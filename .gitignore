@@ -10,3 +10,6 @@ build
 # Ignore eclipse files
 .project
 .settings
+
+# Ignore bin
+bin
