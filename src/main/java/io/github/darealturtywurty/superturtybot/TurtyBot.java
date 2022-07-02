@@ -13,7 +13,7 @@ import io.github.darealturtywurty.superturtybot.commands.util.suggestion.Suggest
 import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
 import io.github.darealturtywurty.superturtybot.modules.AutoModerator;
 import io.github.darealturtywurty.superturtybot.modules.StatTracker;
-import io.github.darealturtywurty.superturtybot.modules.counting.CountingHandler;
+import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -74,8 +74,8 @@ public class TurtyBot {
         // Add the levelling manager so that the bot can handle levels
         builder.addEventListeners(LevellingManager.INSTANCE);
 
-        // Add the counting handler so that counting channels can be managed
-        builder.addEventListeners(CountingHandler.INSTANCE);
+        // Add the counting manager so that the bot can listen for message events
+        builder.addEventListeners(CountingManager.INSTANCE);
     }
     
     @SuppressWarnings("deprecation")

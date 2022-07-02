@@ -14,11 +14,16 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
+import org.bson.conversions.Bson;
 
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+
+import io.github.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
 import io.github.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
-import io.github.darealturtywurty.superturtybot.database.TurtyBotDatabase;
-import io.github.darealturtywurty.superturtybot.database.impl.LevellingDatabaseHandler;
+import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.Levelling;
 import io.github.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -29,7 +34,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
-    private final Map<Long, Map<Long, Pair<Integer, Integer>>> levelMap = new HashMap<>();
     private final Map<Long, Set<Long>> disabledChannels = new HashMap<>();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
     private final List<Long> disabledGuilds = new ArrayList<>();
@@ -45,9 +49,6 @@ public final class LevellingManager extends ListenerAdapter {
         }, 0, 1000);
 
         ShutdownHooks.register(this.cooldownTimer::cancel);
-
-        final Map<Long, Map<Long, Pair<Integer, Integer>>> levels = LevellingDatabaseHandler.load();
-        this.levelMap.putAll(levels);
     }
 
     public boolean areLevelsEnabled(Guild guild) {
@@ -65,51 +66,61 @@ public final class LevellingManager extends ListenerAdapter {
             || this.disabledChannels.containsKey(event.getChannel().getIdLong()))
             return;
 
-        this.levelMap.computeIfAbsent(guild.getIdLong(), id -> new HashMap<>());
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("user", event.getAuthor().getIdLong()));
+        Levelling userProfile = Database.getDatabase().levelling.find(filter).first();
+        if (userProfile == null) {
+            userProfile = new Levelling(guild.getIdLong(), event.getAuthor().getIdLong());
+            Database.getDatabase().levelling.insertOne(userProfile);
+        }
+        
         this.cooldownMap.computeIfAbsent(event.getGuild().getIdLong(), id -> new ConcurrentHashMap<>());
-        final Map<Long, Pair<Integer, Integer>> memberXP = this.levelMap.get(guild.getIdLong());
         final Map<Long, Long> cooldowns = this.cooldownMap.get(guild.getIdLong());
 
         final Member member = event.getMember();
         if (cooldowns.containsKey(member.getIdLong()) && cooldowns.get(member.getIdLong()) > 0)
             return;
-
+            
         // TODO: Server configurable and re-enable
         // cooldowns.put(member.getIdLong(), 25000L);
+        
+        final List<Bson> updates = new ArrayList<>();
 
-        memberXP.computeIfAbsent(member.getIdLong(), id -> Pair.of(0, 0));
-        final Pair<Integer, Integer> xpLevel = memberXP.get(member.getIdLong());
-        final int level = xpLevel.getKey();
+        final int level = userProfile.getLevel();
 
-        int xp = xpLevel.getValue();
+        int xp = userProfile.getXp();
         xp += ThreadLocalRandom.current().nextInt(5, 15);
         // TODO: Re-enable
         // xp = applyBooster(member, event.getMessage(), xp);
-        TurtyBotDatabase.LEVELS.putXP(member, xp);
+        updates.add(Updates.set("xp", xp));
+        userProfile.setXp(xp);
 
         final int newLevel = getLevelForXP(xp);
-        memberXP.put(member.getIdLong(), Pair.of(newLevel, xp));
         if (newLevel > level) {
-            TurtyBotDatabase.LEVELS.putLevel(member, newLevel);
+            updates.add(Updates.set("level", newLevel));
+            userProfile.setLevel(newLevel);
+            
             final var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
             embed.setDescription(member.getAsMention() + ", you are now Level " + newLevel + "! 🎉");
             embed.setColor(Color.BLUE);
-            event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            
             if (ThreadLocalRandom.current().nextInt(50) == 0) {
-                final XPInventory inventory = TurtyBotDatabase.LEVELS.getInventory(member);
+                final List<String> inventory = userProfile.getInventory();
 
-                final RankCardItem chosen = createWeightedBag(inventory).getRandom();
-                inventory.add(chosen);
-                event.getMessage()
-                    .reply("Congratulations " + member.getAsMention() + "! You earned an `"
-                        + WordUtils.capitalize(chosen.rarity.name().toLowerCase())
-                        + "` rank card item! Use `/xpinventory` to view your inventory!")
-                    .mentionRepliedUser(false).queue();
+                final Pair<String, Rarity> chosen = createWeightedBag(inventory).getRandom();
+                inventory.add(chosen.getLeft());
+                updates.add(Updates.set("inventory", inventory));
+
+                embed.appendDescription("\n\nCongratulations " + member.getAsMention() + "! You earned an `"
+                    + WordUtils.capitalize(chosen.getRight().name().toLowerCase())
+                    + "` rank card item! Use `/xpinventory` to view your inventory!");
             }
-        }
 
-        this.levelMap.put(guild.getIdLong(), memberXP);
+            event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        }
+        
+        Database.getDatabase().levelling.updateOne(filter, updates);
         this.cooldownMap.put(guild.getIdLong(), cooldowns);
     }
 
@@ -119,14 +130,17 @@ public final class LevellingManager extends ListenerAdapter {
             * (message.getAttachments().size() + 1);
     }
 
-    private WeightedRandomBag<RankCardItem> createWeightedBag(XPInventory inventory) {
-        final var bag = new WeightedRandomBag<RankCardItem>();
+    private WeightedRandomBag<Pair<String, Rarity>> createWeightedBag(List<String> inventory) {
+        final var bag = new WeightedRandomBag<Pair<String, Rarity>>();
         
-        final List<RankCardItem> canAdd = new ArrayList<>();
-        RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values().forEach(canAdd::add);
+        final Map<String, Rarity> canAdd = new HashMap<>();
+        RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values().forEach(item -> {
+            canAdd.put(item.getName(), item.rarity);
+        });
+        
         inventory.forEach(canAdd::remove);
         
-        canAdd.forEach(item -> bag.addEntry(item, item.rarity.chance));
+        canAdd.forEach((key, value) -> bag.addEntry(Pair.of(key, value), value.chance));
         return bag;
     }
 

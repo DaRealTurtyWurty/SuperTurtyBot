@@ -214,7 +214,7 @@ public class StrawpollCommand extends CoreCommand {
                 JsonObject.class);
             
             final String url = "https://strawpoll.com/" + response.get("content_id").getAsString();
-            Constants.LOGGER.info("A strawpoll was just created: {}", url);
+            Constants.LOGGER.info("FLOAT strawpoll was just created: {}", url);
             return url;
         } catch (IOException | JsonSyntaxException exception) {
             return "There has been an error connecting to strawpoll, please report the following to the bot owner:\n"
