@@ -23,7 +23,7 @@ public class SuggestCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "suggestion", "The thing that you want to suggest", true),
-            new OptionData(OptionType.STRING, "media_url", "A media URL that you would like to add to your suggestion",
+            new OptionData(OptionType.STRING, "media_url", "FLOAT media URL that you would like to add to your suggestion",
                 false));
     }
     

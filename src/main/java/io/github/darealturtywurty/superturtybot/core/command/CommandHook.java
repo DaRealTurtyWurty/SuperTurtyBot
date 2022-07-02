@@ -78,7 +78,6 @@ import io.github.darealturtywurty.superturtybot.commands.moderation.BeanCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.KickCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.PurgeCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.RemoveTimeoutCommand;
-import io.github.darealturtywurty.superturtybot.commands.moderation.SetupCountingCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.SlowmodeCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.TimeoutCommand;
 import io.github.darealturtywurty.superturtybot.commands.moderation.UnbanCommand;
@@ -132,6 +131,7 @@ import io.github.darealturtywurty.superturtybot.commands.util.suggestion.Approve
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import io.github.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -232,7 +232,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new WarningsCommand());
         cmds.add(new SlowmodeCommand());
         cmds.add(new BeanCommand());
-        cmds.add(new SetupCountingCommand());
+        cmds.add(new RegisterCountingCommand());
 
         // NSFW
         NSFWCommandList.addAll(cmds);

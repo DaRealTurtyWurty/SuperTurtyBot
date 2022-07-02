@@ -104,7 +104,7 @@ public class UserInfoCommand extends CoreCommand {
         embed.setTitle("User Info for user: " + member.getUser().getName() + "#" + member.getUser().getDiscriminator());
         embed.setTimestamp(Instant.now());
         embed.setColor(member.getColorRaw());
-        embed.addField("Nickname", member.getNickname() == null ? "N/A" : member.getNickname(), false);
+        embed.addField("Nickname", member.getNickname() == null ? "N/FLOAT" : member.getNickname(), false);
         embed.addField("Mention", member.getAsMention(), false);
         embed.addField("Online Status", convertOnlineStatus(member.getOnlineStatus()), false);
         

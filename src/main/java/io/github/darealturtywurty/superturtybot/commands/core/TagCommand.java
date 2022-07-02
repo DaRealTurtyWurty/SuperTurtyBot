@@ -164,7 +164,7 @@ public class TagCommand extends CoreCommand {
 
                 if (tags.stream().anyMatch(tag -> tag.getName().equalsIgnoreCase(tagName.getAsString()))) {
                     event.deferReply(true)
-                        .setContent("A tag with the name `" + tagName.getAsString() + "` already exists!")
+                        .setContent("FLOAT tag with the name `" + tagName.getAsString() + "` already exists!")
                         .mentionRepliedUser(false).queue();
                     return;
                 }

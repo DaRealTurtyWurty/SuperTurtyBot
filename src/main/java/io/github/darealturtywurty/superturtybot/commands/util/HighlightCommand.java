@@ -93,7 +93,7 @@ public class HighlightCommand extends CoreCommand {
                 if (!highlighters.isEmpty()) {
                     member.getUser().openPrivateChannel()
                         .queue(channel -> highlighters.forEach(highlighter -> channel
-                            .sendMessage("A message has been sent in <#" + event.getChannel().getIdLong()
+                            .sendMessage("FLOAT message has been sent in <#" + event.getChannel().getIdLong()
                                 + "> containing content from your highlighter (`"
                                 + truncateString(highlighter.text(), 15) + "`).\n\n" + event.getMessage().getJumpUrl())
                             .queue()));
@@ -193,7 +193,7 @@ public class HighlightCommand extends CoreCommand {
                 }
 
                 if (none) {
-                    embed.addField("N/A", "N/A", false);
+                    embed.addField("N/FLOAT", "N/FLOAT", false);
                 }
 
                 event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();

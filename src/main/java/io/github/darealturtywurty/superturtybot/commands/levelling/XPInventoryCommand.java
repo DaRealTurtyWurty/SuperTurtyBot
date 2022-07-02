@@ -9,19 +9,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bson.conversions.Bson;
+
+import com.mongodb.client.model.Filters;
 
 import io.github.darealturtywurty.superturtybot.TurtyBot;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
-import io.github.darealturtywurty.superturtybot.database.TurtyBotDatabase;
+import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.Levelling;
+import io.github.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -76,7 +78,16 @@ public class XPInventoryCommand extends CoreCommand {
             return;
         }
         
-        final XPInventory inventory = TurtyBotDatabase.LEVELS.getInventory(event.getMember());
+        final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
+            Filters.eq("user", event.getUser().getIdLong()));
+        Levelling profile = Database.getDatabase().levelling.find(filter).first();
+        if (profile == null) {
+            profile = new Levelling(event.getGuild().getIdLong(), event.getUser().getIdLong());
+            Database.getDatabase().levelling.insertOne(profile);
+        }
+        
+        final List<String> inventory = profile.getInventory();
+        
         try {
             final BufferedImage image = createInventory(inventory, event.getMember());
             final var output = new ByteArrayOutputStream();
@@ -90,7 +101,7 @@ public class XPInventoryCommand extends CoreCommand {
         }
     }
 
-    private BufferedImage createInventory(XPInventory inventory, Member member) throws IOException {
+    private BufferedImage createInventory(List<String> inventory, Member member) throws IOException {
         final BufferedImage template = getTemplate();
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
         final Graphics2D graphics = buffer.createGraphics();
@@ -106,24 +117,12 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawString((name.length() > 22 ? name.substring(0, 22) + "..." : name) + "'s Levelling Inventory",
             80 + profilePic.getWidth() + 30,
             68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
-        
-        final BidiMap<RankCardItem.Type, List<RankCardItem>> grouped = new DualHashBidiMap<>(
-            inventory.stream().collect(Collectors.groupingBy(item -> item.type)));
-        
-        // TODO: Additional sorting by whether its new or not
-        final List<List<RankCardItem>> items = grouped.values().stream()
-            .map(list -> list.stream()
-                .sorted((item0, item1) -> Integer.compare(item0.rarity.ordinal(), item1.rarity.ordinal()))
-                .sorted((item0, item1) -> Boolean.compare(inventory.isNew(item0), inventory.isNew(item1))).toList())
-            .sorted((list0, list1) -> Integer.compare(grouped.getKey(list0).ordinal(), grouped.getKey(list1).ordinal()))
-            .toList();
 
-        items.forEach(items0 -> {
-            items0.forEach(item -> {
-                System.out.println(item.getName());
-            });
-        });
-        
+        final List<RankCardItem> items = inventory.stream()
+            .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
+
+        // TODO: sort items and render items
+
         graphics.dispose();
         return buffer;
     }
