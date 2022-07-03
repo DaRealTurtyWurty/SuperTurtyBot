@@ -183,7 +183,7 @@ public class UserConfigCommand extends CoreCommand {
     
     private static EmbedBuilder createUserConfigEmbed(User user) {
         final var embed = new EmbedBuilder();
-        embed.setTitle("Config for user: " + user.getName() + user.getDiscriminator());
+        embed.setTitle("Config for user: " + user.getName() + "#" + user.getDiscriminator());
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.BLUE);
         final UserConfig config = ConfigRetriever.CONFIGS.get(user.getIdLong());
@@ -194,7 +194,7 @@ public class UserConfigCommand extends CoreCommand {
     @Nullable
     private static EmbedBuilder createUserConfigEmbed(User user, String option) {
         final var embed = new EmbedBuilder();
-        embed.setTitle("Config for user: " + user.getName() + user.getDiscriminator());
+        embed.setTitle("Config for user: " + user.getName() + "#" + user.getDiscriminator());
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.BLUE);
         
