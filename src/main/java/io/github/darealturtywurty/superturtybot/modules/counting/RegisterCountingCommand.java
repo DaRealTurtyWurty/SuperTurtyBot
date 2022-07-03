@@ -21,7 +21,14 @@ public class RegisterCountingCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.CHANNEL, "channel", "The channel to start counting on", true),
             new OptionData(OptionType.STRING, "mode", "The counting mode to use", false).addChoice("normal", "normal")
-                .addChoice("reverse", "reverse").addChoice("decimal", "decimal").addChoice("maths", "maths"),
+                .addChoice("reverse", "reverse").addChoice("decimal", "decimal").addChoice("maths", "maths")
+                .addChoice("binary", "binary").addChoice("ternary", "ternary").addChoice("quaternary", "quaternary")
+                .addChoice("quinary", "quinary").addChoice("senary", "senary").addChoice("septenary", "septenary")
+                .addChoice("octal", "octal").addChoice("nonary", "nonary").addChoice("undecimal", "undecimal")
+                .addChoice("duodecimal", "duodecimal").addChoice("tridecimal", "tridecimal")
+                .addChoice("tetradecimal", "tetradecimal").addChoice("pentadecimal", "pentadecimal")
+                .addChoice("hexadecimal", "hexadecimal").addChoice("base32", "base32").addChoice("base48", "base48")
+                .addChoice("base64", "base64").addChoice("base96", "base96"),
             new OptionData(OptionType.BOOLEAN, "unregister", "Whether or not to unregister this channel", false));
     }
     
@@ -66,6 +73,7 @@ public class RegisterCountingCommand extends CoreCommand {
         final boolean unregister = event.getOption("unregister", false, OptionMapping::getAsBoolean);
         if (unregister) {
             CountingManager.INSTANCE.removeCountingChannel(event.getGuild(), channel);
+            reply(event, "✅ " + channel.getAsMention() + " has been unregistered as a counting channel.");
             return;
         }
 
