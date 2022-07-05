@@ -49,8 +49,11 @@ public class EvalCommand extends CoreCommand {
 
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-        if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId())
+        if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId()) {
+            event.deferReply(true).setContent("❌ You do not have permission to use this command!")
+                .mentionRepliedUser(false).queue();
             return;
+        }
 
         final String content = event.getTarget().getContentDisplay();
         final Context ctx = JSEvaluator.getContext();
@@ -61,8 +64,10 @@ public class EvalCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId())
+        if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId()) {
+            reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
+        }
 
         final String content = event.getOption("javascript").getAsString();
         try {
