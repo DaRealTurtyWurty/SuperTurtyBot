@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.github.darealturtywurty.superturtybot.commands.core.CommandListCommand;
 import io.github.darealturtywurty.superturtybot.commands.core.EvalCommand;
@@ -134,6 +136,7 @@ import io.github.darealturtywurty.superturtybot.commands.util.suggestion.Suggest
 import io.github.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -146,23 +149,25 @@ public class CommandHook extends ListenerAdapter {
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
-    
-    private Set<CoreCommand> commands = new HashSet<>();
 
+    private Set<CoreCommand> commands = new HashSet<>();
+    
     private CommandHook() {
     }
-
+    
     public Set<CoreCommand> getCommands() {
         return Set.of(this.commands.toArray(new CoreCommand[0]));
     }
-
+    
     @Override
     public void onReady(ReadyEvent event) {
         super.onReady(event);
         this.commands.clear();
         this.commands.addAll(registerCommands(event.getJDA()));
+        
+        printCommandList(event.getJDA(), this.commands);
     }
-
+    
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription());
@@ -170,24 +175,53 @@ public class CommandHook extends ListenerAdapter {
             if (!options.isEmpty()) {
                 data.addOptions(options);
             }
-
+            
             final List<SubcommandData> subcommands = cmd.createSubcommands();
             if (!subcommands.isEmpty()) {
                 data.addSubcommands(subcommands);
             }
-
+            
             updates.addCommands(data);
         }
-
+        
         if (cmd.types.messageCtx()) {
             updates.addCommands(Commands.message(cmd.getRichName()));
         }
-
+        
         if (cmd.types.userCtx()) {
             updates.addCommands(Commands.user(cmd.getRichName()));
         }
     }
+    
+    private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
+        final TextChannel cmdList = jda.getTextChannelById(993264482597998673L);
+        final var builder = new StringBuilder();
+        final var previous = new AtomicReference<CoreCommand>();
+        final var slashes = new AtomicInteger();
+        final var prefixes = new AtomicInteger();
+        cmds.stream()
+            .sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName()))
+            .forEach(cmd -> {
+                if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
+                    builder.append("\n**" + cmd.getCategory().getName() + "**\n");
+                } else if (previous.get() == null) {
+                    builder.append("**" + cmd.getCategory().getName() + "**\n");
+                }
 
+                builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
+                previous.set(cmd);
+
+                if (cmd.types.slash()) {
+                    slashes.incrementAndGet();
+                } else {
+                    prefixes.incrementAndGet();
+                }
+            });
+        cmdList.editMessageById(993441356682895370L, builder.toString()).queue();
+        cmdList.editMessageById(993441358658404362L, "\n\nThere are **" + slashes.get()
+            + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.").queue();
+    }
+    
     private static Set<CoreCommand> registerCommands(JDA jda) {
         final Set<CoreCommand> cmds = new HashSet<>();
         // Core
@@ -199,7 +233,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
         cmds.add(new UserConfigCommand());
-        
+
         // Utility
         cmds.add(new BotInfoCommand());
         cmds.add(new UserInfoCommand());
@@ -218,7 +252,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new HighlightCommand());
         cmds.add(new RainbowSixStatsCommand());
         cmds.add(new ReactionRoleCommand());
-
+        
         // Moderation
         cmds.add(new BanCommand());
         cmds.add(new UnbanCommand());
@@ -233,7 +267,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SlowmodeCommand());
         cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
-
+        
         // NSFW
         NSFWCommandList.addAll(cmds);
         cmds.add(new HentaiCommand());
@@ -251,7 +285,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new LoliCommand());
         cmds.add(new OrgasmCommand());
         cmds.add(new Rule34Command());
-        
+
         // Music
         cmds.add(new JoinCommand());
         cmds.add(new LeaveCommand());
@@ -266,7 +300,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShuffleCommand());
         cmds.add(new ClearCommand());
         cmds.add(new SearchCommand());
-
+        
         // Image
         cmds.add(new CatCommand());
         cmds.add(new CatBombCommand());
@@ -314,7 +348,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new InspiroBotCommand());
         cmds.add(new FoodPornCommand());
         cmds.add(new HttpDogCommand());
-        
+
         // Fun
         cmds.add(new AdviceCommand());
         // cmds.add(new AmongUsCommand());
@@ -327,20 +361,20 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-
+        
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         cmds.add(new XPInventoryCommand());
-
+        
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
             cmds.forEach(cmd -> registerCommand(cmd, updates, guild));
             updates.queue();
         });
-
+        
         cmds.forEach(jda::addEventListener);
-
+        
         return cmds;
     }
 }
