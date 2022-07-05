@@ -7,8 +7,6 @@ import java.util.Random;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.primes.Primes;
 
-import com.google.common.math.BigIntegerMath;
-
 public final class MathHandler {
     private static final Random RANDOM = new Random();
 
@@ -19,11 +17,27 @@ public final class MathHandler {
         final List<MathOperation> floats = MathOperation.getFloats();
         if ((int) number != number)
             return floats.get(RANDOM.nextInt(floats.size() - 1));
+
+        if (number == 0 && RANDOM.nextBoolean())
+            return RANDOM.nextBoolean() ? MathOperation.COSINE : MathOperation.SECANT;
         
         if (number <= 0)
             return MathOperation.ADD;
         if (number > 50_000)
             return MathOperation.MODULO;
+
+        if (number % 30 == 0 && number % 60 != 0 && RANDOM.nextInt(5) == 0)
+            return MathOperation.SINE;
+        if (number % 60 == 0 && RANDOM.nextInt(3) == 0)
+            return MathOperation.COSINE;
+        if ((number == 45 || number == 135 || number == 180) && RANDOM.nextInt(1) == 0)
+            return MathOperation.TANGENT;
+        if ((number == 60 || number == 180 || number == 360) && RANDOM.nextInt(3) == 0)
+            return MathOperation.SECANT;
+        if ((number == 30 || number == 90 || number == 270) && RANDOM.nextInt(2) == 0)
+            return MathOperation.COSECANT;
+        if ((number == 45 || number == 90 || number == 270) && RANDOM.nextInt(1) == 0)
+            return MathOperation.COTANGENT;
 
         final double root = Math.sqrt(number);
         if (root == (int) root && root != Double.NaN && RANDOM.nextInt(3) == 0 && number != 1)
@@ -31,15 +45,12 @@ public final class MathHandler {
 
         final List<MathOperation> ints = new ArrayList<>(MathOperation.getInts());
         ints.remove(MathOperation.SQRT);
-        
-        if (number < 10 && number > 2 && RANDOM.nextInt(ints.size()) == 1) {
-            ints.remove(MathOperation.FACTORIAL);
-            return MathOperation.FACTORIAL;
-        }
-
-        if (number < 2) {
-            ints.remove(MathOperation.FACTORIAL);
-        }
+        ints.remove(MathOperation.SINE);
+        ints.remove(MathOperation.COSINE);
+        ints.remove(MathOperation.TANGENT);
+        ints.remove(MathOperation.SECANT);
+        ints.remove(MathOperation.COSECANT);
+        ints.remove(MathOperation.COTANGENT);
 
         if (Primes.isPrime((int) number) || number == 1) {
             ints.remove(MathOperation.DIVIDE);
@@ -82,13 +93,18 @@ public final class MathHandler {
                 final List<Integer> divisors = getDivisors((int) current);
                 yield current / getRandom(divisors);
             }
-            case FACTORIAL -> BigIntegerMath.factorial((int) current).floatValue();
             case FLOOR -> (float) Math.floor(current);
             case MULTIPLY -> current * RANDOM.nextInt(2, 25);
             case ROUND -> Math.round(current);
             case SQRT -> (float) Math.sqrt(current);
             case SQUARE -> current * current;
             case SUBTRACT -> current - RANDOM.nextInt(2, 100);
+            case SINE -> (float) Math.sin(current);
+            case COSINE -> (float) Math.cos(current);
+            case TANGENT -> (float) Math.tan(current);
+            case SECANT -> 1.0f / (float) Math.cos(current);
+            case COSECANT -> 1.0f / (float) Math.sin(current);
+            case COTANGENT -> 1.0f / (float) Math.tan(current);
         };
 
         return Pair.of(operation, value);
