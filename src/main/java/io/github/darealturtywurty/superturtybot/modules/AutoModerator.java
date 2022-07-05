@@ -29,7 +29,7 @@ public class AutoModerator extends ListenerAdapter {
             || event.getAuthor().isSystem())
             return;
         
-        amongusDetection(event.getMessage());
+        // amongusDetection(event.getMessage());
         discordInvites(event.getMessage());
         // scamDetection(event.getMessage());
     }
@@ -40,7 +40,7 @@ public class AutoModerator extends ListenerAdapter {
             || event.getAuthor().isSystem() || event.getMember().isOwner())
             return;
         
-        amongusDetection(event.getMessage());
+        // amongusDetection(event.getMessage());
         discordInvites(event.getMessage());
         // scamDetection(event.getMessage());
     }
@@ -48,19 +48,18 @@ public class AutoModerator extends ListenerAdapter {
     @Override
     public void onReady(ReadyEvent event) {
         /*
-         * try { final URLConnection connection = new
-         * URL("https://phish.sinking.yachts/v2/all").openConnection();
-         * connection.addRequestProperty("X-Identity", "TurtyBot#8108"); final
-         * InputStream stream = connection.getInputStream(); final JsonArray response =
-         * Constants.GSON.fromJson(new InputStreamReader(stream), JsonArray.class);
-         * response.forEach(link -> { final String domain = link.getAsString();
-         * SCAM_DOMAINS.add(domain); Constants.LOGGER.info("Scam link added: {}",
-         * domain); }); } catch (final IOException exception) { Constants.LOGGER.
-         * error("There has been an error accessing: {}\nError Message: {}",
-         * "https://phish.sinking.yachts/v2/all", exception.getMessage()); }
+         * try { final URLConnection connection = new URL("https://phish.sinking.yachts/v2/all").openConnection();
+         * connection.addRequestProperty("X-Identity", "TurtyBot#8108"); final InputStream stream =
+         * connection.getInputStream(); final JsonArray response = Constants.GSON.fromJson(new
+         * InputStreamReader(stream), JsonArray.class); response.forEach(link -> { final String domain =
+         * link.getAsString(); SCAM_DOMAINS.add(domain); Constants.LOGGER.info("Scam link added: {}", domain); }); }
+         * catch (final IOException exception) { Constants.LOGGER.
+         * error("There has been an error accessing: {}\nError Message: {}", "https://phish.sinking.yachts/v2/all",
+         * exception.getMessage()); }
          */
     }
     
+    // TODO: Fix dumpy URL and also cooldown it
     private void amongusDetection(final Message message) {
         final User user = message.getAuthor();
         final String shortenedText = message.getContentRaw().toLowerCase().trim();
