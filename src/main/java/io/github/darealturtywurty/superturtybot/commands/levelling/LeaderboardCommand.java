@@ -28,7 +28,7 @@ import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import io.github.darealturtywurty.superturtybot.database.Database;
-import io.github.darealturtywurty.superturtybot.database.pojos.Levelling;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

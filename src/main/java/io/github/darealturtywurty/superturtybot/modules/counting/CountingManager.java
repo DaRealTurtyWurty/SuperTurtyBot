@@ -11,8 +11,8 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 
 import io.github.darealturtywurty.superturtybot.database.Database;
-import io.github.darealturtywurty.superturtybot.database.pojos.Counting;
-import io.github.darealturtywurty.superturtybot.database.pojos.Counting.UserData;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Counting;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Counting.UserData;
 import io.github.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
 import io.github.darealturtywurty.superturtybot.modules.counting.maths.MathOperation;
 import net.dv8tion.jda.api.entities.ChannelType;

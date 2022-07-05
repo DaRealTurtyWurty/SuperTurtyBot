@@ -1,4 +1,4 @@
-package io.github.darealturtywurty.superturtybot.database.pojos;
+package io.github.darealturtywurty.superturtybot.database.pojos.collections;
 
 import java.util.ArrayList;
 import java.util.List;

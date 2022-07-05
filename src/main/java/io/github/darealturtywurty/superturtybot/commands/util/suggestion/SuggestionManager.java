@@ -3,14 +3,21 @@ package io.github.darealturtywurty.superturtybot.commands.util.suggestion;
 import java.awt.Color;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import org.bson.conversions.Bson;
 import org.jetbrains.annotations.Nullable;
 
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+
+import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,88 +28,43 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-// TODO: Save to database
 public final class SuggestionManager extends ListenerAdapter {
-    private static final Map<Long, List<Suggestion>> SUGGESTIONS = new HashMap<>();
     public static final SuggestionManager INSTANCE = new SuggestionManager();
-    
+
     private SuggestionManager() {
     }
-    
+
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.getUser().isBot() || event.getUser().isSystem())
             return;
-        
+
         final TextChannel suggestionChannel = getSuggestionChannel(event.getGuild());
         if (suggestionChannel == null || event.getChannel().getIdLong() != suggestionChannel.getIdLong())
             return;
-        
-        final List<Suggestion> suggestions = SUGGESTIONS.get(event.getGuild().getIdLong());
-        
-        final long messageId = event.getMessageIdLong();
-        final Optional<Suggestion> optionalSuggestion = suggestions.stream()
-            .filter(suggestion -> suggestion != null && suggestion.messageId() == messageId).findFirst();
-        if (!optionalSuggestion.isPresent())
+
+        final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
+            Filters.eq("message", event.getMessageIdLong()));
+        final Suggestions suggestion = Database.getDatabase().suggestions.find(filter).first();
+        if (suggestion == null)
             return;
 
-        final Suggestion suggestion = optionalSuggestion.get();
-        event.getChannel().retrieveMessageById(messageId).queue(msg -> {
-            final List<MessageReaction> reactions = msg.getReactions();
-            
-            final Optional<MessageReaction> upVote = reactions.stream()
-                .filter(reaction -> "⬆️".equals(reaction.getReactionEmote().getAsReactionCode())).findFirst();
-            final Optional<MessageReaction> downVote = reactions.stream()
-                .filter(reaction -> "⬇️".equals(reaction.getReactionEmote().getAsReactionCode())).findFirst();
-            
-            if (!upVote.isPresent()) {
-                msg.addReaction("⬆️").queue();
-            }
-
-            if (!downVote.isPresent()) {
-                msg.addReaction("⬇️").queue();
-            }
-            
-            final MessageReaction upvote = reactions.stream()
-                .filter(reaction -> "⬆️".equals(reaction.getReactionEmote().getAsReactionCode())).findFirst().get();
-            final MessageReaction downvote = reactions.stream()
-                .filter(reaction -> "⬇️".equals(reaction.getReactionEmote().getAsReactionCode())).findFirst().get();
-            
-            if (compareEmote(event.getReaction(), upvote)) {
-                downvote.retrieveUsers().queue(users -> {
-                    if (users.stream().anyMatch(user -> user.getIdLong() == event.getUserIdLong())) {
-                        event.getReaction().removeReaction(event.getUser()).queue();
-                    }
-                });
-
-                return;
-            }
-            
-            if (compareEmote(event.getReaction(), downvote)) {
-                upvote.retrieveUsers().queue(users -> {
-                    if (users.stream().anyMatch(user -> user.getIdLong() == event.getUserIdLong())) {
-                        event.getReaction().removeReaction(event.getUser()).queue();
-                    }
-                });
-                
-                return;
-            }
-            
-            event.getReaction().removeReaction(event.getUser()).queue();
-        }, error -> {
-            suggestions.remove(suggestion);
-            SUGGESTIONS.put(event.getGuild().getIdLong(), suggestions);
-        });
+        event.getChannel().retrieveMessageById(suggestion.getMessage()).queue(msg -> {
+            msg.addReaction("⬆️").queue();
+            msg.addReaction("⬇️").queue();
+        }, error -> Database.getDatabase().suggestions.deleteOne(filter));
     }
-    
-    public static CompletableFuture<Suggestion> addSuggestion(TextChannel suggestionChannel, Guild guild,
+
+    public static CompletableFuture<Suggestions> addSuggestion(TextChannel suggestionChannel, Guild guild,
         Member suggester, String content, @Nullable String mediaUrl) {
-        SUGGESTIONS.computeIfAbsent(guild.getIdLong(), id -> new ArrayList<>());
-        final List<Suggestion> suggestions = SUGGESTIONS.get(guild.getIdLong());
+        final var counter = new AtomicInteger();
+        Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
+            .forEach(suggestion -> counter.getAndIncrement());
+
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GRAY);
-        embed.setTitle("Suggestion #" + suggestions.size());
+        embed.setTitle("Suggestion #" + counter.get());
         embed.setFooter("Suggested by " + suggester.getUser().getName() + "#" + suggester.getUser().getDiscriminator(),
             suggester.getUser().getEffectiveAvatarUrl());
         embed.setDescription(content);
@@ -110,32 +72,33 @@ public final class SuggestionManager extends ListenerAdapter {
             embed.setImage(mediaUrl);
             embed.appendDescription("\n\n" + "**Media not showing? [Click Me](" + mediaUrl + ")**");
         }
-        
-        final var future = new CompletableFuture<Suggestion>();
+
+        final var future = new CompletableFuture<Suggestions>();
         suggestionChannel.sendMessageEmbeds(embed.build()).queue(msg -> {
-            final var suggestion = new Suggestion(msg.getIdLong(), new ArrayList<>());
-            suggestions.add(suggestion);
+            final var suggestion = new Suggestions(guild.getIdLong(), suggester.getIdLong(), msg.getIdLong(),
+                System.currentTimeMillis());
+            Database.getDatabase().suggestions.insertOne(suggestion);
             future.complete(suggestion);
             msg.addReaction("⬆️").queue(success -> msg.addReaction("⬇️").queue());
         });
-        
+
         return future;
     }
-    
+
     @Nullable
     public static TextChannel getSuggestionChannel(Guild guild) {
         // TODO: Check server config first
         final List<TextChannel> channels = guild.getTextChannelsByName("suggestions", false);
         if (channels.isEmpty())
             return null;
-        
+
         final TextChannel suggestionsChannel = channels.get(0);
         if (!suggestionsChannel.canTalk())
             return null;
-        
+
         return suggestionsChannel;
     }
-    
+
     public static TextChannel getSuggestionChannel(MessageReceivedEvent event) {
         // TODO: Check server config first
         final List<TextChannel> channels = event.getGuild().getTextChannelsByName("suggestions", false);
@@ -144,7 +107,7 @@ public final class SuggestionManager extends ListenerAdapter {
                 .queue();
             return null;
         }
-        
+
         final TextChannel suggestionsChannel = channels.get(0);
         if (!suggestionsChannel.canTalk()) {
             event.getMessage()
@@ -154,10 +117,10 @@ public final class SuggestionManager extends ListenerAdapter {
                 .mentionRepliedUser(false).queue();
             return null;
         }
-        
+
         return suggestionsChannel;
     }
-    
+
     public static TextChannel getSuggestionChannel(SlashCommandInteractionEvent event) {
         // TODO: Check server config first
         final List<TextChannel> channels = event.getGuild().getTextChannelsByName("suggestions", false);
@@ -166,7 +129,7 @@ public final class SuggestionManager extends ListenerAdapter {
                 .mentionRepliedUser(false).queue();
             return null;
         }
-        
+
         final TextChannel suggestionsChannel = channels.get(0);
         if (!suggestionsChannel.canTalk()) {
             event.deferReply(true)
@@ -176,38 +139,42 @@ public final class SuggestionManager extends ListenerAdapter {
                 .mentionRepliedUser(false).queue();
             return null;
         }
-        
+
         return suggestionsChannel;
     }
-    
-    public static CompletableFuture<Suggestion> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
-        Member responder, int number, String response, Response.Type type) {
-        if (!SUGGESTIONS.containsKey(guild.getIdLong()) || SUGGESTIONS.get(guild.getIdLong()) == null
-            || SUGGESTIONS.get(guild.getIdLong()).isEmpty())
+
+    public static CompletableFuture<Suggestions> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
+        Member responder, int number, String response, SuggestionResponse.Type type) {
+        if (number < 0)
+            return null;
+        List<Suggestions> suggestions = new ArrayList<>();
+        Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).forEach(suggestions::add);
+
+        if (number > suggestions.size())
             return null;
         
-        final List<Suggestion> suggestions = SUGGESTIONS.get(guild.getIdLong());
-        if (number > suggestions.size() || number < 0)
-            return null;
-        
+        suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestions::getCreatedAt).reversed())
+            .collect(Collectors.toList());
+
         final long time = System.currentTimeMillis();
-        final Suggestion suggestion = suggestions.get(number);
-        
-        final CompletableFuture<Suggestion> future = new CompletableFuture<>();
-        suggestionsChannel.retrieveMessageById(suggestion.messageId()).queue(message -> {
+        final Suggestions suggestion = suggestions.get(number);
+
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("message", suggestion.getMessage()));
+
+        final var future = new CompletableFuture<Suggestions>();
+        suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
             message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().get(0)).addField(
                 type.richName + " by " + responder.getUser().getName() + "#" + responder.getUser().getDiscriminator(),
                 response, false).build()).queue();
-            suggestion.responses().add(new Response(type, response, responder.getIdLong(), time));
+            suggestion.getResponses().add(new SuggestionResponse(type, response, responder.getIdLong(), time));
+            Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
             future.complete(suggestion);
-        }, err -> {
-            suggestions.remove(suggestion);
-            future.complete(null);
-        });
-        
+        }, err -> Database.getDatabase().suggestions.deleteOne(filter));
+
         return future;
     }
-    
+
     private static boolean compareEmote(MessageReaction reaction0, MessageReaction reaction1) {
         return reaction0.getReactionEmote().equals(reaction1.getReactionEmote());
     }

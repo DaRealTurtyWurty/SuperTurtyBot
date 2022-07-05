@@ -1,7 +1,9 @@
-package io.github.darealturtywurty.superturtybot.database.pojos;
+package io.github.darealturtywurty.superturtybot.database.pojos.collections;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.github.darealturtywurty.superturtybot.database.pojos.RankCard;
 
 public class Levelling {
     private long guild;

@@ -15,14 +15,16 @@ import com.mongodb.client.model.Indexes;
 
 import io.github.darealturtywurty.superturtybot.Environment;
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
-import io.github.darealturtywurty.superturtybot.database.pojos.Counting;
-import io.github.darealturtywurty.superturtybot.database.pojos.Levelling;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Counting;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
 
 public class Database {
     private static final Database DATABASE = new Database();
     
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
+    public final MongoCollection<Suggestions> suggestions;
     
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -36,11 +38,15 @@ public class Database {
 
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
+        this.suggestions = database.getCollection("suggestions", Suggestions.class);
 
         final Bson guildIndex = Indexes.descending("guild");
-        this.levelling.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("user")));
-        this.levelling
+        final Bson userIndex = Indexes.descending("user");
+        final Bson guildUserIndex = Indexes.compoundIndex(guildIndex, userIndex);
+        this.levelling.createIndex(guildUserIndex);
+        this.counting
             .createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel"), Indexes.descending("users")));
+        this.suggestions.createIndex(guildUserIndex);
     }
     
     public static Database getDatabase() {

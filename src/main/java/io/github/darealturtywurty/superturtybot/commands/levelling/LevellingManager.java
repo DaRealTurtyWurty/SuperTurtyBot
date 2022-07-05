@@ -23,7 +23,7 @@ import io.github.darealturtywurty.superturtybot.commands.levelling.RankCardItem.
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
 import io.github.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
 import io.github.darealturtywurty.superturtybot.database.Database;
-import io.github.darealturtywurty.superturtybot.database.pojos.Levelling;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import io.github.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
