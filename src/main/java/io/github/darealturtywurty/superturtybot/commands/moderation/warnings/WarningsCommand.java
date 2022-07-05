@@ -7,9 +7,11 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -55,7 +57,7 @@ public class WarningsCommand extends CoreCommand {
         }
 
         final User user = event.getOption("user").getAsUser();
-        final Set<WarnInfo> warns = WarnManager.getWarns(event.getGuild(), user);
+        final Set<Warning> warns = WarnManager.getWarns(event.getGuild(), user);
         
         final var embed = new EmbedBuilder();
         embed.setColor(Color.BLUE);
@@ -64,13 +66,15 @@ public class WarningsCommand extends CoreCommand {
             embed.setDescription("This user has no warns!");
         } else {
             embed.setDescription("This user has " + warns.size() + " warns!");
-            int index = 1;
+            final var index = new AtomicInteger(1);
             for (final var warn : warns) {
-                embed.addField("Warn #" + index++,
-                    "Reason: `" + warn.reason() + "`\nUUID: `" + warn.uuid().toString() + "`\nModerator: "
-                        + warn.warner().getAsMention() + "\nOccured On: "
-                        + formatTime(Instant.ofEpochMilli(warn.warnTime()).atOffset(ZoneOffset.UTC)),
-                    false);
+                event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
+                    embed.addField("Warn #" + index.getAndIncrement(),
+                        "Reason: `" + warn.getReason() + "`\nUUID: `" + warn.getUuid() + "`\nModerator: "
+                            + warner.getAsMention() + "\nOccured On: "
+                            + formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)),
+                        false);
+                });
             }
         }
         

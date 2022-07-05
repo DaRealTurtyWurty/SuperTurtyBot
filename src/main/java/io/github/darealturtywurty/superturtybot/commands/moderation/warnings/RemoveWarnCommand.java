@@ -9,6 +9,7 @@ import java.util.List;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
@@ -63,16 +64,18 @@ public class RemoveWarnCommand extends CoreCommand {
         
         final User user = event.getOption("user").getAsUser();
         final String uuid = event.getOption("uuid").getAsString();
-        final WarnInfo warn = WarnManager.removeWarn(user, event.getGuild(), uuid);
+        final Warning warn = WarnManager.removeWarn(user, event.getGuild(), uuid);
 
-        final var embed = new EmbedBuilder();
-        embed.setColor(Color.GREEN);
-        embed.setTitle(user.getName() + "'s warn has been removed!");
-        embed.setDescription("Warn Reason: " + warn.reason() + "\nOriginal Warner: " + warn.warner().getAsMention()
-            + "\nWarned At: " + formatTime(Instant.ofEpochMilli(warn.warnTime()).atOffset(ZoneOffset.UTC))
-            + "\nWarn UUID: " + warn.uuid().toString() + "\nRemoved By: " + event.getMember().getAsMention());
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
-        // TODO: Option to notify user of warn removal
+        event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
+            final var embed = new EmbedBuilder();
+            embed.setColor(Color.GREEN);
+            embed.setTitle(user.getName() + "'s warn has been removed!");
+            embed.setDescription("Warn Reason: " + warn.getReason() + "\nOriginal Warner: " + warner.getAsMention()
+                + "\nWarned At: " + formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))
+                + "\nWarn UUID: " + warn.getUuid() + "\nRemoved By: " + event.getMember().getAsMention());
+            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            // TODO: Option to notify user of warn removal
+        });
     }
 
     // TODO: Utility class
