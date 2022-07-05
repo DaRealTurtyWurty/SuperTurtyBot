@@ -4,31 +4,36 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.StringUtils;
 
+import io.github.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
+
 public enum CountingMode {
     NORMAL, REVERSE, DECIMAL, MATHS(true), BINARY, TERNARY, QUATERNARY, QUINARY, SENARY, SEPTENARY, OCTAL, NONARY,
-    UNDECIMAL, DUODECIMAL, TRIDECIMAL, TETRADECIMAL, PENTADECIMAL, HEXADECIMAL, BASE32, BASE48, BASE64, BASE96;
+    UNDECIMAL, DUODECIMAL, TRIDECIMAL, TETRADECIMAL, PENTADECIMAL, HEXADECIMAL, BASE32, BASE48, BASE64, BASE96, SQUARES,
+    TRIANGULAR, PENTAGONAL, HEXAGONAL, CUBES, PRIMES, ABUNDENT, COMPOSITE, ODD, EVEN, FIBONACCI, LUCAS, GOLOMB, HAPPY,
+    LUCKY;
 
     private final boolean notify;
-
+    
     CountingMode() {
         this(false);
     }
-
+    
     CountingMode(boolean notify) {
         this.notify = notify;
     }
-    
+
     public boolean shouldNotify() {
         return this.notify;
     }
-    
+
     public static float getNextNumber(CountingMode mode, float current) {
         return switch (mode) {
             case REVERSE -> current - 1;
+            case SQUARES -> MathHandler.nextPerfectSquare(current);
             default -> current + 1;
         };
     }
-
+    
     public static float getStartingNumber(CountingMode mode) {
         return switch (mode) {
             case REVERSE -> 10;
@@ -37,7 +42,7 @@ public enum CountingMode {
             default -> 0;
         };
     }
-
+    
     public static String parse(CountingMode mode, float current, float result) {
         return switch (mode) {
             case DECIMAL -> {
@@ -47,7 +52,7 @@ public enum CountingMode {
                 for (var i = 0; i < decimalPlaces; i++) {
                     builder.append("0");
                 }
-
+                
                 builder.append(leftover);
                 yield builder.toString();
             }
@@ -72,14 +77,14 @@ public enum CountingMode {
             default -> String.valueOf((int) result);
         };
     }
-
+    
     public static float parse(CountingMode mode, String str) {
         return switch (mode) {
             case DECIMAL -> {
                 if (!str.startsWith("0.")) {
                     yield Float.NaN;
                 }
-                
+
                 final String decimalOnly = str.replace("0.", "");
                 final int decimalPlaces = StringUtils.countMatches(decimalOnly, '0');
                 final int lastNumb = Integer.parseInt(decimalOnly.substring(decimalOnly.length() - 1));
@@ -103,11 +108,11 @@ public enum CountingMode {
             case BASE48 -> tryParseInt(str, 48);
             case BASE64 -> tryParseInt(str, 64);
             case BASE96 -> tryParseInt(str, 96);
-        
+
             default -> tryParseFloat(str);
         };
     }
-    
+
     private static float tryParseFloat(String str) {
         try {
             return Float.parseFloat(str.split("/s*")[0]);
@@ -115,7 +120,7 @@ public enum CountingMode {
             return Float.NaN;
         }
     }
-
+    
     private static float tryParseInt(String str, int radix) {
         try {
             return Integer.parseInt(str, radix);
