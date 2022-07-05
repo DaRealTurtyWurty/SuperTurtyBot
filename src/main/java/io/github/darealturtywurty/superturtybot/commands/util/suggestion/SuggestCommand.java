@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.darealturtywurty.superturtybot.Environment;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
-import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -71,7 +71,7 @@ public class SuggestCommand extends CoreCommand {
 
         event.deferReply(false).mentionRepliedUser(false).queue();
         final String mediaURL = event.getOption("media_url", null, OptionMapping::getAsString);
-        final CompletableFuture<Suggestions> suggestion = SuggestionManager.addSuggestion(suggestionChannel,
+        final CompletableFuture<Suggestion> suggestion = SuggestionManager.addSuggestion(suggestionChannel,
             event.getGuild(), event.getMember(), suggestionStr, mediaURL);
         suggestion.thenAccept(sug -> {
             final var embed = new EmbedBuilder();

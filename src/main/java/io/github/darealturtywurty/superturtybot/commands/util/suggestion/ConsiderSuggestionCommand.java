@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
-import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -69,7 +69,7 @@ public class ConsiderSuggestionCommand extends CoreCommand {
             response = String.join(" ", args).replace(args[0] + " " + args[1], "");
         }
 
-        final CompletableFuture<Suggestions> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
+        final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
             suggestionChannel, event.getMember(), suggestionNumber, response, SuggestionResponse.Type.CONSIDERED);
         
         suggestion.thenAccept(sug -> {

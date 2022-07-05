@@ -17,14 +17,14 @@ import io.github.darealturtywurty.superturtybot.Environment;
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Counting;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
-import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 
 public class Database {
     private static final Database DATABASE = new Database();
     
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
-    public final MongoCollection<Suggestions> suggestions;
+    public final MongoCollection<Suggestion> suggestions;
     
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -38,7 +38,7 @@ public class Database {
 
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
-        this.suggestions = database.getCollection("suggestions", Suggestions.class);
+        this.suggestions = database.getCollection("suggestions", Suggestion.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");

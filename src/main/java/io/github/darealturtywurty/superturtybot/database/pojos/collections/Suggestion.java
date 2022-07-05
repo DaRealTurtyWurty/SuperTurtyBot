@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 
-public class Suggestions {
+public class Suggestion {
     private long guild;
     private long user;
     private long message;
@@ -13,7 +13,7 @@ public class Suggestions {
     private long createdAt;
     private List<SuggestionResponse> responses;
     
-    public Suggestions() {
+    public Suggestion() {
         this.guild = 0;
         this.user = 0;
         this.message = 0;
@@ -22,7 +22,7 @@ public class Suggestions {
         this.responses = new ArrayList<>();
     }
     
-    public Suggestions(long guildId, long authorId, long messageId, long createdAt) {
+    public Suggestion(long guildId, long authorId, long messageId, long createdAt) {
         this();
         this.guild = guildId;
         this.user = authorId;

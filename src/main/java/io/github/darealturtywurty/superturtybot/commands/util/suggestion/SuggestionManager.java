@@ -17,7 +17,7 @@ import com.mongodb.client.model.Updates;
 
 import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
-import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestions;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -45,7 +45,7 @@ public final class SuggestionManager extends ListenerAdapter {
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
             Filters.eq("message", event.getMessageIdLong()));
-        final Suggestions suggestion = Database.getDatabase().suggestions.find(filter).first();
+        final Suggestion suggestion = Database.getDatabase().suggestions.find(filter).first();
         if (suggestion == null)
             return;
 
@@ -55,7 +55,7 @@ public final class SuggestionManager extends ListenerAdapter {
         }, error -> Database.getDatabase().suggestions.deleteOne(filter));
     }
 
-    public static CompletableFuture<Suggestions> addSuggestion(TextChannel suggestionChannel, Guild guild,
+    public static CompletableFuture<Suggestion> addSuggestion(TextChannel suggestionChannel, Guild guild,
         Member suggester, String content, @Nullable String mediaUrl) {
         final var counter = new AtomicInteger();
         Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
@@ -73,9 +73,9 @@ public final class SuggestionManager extends ListenerAdapter {
             embed.appendDescription("\n\n" + "**Media not showing? [Click Me](" + mediaUrl + ")**");
         }
 
-        final var future = new CompletableFuture<Suggestions>();
+        final var future = new CompletableFuture<Suggestion>();
         suggestionChannel.sendMessageEmbeds(embed.build()).queue(msg -> {
-            final var suggestion = new Suggestions(guild.getIdLong(), suggester.getIdLong(), msg.getIdLong(),
+            final var suggestion = new Suggestion(guild.getIdLong(), suggester.getIdLong(), msg.getIdLong(),
                 System.currentTimeMillis());
             Database.getDatabase().suggestions.insertOne(suggestion);
             future.complete(suggestion);
@@ -143,26 +143,26 @@ public final class SuggestionManager extends ListenerAdapter {
         return suggestionsChannel;
     }
 
-    public static CompletableFuture<Suggestions> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
+    public static CompletableFuture<Suggestion> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
         Member responder, int number, String response, SuggestionResponse.Type type) {
         if (number < 0)
             return null;
-        List<Suggestions> suggestions = new ArrayList<>();
+        List<Suggestion> suggestions = new ArrayList<>();
         Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).forEach(suggestions::add);
 
         if (number > suggestions.size())
             return null;
         
-        suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestions::getCreatedAt).reversed())
+        suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt).reversed())
             .collect(Collectors.toList());
 
         final long time = System.currentTimeMillis();
-        final Suggestions suggestion = suggestions.get(number);
+        final Suggestion suggestion = suggestions.get(number);
 
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
             Filters.eq("message", suggestion.getMessage()));
 
-        final var future = new CompletableFuture<Suggestions>();
+        final var future = new CompletableFuture<Suggestion>();
         suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
             message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().get(0)).addField(
                 type.richName + " by " + responder.getUser().getName() + "#" + responder.getUser().getDiscriminator(),
