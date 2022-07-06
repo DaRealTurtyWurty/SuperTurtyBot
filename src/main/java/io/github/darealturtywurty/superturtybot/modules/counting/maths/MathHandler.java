@@ -10,6 +10,10 @@ import org.apache.commons.math3.primes.Primes;
 public final class MathHandler {
     private static final Random RANDOM = new Random();
     
+    //setup initial m and a values for custom function (f(x) = mx + a)
+    private static int customFunctionM;
+    private static int customFunctionA;
+
     private MathHandler() {
     }
     
@@ -105,6 +109,11 @@ public final class MathHandler {
             case SECANT -> 1.0f / (float) Math.cos(current);
             case COSECANT -> 1.0f / (float) Math.sin(current);
             case COTANGENT -> 1.0f / (float) Math.tan(current);
+            case CUSTOM -> {
+                customFunctionM = RANDOM.nextInt(2, 25);
+                customFunctionA = RANDOM.nextInt(2, 100);
+                yield (current * customFunctionM) + customFunctionA;
+            }
         };
         
         return Pair.of(operation, value);
@@ -137,6 +146,7 @@ public final class MathHandler {
             case MULTIPLY -> String.format(format, (int) current, (int) (result / current));
             case ROUND -> String.format(format, current);
             case SUBTRACT -> String.format(format, (int) current, (int) (current - result));
+            case CUSTOM -> String.format(format, (int) customFunctionM, (int) customFunctionA, (int), current);
             default -> String.format(format, (int) current);
         };
     }
