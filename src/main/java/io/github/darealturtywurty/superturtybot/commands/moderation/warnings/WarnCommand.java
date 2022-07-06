@@ -48,7 +48,7 @@ public class WarnCommand extends CoreCommand {
     public String getRichName() {
         return "Add Warning";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -62,7 +62,7 @@ public class WarnCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final User user = event.getOption("user").getAsUser();
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
         final Warning warn = WarnManager.addWarn(user, event.getGuild(), event.getMember(), reason);

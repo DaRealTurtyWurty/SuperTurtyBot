@@ -20,27 +20,27 @@ public class DuckCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets a random duck image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "duck";
     }
-
+    
     @Override
     public String getRichName() {
         return "Duck Image";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         try {

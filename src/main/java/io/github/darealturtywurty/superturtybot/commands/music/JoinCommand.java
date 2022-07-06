@@ -29,7 +29,7 @@ public class JoinCommand extends CoreCommand {
     public String getRichName() {
         return "Join VC";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -37,7 +37,7 @@ public class JoinCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (event.getGuild().getAudioManager().isConnected()) {
             event.deferReply(true)
                 .setContent("❌ I am already connected to "
@@ -45,13 +45,13 @@ public class JoinCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         event.getGuild().getAudioManager().openAudioConnection(channel);
         event.deferReply().setContent("✅ I have joined " + channel.getAsMention() + "!").mentionRepliedUser(false)

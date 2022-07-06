@@ -16,33 +16,33 @@ public class RemoveCommand extends CoreCommand {
     public RemoveCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.INTEGER, "index", "The track index in the queue", true).setMinValue(0));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Removes a track from the music queue";
     }
-
+    
     @Override
     public String getName() {
         return "removequeue";
     }
-
+    
     @Override
     public String getRichName() {
         return "Remove Queue";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -54,31 +54,31 @@ public class RemoveCommand extends CoreCommand {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
-
+        
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         if (!event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }
-
+        
         if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
             reply(event, "❌ You must be in the same voice channel as me to modify the queue!", false, true);
             return;
         }
-
+        
         final List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
         if (queue.isEmpty()) {
             reply(event, "❌ The queue is currently empty!", false, true);
             return;
         }
-
+        
         final int index = event.getOption("index").getAsInt();
-
+        
         if (index < 1) {
             reply(event, "❌ The provided index must be at least **1**!", false, true);
             return;
         }
-
+        
         if (index > queue.size()) {
             reply(event, "❌ No track was found at this index! The queue length is " + queue.size() + ".", false, true);
             return;
@@ -89,7 +89,7 @@ public class RemoveCommand extends CoreCommand {
             reply(event, "❌ No track was found at this index!", false, true);
             return;
         }
-
+        
         reply(event, removed.getInfo().title + " was removed from the queue!");
     }
 }

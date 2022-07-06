@@ -9,22 +9,22 @@ public class DolphinCommand extends PexelsImageCommand {
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "dolphin";
     }
-
+    
     @Override
     public String getRichName() {
         return "Dolphin Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "dolphin";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

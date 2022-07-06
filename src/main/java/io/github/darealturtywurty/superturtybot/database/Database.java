@@ -24,14 +24,14 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warni
 
 public class Database {
     private static final Database DATABASE = new Database();
-
+    
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
     public final MongoCollection<Suggestion> suggestions;
     public final MongoCollection<Highlighter> highlighters;
     public final MongoCollection<Warning> warnings;
     public final MongoCollection<Tag> tags;
-
+    
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
@@ -60,7 +60,7 @@ public class Database {
         this.warnings.createIndex(guildUserIndex);
         this.tags.createIndex(guildUserIndex);
     }
-
+    
     public static Database getDatabase() {
         return DATABASE;
     }

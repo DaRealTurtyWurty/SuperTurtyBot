@@ -18,20 +18,20 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
     private final List<AudioTrack> queue;
     private AudioChannel currentChannel;
-
+    
     public MusicTrackScheduler(AudioPlayer player) {
         this.player = player;
         this.queue = new LinkedList<>();
     }
-
+    
     public void clear() {
         this.queue.clear();
     }
-
+    
     public AudioTrack getCurrentlyPlaying() {
         return this.player.getPlayingTrack();
     }
-
+    
     public List<AudioTrack> getQueue() {
         return new ArrayList<>(this.queue);
     }
@@ -39,7 +39,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     public int getVolume() {
         return this.player.getVolume();
     }
-
+    
     public boolean isPaused() {
         return this.player.isPaused();
     }
@@ -52,7 +52,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
             this.player.startTrack(null, false);
         }
     }
-
+    
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (track.getInfo().uri.endsWith(".mp3") || track.getInfo().uri.endsWith(".wav")
@@ -62,7 +62,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
             nextTrack();
         }
     }
-
+    
     public void pause() {
         this.player.setPaused(true);
     }
@@ -96,11 +96,11 @@ public class MusicTrackScheduler extends AudioEventAdapter {
             this.currentChannel = null;
             return;
         }
-
+        
         this.currentChannel = channel;
         channel.getGuild().getAudioManager().openAudioConnection(channel);
     }
-
+    
     public void setVolume(int volume) {
         int newVol = volume;
         if (volume < 0) {
@@ -111,11 +111,11 @@ public class MusicTrackScheduler extends AudioEventAdapter {
         
         this.player.setVolume(newVol);
     }
-
+    
     public void shuffle() {
         Collections.shuffle(this.queue);
     }
-
+    
     public AudioTrack skip() {
         if (getCurrentlyPlaying() != null) {
             final AudioTrack current = getCurrentlyPlaying();

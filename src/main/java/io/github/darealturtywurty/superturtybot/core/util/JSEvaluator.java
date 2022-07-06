@@ -16,14 +16,14 @@ public final class JSEvaluator {
         .allowExperimentalOptions(true).option("js.console", "true").option("js.nashorn-compat", "true")
         .option("js.experimental-foreign-object-prototype", "true").option("js.disable-eval", "true")
         .option("js.load", "false").option("log.level", "OFF").build();
-
+    
     static {
         ShutdownHooks.register(ENGINE::close);
     }
-
+    
     private static final HostAccess HOST_ACCESS = HostAccess.newBuilder().allowArrayAccess(true).allowListAccess(true)
         .allowMapAccess(true).build();
-
+    
     private JSEvaluator() {
         throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
     }
@@ -31,7 +31,7 @@ public final class JSEvaluator {
     public static Context getContext() {
         return getContext(Collections.emptyMap());
     }
-
+    
     public static Context getContext(Map<String, Object> additionalBindings) {
         final var ctx = Context.newBuilder("js").engine(ENGINE).allowNativeAccess(false).allowIO(false)
             .allowCreateProcess(false).allowEnvironmentAccess(EnvironmentAccess.NONE).allowHostClassLoading(false)
@@ -46,7 +46,7 @@ public final class JSEvaluator {
         for (final Entry<String, Object> keyVal : additionalBindings.entrySet()) {
             bindings.putMember(keyVal.getKey(), keyVal.getValue());
         }
-
+        
         return ctx;
     }
 }

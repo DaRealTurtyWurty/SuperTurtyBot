@@ -32,32 +32,32 @@ public class GithubRepositoryCommand extends CoreCommand {
     public GithubRepositoryCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "repository", "The name of the repository", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-
+    
     @Override
     public String getDescription() {
         return "Get stats about a GitHub Repository.";
     }
-
+    
     @Override
     public String getName() {
         return "github";
     }
-
+    
     @Override
     public String getRichName() {
         return "Github Repository";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String repositoryName = URLEncoder.encode(event.getOption("repository").getAsString(),
@@ -107,7 +107,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         embed.addField("License:", "Name: " + repo.license.name + " (" + repo.license.key + ")", false);
         return embed;
     }
-
+    
     private static Repository getDetails(final JsonObject from) {
         final String name = from.get("name").getAsString();
         final String authorName = from.get("owner").getAsJsonObject().get("login").getAsString();

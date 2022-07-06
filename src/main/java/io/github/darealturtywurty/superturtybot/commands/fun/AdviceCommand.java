@@ -18,27 +18,27 @@ public class AdviceCommand extends CoreCommand {
     public AdviceCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "Grabs some advice";
     }
-
+    
     @Override
     public String getName() {
         return "advice";
     }
-
+    
     @Override
     public String getRichName() {
         return "Advice";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         try {
@@ -51,7 +51,7 @@ public class AdviceCommand extends CoreCommand {
                     .mentionRepliedUser(false).queue();
                 return;
             }
-
+            
             final String advice = json.getAsJsonObject("slip").get("advice").getAsString();
             event.deferReply().setContent(advice).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {

@@ -9,22 +9,22 @@ public class LionCommand extends PexelsImageCommand {
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "lion";
     }
-
+    
     @Override
     public String getRichName() {
         return "Lion Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "lion";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

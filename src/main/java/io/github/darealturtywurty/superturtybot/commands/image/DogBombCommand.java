@@ -62,7 +62,7 @@ public class DogBombCommand extends ImageCommand {
             "siberianhusky", "sighthounds", "springerspaniel", "StandardPoodles", "SwissMountainDogs", "tollers",
             "toyfoxterriers", "vizsla", "weimaraner", "welshterrier", "WestHighlandTerriers", "whippets",
             "xoloitzquintli" };
-
+        
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
@@ -71,7 +71,7 @@ public class DogBombCommand extends ImageCommand {
                 : post.getSubject().getUrl();
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
-
+        
         RestAction.allOf(actions)
             .queue(msgs -> replyFuture.thenAccept(id -> event.getChannel().deleteMessageById(id).queue()));
         event.getMessage().delete().queue();

@@ -37,7 +37,7 @@ public class ResumeCommand extends CoreCommand {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-
+        
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
@@ -58,7 +58,7 @@ public class ResumeCommand extends CoreCommand {
             reply(event, "❌ I am currently not playing anything!", false, true);
             return;
         }
-
+        
         if (!AudioManager.isPaused(event.getGuild())) {
             reply(event, "❌ I am not paused!", false, true);
             return;

@@ -14,17 +14,17 @@ public class SheepCommand extends PexelsImageCommand {
     public String getName() {
         return "sheep";
     }
-
+    
     @Override
     public String getRichName() {
         return "Sheep Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "sheep";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

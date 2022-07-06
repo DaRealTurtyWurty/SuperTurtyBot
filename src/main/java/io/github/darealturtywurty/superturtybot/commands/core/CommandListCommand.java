@@ -31,23 +31,23 @@ public class CommandListCommand extends CoreCommand {
     public CommandListCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.STRING, "category", "The category to get the list of commands from.", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Retrieves the list of commands.";
     }
-
+    
     @Override
     public String getName() {
         return "commands";
@@ -69,24 +69,24 @@ public class CommandListCommand extends CoreCommand {
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final String category = categoryOption.getAsString();
         if (CommandCategory.byName(category) == null) {
             event.deferReply(true).setContent("You must provide a valid category!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final var embed = commandsEmbed(category,
             event.getChannel() instanceof final TextChannel tChannel && tChannel.isNSFW() || !event.isFromGuild());
         if (embed == null) {
             event.deferReply(true).setContent("You must provide a valid category!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     private static EmbedBuilder categoriesEmbed(@Nullable Guild guild, @Nullable Member member, boolean allowNSFW) {
         final var embed = new EmbedBuilder();
         embed.setTitle("Categories:");
@@ -124,7 +124,7 @@ public class CommandListCommand extends CoreCommand {
         if (category.isNSFW()) {
             if (!allowNSFW)
                 return null;
-
+            
             final List<NSFWCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
                 .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW).map(NSFWCommand.class::cast)
                 .collect(Collectors.toList());
@@ -161,7 +161,7 @@ public class CommandListCommand extends CoreCommand {
                 } else {
                     cmdsString.append("Not Yet Implemented");
                 }
-
+                
                 cmdsString.append("\n");
                 
                 toRemove.forEach(cmds::remove);

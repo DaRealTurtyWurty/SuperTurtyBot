@@ -41,14 +41,14 @@ public class VolumeCommand extends CoreCommand {
     public String getRichName() {
         return "Volume";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-
+        
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
@@ -64,13 +64,13 @@ public class VolumeCommand extends CoreCommand {
             reply(event, "❌ You must be in the same voice channel as me to modify the queue!", false, true);
             return;
         }
-
+        
         final OptionMapping volume = event.getOption("volume");
         if (volume == null) {
             reply(event, "The current volume is `" + AudioManager.getVolume(event.getGuild()) + "`");
             return;
         }
-
+        
         reply(event,
             "The volume has been set to `" + AudioManager.setVolume(event.getGuild(), volume.getAsInt()) + "`");
     }

@@ -12,7 +12,7 @@ public class Registry<Type extends Registerable> {
     public Map<String, Type> getRegistry() {
         return Map.copyOf(this.registerables);
     }
-
+    
     public Type register(String name, Type object) {
         if (this.registerables.containsKey(name))
             throw new IllegalStateException("Item with name `" + name + "` has already been registered!");

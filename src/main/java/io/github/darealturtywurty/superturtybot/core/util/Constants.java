@@ -15,11 +15,11 @@ public final class Constants {
     public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
     public static final String BEAN_DUMPY_URL = "https://media.discordapp.net/attachments/855162784924434442/859517109725954048/dumpy.gif";
-
+    
     static {
         ShutdownHooks.register(() -> ShutdownHooks.shutdownOkHttpClient(HTTP_CLIENT));
     }
-
+    
     private Constants() {
         throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
     }

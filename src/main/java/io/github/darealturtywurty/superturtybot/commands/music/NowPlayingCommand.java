@@ -37,7 +37,7 @@ public class NowPlayingCommand extends CoreCommand {
     public String getRichName() {
         return "Now Playing";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -45,14 +45,14 @@ public class NowPlayingCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (!event.getGuild().getAudioManager().isConnected()) {
             event.deferReply(true)
                 .setContent("❌ I am not in a voice channel right now! Use `/joinvc` to put me in a voice channel.")
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
@@ -65,7 +65,7 @@ public class NowPlayingCommand extends CoreCommand {
                 .queue();
             return;
         }
-
+        
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.BLUE);
@@ -81,7 +81,7 @@ public class NowPlayingCommand extends CoreCommand {
         
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     private static String makeProgresssBar(long total, long current, int size) {
         final String line = "▬";
         final String slider = "🔘";
@@ -105,7 +105,7 @@ public class NowPlayingCommand extends CoreCommand {
         
         return String.join("", result);
     }
-
+    
     // TODO: Utility class
     private static String millisecondsFormatted(final long millis) {
         final long hours = TimeUnit.MILLISECONDS.toHours(millis)

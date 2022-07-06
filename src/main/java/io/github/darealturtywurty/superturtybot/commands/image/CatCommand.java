@@ -23,27 +23,27 @@ public class CatCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Random cat image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "cat";
     }
-
+    
     @Override
     public String getRichName() {
         return "Cat Image";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         try {

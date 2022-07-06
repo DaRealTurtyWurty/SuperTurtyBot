@@ -9,22 +9,22 @@ public class WolfCommand extends PexelsImageCommand {
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "wolf";
     }
-
+    
     @Override
     public String getRichName() {
         return "Wolf Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "wolf";
     }
-
+    
     @Override
     int maxPages() {
         return 2;

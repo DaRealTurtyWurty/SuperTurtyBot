@@ -18,12 +18,12 @@ import net.dv8tion.jda.api.entities.User;
 public class WarnManager {
     private WarnManager() {
     }
-
+    
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
         @NotNull String reason) {
         return addWarn(toWarn, guild, warner, reason, System.currentTimeMillis());
     }
-
+    
     // TODO: Timeout, kick and ban handling
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
         @NotNull String reason, long time) {
@@ -49,7 +49,7 @@ public class WarnManager {
     public static @Nullable Warning removeWarn(@NotNull User toRemoveWarn, @NotNull Guild guild, @NotNull String uuid) {
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
             Filters.eq("user", toRemoveWarn.getIdLong()), Filters.eq("uuid", uuid));
-
+        
         return Database.getDatabase().warnings.findOneAndDelete(filter);
     }
 }

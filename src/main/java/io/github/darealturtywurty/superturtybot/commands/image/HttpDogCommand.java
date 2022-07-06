@@ -86,7 +86,7 @@ public class HttpDogCommand extends ImageCommand {
             put(599, "Network Connect Timeout Error");
         }
     };
-
+    
     public HttpDogCommand() {
         super(new Types(true, true, false, false));
     }
@@ -135,7 +135,7 @@ public class HttpDogCommand extends ImageCommand {
             if (!STATUS_CODES.containsKey(statusCode)) {
                 statusCode = 404;
             }
-
+            
             final URLConnection connection = new URL("https://http.dog/" + statusCode + ".jpg").openConnection();
             event.getMessage().reply(connection.getInputStream(), statusCode + ".jpg").mentionRepliedUser(false)
                 .queue();
@@ -153,7 +153,7 @@ public class HttpDogCommand extends ImageCommand {
         if (!STATUS_CODES.containsKey(statusCode)) {
             statusCode = 404;
         }
-
+        
         try {
             final URLConnection connection = new URL("https://http.dog/" + statusCode + ".jpg").openConnection();
             event.deferReply().addFile(connection.getInputStream(), statusCode + ".jpg").mentionRepliedUser(false)

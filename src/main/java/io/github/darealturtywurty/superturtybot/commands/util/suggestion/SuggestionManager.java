@@ -152,7 +152,7 @@ public final class SuggestionManager extends ListenerAdapter {
         
         if (number > suggestions.size())
             return null;
-
+        
         suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt))
             .collect(Collectors.toList());
         

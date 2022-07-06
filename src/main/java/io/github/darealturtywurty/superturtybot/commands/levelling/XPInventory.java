@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class XPInventory extends ArrayList<RankCardItem> {
     private static final long serialVersionUID = -8380703374521460050L;
     private final List<Long> timeAdded = new ArrayList<>();
-
+    
     @Override
     public void add(int index, RankCardItem item) {
         super.add(index, item);
@@ -36,11 +36,11 @@ public class XPInventory extends ArrayList<RankCardItem> {
     public List<RankCardItem> find(RankCardItem.Type type) {
         return stream().filter(item -> item.type == type).toList();
     }
-
+    
     public long getTimeAdded(int index) {
         return this.timeAdded.get(index);
     }
-
+    
     public long getTimeAdded(RankCardItem item) {
         return this.timeAdded.get(indexOf(item));
     }
@@ -48,7 +48,7 @@ public class XPInventory extends ArrayList<RankCardItem> {
     public boolean isNew(RankCardItem item) {
         if (!contains(item))
             return false;
-
+        
         final int index = indexOf(item);
         final long time = this.timeAdded.get(index);
         final long current = System.currentTimeMillis();
@@ -74,7 +74,7 @@ public class XPInventory extends ArrayList<RankCardItem> {
         if (success && index != -1) {
             this.timeAdded.remove(index);
         }
-
+        
         return success;
     }
     

@@ -50,7 +50,7 @@ public class InspiroBotCommand extends ImageCommand {
             Constants.LOGGER.error("Exception thrown whilst getting inspirobot quote!\n{}\n{}", exception.getMessage(),
                 ExceptionUtils.getStackTrace(exception));
         }
-
+        
         return future;
     }
 }

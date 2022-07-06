@@ -26,22 +26,22 @@ public class RemoveTimeoutCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to remove the timeout from!", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Removes a timeout from a member";
     }
-
+    
     @Override
     public String getName() {
         return "removetimeout";
     }
-
+    
     @Override
     public String getRichName() {
         return "Remove Timeout";

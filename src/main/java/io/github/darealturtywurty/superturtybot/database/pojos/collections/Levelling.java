@@ -17,7 +17,7 @@ public class Levelling {
     
     public Levelling() {
     }
-
+    
     public Levelling(long guildId, long userId) {
         this.guild = guildId;
         this.user = userId;
@@ -26,51 +26,51 @@ public class Levelling {
         this.rankCard = new RankCard();
         this.inventory = new ArrayList<>();
     }
-
+    
     public long getGuild() {
         return this.guild;
     }
-
+    
     public List<String> getInventory() {
         return this.inventory;
     }
-
+    
     public int getLevel() {
         return this.level;
     }
-
+    
     public RankCard getRankCard() {
         return this.rankCard;
     }
-
+    
     public long getUser() {
         return this.user;
     }
-
+    
     public int getXp() {
         return this.xp;
     }
-
+    
     public void setGuild(long guild) {
         this.guild = guild;
     }
-
+    
     public void setInventory(List<String> inventory) {
         this.inventory = inventory;
     }
-
+    
     public void setLevel(int level) {
         this.level = level;
     }
-
+    
     public void setRankCard(RankCard rankCard) {
         this.rankCard = rankCard;
     }
-
+    
     public void setUser(long user) {
         this.user = user;
     }
-
+    
     public void setXp(int xp) {
         this.xp = xp;
     }

@@ -100,7 +100,7 @@ public class XPInventoryCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
         }
     }
-
+    
     private BufferedImage createInventory(List<String> inventory, Member member) throws IOException {
         final BufferedImage template = getTemplate();
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -117,16 +117,16 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawString((name.length() > 22 ? name.substring(0, 22) + "..." : name) + "'s Levelling Inventory",
             80 + profilePic.getWidth() + 30,
             68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
-
+        
         final List<RankCardItem> items = inventory.stream()
             .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
-
+        
         // TODO: sort items and render items
-
+        
         graphics.dispose();
         return buffer;
     }
-
+    
     private static BufferedImage getTemplate() throws IOException {
         return ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/xp_inventory.png"));
     }

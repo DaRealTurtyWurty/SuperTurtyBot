@@ -57,7 +57,7 @@ public class MinecraftUserUUIDCommand extends CoreCommand {
             final String response = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
             if (response.contains("not found"))
                 throw new IllegalArgumentException(response);
-
+            
             event.deferReply()
                 .addEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.BLUE)
                     .setDescription(

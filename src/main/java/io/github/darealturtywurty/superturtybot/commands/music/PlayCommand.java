@@ -17,27 +17,27 @@ public class PlayCommand extends CoreCommand {
     public PlayCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "search_term", "The song that you want to play", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Plays the supplied music";
     }
-
+    
     @Override
     public String getName() {
         return "play";
     }
-
+    
     @Override
     public String getRichName() {
         return "Play Music";
@@ -56,20 +56,20 @@ public class PlayCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         if (!event.getGuild().getAudioManager().isConnected()) {
             event.getGuild().getAudioManager().openAudioConnection(channel);
             event.getChannel().sendMessage("✅ I have joined " + channel.getAsMention() + "!").mentionRepliedUser(false)
                 .queue();
         }
-
+        
         if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
             event.deferReply(true).setContent("❌ You must be in the same voice channel as me to play a song!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final String search = event.getOption("search_term").getAsString().trim();
         final CompletableFuture<Pair<Boolean, String>> future = AudioManager.play(channel, event.getTextChannel(),
             search);

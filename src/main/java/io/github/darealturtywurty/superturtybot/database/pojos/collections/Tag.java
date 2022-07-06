@@ -3,22 +3,22 @@ package io.github.darealturtywurty.superturtybot.database.pojos.collections;
 public class Tag {
     private long guild;
     private long user;
-
+    
     private String name;
     private String data;
-
+    
     public Tag() {
         this.guild = 0;
         this.user = 0;
-
+        
         this.name = "";
         this.data = "";
     }
-
+    
     public Tag(long guildId, long userId, String name, String data) {
         this.guild = guildId;
         this.user = userId;
-
+        
         this.name = name;
         this.data = data;
     }

@@ -47,7 +47,7 @@ public class WarningsCommand extends CoreCommand {
     public String getRichName() {
         return "Gather Warnings";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -55,7 +55,7 @@ public class WarningsCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final User user = event.getOption("user").getAsUser();
         final Set<Warning> warns = WarnManager.getWarns(event.getGuild(), user);
         
@@ -84,7 +84,7 @@ public class WarningsCommand extends CoreCommand {
         
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     // TODO: Utility class
     private static String formatTime(OffsetDateTime time) {
         return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);

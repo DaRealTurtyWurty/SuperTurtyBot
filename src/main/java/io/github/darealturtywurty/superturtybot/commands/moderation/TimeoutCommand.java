@@ -23,7 +23,7 @@ public class TimeoutCommand extends CoreCommand {
     public TimeoutCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to timeout!", true),
@@ -49,19 +49,19 @@ public class TimeoutCommand extends CoreCommand {
     public String getRichName() {
         return "Timeout Member";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final Member member = event.getOption("member").getAsMember();
         if (member == null) {
             event.deferReply(true).setContent("You can only timeout someone who is in this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
             && event.getInteraction().getMember().canInteract(member)) {
             final long duration = event.getOption("duration", 15L, OptionMapping::getAsLong);

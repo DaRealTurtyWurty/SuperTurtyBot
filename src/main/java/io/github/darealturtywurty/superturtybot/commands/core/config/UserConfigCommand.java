@@ -34,27 +34,27 @@ public class UserConfigCommand extends CoreCommand {
                 .addOption(OptionType.STRING, "option", "The config option to assign a value to", true, true)
                 .addOption(OptionType.STRING, "value", "The value to assign to the prevously given key", true, true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Configures bot settings about you.";
     }
-
+    
     @Override
     public String getName() {
         return "userconfig";
     }
-
+    
     @Override
     public String getRichName() {
         return "User Config";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String function = event.getSubcommandName();
@@ -65,7 +65,7 @@ public class UserConfigCommand extends CoreCommand {
                         .queue();
                     return;
                 }
-
+                
                 ConfigRetriever.CONFIGS.put(event.getInteraction().getUser().getIdLong(), new UserConfig());
                 event.deferReply(true)
                     .setContent(
@@ -89,11 +89,11 @@ public class UserConfigCommand extends CoreCommand {
                         .mentionRepliedUser(false).queue();
                     return;
                 }
-
+                
                 event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(false).queue();
                 break;
             }
-
+            
             case "set": {
                 final String key = event.getOption("option").getAsString();
                 final String value = event.getOption("value").getAsString();
@@ -167,10 +167,10 @@ public class UserConfigCommand extends CoreCommand {
                         event.deferReply(true)
                             .setContent("✅ Your locale has now been set to `" + config.language.toString() + "`!")
                             .mentionRepliedUser(false).queue();
-
+                        
                         break;
                     }
-
+                    
                     default: {
                         event.deferReply(true).setContent("Option: `" + key + "` is not a valid option!")
                             .mentionRepliedUser(false).queue();
@@ -210,10 +210,10 @@ public class UserConfigCommand extends CoreCommand {
         
         if (!success.get())
             return null;
-
+        
         return embed;
     }
-
+    
     public static class ConfigRetriever {
         private static final Map<Long, UserConfig> CONFIGS = new HashMap<>();
     }

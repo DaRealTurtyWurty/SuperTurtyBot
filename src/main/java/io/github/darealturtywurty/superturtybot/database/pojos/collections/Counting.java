@@ -9,7 +9,7 @@ public class Counting {
     private long guild;
     private long channel;
     private String countingMode;
-
+    
     private List<UserData> users;
     private int currentCount;
     private int highestCount;
@@ -110,11 +110,11 @@ public class Counting {
     public void setSaves(float saves) {
         this.saves = saves;
     }
-
+    
     public void setUsers(List<UserData> users) {
         this.users = users;
     }
-
+    
     public static class UserData {
         private long user;
         

@@ -43,7 +43,7 @@ public class ClearWarningsCommand extends CoreCommand {
     public String getRichName() {
         return "Clear Warnings";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -57,7 +57,7 @@ public class ClearWarningsCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final User user = event.getOption("user").getAsUser();
         final Set<Warning> warns = WarnManager.clearWarnings(event.getGuild(), user);
         

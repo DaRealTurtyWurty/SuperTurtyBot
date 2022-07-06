@@ -56,7 +56,7 @@ public class DogCommand extends ImageCommand {
                 .queue();
         }
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         try {

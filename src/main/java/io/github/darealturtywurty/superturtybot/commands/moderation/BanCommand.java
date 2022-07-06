@@ -22,7 +22,7 @@ public class BanCommand extends CoreCommand {
     public BanCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to ban!", true),
@@ -30,22 +30,22 @@ public class BanCommand extends CoreCommand {
                 .setRequiredRange(0, 7),
             new OptionData(OptionType.STRING, "reason", "The ban reason", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Bans a user";
     }
-
+    
     @Override
     public String getName() {
         return "ban";
     }
-
+    
     @Override
     public String getRichName() {
         return "Ban User";

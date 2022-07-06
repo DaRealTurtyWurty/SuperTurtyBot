@@ -37,7 +37,7 @@ public class ProgrammingMemeCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().setContent("Loading meme...").queue();
         final String[] subreddits = { "ProgrammerHumor", "programmingmemes" };
-
+        
         final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()

@@ -29,7 +29,7 @@ public class LeaveCommand extends CoreCommand {
     public String getRichName() {
         return "Leave VC";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -37,13 +37,13 @@ public class LeaveCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (!event.getGuild().getAudioManager().isConnected()) {
             event.deferReply(true).setContent("❌ I must be in a voice channel for you to be able to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final AudioChannel channel = event.getGuild().getAudioManager().getConnectedChannel();
         event.getGuild().getAudioManager().closeAudioConnection();
         event.deferReply().setContent("✅ I have left " + channel.getAsMention() + "!").mentionRepliedUser(false)

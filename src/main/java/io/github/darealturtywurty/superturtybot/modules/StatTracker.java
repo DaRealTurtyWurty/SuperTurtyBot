@@ -65,7 +65,7 @@ public class StatTracker extends ListenerAdapter {
         
         GUILD_MEMBER_MAP.put(event.getGuild().getIdLong(), stats);
     }
-
+    
     @Override
     public void onGuildReady(GuildReadyEvent event) {
         final var stats = new GuildStats();
@@ -74,24 +74,24 @@ public class StatTracker extends ListenerAdapter {
             GUILD_MEMBER_MAP.put(event.getGuild().getIdLong(), stats);
         });
     }
-
+    
     @Override
     public void onMessageDelete(MessageDeleteEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final var stats = GUILD_MEMBER_MAP.containsKey(event.getGuild().getIdLong())
             ? GUILD_MEMBER_MAP.get(event.getGuild().getIdLong())
             : new GuildStats();
         stats.messagesDeleted++;
         GUILD_MEMBER_MAP.put(event.getGuild().getIdLong(), stats);
     }
-
+    
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final var stats = GUILD_MEMBER_MAP.containsKey(event.getGuild().getIdLong())
             ? GUILD_MEMBER_MAP.get(event.getGuild().getIdLong())
             : new GuildStats();
@@ -103,7 +103,7 @@ public class StatTracker extends ListenerAdapter {
     public void onMessageReactionRemove(MessageReactionRemoveEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final var stats = GUILD_MEMBER_MAP.containsKey(event.getGuild().getIdLong())
             ? GUILD_MEMBER_MAP.get(event.getGuild().getIdLong())
             : new GuildStats();
@@ -115,14 +115,14 @@ public class StatTracker extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final var stats = GUILD_MEMBER_MAP.containsKey(event.getGuild().getIdLong())
             ? GUILD_MEMBER_MAP.get(event.getGuild().getIdLong())
             : new GuildStats();
         stats.messagesSent++;
         GUILD_MEMBER_MAP.put(event.getGuild().getIdLong(), stats);
     }
-
+    
     @Override
     public void onMessageUpdate(MessageUpdateEvent event) {
         if (!event.isFromGuild())
@@ -141,28 +141,28 @@ public class StatTracker extends ListenerAdapter {
         stats.messageCtxCommandsRan++;
         GUILD_MEMBER_MAP.put(guild.getIdLong(), stats);
     }
-
+    
     public static void normalCommandRan(Guild guild) {
         final var stats = GUILD_MEMBER_MAP.containsKey(guild.getIdLong()) ? GUILD_MEMBER_MAP.get(guild.getIdLong())
             : new GuildStats();
         stats.normalCommandsRan++;
         GUILD_MEMBER_MAP.put(guild.getIdLong(), stats);
     }
-
+    
     public static void slashCommandRan(Guild guild) {
         final var stats = GUILD_MEMBER_MAP.containsKey(guild.getIdLong()) ? GUILD_MEMBER_MAP.get(guild.getIdLong())
             : new GuildStats();
         stats.slashCommandsRan++;
         GUILD_MEMBER_MAP.put(guild.getIdLong(), stats);
     }
-
+    
     public static void userCtxCommandRan(Guild guild) {
         final var stats = GUILD_MEMBER_MAP.containsKey(guild.getIdLong()) ? GUILD_MEMBER_MAP.get(guild.getIdLong())
             : new GuildStats();
         stats.userCtxCommandsRan++;
         GUILD_MEMBER_MAP.put(guild.getIdLong(), stats);
     }
-
+    
     public static class DataRetriever {
         public static int getGuildCount() {
             return GUILD_MEMBER_MAP.size();
@@ -181,7 +181,7 @@ public class StatTracker extends ListenerAdapter {
         public static GuildStats getGuildStats(long id) {
             return GUILD_MEMBER_MAP.containsKey(id) ? GUILD_MEMBER_MAP.get(id) : null;
         }
-
+        
         public static long getMemberCount() {
             final var adder = new LongAdder();
             GUILD_MEMBER_MAP.values().parallelStream().map(stats -> stats.members).forEach(adder::add);

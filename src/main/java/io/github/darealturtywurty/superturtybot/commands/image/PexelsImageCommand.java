@@ -23,16 +23,16 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public abstract class PexelsImageCommand extends ImageCommand {
     private static final String BASE_URL = "https://api.pexels.com/v1/";
-
+    
     protected PexelsImageCommand(Types types) {
         super(types);
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets a random " + getName() + " image";
@@ -48,7 +48,7 @@ public abstract class PexelsImageCommand extends ImageCommand {
             });
         }
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (this.types.slash()) {
@@ -59,7 +59,7 @@ public abstract class PexelsImageCommand extends ImageCommand {
             });
         }
     }
-
+    
     abstract String getSearchTerm();
     
     int maxPages() {
@@ -75,7 +75,7 @@ public abstract class PexelsImageCommand extends ImageCommand {
             while (url != null) {
                 final URLConnection connection = new URL(url).openConnection();
                 connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey());
-
+                
                 JsonObject response;
                 try {
                     response = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
@@ -111,16 +111,16 @@ public abstract class PexelsImageCommand extends ImageCommand {
             return future;
         }
     }
-
+    
     public static CompletableFuture<String> getRandomPhoto(String search, int maxPages) {
         final CompletableFuture<List<JsonObject>> futurePhotos = getPhotos(search, maxPages);
-
+        
         final var futurePhoto = new CompletableFuture<String>();
         futurePhotos.thenAccept(photos -> {
             final JsonObject photo = photos.get(ThreadLocalRandom.current().nextInt(photos.size()));
             futurePhoto.complete(photo.getAsJsonObject("src").get("original").getAsString());
         });
-
+        
         return futurePhoto;
     }
 }

@@ -8,27 +8,27 @@ public class AmongUsCommand extends CoreCommand {
     public AmongUsCommand() {
         super(new Types(false, true, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "Sus.";
     }
-
+    
     @Override
     public String getName() {
         return "amongus";
     }
-
+    
     @Override
     public String getRichName() {
         return "Among Us";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         event.getMessage().reply(

@@ -40,7 +40,7 @@ public class ServerInfoCommand extends CoreCommand {
     public String getRichName() {
         return "Server Info";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -64,7 +64,7 @@ public class ServerInfoCommand extends CoreCommand {
             default -> "Undefined";
         };
     }
-
+    
     // TODO: Utility class
     private static String convertNotificationLevel(NotificationLevel level) {
         return switch (level) {
@@ -121,7 +121,7 @@ public class ServerInfoCommand extends CoreCommand {
         embed.addField("Explicit Content Level", convertExplicitContentLevel(guild.getExplicitContentLevel()), true);
         embed.addField("NSFW Level", convertNSFWLevel(guild.getNSFWLevel()), true);
         embed.addField("Verification Level", convertVerificationLevel(guild.getVerificationLevel()), true);
-
+        
         embed.addField("Owner", guild.getOwner().getAsMention(), true);
         embed.addField("Max File Size", guild.getMaxFileSize() + " MiB", true);
         
@@ -138,7 +138,7 @@ public class ServerInfoCommand extends CoreCommand {
         guild.getRoles().forEach(role -> roles.append(role.getAsMention() + ", "));
         roles.delete(roles.length() - 2, roles.length());
         embed.addField("Roles", roles.toString(), false);
-
+        
         return embed;
     }
     

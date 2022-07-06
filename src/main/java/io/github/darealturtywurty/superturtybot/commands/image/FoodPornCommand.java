@@ -24,7 +24,7 @@ public class FoodPornCommand extends PexelsImageCommand {
     String getSearchTerm() {
         return "food";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

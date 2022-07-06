@@ -13,7 +13,7 @@ public class PingCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets the ping of the bot";
@@ -23,12 +23,12 @@ public class PingCommand extends CoreCommand {
     public String getName() {
         return "ping";
     }
-
+    
     @Override
     public String getRichName() {
         return "Ping";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.getJDA().getRestPing()

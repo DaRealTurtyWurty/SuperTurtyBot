@@ -45,7 +45,7 @@ public class MojangStatusCommand extends CoreCommand {
     public String getRichName() {
         return "Mojang Status";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().mentionRepliedUser(false).queue();
@@ -56,7 +56,7 @@ public class MojangStatusCommand extends CoreCommand {
                 .mentionRepliedUser(true).queue();
             return;
         }
-
+        
         embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
             event.isFromGuild() ? event.getMember().getEffectiveAvatarUrl() : event.getUser().getEffectiveAvatarUrl());
         event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -86,20 +86,20 @@ public class MojangStatusCommand extends CoreCommand {
                 exception);
             return null;
         }
-
+        
         siteStatus.entrySet().stream().sorted((entry1, entry2) -> {
             if ("green".equalsIgnoreCase(entry1.getValue()) && "green".equalsIgnoreCase(entry2.getValue())
                 || "yellow".equalsIgnoreCase(entry1.getValue()) && "yellow".equalsIgnoreCase(entry2.getValue()))
                 return entry1.getKey().compareTo(entry2.getKey());
-
+            
             if ("red".equalsIgnoreCase(entry1.getValue()) && "red".equalsIgnoreCase(entry2.getValue()))
                 return entry1.getKey().compareTo(entry2.getKey());
-
+            
             if ("green".equalsIgnoreCase(entry1.getValue()) && "yellow".equalsIgnoreCase(entry2.getValue())
                 || "red".equalsIgnoreCase(entry2.getValue())
                 || "yellow".equalsIgnoreCase(entry1.getValue()) && "red".equalsIgnoreCase(entry2.getValue()))
                 return -1;
-
+            
             return 1;
         }).forEachOrdered(entry -> embed.addField(entry.getKey(), entry.getValue().replace("green", "🟩 No issues 🟩")
             .replace("yellow", "🟨 Issues reported 🟨").replace("red", "🟥 Service unavailable 🟥"), false));

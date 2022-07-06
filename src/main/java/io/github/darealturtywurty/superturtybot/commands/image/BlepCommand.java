@@ -15,27 +15,27 @@ public class BlepCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets a random cat blep image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "blep";
     }
-
+    
     @Override
     public String getRichName() {
         return "Blep";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");

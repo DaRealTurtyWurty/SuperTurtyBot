@@ -36,7 +36,7 @@ public class DenySuggestionCommand extends CoreCommand {
     public String getRichName() {
         return "Deny Suggestion";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         if (!event.isFromGuild()) {
@@ -47,7 +47,7 @@ public class DenySuggestionCommand extends CoreCommand {
         final TextChannel suggestionChannel = SuggestionManager.getSuggestionChannel(event);
         if (suggestionChannel == null)
             return;
-
+        
         final String message = event.getMessage().getContentRaw();
         final String[] args = message.split(" ");
         if (args.length < 2) {
@@ -55,7 +55,7 @@ public class DenySuggestionCommand extends CoreCommand {
                 .queue();
             return;
         }
-
+        
         String response = "No reason given";
         int suggestionNumber = 0;
         try {
@@ -71,14 +71,14 @@ public class DenySuggestionCommand extends CoreCommand {
         
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
             suggestionChannel, event.getMember(), suggestionNumber, response, SuggestionResponse.Type.DENIED);
-
+        
         suggestion.thenAccept(sug -> {
             if (sug == null) {
                 event.getMessage().reply("You must provide a valid suggestion number!").mentionRepliedUser(false)
                     .queue();
                 return;
             }
-
+            
             event.getMessage().delete().queue();
             event.getAuthor().openPrivateChannel().queue(channel -> {
                 final var embed = new EmbedBuilder();
@@ -88,7 +88,7 @@ public class DenySuggestionCommand extends CoreCommand {
                     + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong() + "/" + sug.getMessage());
                 embed.setFooter(event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator(),
                     event.getMember().getEffectiveAvatarUrl());
-
+                
                 channel.sendMessageEmbeds(embed.build()).queue();
             });
         });

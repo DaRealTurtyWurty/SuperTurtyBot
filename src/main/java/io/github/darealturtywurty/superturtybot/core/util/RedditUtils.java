@@ -25,7 +25,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 
 public final class RedditUtils {
     public static final RedditClient REDDIT;
-
+    
     static {
         final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId(),
             Environment.INSTANCE.redditClientSecret(), UUID.randomUUID());
@@ -34,11 +34,11 @@ public final class RedditUtils {
         REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
         REDDIT.setLogHttp(false);
     }
-
+    
     private RedditUtils() {
         throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
     }
-
+    
     @Nullable
     public static EmbedBuilder constructEmbed(boolean requireMedia, String... subreddits) {
         if (subreddits.length < 1)
@@ -83,7 +83,7 @@ public final class RedditUtils {
         embed.setTimestamp(Instant.now());
         return embed;
     }
-
+    
     @Nullable
     public static RootCommentNode findValidPost(SubredditReference subreddit, String... subreddits) {
         RootCommentNode post = null;
@@ -110,7 +110,7 @@ public final class RedditUtils {
             return null;
         }
     }
-
+    
     @NotNull
     public static SubredditReference getRandomSubreddit(String... subreddits) {
         return Stream.of(subreddits).skip(ThreadLocalRandom.current().nextInt(subreddits.length)).map(subreddit -> {
@@ -132,7 +132,7 @@ public final class RedditUtils {
     public static SubredditReference getSubreddit(String name) {
         return REDDIT.subreddit(name);
     }
-
+    
     public static boolean verifyVideo(String url) {
         return !url.endsWith("mp4") && !url.endsWith("mov") && !url.endsWith("wmv") && !url.endsWith("avi")
             && !url.endsWith("flv") && !url.endsWith("webm") && !url.endsWith("mkv");

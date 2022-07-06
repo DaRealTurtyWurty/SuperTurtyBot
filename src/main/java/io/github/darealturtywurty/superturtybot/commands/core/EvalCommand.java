@@ -21,22 +21,22 @@ public class EvalCommand extends CoreCommand {
     public EvalCommand() {
         super(new Types(true, false, true, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "javascript", "The JavaScript code to evaluate.", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Evaluates a javascript expression.";
     }
-
+    
     @Override
     public String getName() {
         return "eval";
@@ -46,7 +46,7 @@ public class EvalCommand extends CoreCommand {
     public String getRichName() {
         return "Evaluate";
     }
-
+    
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
         if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId()) {
@@ -54,21 +54,21 @@ public class EvalCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final String content = event.getTarget().getContentDisplay();
         final Context ctx = JSEvaluator.getContext();
         final Value jsFunc = ctx.eval("js", content);
         event.deferReply().setContent(jsFunc.asString()).mentionRepliedUser(false).queue();
         ctx.close();
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getUser().getIdLong() != Environment.INSTANCE.ownerId()) {
             reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
         }
-
+        
         final String content = event.getOption("javascript").getAsString();
         try {
             final Map<String, Object> bindings = new HashMap<>();

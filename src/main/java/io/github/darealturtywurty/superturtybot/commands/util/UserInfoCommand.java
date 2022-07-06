@@ -21,32 +21,32 @@ public class UserInfoCommand extends CoreCommand {
     public UserInfoCommand() {
         super(new Types(true, false, false, true));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to get information about.", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-
+    
     @Override
     public String getDescription() {
         return "Retrives information about a user.";
     }
-
+    
     @Override
     public String getName() {
         return "userinfo";
     }
-
+    
     @Override
     public String getRichName() {
         return "User Info";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -66,7 +66,7 @@ public class UserInfoCommand extends CoreCommand {
         final EmbedBuilder embed = createEmbed(member);
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -74,7 +74,7 @@ public class UserInfoCommand extends CoreCommand {
                 .queue();
             return;
         }
-
+        
         final Member member = event.getTargetMember();
         if (member == null) {
             event.deferReply(true).setContent("You can only use this command on a member of this server!")
@@ -85,7 +85,7 @@ public class UserInfoCommand extends CoreCommand {
         final EmbedBuilder embed = createEmbed(member);
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     // TODO: Utility class
     private static String convertOnlineStatus(OnlineStatus status) {
         return switch (status) {
@@ -98,7 +98,7 @@ public class UserInfoCommand extends CoreCommand {
             default -> "Undefined";
         };
     }
-
+    
     private static EmbedBuilder createEmbed(Member member) {
         final var embed = new EmbedBuilder();
         embed.setTitle("User Info for user: " + member.getUser().getName() + "#" + member.getUser().getDiscriminator());
@@ -112,20 +112,20 @@ public class UserInfoCommand extends CoreCommand {
         member.getPermissions().forEach(perm -> perms.append("`" + perm.getName() + "`, "));
         perms.delete(perms.length() - 2, perms.length());
         embed.addField("Permissions", perms.toString(), false);
-
+        
         final var roles = new StringBuilder();
         member.getRoles().forEach(role -> roles.append(role.getAsMention() + ", "));
         roles.delete(roles.length() - 2, roles.length());
         embed.addField("Roles", roles.toString(), false);
-
+        
         if (member.isBoosting()) {
             embed.addField("Time Boosted", formatTime(member.getTimeBoosted()), false);
         }
-
+        
         if (member.isTimedOut()) {
             embed.addField("Timeout End", formatTime(member.getTimeOutEnd()), false);
         }
-
+        
         embed.addField("Created At", formatTime(member.getTimeCreated()), false);
         embed.addField("Joined At", formatTime(member.getTimeJoined()), false);
         embed.addField("Is Owner", StringUtils.trueFalseToYesNo(member.isOwner()), true);
@@ -136,7 +136,7 @@ public class UserInfoCommand extends CoreCommand {
         embed.setFooter("ID: " + member.getIdLong());
         return embed;
     }
-
+    
     // TODO: Utility class
     private static String formatTime(OffsetDateTime time) {
         return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);

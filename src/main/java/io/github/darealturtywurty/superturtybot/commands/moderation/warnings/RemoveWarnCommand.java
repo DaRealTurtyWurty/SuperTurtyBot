@@ -21,28 +21,28 @@ public class RemoveWarnCommand extends CoreCommand {
     public RemoveWarnCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to remove a warn from", true),
             new OptionData(OptionType.STRING, "uuid", "The ID of the warn that you want to remove", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Removes a warn from a user";
     }
-
+    
     @Override
     public String getName() {
         return "removewarn";
     }
-
+    
     @Override
     public String getRichName() {
         return "Remove Warning";
@@ -65,7 +65,7 @@ public class RemoveWarnCommand extends CoreCommand {
         final User user = event.getOption("user").getAsUser();
         final String uuid = event.getOption("uuid").getAsString();
         final Warning warn = WarnManager.removeWarn(user, event.getGuild(), uuid);
-
+        
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
             final var embed = new EmbedBuilder();
             embed.setColor(Color.GREEN);
@@ -77,7 +77,7 @@ public class RemoveWarnCommand extends CoreCommand {
             // TODO: Option to notify user of warn removal
         });
     }
-
+    
     // TODO: Utility class
     private static String formatTime(OffsetDateTime time) {
         return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);

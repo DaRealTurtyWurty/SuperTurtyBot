@@ -22,7 +22,7 @@ public class SearchCommand extends CoreCommand {
     public SearchCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "search_term", "The term to find search results for", true));
@@ -42,12 +42,12 @@ public class SearchCommand extends CoreCommand {
     public String getName() {
         return "search";
     }
-
+    
     @Override
     public String getRichName() {
         return "Search";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -74,7 +74,7 @@ public class SearchCommand extends CoreCommand {
                             + "**\nPosted By: " + result.getInfo().author + "\nLink: " + result.getInfo().uri
                             + "\nDuration: [" + QueueCommand.millisecondsFormatted(result.getDuration()) + "]\n\n");
                     }
-
+                    
                     reply(event,
                         new EmbedBuilder().setColor(Color.BLUE).setTimestamp(Instant.now())
                             .setFooter(

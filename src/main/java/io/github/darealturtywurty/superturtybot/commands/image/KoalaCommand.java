@@ -20,27 +20,27 @@ public class KoalaCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Random koala image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "koala";
     }
-
+    
     @Override
     public String getRichName() {
         return "Koala Image";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         try {

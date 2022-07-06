@@ -12,27 +12,27 @@ public class MemeCommand extends CoreCommand {
     public MemeCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets some hot memes";
     }
-
+    
     @Override
     public String getName() {
         return "meme";
     }
-
+    
     @Override
     public String getRichName() {
         return "Meme";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().setContent("Loading meme...").queue();

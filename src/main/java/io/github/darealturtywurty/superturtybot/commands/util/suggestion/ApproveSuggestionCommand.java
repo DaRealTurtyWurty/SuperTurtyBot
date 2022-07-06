@@ -16,22 +16,22 @@ public class ApproveSuggestionCommand extends CoreCommand {
     public ApproveSuggestionCommand() {
         super(new Types(false, true, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-
+    
     @Override
     public String getDescription() {
         return "Approves a suggestion";
     }
-
+    
     @Override
     public String getName() {
         return "approve";
     }
-
+    
     @Override
     public String getRichName() {
         return "Approve Suggestion";
@@ -43,7 +43,7 @@ public class ApproveSuggestionCommand extends CoreCommand {
             event.getMessage().reply("You must be in a server to use this command!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final TextChannel suggestionChannel = SuggestionManager.getSuggestionChannel(event);
         if (suggestionChannel == null)
             return;
@@ -64,11 +64,11 @@ public class ApproveSuggestionCommand extends CoreCommand {
             event.getMessage().reply("You must supply a valid suggestion number!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         if (args.length >= 3) {
             response = String.join(" ", args).replace(args[0] + " " + args[1], "");
         }
-
+        
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
             suggestionChannel, event.getMember(), suggestionNumber, response, SuggestionResponse.Type.APPROVED);
         

@@ -81,9 +81,9 @@ public class RainbowSixStatsCommand extends CoreCommand {
         final var embed = new EmbedBuilder();
         embed.setTitle(
             "Stats for: " + result.get("username").getAsString() + " (" + result.get("platform").getAsString() + ")");
-
+        
         embed.setThumbnail(result.get("avatar_url_256").getAsString());
-
+        
         final JsonObject alias = result.get("aliases").getAsJsonArray().get(0).getAsJsonObject();
         try {
             embed.setAuthor(alias.get("username").getAsString() + " | Last Seen At: "
@@ -91,7 +91,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
         } catch (final ParseException exception) {
             embed.setAuthor(alias.get("username").getAsString());
         }
-
+        
         final JsonObject stats = result.getAsJsonObject("stats");
         final JsonObject overallStats = stats.getAsJsonObject("general");
         // @formatter:off
@@ -126,7 +126,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
             "Level: " + progression.get("level").getAsInt() + "\nTotal XP: " + progression.get("total_xp").getAsInt()
                 + "\nAlpha Pack Chance: " + progression.get("lootbox_probability").getAsInt(),
             false);
-
+        
         final JsonObject queueStats = stats.getAsJsonObject("queue");
         final JsonObject casualStats = queueStats.getAsJsonObject("casual");
         final JsonObject rankedStats = queueStats.getAsJsonObject("ranked");
@@ -134,7 +134,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
         embed.addField("Casual Stats:", getQueueStats(casualStats), false);
         embed.addField("Ranked Stats:", getQueueStats(rankedStats), false);
         embed.addField("Unranked and Event Stats:", getQueueStats(otherStats), false);
-
+        
         embed.setFooter("Ubisoft ID: " + result.get("ubisoft_id").getAsString() + " | Uplay ID: "
             + result.get("uplay_id").getAsString());
         return embed;

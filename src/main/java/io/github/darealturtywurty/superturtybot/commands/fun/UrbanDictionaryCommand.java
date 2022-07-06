@@ -62,7 +62,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
     public String getRichName() {
         return "Urban Dictionary";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String searchTerm = URLEncoder.encode(event.getOption("search_term").getAsString().toLowerCase().trim(),
@@ -94,7 +94,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
             final JsonArray list = json.getAsJsonArray("list");
             if (list.isEmpty())
                 return Pair.of(false, Either.ofLeft("No Results Found!"));
-
+            
             final JsonObject first = list.get(0).getAsJsonObject();
             
             final var embed = new EmbedBuilder();

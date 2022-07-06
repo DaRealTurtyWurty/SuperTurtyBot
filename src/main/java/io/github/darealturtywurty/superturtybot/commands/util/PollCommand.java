@@ -21,7 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class PollCommand extends CoreCommand {
     private static final Map<Integer, String> NUMBER_EMOTE_MAP = new HashMap<>();
-
+    
     static {
         NUMBER_EMOTE_MAP.put(0, "0️⃣");
         NUMBER_EMOTE_MAP.put(1, "1️⃣");
@@ -39,7 +39,7 @@ public class PollCommand extends CoreCommand {
     public PollCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "question", "The question that you want to ask", true),
@@ -54,22 +54,22 @@ public class PollCommand extends CoreCommand {
             new OptionData(OptionType.STRING, "option9", "Option 9", false),
             new OptionData(OptionType.STRING, "option10", "Option 10", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-
+    
     @Override
     public String getDescription() {
         return "Creates a poll";
     }
-
+    
     @Override
     public String getName() {
         return "poll";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String question = event.getOption("question").getAsString();
@@ -93,22 +93,22 @@ public class PollCommand extends CoreCommand {
                 options[optionIndex++] = option;
             }
         }
-
+        
         final Pair<EmbedBuilder, List<String>> embedAndOptions = createEmbed(event.getUser(), question, options);
         event.getChannel().sendMessageEmbeds(embedAndOptions.first.build()).queue(msg -> {
             embedAndOptions.second.forEach(emote -> msg.addReaction(emote).queue());
-
+            
             event.deferReply(true).setContent("Successfully created poll!").mentionRepliedUser(false).queue();
         });
     }
-
+    
     private static Pair<EmbedBuilder, List<String>> createEmbed(User author, String question, String... options) {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.CYAN);
         embed.setFooter(author.getName() + "#" + author.getDiscriminator(), author.getEffectiveAvatarUrl());
         embed.setTitle(question);
-
+        
         final List<String> emotes = new ArrayList<>();
         int optionIndex = 1;
         for (final String option : options) {
@@ -120,7 +120,7 @@ public class PollCommand extends CoreCommand {
             embed.appendDescription(emote + " " + option + "\n");
             emotes.add(emote);
         }
-
+        
         return Pair.of(embed, emotes);
     }
 }

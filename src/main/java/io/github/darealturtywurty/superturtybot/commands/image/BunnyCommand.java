@@ -18,27 +18,27 @@ public class BunnyCommand extends ImageCommand {
     public BunnyCommand() {
         super(new Types(false, true, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Random bunny image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "bunny";
     }
-
+    
     @Override
     public String getRichName() {
         return "Bunny Image";

@@ -11,7 +11,7 @@ public enum CountingMode {
     UNDECIMAL, DUODECIMAL, TRIDECIMAL, TETRADECIMAL, PENTADECIMAL, HEXADECIMAL, BASE32, BASE48, BASE64, BASE96, SQUARES,
     TRIANGULAR, PENTAGONAL, HEXAGONAL, CUBES, PRIMES, ABUNDENT, COMPOSITE, ODD, EVEN, FIBONACCI, LUCAS, GOLOMB, HAPPY,
     LUCKY;
-
+    
     private final boolean notify;
     
     CountingMode() {
@@ -21,11 +21,11 @@ public enum CountingMode {
     CountingMode(boolean notify) {
         this.notify = notify;
     }
-
+    
     public boolean shouldNotify() {
         return this.notify;
     }
-
+    
     public static float getNextNumber(CountingMode mode, float current) {
         return switch (mode) {
             case REVERSE -> current - 1;
@@ -84,7 +84,7 @@ public enum CountingMode {
                 if (!str.startsWith("0.")) {
                     yield Float.NaN;
                 }
-
+                
                 final String decimalOnly = str.replace("0.", "");
                 final int decimalPlaces = StringUtils.countMatches(decimalOnly, '0');
                 final int lastNumb = Integer.parseInt(decimalOnly.substring(decimalOnly.length() - 1));
@@ -108,11 +108,11 @@ public enum CountingMode {
             case BASE48 -> tryParseInt(str, 48);
             case BASE64 -> tryParseInt(str, 64);
             case BASE96 -> tryParseInt(str, 96);
-
+        
             default -> tryParseFloat(str);
         };
     }
-
+    
     private static float tryParseFloat(String str) {
         try {
             return Float.parseFloat(str.split("/s*")[0]);

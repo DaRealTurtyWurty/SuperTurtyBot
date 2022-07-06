@@ -23,27 +23,27 @@ public class QueueCommand extends CoreCommand {
     public QueueCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets the current queue of the bot";
     }
-
+    
     @Override
     public String getName() {
         return "queue";
     }
-
+    
     @Override
     public String getRichName() {
         return "Queue";
     }
-
+    
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         final String componentId = event.getComponentId();
@@ -62,7 +62,7 @@ public class QueueCommand extends CoreCommand {
                 .setEmbeds().queue();
             return;
         }
-
+        
         final List<List<AudioTrack>> pages = Lists.partition(queue, 15);
         switch (type) {
             case "queue_pages_first": {
@@ -83,7 +83,7 @@ public class QueueCommand extends CoreCommand {
                     .queue();
                 break;
             }
-
+            
             case "queue_pages_previous": {
                 var embed = event.getMessage().getEmbeds().get(0);
                 int page = Integer.parseInt(embed.getFooter().getText().replace("Page: ", "").split("/")[0]);
@@ -156,13 +156,13 @@ public class QueueCommand extends CoreCommand {
                     .queue();
                 break;
             }
-
+            
             default:
                 throw new UnsupportedOperationException(
                     "Button on queue page that should not exist!\nID: " + componentId);
         }
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -207,13 +207,13 @@ public class QueueCommand extends CoreCommand {
                 nextPage = nextPage.asDisabled();
                 lastPage = lastPage.asDisabled();
             }
-
+            
             msg.editMessageById(messageId, "").setActionRow(firstPage, previousPage, close, nextPage, lastPage).queue();
-
+            
             event.getChannel().deleteMessageById(messageId).queueAfter(180, TimeUnit.SECONDS);
         });
     }
-
+    
     // TODO: Utility class
     public static String millisecondsFormatted(final long millis) {
         final long hours = TimeUnit.MILLISECONDS.toHours(millis)
@@ -230,7 +230,7 @@ public class QueueCommand extends CoreCommand {
             milliseconds > 0 ? String.format("%02d", milliseconds) : "").trim();
         return ret.endsWith(":") ? ret.substring(0, ret.length() - 1) : ret;
     }
-
+    
     private static EmbedBuilder getPage(Guild guild, List<List<AudioTrack>> pages, int number) {
         final List<AudioTrack> queue = pages.stream().reduce(new ArrayList<>(), (list0, list1) -> {
             list0.addAll(list1);
@@ -242,7 +242,7 @@ public class QueueCommand extends CoreCommand {
         embed.setColor(Color.BLUE);
         embed.setTitle("Music queue for server: " + guild.getName());
         embed.setFooter("Page: " + (number + 1) + "/" + pages.size());
-
+        
         final List<AudioTrack> page = pages.get(number);
         
         for (final AudioTrack audioTrack : page) {

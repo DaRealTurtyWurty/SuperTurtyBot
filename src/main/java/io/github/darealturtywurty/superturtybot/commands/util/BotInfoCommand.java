@@ -34,7 +34,7 @@ public class BotInfoCommand extends CoreCommand {
     public String getName() {
         return "botinfo";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final var embed = createEmbed(event.getJDA(), event.isFromGuild() ? event.getGuild() : null);
@@ -53,7 +53,7 @@ public class BotInfoCommand extends CoreCommand {
         if (fromGuild) {
             embed.addField("Joined At", formatTime(guild.getSelfMember().getTimeJoined()), false);
         }
-
+        
         embed.addField("Server Count", DataRetriever.getGuildCount() + "", false);
         embed.addField("Member Count", DataRetriever.getMemberCount() + "", false);
         int messagesSent = 0, messagesEdited = 0, messagesDeleted = 0, reactionsAdded = 0, reactionsRemoved = 0,
@@ -81,13 +81,13 @@ public class BotInfoCommand extends CoreCommand {
         embed.addField("Msg Ctx Commands", messageCtxCommandsRan + "", true);
         embed.addField("User Ctx Commands", userCtxCommandsRan + "", true);
         embed.addField("Normal Commands", normalCommandsRan + "", true);
-
+        
         embed.setFooter("Note: These statistics only update whilst the bot is online!");
         embed.setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
         
         return embed;
     }
-
+    
     // TODO: Utility class
     private static String formatTime(OffsetDateTime time) {
         return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);

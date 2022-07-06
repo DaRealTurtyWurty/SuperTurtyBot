@@ -89,7 +89,7 @@ public class LeaderboardCommand extends CoreCommand {
         List<Levelling> profiles = new ArrayList<>();
         Database.getDatabase().levelling.find(filter).forEach(profiles::add);
         profiles = profiles.stream().sorted(Comparator.comparing(Levelling::getXp).reversed()).toList();
-
+        
         final List<Levelling> top10 = Lists.partition(profiles, 10).get(0);
         try {
             final BufferedImage lb = constructLeaderboard(event.getGuild(), top10);
@@ -106,17 +106,17 @@ public class LeaderboardCommand extends CoreCommand {
     
     private BufferedImage constructLeaderboard(Guild guild, List<Levelling> profiles) throws IOException {
         final BufferedImage template = getTemplate();
-
+        
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
         final Graphics2D graphics = buffer.createGraphics();
         graphics.setFont(this.usedFont);
         final FontMetrics metrics = graphics.getFontMetrics();
-
+        
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
-
+        
         final BufferedImage guildIcon = RankCommand.resize(ImageIO.read(new URL(guild.getIconUrl())), 420);
         graphics.drawImage(guildIcon, 125, 125, guildIcon.getWidth(), guildIcon.getHeight(), null);
-
+        
         final String guildName = guild.getName();
         final int guildLength = metrics.stringWidth(guildName);
         graphics.drawString(guildName, 600, 300);
@@ -177,23 +177,21 @@ public class LeaderboardCommand extends CoreCommand {
                     + numberFormat(level, 0).replace(".0", ""),
                 420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
         }
-
+        
         graphics.dispose();
         return buffer;
     }
-
+    
     private static BufferedImage getTemplate() throws IOException {
         return ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/leaderboard.png"));
     }
-
+    
     /**
-     * Recursive implementation, invokes itself for each factor of a thousand,
-     * increasing the class on each invokation.
+     * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invokation.
      *
      * @param  n         the number to format
      * @param  iteration in fact this is the class from the array c
-     * @return           a String representing the number n formatted in a cool
-     *                   looking way.
+     * @return           a String representing the number n formatted in a cool looking way.
      */
     // TODO: Utility class
     private static String numberFormat(final double n, final int iteration) {

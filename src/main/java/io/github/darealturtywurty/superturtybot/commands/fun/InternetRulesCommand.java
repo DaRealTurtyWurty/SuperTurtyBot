@@ -38,28 +38,28 @@ public class InternetRulesCommand extends CoreCommand {
     public InternetRulesCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.INTEGER, "rule_number", "The rule number", true).setRequiredRange(1, 100));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets a rule from The Rules of The Internet.";
     }
-
+    
     @Override
     public String getName() {
         return "internetrule";
     }
-
+    
     @Override
     public String getRichName() {
         return "Internet Rule";

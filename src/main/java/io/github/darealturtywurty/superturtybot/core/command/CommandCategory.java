@@ -21,26 +21,26 @@ public interface CommandCategory {
     default boolean isNSFW() {
         return false;
     }
-
+    
     @Nullable
     static CommandCategory byName(String name) {
         return getCategories().stream().filter(category -> category.getName().equalsIgnoreCase(name)).findFirst()
             .orElse(null);
     }
-
+    
     static CommandCategory create(String name, String emoji) {
         final var category = new CommandCategory() {
             @Override
             public String getEmoji() {
                 return emoji;
             }
-
+            
             @Override
             public String getName() {
                 return name;
             }
         };
-
+        
         CommandHook.CATEGORIES.add(category);
         return category;
     }
@@ -51,18 +51,18 @@ public interface CommandCategory {
             public String getEmoji() {
                 return emoji;
             }
-
+            
             @Override
             public String getName() {
                 return name;
             }
-
+            
             @Override
             public boolean isNSFW() {
                 return isNSFW;
             }
         };
-
+        
         CommandHook.CATEGORIES.add(category);
         return category;
     }

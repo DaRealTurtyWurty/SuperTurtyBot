@@ -14,27 +14,27 @@ public class ShuffleCommand extends CoreCommand {
     public ShuffleCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Shuffles the music queue";
     }
-
+    
     @Override
     public String getName() {
         return "shuffle";
     }
-
+    
     @Override
     public String getRichName() {
         return "Shuffle";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -46,13 +46,13 @@ public class ShuffleCommand extends CoreCommand {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
-
+        
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         if (!event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }
-
+        
         if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
             reply(event, "❌ You must be in the same voice channel as me to modify the queue!", false, true);
             return;

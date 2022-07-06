@@ -21,27 +21,27 @@ public class UnbanCommand extends CoreCommand {
     public UnbanCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to unban!", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Unbans a user";
     }
-
+    
     @Override
     public String getName() {
         return "unban";
     }
-
+    
     @Override
     public String getRichName() {
         return "Unban User";

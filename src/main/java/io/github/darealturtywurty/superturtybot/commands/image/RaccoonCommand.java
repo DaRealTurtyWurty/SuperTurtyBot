@@ -20,27 +20,27 @@ public class RaccoonCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Random raccoon image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "raccoon";
     }
-
+    
     @Override
     public String getRichName() {
         return "Raccoon Image";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         try {

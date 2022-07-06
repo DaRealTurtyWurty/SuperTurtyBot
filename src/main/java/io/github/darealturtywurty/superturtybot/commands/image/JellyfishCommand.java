@@ -9,22 +9,22 @@ public class JellyfishCommand extends PexelsImageCommand {
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "jellyfish";
     }
-
+    
     @Override
     public String getRichName() {
         return "Jellyfish Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "jellyfish";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

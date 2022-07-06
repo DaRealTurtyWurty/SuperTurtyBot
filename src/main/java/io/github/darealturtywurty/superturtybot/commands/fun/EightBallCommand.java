@@ -27,33 +27,33 @@ public class EightBallCommand extends CoreCommand {
     public EightBallCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.STRING, "question", "The question that you want to ask the 8 Ball", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "This will fortune tell with an answer for your question.";
     }
-
+    
     @Override
     public String getName() {
         return "eightball";
     }
-
+    
     @Override
     public String getRichName() {
         return "8 Ball";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String question = event.getOption("question").getAsString();
@@ -64,7 +64,7 @@ public class EightBallCommand extends CoreCommand {
             final JsonObject result = Constants.GSON
                 .fromJson(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8), JsonObject.class)
                 .getAsJsonObject("magic");
-
+            
             final var embed = new EmbedBuilder();
             final Color color = switch (result.get("type").getAsString()) {
                 case "affirmitive" -> Color.GREEN;
@@ -72,7 +72,7 @@ public class EightBallCommand extends CoreCommand {
                 case "contrary" -> Color.RED;
                 default -> Color.BLACK;
             };
-
+            
             embed.setColor(color);
             embed.setTimestamp(Instant.now());
             embed.setTitle("8 Ball 🎱");

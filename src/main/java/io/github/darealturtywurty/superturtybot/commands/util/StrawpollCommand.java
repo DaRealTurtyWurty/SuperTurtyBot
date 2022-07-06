@@ -105,7 +105,7 @@ public class StrawpollCommand extends CoreCommand {
                     .mentionRepliedUser(false).queue();
                 return null;
             }
-
+            
             try {
                 return DateFormat.getInstance().parseObject(parseDate(parts));
             } catch (final ParseException exception) {
@@ -126,7 +126,7 @@ public class StrawpollCommand extends CoreCommand {
                     allowVPN, allowComments, duplicationType, deadline, option1, option2, option3, option4, option5)))
             .mentionRepliedUser(false).queue();
     }
-
+    
     // TODO: Utility class
     public static String parseDate(final String[] parts) {
         final var deadlineStrBuilder = new StringBuilder();
@@ -221,7 +221,7 @@ public class StrawpollCommand extends CoreCommand {
                 + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception);
         }
     }
-
+    
     public enum DuplicationType {
         IP, BROWSER;
     }

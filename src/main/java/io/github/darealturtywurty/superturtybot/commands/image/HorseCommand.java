@@ -9,22 +9,22 @@ public class HorseCommand extends PexelsImageCommand {
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "horse";
     }
-
+    
     @Override
     public String getRichName() {
         return "Horse Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "horse";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

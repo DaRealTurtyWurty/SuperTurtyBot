@@ -20,27 +20,27 @@ public class PandaCommand extends ImageCommand {
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Random panda image";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.ANIMAL;
     }
-
+    
     @Override
     public String getName() {
         return "panda";
     }
-
+    
     @Override
     public String getRichName() {
         return "Panda Image";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         try {

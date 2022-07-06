@@ -27,7 +27,7 @@ public final class ScamSocket extends WebSocketListener {
         final String type = response.has("type") ? response.get("type").getAsString() : "none";
         if ("none".equals(type))
             return;
-
+        
         final JsonArray domains = response.has("domains") ? response.getAsJsonArray("domains") : new JsonArray();
         for (final JsonElement elem : domains) {
             final String domain = elem.getAsString();

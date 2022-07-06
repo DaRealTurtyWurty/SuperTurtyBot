@@ -29,7 +29,7 @@ public class TagCommand extends CoreCommand {
     public TagCommand() {
         super(new Types(true, false, true, false));
     }
-
+    
     @Override
     public List<SubcommandData> createSubcommands() {
         return List.of(new SubcommandData("get", "Retrives an existing tag").addOptions(
@@ -72,9 +72,9 @@ public class TagCommand extends CoreCommand {
     
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-
+        
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -131,7 +131,7 @@ public class TagCommand extends CoreCommand {
                 break;
         }
     }
-
+    
     private static void sendData(SlashCommandInteractionEvent event, String data) {
         final JsonObject json = Constants.GSON.fromJson(data, JsonObject.class);
         if (json.has("message")) {
@@ -139,7 +139,7 @@ public class TagCommand extends CoreCommand {
         } else if (json.has("embed")) {
             final JsonObject jsonEmbed = json.getAsJsonObject("embed");
             final var embed = new EmbedBuilder();
-
+            
             if (jsonEmbed.has("author")) {
                 final JsonElement authorElement = jsonEmbed.get("author");
                 String text = "", url = null, iconUrl = null;
@@ -148,21 +148,21 @@ public class TagCommand extends CoreCommand {
                     if (author.has("text")) {
                         text = author.get("text").getAsString();
                     }
-
+                    
                     if (author.has("url")) {
                         url = author.get("url").getAsString();
                     }
-
+                    
                     if (author.has("iconUrl")) {
                         iconUrl = author.get("iconUrl").getAsString();
                     }
                 } else {
                     text = authorElement.getAsString();
                 }
-
+                
                 embed.setAuthor(text, url, iconUrl);
             }
-
+            
             if (jsonEmbed.has("color")) {
                 final JsonElement colorElement = jsonEmbed.get("color");
                 Color color = Color.BLACK;
@@ -179,14 +179,14 @@ public class TagCommand extends CoreCommand {
                         color = Color.decode(primitive.getAsString());
                     }
                 }
-
+                
                 embed.setColor(color);
             }
-
+            
             if (jsonEmbed.has("description")) {
                 embed.setDescription(jsonEmbed.get("description").getAsString());
             }
-
+            
             if (jsonEmbed.has("footer")) {
                 final JsonElement footerElement = jsonEmbed.get("footer");
                 String text = "", iconUrl = null;
@@ -195,29 +195,29 @@ public class TagCommand extends CoreCommand {
                     if (footer.has("text")) {
                         text = footer.get("text").getAsString();
                     }
-
+                    
                     if (footer.has("iconUrl")) {
                         iconUrl = footer.get("iconUrl").getAsString();
                     }
                 } else {
                     text = footerElement.getAsString();
                 }
-
+                
                 embed.setFooter(text, iconUrl);
             }
-
+            
             if (jsonEmbed.has("image")) {
                 embed.setImage(jsonEmbed.get("image").getAsString());
             }
-
+            
             if (jsonEmbed.has("thumbnail")) {
                 embed.setThumbnail(jsonEmbed.get("thumbnail").getAsString());
             }
-
+            
             if (jsonEmbed.has("timestamp")) {
                 embed.setTimestamp(Instant.ofEpochMilli(jsonEmbed.get("timestamp").getAsLong()));
             }
-
+            
             if (jsonEmbed.has("title")) {
                 final JsonElement title = jsonEmbed.get("title");
                 if (title.isJsonObject()) {

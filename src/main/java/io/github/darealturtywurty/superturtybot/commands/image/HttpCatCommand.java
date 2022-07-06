@@ -89,37 +89,37 @@ public class HttpCatCommand extends ImageCommand {
     public HttpCatCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.INTEGER, "status_code", "The HTTP status code", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets a cat image for the corresponding http status code.";
     }
-
+    
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.FUN;
     }
-
+    
     @Override
     public String getName() {
         return "httpcat";
     }
-
+    
     @Override
     public String getRichName() {
         return "HTTP Cat";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         int statusCode = event.getOption("status_code").getAsInt();

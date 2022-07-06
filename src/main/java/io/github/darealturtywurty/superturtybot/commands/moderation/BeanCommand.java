@@ -13,7 +13,7 @@ public class BeanCommand extends CoreCommand {
     public BeanCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to bean!", true),
@@ -21,27 +21,27 @@ public class BeanCommand extends CoreCommand {
                 .setRequiredRange(0, 7),
             new OptionData(OptionType.STRING, "reason", "The bean reason", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Beans a user";
     }
-
+    
     @Override
     public String getName() {
         return "bean";
     }
-
+    
     @Override
     public String getRichName() {
         return "bean";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild())

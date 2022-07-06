@@ -9,13 +9,13 @@ public interface BotCommand {
     default List<OptionData> createOptions() {
         return List.of();
     }
-
+    
     default List<SubcommandData> createSubcommands() {
         return List.of();
     }
-
+    
     CommandCategory getCategory();
-
+    
     String getDescription();
     
     String getName();

@@ -17,7 +17,7 @@ public final class StringUtils {
     public static String trueFalseToYesNo(final boolean value) {
         return value ? "Yes" : "No";
     }
-
+    
     public static String upperSnakeToSpacedPascal(String str) {
         return WordUtils.capitalize(str.toLowerCase().replace("_", " "));
     }

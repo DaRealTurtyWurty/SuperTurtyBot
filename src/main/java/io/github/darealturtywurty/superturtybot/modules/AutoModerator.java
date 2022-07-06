@@ -78,7 +78,7 @@ public class AutoModerator extends ListenerAdapter {
                     .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
         }
     }
-
+    
     private void scamDetection(Message message) {
         final String content = message.getContentRaw().toLowerCase().trim().replace("https://", "")
             .replace("http://", "").replace("www.", "").replace("/", "");
@@ -96,7 +96,7 @@ public class AutoModerator extends ListenerAdapter {
                 }
             }
         }
-
+        
         for (final String part : parts) {
             if (SCAM_DOMAINS.contains(part)) {
                 message.delete().queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention()

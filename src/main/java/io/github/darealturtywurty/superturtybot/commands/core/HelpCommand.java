@@ -37,12 +37,12 @@ public class HelpCommand extends CoreCommand {
     public String getDescription() {
         return "Gets information about a command.";
     }
-
+    
     @Override
     public String getName() {
         return "help";
     }
-
+    
     @Override
     public String getRichName() {
         return "Help";
@@ -57,7 +57,7 @@ public class HelpCommand extends CoreCommand {
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final String command = cmdOption.getAsString();
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -69,10 +69,10 @@ public class HelpCommand extends CoreCommand {
                 embed.setDescription(String.format("No command found by name '%s'!", command));
                 embed.setColor(Color.RED);
             });
-
+        
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     private EmbedBuilder commandless(String prefix) {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -81,11 +81,11 @@ public class HelpCommand extends CoreCommand {
             Welcome to TurtyBot.
             
             I contain a wide diversity of features ranging from music to moderation to minigames.
-
+            
             You can view my list of commands using `/commands`!""");
         return embed;
     }
-
+    
     private EmbedBuilder constructEmbed(EmbedBuilder embed, CoreCommand cmd) {
         // TODO: Guild prefix
         embed.setDescription(String.format("Information about command: **`%s%s`**",

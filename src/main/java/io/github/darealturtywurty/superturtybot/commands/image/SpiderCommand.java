@@ -14,17 +14,17 @@ public class SpiderCommand extends PexelsImageCommand {
     public String getName() {
         return "spider";
     }
-
+    
     @Override
     public String getRichName() {
         return "Spider Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "spider";
     }
-
+    
     @Override
     int maxPages() {
         return 2;

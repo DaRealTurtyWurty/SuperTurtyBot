@@ -14,17 +14,17 @@ public class MonkeyCommand extends PexelsImageCommand {
     public String getName() {
         return "monkey";
     }
-
+    
     @Override
     public String getRichName() {
         return "Monkey Image";
     }
-
+    
     @Override
     String getSearchTerm() {
         return "monkey";
     }
-
+    
     @Override
     int maxPages() {
         return 3;

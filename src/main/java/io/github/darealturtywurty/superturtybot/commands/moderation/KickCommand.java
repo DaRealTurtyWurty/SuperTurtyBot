@@ -22,28 +22,28 @@ public class KickCommand extends CoreCommand {
     public KickCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to ban!", true),
             new OptionData(OptionType.STRING, "reason", "The ban reason", false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-
+    
     @Override
     public String getDescription() {
         return "Kicks a member";
     }
-
+    
     @Override
     public String getName() {
         return "kick";
     }
-
+    
     @Override
     public String getRichName() {
         return "Kick Member";
@@ -62,7 +62,7 @@ public class KickCommand extends CoreCommand {
                 reason = reason.substring(0, 512);
                 // TODO: Confirmation of whether they still want to kick
             }
-
+            
             event.getGuild().kick(member, reason).queue(v -> event.deferReply()
                 .setContent("Successfully kicked " + member.getAsMention() + "!").mentionRepliedUser(false).queue(),
                 error -> {

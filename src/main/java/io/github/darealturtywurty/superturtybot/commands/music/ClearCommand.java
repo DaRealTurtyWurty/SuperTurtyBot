@@ -41,7 +41,7 @@ public class ClearCommand extends CoreCommand {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-
+        
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;

@@ -149,7 +149,7 @@ public class CommandHook extends ListenerAdapter {
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
-
+    
     private Set<CoreCommand> commands = new HashSet<>();
     
     private CommandHook() {
@@ -207,10 +207,10 @@ public class CommandHook extends ListenerAdapter {
                 } else if (previous.get() == null) {
                     builder.append("**" + cmd.getCategory().getName() + "**\n");
                 }
-
+                
                 builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
                 previous.set(cmd);
-
+                
                 if (cmd.types.slash()) {
                     slashes.incrementAndGet();
                 } else {
@@ -233,7 +233,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
         cmds.add(new UserConfigCommand());
-
+        
         // Utility
         cmds.add(new BotInfoCommand());
         cmds.add(new UserInfoCommand());
@@ -285,7 +285,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new LoliCommand());
         cmds.add(new OrgasmCommand());
         cmds.add(new Rule34Command());
-
+        
         // Music
         cmds.add(new JoinCommand());
         cmds.add(new LeaveCommand());
@@ -348,7 +348,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new InspiroBotCommand());
         cmds.add(new FoodPornCommand());
         cmds.add(new HttpDogCommand());
-
+        
         // Fun
         cmds.add(new AdviceCommand());
         // cmds.add(new AmongUsCommand());
