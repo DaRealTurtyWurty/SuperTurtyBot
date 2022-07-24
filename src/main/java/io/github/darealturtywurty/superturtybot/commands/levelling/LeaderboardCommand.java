@@ -88,8 +88,13 @@ public class LeaderboardCommand extends CoreCommand {
         final Bson filter = Filters.eq("guild", event.getGuild().getIdLong());
         List<Levelling> profiles = new ArrayList<>();
         Database.getDatabase().levelling.find(filter).forEach(profiles::add);
-        profiles = profiles.stream().sorted(Comparator.comparing(Levelling::getXp).reversed()).toList();
+        if (profiles.isEmpty()) {
+            event.getHook().sendMessage("❌ This server has no levels!").mentionRepliedUser(false).queue();
+            return;
+        }
         
+        profiles = profiles.stream().sorted(Comparator.comparing(Levelling::getXp).reversed()).toList();
+
         final List<Levelling> top10 = Lists.partition(profiles, 10).get(0);
         try {
             final BufferedImage lb = constructLeaderboard(event.getGuild(), top10);
