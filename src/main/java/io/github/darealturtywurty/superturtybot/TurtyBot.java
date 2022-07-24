@@ -12,6 +12,7 @@ import io.github.darealturtywurty.superturtybot.commands.levelling.LevellingMana
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
 import io.github.darealturtywurty.superturtybot.modules.AutoModerator;
+import io.github.darealturtywurty.superturtybot.modules.StarboardManager;
 import io.github.darealturtywurty.superturtybot.modules.StatTracker;
 import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
@@ -76,6 +77,9 @@ public class TurtyBot {
         
         // Add the counting manager so that the bot can listen for message events
         builder.addEventListeners(CountingManager.INSTANCE);
+        
+        // Add the starboard manager so that the bot can listen for messages in showcases and respond to reactions
+        builder.addEventListeners(StarboardManager.INSTANCE);
     }
     
     @SuppressWarnings("deprecation")
