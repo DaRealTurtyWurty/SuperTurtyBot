@@ -146,7 +146,7 @@ public final class MathHandler {
             case MULTIPLY -> String.format(format, (int) current, (int) (result / current));
             case ROUND -> String.format(format, current);
             case SUBTRACT -> String.format(format, (int) current, (int) (current - result));
-            case CUSTOM -> String.format(format, (int) customFunctionM, (int) customFunctionA, (int), current);
+            case CUSTOM -> String.format(format, (int) customFunctionM, (int) customFunctionA, (int) current);
             default -> String.format(format, (int) current);
         };
     }
