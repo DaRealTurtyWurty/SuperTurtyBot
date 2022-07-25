@@ -10,60 +10,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
+
+import org.apache.commons.text.WordUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.darealturtywurty.superturtybot.Environment;
-import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
+import io.github.darealturtywurty.superturtybot.registry.Registerable;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-public abstract class PexelsImageCommand extends ImageCommand {
+public class PexelsImageCommandType extends ImageCommandType {
     private static final String BASE_URL = "https://api.pexels.com/v1/";
     
-    protected PexelsImageCommand(Types types) {
-        super(types);
+    private String searchTerm;
+    private final int maxPages;
+
+    public PexelsImageCommandType(int maxPages) {
+        super(createRunner());
+        this.maxPages = maxPages;
     }
-    
-    @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.IMAGE;
+
+    public PexelsImageCommandType(int maxPages, String term) {
+        this(maxPages);
+        this.searchTerm = term;
     }
-    
+
     @Override
-    public String getDescription() {
-        return "Gets a random " + getName() + " image";
-    }
-    
-    @Override
-    protected void runNormalMessage(MessageReceivedEvent event) {
-        if (this.types.normal()) {
-            event.getMessage().reply("Loading " + getName() + " image...").mentionRepliedUser(false).queue(msg -> {
-                final String search = URLEncoder.encode(getSearchTerm().trim(), StandardCharsets.UTF_8);
-                final CompletableFuture<String> futurePhoto = getRandomPhoto(search, maxPages());
-                futurePhoto.thenAccept(photo -> msg.editMessage(photo).mentionRepliedUser(false).queue());
-            });
+    public Registerable setName(String name) {
+        if (this.searchTerm == null || this.searchTerm.isBlank()) {
+            this.searchTerm = name;
+            return this;
         }
-    }
-    
-    @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (this.types.slash()) {
-            event.deferReply().setContent("Loading " + getName() + " image...").mentionRepliedUser(false).queue(msg -> {
-                final String search = URLEncoder.encode(getSearchTerm().trim(), StandardCharsets.UTF_8);
-                final CompletableFuture<String> futurePhoto = getRandomPhoto(search, maxPages());
-                futurePhoto.thenAccept(photo -> event.getHook().setEphemeral(false).editOriginal(photo).queue());
-            });
-        }
-    }
-    
-    abstract String getSearchTerm();
-    
-    int maxPages() {
-        return 5;
+
+        return super.setName(name);
     }
     
     public static CompletableFuture<List<JsonObject>> getPhotos(String search, int maxPages) {
@@ -122,5 +105,17 @@ public abstract class PexelsImageCommand extends ImageCommand {
         });
         
         return futurePhoto;
+    }
+    
+    private static BiConsumer<SlashCommandInteractionEvent, ImageCommandType> createRunner() {
+        return (event, cmd) -> {
+            final PexelsImageCommandType pexelsCmd = (PexelsImageCommandType) cmd;
+            event.deferReply().setContent("Loading " + WordUtils.capitalize(pexelsCmd.searchTerm) + " image...")
+                .mentionRepliedUser(false).queue(msg -> {
+                    final String search = URLEncoder.encode(pexelsCmd.searchTerm.trim(), StandardCharsets.UTF_8);
+                    final CompletableFuture<String> futurePhoto = getRandomPhoto(search, pexelsCmd.maxPages);
+                    futurePhoto.thenAccept(photo -> event.getHook().setEphemeral(false).editOriginal(photo).queue());
+                });
+        };
     }
 }

@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
-import io.github.darealturtywurty.superturtybot.commands.image.ImageCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.ImageCommand.ImageCategory;
+import io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand;
+import io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory;
 import io.github.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import io.github.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand.NSFWCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -144,12 +144,12 @@ public class CommandListCommand extends CoreCommand {
                 toRemove.clear();
             }
         } else if (category == CommandCategory.IMAGE) {
-            final List<ImageCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
-                .filter(cmd -> cmd.getCategory() == CommandCategory.IMAGE).map(ImageCommand.class::cast)
+            final List<AbstractImageCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
+                .filter(cmd -> cmd.getCategory() == CommandCategory.IMAGE).map(AbstractImageCommand.class::cast)
                 .collect(Collectors.toList());
             for (final var imageCategory : ImageCategory.values()) {
                 cmdsString.append("**" + StringUtils.capitalize(imageCategory.name().toLowerCase()) + "**\n");
-                final List<ImageCommand> toRemove = new ArrayList<>();
+                final List<AbstractImageCommand> toRemove = new ArrayList<>();
                 cmds.stream().filter(cmd -> cmd.getImageCategory() == imageCategory)
                     .sorted(Comparator.comparing(CoreCommand::getName)).forEachOrdered(cmd -> {
                         cmdsString.append("`" + cmd.getName() + "`, ");

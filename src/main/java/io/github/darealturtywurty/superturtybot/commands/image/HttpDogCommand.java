@@ -9,11 +9,10 @@ import java.util.Map;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-public class HttpDogCommand extends ImageCommand {
+public class HttpDogCommand extends AbstractImageCommand {
     private static final Map<Integer, String> STATUS_CODES = new HashMap<>() {
         private static final long serialVersionUID = 1169231675070322026L;
         {
@@ -88,7 +87,7 @@ public class HttpDogCommand extends ImageCommand {
     };
     
     public HttpDogCommand() {
-        super(new Types(true, true, false, false));
+        super(new Types(true, false, false, false));
     }
     
     @Override
@@ -122,32 +121,6 @@ public class HttpDogCommand extends ImageCommand {
     }
     
     @Override
-    protected void runNormalMessage(MessageReceivedEvent event) {
-        final String content = event.getMessage().getContentRaw();
-        final String[] args = content.split("\s+");
-        if (args.length < 2) {
-            event.getMessage().reply("You must supply an HTTP status code!").mentionRepliedUser(false).queue();
-            return;
-        }
-        
-        try {
-            int statusCode = Integer.parseInt(args[1]);
-            if (!STATUS_CODES.containsKey(statusCode)) {
-                statusCode = 404;
-            }
-            
-            final URLConnection connection = new URL("https://http.dog/" + statusCode + ".jpg").openConnection();
-            event.getMessage().reply(connection.getInputStream(), statusCode + ".jpg").mentionRepliedUser(false)
-                .queue();
-        } catch (final NumberFormatException exception) {
-            event.getMessage().reply("You must supply a valid status code!").mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.getMessage().reply("There was an issue getting this HTTP Dog!").mentionRepliedUser(false).queue();
-        }
-    }
-    
-    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         int statusCode = event.getOption("status_code").getAsInt();
         if (!STATUS_CODES.containsKey(statusCode)) {
@@ -160,7 +133,7 @@ public class HttpDogCommand extends ImageCommand {
                 .queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("There was an issue getting this HTTP Dog!").mentionRepliedUser(false)
+            event.deferReply(true).setContent("â?Œ There was an issue getting this HTTP Dog!").mentionRepliedUser(false)
                 .queue();
         }
     }
