@@ -39,8 +39,6 @@ import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.EmbedType;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.GuildMessageChannel;
@@ -59,10 +57,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed.Provider;
 import net.dv8tion.jda.api.entities.MessageEmbed.Thumbnail;
 import net.dv8tion.jda.api.entities.MessageEmbed.VideoInfo;
 import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.api.entities.MessageReference;
-import net.dv8tion.jda.api.entities.MessageSticker;
-import net.dv8tion.jda.api.entities.MessageSticker.StickerFormat;
 import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
@@ -76,6 +71,9 @@ import net.dv8tion.jda.api.entities.ThreadChannel.AutoArchiveDuration;
 import net.dv8tion.jda.api.entities.ThreadMember;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
+import net.dv8tion.jda.api.entities.sticker.RichSticker;
+import net.dv8tion.jda.api.entities.sticker.Sticker.StickerFormat;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -261,33 +259,14 @@ public final class ProxyFactory {
         );
     }
 
-    public static ProxyObject emoji(Emoji emoji) {
+    public static ProxyObject emoji(CustomEmoji emoji) {
         return fromMap(emoji,
             Map.of(
                 "timeCreated", toProxy(emoji.getTimeCreated()),
                 "mention", emoji.getAsMention(),
                 "id", emoji.getIdLong(),
                 "name", emoji.getName(),
-                "isAnimated", function(args -> emoji.isAnimated()),
-                "isCustom", function(args -> emoji.isCustom()),
-                "isUnicode", function(args -> emoji.isUnicode())
-            )
-        );
-    }
-
-    public static ProxyObject emote(Emote emote) {
-        return fromMap(emote,
-            Map.of(
-                "mention", emote.getAsMention(),
-                "guild", toProxy(emote.getGuild()),
-                "imageURL", emote.getImageUrl(),
-                "name", emote.getName(),
-                "roles", toProxy(emote.getRoles()),
-                "timeCreated", toProxy(emote.getTimeCreated()),
-                "id", emote.getIdLong(),
-                "isAnimated", function(args -> emote.isAnimated()),
-                "isAvailable", function(args -> emote.isAvailable()),
-                "isManaged", function(args -> emote.isManaged())
+                "isAnimated", function(args -> emoji.isAnimated())
             )
         );
     }
@@ -322,7 +301,7 @@ public final class ProxyFactory {
         entries.put("channels", toProxy(guild.getChannels()));
         entries.put("boosters", toProxy(guild.getBoosters()));
         entries.put("description", guild.getDescription());
-        entries.put("emotes", toProxy(guild.getEmotes()));
+        entries.put("emotes", toProxy(guild.getEmojis()));
         entries.put("icon", guild.getIconUrl());
         entries.put("locale", toProxy(guild.getLocale()));
         entries.put("members", toProxy(guild.getMembers()));
@@ -477,8 +456,6 @@ public final class ProxyFactory {
         entries.put("rawContent", message.getContentRaw());
         entries.put("strippedContent", message.getContentStripped());
         entries.put("embeds", toProxy(message.getEmbeds()));
-        entries.put("emotes", toProxy(message.getEmotes()));
-        entries.put("emotesBag", toProxy(message.getEmotesBag()));
         entries.put("flags", toProxy(message.getFlags()));
         entries.put("rawFlags", message.getFlagsRaw());
         entries.put("guild", toProxy(message.getGuild()));
@@ -486,13 +463,10 @@ public final class ProxyFactory {
         entries.put("invites", toProxy(message.getInvites()));
         entries.put("jumpURL", message.getJumpUrl());
         entries.put("member", toProxy(message.getMember()));
-        entries.put("mentionedChannels", toProxy(message.getMentionedChannels()));
-        entries.put("mentionedChannelsBag", toProxy(message.getMentionedChannelsBag()));
-        entries.put("mentionedMembers", toProxy(message.getMentionedMembers()));
-        entries.put("mentionedRoles", toProxy(message.getMentionedRoles()));
-        entries.put("mentionedRolesBag", toProxy(message.getMentionedRolesBag()));
-        entries.put("mentionedUsers", toProxy(message.getMentionedUsers()));
-        entries.put("mentionedUsersBag", toProxy(message.getMentionedUsersBag()));
+        entries.put("mentionedChannels", toProxy(message.getMentions().getChannels()));
+        entries.put("mentionedMembers", toProxy(message.getMentions().getMembers()));
+        entries.put("mentionedRoles", toProxy(message.getMentions().getRoles()));
+        entries.put("mentionedUsers", toProxy(message.getMentions().getUsers()));
         entries.put("messageReference", toProxy(message.getMessageReference()));
         entries.put("nonce", message.getNonce());
         entries.put("reactions", toProxy(message.getReactions()));
@@ -508,7 +482,7 @@ public final class ProxyFactory {
         entries.put("isSuppressedEmbeds", function(args -> message.isSuppressedEmbeds()));
         entries.put("isTTS", function(args -> message.isTTS()));
         entries.put("isWebhookMessage", function(args -> message.isWebhookMessage()));
-        entries.put("doesMentionEveryone", function(args -> message.mentionsEveryone()));
+        entries.put("doesMentionEveryone", function(args -> message.getMentions().mentionsEveryone()));
         return fromMap(message, entries);
     }
 
@@ -606,7 +580,7 @@ public final class ProxyFactory {
                 "channel", toProxy(messageReaction.getChannel()),
                 "channelType", toProxy(messageReaction.getChannelType()),
                 "guild", toProxy(messageReaction.getGuild()),
-                "reactionEmote", toProxy(messageReaction.getReactionEmote()),
+                "reactionEmote", toProxy(messageReaction.getEmoji()),
                 "hasCount", function(args -> messageReaction.hasCount()),
                 "isSelf", function(args -> messageReaction.isSelf())
             )
@@ -645,7 +619,7 @@ public final class ProxyFactory {
         );
     }
 
-    public static ProxyObject messageSticker(MessageSticker messageSticker) {
+    public static ProxyObject messageSticker(RichSticker messageSticker) {
         return fromMap(messageSticker,
             Map.of(
                 "id", messageSticker.getIdLong(),
@@ -654,8 +628,7 @@ public final class ProxyFactory {
                 "timeCreated", toProxy(messageSticker.getTimeCreated()),
                 "description", messageSticker.getDescription(),
                 "iconURL", messageSticker.getIconUrl(),
-                "name", messageSticker.getName(),
-                "packId", messageSticker.getPackIdLong()
+                "name", messageSticker.getName()
             )
         );
     }
@@ -684,28 +657,28 @@ public final class ProxyFactory {
     public static ProxyObject optionMapping(OptionMapping optionMapping) {
         final Map<String, Object> entries = new HashMap<>();
         entries.put("asAttachment", function(args -> toProxy(optionMapping.getAsAttachment())));
-        entries.put("asAudioChannel", function(args -> toProxy(optionMapping.getAsAudioChannel())));
+        entries.put("asAudioChannel", function(args -> toProxy(optionMapping.getAsChannel().asAudioChannel())));
         entries.put("asBoolean", function(args -> optionMapping.getAsBoolean()));
         entries.put("asDouble", function(args -> optionMapping.getAsDouble()));
         entries.put("asInteger", function(args -> optionMapping.getAsInt()));
         entries.put("asLong", function(args -> optionMapping.getAsLong()));
-        entries.put("asGuildChannel", function(args -> toProxy(optionMapping.getAsGuildChannel())));
+        entries.put("asGuildChannel", function(args -> toProxy(optionMapping.getAsChannel().asGuildMessageChannel())));
         entries.put("asMember", function(args -> toProxy(optionMapping.getAsMember())));
         entries.put("asMentionable", function(args -> toProxy(optionMapping.getAsMentionable())));
-        entries.put("asMessageChannel", function(args -> toProxy(optionMapping.getAsMessageChannel())));
-        entries.put("asNewsChannel", function(args -> toProxy(optionMapping.getAsNewsChannel())));
+        entries.put("asMessageChannel", function(args -> toProxy(optionMapping.getAsChannel().asStandardGuildMessageChannel())));
+        entries.put("asNewsChannel", function(args -> toProxy(optionMapping.getAsChannel().asNewsChannel())));
         entries.put("asRole", function(args -> toProxy(optionMapping.getAsRole())));
-        entries.put("asStageChannel", function(args -> toProxy(optionMapping.getAsStageChannel())));
+        entries.put("asStageChannel", function(args -> toProxy(optionMapping.getAsChannel().asStageChannel())));
         entries.put("asString", function(args -> optionMapping.getAsString()));
-        entries.put("asTextChannel", function(args -> toProxy(optionMapping.getAsTextChannel())));
-        entries.put("asThreadChannel", function(args -> toProxy(optionMapping.getAsThreadChannel())));
+        entries.put("asTextChannel", function(args -> toProxy(optionMapping.getAsChannel().asTextChannel())));
+        entries.put("asThreadChannel", function(args -> toProxy(optionMapping.getAsChannel().asThreadChannel())));
         entries.put("asUser", function(args -> toProxy(optionMapping.getAsUser())));
-        entries.put("asVoiceChannel", function(args -> toProxy(optionMapping.getAsVoiceChannel())));
+        entries.put("asVoiceChannel", function(args -> toProxy(optionMapping.getAsChannel().asVoiceChannel())));
         entries.put("channelType", toProxy(optionMapping.getChannelType()));
-        entries.put("mentionedChannels", toProxy(optionMapping.getMentionedChannels()));
-        entries.put("mentionedMembers", toProxy(optionMapping.getMentionedMembers()));
-        entries.put("mentionedRoles", toProxy(optionMapping.getMentionedRoles()));
-        entries.put("mentionedUsers", toProxy(optionMapping.getMentionedUsers()));
+        entries.put("mentionedChannels", toProxy(optionMapping.getMentions()));
+        entries.put("mentionedMembers", toProxy(optionMapping.getMentions()));
+        entries.put("mentionedRoles", toProxy(optionMapping.getMentions().getRoles()));
+        entries.put("mentionedUsers", toProxy(optionMapping.getMentions().getUsers()));
         entries.put("mentions", toProxy(optionMapping.getMentions()));
         entries.put("name", optionMapping.getName());
         entries.put("type", toProxy(optionMapping.getType()));
@@ -762,21 +735,6 @@ public final class ProxyFactory {
             Map.of(
                 "url", provider.getUrl(),
                 "name", provider.getName()
-            )
-        );
-    }
-
-    public static ProxyObject reactionEmote(ReactionEmote reactionEmote) {
-        return fromMap(reactionEmote,
-            Map.of(
-                "codepoints", reactionEmote.getAsCodepoints(),
-                "emote", toProxy(reactionEmote.getEmote()),
-                "timeCreated", toProxy(reactionEmote.getTimeCreated()),
-                "reactionCode", reactionEmote.getAsReactionCode(),
-                "emoji", reactionEmote.getEmoji(),
-                "id", reactionEmote.getIdLong(),
-                "isEmoji", function(args -> reactionEmote.isEmoji()),
-                "isEmote", function(args -> reactionEmote.isEmote())
             )
         );
     }
@@ -867,12 +825,10 @@ public final class ProxyFactory {
         return fromMap(event, entries);
     }
 
-    @SuppressWarnings("deprecation")
     public static ProxyObject stageChannel(StageChannel channel) {
         final Map<String, Object> entries = new HashMap<>(audioChannelDetails(channel));
         entries.put("topic", channel.getStageInstance().getTopic());
         entries.put("privacyLevel", toProxy(channel.getStageInstance().getPrivacyLevel()));
-        entries.put("isDiscoverable", function(args -> channel.getStageInstance().isDiscoverable()));
         entries.put("audience", toProxy(channel.getStageInstance().getAudience()));
         entries.put("speakers", toProxy(channel.getStageInstance().getSpeakers()));
         return fromMap(channel, entries);
@@ -947,8 +903,7 @@ public final class ProxyFactory {
         if(object instanceof final User user) return user(user);
         if(object instanceof final Member member) return function(args -> member(member));
         if(object instanceof final Guild guild) return function(args -> guild(guild));
-        if(object instanceof final Emote emote) return function(args -> emote(emote));
-        if(object instanceof final Emoji emoji) return emoji(emoji);
+        if(object instanceof final CustomEmoji emoji) return emoji(emoji);
         if(object instanceof final Role role) return function(args -> role(role));
         if(object instanceof final RoleTags roleTags) return roleTags(roleTags);
         if(object instanceof final RoleIcon roleIcon) return roleIcon(roleIcon);
@@ -964,8 +919,7 @@ public final class ProxyFactory {
         if(object instanceof final Message.Interaction messageInteraction) return function(args -> messageInteraction(messageInteraction));
         if(object instanceof final MessageReference messageReference) return function(args -> messageReference(messageReference));
         if(object instanceof final MessageReaction messageReaction) return function(args -> messageReaction(messageReaction));
-        if(object instanceof final ReactionEmote reactionEmote) return function(args -> reactionEmote(reactionEmote));
-        if(object instanceof final MessageSticker messageSticker) return function(args -> messageSticker(messageSticker));
+        if(object instanceof final RichSticker messageSticker) return function(args -> messageSticker(messageSticker));
         if(object instanceof final MessageReceivedEvent messageReceivedEvent) return function(args -> messageReceivedEvent(messageReceivedEvent));
         if(object instanceof final SlashCommandInteractionEvent slashCommandInteractionEvent) return function(args -> slashCommandInteractionEvent(slashCommandInteractionEvent));
         if(object instanceof final Command.Type commandType) return commandType(commandType);

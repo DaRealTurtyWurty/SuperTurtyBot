@@ -24,12 +24,12 @@ import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -111,7 +111,7 @@ public class ReactionRoleCommand extends CoreCommand {
             return;
         
         matches = matches.stream().filter(rr -> rr.getEmoji().replace("<:", "").replace("<a:", "").replace(">", "")
-            .equals(event.getReactionEmote().getAsReactionCode())).toList();
+            .equals(event.getReaction().getEmoji().getName())).toList();
         
         if (matches.isEmpty())
             return;
@@ -152,7 +152,7 @@ public class ReactionRoleCommand extends CoreCommand {
             return;
         
         matches = matches.stream().filter(rr -> rr.getEmoji().replace("<:", "").replace("<a:", "").replace(">", "")
-            .equals(event.getReactionEmote().getAsReactionCode())).toList();
+            .equals(event.getReaction().getEmoji().getName())).toList();
         
         if (matches.isEmpty())
             return;
@@ -206,7 +206,8 @@ public class ReactionRoleCommand extends CoreCommand {
                 }
                 
                 final MessageChannel channel = event.getOption("channel", event.getChannel(),
-                    option -> option.getAsMessageChannel() == null ? event.getChannel() : option.getAsMessageChannel());
+                    option -> option.getAsChannel().asStandardGuildMessageChannel() == null ? event.getChannel()
+                        : option.getAsChannel().asStandardGuildMessageChannel());
                 
                 event.deferReply(true).mentionRepliedUser(false).queue();
                 
@@ -230,7 +231,7 @@ public class ReactionRoleCommand extends CoreCommand {
                     event.getHook().sendMessage("Reaction role added: " + msg.getJumpUrl()).queue();
                     
                     for (final Entry<String, Role> emojiRole : emojiRoleMap.entrySet()) {
-                        msg.addReaction(stripEmote(emojiRole.getKey())).queue();
+                        msg.addReaction(Emoji.fromFormatted(stripEmote(emojiRole.getKey()))).queue();
                         
                         REACTION_ROLES.computeIfAbsent(event.getGuild().getIdLong(), id -> new ArrayList<>());
                         final List<ReactionRole> reactionRoles = REACTION_ROLES.get(event.getGuild().getIdLong());
@@ -358,8 +359,9 @@ public class ReactionRoleCommand extends CoreCommand {
                             foundReactionRole.getEmoji(), newRole.getIdLong());
                         reactionRoles.add(newReactionRole);
                         
-                        message.clearReactions(stripEmote(foundReactionRole.getEmoji()))
-                            .queue(success -> message.addReaction(stripEmote(foundReactionRole.getEmoji())).queue());
+                        message.clearReactions(Emoji.fromFormatted(stripEmote(foundReactionRole.getEmoji())))
+                            .queue(success -> message
+                                .addReaction(Emoji.fromFormatted(stripEmote(foundReactionRole.getEmoji()))).queue());
                         
                         final var embed = new EmbedBuilder(message.getEmbeds().get(0));
                         embed.setDescription(message.getEmbeds().get(0).getDescription().replace(role.getAsMention(),
@@ -480,7 +482,8 @@ public class ReactionRoleCommand extends CoreCommand {
                                     .mentionRepliedUser(false).queue();
                             } else {
                                 reactionRoles.remove(foundReactionRole);
-                                message.clearReactions(stripEmote(foundReactionRole.getEmoji())).queue();
+                                message.clearReactions(Emoji.fromFormatted(stripEmote(foundReactionRole.getEmoji())))
+                                    .queue();
                                 
                                 final var embed = new EmbedBuilder(message.getEmbeds().get(0));
                                 
@@ -532,7 +535,8 @@ public class ReactionRoleCommand extends CoreCommand {
                                     .mentionRepliedUser(false).queue();
                             } else {
                                 reactionRoles.remove(foundReactionRole);
-                                message.clearReactions(stripEmote(foundReactionRole.getEmoji())).queue();
+                                message.clearReactions(Emoji.fromFormatted(stripEmote(foundReactionRole.getEmoji())))
+                                    .queue();
                                 
                                 final var embed = new EmbedBuilder(message.getEmbeds().get(0));
                                 
@@ -599,7 +603,7 @@ public class ReactionRoleCommand extends CoreCommand {
                             final Role role = event.getGuild().getRoleById(reactionRole.getRoleId());
                             if (role == null) {
                                 reactionRoles.remove(reactionRole);
-                                msg.clearReactions(stripEmote(reactionRole.getEmoji()));
+                                msg.clearReactions(Emoji.fromFormatted(stripEmote(reactionRole.getEmoji())));
                             } else {
                                 embed.appendDescription(role.getAsMention() + " - [View here](" + msg.getJumpUrl()
                                     + ")\n\t UUID: " + reactionRole.getMessageInfo().uuid() + "\n\n");
@@ -632,7 +636,7 @@ public class ReactionRoleCommand extends CoreCommand {
             final String string = option.getAsString();
             
             final List<String> emojis = EmojiParser.extractEmojis(string);
-            final List<Long> emotes = MentionType.EMOTE.getPattern().matcher(string).results()
+            final List<Long> emotes = MentionType.EMOJI.getPattern().matcher(string).results()
                 .map(result -> string.substring(result.start(), result.end())).map(str -> {
                     final String[] parts = str.split(":");
                     if (parts.length < 1)
@@ -649,7 +653,7 @@ public class ReactionRoleCommand extends CoreCommand {
                 if (emotes.isEmpty())
                     return null;
                 
-                final Emote emote = jda.getEmoteById(emotes.get(0));
+                final RichCustomEmoji emote = jda.getEmojiById(emotes.get(0));
                 if (emote == null || emote.getGuild().getMemberById(guild.getSelfMember().getIdLong()) == null
                     || !emote.getGuild().getMemberById(guild.getSelfMember().getIdLong()).canInteract(emote))
                     return null;
@@ -657,7 +661,7 @@ public class ReactionRoleCommand extends CoreCommand {
                 return emote.getAsMention();
             }
             
-            return Emoji.fromMarkdown(emojis.get(0)).getName();
+            return Emoji.fromFormatted(emojis.get(0)).getName();
         };
     }
     

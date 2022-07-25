@@ -13,8 +13,8 @@ import io.github.darealturtywurty.superturtybot.commands.music.handler.AudioMana
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -109,7 +109,7 @@ public class QueueCommand extends CoreCommand {
             }
             
             case "queue_close": {
-                event.getTextChannel().deleteMessageById(messageId).queue();
+                event.getChannel().asTextChannel().deleteMessageById(messageId).queue();
                 break;
             }
             
@@ -195,7 +195,7 @@ public class QueueCommand extends CoreCommand {
         final var embed = getPage(event.getGuild(), pages, 0);
         
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue(msg -> {
-            final long messageId = msg.getInteraction().getTextChannel().getLatestMessageIdLong();
+            final long messageId = msg.getInteraction().getMessageChannel().getLatestMessageIdLong();
             final Button firstPage = Button.primary("queue_pages_first-" + messageId, Emoji.fromUnicode("⏮️"))
                 .asDisabled();
             final Button previousPage = Button.primary("queue_pages_previous-" + messageId, Emoji.fromUnicode("◀️"))

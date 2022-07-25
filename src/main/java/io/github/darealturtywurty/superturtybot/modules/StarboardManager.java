@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -36,40 +37,39 @@ public final class StarboardManager extends ListenerAdapter {
     private static final EnumSet<Permission> DISALLOWED_PERMS = EnumSet.of(Permission.MESSAGE_SEND,
         Permission.MESSAGE_ADD_REACTION, Permission.CREATE_PUBLIC_THREADS, Permission.CREATE_PRIVATE_THREADS,
         Permission.MESSAGE_SEND_IN_THREADS);
-
+    
     private StarboardManager() {
     }
-
+    
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.isFromThread() || !event.isFromType(ChannelType.TEXT)
             || event.getUser().isBot() || event.getUser().isSystem())
             return;
-
+        
         // TODO: Check server config for starring emoji/emote
-        if (!event.getReactionEmote().isEmoji() || !"⭐".equals(event.getReactionEmote().getEmoji()))
+        if (!"⭐".equals(event.getReaction().getEmoji().getName()))
             return;
-        
-        final TextChannel channel = event.getTextChannel();
-        
+
+        final TextChannel channel = event.getChannel().asTextChannel();
+
         // TODO: Check server config first
         if (!"showcases".equalsIgnoreCase(channel.getName()))
             return;
-        
+
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
             Filters.eq("channel", channel.getIdLong()), Filters.eq("message", event.getMessageIdLong()));
         final Showcase showcase = Database.getDatabase().starboard.find(filter).first();
         if (showcase == null)
             return;
-        
+
         event.getChannel().retrieveMessageById(event.getMessageIdLong()).queue(m -> {
             final List<Bson> updates = new ArrayList<>();
-            final MessageReaction reaction = m.getReactions().stream()
-                .filter(r -> r.getReactionEmote().isEmoji() && "⭐".equals(r.getReactionEmote().getEmoji())).findFirst()
-                .get();
+            final MessageReaction reaction = m.getReactions().stream().filter(r -> "⭐".equals(r.getEmoji().getName()))
+                .findFirst().get();
             showcase.setStars(reaction.getCount());
             updates.add(Updates.set("stars", showcase.getStars()));
-
+            
             final long starboardMessageId = showcase.getStarboardMessage();
             if (showcase.getStars() >= 5) {
                 getStarboard(event.getGuild()).thenAccept(starboard -> {
@@ -105,41 +105,41 @@ public final class StarboardManager extends ListenerAdapter {
                                 });
                     }
                 });
-
+                
                 return;
             }
-
+            
             Database.getDatabase().starboard.updateOne(filter, updates);
         });
     }
-    
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild() || event.isFromThread() || event.isWebhookMessage()
             || !event.isFromType(ChannelType.TEXT) || event.getAuthor().isBot() || event.getAuthor().isSystem())
             return;
-
-        final TextChannel channel = event.getTextChannel();
         
+        final TextChannel channel = event.getChannel().asTextChannel();
+
         // TODO: Check server config first
         if (!"showcases".equalsIgnoreCase(channel.getName()))
             return;
-        
-        final Message message = event.getMessage();
 
+        final Message message = event.getMessage();
+        
         // TODO: Check server config to see if its a media only starboard
         if (message.getAttachments().isEmpty() && !Constants.URL_VALIDATOR.isValid(message.getContentDisplay())
             && message.getEmbeds().isEmpty())
             return;
-
+        
         // TODO: Get emoji from server config
-        message.addReaction("⭐").queue();
-
+        message.addReaction(Emoji.fromUnicode("⭐")).queue();
+        
         System.out.println(message.getIdLong());
         Database.getDatabase().starboard.insertOne(new Showcase(event.getGuild().getIdLong(), channel.getIdLong(),
             message.getIdLong(), event.getAuthor().getIdLong()));
     }
-
+    
     // TODO: Check the server config as the first thing
     private static CompletableFuture<TextChannel> getStarboard(Guild guild) {
         final var channel = new CompletableFuture<TextChannel>();
@@ -150,20 +150,20 @@ public final class StarboardManager extends ListenerAdapter {
         } else {
             channel.complete(found.get(0));
         }
-        
+
         return channel;
     }
-    
+
     private static CompletableFuture<Long> sendStarboard(JDA jda, TextChannel channel, Bson filter, Showcase showcase) {
         final var future = new CompletableFuture<Long>();
         final TextChannel original = jda.getTextChannelById(showcase.getChannel());
         original.retrieveMessageById(showcase.getMessage()).queue(msg -> {
             final User author = msg.getAuthor();
             final Member member = original.getGuild().getMember(author);
-            
+
             final ZonedDateTime dateTime = msg.getTimeCreated().toZonedDateTime();
             final String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-            
+
             channel.sendMessage("⭐ **" + showcase.getStars() + "** from <#" + showcase.getChannel() + ">")
                 .setEmbeds(new EmbedBuilder()
                     .setAuthor(author.getName(),

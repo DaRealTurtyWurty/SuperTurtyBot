@@ -43,7 +43,7 @@ public class TurtyBot {
         // We want to ensure that guild messages, DMs, members, presences, emojis and
         // voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
-            GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_EMOJIS, GatewayIntent.GUILD_VOICE_STATES);
+            GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES);
 
         // Cache all members. This makes it easier to do any kind of retrieval.
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
@@ -59,7 +59,7 @@ public class TurtyBot {
 
         // Ensure that the online status, emotes, voice states and role tags are being
         // cached
-        builder.enableCache(CacheFlag.ONLINE_STATUS, CacheFlag.EMOTE, CacheFlag.VOICE_STATE, CacheFlag.ROLE_TAGS);
+        builder.enableCache(CacheFlag.ONLINE_STATUS, CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.ROLE_TAGS);
 
         // If the guild size is bigger than this amount then only online members will be
         // cached (reduces bandwidth).
