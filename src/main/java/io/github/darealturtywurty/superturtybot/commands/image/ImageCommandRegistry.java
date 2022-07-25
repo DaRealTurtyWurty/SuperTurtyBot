@@ -1,9 +1,5 @@
 package io.github.darealturtywurty.superturtybot.commands.image;
 
-import static io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory.ANIMAL;
-import static io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory.FUN;
-import static io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory.SCENERY;
-
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,7 +18,6 @@ import org.jsoup.nodes.Document;
 
 import com.google.gson.JsonObject;
 
-import io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import io.github.darealturtywurty.superturtybot.core.util.RedditUtils;
 import io.github.darealturtywurty.superturtybot.registry.Registry;
@@ -42,11 +37,11 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this bird image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this bird image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BLEP = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Blep");
@@ -66,7 +61,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this bunny image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this bunny image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -91,7 +86,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
 
         RestAction.allOf(actions).queue(success -> event.getHook().deleteOriginal().queue());
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT = (event, cmd) -> {
         try {
             final BufferedImage image = ImageIO.read(new URL("https://cataas.com/cat"));
@@ -103,11 +98,11 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
                 .mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this cat image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this cat image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG_BOMB = (event, cmd) -> {
         event.deferReply().setContent("Loading dogs...").queue();
         final String[] subreddits = { "Dogs", "lookatmydog", "dogpictures", "dogswearinghats", "dogswitheyebrows",
@@ -126,7 +121,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             "siberianhusky", "sighthounds", "springerspaniel", "StandardPoodles", "SwissMountainDogs", "tollers",
             "toyfoxterriers", "vizsla", "weimaraner", "welshterrier", "WestHighlandTerriers", "whippets",
             "xoloitzquintli" };
-        
+
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
@@ -135,10 +130,10 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
                 : post.getSubject().getUrl();
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
-        
+
         RestAction.allOf(actions).queue(success -> event.getHook().deleteOriginal().queue());
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://dog.ceo/api/breeds/image/random").openConnection();
@@ -148,7 +143,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this dog image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this dog image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -170,7 +165,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been a problem gathering this duck image!")
+            event.deferReply(true).setContent("‚ùå There has been a problem gathering this duck image!")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -184,11 +179,11 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this fox image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this fox image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> KOALA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/koala").openConnection();
@@ -198,11 +193,11 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this koala image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this koala image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> PANDA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/panda").openConnection();
@@ -212,7 +207,7 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this panda image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this panda image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -226,11 +221,11 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this raccoon image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this raccoon image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> RED_PANDA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/red_panda").openConnection();
@@ -240,71 +235,67 @@ public class ImageCommandRegistry extends Registry<ImageCommandType> {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this red panda image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this red panda image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> SNAKE = (event, cmd) -> {
         try {
             final Document page = Jsoup.connect("https://generatorfun.com/random-snake-image").get();
             event.deferReply().setContent(page.select("img").first().attr("abs:src")).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("‚?å There has been an issue gathering this snake image.")
+            event.deferReply(true).setContent("‚ùå There has been an issue gathering this snake image.")
                 .mentionRepliedUser(false).queue();
         }
     };
 
     public ImageCommandRegistry() {
-        pexelsAnimal("bee", 3);
-        register("bird", new ImageCommandType(BIRD, ANIMAL));
-        register("blep", new ImageCommandType(BLEP, ANIMAL));
-        register("bunny", new ImageCommandType(BUNNY, ANIMAL));
-        register("catbomb", new ImageCommandType(CAT_BOMB, FUN));
-        register("cat", new ImageCommandType(CAT, ANIMAL));
-        pexelsAnimal("cow", 3);
-        pexelsAnimal("crab", 1);
-        register("dogbomb", new ImageCommandType(DOG_BOMB, FUN));
-        register("dog", new ImageCommandType(DOG, ANIMAL));
-        register("doge", new ImageCommandType(DOGE, ANIMAL));
-        pexelsAnimal("dolphin", 3);
-        register("duck", new ImageCommandType(DUCK, ANIMAL));
-        pexelsAnimal("elephant", 3);
-        register("foodporn", new PexelsImageCommandType(FUN, 3, "food"));
-        pexels("forest", SCENERY, 3);
-        register("fox", new ImageCommandType(FOX, ANIMAL));
-        pexelsAnimal("giraffe", 3);
-        pexelsAnimal("gorilla", 1);
-        pexelsAnimal("horse", 3);
-        pexelsAnimal("insect", 3);
-        pexelsAnimal("jellyfish", 3);
-        register("koala", new ImageCommandType(KOALA, ANIMAL));
-        pexelsAnimal("lion", 3);
-        pexelsAnimal("monkey", 3);
-        pexels("nature", SCENERY, 3);
-        pexelsAnimal("owl", 3);
-        register("panda", new ImageCommandType(PANDA, ANIMAL));
-        pexelsAnimal("pig", 2);
-        register("raccoon", new ImageCommandType(RACCOON, ANIMAL));
-        register("redpdanda", new ImageCommandType(RED_PANDA, ANIMAL));
-        pexelsAnimal("sheep", 3);
-        register("snake", new ImageCommandType(SNAKE, ANIMAL));
-        pexels("space", SCENERY, 3);
-        pexelsAnimal("spider", 2);
-        pexelsAnimal("squirrel", 3);
-        pexelsAnimal("tiger", 3);
-        pexelsAnimal("turtle", 3);
-        pexelsAnimal("whale", 3);
-        pexelsAnimal("wolf", 2);
-        pexelsAnimal("zebra", 2);
-    }
-    
-    private ImageCommandType pexels(String name, ImageCategory category, int maxPages) {
-        return register(name, new PexelsImageCommandType(category, maxPages));
+        pexels("bee", 3);
+        register("bird", new ImageCommandType(BIRD));
+        register("blep", new ImageCommandType(BLEP));
+        register("bunny", new ImageCommandType(BUNNY));
+        register("catbomb", new ImageCommandType(CAT_BOMB));
+        register("cat", new ImageCommandType(CAT));
+        pexels("cow", 3);
+        pexels("crab", 1);
+        register("dogbomb", new ImageCommandType(DOG_BOMB));
+        register("dog", new ImageCommandType(DOG));
+        register("doge", new ImageCommandType(DOGE));
+        pexels("dolphin", 3);
+        register("duck", new ImageCommandType(DUCK));
+        pexels("elephant", 3);
+        register("foodporn", new PexelsImageCommandType(3, "food"));
+        pexels("forest", 3);
+        register("fox", new ImageCommandType(FOX));
+        pexels("giraffe", 3);
+        pexels("gorilla", 1);
+        pexels("horse", 3);
+        pexels("insect", 3);
+        pexels("jellyfish", 3);
+        register("koala", new ImageCommandType(KOALA));
+        pexels("lion", 3);
+        pexels("monkey", 3);
+        pexels("nature", 3);
+        pexels("owl", 3);
+        register("panda", new ImageCommandType(PANDA));
+        pexels("pig", 2);
+        register("raccoon", new ImageCommandType(RACCOON));
+        register("redpanda", new ImageCommandType(RED_PANDA));
+        pexels("sheep", 3);
+        register("snake", new ImageCommandType(SNAKE));
+        pexels("space", 3);
+        pexels("spider", 2);
+        pexels("squirrel", 3);
+        pexels("tiger", 3);
+        pexels("turtle", 3);
+        pexels("whale", 3);
+        pexels("wolf", 2);
+        pexels("zebra", 2);
     }
 
-    private ImageCommandType pexelsAnimal(String name, int maxPages) {
-        return pexels(name, ImageCategory.ANIMAL, maxPages);
+    private ImageCommandType pexels(String name, int maxPages) {
+        return register(name, new PexelsImageCommandType(maxPages));
     }
 }
