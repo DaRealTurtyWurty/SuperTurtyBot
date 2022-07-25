@@ -10,62 +10,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
+
+import org.apache.commons.text.WordUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import io.github.darealturtywurty.superturtybot.Environment;
-import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
+import io.github.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
+import io.github.darealturtywurty.superturtybot.registry.Registerable;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-public abstract class PexelsImageCommand extends ImageCommand {
+public class PexelsImageCommandType extends ImageCommandType {
     private static final String BASE_URL = "https://api.pexels.com/v1/";
+
+    private String searchTerm;
+    private final int maxPages;
     
-    protected PexelsImageCommand(Types types) {
-        super(types);
+    public PexelsImageCommandType(ImageCategory category, int maxPages) {
+        super(createRunner(), category);
+        this.maxPages = maxPages;
+    }
+    
+    public PexelsImageCommandType(ImageCategory category, int maxPages, String term) {
+        this(category, maxPages);
+        this.searchTerm = term;
     }
     
     @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.IMAGE;
-    }
-    
-    @Override
-    public String getDescription() {
-        return "Gets a random " + getName() + " image";
-    }
-    
-    @Override
-    protected void runNormalMessage(MessageReceivedEvent event) {
-        if (this.types.normal()) {
-            event.getMessage().reply("Loading " + getName() + " image...").mentionRepliedUser(false).queue(msg -> {
-                final String search = URLEncoder.encode(getSearchTerm().trim(), StandardCharsets.UTF_8);
-                final CompletableFuture<String> futurePhoto = getRandomPhoto(search, maxPages());
-                futurePhoto.thenAccept(photo -> msg.editMessage(photo).mentionRepliedUser(false).queue());
-            });
+    public Registerable setName(String name) {
+        if (this.searchTerm == null || this.searchTerm.isBlank()) {
+            this.searchTerm = name;
+            return this;
         }
+        
+        return super.setName(name);
     }
-    
-    @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (this.types.slash()) {
-            event.deferReply().setContent("Loading " + getName() + " image...").mentionRepliedUser(false).queue(msg -> {
-                final String search = URLEncoder.encode(getSearchTerm().trim(), StandardCharsets.UTF_8);
-                final CompletableFuture<String> futurePhoto = getRandomPhoto(search, maxPages());
-                futurePhoto.thenAccept(photo -> event.getHook().setEphemeral(false).editOriginal(photo).queue());
-            });
-        }
-    }
-    
-    abstract String getSearchTerm();
-    
-    int maxPages() {
-        return 5;
-    }
-    
+
     public static CompletableFuture<List<JsonObject>> getPhotos(String search, int maxPages) {
         final var future = new CompletableFuture<List<JsonObject>>();
         try {
@@ -75,7 +59,7 @@ public abstract class PexelsImageCommand extends ImageCommand {
             while (url != null) {
                 final URLConnection connection = new URL(url).openConnection();
                 connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey());
-                
+
                 JsonObject response;
                 try {
                     response = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
@@ -83,7 +67,7 @@ public abstract class PexelsImageCommand extends ImageCommand {
                 } catch (final IOException exception) {
                     continue;
                 }
-                
+
                 if (response.has("photos")) {
                     count++;
                     final JsonArray photos = response.getAsJsonArray("photos");
@@ -91,18 +75,18 @@ public abstract class PexelsImageCommand extends ImageCommand {
                         results.add(photoElement.getAsJsonObject());
                     }
                 }
-                
+
                 if (response.has("next_page")) {
                     url = response.get("next_page").getAsString();
                 } else {
                     url = null;
                 }
-                
+
                 if (count > maxPages) {
                     url = null;
                 }
             }
-            
+
             future.complete(results);
             return future;
         } catch (final IOException exception) {
@@ -111,16 +95,28 @@ public abstract class PexelsImageCommand extends ImageCommand {
             return future;
         }
     }
-    
+
     public static CompletableFuture<String> getRandomPhoto(String search, int maxPages) {
         final CompletableFuture<List<JsonObject>> futurePhotos = getPhotos(search, maxPages);
-        
+
         final var futurePhoto = new CompletableFuture<String>();
         futurePhotos.thenAccept(photos -> {
             final JsonObject photo = photos.get(ThreadLocalRandom.current().nextInt(photos.size()));
             futurePhoto.complete(photo.getAsJsonObject("src").get("original").getAsString());
         });
-        
+
         return futurePhoto;
+    }
+
+    private static BiConsumer<SlashCommandInteractionEvent, ImageCommandType> createRunner() {
+        return (event, cmd) -> {
+            final PexelsImageCommandType pexelsCmd = (PexelsImageCommandType) cmd;
+            event.deferReply().setContent("Loading " + WordUtils.capitalize(pexelsCmd.searchTerm) + " image...")
+                .mentionRepliedUser(false).queue(msg -> {
+                    final String search = URLEncoder.encode(pexelsCmd.searchTerm.trim(), StandardCharsets.UTF_8);
+                    final CompletableFuture<String> futurePhoto = getRandomPhoto(search, pexelsCmd.maxPages);
+                    futurePhoto.thenAccept(photo -> event.getHook().setEphemeral(false).editOriginal(photo).queue());
+                });
+        };
     }
 }

@@ -28,50 +28,10 @@ import io.github.darealturtywurty.superturtybot.commands.fun.ProgrammingMemeComm
 import io.github.darealturtywurty.superturtybot.commands.fun.ReverseTextCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.UpsideDownTextCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.UrbanDictionaryCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.BeeCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.BirdCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.BlepCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.BunnyCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.CatBombCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.CatCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.CowCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.CrabCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.DogBombCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.DogCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.DogeCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.DolphinCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.DuckCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.ElephantCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.FoodPornCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.ForestCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.FoxCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.GiraffeCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.GorillaCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.HorseCommand;
 import io.github.darealturtywurty.superturtybot.commands.image.HttpCatCommand;
 import io.github.darealturtywurty.superturtybot.commands.image.HttpDogCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.InsectCommand;
+import io.github.darealturtywurty.superturtybot.commands.image.ImageCommand;
 import io.github.darealturtywurty.superturtybot.commands.image.InspiroBotCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.JellyfishCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.KoalaCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.LionCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.MonkeyCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.NatureCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.OwlCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.PandaCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.PigCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.RaccoonCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.RedPandaCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.SheepCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.SnakeCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.SpaceCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.SpiderCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.SquirrelCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.TigerCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.TurtleCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.WhaleCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.WolfCommand;
-import io.github.darealturtywurty.superturtybot.commands.image.ZebraCommand;
 import io.github.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import io.github.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import io.github.darealturtywurty.superturtybot.commands.levelling.XPInventoryCommand;
@@ -149,25 +109,25 @@ public class CommandHook extends ListenerAdapter {
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
-    
+
     private Set<CoreCommand> commands = new HashSet<>();
-    
+
     private CommandHook() {
     }
-    
+
     public Set<CoreCommand> getCommands() {
         return Set.of(this.commands.toArray(new CoreCommand[0]));
     }
-    
+
     @Override
     public void onReady(ReadyEvent event) {
         super.onReady(event);
         this.commands.clear();
         this.commands.addAll(registerCommands(event.getJDA()));
-        
+
         printCommandList(event.getJDA(), this.commands);
     }
-    
+
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription());
@@ -175,24 +135,24 @@ public class CommandHook extends ListenerAdapter {
             if (!options.isEmpty()) {
                 data.addOptions(options);
             }
-            
+
             final List<SubcommandData> subcommands = cmd.createSubcommands();
             if (!subcommands.isEmpty()) {
                 data.addSubcommands(subcommands);
             }
-            
+
             updates.addCommands(data);
         }
-        
+
         if (cmd.types.messageCtx()) {
             updates.addCommands(Commands.message(cmd.getRichName()));
         }
-        
+
         if (cmd.types.userCtx()) {
             updates.addCommands(Commands.user(cmd.getRichName()));
         }
     }
-    
+
     private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
         final TextChannel cmdList = jda.getTextChannelById(993264482597998673L);
         final var builder = new StringBuilder();
@@ -207,10 +167,10 @@ public class CommandHook extends ListenerAdapter {
                 } else if (previous.get() == null) {
                     builder.append("**" + cmd.getCategory().getName() + "**\n");
                 }
-                
+
                 builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
                 previous.set(cmd);
-                
+
                 if (cmd.types.slash()) {
                     slashes.incrementAndGet();
                 } else {
@@ -221,7 +181,7 @@ public class CommandHook extends ListenerAdapter {
         cmdList.editMessageById(993441358658404362L, "\n\nThere are **" + slashes.get()
             + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.").queue();
     }
-    
+
     private static Set<CoreCommand> registerCommands(JDA jda) {
         final Set<CoreCommand> cmds = new HashSet<>();
         // Core
@@ -233,7 +193,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
         cmds.add(new UserConfigCommand());
-        
+
         // Utility
         cmds.add(new BotInfoCommand());
         cmds.add(new UserInfoCommand());
@@ -252,7 +212,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new HighlightCommand());
         cmds.add(new RainbowSixStatsCommand());
         cmds.add(new ReactionRoleCommand());
-        
+
         // Moderation
         cmds.add(new BanCommand());
         cmds.add(new UnbanCommand());
@@ -267,7 +227,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SlowmodeCommand());
         cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
-        
+
         // NSFW
         NSFWCommandList.addAll(cmds);
         cmds.add(new HentaiCommand());
@@ -285,7 +245,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new LoliCommand());
         cmds.add(new OrgasmCommand());
         cmds.add(new Rule34Command());
-        
+
         // Music
         cmds.add(new JoinCommand());
         cmds.add(new LeaveCommand());
@@ -300,55 +260,15 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShuffleCommand());
         cmds.add(new ClearCommand());
         cmds.add(new SearchCommand());
-        
+
         // Image
-        cmds.add(new CatCommand());
-        cmds.add(new CatBombCommand());
-        cmds.add(new BlepCommand());
-        cmds.add(new DogCommand());
-        cmds.add(new DogBombCommand());
-        cmds.add(new DogeCommand());
-        cmds.add(new PandaCommand());
-        cmds.add(new RedPandaCommand());
-        cmds.add(new FoxCommand());
-        cmds.add(new KoalaCommand());
-        cmds.add(new BirdCommand());
-        cmds.add(new RaccoonCommand());
-        cmds.add(new SnakeCommand());
-        cmds.add(new BunnyCommand());
-        cmds.add(new DuckCommand());
         cmds.add(new HttpCatCommand());
-        cmds.add(new NatureCommand());
-        cmds.add(new ElephantCommand());
-        cmds.add(new GiraffeCommand());
-        cmds.add(new ZebraCommand());
-        cmds.add(new LionCommand());
-        cmds.add(new TigerCommand());
-        cmds.add(new MonkeyCommand());
-        cmds.add(new GorillaCommand());
-        cmds.add(new WhaleCommand());
-        cmds.add(new DolphinCommand());
-        cmds.add(new TurtleCommand());
-        cmds.add(new JellyfishCommand());
-        cmds.add(new CrabCommand());
-        cmds.add(new ForestCommand());
-        cmds.add(new OwlCommand());
-        cmds.add(new WolfCommand());
-        cmds.add(new SpiderCommand());
-        cmds.add(new HorseCommand());
-        cmds.add(new CowCommand());
-        cmds.add(new SheepCommand());
-        cmds.add(new PigCommand());
-        cmds.add(new SquirrelCommand());
-        cmds.add(new InsectCommand());
-        cmds.add(new BeeCommand());
-        cmds.add(new SpaceCommand());
         cmds.add(new MemeCommand());
         cmds.add(new ProgrammingMemeCommand());
         cmds.add(new InspiroBotCommand());
-        cmds.add(new FoodPornCommand());
         cmds.add(new HttpDogCommand());
-        
+        cmds.add(new ImageCommand());
+
         // Fun
         cmds.add(new AdviceCommand());
         // cmds.add(new AmongUsCommand());
@@ -361,20 +281,20 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-        
+
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         cmds.add(new XPInventoryCommand());
-        
+
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
             cmds.forEach(cmd -> registerCommand(cmd, updates, guild));
             updates.queue();
         });
-        
+
         cmds.forEach(jda::addEventListener);
-        
+
         return cmds;
     }
 }

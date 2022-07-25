@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-public class HttpCatCommand extends ImageCommand {
+public class HttpCatCommand extends AbstractImageCommand {
     private static final Map<Integer, String> STATUS_CODES = new HashMap<>() {
         private static final long serialVersionUID = 1169231675070322026L;
         {
@@ -85,55 +85,55 @@ public class HttpCatCommand extends ImageCommand {
             put(599, "Network Connect Timeout Error");
         }
     };
-    
+
     public HttpCatCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.INTEGER, "status_code", "The HTTP status code", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.IMAGE;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets a cat image for the corresponding http status code.";
     }
-    
+
     @Override
     public ImageCategory getImageCategory() {
         return ImageCategory.FUN;
     }
-    
+
     @Override
     public String getName() {
         return "httpcat";
     }
-    
+
     @Override
     public String getRichName() {
         return "HTTP Cat";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         int statusCode = event.getOption("status_code").getAsInt();
         if (!STATUS_CODES.containsKey(statusCode)) {
             statusCode = 404;
         }
-        
+
         try {
             final URLConnection connection = new URL("https://http.cat/" + statusCode).openConnection();
             event.deferReply().addFile(connection.getInputStream(), statusCode + ".png").mentionRepliedUser(false)
                 .queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("There was an issue getting this HTTP Cat!").mentionRepliedUser(false)
+            event.deferReply(true).setContent("â?Œ There was an issue getting this HTTP Cat!").mentionRepliedUser(false)
                 .queue();
         }
     }

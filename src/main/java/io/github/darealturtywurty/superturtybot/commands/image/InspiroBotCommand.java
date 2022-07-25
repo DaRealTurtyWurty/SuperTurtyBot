@@ -12,7 +12,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
-public class InspiroBotCommand extends ImageCommand {
+public class InspiroBotCommand extends AbstractImageCommand {
     public InspiroBotCommand() {
         super(new Types(true, false, false, false));
     }
