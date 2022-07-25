@@ -5,13 +5,16 @@ import java.time.Instant;
 import java.util.List;
 
 import io.github.darealturtywurty.superturtybot.Environment;
+import io.github.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -24,8 +27,8 @@ public class HelpCommand extends CoreCommand {
     
     @Override
     public List<OptionData> createOptions() {
-        return List
-            .of(new OptionData(OptionType.STRING, "command", "Gets information about a specific command.", false));
+        return List.of(new OptionData(OptionType.STRING, "command", "Gets information about a specific command.", false)
+            .setAutoComplete(true));
     }
     
     @Override
@@ -46,6 +49,23 @@ public class HelpCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Help";
+    }
+    
+    @Override
+    public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
+        if (!event.getName().equalsIgnoreCase(getName()))
+            return;
+
+        final String term = event.getFocusedOption().getValue().toLowerCase();
+
+        final List<String> commands = CommandHook.INSTANCE.getCommands().stream()
+            .filter(cmd -> cmd.getName().contains(term)).filter(cmd -> {
+                if (!event.isFromGuild() || !(cmd instanceof NSFWCommand))
+                    return true;
+                final TextChannel channel = (TextChannel) event.getChannel();
+                return channel.isNSFW();
+            }).limit(25).map(CoreCommand::getName).toList();
+        event.replyChoiceStrings(commands).queue();
     }
     
     @Override
