@@ -8,8 +8,6 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import io.github.darealturtywurty.superturtybot.commands.image.ImageCommandRegistry;
-import io.github.darealturtywurty.superturtybot.commands.image.ImageCommandType;
 import io.github.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
@@ -18,7 +16,6 @@ import io.github.darealturtywurty.superturtybot.modules.StarboardManager;
 import io.github.darealturtywurty.superturtybot.modules.StatTracker;
 import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
-import io.github.darealturtywurty.superturtybot.registry.Registry;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -27,8 +24,6 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class TurtyBot {
-    public static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new ImageCommandRegistry();
-    
     public static void main(String[] args) throws LoginException {
         final var jdaBuilder = JDABuilder.createDefault(args.length < 1 ? Environment.INSTANCE.botToken() : args[0]);
         configureBuilder(jdaBuilder);
