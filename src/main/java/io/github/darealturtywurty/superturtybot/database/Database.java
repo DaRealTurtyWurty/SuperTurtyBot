@@ -16,11 +16,13 @@ import com.mongodb.client.model.Indexes;
 import io.github.darealturtywurty.superturtybot.Environment;
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Counting;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 
 public class Database {
@@ -33,7 +35,9 @@ public class Database {
     public final MongoCollection<Warning> warnings;
     public final MongoCollection<Tag> tags;
     public final MongoCollection<Showcase> starboard;
-    
+    public final MongoCollection<GuildConfig> guildConfig;
+    public final MongoCollection<UserConfig> userConfig;
+
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
@@ -51,6 +55,8 @@ public class Database {
         this.warnings = database.getCollection("warnings", Warning.class);
         this.tags = database.getCollection("tags", Tag.class);
         this.starboard = database.getCollection("starboard", Showcase.class);
+        this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
+        this.userConfig = database.getCollection("userConfig", UserConfig.class);
         
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -64,6 +70,8 @@ public class Database {
         this.warnings.createIndex(guildUserIndex);
         this.tags.createIndex(guildUserIndex);
         this.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
+        this.guildConfig.createIndex(guildIndex);
+        this.userConfig.createIndex(guildUserIndex);
     }
     
     public static Database getDatabase() {
