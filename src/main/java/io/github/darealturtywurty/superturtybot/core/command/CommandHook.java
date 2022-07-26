@@ -15,6 +15,7 @@ import io.github.darealturtywurty.superturtybot.commands.core.PingCommand;
 import io.github.darealturtywurty.superturtybot.commands.core.RestartCommand;
 import io.github.darealturtywurty.superturtybot.commands.core.ShutdownCommand;
 import io.github.darealturtywurty.superturtybot.commands.core.TagCommand;
+import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
 import io.github.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.AdviceCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.CoinFlipCommand;
@@ -192,6 +193,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new EvalCommand());
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
+        cmds.add(new ServerConfigCommand());
         cmds.add(new UserConfigCommand());
 
         // Utility
