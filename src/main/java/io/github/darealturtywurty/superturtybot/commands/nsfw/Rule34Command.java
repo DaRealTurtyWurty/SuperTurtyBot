@@ -18,27 +18,32 @@ public class Rule34Command extends NSFWCommand {
     public Rule34Command() {
         super(NSFWCategory.MISC);
     }
-
+    
     @Override
     public String getDescription() {
         return "Searches rule34 for the inputted search phrase";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return ".rule34 [searchTerm]";
     }
 
     @Override
     public String getName() {
         return "rule34";
     }
-
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         // TODO: Check user config to see if they have denied NSFW usage
         // TODO: Check server config to see if the server has disabled this command
         if (event.isFromGuild() && !event.getChannel().asTextChannel().isNSFW())
             return;
-
+        
         // Essential
         super.runNormalMessage(event);
-
+        
         final String content = event.getMessage().getContentRaw();
         final String[] args = content.split(" ");
         if (args.length < 2)
@@ -49,7 +54,7 @@ public class Rule34Command extends NSFWCommand {
             final Document document = Jsoup
                 .connect("https://rule34.xxx/index.php?page=post&s=list&tags=" + encodedInput).get();
             final Element pagination = document.getElementsByClass("pagination").first();
-
+            
             int pages;
             if (pagination == null) {
                 pages = 1;
@@ -60,7 +65,7 @@ public class Rule34Command extends NSFWCommand {
                 if (pages < 1) {
                     pages = 1;
                 }
-
+                
                 for (final Element pageBtn : pageButtons) {
                     if ("last page".equalsIgnoreCase(pageBtn.attr("alt"))) {
                         pages = Integer.parseInt(pageBtn.attr("href").split("&pid=")[1]) / 42;
@@ -68,12 +73,12 @@ public class Rule34Command extends NSFWCommand {
                     }
                 }
             }
-
+            
             final int randomPage = ThreadLocalRandom.current().nextInt(pages);
             final String newURL = "https://rule34.xxx/index.php?page=post&s=list&tags=" + encodedInput + "&pid="
                 + randomPage * 42;
             final Document newPage = Jsoup.connect(newURL).get();
-
+            
             final Element imageList = newPage.getElementsByClass("image-list").first();
             final List<String> images = imageList.getElementsByClass("thumb").stream()
                 .map(element -> element.select("a")).map(element -> element.attr("href")).collect(Collectors.toList());

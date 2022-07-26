@@ -32,37 +32,42 @@ public class GithubRepositoryCommand extends CoreCommand {
     public GithubRepositoryCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "repository", "The name of the repository", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Get stats about a GitHub Repository.";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/github [repositoryName]";
+    }
+
     @Override
     public String getName() {
         return "github";
     }
-    
+
     @Override
     public String getRichName() {
         return "Github Repository";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String repositoryName = URLEncoder.encode(event.getOption("repository").getAsString(),
             StandardCharsets.UTF_8);
-        
+
         Repository repo;
         try {
             repo = searchGithubRepo(repositoryName);
@@ -72,7 +77,7 @@ public class GithubRepositoryCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         if (repo != null) {
             final EmbedBuilder embed = createEmbed(repo);
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
@@ -82,7 +87,7 @@ public class GithubRepositoryCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
         }
     }
-    
+
     private static EmbedBuilder createEmbed(Repository repo) {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -107,26 +112,26 @@ public class GithubRepositoryCommand extends CoreCommand {
         embed.addField("License:", "Name: " + repo.license.name + " (" + repo.license.key + ")", false);
         return embed;
     }
-    
+
     private static Repository getDetails(final JsonObject from) {
         final String name = from.get("name").getAsString();
         final String authorName = from.get("owner").getAsJsonObject().get("login").getAsString();
         final String url = from.get("html_url").getAsString();
-        
+
         String description = "No description provided.";
         if (!(from.get("description") instanceof JsonNull)) {
             description = from.get("description").getAsString();
         }
-        
+
         String language = "No language";
         if (!(from.get("language") instanceof JsonNull)) {
             language = from.get("language").getAsString();
         }
-        
+
         final String defaultBranch = from.get("default_branch").getAsString();
         final String createdAt = from.get("created_at").getAsString();
         final String updatedAt = from.get("updated_at").getAsString();
-        
+
         License license;
         if (!(from.get("license") instanceof JsonNull)) {
             final JsonObject licenseObj = from.get("license").getAsJsonObject();
@@ -134,7 +139,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         } else {
             license = new License("arr", "All Rights Reserved");
         }
-        
+
         final int stars = from.get("stargazers_count").getAsInt();
         final int forks = from.get("forks_count").getAsInt();
         final int watchers = from.get("watchers_count").getAsInt();
@@ -146,7 +151,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         return new Repository(name, authorName, url, description, language, defaultBranch, createdAt, updatedAt,
             license, stars, forks, watchers, openIssueCount, estimateSize, isFork, isArchived, isDisabled);
     }
-    
+
     private static Color languageToColor(final String language) {
         try {
             final URLConnection urlc = new URL("https://raw.githubusercontent.com/ozh/github-colors/master/colors.json")
@@ -155,7 +160,7 @@ public class GithubRepositoryCommand extends CoreCommand {
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
             final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(urlc.getInputStream())));
             final JsonObject master = Constants.GSON.fromJson(result, JsonObject.class);
-            
+
             return master.has(language)
                 ? Color.decode(master.get(language).getAsJsonObject().get("color").getAsString())
                 : Color.WHITE;
@@ -163,7 +168,7 @@ public class GithubRepositoryCommand extends CoreCommand {
             return Color.WHITE;
         }
     }
-    
+
     @SuppressWarnings("deprecation")
     private static Date parseDateTime(final String dateTime) {
         final int year = Integer.parseInt(dateTime.split("-")[0]);
@@ -174,7 +179,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         final int second = Integer.parseInt(dateTime.split("T")[1].split(":")[2].split("Z")[0]);
         return new Date(year - 1900, month, day, hour, minute, second);
     }
-    
+
     private static Repository searchGithubRepo(final String repo) throws IOException {
         final var url = new URL("https://api.github.com/search/repositories?q=" + repo + "&sort=stars&order=desc");
         final URLConnection urlc = url.openConnection();
@@ -188,12 +193,12 @@ public class GithubRepositoryCommand extends CoreCommand {
         }
         return null;
     }
-    
+
     private static record Repository(String name, String authorName, String url, String description, String language,
         String defaultBranch, String creationDate, String lastUpdated, License license, int stars, int forks,
         int watchers, int openIssueCount, int estimateSize, boolean isFork, boolean archived, boolean disabled) {
     }
-    
+
     private static record License(String key, String name) {
     }
 }

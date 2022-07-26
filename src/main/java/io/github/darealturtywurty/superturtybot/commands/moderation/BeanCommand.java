@@ -26,10 +26,15 @@ public class BeanCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Beans a user";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return "/bean [user]\n/bean [user] [deleteDays]\n/bean [user] [reason]\n/bean [user] [deleteDays] [reason]\n/bean [user] [reason] [deleteDays]";
     }
     
     @Override
@@ -40,6 +45,11 @@ public class BeanCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "bean";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

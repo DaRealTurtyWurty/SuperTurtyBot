@@ -11,7 +11,7 @@ public abstract class NSFWCommand extends CoreCommand {
         super(new Types(false, true, false, false));
         this.category = category;
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.NSFW;

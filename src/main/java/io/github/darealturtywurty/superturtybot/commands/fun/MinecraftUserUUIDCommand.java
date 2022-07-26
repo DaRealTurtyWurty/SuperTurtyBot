@@ -22,32 +22,37 @@ public class MinecraftUserUUIDCommand extends CoreCommand {
     public MinecraftUserUUIDCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "username", "The username used to get the UUID from", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets the UUID from a Minecraft User's Name.";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/mc-uuid [username]";
+    }
+
     @Override
     public String getName() {
         return "mc-uuid";
     }
-    
+
     @Override
     public String getRichName() {
         return "Minecraft User UUID";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String username = URLEncoder.encode(event.getOption("username").getAsString().trim(),
@@ -57,7 +62,7 @@ public class MinecraftUserUUIDCommand extends CoreCommand {
             final String response = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
             if (response.contains("not found"))
                 throw new IllegalArgumentException(response);
-            
+
             event.deferReply()
                 .addEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.BLUE)
                     .setDescription(

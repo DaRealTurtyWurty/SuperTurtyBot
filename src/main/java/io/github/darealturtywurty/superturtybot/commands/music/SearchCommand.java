@@ -32,10 +32,15 @@ public class SearchCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-    
+
     @Override
     public String getDescription() {
         return "Searches for a specific song, showing the results";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return "/search [term]";
     }
     
     @Override
@@ -46,6 +51,11 @@ public class SearchCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Search";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

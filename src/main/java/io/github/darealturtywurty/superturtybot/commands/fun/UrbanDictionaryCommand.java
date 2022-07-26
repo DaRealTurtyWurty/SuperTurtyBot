@@ -29,40 +29,45 @@ import okhttp3.Response;
 
 public class UrbanDictionaryCommand extends CoreCommand {
     private static final OkHttpClient CLIENT = new OkHttpClient();
-    
+
     static {
         ShutdownHooks.register(() -> ShutdownHooks.shutdownOkHttpClient(CLIENT));
     }
-    
+
     public UrbanDictionaryCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "search_term", "The thing that you want to search", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-    
+
     @Override
     public String getDescription() {
         return "Searches the Urban Dictionary for a definition of the given term";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/urban [searchTerm]";
+    }
+
     @Override
     public String getName() {
         return "urban";
     }
-    
+
     @Override
     public String getRichName() {
         return "Urban Dictionary";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String searchTerm = URLEncoder.encode(event.getOption("search_term").getAsString().toLowerCase().trim(),
@@ -73,7 +78,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
                 .queue();
             return;
         }
-        
+
         if (returned.getRight().isLeft()) {
             event.deferReply().setContent(returned.getRight().left().toOptional().get()).mentionRepliedUser(false)
                 .queue();
@@ -82,7 +87,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
         }
     }
-    
+
     private static Pair<Boolean, Either<String, EmbedBuilder>> makeRequest(String searchTerm) {
         try {
             final Request request = new Request.Builder()
@@ -94,9 +99,9 @@ public class UrbanDictionaryCommand extends CoreCommand {
             final JsonArray list = json.getAsJsonArray("list");
             if (list.isEmpty())
                 return Pair.of(false, Either.ofLeft("No Results Found!"));
-            
+
             final JsonObject first = list.get(0).getAsJsonObject();
-            
+
             final var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
             embed.setColor(Color.GREEN);
@@ -106,9 +111,9 @@ public class UrbanDictionaryCommand extends CoreCommand {
                 + first.get("example").getAsString());
             embed.setFooter("👍" + first.get("thumbs_up").getAsInt() + " 👎" + first.get("thumbs_down").getAsInt()
                 + " | Written By: " + first.get("author").getAsString());
-            
+
             response.close();
-            
+
             return Pair.of(true, Either.ofRight(embed));
         } catch (final IOException exception) {
             return Pair.of(false, Either.ofLeft("Failed to connect!"));

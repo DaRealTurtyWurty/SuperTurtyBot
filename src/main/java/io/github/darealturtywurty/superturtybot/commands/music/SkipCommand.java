@@ -12,6 +12,11 @@ public class SkipCommand extends CoreCommand {
     public SkipCommand() {
         super(new Types(true, false, false, false));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators, Owner of song, Everyone (if owner isn't in VC)";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -31,6 +36,11 @@ public class SkipCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Skip";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

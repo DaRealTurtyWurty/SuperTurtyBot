@@ -30,7 +30,7 @@ public class ServerConfigCommand extends CoreCommand {
     public ServerConfigCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     //@formatter:off
     @Override
     public List<SubcommandData> createSubcommands() {
@@ -42,52 +42,67 @@ public class ServerConfigCommand extends CoreCommand {
                 .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
     //@formatter:on
+
+    @Override
+    public String getAccess() {
+        return "Server Owner";
+    }
     
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-    
+
     @Override
     public String getDescription() {
         return "Sets up this server's config";
     }
 
     @Override
+    public String getHowToUse() {
+        return "/serverconfig get\n/serverconfig get [key]\n/serverconfig set [key] [value]";
+    }
+
+    @Override
     public String getName() {
         return "serverconfig";
     }
-
+    
     @Override
     public String getRichName() {
         return "Server Config";
     }
     
     @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+
+    @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
         if (!event.isFromGuild() || !event.getName().equals(getName()))
             return;
-
+        
         final String term = event.getFocusedOption().getValue();
-
+        
         final List<String> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry().entrySet().stream()
             .map(Entry::getValue).map(ServerConfigOption::getSaveName).filter(key -> key.contains(term)).limit(25)
             .toList();
         event.replyChoiceStrings(keys).queue();
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong())
             return;
-        
+
         final String subcommand = event.getSubcommandName();
         if ("get".equalsIgnoreCase(subcommand)) {
             final String key = event.getOption("key", null, OptionMapping::getAsString);
-            
+
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
-            
+
             if (key == null) {
                 // Get all data
                 final Map<String, Object> configValues = new HashMap<>();
@@ -105,30 +120,30 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, embed);
                 return;
             }
-            
+
             // Get data by the given key
             final String copyKey = key.trim();
             final Optional<ServerConfigOption> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
                 .entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(copyKey))
                 .map(Entry::getValue).findFirst();
-
+            
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
                 return;
             }
-
+            
             final ServerConfigOption option = found.get();
             final Object value = option.getValueFromConfig().apply(config);
             reply(event, "✅ The value assigned to `" + option.getRichName() + "` is `" + value + "`!");
         }
-        
+
         if ("set".equalsIgnoreCase(subcommand)) {
             final String key = event.getOption("key", "", OptionMapping::getAsString);
             final String value = event.getOption("value", "", OptionMapping::getAsString);
-            
+
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
-
+            
             final Optional<Entry<String, ServerConfigOption>> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS
                 .getRegistry().entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(key))
                 .findFirst();
@@ -136,7 +151,7 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
                 return;
             }
-            
+
             final ServerConfigOption option = found.get().getValue();
             if (Boolean.FALSE.equals(option.getDataType().validator.apply(value))) {
                 reply(event,
@@ -145,12 +160,12 @@ public class ServerConfigCommand extends CoreCommand {
                     false, true);
                 return;
             }
-            
+
             if (!option.validate(event, value)) {
                 reply(event, "❌ `" + value + "` is not a valid input for `" + option.getRichName() + "`!", false, true);
                 return;
             }
-
+            
             option.serialize(config, value);
             final Bson update = Updates.set(option.getSaveName(), option.getValueFromConfig().apply(config));
             final UpdateResult result = Database.getDatabase().guildConfig.updateOne(filter, update);
@@ -158,22 +173,22 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, "✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!");
                 return;
             }
-            
+
             reply(event, "❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!", false,
                 true);
         }
     }
-    
+
     private static GuildConfig get(Bson filter, Guild guild) {
         GuildConfig found = Database.getDatabase().guildConfig.find(filter).first();
         if (found == null) {
             found = new GuildConfig(guild.getIdLong());
             Database.getDatabase().guildConfig.insertOne(found);
         }
-        
+
         return found;
     }
-    
+
     private static Bson getFilter(Guild guild) {
         return Filters.eq("guild", guild.getIdLong());
     }

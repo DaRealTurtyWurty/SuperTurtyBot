@@ -18,6 +18,11 @@ public class ConsiderSuggestionCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Server Owner";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
@@ -25,6 +30,11 @@ public class ConsiderSuggestionCommand extends CoreCommand {
     @Override
     public String getDescription() {
         return "Considers a suggestion";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return ".consider [number]\n.consider [number] [reason]";
     }
     
     @Override
@@ -38,9 +48,19 @@ public class ConsiderSuggestionCommand extends CoreCommand {
     }
     
     @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+    
+    @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         if (!event.isFromGuild()) {
             event.getMessage().reply("You must be in a server to use this command!").mentionRepliedUser(false).queue();
+            return;
+        }
+
+        if (event.getAuthor().getIdLong() != event.getGuild().getOwnerIdLong()) {
+            reply(event, "❌ You must be the server owner to use this command!", false);
             return;
         }
         

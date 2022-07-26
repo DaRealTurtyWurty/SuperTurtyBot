@@ -28,11 +28,11 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class StrawpollCommand extends CoreCommand {
     protected static final String STRAWPOLL_URL = "https://strawpoll.com/api/poll";
-    
+
     public StrawpollCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(
@@ -58,27 +58,32 @@ public class StrawpollCommand extends CoreCommand {
                 "When this poll ends [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional",
                 false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Creates a strawpoll";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/strawpoll [question] [option1] [option2] (optional: [option3] [option4] [option5] [description] [isPrivate] [isMultipleChoice] [isNameRequired] [isReCAPTCHArequired] [isVPNallowed] [allowComments] [ip|browser] [deadline])";
+    }
+
     @Override
     public String getName() {
         return "strawpoll";
     }
-    
+
     @Override
     public String getRichName() {
         return "Create Strawpoll";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String question = event.getOption("question").getAsString();
@@ -105,7 +110,7 @@ public class StrawpollCommand extends CoreCommand {
                     .mentionRepliedUser(false).queue();
                 return null;
             }
-            
+
             try {
                 return DateFormat.getInstance().parseObject(parseDate(parts));
             } catch (final ParseException exception) {
@@ -116,17 +121,17 @@ public class StrawpollCommand extends CoreCommand {
                 return null;
             }
         });
-        
+
         if (deadline == null && event.getInteraction().isAcknowledged())
             return;
-        
+
         event.deferReply()
             .setContent(
                 createPoll(new StrawpollEntry(question, description, isPrivate, multipleChoice, nameRequired, reCAPTCHA,
                     allowVPN, allowComments, duplicationType, deadline, option1, option2, option3, option4, option5)))
             .mentionRepliedUser(false).queue();
     }
-    
+
     // TODO: Utility class
     public static String parseDate(final String[] parts) {
         final var deadlineStrBuilder = new StringBuilder();
@@ -137,7 +142,7 @@ public class StrawpollCommand extends CoreCommand {
             deadlineStrBuilder.append("00:00:00.000Z");
             return deadlineStrBuilder.toString();
         }
-        
+
         if (parts.length >= 4) {
             deadlineStrBuilder.append(parts[3] + ":");
             if (parts.length == 4) {
@@ -145,7 +150,7 @@ public class StrawpollCommand extends CoreCommand {
                 return deadlineStrBuilder.toString();
             }
         }
-        
+
         if (parts.length >= 5) {
             deadlineStrBuilder.append(parts[4] + ":");
             if (parts.length == 5) {
@@ -153,7 +158,7 @@ public class StrawpollCommand extends CoreCommand {
                 return deadlineStrBuilder.toString();
             }
         }
-        
+
         if (parts.length >= 6) {
             deadlineStrBuilder.append(parts[5] + ".");
             if (parts.length == 5) {
@@ -161,14 +166,14 @@ public class StrawpollCommand extends CoreCommand {
                 return deadlineStrBuilder.toString();
             }
         }
-        
+
         if (parts.length >= 7) {
             deadlineStrBuilder.append(parts[6] + "Z");
         }
-        
+
         return deadlineStrBuilder.toString();
     }
-    
+
     private static String createPoll(StrawpollEntry entry) {
         try {
             final var connection = (HttpsURLConnection) new URL(STRAWPOLL_URL).openConnection();
@@ -184,7 +189,7 @@ public class StrawpollCommand extends CoreCommand {
             if (entry.description() != null && !entry.description().isBlank()) {
                 poll.addProperty("description", entry.description());
             }
-            
+
             poll.addProperty("priv", entry.isPrivate());
             poll.addProperty("ma", entry.multiple());
             poll.addProperty("enter_name", entry.enterName());
@@ -195,24 +200,24 @@ public class StrawpollCommand extends CoreCommand {
             if (entry.deadline() != null) {
                 poll.addProperty("deadline", DateFormat.getInstance().format(entry.deadline()));
             }
-            
+
             final var options = new JsonArray();
             for (final String option : entry.options()) {
                 if (option != null && !option.isBlank()) {
                     options.add(option);
                 }
             }
-            
+
             poll.add("answers", options);
             parent.add("poll", poll);
-            
+
             final String json = Constants.GSON.toJson(parent);
             connection.getOutputStream().write(json.getBytes());
-            
+
             final var reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             final var response = Constants.GSON.fromJson(String.join("\n", IOUtils.readLines(reader)),
                 JsonObject.class);
-            
+
             final String url = "https://strawpoll.com/" + response.get("content_id").getAsString();
             Constants.LOGGER.info("FLOAT strawpoll was just created: {}", url);
             return url;
@@ -221,11 +226,11 @@ public class StrawpollCommand extends CoreCommand {
                 + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception);
         }
     }
-    
+
     public enum DuplicationType {
         IP, BROWSER;
     }
-    
+
     public record StrawpollEntry(String title, String description, boolean isPrivate, boolean multiple,
         boolean enterName, boolean reCAPTCHA, boolean allowVPN, boolean allowComments, DuplicationType duplicationCheck,
         Date deadline, String... options) {

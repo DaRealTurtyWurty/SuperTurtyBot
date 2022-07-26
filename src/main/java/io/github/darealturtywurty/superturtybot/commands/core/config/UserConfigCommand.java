@@ -55,6 +55,11 @@ public class UserConfigCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/userconfig get\n/userconfig get [key]\n/userconfig set [key] [value]";
+    }
+
+    @Override
     public String getName() {
         return "userconfig";
     }
@@ -62,6 +67,11 @@ public class UserConfigCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "User Config";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
 
     @Override

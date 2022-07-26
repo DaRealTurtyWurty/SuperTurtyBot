@@ -29,6 +29,11 @@ public class TimeoutCommand extends CoreCommand {
         return List.of(new OptionData(OptionType.USER, "member", "The member to timeout!", true),
             new OptionData(OptionType.STRING, "duration", "How long to timeout the member (in minutes)", true));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators (Manage Members Permission)";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -41,6 +46,11 @@ public class TimeoutCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/timeout [member] [duration]";
+    }
+    
+    @Override
     public String getName() {
         return "timeout";
     }
@@ -48,6 +58,11 @@ public class TimeoutCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Timeout Member";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

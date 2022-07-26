@@ -14,33 +14,38 @@ public class CoinFlipCommand extends CoreCommand {
     public CoinFlipCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "choice", "Whether you are choosing heads or tails", false)
             .addChoice("heads", "heads").addChoice("tails", "tails"));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-    
+
     @Override
     public String getDescription() {
         return "Flips a coin";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/coinflip\n/coinflip [heads or tails]";
+    }
+
     @Override
     public String getName() {
         return "coinflip";
     }
-    
+
     @Override
     public String getRichName() {
         return "Coin Flip";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final OptionMapping choice = event.getOption("choice");
@@ -61,7 +66,7 @@ public class CoinFlipCommand extends CoreCommand {
                     .mentionRepliedUser(false).queue();
                 return;
             }
-            
+
             if (choiceStr.contains("head")) {
                 choiceStr = "heads";
             } else if (choiceStr.contains("tail")) {
@@ -69,14 +74,14 @@ public class CoinFlipCommand extends CoreCommand {
             } else {
                 choiceStr = "side";
             }
-            
+
             String botChoice = "";
             if (ThreadLocalRandom.current().nextInt(1000) == 69) {
                 botChoice = "side";
             } else {
                 botChoice = ThreadLocalRandom.current().nextBoolean() ? "heads" : "tails";
             }
-            
+
             String reply = "";
             if (botChoice.equalsIgnoreCase(choiceStr)) {
                 if (choiceStr.contains("head")) {
@@ -93,7 +98,7 @@ public class CoinFlipCommand extends CoreCommand {
             } else {
                 reply = "You were incorrect! It landed on it's side 😲.";
             }
-            
+
             event.deferReply().setContent("You chose `" + choiceStr + "`. " + reply).mentionRepliedUser(false).queue();
         }
     }

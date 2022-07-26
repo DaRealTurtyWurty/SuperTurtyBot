@@ -24,10 +24,10 @@ public class SuggestCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "suggestion", "The thing that you want to suggest", true),
-            new OptionData(OptionType.STRING, "media_url",
-                "FLOAT media URL that you would like to add to your suggestion", false));
+            new OptionData(OptionType.STRING, "media_url", "A media URL that you would like to add to your suggestion",
+                false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -39,6 +39,11 @@ public class SuggestCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/suggest [suggestion]\n/suggest [suggestion] [mediaURL]";
+    }
+    
+    @Override
     public String getName() {
         return "suggest";
     }
@@ -46,6 +51,11 @@ public class SuggestCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Suggest";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

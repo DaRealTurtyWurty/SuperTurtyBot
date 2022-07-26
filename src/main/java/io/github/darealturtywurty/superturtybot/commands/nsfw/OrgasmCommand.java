@@ -18,7 +18,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class OrgasmCommand extends NSFWCommand {
     public static final String PATH = "src/main/resources/audio/orgasms/";
-
+    
     public OrgasmCommand() {
         super(NSFWCategory.MISC);
     }
@@ -27,25 +27,30 @@ public class OrgasmCommand extends NSFWCommand {
     public String getDescription() {
         return "Plays an orgasm sound in VC!";
     }
-
+    
     @Override
     public String getName() {
         return "orgasm";
     }
-
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+    
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         // TODO: Check user config to see if they have denied NSFW usage
         // TODO: Check server config to see if the server has disabled this command
         if (event.isFromGuild() && !event.getChannel().asTextChannel().isNSFW())
             return;
-
+        
         // Essential
         super.runNormalMessage(event);
-
+        
         if (!event.isFromGuild() || !event.getMember().getVoiceState().inAudioChannel())
             return;
-
+        
         List<File> files = new ArrayList<>();
         try (Stream<Path> paths = Files.list(Path.of(PATH))) {
             files = paths.map(Path::toFile).collect(Collectors.toList());
@@ -57,7 +62,7 @@ public class OrgasmCommand extends NSFWCommand {
                 .queue();
             return;
         }
-
+        
         Collections.shuffle(files);
         AudioManager.play(event.getGuild(), event.getMember().getVoiceState().getChannel(), files.get(0));
     }

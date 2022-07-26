@@ -16,7 +16,12 @@ public class DenySuggestionCommand extends CoreCommand {
     public DenySuggestionCommand() {
         super(new Types(false, true, false, false));
     }
-    
+
+    @Override
+    public String getAccess() {
+        return "Server Owner";
+    }
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -26,28 +31,43 @@ public class DenySuggestionCommand extends CoreCommand {
     public String getDescription() {
         return "Denies a suggestion";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return ".deny [number]\n.deny [number] [reason]";
+    }
+
     @Override
     public String getName() {
         return "deny";
     }
-    
+
     @Override
     public String getRichName() {
         return "Deny Suggestion";
     }
-    
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
         if (!event.isFromGuild()) {
             event.getMessage().reply("You must be in a server to use this command!").mentionRepliedUser(false).queue();
             return;
         }
-        
+
+        if (event.getAuthor().getIdLong() != event.getGuild().getOwnerIdLong()) {
+            reply(event, "❌ You must be the server owner to use this command!", false);
+            return;
+        }
+
         final TextChannel suggestionChannel = SuggestionManager.getSuggestionChannel(event);
         if (suggestionChannel == null)
             return;
-        
+
         final String message = event.getMessage().getContentRaw();
         final String[] args = message.split(" ");
         if (args.length < 2) {
@@ -55,7 +75,7 @@ public class DenySuggestionCommand extends CoreCommand {
                 .queue();
             return;
         }
-        
+
         String response = "No reason given";
         int suggestionNumber = 0;
         try {
@@ -64,21 +84,21 @@ public class DenySuggestionCommand extends CoreCommand {
             event.getMessage().reply("You must supply a valid suggestion number!").mentionRepliedUser(false).queue();
             return;
         }
-        
+
         if (args.length >= 3) {
             response = String.join(" ", args).replace(args[0] + " " + args[1], "");
         }
-        
+
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
             suggestionChannel, event.getMember(), suggestionNumber, response, SuggestionResponse.Type.DENIED);
-        
+
         suggestion.thenAccept(sug -> {
             if (sug == null) {
                 event.getMessage().reply("You must provide a valid suggestion number!").mentionRepliedUser(false)
                     .queue();
                 return;
             }
-            
+
             event.getMessage().delete().queue();
             event.getAuthor().openPrivateChannel().queue(channel -> {
                 final var embed = new EmbedBuilder();
@@ -88,7 +108,7 @@ public class DenySuggestionCommand extends CoreCommand {
                     + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong() + "/" + sug.getMessage());
                 embed.setFooter(event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator(),
                     event.getMember().getEffectiveAvatarUrl());
-                
+
                 channel.sendMessageEmbeds(embed.build()).queue();
             });
         });

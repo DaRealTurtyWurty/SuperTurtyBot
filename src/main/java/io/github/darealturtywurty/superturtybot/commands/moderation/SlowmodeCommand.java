@@ -22,6 +22,11 @@ public class SlowmodeCommand extends CoreCommand {
     }
 
     @Override
+    public String getAccess() {
+        return "Moderators (Manage Channel Permission)";
+    }
+    
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
@@ -29,6 +34,11 @@ public class SlowmodeCommand extends CoreCommand {
     @Override
     public String getDescription() {
         return "Puts the current channel on slowmode";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return "/slowmode\n/slowmode [time]";
     }
 
     @Override
@@ -39,6 +49,11 @@ public class SlowmodeCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Slowmode";
+    }
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
 
     @Override

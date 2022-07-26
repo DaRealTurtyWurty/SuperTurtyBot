@@ -9,27 +9,32 @@ public class JoinCommand extends CoreCommand {
     public JoinCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-    
+
     @Override
     public String getDescription() {
         return "Joins the user's vc";
     }
-    
+
     @Override
     public String getName() {
         return "joinvc";
     }
-    
+
     @Override
     public String getRichName() {
         return "Join VC";
     }
-    
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -37,7 +42,7 @@ public class JoinCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         if (event.getGuild().getAudioManager().isConnected()) {
             event.deferReply(true)
                 .setContent("❌ I am already connected to "
@@ -45,13 +50,13 @@ public class JoinCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         if (!event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         event.getGuild().getAudioManager().openAudioConnection(channel);
         event.deferReply().setContent("✅ I have joined " + channel.getAsMention() + "!").mentionRepliedUser(false)

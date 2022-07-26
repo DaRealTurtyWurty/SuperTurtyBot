@@ -12,6 +12,11 @@ public class ResumeCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators, Owner of Song";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
@@ -29,6 +34,11 @@ public class ResumeCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Resume";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

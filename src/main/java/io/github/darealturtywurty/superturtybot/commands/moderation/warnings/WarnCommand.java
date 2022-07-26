@@ -28,6 +28,11 @@ public class WarnCommand extends CoreCommand {
         return List.of(new OptionData(OptionType.USER, "user", "The user to warn", true),
             new OptionData(OptionType.STRING, "reason", "The reason for why you want to warn that user", false));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators (Ban Permission)";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -40,6 +45,11 @@ public class WarnCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/warn [user]\n/warn [user] [reason]";
+    }
+    
+    @Override
     public String getName() {
         return "warn";
     }
@@ -47,6 +57,11 @@ public class WarnCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Add Warning";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

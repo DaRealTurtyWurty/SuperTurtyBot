@@ -29,6 +29,11 @@ public class PurgeCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators (Manage Messages Permission)";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
@@ -36,6 +41,11 @@ public class PurgeCommand extends CoreCommand {
     @Override
     public String getDescription() {
         return "Purges a channel of n messages";
+    }
+    
+    @Override
+    public String getHowToUse() {
+        return "/purge\n/purge [amount]\n/purge [user]\n/purge [amount] [user]";
     }
     
     public CompletableFuture<List<Message>> getMessages(MessageChannel channel, int amount) {
@@ -52,6 +62,11 @@ public class PurgeCommand extends CoreCommand {
     @Override
     public String getName() {
         return "purge";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

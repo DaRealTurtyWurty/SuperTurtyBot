@@ -29,6 +29,11 @@ public class RemoveWarnCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators (Ban Permission)";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
@@ -39,6 +44,11 @@ public class RemoveWarnCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/removewarn [user] [warnUUID]";
+    }
+    
+    @Override
     public String getName() {
         return "removewarn";
     }
@@ -46,6 +56,11 @@ public class RemoveWarnCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Remove Warning";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

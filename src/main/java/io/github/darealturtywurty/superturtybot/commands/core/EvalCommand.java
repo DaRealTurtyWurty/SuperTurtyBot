@@ -28,6 +28,11 @@ public class EvalCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Bot Owner";
+    }
+    
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
@@ -38,10 +43,15 @@ public class EvalCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/eval [expression]";
+    }
+    
+    @Override
     public String getName() {
         return "eval";
     }
-    
+
     @Override
     public String getRichName() {
         return "Evaluate";

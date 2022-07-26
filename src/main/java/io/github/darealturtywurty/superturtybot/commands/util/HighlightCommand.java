@@ -41,7 +41,7 @@ public class HighlightCommand extends CoreCommand {
             new SubcommandData("delete", "Deletes an existing highlighter").addOption(OptionType.STRING, "id",
                 "The ID of the highlighter that you want to delete", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -53,6 +53,11 @@ public class HighlightCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/highlight create [text]\n/highlight create [text] [caseSensitive]\nhighlight list\n/highlight delete [id]";
+    }
+    
+    @Override
     public String getName() {
         return "highlight";
     }
@@ -60,6 +65,11 @@ public class HighlightCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Highlight";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

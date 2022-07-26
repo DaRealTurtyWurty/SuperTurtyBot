@@ -22,7 +22,7 @@ public class WarningsCommand extends CoreCommand {
     public WarningsCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true));
@@ -32,22 +32,32 @@ public class WarningsCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets all warnings for a user";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/warnings\n/warnings [user]";
+    }
+
     @Override
     public String getName() {
         return "warnings";
     }
-    
+
     @Override
     public String getRichName() {
         return "Gather Warnings";
     }
-    
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -55,10 +65,10 @@ public class WarningsCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         final User user = event.getOption("user").getAsUser();
         final Set<Warning> warns = WarnManager.getWarns(event.getGuild(), user);
-        
+
         final var embed = new EmbedBuilder();
         embed.setColor(Color.BLUE);
         embed.setTitle(user.getName() + "'s warnings!");
@@ -77,14 +87,14 @@ public class WarningsCommand extends CoreCommand {
                 });
             }
         }
-        
+
         embed.setTimestamp(Instant.now());
         embed.setFooter(event.getMember().getEffectiveName() + "#" + event.getUser().getDiscriminator(),
             event.getMember().getEffectiveAvatarUrl());
-        
+
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-    
+
     // TODO: Utility class
     private static String formatTime(OffsetDateTime time) {
         return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);

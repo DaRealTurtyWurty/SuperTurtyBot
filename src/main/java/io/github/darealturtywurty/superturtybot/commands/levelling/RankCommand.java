@@ -78,6 +78,11 @@ public class RankCommand extends CoreCommand {
     public String getDescription() {
         return "Gets the rank of yourself or the provided member";
     }
+
+    @Override
+    public String getHowToUse() {
+        return "/rank\n/rank [user]";
+    }
     
     @Override
     public String getName() {
@@ -104,6 +109,11 @@ public class RankCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Rank";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

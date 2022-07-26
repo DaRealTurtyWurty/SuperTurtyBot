@@ -16,6 +16,11 @@ public class ClearCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators, Owner of all songs (if present in VC), Everyone (if the owners of the songs are not in VC)";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
@@ -33,6 +38,11 @@ public class ClearCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Clear Queue";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

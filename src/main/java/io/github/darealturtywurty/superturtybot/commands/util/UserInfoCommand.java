@@ -38,6 +38,11 @@ public class UserInfoCommand extends CoreCommand {
     }
 
     @Override
+    public String getHowToUse() {
+        return "/userinfo\n/userinfo [user]";
+    }
+
+    @Override
     public String getName() {
         return "userinfo";
     }
@@ -45,6 +50,11 @@ public class UserInfoCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "User Info";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
 
     @Override

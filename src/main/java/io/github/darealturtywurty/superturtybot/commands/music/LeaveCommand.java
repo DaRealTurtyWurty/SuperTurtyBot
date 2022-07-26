@@ -9,6 +9,11 @@ public class LeaveCommand extends CoreCommand {
     public LeaveCommand() {
         super(new Types(true, false, false, false));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators, Singular Person in VC";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -28,6 +33,11 @@ public class LeaveCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Leave VC";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

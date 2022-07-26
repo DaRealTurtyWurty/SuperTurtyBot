@@ -67,6 +67,11 @@ public class PollCommand extends CoreCommand {
     }
 
     @Override
+    public String getHowToUse() {
+        return "/poll [question] [option1] [option2]\n/poll [question] [option1] [option2] [option3]\n/poll [question] [option1] [option2] [option3] [option4-10]";
+    }
+
+    @Override
     public String getName() {
         return "poll";
     }

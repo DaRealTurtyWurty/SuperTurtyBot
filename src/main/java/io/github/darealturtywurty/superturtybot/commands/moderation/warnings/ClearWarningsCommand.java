@@ -23,6 +23,11 @@ public class ClearWarningsCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators (Ban Permission)";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -35,6 +40,11 @@ public class ClearWarningsCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/clearwarns [user]";
+    }
+    
+    @Override
     public String getName() {
         return "clearwarns";
     }
@@ -42,6 +52,11 @@ public class ClearWarningsCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Clear Warnings";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

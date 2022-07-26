@@ -32,6 +32,11 @@ public class BanCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators (Ban Permission)";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
@@ -42,6 +47,11 @@ public class BanCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/ban [user]\n/ban [user] [deleteDays]\n/ban [user] [reason]\n/ban [user] [deleteDays] [reason]\n/ban [user] [reason] [deleteDays]";
+    }
+    
+    @Override
     public String getName() {
         return "ban";
     }
@@ -49,6 +59,11 @@ public class BanCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Ban User";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

@@ -27,34 +27,39 @@ public class RainbowSixStatsCommand extends CoreCommand {
     public RainbowSixStatsCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "user", "The name of the user to get statistics for", true),
             new OptionData(OptionType.STRING, "platform", "The platform in which this account can be found", false)
                 .addChoice("xbox", "xbox").addChoice("pc", "pc").addChoice("playstation", "playstation"));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gathers statistics about a rainbow six siege account";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/r6stats [username]\n/r6stats [username] [xbox|pc|playstation]";
+    }
+
     @Override
     public String getName() {
         return "r6stats";
     }
-    
+
     @Override
     public String getRichName() {
         return "Rainbow Six Siege Stats";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String user = event.getOption("user").getAsString();
@@ -62,13 +67,13 @@ public class RainbowSixStatsCommand extends CoreCommand {
         if (!"pc".equals(platform) && !"xbox".equals(platform) && !"playstation".equals(platform)) {
             platform = "pc";
         }
-        
+
         try {
             final URLConnection connection = new URL("https://api2.r6stats.com/public-api/stats/"
                 + URLEncoder.encode(user, StandardCharsets.UTF_8) + "/" + platform + "/generic").openConnection();
             connection.addRequestProperty("Authorization", "Bearer " + Environment.INSTANCE.r6StatsKey());
             connection.connect();
-            
+
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             event.deferReply().addEmbeds(createEmbed(result).build()).mentionRepliedUser(false).queue();
@@ -76,14 +81,14 @@ public class RainbowSixStatsCommand extends CoreCommand {
             exception.printStackTrace();
         }
     }
-    
+
     public static EmbedBuilder createEmbed(final JsonObject result) {
         final var embed = new EmbedBuilder();
         embed.setTitle(
             "Stats for: " + result.get("username").getAsString() + " (" + result.get("platform").getAsString() + ")");
-        
+
         embed.setThumbnail(result.get("avatar_url_256").getAsString());
-        
+
         final JsonObject alias = result.get("aliases").getAsJsonArray().get(0).getAsJsonObject();
         try {
             embed.setAuthor(alias.get("username").getAsString() + " | Last Seen At: "
@@ -91,7 +96,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
         } catch (final ParseException exception) {
             embed.setAuthor(alias.get("username").getAsString());
         }
-        
+
         final JsonObject stats = result.getAsJsonObject("stats");
         final JsonObject overallStats = stats.getAsJsonObject("general");
         // @formatter:off
@@ -126,7 +131,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
             "Level: " + progression.get("level").getAsInt() + "\nTotal XP: " + progression.get("total_xp").getAsInt()
                 + "\nAlpha Pack Chance: " + progression.get("lootbox_probability").getAsInt(),
             false);
-        
+
         final JsonObject queueStats = stats.getAsJsonObject("queue");
         final JsonObject casualStats = queueStats.getAsJsonObject("casual");
         final JsonObject rankedStats = queueStats.getAsJsonObject("ranked");
@@ -134,12 +139,12 @@ public class RainbowSixStatsCommand extends CoreCommand {
         embed.addField("Casual Stats:", getQueueStats(casualStats), false);
         embed.addField("Ranked Stats:", getQueueStats(rankedStats), false);
         embed.addField("Unranked and Event Stats:", getQueueStats(otherStats), false);
-        
+
         embed.setFooter("Ubisoft ID: " + result.get("ubisoft_id").getAsString() + " | Uplay ID: "
             + result.get("uplay_id").getAsString());
         return embed;
     }
-    
+
     private static String getQueueStats(final JsonObject queue) {
         // @formatter:off
         return "Kills: " + queue.get("kills").getAsInt()
@@ -153,7 +158,7 @@ public class RainbowSixStatsCommand extends CoreCommand {
                 + "\nTime Played: " + millisecondsFormatted(queue.get("playtime").getAsLong() * 1000L);
         // @formatter:on
     }
-    
+
     // TODO: Utility class
     private static String millisecondsFormatted(final long millis) {
         long days = TimeUnit.MILLISECONDS.toDays(millis);

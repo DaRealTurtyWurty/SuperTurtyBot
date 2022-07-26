@@ -16,6 +16,11 @@ public class ShuffleCommand extends CoreCommand {
     }
     
     @Override
+    public String getAccess() {
+        return "Moderators, Owner of whole queue, Everyone (if the owners arent in VC)";
+    }
+
+    @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
@@ -33,6 +38,11 @@ public class ShuffleCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Shuffle";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override

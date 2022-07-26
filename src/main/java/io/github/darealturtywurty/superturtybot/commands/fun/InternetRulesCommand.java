@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class InternetRulesCommand extends CoreCommand {
     private static final List<String> RULES = new ArrayList<>();
-    
+
     static {
         if (RULES.isEmpty()) {
             try {
@@ -34,37 +34,42 @@ public class InternetRulesCommand extends CoreCommand {
             }
         }
     }
-    
+
     public InternetRulesCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.INTEGER, "rule_number", "The rule number", true).setRequiredRange(1, 100));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets a rule from The Rules of The Internet.";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/internetrule [ruleNumber]";
+    }
+
     @Override
     public String getName() {
         return "internetrule";
     }
-    
+
     @Override
     public String getRichName() {
         return "Internet Rule";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final int number = event.getOption("rule_number").getAsInt();

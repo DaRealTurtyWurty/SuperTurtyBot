@@ -49,6 +49,11 @@ public class TagCommand extends CoreCommand {
             
             new SubcommandData("list", "List the available tags"));
     }
+
+    @Override
+    public String getAccess() {
+        return "Create, Edit, Delete - Moderator, Get, List - Everyone";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -61,6 +66,11 @@ public class TagCommand extends CoreCommand {
     }
     
     @Override
+    public String getHowToUse() {
+        return "/tag get [name]\n/tag create [name] [content]\n/tag create [name] [content] [isEmbed]\n/tag edit [name]\n/tag delete [name]\n/tag list";
+    }
+    
+    @Override
     public String getName() {
         return "tag";
     }
@@ -69,10 +79,15 @@ public class TagCommand extends CoreCommand {
     public String getRichName() {
         return "Create Tag";
     }
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
     
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-        
+        // TODO: Add me
     }
     
     @Override

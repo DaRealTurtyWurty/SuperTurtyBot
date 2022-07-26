@@ -40,11 +40,11 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class StrawpollResultsCommand extends CoreCommand {
     private static final int WIDTH = 1080, HEIGHT = 720;
-    
+
     public StrawpollResultsCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(
@@ -53,32 +53,37 @@ public class StrawpollResultsCommand extends CoreCommand {
             new OptionData(OptionType.BOOLEAN, "is3d", "Whether or not this should provide a 3D chart instead of 2D",
                 false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Retrieves the results of a strawpoll.";
     }
-    
+
+    @Override
+    public String getHowToUse() {
+        return "/strawpollresults [id]\n/strawpollresults [id] [is3D]";
+    }
+
     @Override
     public String getName() {
         return "strawpollresults";
     }
-    
+
     @Override
     public String getRichName() {
         return "Strawpoll Results";
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String id = event.getOption("id").getAsString();
         final boolean is3D = event.getOption("is3d", false, OptionMapping::getAsBoolean);
-        
+
         try {
             final InputStream stream = handle(id, is3D);
             event.deferReply().addFile(stream, "chart.png").mentionRepliedUser(false).queue();
@@ -89,7 +94,7 @@ public class StrawpollResultsCommand extends CoreCommand {
                 .mentionRepliedUser(true).queue();
         }
     }
-    
+
     private InputStream handle(String id, boolean is3D) throws IOException, IllegalStateException {
         final URLConnection connection = new URL(StrawpollCommand.STRAWPOLL_URL + "/" + id).openConnection();
         connection.addRequestProperty("User-Agent",
@@ -97,7 +102,7 @@ public class StrawpollResultsCommand extends CoreCommand {
         final InputStream input = connection.getInputStream();
         final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(input)));
         input.close();
-        
+
         final var response = Constants.GSON.fromJson(result, JsonObject.class).get("content").getAsJsonObject()
             .get("poll").getAsJsonObject();
         final var answers = response.getAsJsonArray("poll_answers");
@@ -106,13 +111,13 @@ public class StrawpollResultsCommand extends CoreCommand {
             final JsonObject answer = element.getAsJsonObject();
             resultMap.put(answer.get("answer").getAsString(), answer.get("votes").getAsDouble());
         }
-        
+
         final PieDataset<String> dataset = createDataset(resultMap);
         final JFreeChart chart = createChart(dataset, response.get("title").getAsString(), is3D);
         final BufferedImage image = drawChart(chart);
         return toInputStream(image);
     }
-    
+
     @SuppressWarnings("deprecation")
     public static JFreeChart createChart(final PieDataset<String> dataset, final String title, final boolean is3D) {
         JFreeChart chart;
@@ -124,13 +129,13 @@ public class StrawpollResultsCommand extends CoreCommand {
         }
         return chart;
     }
-    
+
     public static PieDataset<String> createDataset(final Map<String, Double> data) {
         final var dataset = new DefaultPieDataset<String>();
         data.forEach(dataset::setValue);
         return dataset;
     }
-    
+
     public static BufferedImage drawChart(final JFreeChart chart) {
         final var bufferedImage = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         final Graphics2D graphics = bufferedImage.createGraphics();
@@ -138,7 +143,7 @@ public class StrawpollResultsCommand extends CoreCommand {
         graphics.dispose();
         return bufferedImage;
     }
-    
+
     // TODO: Utility class
     @Nullable
     public static InputStream toInputStream(@NotNull BufferedImage image) {
@@ -150,7 +155,7 @@ public class StrawpollResultsCommand extends CoreCommand {
             throw new IllegalStateException(exception);
         }
     }
-    
+
     // TODO: Utility class
     private static boolean readBoolean(String str) {
         final String mod = str.trim().toLowerCase();

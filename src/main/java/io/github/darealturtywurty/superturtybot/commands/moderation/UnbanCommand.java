@@ -26,6 +26,11 @@ public class UnbanCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to unban!", true));
     }
+
+    @Override
+    public String getAccess() {
+        return "Moderators (Ban Permission)";
+    }
     
     @Override
     public CommandCategory getCategory() {
@@ -36,6 +41,11 @@ public class UnbanCommand extends CoreCommand {
     public String getDescription() {
         return "Unbans a user";
     }
+
+    @Override
+    public String getHowToUse() {
+        return "/unban [user]";
+    }
     
     @Override
     public String getName() {
@@ -45,6 +55,11 @@ public class UnbanCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Unban User";
+    }
+    
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
     
     @Override
