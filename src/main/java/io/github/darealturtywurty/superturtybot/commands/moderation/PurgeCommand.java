@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.math3.util.Pair;
+
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -106,7 +109,16 @@ public class PurgeCommand extends CoreCommand {
             CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
                 .thenAccept(action -> event.getMessageChannel().sendMessage(
                     event.getMember().getAsMention() + " ✅ I have successfully purged " + msgs.size() + " messages!")
-                    .queue());
+                    .queue(success -> {
+                        final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
+                        if (Boolean.TRUE.equals(logging.getKey())) {
+                            BanCommand.log(logging.getValue(),
+                                event.getMember().getAsMention() + " has purged " + msgs.size() + " messages"
+                                    + (userOption != null ? " from user " + userOption.getAsUser().getAsMention() : "")
+                                    + "!",
+                                false);
+                        }
+                    }));
         });
     }
 }

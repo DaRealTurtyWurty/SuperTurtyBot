@@ -4,11 +4,15 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.math3.util.Pair;
+
+import io.github.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -74,6 +78,11 @@ public class ClearWarningsCommand extends CoreCommand {
         }
         
         final User user = event.getOption("user").getAsUser();
+        event.getUser().openPrivateChannel().queue(channel -> channel
+            .sendMessage("Your warnings on `" + event.getGuild().getName() + "` have been cleared!").queue(success -> {
+            }, error -> {
+            }));
+
         final Set<Warning> warns = WarnManager.clearWarnings(event.getGuild(), user);
         
         final var embed = new EmbedBuilder();
@@ -81,6 +90,11 @@ public class ClearWarningsCommand extends CoreCommand {
         embed.setTitle(user.getName() + "'s warns has been cleared!");
         embed.setDescription("Warns Removed: " + warns.size() + "\nRemoved By: " + event.getMember().getAsMention());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
-        // TODO: Option to notify user of warnings clear
+        
+        final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
+        if (Boolean.TRUE.equals(logging.getKey())) {
+            BanCommand.log(logging.getValue(),
+                event.getMember().getAsMention() + " has cleared " + user.getAsMention() + "'s warnings!", false);
+        }
     }
 }

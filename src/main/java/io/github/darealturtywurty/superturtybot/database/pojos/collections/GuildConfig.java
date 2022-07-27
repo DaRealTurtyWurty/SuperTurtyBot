@@ -7,17 +7,19 @@ public class GuildConfig {
     private boolean starboardEnabled;
     private int minimumStars;
     private boolean botStarsCount;
-    
+    private long modLogging;
+
     public GuildConfig() {
         this(0);
     }
-    
+
     public GuildConfig(long guildId) {
         this.guild = guildId;
         this.starboard = 0L;
         this.starboardEnabled = false;
         this.minimumStars = 5;
         this.botStarsCount = true;
+        this.modLogging = 0L;
     }
     
     public long getGuild() {
@@ -26,6 +28,10 @@ public class GuildConfig {
     
     public int getMinimumStars() {
         return this.minimumStars;
+    }
+    
+    public long getModLogging() {
+        return this.modLogging;
     }
     
     public long getStarboard() {
@@ -50,6 +56,10 @@ public class GuildConfig {
     
     public void setMinimumStars(int minimumStars) {
         this.minimumStars = minimumStars;
+    }
+    
+    public void setModLogging(long modLogging) {
+        this.modLogging = modLogging;
     }
     
     public void setStarboard(long starboard) {

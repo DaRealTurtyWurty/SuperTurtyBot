@@ -7,11 +7,15 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.apache.commons.math3.util.Pair;
+
+import io.github.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -80,6 +84,14 @@ public class WarnCommand extends CoreCommand {
         
         final User user = event.getOption("user").getAsUser();
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
+
+        event.getUser().openPrivateChannel()
+            .queue(channel -> channel
+                .sendMessage("You have been warned on `" + event.getGuild().getName() + "` for `" + reason + "`!")
+                .queue(success -> {
+                }, error -> {
+                }));
+
         final Warning warn = WarnManager.addWarn(user, event.getGuild(), event.getMember(), reason);
         
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
@@ -91,6 +103,13 @@ public class WarnCommand extends CoreCommand {
                 "Reason: " + warn.getReason() + "\nWarned By: " + warner.getAsMention() + "\nUUID: " + warn.getUuid());
             embed.setColor(Color.RED);
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            
+            final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
+            if (Boolean.TRUE.equals(logging.getKey())) {
+                BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has warned "
+                    + user.getAsMention() + " for reason: `" + reason + "`!", false);
+            }
+            
             // TODO: Option to notify user of warn
         });
     }

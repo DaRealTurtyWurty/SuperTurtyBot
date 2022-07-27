@@ -5,11 +5,19 @@ import java.time.Instant;
 import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.math3.util.Pair;
+import org.bson.conversions.Bson;
+
+import com.mongodb.client.model.Filters;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
@@ -70,7 +78,7 @@ public class BanCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild())
             return;
-        
+
         final User user = event.getOption("user").getAsUser();
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
             boolean canInteract = true;
@@ -78,7 +86,7 @@ public class BanCommand extends CoreCommand {
                 && !event.getInteraction().getMember().canInteract(event.getOption("user").getAsMember())) {
                 canInteract = false;
             }
-            
+
             if (canInteract) {
                 final int deleteDays = event.getOption("delete_days", 0, OptionMapping::getAsInt);
                 String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
@@ -86,27 +94,62 @@ public class BanCommand extends CoreCommand {
                     reason = reason.substring(0, 512);
                     // TODO: Confirmation of whether they still want to ban
                 }
-                
-                event.getGuild().ban(user, deleteDays, reason).queue(v -> event.deferReply()
-                    .setContent("Successfully banned " + user.getAsMention() + "!").mentionRepliedUser(false).queue(),
-                    error -> {
-                        if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                            event.deferReply(true).setContent("I do not have permission to ban " + user.getAsMention())
-                                .mentionRepliedUser(false).queue();
-                        } else {
-                            final var embed = new EmbedBuilder();
-                            embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                            embed.setDescription(
-                                "**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
-                            embed.setTimestamp(Instant.now());
-                            embed.setColor(Color.red);
-                            event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
-                        }
-                    });
+
+                final String finalReason = reason;
+                user.openPrivateChannel().queue(channel -> channel.sendMessage(
+                    "You have been banned from `" + event.getGuild().getName() + "` for reason: `" + finalReason + "`!")
+                    .queue(success -> {
+                    }, error -> {
+                    }));
+
+                event.getGuild().ban(user, deleteDays, finalReason).queue(success -> {
+                    event.deferReply().setContent("Successfully banned " + user.getAsMention() + "!")
+                        .mentionRepliedUser(false).queue();
+                    final Pair<Boolean, TextChannel> logging = canLog(event.getGuild());
+                    if (Boolean.TRUE.equals(logging.getKey())) {
+                        log(logging.getValue(), event.getMember().getAsMention() + " has banned " + user.getAsMention()
+                            + " for reason: `" + finalReason + "`!", false);
+                    }
+                }, error -> {
+                    if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
+                        event.deferReply(true).setContent("I do not have permission to ban " + user.getAsMention())
+                            .mentionRepliedUser(false).queue();
+                    } else {
+                        final var embed = new EmbedBuilder();
+                        embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
+                        embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed.setTimestamp(Instant.now());
+                        embed.setColor(Color.red);
+                        event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                    }
+                });
             } else {
                 event.deferReply(true).setContent("You do not have permission to ban " + user.getAsMention())
                     .mentionRepliedUser(false).queue();
             }
         }
+    }
+
+    public static Pair<Boolean, TextChannel> canLog(Guild guild) {
+        final Bson filter = Filters.eq("guild", guild.getIdLong());
+        GuildConfig config = Database.getDatabase().guildConfig.find(filter).first();
+        if (config == null) {
+            config = new GuildConfig(guild.getIdLong());
+            Database.getDatabase().guildConfig.insertOne(config);
+        }
+        
+        final long modLogging = config.getModLogging();
+        final TextChannel channel = guild.getTextChannelById(modLogging);
+        return Pair.create(channel != null, channel);
+    }
+    
+    public static void log(TextChannel channel, String message, boolean positive) {
+        final var embed = new EmbedBuilder();
+        embed.setColor(positive ? Color.GREEN : Color.RED);
+        embed.setTimestamp(Instant.now());
+        embed.setDescription(positive ? "✅ " : "❌ ");
+        embed.appendDescription(message);
+
+        channel.sendMessageEmbeds(embed.build()).queue();
     }
 }

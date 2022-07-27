@@ -5,11 +5,13 @@ import java.time.Instant;
 import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.math3.util.Pair;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
@@ -75,23 +77,31 @@ public class UnbanCommand extends CoreCommand {
             }
             
             if (canInteract) {
-                event.getGuild().unban(user).queue(v -> event.deferReply()
-                    .setContent("Successfully unbanned " + user.getAsMention() + "!").mentionRepliedUser(false).queue(),
-                    error -> {
-                        if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                            event.deferReply(true)
-                                .setContent("I do not have permission to unban " + user.getAsMention())
-                                .mentionRepliedUser(false).queue();
-                        } else {
-                            final var embed = new EmbedBuilder();
-                            embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                            embed.setDescription(
-                                "**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
-                            embed.setTimestamp(Instant.now());
-                            embed.setColor(Color.red);
-                            event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
-                        }
-                    });
+                user.openPrivateChannel().queue(channel -> channel
+                    .sendMessage("You have been unbanned from `" + event.getGuild().getName() + "`!").queue(success -> {
+                    }, error -> {
+                    }));
+                event.getGuild().unban(user).queue(success -> {
+                    event.deferReply().setContent("Successfully unbanned " + user.getAsMention() + "!")
+                        .mentionRepliedUser(false).queue();
+                    final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
+                    if (Boolean.TRUE.equals(logging.getKey())) {
+                        BanCommand.log(logging.getValue(),
+                            event.getMember().getAsMention() + " has unbanned " + user.getAsMention() + "!", false);
+                    }
+                }, error -> {
+                    if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
+                        event.deferReply(true).setContent("I do not have permission to unban " + user.getAsMention())
+                            .mentionRepliedUser(false).queue();
+                    } else {
+                        final var embed = new EmbedBuilder();
+                        embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
+                        embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed.setTimestamp(Instant.now());
+                        embed.setColor(Color.red);
+                        event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                    }
+                });
             } else {
                 event.deferReply(true).setContent("You do not have permission to unban " + user.getAsMention())
                     .mentionRepliedUser(false).queue();
