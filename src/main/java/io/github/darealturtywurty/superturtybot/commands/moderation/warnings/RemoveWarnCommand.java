@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
@@ -29,7 +30,8 @@ public class RemoveWarnCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to remove a warn from", true),
-            new OptionData(OptionType.STRING, "uuid", "The ID of the warn that you want to remove", true));
+            new OptionData(OptionType.STRING, "uuid", "The ID of the warn that you want to remove", true),
+            new OptionData(OptionType.STRING, "reason", "The reason for the warn removal", false));
     }
     
     @Override
@@ -83,14 +85,13 @@ public class RemoveWarnCommand extends CoreCommand {
         
         final User user = event.getOption("user").getAsUser();
         final String uuid = event.getOption("uuid").getAsString();
-
         final Warning warn = WarnManager.removeWarn(user, event.getGuild(), uuid);
 
+        final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
+
         event.getUser().openPrivateChannel()
-            .queue(channel -> channel
-                .sendMessage(
-                    "Your warning (`" + warn.getUuid() + "`) on `" + event.getGuild().getName() + "` has been removed!")
-                .queue(success -> {
+            .queue(channel -> channel.sendMessage("Your warning (`" + warn.getUuid() + "`) on `"
+                + event.getGuild().getName() + "` has been removed with reason: `" + reason + "!").queue(success -> {
                 }, error -> {
                 }));
         
@@ -100,13 +101,14 @@ public class RemoveWarnCommand extends CoreCommand {
             embed.setTitle(user.getName() + "'s warn has been removed!");
             embed.setDescription("Warn Reason: " + warn.getReason() + "\nOriginal Warner: " + warner.getAsMention()
                 + "\nWarned At: " + formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))
-                + "\nWarn UUID: " + warn.getUuid() + "\nRemoved By: " + event.getMember().getAsMention());
+                + "\nWarn UUID: " + warn.getUuid() + "\nRemoved By: " + event.getMember().getAsMention()
+                + "\nRemoval Reason: " + reason);
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has removed warn `"
-                    + warn.getUuid() + "` from " + user.getAsMention() + "!", true);
+                    + warn.getUuid() + "` from " + user.getAsMention() + " with reason: `" + reason + "`!", true);
             }
         });
     }
