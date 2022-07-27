@@ -31,12 +31,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     @Override
     public void onMessageContextInteraction(MessageContextInteractionEvent event) {
         super.onMessageContextInteraction(event);
-        if (!event.getName().equalsIgnoreCase(getName()) || !this.types.messageCtx())
-            return;
 
-        if (event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L
-            && event.getChannel().getIdLong() != 957962504418517042L
-            && event.getChannel().getIdLong() != 961356052866150480L)
+        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx()
+            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
             return;
 
         if (event.isFromGuild()) {
@@ -57,12 +54,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                 && !(Environment.INSTANCE.defaultPrefix() + getName()).equals(content))
             return;
 
-        if (!this.types.normal())
-            return;
-
-        if (event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L
-            && event.getChannel().getIdLong() != 957962504418517042L
-            && event.getChannel().getIdLong() != 961356052866150480L)
+        if (!this.types.normal() || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
             return;
 
         runNormalMessage(event);
@@ -84,12 +76,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     @Override
     public final void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         super.onSlashCommandInteraction(event);
-        if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
-            return;
-
-        if (event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L
-            && event.getChannel().getIdLong() != 957962504418517042L
-            && event.getChannel().getIdLong() != 961356052866150480L)
+        if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash()
+            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
             return;
 
         if (event.isFromGuild()) {
@@ -102,12 +90,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     @Override
     public void onUserContextInteraction(UserContextInteractionEvent event) {
         super.onUserContextInteraction(event);
-        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
-            return;
-
-        if (event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L
-            && event.getChannel().getIdLong() != 957962504418517042L
-            && event.getChannel().getIdLong() != 961356052866150480L)
+        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx()
+            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
             return;
 
         if (event.isFromGuild()) {
