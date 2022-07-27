@@ -26,9 +26,11 @@ public class PurgeCommand extends CoreCommand {
     
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.INTEGER, "amount", "The number of messages to delete.", false)
-            .setRequiredRange(1, 500),
-            new OptionData(OptionType.USER, "user", "The user to delete messages from.", false));
+        return List.of(
+            new OptionData(OptionType.INTEGER, "amount", "The number of messages to delete.", false).setRequiredRange(1,
+                500),
+            new OptionData(OptionType.USER, "user", "The user to delete messages from.", false),
+            new OptionData(OptionType.STRING, "reason", "The reason for the purging", false));
     }
     
     @Override
@@ -89,6 +91,7 @@ public class PurgeCommand extends CoreCommand {
         final int amount = event.getOption("amount", 100, OptionMapping::getAsInt);
         if (amount < 1 || amount > 500) {
             event.getMember().ban(0, "Hacking TurtyBot").queue();
+            return;
         }
         
         final OptionMapping userOption = event.getOption("user");
@@ -99,6 +102,8 @@ public class PurgeCommand extends CoreCommand {
         } else {
             messages = getMessages(event.getMessageChannel(), amount);
         }
+
+        final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
         
         messages.thenAccept(msgs -> {
             event.deferReply(true).setContent("I have found " + msgs.size() + " messages, I will now start purging!")
@@ -115,7 +120,7 @@ public class PurgeCommand extends CoreCommand {
                             BanCommand.log(logging.getValue(),
                                 event.getMember().getAsMention() + " has purged " + msgs.size() + " messages"
                                     + (userOption != null ? " from user " + userOption.getAsUser().getAsMention() : "")
-                                    + "!",
+                                    + " with reason: `" + reason + "`!",
                                 false);
                         }
                     }));
