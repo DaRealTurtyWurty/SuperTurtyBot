@@ -106,10 +106,8 @@ public class RemoveWarnCommand extends CoreCommand {
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has removed warn `"
-                    + warn.getUuid() + "` from " + user.getAsMention() + "!", false);
+                    + warn.getUuid() + "` from " + user.getAsMention() + "!", true);
             }
-            
-            // TODO: Option to notify user of warn removal
         });
     }
     

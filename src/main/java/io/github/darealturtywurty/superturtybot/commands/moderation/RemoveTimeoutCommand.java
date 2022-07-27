@@ -23,59 +23,59 @@ public class RemoveTimeoutCommand extends CoreCommand {
     public RemoveTimeoutCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to remove the timeout from!", true));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Manage Members Permission)";
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Removes a timeout from a member";
     }
-
+    
     @Override
     public String getHowToUse() {
         return "/removetimeout [member]";
     }
-    
+
     @Override
     public String getName() {
         return "removetimeout";
     }
-    
+
     @Override
     public String getRichName() {
         return "Remove Timeout";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild())
             return;
-        
+
         final Member member = event.getOption("member").getAsMember();
         if (member == null) {
             event.deferReply(true).setContent("You can only remove a timeout from someone who is in this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
             && event.getInteraction().getMember().canInteract(member)) {
             member.getUser().openPrivateChannel()
@@ -84,14 +84,14 @@ public class RemoveTimeoutCommand extends CoreCommand {
                     .queue(success -> {
                     }, error -> {
                     }));
-            
+
             event.getGuild().removeTimeout(member).queue(success -> {
                 event.deferReply().setContent("Successfully removed timeout from " + member.getAsMention() + "!")
                     .mentionRepliedUser(false).queue();
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
                     BanCommand.log(logging.getValue(), event.getMember().getAsMention()
-                        + " has removed the time-out from " + member.getAsMention() + "!", false);
+                        + " has removed the time-out from " + member.getAsMention() + "!", true);
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
@@ -107,7 +107,7 @@ public class RemoveTimeoutCommand extends CoreCommand {
                     event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
                 }
             });
-            
+
         } else {
             event.deferReply(true)
                 .setContent("You do not have permission to remove the timeout from " + member.getAsMention())
