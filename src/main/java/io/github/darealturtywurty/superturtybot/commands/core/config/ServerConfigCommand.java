@@ -1,11 +1,13 @@
 package io.github.darealturtywurty.superturtybot.commands.core.config;
 
+import java.awt.Color;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
@@ -20,6 +22,8 @@ import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -52,7 +56,7 @@ public class ServerConfigCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Sets up this server's config";
@@ -67,7 +71,7 @@ public class ServerConfigCommand extends CoreCommand {
     public String getName() {
         return "serverconfig";
     }
-    
+
     @Override
     public String getRichName() {
         return "Server Config";
@@ -77,7 +81,7 @@ public class ServerConfigCommand extends CoreCommand {
     public boolean isServerOnly() {
         return true;
     }
-
+    
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
         if (!event.isFromGuild() || !event.getName().equals(getName()))
@@ -89,6 +93,33 @@ public class ServerConfigCommand extends CoreCommand {
             .map(Entry::getValue).map(ServerConfigOption::getSaveName).filter(key -> key.contains(term)).limit(25)
             .toList();
         event.replyChoiceStrings(keys).queue();
+    }
+
+    @Override
+    public void onGuildJoin(GuildJoinEvent event) {
+        final Guild guild = event.getGuild();
+        final TextChannel defaultChannel = guild.getDefaultChannel().asTextChannel();
+
+        final Bson filter = Filters.eq("guild", guild.getIdLong());
+        final AtomicReference<GuildConfig> found = new AtomicReference<>(
+            Database.getDatabase().guildConfig.find(filter).first());
+        if (found.get() == null) {
+            found.set(new GuildConfig(guild.getIdLong()));
+            Database.getDatabase().guildConfig.insertOne(found.get());
+        }
+
+        final var embed = new EmbedBuilder();
+        embed.setTimestamp(Instant.now());
+        embed.setFooter(event.getGuild().getName(), event.getGuild().getIconUrl());
+        embed.setTitle("Config Setup");
+        embed.setDescription(
+            "Thank you for adding me to your server! The following are the default config settings. You can change them with `/serverconfig set [key] [value]`\n");
+        embed.setColor(Color.CYAN);
+        final List<ServerConfigOption> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry().entrySet()
+            .stream().map(Entry::getValue).toList();
+        keys.forEach(option -> embed.appendDescription(
+            "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(found.get()) + "`\n"));
+        defaultChannel.sendMessageEmbeds(embed.build()).queue();
     }
     
     @Override
