@@ -149,7 +149,6 @@ public class TagCommand extends CoreCommand {
     
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-        System.out.println("im here");
         if (!event.isFromGuild()) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
                 .mentionRepliedUser(false).queue();
@@ -207,7 +206,7 @@ public class TagCommand extends CoreCommand {
                 }
                 
                 final Bson createFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName0.getAsString()));
+                    Filters.eq("name", tagName0.getAsString()));
 
                 final OptionMapping embedOption = event.getOption("embed");
                 
