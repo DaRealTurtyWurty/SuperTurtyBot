@@ -74,8 +74,8 @@ public class HighlightCommand extends CoreCommand {
     
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || !event.isWebhookMessage() || !event.getAuthor().isBot()
-            || !event.getAuthor().isSystem())
+        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot()
+            || event.getAuthor().isSystem())
             return;
         
         final Bson filter = Filters.eq("guild", event.getGuild().getIdLong());
@@ -180,9 +180,8 @@ public class HighlightCommand extends CoreCommand {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.BLUE);
-        embed.setDescription("**" + event.getUser().getName() + "'s Highlighters:**");
+        embed.setTitle("**" + event.getUser().getName() + "'s Highlighters:**");
         final List<Highlighter> guildHighlighters = highlighters.stream()
-            .filter(highlighter -> highlighter.getGuild() == event.getGuild().getIdLong())
             .sorted(Comparator.comparing(Highlighter::getTimeAdded)).toList();
         
         boolean none = true;
@@ -191,6 +190,7 @@ public class HighlightCommand extends CoreCommand {
             guildHighlighters.stream()
                 .forEachOrdered(highlighter -> builder.append("`" + truncateString(highlighter.getText(), 15) + "`"
                     + " (ID: **" + highlighter.asUUID().toString() + "**)\n"));
+            embed.appendDescription(builder.toString());
             none = false;
         }
         
