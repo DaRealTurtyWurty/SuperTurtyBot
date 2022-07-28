@@ -22,12 +22,12 @@ import net.dv8tion.jda.api.entities.User;
 public class WarnManager {
     private WarnManager() {
     }
-    
+
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
         @NotNull String reason) {
         return addWarn(toWarn, guild, warner, reason, System.currentTimeMillis());
     }
-    
+
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
         @NotNull String reason, long time) {
         final var warn = new Warning(guild.getIdLong(), toWarn.getIdLong(), reason, warner.getIdLong());
@@ -35,7 +35,7 @@ public class WarnManager {
         addSanctions(guild, toWarn, warner.getUser());
         return warn;
     }
-    
+
     public static @NotNull Set<Warning> clearWarnings(@NotNull Guild guild, @NotNull User user, @NotNull User clearer) {
         final Set<Warning> warns = getWarns(guild, user);
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
@@ -43,34 +43,35 @@ public class WarnManager {
         clearSanctions(warns, guild, user, clearer);
         return warns;
     }
-
+    
     public static @NotNull Set<Warning> getWarns(@NotNull Guild guild, @NotNull User user) {
         final Set<Warning> warnings = new HashSet<>();
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
         Database.getDatabase().warnings.find(filter).forEach(warnings::add);
         return warnings;
     }
-    
+
     public static @Nullable Warning removeWarn(@NotNull User toRemoveWarn, @NotNull Guild guild, @NotNull String uuid,
         @NotNull User remover) {
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
             Filters.eq("user", toRemoveWarn.getIdLong()), Filters.eq("uuid", uuid));
-        
+
         final Warning removed = Database.getDatabase().warnings.findOneAndDelete(filter);
         removeSanctions(guild, toRemoveWarn, remover);
         return removed;
     }
-    
+
     // TODO: Don't hardcode
     protected static void addSanctions(Guild guild, User user, User warner) {
         final Set<Warning> warnings = getWarns(guild, user);
         if (warnings.size() == 1 || warnings.size() == 2 || warnings.size() == 4) {
-            user.openPrivateChannel()
-                .queue(channel -> channel.sendMessage(
+            if (user.getIdLong() != guild.getSelfMember().getIdLong()) {
+                user.openPrivateChannel().queue(channel -> channel.sendMessage(
                     "You have been put on timeout for " + warnings.size() * 2 + " hours in `" + guild.getName() + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));
+            }
             guild.timeoutFor(user, Duration.ofHours(warnings.size() * 2)).queue();
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
             if (Boolean.TRUE.equals(logging.getKey())) {
@@ -110,7 +111,7 @@ public class WarnManager {
             }
         }
     }
-
+    
     protected static void clearSanctions(Set<Warning> warns, Guild guild, User user, User clearer) {
         if (warns.size() >= 5) {
             guild.unban(user).queue(success -> {
@@ -125,7 +126,7 @@ public class WarnManager {
                 }
             }, error -> {
             });
-            
+
         } else {
             guild.removeTimeout(user).queue(success -> {
                 clearer.openPrivateChannel().queue(channel -> channel
@@ -141,7 +142,7 @@ public class WarnManager {
             });
         }
     }
-
+    
     protected static void removeSanctions(Guild guild, User user, User remover) {
         final Set<Warning> warnings = getWarns(guild, user);
         if (warnings.size() == 4) {
@@ -157,7 +158,7 @@ public class WarnManager {
                 }
             }, error -> {
             });
-            
+
         } else if (warnings.size() == 3 || warnings.size() == 1 || warnings.isEmpty()) {
             guild.removeTimeout(user).queue(success -> {
                 remover.openPrivateChannel().queue(channel -> channel
