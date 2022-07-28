@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
@@ -25,7 +26,8 @@ public class ClearWarningsCommand extends CoreCommand {
     
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true));
+        return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true),
+            new OptionData(OptionType.STRING, "reason", "The reason for clearing the warnings", false));
     }
 
     @Override
@@ -76,10 +78,13 @@ public class ClearWarningsCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
+
+        final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
         
         final User user = event.getOption("user").getAsUser();
-        event.getUser().openPrivateChannel().queue(channel -> channel
-            .sendMessage("Your warnings on `" + event.getGuild().getName() + "` have been cleared!").queue(success -> {
+        event.getUser().openPrivateChannel().queue(channel -> channel.sendMessage(
+            "Your warnings on `" + event.getGuild().getName() + "` have been cleared, with reason: `" + reason + "`!")
+            .queue(success -> {
             }, error -> {
             }));
 
@@ -88,13 +93,14 @@ public class ClearWarningsCommand extends CoreCommand {
         final var embed = new EmbedBuilder();
         embed.setColor(Color.GREEN);
         embed.setTitle(user.getName() + "'s warns has been cleared!");
-        embed.setDescription("Warns Removed: " + warns.size() + "\nRemoved By: " + event.getMember().getAsMention());
+        embed.setDescription("Warns Removed: " + warns.size() + "\nRemoved By: " + event.getMember().getAsMention()
+            + "\nWith Reason: " + reason);
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
         
         final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
         if (Boolean.TRUE.equals(logging.getKey())) {
-            BanCommand.log(logging.getValue(),
-                event.getMember().getAsMention() + " has cleared " + user.getAsMention() + "'s warnings!", true);
+            BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has cleared " + user.getAsMention()
+                + "'s warnings, with reason: `" + reason + "`!", true);
         }
     }
 }
