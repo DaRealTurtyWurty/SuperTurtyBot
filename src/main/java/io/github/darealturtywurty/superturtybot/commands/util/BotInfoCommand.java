@@ -8,8 +8,8 @@ import java.time.format.DateTimeFormatter;
 import org.jetbrains.annotations.Nullable;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
+import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
-import io.github.darealturtywurty.superturtybot.modules.StatTracker.DataRetriever;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -54,35 +54,23 @@ public class BotInfoCommand extends CoreCommand {
             embed.addField("Joined At", formatTime(guild.getSelfMember().getTimeJoined()), false);
         }
         
-        embed.addField("Server Count", DataRetriever.getGuildCount() + "", false);
-        embed.addField("Member Count", DataRetriever.getMemberCount() + "", false);
-        int messagesSent = 0, messagesEdited = 0, messagesDeleted = 0, reactionsAdded = 0, reactionsRemoved = 0,
-            slashCommandsRan = 0, normalCommandsRan = 0, messageCtxCommandsRan = 0, userCtxCommandsRan = 0;
-        for (final long guildId : DataRetriever.getGuildIDs()) {
-            final var stats = DataRetriever.getGuildStats(guildId);
-            messagesSent += stats.getMessagesSent();
-            messagesEdited += stats.getMessagesEdited();
-            messagesDeleted += stats.getMessagesDeleted();
-            reactionsAdded += stats.getReactionsAdded();
-            reactionsRemoved += stats.getReactionsRemoved();
-            slashCommandsRan += stats.getSlashCommandsRan();
-            normalCommandsRan += stats.getNormalCommandsRan();
-            messageCtxCommandsRan += stats.getMessageCtxCommandsRan();
-            userCtxCommandsRan += stats.getUserCtxCommandsRan();
-        }
+        embed.addField("", "**__Counts__**:", false);
+        embed.addField("Members", jda.getUserCache().size() + "", true);
+        embed.addField("Roles", jda.getRoleCache().size() + "", true);
+        embed.addField("Emojis", jda.getEmojiCache().size() + "", true);
+        embed.addField("Servers", jda.getGuildCache().size() + "", true);
+        embed.addField("Categories", jda.getCategoryCache().size() + "", true);
+        embed.addField("Channels", jda.getVoiceChannelCache().size() + jda.getTextChannelCache().size()
+            + jda.getThreadChannelCache().size() + "", true);
         
-        embed.addField("", "__**Observed Stats**__", false);
-        embed.addField("Messages Sent", messagesSent + "", true);
-        embed.addField("Messages Edited", messagesEdited + "", true);
-        embed.addField("Messages Deleted", messagesDeleted + "", true);
-        embed.addField("Reactions Added", reactionsAdded + "", true);
-        embed.addField("Reactions Removed", reactionsRemoved + "", true);
-        embed.addField("Slash Commands", slashCommandsRan + "", true);
-        embed.addField("Msg Ctx Commands", messageCtxCommandsRan + "", true);
-        embed.addField("User Ctx Commands", userCtxCommandsRan + "", true);
-        embed.addField("Normal Commands", normalCommandsRan + "", true);
-        
-        embed.setFooter("Note: These statistics only update whilst the bot is online!");
+        embed.addField("", "**__Commands__**:", false);
+        embed.addField("Slash",
+            CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.slash()).count() + "", true);
+        embed.addField("Prefix",
+            CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.normal()).count() + "", true);
+        embed.addField("Context", CommandHook.INSTANCE.getCommands().stream()
+            .filter(cmd -> cmd.types.messageCtx() || cmd.types.userCtx()).count() + "", true);
+
         embed.setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
         
         return embed;
