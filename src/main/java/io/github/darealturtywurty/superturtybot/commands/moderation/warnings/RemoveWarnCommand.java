@@ -89,11 +89,10 @@ public class RemoveWarnCommand extends CoreCommand {
         
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
         
-        event.getUser().openPrivateChannel()
-            .queue(channel -> channel.sendMessage("Your warning (`" + warn.getUuid() + "`) on `"
-                + event.getGuild().getName() + "` has been removed with reason: `" + reason + "!").queue(success -> {
-                }, error -> {
-                }));
+        user.openPrivateChannel().queue(channel -> channel.sendMessage("Your warning (`" + warn.getUuid() + "`) on `"
+            + event.getGuild().getName() + "` has been removed with reason: `" + reason + "`!").queue(success -> {
+            }, error -> {
+            }));
 
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
             final var embed = new EmbedBuilder();

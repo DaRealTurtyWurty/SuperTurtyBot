@@ -129,7 +129,7 @@ public class WarnManager {
 
         } else {
             guild.removeTimeout(user).queue(success -> {
-                clearer.openPrivateChannel().queue(channel -> channel
+                user.openPrivateChannel().queue(channel -> channel
                     .sendMessage("Your timeout on `" + guild.getName() + "` has been removed!").queue(succes -> {
                     }, error -> {
                     }));
@@ -161,7 +161,7 @@ public class WarnManager {
 
         } else if (warnings.size() == 3 || warnings.size() == 1 || warnings.isEmpty()) {
             guild.removeTimeout(user).queue(success -> {
-                remover.openPrivateChannel().queue(channel -> channel
+                user.openPrivateChannel().queue(channel -> channel
                     .sendMessage("Your timeout on `" + guild.getName() + "` has been removed!").queue(succes -> {
                     }, error -> {
                     }));
