@@ -30,7 +30,7 @@ public class BanCommand extends CoreCommand {
     public BanCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to ban!", true),
@@ -38,47 +38,49 @@ public class BanCommand extends CoreCommand {
                 .setRequiredRange(0, 7),
             new OptionData(OptionType.STRING, "reason", "The ban reason", false));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Ban Permission)";
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Bans a user";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/ban [user]\n/ban [user] [deleteDays]\n/ban [user] [reason]\n/ban [user] [deleteDays] [reason]\n/ban [user] [reason] [deleteDays]";
     }
-    
+
     @Override
     public String getName() {
         return "ban";
     }
-    
+
     @Override
     public String getRichName() {
         return "Ban User";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild())
+        if (!event.isFromGuild()) {
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
-
+        }
+        
         final User user = event.getOption("user").getAsUser();
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
             boolean canInteract = true;
@@ -86,7 +88,7 @@ public class BanCommand extends CoreCommand {
                 && !event.getInteraction().getMember().canInteract(event.getOption("user").getAsMember())) {
                 canInteract = false;
             }
-
+            
             if (canInteract) {
                 final int deleteDays = event.getOption("delete_days", 0, OptionMapping::getAsInt);
                 String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
@@ -94,14 +96,14 @@ public class BanCommand extends CoreCommand {
                     reason = reason.substring(0, 512);
                     // TODO: Confirmation of whether they still want to ban
                 }
-
+                
                 final String finalReason = reason;
                 user.openPrivateChannel().queue(channel -> channel.sendMessage(
                     "You have been banned from `" + event.getGuild().getName() + "` for reason: `" + finalReason + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));
-
+                
                 event.getGuild().ban(user, deleteDays, finalReason).queue(success -> {
                     event.deferReply().setContent("Successfully banned " + user.getAsMention() + "!")
                         .mentionRepliedUser(false).queue();
@@ -123,13 +125,14 @@ public class BanCommand extends CoreCommand {
                         event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
                     }
                 });
-            } else {
-                event.deferReply(true).setContent("You do not have permission to ban " + user.getAsMention())
-                    .mentionRepliedUser(false).queue();
+                return;
             }
         }
-    }
 
+        event.deferReply(true).setContent("You do not have permission to ban " + user.getAsMention())
+            .mentionRepliedUser(false).queue();
+    }
+    
     public static Pair<Boolean, TextChannel> canLog(Guild guild) {
         final Bson filter = Filters.eq("guild", guild.getIdLong());
         GuildConfig config = Database.getDatabase().guildConfig.find(filter).first();
@@ -137,19 +140,19 @@ public class BanCommand extends CoreCommand {
             config = new GuildConfig(guild.getIdLong());
             Database.getDatabase().guildConfig.insertOne(config);
         }
-        
+
         final long modLogging = config.getModLogging();
         final TextChannel channel = guild.getTextChannelById(modLogging);
         return Pair.create(channel != null, channel);
     }
-    
+
     public static void log(TextChannel channel, String message, boolean positive) {
         final var embed = new EmbedBuilder();
         embed.setColor(positive ? Color.GREEN : Color.RED);
         embed.setTimestamp(Instant.now());
         embed.setDescription(positive ? "✅ " : "❌ ");
         embed.appendDescription(message);
-
+        
         channel.sendMessageEmbeds(embed.build()).queue();
     }
 }
