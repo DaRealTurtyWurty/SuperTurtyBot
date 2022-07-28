@@ -36,13 +36,14 @@ public class WarnManager {
         return warn;
     }
     
-    public static @NotNull Set<Warning> clearWarnings(@NotNull Guild guild, @NotNull User user) {
+    public static @NotNull Set<Warning> clearWarnings(@NotNull Guild guild, @NotNull User user, @NotNull User clearer) {
         final Set<Warning> warns = getWarns(guild, user);
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
         Database.getDatabase().warnings.deleteMany(filter);
+        clearSanctions(warns, guild, user, clearer);
         return warns;
     }
-    
+
     public static @NotNull Set<Warning> getWarns(@NotNull Guild guild, @NotNull User user) {
         final Set<Warning> warnings = new HashSet<>();
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
@@ -59,7 +60,7 @@ public class WarnManager {
         removeSanctions(guild, toRemoveWarn, remover);
         return removed;
     }
-
+    
     // TODO: Don't hardcode
     protected static void addSanctions(Guild guild, User user, User warner) {
         final Set<Warning> warnings = getWarns(guild, user);
@@ -110,30 +111,66 @@ public class WarnManager {
         }
     }
 
+    protected static void clearSanctions(Set<Warning> warns, Guild guild, User user, User clearer) {
+        if (warns.size() >= 5) {
+            guild.unban(user).queue(success -> {
+                user.openPrivateChannel().queue(channel -> channel
+                    .sendMessage("You have been unbanned from `" + guild.getName() + "`!").queue(succes -> {
+                    }, error -> {
+                    }));
+                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
+                if (Boolean.TRUE.equals(logging.getKey())) {
+                    BanCommand.log(logging.getValue(),
+                        clearer.getAsMention() + " has unbanned " + user.getAsMention() + "!", true);
+                }
+            }, error -> {
+            });
+            
+        } else {
+            guild.removeTimeout(user).queue(success -> {
+                clearer.openPrivateChannel().queue(channel -> channel
+                    .sendMessage("Your timeout on `" + guild.getName() + "` has been removed!").queue(succes -> {
+                    }, error -> {
+                    }));
+                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
+                if (Boolean.TRUE.equals(logging.getKey())) {
+                    BanCommand.log(logging.getValue(),
+                        clearer.getAsMention() + " has removed the time-out from " + user.getAsMention() + "!", true);
+                }
+            }, error -> {
+            });
+        }
+    }
+
     protected static void removeSanctions(Guild guild, User user, User remover) {
         final Set<Warning> warnings = getWarns(guild, user);
         if (warnings.size() == 4) {
-            user.openPrivateChannel().queue(channel -> channel
-                .sendMessage("You have been unbanned from `" + guild.getName() + "`!").queue(success -> {
-                }, error -> {
-                }));
-            guild.unban(user).queue();
-            final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-            if (Boolean.TRUE.equals(logging.getKey())) {
-                BanCommand.log(logging.getValue(),
-                    remover.getAsMention() + " has unbanned " + user.getAsMention() + "!", true);
-            }
+            guild.unban(user).queue(success -> {
+                user.openPrivateChannel().queue(channel -> channel
+                    .sendMessage("You have been unbanned from `" + guild.getName() + "`!").queue(succes -> {
+                    }, error -> {
+                    }));
+                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
+                if (Boolean.TRUE.equals(logging.getKey())) {
+                    BanCommand.log(logging.getValue(),
+                        remover.getAsMention() + " has unbanned " + user.getAsMention() + "!", true);
+                }
+            }, error -> {
+            });
+            
         } else if (warnings.size() == 3 || warnings.size() == 1 || warnings.isEmpty()) {
-            remover.openPrivateChannel().queue(channel -> channel
-                .sendMessage("Your timeout on `" + guild.getName() + "` has been removed!").queue(success -> {
-                }, error -> {
-                }));
-            guild.removeTimeout(user).queue();
-            final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-            if (Boolean.TRUE.equals(logging.getKey())) {
-                BanCommand.log(logging.getValue(),
-                    remover.getAsMention() + " has removed the time-out from " + user.getAsMention() + "!", true);
-            }
+            guild.removeTimeout(user).queue(success -> {
+                remover.openPrivateChannel().queue(channel -> channel
+                    .sendMessage("Your timeout on `" + guild.getName() + "` has been removed!").queue(succes -> {
+                    }, error -> {
+                    }));
+                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
+                if (Boolean.TRUE.equals(logging.getKey())) {
+                    BanCommand.log(logging.getValue(),
+                        remover.getAsMention() + " has removed the time-out from " + user.getAsMention() + "!", true);
+                }
+            }, error -> {
+            });
         }
     }
 }
