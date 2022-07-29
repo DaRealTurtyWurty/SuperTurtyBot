@@ -51,11 +51,13 @@ import io.github.darealturtywurty.superturtybot.commands.moderation.warnings.War
 import io.github.darealturtywurty.superturtybot.commands.music.ClearCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.JoinCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.LeaveCommand;
+import io.github.darealturtywurty.superturtybot.commands.music.LyricsCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.NowPlayingCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.PauseCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.PlayCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.QueueCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.RemoveCommand;
+import io.github.darealturtywurty.superturtybot.commands.music.RemoveDuplicatesCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.ResumeCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.SearchCommand;
 import io.github.darealturtywurty.superturtybot.commands.music.ShuffleCommand;
@@ -262,6 +264,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ShuffleCommand());
         cmds.add(new ClearCommand());
         cmds.add(new SearchCommand());
+        cmds.add(new LyricsCommand());
+        cmds.add(new RemoveDuplicatesCommand());
 
         // Image
         cmds.add(new HttpCatCommand());
