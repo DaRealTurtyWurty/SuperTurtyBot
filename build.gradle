@@ -50,6 +50,7 @@ dependencies {
     
     implementation group: 'com.vdurmont', name: 'emoji-java', version: '5.1.1'
     implementation group: 'net.dean.jraw', name: 'JRAW', version: '1.1.0'
+    implementation group: 'com.github.LowLevelSubmarine', name: 'GeniusLyricsAPI', version: '1.0.3'
     
     implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
     implementation group: 'com.jhlabs', name: 'filters', version: '2.0.235-1'
