@@ -46,20 +46,21 @@ public class RemoveDuplicatesCommand extends CoreCommand {
         final List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
         final Set<String> nonDuplicates = new HashSet<>();
         int removeCounter = 0;
-        for (int index = 0; index < queue.size(); index++) {
-            final AudioTrack track = queue.get(index);
+        for (final AudioTrack track : queue) {
             if (!nonDuplicates.contains(track.getInfo().uri)) {
                 nonDuplicates.add(track.getInfo().uri);
                 continue;
             }
             
-            AudioManager.removeTrack(event.getGuild(), index);
-            removeCounter++;
+            if (AudioManager.removeTrack(event.getGuild(), track)) {
+                removeCounter++;
+            }
         }
         
         nonDuplicates.clear();
+
         if (removeCounter > 0) {
-            reply(event, "✅ I have removed " + removeCounter + "tracks from the queue!");
+            reply(event, "✅ I have removed " + removeCounter + " track(s) from the queue!");
         } else {
             reply(event, "❌ There are no duplicate tracks in the queue!", false, true);
         }

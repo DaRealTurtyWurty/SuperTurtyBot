@@ -73,6 +73,18 @@ public class MusicTrackScheduler extends AudioEventAdapter {
         }
     }
     
+    public boolean removeTrack(AudioTrack track) {
+        if (track == null)
+            return false;
+        
+        if (getCurrentlyPlaying().equals(track)) {
+            nextTrack();
+            return true;
+        }
+        
+        return this.queue.remove(track);
+    }
+    
     @Nullable
     public AudioTrack removeTrack(int index) {
         if (index < 0 || index >= this.queue.size())
