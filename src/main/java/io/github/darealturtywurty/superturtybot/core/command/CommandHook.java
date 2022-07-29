@@ -26,6 +26,7 @@ import io.github.darealturtywurty.superturtybot.commands.fun.MinecraftUserSkinCo
 import io.github.darealturtywurty.superturtybot.commands.fun.MinecraftUserUUIDCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.MinecraftUsernameCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.ProgrammingMemeCommand;
+import io.github.darealturtywurty.superturtybot.commands.fun.RainbowSixStatsCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.ReverseTextCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.UpsideDownTextCommand;
 import io.github.darealturtywurty.superturtybot.commands.fun.UrbanDictionaryCommand;
@@ -85,7 +86,6 @@ import io.github.darealturtywurty.superturtybot.commands.util.GithubRepositoryCo
 import io.github.darealturtywurty.superturtybot.commands.util.HighlightCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.MojangStatusCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.PollCommand;
-import io.github.darealturtywurty.superturtybot.commands.util.RainbowSixStatsCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.ReactionRoleCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.RolesCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.ServerInfoCommand;
