@@ -27,17 +27,17 @@ public class LyricsCommand extends CoreCommand {
     public LyricsCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Get lyrics for the currently playing song";
     }
-
+    
     @Override
     public String getName() {
         return "lyrics";
@@ -47,16 +47,16 @@ public class LyricsCommand extends CoreCommand {
     public String getRichName() {
         return "Song Lyrics";
     }
-
+    
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         if (!event.isFromGuild())
             return;
-
+        
         final String id = event.getComponentId();
         if (!id.startsWith("lyrics-"))
             return;
-
+        
         final String[] parts = id.split("-");
         final long channel = Long.parseLong(parts[1]);
         final long user = Long.parseLong(parts[2]);
@@ -64,64 +64,90 @@ public class LyricsCommand extends CoreCommand {
         final int page = Integer.parseInt(parts[4].replace("page", ""));
         final String action = parts[5];
         
+        int newPage = page;
         if ("prev".equals(action)) {
-            if (page - 1 <= 0) {
+            newPage--;
+            
+            if (newPage == 0) {
                 event.editButton(event.getButton().asDisabled()).queue();
-                return;
             }
+
+            if (newPage < 0)
+                return;
             
             final String lyrics = ID_LYRIC_MAP.get(hitId);
-            final String prevPage = lyrics.substring(0 + (page - 1) * 1024,
-                Math.min(lyrics.length(), 1024 + (page - 1) * 1024));
+            final String prevPage = lyrics.substring(0 + newPage * 1024,
+                Math.min(lyrics.length(), 1024 + newPage * 1024));
             final ActionRow row = event.getMessage().getActionRows().get(0);
-            final Button previous = row.getButtons().get(0);
-            previous.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page - 1) + "-prev");
-            final Button close = row.getButtons().get(1);
-            close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page - 1) + "-close");
-            final Button next = row.getButtons().get(2);
-            next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page - 1) + "-next");
+            Button previous = row.getButtons().get(0);
+            previous = previous.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
+            Button close = row.getButtons().get(1).withDisabled(false);
+            close = close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
+            Button next = row.getButtons().get(2).withDisabled(false);
+            next = next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
             
-            event
-                .editMessageEmbeds(
-                    new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
-                .setActionRows(ActionRow.of(previous, close, next)).queue();
+            if (newPage != 0) {
+                event
+                    .editMessageEmbeds(
+                        new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
+                    .setActionRows(ActionRow.of(previous, close, next)).queue();
+                
+            } else {
+                event.getHook()
+                    .editOriginalEmbeds(
+                        new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
+                    .setActionRows(ActionRow.of(previous, close, next)).queue();
+            }
         } else if ("close".equals(action)) {
             event.deferEdit().flatMap(InteractionHook::deleteOriginal).queue();
             ID_LYRIC_MAP.remove(hitId);
         } else if ("next".equals(action)) {
+            newPage++;
+            
             final String lyrics = ID_LYRIC_MAP.get(hitId);
-            if (page + 1 > lyrics.length() / 1024f) {
+            if (newPage == lyrics.length() / 1024) {
                 event.editButton(event.getButton().withDisabled(true)).queue();
-                return;
             }
 
-            if (page + 1 > 0) {
-                final String nextPage = lyrics.substring(0 + (page + 1) * 1024,
-                    Math.min(lyrics.length(), 1024 + (page + 1) * 1024));
-
+            if (newPage > lyrics.length() / 1024)
+                return;
+            
+            if (newPage > 0) {
+                final String nextPage = lyrics.substring(0 + newPage * 1024,
+                    Math.min(lyrics.length(), 1024 + newPage * 1024));
+                
                 final ActionRow row = event.getMessage().getActionRows().get(0);
-                final Button previous = row.getButtons().get(0).withDisabled(false);
-                previous.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page + 1) + "-prev");
-                final Button close = row.getButtons().get(1);
-                close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page + 1) + "-close");
-                final Button next = row.getButtons().get(2);
-                next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + (page + 1) + "-next");
+                Button previous = row.getButtons().get(0).withDisabled(false);
+                previous = previous
+                    .withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
+                Button close = row.getButtons().get(1);
+                close = close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
+                Button next = row.getButtons().get(2);
+                next = next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
+                
+                if (newPage != lyrics.length() / 1024) {
+                    event
+                        .editMessageEmbeds(
+                            new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
+                        .setActionRows().setActionRows(ActionRow.of(previous, close, next)).queue();
 
-                event
-                    .editMessageEmbeds(
-                        new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
-                    .setActionRows().setActionRows(ActionRow.of(previous, close, next)).queue();
+                } else {
+                    event.getHook()
+                        .editOriginalEmbeds(
+                            new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
+                        .setActionRows().setActionRows(ActionRow.of(previous, close, next)).queue();
+                }
             }
         }
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || !AudioManager.isPlaying(event.getGuild())) {
             reply(event, "❌ You must be in a server with a track currently playing!", false, true);
             return;
         }
-
+        
         try {
             final SongSearch search = Constants.GENIUS_LYRICS
                 .search(AudioManager.getCurrentlyPlaying(event.getGuild()).getInfo().title);
@@ -149,7 +175,7 @@ public class LyricsCommand extends CoreCommand {
                     Button.primary("lyrics-" + event.getChannel().getId() + "-" + event.getUser().getId() + "-"
                         + hit.getId() + "-page0" + "-prev", Emoji.fromUnicode("◀️")).asDisabled(),
                     Button.danger("lyrics-" + event.getChannel().getId() + "-" + event.getUser().getId() + "-"
-                        + hit.getId() + "-page0" + "-close", Emoji.fromUnicode("❌")),
+                        + hit.getId() + "-page0" + "-close", Emoji.fromUnicode("⚠️")),
                     Button.primary("lyrics-" + event.getChannel().getId() + "-" + event.getUser().getId() + "-"
                         + hit.getId() + "-page0" + "-next", Emoji.fromUnicode("▶️"))))
                 .queue();
