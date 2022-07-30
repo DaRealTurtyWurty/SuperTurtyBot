@@ -1,4 +1,4 @@
-FROM gradle:7.4.2-jdk18 as builder
+FROM gradle:7.5-jdk18 as builder
 WORKDIR /opt/SuperTurtyBot/code/
 
 COPY build.gradle ./
