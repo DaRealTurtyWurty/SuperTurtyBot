@@ -4,10 +4,10 @@ WORKDIR /home/gradle/source/
 COPY build.gradle ./
 COPY src/ src/
 RUN gradle installDist
-RUN ls
+RUN ls -Rla
 
 FROM eclipse-temurin:17-jre
-WORKDIR /home/gradle/source/
+WORKDIR /opt/SuperTurtyBot/
 
 COPY --from=builder /home/gradle/source/build/install/SuperTurtyBot/ ./
 COPY run ./
