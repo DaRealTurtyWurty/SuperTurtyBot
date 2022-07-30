@@ -3,7 +3,8 @@ WORKDIR /home/gradle/source/
 
 COPY build.gradle ./
 COPY src/ src/
-RUN gradle installDist ls
+RUN gradle installDist
+RUN ls
 
 FROM eclipse-temurin:17-jre
 WORKDIR /home/gradle/source/
