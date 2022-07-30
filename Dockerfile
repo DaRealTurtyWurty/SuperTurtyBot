@@ -1,6 +1,7 @@
 FROM gradle:7.5-jdk17 as builder
 WORKDIR /home/gradle/source/
 
+COPY settings.gradle ./
 COPY build.gradle ./
 COPY src/ src/
 RUN gradle installDist
