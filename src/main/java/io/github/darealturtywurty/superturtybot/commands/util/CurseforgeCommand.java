@@ -37,44 +37,44 @@ public class CurseforgeCommand extends CoreCommand {
     public CurseforgeCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "project", "The name of the curseforge project", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-
+    
     @Override
     public String getDescription() {
         return "Get stats about a curseforge project";
     }
-
+    
     @Override
     public String getHowToUse() {
         return "/curseforge [projectName]";
     }
-
+    
     @Override
     public String getName() {
         return "curseforge";
     }
-
+    
     @Override
     public String getRichName() {
         return "Curseforge Project";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String search = URLEncoder.encode(event.getOption("project").getAsString(), StandardCharsets.UTF_8);
         final JsonObject mod = getMod(listMods(search));
         event.deferReply().addEmbeds(createModEmbed(mod, search).build()).mentionRepliedUser(false).queue();
     }
-
+    
     private EmbedBuilder createModEmbed(JsonObject modObj, String search) {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -84,52 +84,52 @@ public class CurseforgeCommand extends CoreCommand {
             embed.setColor(Color.RED);
             return embed;
         }
-
+        
         embed.setTitle(modObj.get("name").getAsString());
         embed.setDescription(modObj.get("summary").getAsString());
         embed.addField("Downloads", modObj.get("downloadCount").getAsInt() + "", false);
-
+        
         var builder = new StringBuilder();
         final JsonArray categories = modObj.getAsJsonArray("categories");
         for (final JsonElement element : categories) {
             final JsonObject category = element.getAsJsonObject();
-            builder.append("• " + category.get("name").getAsString() + "\n");
+            builder.append("\u8226 " + category.get("name").getAsString() + "\n");
         }
-
+        
         String categoriesStr = builder.toString();
         final String[] categoriesArr = categoriesStr.split("\n");
         if (categoriesArr.length < 2) {
-            categoriesStr = categoriesStr.replace("• ", "");
+            categoriesStr = categoriesStr.replace("\u8226 ", "");
         }
-
+        
         embed.addField("Categories", categoriesStr, false);
-
+        
         builder = new StringBuilder();
         final JsonArray authors = modObj.getAsJsonArray("authors");
         for (final JsonElement element : authors) {
             final JsonObject author = element.getAsJsonObject();
-            builder.append("• " + author.get("name").getAsString() + "\n");
+            builder.append("\u8226 " + author.get("name").getAsString() + "\n");
         }
-
+        
         String authorsStr = builder.toString();
         final String[] authorArr = authorsStr.split("\n");
         if (authorArr.length < 2) {
-            authorsStr = authorsStr.replace("• ", "");
+            authorsStr = authorsStr.replace("\u8226 ", "");
         }
-
+        
         embed.addField("Authors", authorsStr, false);
-
+        
         if (!modObj.get("logo").isJsonNull()) {
             embed.setThumbnail(modObj.get("logo").getAsJsonObject().get("url").getAsString());
         }
-
+        
         embed.addField("Updated At",
             DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.parse(modObj.get("dateModified").getAsString())),
             false);
         embed.addField("Created At",
             DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.parse(modObj.get("dateReleased").getAsString())),
             false);
-
+        
         final JsonArray latestFiles = modObj.getAsJsonArray("latestFiles");
         if (!latestFiles.isEmpty()) {
             final List<String> foundVersions = new ArrayList<>();
@@ -141,33 +141,33 @@ public class CurseforgeCommand extends CoreCommand {
                     final String version = elem.getAsString();
                     if (!foundVersions.contains(version)) {
                         foundVersions.add(version);
-                        builder.append("• " + version + "\n");
+                        builder.append("\u8226 " + version + "\n");
                     }
                 }
             }
-
+            
             String versionsStr = builder.toString();
             final String[] versionsArr = versionsStr.split("\n");
             if (versionsArr.length < 2) {
-                versionsStr = versionsStr.replace("• ", "");
+                versionsStr = versionsStr.replace("\u8226 ", "");
             }
-
+            
             embed.addField("Versions", versionsStr, false);
         }
-
+        
         return embed;
     }
-
+    
     private JsonObject getMod(String modsStr) {
         final var mods = Constants.GSON.fromJson(modsStr, JsonObject.class);
         final JsonArray modArray = mods.getAsJsonArray("data");
-
+        
         final List<JsonObject> objs = new ArrayList<>();
         StreamSupport.stream(modArray.spliterator(), false).map(JsonElement::getAsJsonObject)
             .sorted(Comparator.comparingInt(obj -> -obj.get("downloadCount").getAsInt())).forEach(objs::add);
         return objs.isEmpty() ? null : objs.get(0);
     }
-
+    
     private String listCategories() {
         try {
             final URLConnection urlc = new URL("https://api.curseforge.com/v1/categories?gameId=432").openConnection();
@@ -177,7 +177,7 @@ public class CurseforgeCommand extends CoreCommand {
             throw new IllegalStateException(exception);
         }
     }
-
+    
     private String listGames() {
         try {
             final URLConnection urlc = new URL("https://api.curseforge.com/v1/games").openConnection();
@@ -187,7 +187,7 @@ public class CurseforgeCommand extends CoreCommand {
             throw new IllegalStateException(exception);
         }
     }
-
+    
     private String listMods(String search) {
         try {
             final URLConnection urlc = new URL(
@@ -199,7 +199,7 @@ public class CurseforgeCommand extends CoreCommand {
             throw new IllegalStateException(exception);
         }
     }
-
+    
     private void printMods(String search) {
         final String result = listMods(search);
         final Iterator<JsonElement> mods = Constants.GSON.fromJson(result, JsonObject.class).getAsJsonArray("data")
