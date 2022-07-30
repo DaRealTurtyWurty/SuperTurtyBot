@@ -13,60 +13,61 @@ public interface CommandCategory {
     CommandCategory MUSIC = create("Music", "🎶");
     CommandCategory IMAGE = create("Image", "🖼️");
     CommandCategory LEVELLING = create("Levelling", "🔝");
-    
+    CommandCategory RPG = create("RPG", "⚔️");
+
     String getEmoji();
-    
+
     String getName();
-    
+
     default boolean isNSFW() {
         return false;
     }
-    
+
     @Nullable
     static CommandCategory byName(String name) {
         return getCategories().stream().filter(category -> category.getName().equalsIgnoreCase(name)).findFirst()
             .orElse(null);
     }
-    
+
     static CommandCategory create(String name, String emoji) {
         final var category = new CommandCategory() {
             @Override
             public String getEmoji() {
                 return emoji;
             }
-            
+
             @Override
             public String getName() {
                 return name;
             }
         };
-        
+
         CommandHook.CATEGORIES.add(category);
         return category;
     }
-    
+
     static CommandCategory create(String name, String emoji, boolean isNSFW) {
         final var category = new CommandCategory() {
             @Override
             public String getEmoji() {
                 return emoji;
             }
-            
+
             @Override
             public String getName() {
                 return name;
             }
-            
+
             @Override
             public boolean isNSFW() {
                 return isNSFW;
             }
         };
-        
+
         CommandHook.CATEGORIES.add(category);
         return category;
     }
-    
+
     static Set<CommandCategory> getCategories() {
         return Set.of(CommandHook.CATEGORIES.toArray(new CommandCategory[0]));
     }

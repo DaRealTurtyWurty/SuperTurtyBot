@@ -24,10 +24,11 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Sugge
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
+import io.github.darealturtywurty.superturtybot.modules.idlerpg.RPGStats;
 
 public class Database {
     private static final Database DATABASE = new Database();
-    
+
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
     public final MongoCollection<Suggestion> suggestions;
@@ -37,17 +38,18 @@ public class Database {
     public final MongoCollection<Showcase> starboard;
     public final MongoCollection<GuildConfig> guildConfig;
     public final MongoCollection<UserConfig> userConfig;
-
+    public final MongoCollection<RPGStats> rpgStats;
+    
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
         final CodecRegistry codecRegistry = CodecRegistries
             .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
-        
+
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
         final MongoDatabase database = client.getDatabase("TurtyBot");
-        
+
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
         this.suggestions = database.getCollection("suggestions", Suggestion.class);
@@ -57,12 +59,14 @@ public class Database {
         this.starboard = database.getCollection("starboard", Showcase.class);
         this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
-        
+        this.rpgStats = database.getCollection("rpgStats", RPGStats.class);
+
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
         final Bson channelIndex = Indexes.descending("channel");
         final Bson messageIndex = Indexes.descending("message");
         final Bson guildUserIndex = Indexes.compoundIndex(guildIndex, userIndex);
+
         this.levelling.createIndex(guildUserIndex);
         this.counting.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("users")));
         this.suggestions.createIndex(guildUserIndex);
@@ -72,12 +76,13 @@ public class Database {
         this.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
         this.guildConfig.createIndex(guildIndex);
         this.userConfig.createIndex(guildUserIndex);
+        this.rpgStats.createIndex(guildUserIndex);
     }
-    
+
     public static Database getDatabase() {
         return DATABASE;
     }
-    
+
     private static MongoClient connect(CodecRegistry codec) {
         final ConnectionString connectionString = new ConnectionString(
             "mongodb+srv://" + Environment.INSTANCE.mongoUsername() + ":" + Environment.INSTANCE.mongoPassword()
