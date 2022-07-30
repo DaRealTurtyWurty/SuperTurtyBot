@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocatio
 plugins {
     id 'java'
     id 'java-library'
+    id 'application'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
