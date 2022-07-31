@@ -95,13 +95,12 @@ public class ImageCommandRegistry {
 
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT = (event, cmd) -> {
         try {
-            final BufferedImage image = ImageIO.read(new URL("https://cataas.com/cat"));
-            final var stream = new ByteArrayOutputStream();
-            ImageIO.write(image, image.getType() == BufferedImage.TYPE_INT_ARGB ? "png" : "jpg", stream);
-            event.deferReply()
-                .addFile(new ByteArrayInputStream(stream.toByteArray()),
-                    "cat." + (image.getType() == BufferedImage.TYPE_INT_ARGB ? "png" : "jpg"))
-                .mentionRepliedUser(false).queue();
+            final String url = "https://cataas.com";
+            final URLConnection connection = new URL(url + "/cat?json=true").openConnection();
+            final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
+                    JsonObject.class);
+            final String imageId = result.get("url").getAsString();
+            event.deferReply().setContent(url + imageId).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
             event.deferReply(true).setContent("â�Œ There has been an issue gathering this cat image.")
