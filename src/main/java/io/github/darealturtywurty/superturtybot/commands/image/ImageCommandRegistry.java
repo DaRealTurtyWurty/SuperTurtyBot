@@ -99,9 +99,8 @@ public class ImageCommandRegistry {
             final URLConnection connection = new URL(url + "/cat?json=true").openConnection();
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                     JsonObject.class);
-            final String urlPart = result.get("url").getAsString();
-            final String catUrl = url + urlPart;
-            event.deferReply().setContent(catUrl).mentionRepliedUser(false).queue();
+            final String imageId = result.get("url").getAsString();
+            event.deferReply().setContent(url + imageId).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
             event.deferReply(true).setContent("â�Œ There has been an issue gathering this cat image.")
