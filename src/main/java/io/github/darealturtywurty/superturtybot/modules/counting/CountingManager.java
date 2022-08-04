@@ -75,7 +75,7 @@ public class CountingManager extends ListenerAdapter {
                 data = optData.get();
 
                 // If the user's current count succession is already greater or equal to 3 then fail
-                if (data.getCurrentCountSuccession() >= 100) {
+                if (data.getCurrentCountSuccession() >= 3) {
                     final float starting = CountingMode.getStartingNumber(mode);
                     final float next = CountingMode.getNextNumber(mode, starting);
                     failChannel(profile, mode, message, filter, updates,
