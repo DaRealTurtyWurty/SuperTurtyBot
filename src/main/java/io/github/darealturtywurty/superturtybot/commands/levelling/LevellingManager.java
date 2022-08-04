@@ -36,7 +36,7 @@ public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
     private final Map<Long, Set<Long>> disabledChannels = new HashMap<>();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
-    private final List<Long> disabledGuilds = List.of(621352915034177566L);
+    private final List<Long> disabledGuilds = List.of();
     private final Timer cooldownTimer = new Timer();
     
     private LevellingManager() {
