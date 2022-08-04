@@ -31,8 +31,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     public void onMessageContextInteraction(MessageContextInteractionEvent event) {
         super.onMessageContextInteraction(event);
         
-        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx()
-            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
+        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx())
             return;
         
         runMessageCtx(event);
@@ -49,7 +48,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                 && !(Environment.INSTANCE.defaultPrefix() + getName()).equals(content))
             return;
         
-        if (!this.types.normal() || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
+        if (!this.types.normal())
             return;
         
         runNormalMessage(event);
@@ -70,8 +69,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     @Override
     public final void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         super.onSlashCommandInteraction(event);
-        if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash()
-            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
+        if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
             return;
         
         runSlash(event);
@@ -80,8 +78,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     @Override
     public void onUserContextInteraction(UserContextInteractionEvent event) {
         super.onUserContextInteraction(event);
-        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx()
-            || event.isFromGuild() && event.getGuild().getIdLong() == 621352915034177566L)
+        if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
             return;
         
         runUserCtx(event);
