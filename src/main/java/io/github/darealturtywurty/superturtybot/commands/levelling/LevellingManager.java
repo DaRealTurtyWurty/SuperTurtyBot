@@ -6,12 +6,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
+import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigOption;
+import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigRegistry;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
@@ -104,6 +114,17 @@ public final class LevellingManager extends ListenerAdapter {
             embed.setTimestamp(Instant.now());
             embed.setDescription(member.getAsMention() + ", you are now Level " + newLevel + "! 🎉");
             embed.setColor(Color.BLUE);
+
+            final var userRoles = event.getMember().getRoles()
+                    .stream().map(Role::getIdLong).collect(Collectors.toSet());
+            final var levelRoles = getLevelRoles(guild);
+            final var toAddRoles = levelRoles.entrySet().stream()
+                    .filter(it -> it.getKey() <= newLevel)
+                    .filter(it -> !userRoles.contains(it.getValue()))
+                    .map(Map.Entry::getValue)
+                    .map(event.getGuild()::getRoleById)
+                    .filter(Objects::nonNull).toList();
+            event.getGuild().modifyMemberRoles(event.getMember(), toAddRoles, null).queue();
             
             if (ThreadLocalRandom.current().nextInt(50) == 0) {
                 final List<String> inventory = userProfile.getInventory();
@@ -122,6 +143,16 @@ public final class LevellingManager extends ListenerAdapter {
         
         Database.getDatabase().levelling.updateOne(filter, updates);
         this.cooldownMap.put(guild.getIdLong(), cooldowns);
+    }
+
+    private Map<Integer, Long> getLevelRoles(Guild guild) {
+        final Bson filter = ServerConfigCommand.getFilter(guild);
+        final GuildConfig config = ServerConfigCommand.get(filter, guild);
+        record LevelWithRole(int level, long role) {}
+        return Stream.of(config.getLevelRoles().split("( |;)"))
+                .map(it -> it.split("->"))
+                .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
+                .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }
     
     private int applyBooster(Member member, Message message, int current) {

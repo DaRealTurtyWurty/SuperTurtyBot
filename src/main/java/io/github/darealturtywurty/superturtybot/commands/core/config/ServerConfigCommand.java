@@ -210,7 +210,7 @@ public class ServerConfigCommand extends CoreCommand {
         }
     }
 
-    private static GuildConfig get(Bson filter, Guild guild) {
+    public static GuildConfig get(Bson filter, Guild guild) {
         GuildConfig found = Database.getDatabase().guildConfig.find(filter).first();
         if (found == null) {
             found = new GuildConfig(guild.getIdLong());
@@ -220,7 +220,7 @@ public class ServerConfigCommand extends CoreCommand {
         return found;
     }
 
-    private static Bson getFilter(Guild guild) {
+    public static Bson getFilter(Guild guild) {
         return Filters.eq("guild", guild.getIdLong());
     }
 }
