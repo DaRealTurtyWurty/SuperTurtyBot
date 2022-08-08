@@ -9,6 +9,8 @@ public class GuildConfig {
     private boolean botStarsCount;
     private long modLogging;
 
+    private String levelRoles;
+
     public GuildConfig() {
         this(0);
     }
@@ -20,6 +22,7 @@ public class GuildConfig {
         this.minimumStars = 5;
         this.botStarsCount = true;
         this.modLogging = 0L;
+        this.levelRoles = "";
     }
     
     public long getGuild() {
@@ -45,7 +48,11 @@ public class GuildConfig {
     public boolean isStarboardEnabled() {
         return this.starboardEnabled;
     }
-    
+
+    public String getLevelRoles() {
+        return levelRoles;
+    }
+
     public void setBotStarsCount(boolean botStarsCount) {
         this.botStarsCount = botStarsCount;
     }
@@ -68,5 +75,9 @@ public class GuildConfig {
     
     public void setStarboardEnabled(boolean starboardEnabled) {
         this.starboardEnabled = starboardEnabled;
+    }
+
+    public void setLevelRoles(String levelRoles) {
+        this.levelRoles = levelRoles;
     }
 }

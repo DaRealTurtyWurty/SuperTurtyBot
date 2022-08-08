@@ -11,5 +11,8 @@ build
 .project
 .settings
 
+# Ignore idea files
+.idea
+
 # Ignore bin
 bin

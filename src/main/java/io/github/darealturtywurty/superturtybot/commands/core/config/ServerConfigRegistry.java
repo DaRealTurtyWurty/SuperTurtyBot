@@ -3,6 +3,8 @@ package io.github.darealturtywurty.superturtybot.commands.core.config;
 import java.util.List;
 import java.util.function.BiPredicate;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigOption.DataType;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import io.github.darealturtywurty.superturtybot.registry.Registry;
@@ -64,4 +66,19 @@ public class ServerConfigRegistry {
         new ServerConfigOption.Builder().dataType(DataType.LONG)
             .serializer((config, value) -> config.setModLogging(Long.parseLong(value)))
             .valueFromConfig(GuildConfig::getModLogging).validator(TEXT_CHANNEL_VALIDATOR).build());
+
+    public static final ServerConfigOption LEVEL_ROLES = SERVER_CONFIG_OPTIONS.register("level_roles",
+        new ServerConfigOption.Builder().dataType(DataType.STRING)
+            .serializer(GuildConfig::setLevelRoles)
+            .valueFromConfig(GuildConfig::getLevelRoles)
+            .validator((event, value) -> {
+                final String[] split = value.split("( |;)");
+                for (String val : split) {
+                    final String[] roleToChannel = val.split("->");
+                    if (roleToChannel.length != 2) return false;
+                    if (Ints.tryParse(roleToChannel[0]) == null) return false;
+                    if (Longs.tryParse(roleToChannel[1]) == null) return false;
+                }
+                return true;
+            }).build());
 }
