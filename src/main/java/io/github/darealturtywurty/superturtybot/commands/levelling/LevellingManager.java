@@ -151,7 +151,7 @@ public final class LevellingManager extends ListenerAdapter {
         record LevelWithRole(int level, long role) {}
         return Stream.of(config.getLevelRoles().split("( |;)"))
                 .map(it -> it.split("->"))
-                .map(it -> new LevelWithRole(Integer.parseInt(it[0]), Long.parseLong(it[1])))
+                .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
                 .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }
     
