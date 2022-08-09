@@ -166,9 +166,9 @@ public class RankCommand extends CoreCommand {
             percentage = 0;
         }
 
-        event.deferReply().queue();
+        event.deferReply().mentionRepliedUser(false).queue();
         final File card = makeRankCard(member, profile.getRankCard(), level, xp, forLevel, percentage);
-        event.getHook().editOriginal(card).mentionRepliedUser(false).queue();
+        event.getHook().editOriginal(card).queue();
     }
 
     @Nullable
