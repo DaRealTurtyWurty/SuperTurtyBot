@@ -93,13 +93,13 @@ public class CurseforgeCommand extends CoreCommand {
         final JsonArray categories = modObj.getAsJsonArray("categories");
         for (final JsonElement element : categories) {
             final JsonObject category = element.getAsJsonObject();
-            builder.append("\u8226 " + category.get("name").getAsString() + "\n");
+            builder.append("\u2022 ").append(category.get("name").getAsString()).append("\n");
         }
         
         String categoriesStr = builder.toString();
         final String[] categoriesArr = categoriesStr.split("\n");
         if (categoriesArr.length < 2) {
-            categoriesStr = categoriesStr.replace("\u8226 ", "");
+            categoriesStr = categoriesStr.replace("\u2022 ", "");
         }
         
         embed.addField("Categories", categoriesStr, false);
@@ -108,13 +108,13 @@ public class CurseforgeCommand extends CoreCommand {
         final JsonArray authors = modObj.getAsJsonArray("authors");
         for (final JsonElement element : authors) {
             final JsonObject author = element.getAsJsonObject();
-            builder.append("\u8226 " + author.get("name").getAsString() + "\n");
+            builder.append("\u2022 ").append(author.get("name").getAsString()).append("\n");
         }
         
         String authorsStr = builder.toString();
         final String[] authorArr = authorsStr.split("\n");
         if (authorArr.length < 2) {
-            authorsStr = authorsStr.replace("\u8226 ", "");
+            authorsStr = authorsStr.replace("\u2022 ", "");
         }
         
         embed.addField("Authors", authorsStr, false);
@@ -141,7 +141,7 @@ public class CurseforgeCommand extends CoreCommand {
                     final String version = elem.getAsString();
                     if (!foundVersions.contains(version)) {
                         foundVersions.add(version);
-                        builder.append("\u8226 " + version + "\n");
+                        builder.append("\u2022 ").append(version).append("\n");
                     }
                 }
             }
@@ -149,7 +149,7 @@ public class CurseforgeCommand extends CoreCommand {
             String versionsStr = builder.toString();
             final String[] versionsArr = versionsStr.split("\n");
             if (versionsArr.length < 2) {
-                versionsStr = versionsStr.replace("\u8226 ", "");
+                versionsStr = versionsStr.replace("\u2022 ", "");
             }
             
             embed.addField("Versions", versionsStr, false);
@@ -207,7 +207,7 @@ public class CurseforgeCommand extends CoreCommand {
         final var builder = new StringBuilder();
         Stream.generate(() -> null).takeWhile(x -> mods.hasNext()).map(n -> mods.next())
             .map(JsonElement::getAsJsonObject).map(obj -> obj.get("name").getAsString())
-            .forEach(n -> builder.append(n + "\n"));
+            .forEach(n -> builder.append(n).append("\n"));
         Constants.LOGGER.debug(builder.toString());
     }
 }
