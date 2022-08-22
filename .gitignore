@@ -10,7 +10,7 @@ build
 # Ignore eclipse files
 .project
 .settings
-.classpath
+*.classpath
 
 # Ignore idea files
 .idea
