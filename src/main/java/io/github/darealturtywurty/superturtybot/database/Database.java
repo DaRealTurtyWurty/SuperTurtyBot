@@ -19,12 +19,12 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Count
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
-import io.github.darealturtywurty.superturtybot.modules.idlerpg.RPGStats;
 
 public class Database {
     private static final Database DATABASE = new Database();
@@ -38,7 +38,7 @@ public class Database {
     public final MongoCollection<Showcase> starboard;
     public final MongoCollection<GuildConfig> guildConfig;
     public final MongoCollection<UserConfig> userConfig;
-    public final MongoCollection<RPGStats> rpgStats;
+    public final MongoCollection<RPGPlayer> rpgStats;
     
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -59,7 +59,7 @@ public class Database {
         this.starboard = database.getCollection("starboard", Showcase.class);
         this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
-        this.rpgStats = database.getCollection("rpgStats", RPGStats.class);
+        this.rpgStats = database.getCollection("rpgStats", RPGPlayer.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");

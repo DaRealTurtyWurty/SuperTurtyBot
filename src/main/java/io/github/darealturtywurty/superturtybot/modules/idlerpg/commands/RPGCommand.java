@@ -1,4 +1,4 @@
-package io.github.darealturtywurty.superturtybot.modules.idlerpg;
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.commands;
 
 import org.bson.conversions.Bson;
 
@@ -7,6 +7,7 @@ import com.mongodb.client.model.Filters;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public abstract class RPGCommand extends CoreCommand {
@@ -24,10 +25,10 @@ public abstract class RPGCommand extends CoreCommand {
             Filters.eq("user", event.getAuthor().getIdLong()));
     }
 
-    protected RPGStats getStats(MessageReceivedEvent event) {
+    protected RPGPlayer getStats(MessageReceivedEvent event) {
         final Bson filter = getFilter(event);
         
-        final RPGStats found = Database.getDatabase().rpgStats.find(filter).first();
+        final RPGPlayer found = Database.getDatabase().rpgStats.find(filter).first();
         if (found == null) {
             reply(event, "❌ You do not have a profile on this server! Use `.start` to get started!");
             return null;

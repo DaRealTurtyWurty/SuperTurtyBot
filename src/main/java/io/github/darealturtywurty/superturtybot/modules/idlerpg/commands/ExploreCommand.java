@@ -1,10 +1,12 @@
-package io.github.darealturtywurty.superturtybot.modules.idlerpg;
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.commands;
 
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Updates;
 
 import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
+import io.github.darealturtywurty.superturtybot.modules.idlerpg.RPGManager;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class ExploreCommand extends RPGCommand {
@@ -25,7 +27,7 @@ public class ExploreCommand extends RPGCommand {
 
     @Override
     protected void run(MessageReceivedEvent event) {
-        final RPGStats found = getStats(event);
+        final RPGPlayer found = getStats(event);
         if (found == null)
             return;
 
@@ -45,9 +47,9 @@ public class ExploreCommand extends RPGCommand {
         }
 
         found.setExploring(true);
-        final Bson update = Updates.set("isExploring", found.isExploring());
+        final Bson update = Updates.set("exploring", found.isExploring());
         Database.getDatabase().rpgStats.updateOne(getFilter(event), update);
-        RPGManager.INSTANCE.explore(event.getMember(), event.getChannel().asTextChannel());
+        RPGManager.INSTANCE.explore(event.getMember(), event.getChannel().asTextChannel(), getFilter(event), found);
         
         reply(event, "You start exploring into the wilderness. What will you find?", true);
     }

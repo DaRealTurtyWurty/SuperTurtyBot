@@ -1,13 +1,13 @@
-package io.github.darealturtywurty.superturtybot.modules.idlerpg;
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.pojo;
 
 import java.awt.Color;
 
-public enum Bruhnuments {
+public enum Outcome {
     POSITIVE(Color.GREEN), UNDEFINED(Color.GRAY), UNKNOWN(Color.MAGENTA), NEGATIVE(Color.RED);
     
     private final Color color;
     
-    Bruhnuments(Color color) {
+    Outcome(Color color) {
         this.color = color;
     }
     

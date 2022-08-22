@@ -1,7 +1,8 @@
-package io.github.darealturtywurty.superturtybot.modules.idlerpg;
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.commands;
 
 import java.time.Instant;
 
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
@@ -23,7 +24,7 @@ public class ProfileCommand extends RPGCommand {
 
     @Override
     protected void run(MessageReceivedEvent event) {
-        final RPGStats found = getStats(event);
+        final RPGPlayer found = getStats(event);
         if (found == null)
             return;
 

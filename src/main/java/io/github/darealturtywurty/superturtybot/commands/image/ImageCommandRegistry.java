@@ -29,11 +29,11 @@ import net.dv8tion.jda.api.requests.RestAction;
 
 public class ImageCommandRegistry {
     public static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
-
+    
     static {
         new ImageCommandRegistry();
     }
-    
+
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BIRD = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/birb").openConnection();
@@ -47,7 +47,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BLEP = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Blep");
@@ -55,7 +55,7 @@ public class ImageCommandRegistry {
             : post.getSubject().getUrl();
         event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BUNNY = (event, cmd) -> {
         try {
             final URLConnection connection = new URL(
@@ -71,7 +71,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT_BOMB = (event, cmd) -> {
         event.deferReply().setContent("Loading cats...").queue();
         final String[] subreddits = { "Cats", "Kitten", "CatSpotting", "IllegallySmolCats", "IllegallyBigCats",
@@ -80,7 +80,7 @@ public class ImageCommandRegistry {
             "SadCats", "PirateKitties", "meowormyson", "goodcats", "pimpcats", "C_AT", "thisismylifemeow", "fatcats",
             "nowmycat", "divorcedcats", "notmycat", "ChristmasCats", "scrungycats", "AdorableCats", "AliveNamedCats",
             "Medieval_Cats" };
-
+        
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
@@ -89,10 +89,10 @@ public class ImageCommandRegistry {
                 : post.getSubject().getUrl();
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
-
+        
         RestAction.allOf(actions).queue(success -> event.getHook().deleteOriginal().queue());
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT = (event, cmd) -> {
         try {
             final BufferedImage image = ImageIO.read(new URL("https://cataas.com/cat"));
@@ -104,11 +104,11 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this cat image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this cat image.")
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG_BOMB = (event, cmd) -> {
         event.deferReply().setContent("Loading dogs...").queue();
         final String[] subreddits = { "Dogs", "lookatmydog", "dogpictures", "dogswearinghats", "dogswitheyebrows",
@@ -127,7 +127,7 @@ public class ImageCommandRegistry {
             "siberianhusky", "sighthounds", "springerspaniel", "StandardPoodles", "SwissMountainDogs", "tollers",
             "toyfoxterriers", "vizsla", "weimaraner", "welshterrier", "WestHighlandTerriers", "whippets",
             "xoloitzquintli" };
-
+        
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
@@ -136,10 +136,10 @@ public class ImageCommandRegistry {
                 : post.getSubject().getUrl();
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
-
+        
         RestAction.allOf(actions).queue(success -> event.getHook().deleteOriginal().queue());
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://dog.ceo/api/breeds/image/random").openConnection();
@@ -153,7 +153,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOGE = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Doge");
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Doge");
@@ -161,7 +161,7 @@ public class ImageCommandRegistry {
             : post.getSubject().getUrl();
         event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DUCK = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://random-d.uk/api/v2/random").openConnection();
@@ -175,7 +175,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> FOX = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/fox").openConnection();
@@ -189,7 +189,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> KOALA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/koala").openConnection();
@@ -203,7 +203,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> PANDA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/panda").openConnection();
@@ -217,7 +217,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> RACCOON = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/raccoon").openConnection();
@@ -231,7 +231,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> RED_PANDA = (event, cmd) -> {
         try {
             final URLConnection connection = new URL("https://some-random-api.ml/img/red_panda").openConnection();
@@ -245,7 +245,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> SNAKE = (event, cmd) -> {
         try {
             final Document page = Jsoup.connect("https://generatorfun.com/random-snake-image").get();
@@ -256,7 +256,7 @@ public class ImageCommandRegistry {
                 .mentionRepliedUser(false).queue();
         }
     };
-
+    
     public ImageCommandRegistry() {
         pexels("bee", 3);
         IMAGE_CMD_TYPES.register("bird", new ImageCommandType(BIRD));
@@ -300,7 +300,7 @@ public class ImageCommandRegistry {
         pexels("wolf", 2);
         pexels("zebra", 2);
     }
-
+    
     private ImageCommandType pexels(String name, int maxPages) {
         return IMAGE_CMD_TYPES.register(name, new PexelsImageCommandType(maxPages));
     }

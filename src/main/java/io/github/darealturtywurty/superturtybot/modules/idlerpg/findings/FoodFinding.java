@@ -1,0 +1,17 @@
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.findings;
+
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
+import io.github.darealturtywurty.superturtybot.modules.idlerpg.findings.response.ResponseBuilder;
+import io.github.darealturtywurty.superturtybot.modules.idlerpg.pojo.Outcome;
+import net.dv8tion.jda.api.JDA;
+
+public class FoodFinding extends Finding {
+    public FoodFinding() {
+        super(Outcome.POSITIVE, "Aw man now my tummy is rumbling. You found some food.");
+    }
+
+    @Override
+    protected ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
+        return null;
+    }
+}

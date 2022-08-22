@@ -1,10 +1,11 @@
-package io.github.darealturtywurty.superturtybot.modules.idlerpg;
+package io.github.darealturtywurty.superturtybot.modules.idlerpg.commands;
 
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Filters;
 
 import io.github.darealturtywurty.superturtybot.database.Database;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 // TODO: Use config for prefix
@@ -34,14 +35,14 @@ public class StartCommand extends RPGCommand {
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
             Filters.eq("user", event.getAuthor().getIdLong()));
 
-        RPGStats found = Database.getDatabase().rpgStats.find(filter).first();
+        RPGPlayer found = Database.getDatabase().rpgStats.find(filter).first();
         if (found != null) {
             reply(event,
                 "❌ You already have a RPG profile in this server! You can use `.profile` to view your profile!");
             return;
         }
 
-        found = new RPGStats(event.getGuild().getIdLong(), event.getAuthor().getIdLong());
+        found = new RPGPlayer(event.getGuild().getIdLong(), event.getAuthor().getIdLong());
         Database.getDatabase().rpgStats.insertOne(found);
 
         reply(event,
