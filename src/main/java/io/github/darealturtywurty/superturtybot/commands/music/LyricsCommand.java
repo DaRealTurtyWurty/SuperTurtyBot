@@ -50,12 +50,14 @@ public class LyricsCommand extends CoreCommand {
     
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        if (!event.isFromGuild())
-            return;
+        if (!event.isFromGuild()) {
+            event.deferEdit().queue();
+        }
         
         final String id = event.getComponentId();
-        if (!id.startsWith("lyrics-"))
-            return;
+        if (!id.startsWith("lyrics-")) {
+            event.deferEdit().queue();
+        }
         
         final String[] parts = id.split("-");
         final long channel = Long.parseLong(parts[1]);
@@ -72,8 +74,9 @@ public class LyricsCommand extends CoreCommand {
                 event.editButton(event.getButton().asDisabled()).queue();
             }
 
-            if (newPage < 0)
-                return;
+            if (newPage < 0) {
+                event.deferEdit().queue();
+            }
             
             final String lyrics = ID_LYRIC_MAP.get(hitId);
             final String prevPage = lyrics.substring(0 + newPage * 1024,
@@ -90,13 +93,13 @@ public class LyricsCommand extends CoreCommand {
                 event
                     .editMessageEmbeds(
                         new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
-                    .setActionRows(ActionRow.of(previous, close, next)).queue();
+                    .setComponents(ActionRow.of(previous, close, next)).queue();
                 
             } else {
                 event.getHook()
                     .editOriginalEmbeds(
                         new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
-                    .setActionRows(ActionRow.of(previous, close, next)).queue();
+                    .setComponents(ActionRow.of(previous, close, next)).queue();
             }
         } else if ("close".equals(action)) {
             event.deferEdit().flatMap(InteractionHook::deleteOriginal).queue();
@@ -129,13 +132,13 @@ public class LyricsCommand extends CoreCommand {
                     event
                         .editMessageEmbeds(
                             new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
-                        .setActionRows().setActionRows(ActionRow.of(previous, close, next)).queue();
+                        .setComponents(ActionRow.of(previous, close, next)).queue();
 
                 } else {
                     event.getHook()
                         .editOriginalEmbeds(
                             new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
-                        .setActionRows().setActionRows(ActionRow.of(previous, close, next)).queue();
+                        .setComponents(ActionRow.of(previous, close, next)).queue();
                 }
             }
         }
@@ -148,12 +151,14 @@ public class LyricsCommand extends CoreCommand {
             return;
         }
         
+        event.deferReply().mentionRepliedUser(false).queue();
+        
         try {
             final SongSearch search = Constants.GENIUS_LYRICS
                 .search(AudioManager.getCurrentlyPlaying(event.getGuild()).getInfo().title);
             final LinkedList<Hit> hits = search.getHits();
             if (hits.isEmpty()) {
-                reply(event, "❌ There are no results for this song!", false, true);
+                event.getHook().editOriginal("❌ There are no lyrics found for this song!").queue();
                 return;
             }
             
@@ -170,8 +175,8 @@ public class LyricsCommand extends CoreCommand {
             
             final String page0 = lyrics.substring(0, Math.min(lyrics.length(), 1024));
             embed.setDescription(page0);
-            event.deferReply().addEmbeds(embed.build())
-                .addActionRows(ActionRow.of(
+            event.getHook().editOriginalEmbeds(embed.build())
+                .setComponents(ActionRow.of(
                     Button.primary("lyrics-" + event.getChannel().getId() + "-" + event.getUser().getId() + "-"
                         + hit.getId() + "-page0" + "-prev", Emoji.fromUnicode("◀️")).asDisabled(),
                     Button.danger("lyrics-" + event.getChannel().getId() + "-" + event.getUser().getId() + "-"

@@ -29,43 +29,44 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.FileUpload;
 
 public class MinecraftUserSkinCommand extends CoreCommand {
     public MinecraftUserSkinCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.STRING, "username", "The username of which to get the skin for", true));
     }
-
+    
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-
+    
     @Override
     public String getDescription() {
         return "Gets the Minecraft Skin from a username.";
     }
-
+    
     @Override
     public String getHowToUse() {
         return "/mc-skin [username]";
     }
-
+    
     @Override
     public String getName() {
         return "mc-skin";
     }
-
+    
     @Override
     public String getRichName() {
         return "Minecraft Skin";
     }
-
+    
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         final Message message = event.getMessage();
@@ -77,7 +78,7 @@ public class MinecraftUserSkinCommand extends CoreCommand {
             if (rotation >= 360) {
                 rotation = 5;
             }
-
+            
             final MessageEmbed embed = message.getEmbeds().get(0);
             final EmbedBuilder newEmbed = new EmbedBuilder(embed);
             final String filename = embed.getImage().getProxyUrl()
@@ -88,12 +89,12 @@ public class MinecraftUserSkinCommand extends CoreCommand {
                     "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json"));
                 newEmbed.setImage("attachment://" + username + ".png");
                 final var atomicRotation = new AtomicInteger(rotation);
-                event.deferEdit().retainFiles(message.getAttachments()).setCheck(event::isAcknowledged)
+                event.deferEdit().setAttachments(message.getAttachments()).setCheck(event::isAcknowledged)
                     .queue(hook -> hook.editOriginalEmbeds(newEmbed.build())
-                        .setActionRows(createButtons(message.getIdLong(), atomicRotation.get()))
-                        .addFile(bytes, username + ".png").queue());
+                        .setComponents(createButtons(message.getIdLong(), atomicRotation.get()))
+                        .setAttachments(FileUpload.fromData(bytes, username + ".png")).queue());
             } catch (final IOException exception) {
-
+                
             }
         } else if (event.getComponentId().startsWith(message.getIdLong() + "-dismiss")) {
             if (message.getInteraction() == null) {
@@ -104,19 +105,17 @@ public class MinecraftUserSkinCommand extends CoreCommand {
                         message.delete().queue();
                         msg.delete().queue();
                     }
-                }, error -> {
-                    message.delete().queue();
-                });
-
+                }, error -> message.delete().queue());
+                
                 return;
             }
-
+            
             final User author = message.getInteraction().getUser();
             if (event.getUser().getIdLong() != author.getIdLong()) {
                 event.deferEdit().queue();
                 return;
             }
-
+            
             message.delete().queue();
         } else if (event.getComponentId().startsWith(message.getIdLong() + "-rotate-clockwise")) {
             int rotation = Integer.parseInt(event.getComponentId().split("-")[3]) + 45;
@@ -126,7 +125,7 @@ public class MinecraftUserSkinCommand extends CoreCommand {
             if (rotation >= 360) {
                 rotation = 5;
             }
-
+            
             final MessageEmbed embed = message.getEmbeds().get(0);
             final EmbedBuilder newEmbed = new EmbedBuilder(embed);
             final String filename = embed.getImage().getProxyUrl()
@@ -137,16 +136,16 @@ public class MinecraftUserSkinCommand extends CoreCommand {
                     "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json"));
                 newEmbed.setImage("attachment://" + username + ".png");
                 final var atomicRotation = new AtomicInteger(rotation);
-                event.deferEdit().retainFiles(message.getAttachments()).setCheck(() -> event.isAcknowledged())
+                event.deferEdit().setAttachments(message.getAttachments()).setCheck(event::isAcknowledged)
                     .queue(hook -> hook.editOriginalEmbeds(newEmbed.build())
-                        .setActionRows(createButtons(message.getIdLong(), atomicRotation.get()))
-                        .addFile(bytes, username + ".png").queue());
+                        .setComponents(createButtons(message.getIdLong(), atomicRotation.get()))
+                        .setFiles(FileUpload.fromData(bytes, username + ".png")).queue());
             } catch (final IOException exception) {
-
+                
             }
         }
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String username = URLEncoder.encode(event.getOption("username").getAsString().trim(),
@@ -156,13 +155,13 @@ public class MinecraftUserSkinCommand extends CoreCommand {
             final var url = new URL(
                 "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json");
             final byte[] bytes = decodeURL(url);
-
+            
             final var embed = new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.BLUE)
                 .setDescription("The skin for `" + event.getOption("username").getAsString() + "` is:")
                 .setImage("attachment://" + username + ".png").build();
-            event.deferReply().addFile(bytes, username + ".png").addEmbeds(embed).mentionRepliedUser(false)
-                .flatMap(InteractionHook::retrieveOriginal).queue(msg -> msg.editMessageEmbeds(embed)
-                    .setActionRows(createButtons(msg.getIdLong(), rotation)).queue());
+            event.deferReply().setFiles(FileUpload.fromData(bytes, username + ".png")).addEmbeds(embed)
+                .mentionRepliedUser(false).flatMap(InteractionHook::retrieveOriginal).queue(msg -> msg
+                    .editMessageEmbeds(embed).setComponents(createButtons(msg.getIdLong(), rotation)).queue());
         } catch (final IOException exception) {
             event.deferReply(true)
                 .setContent("There has been an issue trying to gather this information from our database! "
@@ -173,13 +172,13 @@ public class MinecraftUserSkinCommand extends CoreCommand {
             event.deferReply(true).setContent("This player does not exist!").mentionRepliedUser(false).queue();
         }
     }
-
+    
     private static ActionRow createButtons(long messageId, int rotation) {
         return ActionRow.of(Button.primary(messageId + "-rotate-counter-clockwise-" + rotation, "↩️"),
             Button.primary(messageId + "-dismiss", "🚮"),
             Button.primary(messageId + "-rotate-clockwise-" + rotation, "↪️"));
     }
-
+    
     private static byte[] decodeURL(URL url) throws IOException {
         final URLConnection connection = url.openConnection();
         final String response = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
