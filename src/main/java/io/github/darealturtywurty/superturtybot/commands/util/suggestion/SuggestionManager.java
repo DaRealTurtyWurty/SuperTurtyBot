@@ -15,13 +15,14 @@ import org.jetbrains.annotations.Nullable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 
+import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
 import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -86,62 +87,43 @@ public final class SuggestionManager extends ListenerAdapter {
         return future;
     }
 
-    @Nullable
-    public static TextChannel getSuggestionChannel(Guild guild) {
-        // TODO: Check server config first
-        final List<TextChannel> channels = guild.getTextChannelsByName("suggestions", false);
-        if (channels.isEmpty())
+    public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
+        final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
+        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+        
+        TextChannel channel = guild.getTextChannelById(config.getSuggestions());
+        if (channel == null) {
+            channel = guild.getTextChannelsByName("suggestions", false).get(0);
+            if (channel == null)
+                return null;
+        }
+
+        if (!channel.canTalk())
             return null;
 
-        final TextChannel suggestionsChannel = channels.get(0);
-        if (!suggestionsChannel.canTalk())
-            return null;
-
-        return suggestionsChannel;
+        return channel;
     }
 
-    public static TextChannel getSuggestionChannel(MessageReceivedEvent event) {
-        // TODO: Check server config first
-        final List<TextChannel> channels = event.getGuild().getTextChannelsByName("suggestions", false);
-        if (channels.isEmpty()) {
+    public static @Nullable TextChannel getSuggestionChannel(MessageReceivedEvent event) {
+        final TextChannel channel = getSuggestionChannel(event.getGuild());
+        if (channel == null) {
             event.getMessage().reply("This server does not have suggestions enabled!").mentionRepliedUser(false)
                 .queue();
             return null;
         }
 
-        final TextChannel suggestionsChannel = channels.get(0);
-        if (!suggestionsChannel.canTalk()) {
-            event.getMessage()
-                .reply("I cannot use the channel " + suggestionsChannel.getAsMention()
-                    + "! If there is another suggestions channel, please use the server config to set the channel! "
-                    + "If you do not have permission to access the config, please contact a server administrator!")
-                .mentionRepliedUser(false).queue();
-            return null;
-        }
-
-        return suggestionsChannel;
+        return channel;
     }
 
-    public static TextChannel getSuggestionChannel(SlashCommandInteractionEvent event) {
-        // TODO: Check server config first
-        final List<TextChannel> channels = event.getGuild().getTextChannelsByName("suggestions", false);
-        if (channels.isEmpty()) {
+    public static @Nullable TextChannel getSuggestionChannel(SlashCommandInteractionEvent event) {
+        final TextChannel channel = getSuggestionChannel(event.getGuild());
+        if (channel == null) {
             event.deferReply(true).setContent("This server does not have suggestions enabled!")
-                .mentionRepliedUser(false).queue();
+                .mentionRepliedUser(false).mentionRepliedUser(false).queue();
             return null;
         }
 
-        final TextChannel suggestionsChannel = channels.get(0);
-        if (!suggestionsChannel.canTalk()) {
-            event.deferReply(true)
-                .setContent("I cannot use the channel " + suggestionsChannel.getAsMention()
-                    + "! If there is another suggestions channel, please use the server config to set the channel! "
-                    + "If you do not have permission to access the config, please contact a server administrator!")
-                .mentionRepliedUser(false).queue();
-            return null;
-        }
-
-        return suggestionsChannel;
+        return channel;
     }
 
     public static CompletableFuture<Suggestion> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
@@ -174,9 +156,5 @@ public final class SuggestionManager extends ListenerAdapter {
         }, err -> Database.getDatabase().suggestions.deleteOne(filter));
 
         return future;
-    }
-
-    private static boolean compareEmote(MessageReaction reaction0, MessageReaction reaction1) {
-        return reaction0.getEmoji().getName().equals(reaction1.getEmoji().getName());
     }
 }

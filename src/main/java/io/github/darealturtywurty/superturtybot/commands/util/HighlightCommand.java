@@ -16,6 +16,7 @@ import com.mongodb.client.model.Filters;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
+import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -43,7 +44,7 @@ public class HighlightCommand extends CoreCommand {
             new SubcommandData("delete", "Deletes an existing highlighter").addOption(OptionType.STRING, "id",
                 "The ID of the highlighter that you want to delete", true, true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -173,7 +174,7 @@ public class HighlightCommand extends CoreCommand {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GREEN);
-        embed.setDescription("✅ Highlighter for text `" + truncateString(text, 15) + "` has been added!");
+        embed.setDescription("✅ Highlighter for text `" + StringUtils.truncateString(text, 15) + "` has been added!");
         embed.setFooter("ID: " + highlighter.asUUID(), event.getUser().getEffectiveAvatarUrl());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
@@ -185,7 +186,7 @@ public class HighlightCommand extends CoreCommand {
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.RED);
         embed.setDescription(
-            "❌ Highlighter for text `" + truncateString(highlighter.getText(), 15) + "` has been removed!");
+            "❌ Highlighter for text `" + StringUtils.truncateString(highlighter.getText(), 15) + "` has been removed!");
         embed.setFooter("ID: " + highlighter.asUUID(), event.getUser().getEffectiveAvatarUrl());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
@@ -209,8 +210,8 @@ public class HighlightCommand extends CoreCommand {
         boolean none = true;
         if (!guildHighlighters.isEmpty()) {
             final var builder = new StringBuilder();
-            guildHighlighters.stream()
-                .forEachOrdered(highlighter -> builder.append("`" + truncateString(highlighter.getText(), 15) + "`"
+            guildHighlighters.stream().forEachOrdered(
+                highlighter -> builder.append("`" + StringUtils.truncateString(highlighter.getText(), 15) + "`"
                     + " (ID: **" + highlighter.asUUID().toString() + "**)\n"));
             embed.appendDescription(builder.toString());
             none = false;
@@ -231,19 +232,10 @@ public class HighlightCommand extends CoreCommand {
         if (highlighter.isCaseSensitive() ? content.contains(highlighter.getText())
             : content.toLowerCase().contains(highlighter.getText().toLowerCase())) {
             member.getUser().openPrivateChannel()
-                .queue(
-                    channel -> channel
-                        .sendMessage("A message has been sent in <#" + event.getChannel().getIdLong()
-                            + "> containing content from your highlighter (`"
-                            + truncateString(highlighter.getText(), 15) + "`).\n\n" + event.getMessage().getJumpUrl())
-                        .queue());
+                .queue(channel -> channel.sendMessage("A message has been sent in <#" + event.getChannel().getIdLong()
+                    + "> containing content from your highlighter (`"
+                    + StringUtils.truncateString(highlighter.getText(), 15) + "`).\n\n"
+                    + event.getMessage().getJumpUrl()).queue());
         }
-    }
-
-    // TODO: Utility class
-    private static String truncateString(String str, int length) {
-        if (str.length() > length)
-            return str.substring(0, length - 3) + "...";
-        return str;
     }
 }

@@ -34,7 +34,7 @@ public class ServerConfigCommand extends CoreCommand {
     public ServerConfigCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     //@formatter:off
     @Override
     public List<SubcommandData> createSubcommands() {
@@ -46,7 +46,7 @@ public class ServerConfigCommand extends CoreCommand {
                 .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
     //@formatter:on
-
+    
     @Override
     public String getAccess() {
         return "Server Owner";
@@ -61,17 +61,17 @@ public class ServerConfigCommand extends CoreCommand {
     public String getDescription() {
         return "Sets up this server's config";
     }
-
+    
     @Override
     public String getHowToUse() {
         return "/serverconfig get\n/serverconfig get [key]\n/serverconfig set [key] [value]";
     }
-
+    
     @Override
     public String getName() {
         return "serverconfig";
     }
-
+    
     @Override
     public String getRichName() {
         return "Server Config";
@@ -84,7 +84,8 @@ public class ServerConfigCommand extends CoreCommand {
     
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-        if (!event.isFromGuild() || !event.getName().equals(getName()))
+        if (!event.isFromGuild() || !event.getName().equals(getName())
+            || !"key".equals(event.getFocusedOption().getName()))
             return;
         
         final String term = event.getFocusedOption().getValue();
@@ -94,12 +95,12 @@ public class ServerConfigCommand extends CoreCommand {
             .toList();
         event.replyChoiceStrings(keys).queue();
     }
-
+    
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         final Guild guild = event.getGuild();
         final TextChannel defaultChannel = guild.getDefaultChannel().asTextChannel();
-
+        
         final Bson filter = Filters.eq("guild", guild.getIdLong());
         final AtomicReference<GuildConfig> found = new AtomicReference<>(
             Database.getDatabase().guildConfig.find(filter).first());
@@ -107,7 +108,7 @@ public class ServerConfigCommand extends CoreCommand {
             found.set(new GuildConfig(guild.getIdLong()));
             Database.getDatabase().guildConfig.insertOne(found.get());
         }
-
+        
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setFooter(event.getGuild().getName(), event.getGuild().getIconUrl());
@@ -124,16 +125,18 @@ public class ServerConfigCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong())
+        if (!event.isFromGuild() || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong()) {
+            reply(event, "❌ You do not have permission to use this command here!", false, true);
             return;
-
+        }
+        
         final String subcommand = event.getSubcommandName();
         if ("get".equalsIgnoreCase(subcommand)) {
             final String key = event.getOption("key", null, OptionMapping::getAsString);
-
+            
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
-
+            
             if (key == null) {
                 // Get all data
                 final Map<String, Object> configValues = new HashMap<>();
@@ -151,7 +154,7 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, embed);
                 return;
             }
-
+            
             // Get data by the given key
             final String copyKey = key.trim();
             final Optional<ServerConfigOption> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
@@ -167,11 +170,11 @@ public class ServerConfigCommand extends CoreCommand {
             final Object value = option.getValueFromConfig().apply(config);
             reply(event, "✅ The value assigned to `" + option.getRichName() + "` is `" + value + "`!");
         }
-
+        
         if ("set".equalsIgnoreCase(subcommand)) {
             final String key = event.getOption("key", "", OptionMapping::getAsString);
             final String value = event.getOption("value", "", OptionMapping::getAsString);
-
+            
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
             
@@ -182,7 +185,7 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
                 return;
             }
-
+            
             final ServerConfigOption option = found.get().getValue();
             if (Boolean.FALSE.equals(option.getDataType().validator.apply(value))) {
                 reply(event,
@@ -191,7 +194,7 @@ public class ServerConfigCommand extends CoreCommand {
                     false, true);
                 return;
             }
-
+            
             if (!option.validate(event, value)) {
                 reply(event, "❌ `" + value + "` is not a valid input for `" + option.getRichName() + "`!", false, true);
                 return;
@@ -204,22 +207,22 @@ public class ServerConfigCommand extends CoreCommand {
                 reply(event, "✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!");
                 return;
             }
-
+            
             reply(event, "❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!", false,
                 true);
         }
     }
-
+    
     public static GuildConfig get(Bson filter, Guild guild) {
         GuildConfig found = Database.getDatabase().guildConfig.find(filter).first();
         if (found == null) {
             found = new GuildConfig(guild.getIdLong());
             Database.getDatabase().guildConfig.insertOne(found);
         }
-
+        
         return found;
     }
-
+    
     public static Bson getFilter(Guild guild) {
         return Filters.eq("guild", guild.getIdLong());
     }

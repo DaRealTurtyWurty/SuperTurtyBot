@@ -88,7 +88,7 @@ public class HelpCommand extends CoreCommand {
         embed.setTimestamp(Instant.now());
         setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
 
-        embed.setColor(Color.GREEN); // TODO: Random color
+        embed.setColor(Color.GREEN);
         CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.getName().equals(command)).findFirst()
             .ifPresentOrElse(cmd -> constructEmbed(embed, cmd), () -> {
                 embed.setDescription(String.format("No command found by name '%s'!", command));
@@ -101,7 +101,7 @@ public class HelpCommand extends CoreCommand {
     private EmbedBuilder commandless(String prefix) {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
-        embed.setColor(Color.GREEN); // TODO: Random color
+        embed.setColor(Color.GREEN);
         embed.setDescription("""
             Welcome to TurtyBot.
 
@@ -112,7 +112,6 @@ public class HelpCommand extends CoreCommand {
     }
 
     private EmbedBuilder constructEmbed(EmbedBuilder embed, CoreCommand cmd) {
-        // TODO: Guild prefix
         embed.setDescription(String.format("Information about command: **`%s%s`**",
             cmd.types.slash() ? "/" : Environment.INSTANCE.defaultPrefix(), cmd.getName()));
         embed.addField("Name: ", cmd.getRichName() + " (" + cmd.getName() + ")", false);

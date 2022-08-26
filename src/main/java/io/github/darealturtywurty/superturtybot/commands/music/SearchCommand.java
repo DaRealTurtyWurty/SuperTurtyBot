@@ -13,6 +13,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.github.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -22,49 +23,49 @@ public class SearchCommand extends CoreCommand {
     public SearchCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "search_term", "The term to find search results for", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MUSIC;
     }
-
+    
     @Override
     public String getDescription() {
         return "Searches for a specific song, showing the results";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/search [term]";
     }
-    
+
     @Override
     public String getName() {
         return "search";
     }
-    
+
     @Override
     public String getRichName() {
         return "Search";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-        
+
         final String search = event.getOption("search_term").getAsString().trim();
         final CompletableFuture<Either<List<AudioTrack>, FriendlyException>> future = AudioManager
             .search(event.getGuild(), "ytsearch:" + search);
@@ -75,16 +76,16 @@ public class SearchCommand extends CoreCommand {
                     reply(event, "❌ No results have been found!", false, true);
                 } else {
                     final List<AudioTrack> truncated = results.stream().limit(5).toList();
-                    
+
                     final var strBuilder = new StringBuilder();
                     int index = 1;
                     for (final AudioTrack result : truncated) {
                         strBuilder.append(index++ + ". **"
                             + result.getInfo().title.replace("*", "\\*").replace("_", "\\_").replace("~", "\\~")
                             + "**\nPosted By: " + result.getInfo().author + "\nLink: " + result.getInfo().uri
-                            + "\nDuration: [" + QueueCommand.millisecondsFormatted(result.getDuration()) + "]\n\n");
+                            + "\nDuration: [" + StringUtils.millisecondsFormatted(result.getDuration()) + "]\n\n");
                     }
-                    
+
                     reply(event,
                         new EmbedBuilder().setColor(Color.BLUE).setTimestamp(Instant.now())
                             .setFooter(

@@ -21,6 +21,7 @@ import com.google.gson.JsonSyntaxException;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
+import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -112,7 +113,7 @@ public class StrawpollCommand extends CoreCommand {
             }
 
             try {
-                return DateFormat.getInstance().parseObject(parseDate(parts));
+                return DateFormat.getInstance().parseObject(StringUtils.parseDate(parts));
             } catch (final ParseException exception) {
                 event.deferReply()
                     .setContent("There was an issue parsing this date. Please report the following to the bot owner:\n"
@@ -130,48 +131,6 @@ public class StrawpollCommand extends CoreCommand {
                 createPoll(new StrawpollEntry(question, description, isPrivate, multipleChoice, nameRequired, reCAPTCHA,
                     allowVPN, allowComments, duplicationType, deadline, option1, option2, option3, option4, option5)))
             .mentionRepliedUser(false).queue();
-    }
-
-    // TODO: Utility class
-    public static String parseDate(final String[] parts) {
-        final var deadlineStrBuilder = new StringBuilder();
-        deadlineStrBuilder.append(parts[0] + "-");
-        deadlineStrBuilder.append(parts[1] + "-");
-        deadlineStrBuilder.append(parts[2] + "T");
-        if (parts.length == 3) {
-            deadlineStrBuilder.append("00:00:00.000Z");
-            return deadlineStrBuilder.toString();
-        }
-
-        if (parts.length >= 4) {
-            deadlineStrBuilder.append(parts[3] + ":");
-            if (parts.length == 4) {
-                deadlineStrBuilder.append("00:00.000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 5) {
-            deadlineStrBuilder.append(parts[4] + ":");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("00.000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 6) {
-            deadlineStrBuilder.append(parts[5] + ".");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 7) {
-            deadlineStrBuilder.append(parts[6] + "Z");
-        }
-
-        return deadlineStrBuilder.toString();
     }
 
     private static String createPoll(StrawpollEntry entry) {

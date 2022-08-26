@@ -6,6 +6,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import io.github.darealturtywurty.superturtybot.TurtyBot;
+import io.github.darealturtywurty.superturtybot.core.util.BotUtils;
 import io.github.darealturtywurty.superturtybot.registry.Registerable;
 
 public class RankCardItem implements Registerable {
@@ -43,12 +44,10 @@ public class RankCardItem implements Registerable {
     
     private static final BufferedImage thumbnail(String name) {
         try {
-            return RankCommand
+            return BotUtils
                 .resize(ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/thumbnails/" + name + ".png")), 120);
         } catch (final IOException | IllegalArgumentException exception) {
             return null;
-            // throw new IllegalArgumentException("Unable to find or read file!",
-            // exception);
         }
     }
     

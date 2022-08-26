@@ -2,15 +2,14 @@ package io.github.darealturtywurty.superturtybot.commands.moderation.warnings;
 
 import java.awt.Color;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
@@ -78,13 +77,12 @@ public class WarningsCommand extends CoreCommand {
             embed.setDescription("This user has " + warns.size() + " warns!");
             final var index = new AtomicInteger(1);
             for (final var warn : warns) {
-                event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
-                    embed.addField("Warn #" + index.getAndIncrement(),
+                event.getJDA().retrieveUserById(warn.getWarner())
+                    .queue(warner -> embed.addField("Warn #" + index.getAndIncrement(),
                         "Reason: `" + warn.getReason() + "`\nUUID: `" + warn.getUuid() + "`\nModerator: "
                             + warner.getAsMention() + "\nOccured On: "
-                            + formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)),
-                        false);
-                });
+                            + StringUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)),
+                        false));
             }
         }
 
@@ -93,10 +91,5 @@ public class WarningsCommand extends CoreCommand {
             event.getMember().getEffectiveAvatarUrl());
 
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
-    }
-
-    // TODO: Utility class
-    private static String formatTime(OffsetDateTime time) {
-        return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }
 }

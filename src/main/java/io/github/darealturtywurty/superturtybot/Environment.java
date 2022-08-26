@@ -3,6 +3,7 @@ package io.github.darealturtywurty.superturtybot;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Activity.ActivityType;
 
@@ -98,7 +99,7 @@ public final class Environment {
     
     public void print() {
         this.env.entries(Dotenv.Filter.DECLARED_IN_ENV_FILE)
-            .forEach(entry -> System.out.println(entry.getKey() + "=" + entry.getValue()));
+            .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));
     }
     
     public String r6StatsKey() {

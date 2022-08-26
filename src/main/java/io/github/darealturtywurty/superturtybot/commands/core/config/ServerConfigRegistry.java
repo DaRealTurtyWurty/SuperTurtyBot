@@ -1,55 +1,28 @@
 package io.github.darealturtywurty.superturtybot.commands.core.config;
 
-import java.util.List;
-import java.util.function.BiPredicate;
-
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+
 import io.github.darealturtywurty.superturtybot.commands.core.config.ServerConfigOption.DataType;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import io.github.darealturtywurty.superturtybot.registry.Registry;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 
 public class ServerConfigRegistry {
-    // TODO: Utility class
-    private static final BiPredicate<SlashCommandInteractionEvent, String> TEXT_CHANNEL_VALIDATOR = (event, str) -> {
-        final Guild guild = event.getGuild();
-        TextChannel channel = guild.getTextChannelById(str);
-        if (channel != null)
-            return true;
-        
-        if (MentionType.CHANNEL.getPattern().matcher(str).matches()) {
-            final String id = str.replace("<#", "").replace(">", "");
-            channel = guild.getTextChannelById(id);
-            return channel != null;
-        }
-        
-        List<TextChannel> possibleMatches = guild.getTextChannelsByName(str, false);
-        if (possibleMatches.isEmpty()) {
-            possibleMatches = guild.getTextChannelsByName(str, true);
-            if (possibleMatches.isEmpty())
-                return false;
-        }
-        
-        return true;
-    };
-    
     public static final Registry<ServerConfigOption> SERVER_CONFIG_OPTIONS = new Registry<>();
-
+    
     public static final ServerConfigOption STARBOARD = SERVER_CONFIG_OPTIONS.register("starboard",
         new ServerConfigOption.Builder().dataType(DataType.LONG)
             .serializer((config, value) -> config.setStarboard(Long.parseLong(value)))
-            .valueFromConfig(GuildConfig::getStarboard).validator(TEXT_CHANNEL_VALIDATOR).build());
-
+            .valueFromConfig(GuildConfig::getStarboard).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+    
     public static final ServerConfigOption IS_STARBOARD_ENABLED = SERVER_CONFIG_OPTIONS.register("starboard_enabled",
         new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
             .serializer((config, value) -> config.setStarboardEnabled(Boolean.parseBoolean(value)))
             .valueFromConfig(GuildConfig::isStarboardEnabled).build());
-
+    
     public static final ServerConfigOption MINIMUM_STARS = SERVER_CONFIG_OPTIONS.register("minimum_stars",
         new ServerConfigOption.Builder().dataType(DataType.INTEGER)
             .serializer((config, value) -> config.setMinimumStars(Integer.parseInt(value)))
@@ -57,32 +30,106 @@ public class ServerConfigRegistry {
                 final int input = Integer.parseInt(str);
                 return input >= 1 && input <= event.getGuild().getMemberCount();
             }).build());
-
+    
     public static final ServerConfigOption DO_BOT_STARS_COUNT = SERVER_CONFIG_OPTIONS.register("bot_stars_count",
         new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
             .serializer((config, value) -> config.setBotStarsCount(Boolean.parseBoolean(value)))
             .valueFromConfig(GuildConfig::isBotStarsCount).build());
-
+    
     public static final ServerConfigOption MOD_LOGGING = SERVER_CONFIG_OPTIONS.register("mod_logging",
         new ServerConfigOption.Builder().dataType(DataType.LONG)
             .serializer((config, value) -> config.setModLogging(Long.parseLong(value)))
-            .valueFromConfig(GuildConfig::getModLogging).validator(TEXT_CHANNEL_VALIDATOR).build());
-
+            .valueFromConfig(GuildConfig::getModLogging).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+    
     public static final ServerConfigOption LEVEL_ROLES = SERVER_CONFIG_OPTIONS.register("level_roles",
-        new ServerConfigOption.Builder().dataType(DataType.STRING)
-            .serializer(GuildConfig::setLevelRoles)
-            .valueFromConfig(GuildConfig::getLevelRoles)
-            .validator((event, value) -> {
-                final String[] split = value.split("( |;)");
-                for (String val : split) {
+        new ServerConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setLevelRoles)
+            .valueFromConfig(GuildConfig::getLevelRoles).validator((event, value) -> {
+                final String[] split = value.split("[\s;]");
+                for (final String val : split) {
                     final String[] roleToChannel = val.split("->");
-                    if (roleToChannel.length != 2) return false;
-                    if (Ints.tryParse(roleToChannel[0].trim()) == null) return false;
+                    if (roleToChannel.length != 2 || Ints.tryParse(roleToChannel[0].trim()) == null)
+                        return false;
                     final Long roleId = Longs.tryParse(roleToChannel[1].trim());
-                    if (roleId == null) return false;
+                    if (roleId == null)
+                        return false;
                     final Role role = event.getGuild().getRoleById(roleId);
-                    if (role == null) return false;
+                    if (role == null)
+                        return false;
                 }
                 return true;
             }).build());
+    
+    public static final ServerConfigOption LEVELLING_COOLDOWN = SERVER_CONFIG_OPTIONS.register("level_cooldown",
+        new ServerConfigOption.Builder().dataType(DataType.LONG)
+            .serializer((config, value) -> config.setLevelCooldown(Long.parseLong(value)))
+            .valueFromConfig(GuildConfig::getLevelCooldown).validator((event, value) -> Long.parseLong(value) > 0)
+            .build());
+    
+    public static final ServerConfigOption MINIMUM_XP = SERVER_CONFIG_OPTIONS.register("min_xp",
+        new ServerConfigOption.Builder().dataType(DataType.INTEGER)
+            .serializer((config, value) -> config.setMinXP(Integer.parseInt(value)))
+            .valueFromConfig(GuildConfig::getMinXP)
+            .validator((event, value) -> Integer.parseInt(value) > 0 && Integer.parseInt(value) < 100).build());
+    
+    public static final ServerConfigOption MAXIMUM_XP = SERVER_CONFIG_OPTIONS.register("max_xp",
+        new ServerConfigOption.Builder().dataType(DataType.INTEGER)
+            .serializer((config, value) -> config.setMaxXP(Integer.parseInt(value)))
+            .valueFromConfig(GuildConfig::getMaxXP)
+            .validator((event, value) -> Integer.parseInt(value) > 0 && Integer.parseInt(value) < 100).build());
+    
+    public static final ServerConfigOption LEVELLING_ITEM_CHANCE = SERVER_CONFIG_OPTIONS.register(
+        "levelling_item_chance",
+        new ServerConfigOption.Builder().dataType(DataType.INTEGER)
+            .serializer((config, value) -> config.setLevellingItemChance(Integer.parseInt(value)))
+            .valueFromConfig(GuildConfig::getLevellingItemChance)
+            .validator((event, value) -> Integer.parseInt(value) >= 0 && Integer.parseInt(value) <= 100).build());
+    
+    public static final ServerConfigOption LEVELLING_ENABLED = SERVER_CONFIG_OPTIONS.register("levelling_enabled",
+        new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
+            .serializer((config, value) -> config.setLevellingEnabled(Boolean.parseBoolean(value)))
+            .valueFromConfig(GuildConfig::isLevellingEnabled).build());
+    
+    public static final ServerConfigOption DISABLED_LEVELLING_CHANNELS = SERVER_CONFIG_OPTIONS
+        .register("disabled_levelling_channels",
+            new ServerConfigOption.Builder().dataType(DataType.STRING)
+                .serializer(GuildConfig::setDisabledLevellingChannels)
+                .valueFromConfig(GuildConfig::getDisabledLevellingChannels).validator((event, value) -> {
+                    final String[] channels = value.split("[\s;]");
+                    for (final String channelStr : channels) {
+                        if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
+                            return false;
+                    }
+                    
+                    return true;
+                }).build());
+    
+    public static final ServerConfigOption SHOWCASE_CHANNELS = SERVER_CONFIG_OPTIONS.register("showcase_channels",
+        new ServerConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setShowcaseChannels)
+            .valueFromConfig(GuildConfig::getShowcaseChannels).validator((event, value) -> {
+                final String[] channels = value.split("[\s;]");
+                for (final String channelStr : channels) {
+                    if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
+                        return false;
+                }
+                
+                return true;
+            }).build());
+    
+    public static final ServerConfigOption IS_STARBOARD_MEDIA = SERVER_CONFIG_OPTIONS.register(
+        "is_starboard_media_only",
+        new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
+            .serializer((config, value) -> config.setStarboardMediaOnly(Boolean.parseBoolean(value)))
+            .valueFromConfig(GuildConfig::isStarboardMediaOnly).build());
+
+    public static final ServerConfigOption STAR_EMOJI = SERVER_CONFIG_OPTIONS.register("star_emoji",
+        new ServerConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setStarEmoji)
+            .valueFromConfig(GuildConfig::getStarEmoji)
+            .validator((event, value) -> (MentionType.EMOJI.getPattern().matcher(value).matches()
+                || Emoji.fromUnicode(value) != null || Emoji.fromFormatted(value) != null))
+            .build());
+
+    public static final ServerConfigOption SUGGESTIONS = SERVER_CONFIG_OPTIONS.register("suggestions",
+        new ServerConfigOption.Builder().dataType(DataType.LONG)
+            .serializer((config, value) -> config.setSuggestions(Long.parseLong(value)))
+            .valueFromConfig(GuildConfig::getSuggestions).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 }

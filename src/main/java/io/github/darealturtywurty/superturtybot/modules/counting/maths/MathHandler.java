@@ -9,23 +9,23 @@ import org.apache.commons.math3.primes.Primes;
 
 public final class MathHandler {
     private static final Random RANDOM = new Random();
-    
+
     private MathHandler() {
     }
-    
+
     public static MathOperation chooseOperation(float number) {
         final List<MathOperation> floats = MathOperation.getFloats();
         if ((int) number != number)
             return floats.get(RANDOM.nextInt(floats.size() - 1));
-        
+
         if (number == 0 && RANDOM.nextBoolean())
             return RANDOM.nextBoolean() ? MathOperation.COSINE : MathOperation.SECANT;
-        
+
         if (number <= 0)
             return MathOperation.ADD;
         if (number > 50_000)
             return MathOperation.MODULO;
-        
+
         if (number % 30 == 0 && number % 60 != 0 && RANDOM.nextInt(5) == 0)
             return MathOperation.SINE;
         if (number % 60 == 0 && RANDOM.nextInt(3) == 0)
@@ -38,11 +38,11 @@ public final class MathHandler {
             return MathOperation.COSECANT;
         if ((number == 45 || number == 90 || number == 270) && RANDOM.nextInt(1) == 0)
             return MathOperation.COTANGENT;
-        
+
         final double root = Math.sqrt(number);
         if (root == (int) root && root != Double.NaN && RANDOM.nextInt(3) == 0 && number != 1)
             return MathOperation.SQRT;
-        
+
         final List<MathOperation> ints = new ArrayList<>(MathOperation.getInts());
         ints.remove(MathOperation.SQRT);
         ints.remove(MathOperation.SINE);
@@ -51,23 +51,23 @@ public final class MathHandler {
         ints.remove(MathOperation.SECANT);
         ints.remove(MathOperation.COSECANT);
         ints.remove(MathOperation.COTANGENT);
-        
+
         if (Primes.isPrime((int) number) || number == 1) {
             ints.remove(MathOperation.DIVIDE);
             ints.remove(MathOperation.SQRT);
         }
-        
+
         if (number < 3) {
             ints.remove(MathOperation.MODULO);
         }
-        
+
         if (number > 20) {
             ints.remove(MathOperation.SQUARE);
         }
-        
+
         return ints.get(RANDOM.nextInt(ints.size() - 1));
     }
-    
+
     public static List<Integer> getDivisors(int number) {
         final List<Integer> divisors = new ArrayList<>();
         for (int i = 2; i < number; i++) {
@@ -75,13 +75,13 @@ public final class MathHandler {
                 divisors.add(i);
             }
         }
-        
+
         return divisors;
     }
-    
+
     public static Pair<MathOperation, Float> getNextNumber(float current) {
         final MathOperation operation = chooseOperation(current);
-        
+
         final float value = switch (operation) {
             case MODULO -> {
                 final List<Integer> nonDivisors = getNonDivisors((int) current);
@@ -106,10 +106,10 @@ public final class MathHandler {
             case COSECANT -> 1.0f / (float) Math.sin(current);
             case COTANGENT -> 1.0f / (float) Math.tan(current);
         };
-        
+
         return Pair.of(operation, value);
     }
-    
+
     public static List<Integer> getNonDivisors(int number) {
         final List<Integer> nonDivisors = new ArrayList<>();
         for (int i = 2; i < number; i++) {
@@ -117,15 +117,15 @@ public final class MathHandler {
                 nonDivisors.add(i);
             }
         }
-        
+
         return nonDivisors;
     }
-    
+
     public static float nextPerfectSquare(float numb) {
         final float nextN = (float) Math.floor(Math.sqrt(numb)) + 1;
         return nextN * nextN;
     }
-    
+
     public static String parse(MathOperation operation, float current, float result) {
         final String format = operation.getFormat();
         return switch (operation) {
@@ -140,9 +140,8 @@ public final class MathHandler {
             default -> String.format(format, (int) current);
         };
     }
-    
+
     private static int getRandom(List<Integer> list) {
-        System.out.println(list.size());
         return list.get(RANDOM.nextInt(list.size()));
     }
 }

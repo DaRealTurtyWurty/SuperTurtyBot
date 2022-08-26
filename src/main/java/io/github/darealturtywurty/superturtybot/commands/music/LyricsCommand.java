@@ -50,14 +50,12 @@ public class LyricsCommand extends CoreCommand {
     
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        if (!event.isFromGuild()) {
-            event.deferEdit().queue();
-        }
+        if (!event.isFromGuild())
+            return;
         
         final String id = event.getComponentId();
-        if (!id.startsWith("lyrics-")) {
-            event.deferEdit().queue();
-        }
+        if (!id.startsWith("lyrics-"))
+            return;
         
         final String[] parts = id.split("-");
         final long channel = Long.parseLong(parts[1]);
@@ -76,6 +74,7 @@ public class LyricsCommand extends CoreCommand {
 
             if (newPage < 0) {
                 event.deferEdit().queue();
+                return;
             }
             
             final String lyrics = ID_LYRIC_MAP.get(hitId);

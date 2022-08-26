@@ -11,7 +11,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.TexturePaint;
-import java.awt.Transparency;
 import java.awt.font.LineMetrics;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
@@ -37,6 +36,8 @@ import com.mongodb.client.model.Filters;
 import io.github.darealturtywurty.superturtybot.TurtyBot;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
+import io.github.darealturtywurty.superturtybot.core.util.BotUtils;
+import io.github.darealturtywurty.superturtybot.core.util.StringUtils;
 import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.RankCard;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
@@ -47,7 +48,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 public class RankCommand extends CoreCommand {
-    private static final char[] CHARS = { 'k', 'm', 'b', 't' };
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.#");
     private final Font usedFont;
 
@@ -284,9 +284,9 @@ public class RankCommand extends CoreCommand {
             graphics.drawLine(700, 300 + fontMetrics.getDescent(), 2200 - xModifier + textWidth,
                 300 + fontMetrics.getDescent());
 
-            final var xpStr = xpFormat(xp, 0).replace(".0", "");
+            final var xpStr = StringUtils.numberFormat(xp, 0).replace(".0", "");
             final var levelStr = String.valueOf(level);
-            final var nextLevelXPStr = xpFormat(nextLevelXp, 0).replace(".0", "");
+            final var nextLevelXPStr = StringUtils.numberFormat(nextLevelXp, 0).replace(".0", "");
             graphics.setColor(card.getLevelTextColor().asColor());
             graphics.drawString("Level " + levelStr, 700, 450);
             graphics.setFont(this.usedFont.deriveFont(75f));
@@ -331,7 +331,7 @@ public class RankCommand extends CoreCommand {
 
             // User Avatar
             BufferedImage userAvatar = ImageIO.read(new URL(member.getUser().getEffectiveAvatarUrl()));
-            userAvatar = resize(userAvatar, 512);
+            userAvatar = BotUtils.resize(userAvatar, 512);
 
             if (!card.getAvatarOutlineImage().isBlank()) {
                 final var avatarOut = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
@@ -458,36 +458,7 @@ public class RankCommand extends CoreCommand {
             g2.setRenderingHints(originalHints);
         }
     }
-
-    /**
-     * Takes a BufferedImage and resizes it according to the provided targetSize
-     *
-     * @param  src        the source BufferedImage
-     * @param  targetSize maximum height (if portrait) or width (if landscape)
-     * @return            a resized version of the provided BufferedImage
-     */
-    // TODO: Utility class
-    public static BufferedImage resize(final BufferedImage src, final int targetSize) {
-        if (targetSize <= 0)
-            return src;
-        int targetWidth = targetSize;
-        int targetHeight = targetSize;
-        final float ratio = (float) src.getHeight() / (float) src.getWidth();
-        if (ratio <= 1) { // square or landscape-oriented image
-            targetHeight = (int) Math.ceil(targetWidth * ratio);
-        } else { // portrait image
-            targetWidth = Math.round(targetHeight / ratio);
-        }
-
-        final BufferedImage retImg = new BufferedImage(targetWidth, targetHeight,
-            src.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
-        final Graphics2D g2d = retImg.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.drawImage(src, 0, 0, targetWidth, targetHeight, null);
-        g2d.dispose();
-        return retImg;
-    }
-
+    
     private static void drawAvatar(final BufferedImage userAvatar, final Graphics2D graphics) {
         graphics.setStroke(new BasicStroke(4));
         final var circleBuffer = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
@@ -497,24 +468,5 @@ public class RankCommand extends CoreCommand {
         avatarGraphics.drawImage(userAvatar, 0, 0, userAvatar.getWidth(), userAvatar.getHeight(), null);
         avatarGraphics.dispose();
         graphics.drawImage(circleBuffer, 100, 50, null);
-    }
-
-    /**
-     * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invokation.
-     *
-     * @param  n         the number to format
-     * @param  iteration in fact this is the class from the array c
-     * @return           a String representing the number n formatted in a cool looking way.
-     */
-    private static String xpFormat(final double n, final int iteration) {
-        if (n < 1000)
-            return String.valueOf(n);
-        final double d = (long) n / 100 / 10D;
-        final boolean isRound = d * 10 % 10 == 0;// true if the decimal part is equal to 0 (then it's trimmed
-                                                 // anyway)
-        return d < 1000 ? // this determines the class, i.e. 'k', 'm' etc
-            (d > 99.9D || isRound && d > 9.99D ? // this decides whether to trim the decimals
-                (int) d * 10 / 10 : d + "" // (int) d * 10 / 10 drops the decimal
-            ) + "" + CHARS[iteration] : xpFormat(d, iteration + 1);
     }
 }
