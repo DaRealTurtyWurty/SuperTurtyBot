@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
 
 import com.google.common.primitives.Longs;
@@ -91,26 +90,22 @@ public final class LevellingManager extends ListenerAdapter {
         final Member member = event.getMember();
         if (cooldowns.containsKey(member.getIdLong()) && cooldowns.get(member.getIdLong()) > 0)
             return;
-        
-        // TEST
-        event.getChannel().asTextChannel().sendMessage("bruh moment").queue();
 
         cooldowns.put(member.getIdLong(), config.getLevelCooldown());
 
         final List<Bson> updates = new ArrayList<>();
 
         final int level = userProfile.getLevel();
-
         int xp = userProfile.getXp();
         xp += ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP());
 
-        updates.add(Updates.set("xp", xp));
         userProfile.setXp(xp);
-
+        updates.add(Updates.set("xp", xp));
+        
         final int newLevel = getLevelForXP(xp);
         if (newLevel > level) {
-            updates.add(Updates.set("level", newLevel));
             userProfile.setLevel(newLevel);
+            updates.add(Updates.set("level", newLevel));
 
             final var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
@@ -125,22 +120,21 @@ public final class LevellingManager extends ListenerAdapter {
                 .map(event.getGuild()::getRoleById).filter(Objects::nonNull).toList();
             event.getGuild().modifyMemberRoles(event.getMember(), toAddRoles, null).queue();
 
-            if (ThreadLocalRandom.current().nextInt(config.getLevellingItemChance()) == 0) {
-                final List<String> inventory = userProfile.getInventory();
-
-                final Pair<String, Rarity> chosen = createWeightedBag(inventory).getRandom();
-                inventory.add(chosen.getLeft());
-                updates.add(Updates.set("inventory", inventory));
-
-                embed.appendDescription("\n\nCongratulations " + member.getAsMention() + "! You earned an `"
-                    + WordUtils.capitalize(chosen.getRight().name().toLowerCase())
-                    + "` rank card item! Use `/xpinventory` to view your inventory!");
-            }
+            // TODO: Re-enable when implemented properly
+            /*
+             * if (ThreadLocalRandom.current().nextInt(config.getLevellingItemChance()) == 0) { final List<String>
+             * inventory = userProfile.getInventory(); final Pair<String, Rarity> chosen =
+             * createWeightedBag(inventory).getRandom(); inventory.add(chosen.getLeft());
+             * updates.add(Updates.set("inventory", inventory)); embed.appendDescription("\n\nCongratulations " +
+             * member.getAsMention() + "! You earned an `" +
+             * WordUtils.capitalize(chosen.getRight().name().toLowerCase()) +
+             * "` rank card item! Use `/xpinventory` to view your inventory!"); }
+             */
 
             event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
         }
 
-        Database.getDatabase().levelling.updateOne(serverConfigFilter, updates);
+        Database.getDatabase().levelling.updateOne(filter, updates);
         this.cooldownMap.put(guild.getIdLong(), cooldowns);
     }
 

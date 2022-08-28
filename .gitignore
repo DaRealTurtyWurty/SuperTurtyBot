@@ -8,7 +8,7 @@ build
 *.env
 
 # Ignore eclipse files
-.project
+*.project
 .settings
 *.classpath
 
@@ -17,3 +17,6 @@ build
 
 # Ignore bin
 bin
+
+# Ignore logs 
+*.log
