@@ -91,6 +91,9 @@ public final class LevellingManager extends ListenerAdapter {
         final Member member = event.getMember();
         if (cooldowns.containsKey(member.getIdLong()) && cooldowns.get(member.getIdLong()) > 0)
             return;
+        
+        // TEST
+        event.getChannel().asTextChannel().sendMessage("bruh moment").queue();
 
         cooldowns.put(member.getIdLong(), config.getLevelCooldown());
 
