@@ -41,88 +41,95 @@ public class TagCommand extends CoreCommand {
     public TagCommand() {
         super(new Types(true, false, true, false));
     }
-    
+
     @Override
     public List<SubcommandData> createSubcommands() {
         return List.of(new SubcommandData("get", "Retrives an existing tag").addOptions(
             new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true).setAutoComplete(true)),
-            
+
             new SubcommandData("create", "Creates a new tag").addOptions(
                 new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true).setAutoComplete(true),
                 new OptionData(OptionType.STRING, "content", "The content of this tag", true),
                 new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)),
-            
+
             new SubcommandData("edit", "Edits an existing tag").addOptions(
                 new OptionData(OptionType.STRING, "name", "The name of the tag to edit.", true).setAutoComplete(true),
                 new OptionData(OptionType.STRING, "content", "The new content of this tag", true)),
-            
+
             new SubcommandData("delete", "Deletes an existing tag")
                 .addOptions(new OptionData(OptionType.STRING, "name", "The name of the tag to delete.", true)
                     .setAutoComplete(true)),
-            
+
             new SubcommandData("list", "List the available tags"));
     }
-
+    
     @Override
     public String getAccess() {
         return "Create, Edit, Delete - Moderator, Get, List - Everyone";
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-    
+
     @Override
     public String getDescription() {
         return "Creates a tag that any user can use to get information about a certain thing.";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/tag get [name]\n/tag create [name] [content]\n/tag create [name] [content] [isEmbed]\n/tag edit [name]\n/tag delete [name]\n/tag list";
     }
-    
+
     @Override
     public String getName() {
         return "tag";
     }
-    
+
     @Override
     public String getRichName() {
         return "Create Tag";
     }
-
+    
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
         if (!event.getName().equals(getName()) || !event.isFromGuild())
             return;
-        
+
         final String optionName = event.getFocusedOption().getName();
         if (!"name".equals(optionName))
             return;
-        
+
         final String subcommand = event.getSubcommandName();
         if (!"edit".equals(subcommand) && !"delete".equals(subcommand) && !"get".equals(subcommand))
             return;
-        
+
         final String given = event.getFocusedOption().getValue();
-        
-        final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-            Filters.eq("user", event.getUser().getIdLong()));
+
+        Bson filter;
+
+        if (!"get".equals(subcommand)) {
+            filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
+                Filters.eq("user", event.getUser().getIdLong()));
+        } else {
+            filter = Filters.eq("guild", event.getGuild().getIdLong());
+        }
+
         final List<Tag> tags = new ArrayList<>();
         Database.getDatabase().tags.find(filter).forEach(tags::add);
-        
+
         final List<String> results = tags.stream().filter(tag -> tag.getName().contains(given)).limit(25)
             .map(Tag::getName).toList();
         event.replyChoiceStrings(results).queue();
     }
-    
+
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -130,7 +137,7 @@ public class TagCommand extends CoreCommand {
                 .queue();
             return;
         }
-        
+
         final ModalMapping nameMapping = event.getValues().stream()
             .filter(mapping -> mapping.getId().endsWith("-name_input")).findFirst().get();
         final ModalMapping contentMapping = event.getValues().stream()
@@ -146,7 +153,7 @@ public class TagCommand extends CoreCommand {
         embed.setTimestamp(Instant.now());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-    
+
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -154,7 +161,7 @@ public class TagCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
             return;
         }
-        
+
         final Message message = event.getTarget();
         final String content = message.getContentRaw();
         final Modal.Builder builder = Modal.create("tag-" + message.getIdLong() + "-" + event.getUser().getIdLong(),
@@ -167,7 +174,7 @@ public class TagCommand extends CoreCommand {
         final Modal modal = builder.addActionRows(ActionRow.of(nameInput), ActionRow.of(contentInput)).build();
         event.replyModal(modal).queue();
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
@@ -186,8 +193,8 @@ public class TagCommand extends CoreCommand {
                 }
                 
                 final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName.getAsString()));
-
+                    Filters.eq("name", tagName.getAsString()));
+                
                 final Tag tag = Database.getDatabase().tags.find(filter).first();
                 
                 if (tag == null) {
@@ -207,7 +214,7 @@ public class TagCommand extends CoreCommand {
                 
                 final Bson createFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("name", tagName0.getAsString()));
-
+                
                 final OptionMapping embedOption = event.getOption("embed");
                 
                 if (Database.getDatabase().tags.find(createFilter).first() != null) {
@@ -243,13 +250,13 @@ public class TagCommand extends CoreCommand {
                     reply(event, "❌ No tag was found by the name of `" + tagName1.getAsString() + "`!", false, true);
                     return;
                 }
-
+                
                 final String content = event.getOption("content", "", OptionMapping::getAsString);
                 if (content.isBlank()) {
                     reply(event, "❌ You must supply some non-blank content!", false, true);
                     return;
                 }
-
+                
                 found.setData("{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}");
                 final Bson update = Updates.set("data", found.getData());
                 Database.getDatabase().tags.updateOne(editFilter, update);
@@ -264,13 +271,13 @@ public class TagCommand extends CoreCommand {
                 
                 final Bson deleteFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName2.getAsString()));
-
+                
                 final DeleteResult result = Database.getDatabase().tags.deleteOne(deleteFilter);
                 if (result.getDeletedCount() < 1) {
                     reply(event, "❌ No tag was found by the name of `" + tagName2.getAsString() + "`!", false, true);
                     return;
                 }
-
+                
                 reply(event, "✅ Tag `" + tagName2.getAsString() + "` has successfully been deleted!");
                 break;
             case "list":
@@ -289,7 +296,7 @@ public class TagCommand extends CoreCommand {
                     event.getMember().getEffectiveAvatarUrl());
                 embed.setTitle("Tags: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
                 embed.setThumbnail(event.getGuild().getIconUrl());
-
+                
                 final var future = new CompletableFuture<Boolean>();
                 final var counter = new AtomicInteger();
                 tags.forEach(t -> event.getJDA().retrieveUserById(t.getUser()).queue(user -> {
@@ -299,7 +306,7 @@ public class TagCommand extends CoreCommand {
                         future.complete(true);
                     }
                 }, error -> future.complete(false)));
-
+                
                 future.thenAccept(bool -> reply(event, embed));
                 break;
             default:
@@ -307,7 +314,7 @@ public class TagCommand extends CoreCommand {
                 break;
         }
     }
-    
+
     private static void sendData(SlashCommandInteractionEvent event, String data) {
         final JsonObject json = Constants.GSON.fromJson(data, JsonObject.class);
         if (json.has("message")) {
@@ -315,7 +322,7 @@ public class TagCommand extends CoreCommand {
         } else if (json.has("embed")) {
             final JsonObject jsonEmbed = json.getAsJsonObject("embed");
             final var embed = new EmbedBuilder();
-            
+
             if (jsonEmbed.has("author")) {
                 final JsonElement authorElement = jsonEmbed.get("author");
                 String text = "", url = null, iconUrl = null;
@@ -324,21 +331,21 @@ public class TagCommand extends CoreCommand {
                     if (author.has("text")) {
                         text = author.get("text").getAsString();
                     }
-                    
+
                     if (author.has("url")) {
                         url = author.get("url").getAsString();
                     }
-                    
+
                     if (author.has("iconUrl")) {
                         iconUrl = author.get("iconUrl").getAsString();
                     }
                 } else {
                     text = authorElement.getAsString();
                 }
-                
+
                 embed.setAuthor(text, url, iconUrl);
             }
-            
+
             if (jsonEmbed.has("color")) {
                 final JsonElement colorElement = jsonEmbed.get("color");
                 Color color = Color.BLACK;
@@ -355,14 +362,14 @@ public class TagCommand extends CoreCommand {
                         color = Color.decode(primitive.getAsString());
                     }
                 }
-                
+
                 embed.setColor(color);
             }
-            
+
             if (jsonEmbed.has("description")) {
                 embed.setDescription(jsonEmbed.get("description").getAsString());
             }
-            
+
             if (jsonEmbed.has("footer")) {
                 final JsonElement footerElement = jsonEmbed.get("footer");
                 String text = "", iconUrl = null;
@@ -371,29 +378,29 @@ public class TagCommand extends CoreCommand {
                     if (footer.has("text")) {
                         text = footer.get("text").getAsString();
                     }
-                    
+
                     if (footer.has("iconUrl")) {
                         iconUrl = footer.get("iconUrl").getAsString();
                     }
                 } else {
                     text = footerElement.getAsString();
                 }
-                
+
                 embed.setFooter(text, iconUrl);
             }
-            
+
             if (jsonEmbed.has("image")) {
                 embed.setImage(jsonEmbed.get("image").getAsString());
             }
-            
+
             if (jsonEmbed.has("thumbnail")) {
                 embed.setThumbnail(jsonEmbed.get("thumbnail").getAsString());
             }
-            
+
             if (jsonEmbed.has("timestamp")) {
                 embed.setTimestamp(Instant.ofEpochMilli(jsonEmbed.get("timestamp").getAsLong()));
             }
-            
+
             if (jsonEmbed.has("title")) {
                 final JsonElement title = jsonEmbed.get("title");
                 if (title.isJsonObject()) {
