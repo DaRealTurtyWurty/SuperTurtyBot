@@ -185,7 +185,7 @@ public class LyricsCommand extends CoreCommand {
                 .queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            reply(event, "❌ There has been an issue getting the lyrics for this track!", false, true);
+            event.getHook().editOriginal("❌ There has been an issue getting the lyrics for this track!").queue();
         }
     }
 }
