@@ -79,7 +79,7 @@ public class TopicCommand extends CoreCommand {
         "If you had to pick any character in a book, movie, or TV show who is most similar to you, who would you choose? Why?",
         "When you were growing up, what was your dream job? Is any part of that still true?",
         "What's your biggest fear?", "Is there a charitable cause you support?",
-        "If you had to pick one–skydiving, bungee jumping, or scuba diving–which would you do?",
+        "If you had to pick one-skydiving, bungee jumping, or scuba diving-which would you do?",
         "Which of your family members are you most like?", "Do you think there are aliens on other planets?",
         "Who would win in a fight, a robot or a dinosaur?", "What was your worst fashion disaster?",
         "What's your plan if there was a zombie apocalypse?", "What's your favorite form of social media?",
@@ -102,31 +102,31 @@ public class TopicCommand extends CoreCommand {
         "\"Go to bed, you'll feel better in the morning\" is the human version of \"Did you turn it off and turn it back on again?\"",
         "Maybe plants are really farming us, giving us oxygen until we eventually expire and turn into mulch which they can consume.",
         "Lawyers hope you get sued, doctors hope you get sick, cops hope you're criminal, mechanics hope you have car trouble, but only a thief wishes prosperity for you." };
-    
+
     public TopicCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets a random topic to talk about. Great for a conversation starter.";
     }
-    
+
     @Override
     public String getName() {
         return "topic";
     }
-    
+
     @Override
     public String getRichName() {
         return "Topic";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String topic = TOPICS[ThreadLocalRandom.current().nextInt(TOPICS.length - 1)];
