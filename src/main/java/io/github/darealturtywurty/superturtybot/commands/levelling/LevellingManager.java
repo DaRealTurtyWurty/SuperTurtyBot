@@ -34,6 +34,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -101,16 +102,11 @@ public final class LevellingManager extends ListenerAdapter {
 
         userProfile.setXp(xp);
         updates.add(Updates.set("xp", xp));
-        
+
         final int newLevel = getLevelForXP(xp);
         if (newLevel > level) {
             userProfile.setLevel(newLevel);
             updates.add(Updates.set("level", newLevel));
-
-            final var embed = new EmbedBuilder();
-            embed.setTimestamp(Instant.now());
-            embed.setDescription(member.getAsMention() + ", you are now Level " + newLevel + "! 🎉");
-            embed.setColor(Color.BLUE);
 
             final var userRoles = event.getMember().getRoles().stream().map(Role::getIdLong)
                 .collect(Collectors.toSet());
@@ -120,18 +116,47 @@ public final class LevellingManager extends ListenerAdapter {
                 .map(event.getGuild()::getRoleById).filter(Objects::nonNull).toList();
             event.getGuild().modifyMemberRoles(event.getMember(), toAddRoles, null).queue();
 
+            final var description = new StringBuilder(
+                member.getAsMention() + ", you are now Level " + newLevel + "! 🎉");
+
             // TODO: Re-enable when implemented properly
             /*
              * if (ThreadLocalRandom.current().nextInt(config.getLevellingItemChance()) == 0) { final List<String>
              * inventory = userProfile.getInventory(); final Pair<String, Rarity> chosen =
              * createWeightedBag(inventory).getRandom(); inventory.add(chosen.getLeft());
-             * updates.add(Updates.set("inventory", inventory)); embed.appendDescription("\n\nCongratulations " +
+             * updates.add(Updates.set("inventory", inventory)); description.append("\n\nCongratulations " +
              * member.getAsMention() + "! You earned an `" +
              * WordUtils.capitalize(chosen.getRight().name().toLowerCase()) +
              * "` rank card item! Use `/xpinventory` to view your inventory!"); }
              */
 
-            event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            if (!config.areLevelUpMessagesDisabled()) {
+                final var embed = new EmbedBuilder();
+                embed.setTimestamp(Instant.now());
+                embed.setDescription(description);
+                embed.setColor(Color.BLUE);
+
+                if (!config.hasLevelUpChannel()) {
+                    if (config.shouldEmbedLevelUpMessage()) {
+                        event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+                    } else {
+                        event.getMessage().reply(description).mentionRepliedUser(false).queue();
+                    }
+                } else {
+                    final TextChannel channel = event.getJDA().getTextChannelById(config.getLevelUpMessageChannel());
+                    if (channel == null) {
+                        if (config.shouldEmbedLevelUpMessage()) {
+                            event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+                        } else {
+                            event.getMessage().reply(description).mentionRepliedUser(false).queue();
+                        }
+                    } else if (config.shouldEmbedLevelUpMessage()) {
+                        channel.sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
+                    } else {
+                        channel.sendMessage(description).mentionRepliedUser(false).queue();
+                    }
+                }
+            }
         }
 
         Database.getDatabase().levelling.updateOne(filter, updates);
