@@ -132,4 +132,27 @@ public class ServerConfigRegistry {
         new ServerConfigOption.Builder().dataType(DataType.LONG)
             .serializer((config, value) -> config.setSuggestions(Long.parseLong(value)))
             .valueFromConfig(GuildConfig::getSuggestions).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+    
+    public static final ServerConfigOption DISABLE_LEVEL_UP_MESSAGES = SERVER_CONFIG_OPTIONS.register(
+        "disable_level_up_messages",
+        new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
+            .serializer((config, value) -> config.setDisableLevelUpMessages(Boolean.parseBoolean(value)))
+            .valueFromConfig(GuildConfig::areLevelUpMessagesDisabled).build());
+    
+    public static final ServerConfigOption HAS_LEVEL_UP_CHANNEL = SERVER_CONFIG_OPTIONS.register("has_level_up_channel",
+        new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
+            .serializer((config, value) -> config.setHasLevelUpChannel(Boolean.parseBoolean(value)))
+            .valueFromConfig(GuildConfig::hasLevelUpChannel).build());
+
+    public static final ServerConfigOption LEVEL_UP_MESSAGE_CHANNEL = SERVER_CONFIG_OPTIONS
+        .register("level_up_message_channel",
+            new ServerConfigOption.Builder().dataType(DataType.LONG)
+                .valueFromConfig(GuildConfig::getLevelUpMessageChannel).validator(Validators.TEXT_CHANNEL_VALIDATOR)
+                .build());
+    
+    public static final ServerConfigOption SHOULD_EMBED_LEVEL_UP_MESSAGES = SERVER_CONFIG_OPTIONS.register(
+        "should_embed_level_up_message",
+        new ServerConfigOption.Builder().dataType(DataType.BOOLEAN)
+            .serializer((config, value) -> config.setShouldEmbedLevelUpMessage(Boolean.parseBoolean(value)))
+            .valueFromConfig(GuildConfig::shouldEmbedLevelUpMessage).build());
 }
