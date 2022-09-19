@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.github.darealturtywurty.superturtybot.TurtyBot;
+import io.github.darealturtywurty.superturtybot.core.util.BotUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.TextChannel;
 
@@ -15,8 +16,8 @@ public class NoHupListener {
         if (channel == null || !channel.canTalk())
             return;
         
-        channel.sendMessage("Starting nohup.out listener! Development: " + isDevelopmentEnvironment()).queue();
-        if (isDevelopmentEnvironment())
+        channel.sendMessage("Starting nohup.out listener! Development: " + BotUtils.isDevelopmentEnvironment()).queue();
+        if (BotUtils.isDevelopmentEnvironment())
             return;
         
         channel.sendMessage("I am in production!").queue();
@@ -47,9 +48,5 @@ public class NoHupListener {
         monitor.start();
         
         channel.sendMessage("File Monitor added!").queue();
-    }
-    
-    private static boolean isDevelopmentEnvironment() {
-        return System.getenv("development") != null;
     }
 }

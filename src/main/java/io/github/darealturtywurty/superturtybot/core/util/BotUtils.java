@@ -26,7 +26,7 @@ public final class BotUtils {
     public static boolean compareEmote(MessageReaction reaction0, MessageReaction reaction1) {
         return reaction0.getEmoji().getName().equals(reaction1.getEmoji().getName());
     }
-
+    
     public static String convertExplicitContentLevel(ExplicitContentLevel level) {
         return switch (level) {
             case OFF -> "None";
@@ -36,7 +36,7 @@ public final class BotUtils {
             default -> "Undefined";
         };
     }
-
+    
     public static String convertNotificationLevel(NotificationLevel level) {
         return switch (level) {
             case ALL_MESSAGES -> "All Messages";
@@ -45,7 +45,7 @@ public final class BotUtils {
             default -> "Undefined";
         };
     }
-    
+
     public static String convertNSFWLevel(NSFWLevel level) {
         return switch (level) {
             case SAFE -> "Safe";
@@ -84,7 +84,11 @@ public final class BotUtils {
         final var luminance = 0.9f;
         return Color.getHSBColor(hue, saturation, luminance);
     }
-
+    
+    public static boolean isDevelopmentEnvironment() {
+        return System.getenv("development") != null;
+    }
+    
     /**
      * Takes a BufferedImage and resizes it according to the provided targetSize
      *
@@ -103,7 +107,7 @@ public final class BotUtils {
         } else { // portrait image
             targetWidth = Math.round(targetHeight / ratio);
         }
-
+        
         final BufferedImage retImg = new BufferedImage(targetWidth, targetHeight,
             src.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g2d = retImg.createGraphics();
@@ -112,7 +116,7 @@ public final class BotUtils {
         g2d.dispose();
         return retImg;
     }
-
+    
     @Nullable
     public static InputStream toInputStream(@NotNull BufferedImage image) {
         try {
