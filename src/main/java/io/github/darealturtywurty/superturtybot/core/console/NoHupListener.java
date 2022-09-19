@@ -6,41 +6,41 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.github.darealturtywurty.superturtybot.TurtyBot;
-import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.JDA;
 
 public class NoHupListener {
     public void start(JDA jda) throws URISyntaxException {
-        System.out.println(isDevelopmentEnvironment());
+        jda.getTextChannelById(1021457564849942548L)
+            .sendMessage("Starting nohup.out listener internally! " + isDevelopmentEnvironment()).queue();
         if (!isDevelopmentEnvironment())
             return;
-
-        Constants.LOGGER.debug("Not Development");
-
+        
+        jda.getTextChannelById(1021457564849942548L).sendMessage("I am in production!").queue();
+        
         final var runFolder = new File(TurtyBot.class.getProtectionDomain().getCodeSource().getLocation().toURI())
             .getParentFile();
-        Constants.LOGGER.debug(runFolder.toString());
+        jda.getTextChannelById(1021457564849942548L).sendMessage("The run folder is: " + runFolder).queue();
         if (!runFolder.exists())
             return;
-
-        Constants.LOGGER.debug("Found run folder");
-
+        
+        jda.getTextChannelById(1021457564849942548L).sendMessage("I've found a valid run folder!").queue();
+        
         final Path projectFolder = Path.of(runFolder.getAbsolutePath()).getParent().getParent();
-        Constants.LOGGER.debug(projectFolder.toString());
+        jda.getTextChannelById(1021457564849942548L).sendMessage("The project folder is: " + projectFolder).queue();
         final Path nohupOut = Path.of(projectFolder.toString(), "nohup.out");
-        Constants.LOGGER.debug(nohupOut.toString());
+        jda.getTextChannelById(1021457564849942548L).sendMessage("The nohup.out file is: " + nohupOut).queue();
         if (!Files.exists(nohupOut))
             return;
-
-        Constants.LOGGER.debug("nohup.out exists");
         
+        jda.getTextChannelById(1021457564849942548L).sendMessage("I've found the nohup.out!").queue();
+
         final var monitor = new FileMonitor(1000);
         monitor.monitor(projectFolder.toString(), "nohup.out", new FileChangedAdapter(jda));
         monitor.start();
-
-        Constants.LOGGER.debug("File Monitor started");
+        
+        jda.getTextChannelById(1021457564849942548L).sendMessage("File Monitor added!").queue();
     }
-
+    
     private static boolean isDevelopmentEnvironment() {
         return System.getenv("development") != null;
     }

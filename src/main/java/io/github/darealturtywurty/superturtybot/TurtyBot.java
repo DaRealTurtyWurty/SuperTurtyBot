@@ -32,6 +32,8 @@ public class TurtyBot {
         configureBuilder(jdaBuilder);
         final JDA jda = jdaBuilder.build();
         loadRegisterers();
+        
+        jda.getTextChannelById(1021457564849942548L).sendMessage("Starting nohup.out listener from main!").queue();
         new NoHupListener().start(jda);
     }
 
