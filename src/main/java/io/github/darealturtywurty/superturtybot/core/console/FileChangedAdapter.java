@@ -13,22 +13,23 @@ import net.dv8tion.jda.api.entities.TextChannel;
 public class FileChangedAdapter extends FileAlterationListenerAdaptor {
     private final JDA jda;
     private AtomicReference<String> previousLog = new AtomicReference<>("");
-
+    
     public FileChangedAdapter(JDA jda) {
         this.jda = jda;
     }
-
+    
     @Override
     public void onFileChange(File file) {
         final TextChannel channel = this.jda.getTextChannelById(1021457564849942548L);
         if (channel == null)
             return;
-        
+
         try {
             final String content = Files.readString(file.toPath()).replace(this.previousLog.get(), "");
             channel.sendMessage(content).queue();
+            this.previousLog.set(this.previousLog + content);
         } catch (final IOException exception) {
-            
+
         }
     }
 }
