@@ -231,16 +231,20 @@ public class HighlightCommand extends CoreCommand {
     
     private static void performHighlight(MessageReceivedEvent event, final String content,
         final Highlighter highlighter, Member member) {
-        if (!member.hasAccess(event.getGuildChannel()))
-            return;
-        
-        if (highlighter.isCaseSensitive() ? content.contains(highlighter.getText())
-            : content.toLowerCase().contains(highlighter.getText().toLowerCase())) {
-            member.getUser().openPrivateChannel()
-                .queue(channel -> channel.sendMessage("A message has been sent in <#" + event.getChannel().getIdLong()
-                    + "> containing content from your highlighter (`"
-                    + StringUtils.truncateString(highlighter.getText(), 15) + "`).\n\n"
-                    + event.getMessage().getJumpUrl()).queue());
+        try {
+            if (!member.hasAccess(event.getGuildChannel()))
+                return;
+            
+            if (highlighter.isCaseSensitive() ? content.contains(highlighter.getText())
+                : content.toLowerCase().contains(highlighter.getText().toLowerCase())) {
+                member.getUser().openPrivateChannel()
+                    .queue(channel -> channel.sendMessage("A message has been sent in <#"
+                        + event.getChannel().getIdLong() + "> containing content from your highlighter (`"
+                        + StringUtils.truncateString(highlighter.getText(), 15) + "`).\n\n"
+                        + event.getMessage().getJumpUrl()).queue());
+            }
+        } catch (final IllegalStateException | IllegalArgumentException exception) {
+            
         }
     }
 }
