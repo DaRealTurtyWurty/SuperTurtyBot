@@ -1,5 +1,7 @@
 package io.github.darealturtywurty.superturtybot;
 
+import java.net.URISyntaxException;
+
 import javax.security.auth.login.LoginException;
 
 import org.reflections.Reflections;
@@ -11,10 +13,12 @@ import org.reflections.util.FilterBuilder;
 import io.github.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
+import io.github.darealturtywurty.superturtybot.core.console.NoHupListener;
 import io.github.darealturtywurty.superturtybot.modules.AutoModerator;
 import io.github.darealturtywurty.superturtybot.modules.StarboardManager;
 import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -23,11 +27,12 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class TurtyBot {
-    public static void main(String[] args) throws LoginException {
+    public static void main(String[] args) throws LoginException, URISyntaxException {
         final var jdaBuilder = JDABuilder.createDefault(args.length < 1 ? Environment.INSTANCE.botToken() : args[0]);
         configureBuilder(jdaBuilder);
-        jdaBuilder.build();
+        final JDA jda = jdaBuilder.build();
         loadRegisterers();
+        new NoHupListener().start(jda);
     }
 
     private static void configureBuilder(JDABuilder builder) {
