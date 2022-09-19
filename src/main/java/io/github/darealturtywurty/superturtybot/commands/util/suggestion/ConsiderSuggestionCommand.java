@@ -92,6 +92,7 @@ public class ConsiderSuggestionCommand extends CoreCommand {
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
             suggestionChannel, event.getMember(), suggestionNumber, response, SuggestionResponse.Type.CONSIDERED);
         
+        final String finalResponse = response;
         suggestion.thenAccept(sug -> {
             if (sug == null) {
                 event.getMessage().reply("You must provide a valid suggestion number!").mentionRepliedUser(false)
@@ -100,12 +101,14 @@ public class ConsiderSuggestionCommand extends CoreCommand {
             }
             
             event.getMessage().delete().queue();
-            event.getAuthor().openPrivateChannel().queue(channel -> {
+            event.getJDA().getUserById(sug.getUser()).openPrivateChannel().queue(channel -> {
                 final var embed = new EmbedBuilder();
                 embed.setTimestamp(Instant.now());
                 embed.setColor(sug != null ? Color.GREEN : Color.RED);
-                embed.setTitle("✅ Response successfully added!", "https://discord.com/channels/"
-                    + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong() + "/" + sug.getMessage());
+                embed.setTitle("❓" + event.getAuthor().getAsMention() + " has considered your suggestion!",
+                    "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
+                        + "/" + sug.getMessage());
+                embed.setDescription(finalResponse);
                 embed.setFooter(event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator(),
                     event.getMember().getEffectiveAvatarUrl());
                 
