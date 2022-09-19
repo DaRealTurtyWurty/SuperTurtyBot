@@ -27,13 +27,14 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class TurtyBot {
-    public static void main(String[] args) throws LoginException, URISyntaxException {
+    public static void main(String[] args) throws LoginException, URISyntaxException, InterruptedException {
         final var jdaBuilder = JDABuilder.createDefault(args.length < 1 ? Environment.INSTANCE.botToken() : args[0]);
         configureBuilder(jdaBuilder);
-        final JDA jda = jdaBuilder.build();
+        JDA jda = jdaBuilder.build();
         loadRegisterers();
         
-        jda.getTextChannelById(1021457564849942548L).sendMessage("Starting nohup.out listener from main!").queue();
+        jda = jda.awaitReady();
+        Thread.sleep(1000);
         new NoHupListener().start(jda);
     }
 
