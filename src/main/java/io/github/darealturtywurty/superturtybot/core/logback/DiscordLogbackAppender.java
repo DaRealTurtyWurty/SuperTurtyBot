@@ -18,22 +18,22 @@ import ch.qos.logback.core.Layout;
 public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static final org.slf4j.Logger LOG = LoggerFactory.getLogger("DiscordLogbackAppender");
     public static final String POST_URL = "https://discord.com/api/v9/webhooks/%s/%s";
-
+    
     private Layout<ILoggingEvent> layout;
-
+    
     private final HttpClient client = HttpClient.newBuilder().executor(Executors.newSingleThreadExecutor(r -> {
         final Thread thread = new Thread(r);
         thread.setName("DiscordLoggingAppender");
         thread.setDaemon(true);
         return thread;
     })).build();
-
+    
     private URI uri;
-
+    
     public void login(String webhookId, String webhookToken) {
         this.uri = URI.create(POST_URL.formatted(webhookId, webhookToken));
     }
-
+    
     /**
      * Sets the inner {@link Layout}, used for formatting the message to be sent.
      *
@@ -42,7 +42,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public void setLayout(final Layout<ILoggingEvent> layoutIn) {
         this.layout = layoutIn;
     }
-
+    
     @Override
     protected void append(final ILoggingEvent eventObject) {
         if (this.uri == null)
@@ -51,9 +51,12 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
             final var contentBuf = new StringBuilder();
             escape(getMessageContent(eventObject), contentBuf);
 
+            if (contentBuf.toString().endsWith("Successfully resumed Session!"))
+                return;
+            
             final String body = '{' + "\"content\":\"" + contentBuf + "\"," + "\"allowed_mentions\":{\"parse\": []}"
                 + '}';
-
+            
             this.client
                 .send(HttpRequest.newBuilder(this.uri).header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body)).build(), HttpResponse.BodyHandlers.ofString())
@@ -62,29 +65,29 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
             LOG.error("Error trying to send webhook message: ", exception);
         }
     }
-
+    
     protected String getMessageContent(final ILoggingEvent event) {
         return this.layout != null ? this.layout.doLayout(event) : event.getFormattedMessage();
     }
-
+    
     public static void setup(String webhookId, String webhookToken) throws ClassCastException {
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-
+        
         final var appender = new DiscordLogbackAppender();
         appender.setContext(context);
-
+        
         final var layout = new DiscordLogbackLayout();
         layout.setContext(context);
         layout.start();
         appender.setLayout(layout);
-
+        
         appender.login(webhookId, webhookToken);
         appender.start();
-
+        
         final ch.qos.logback.classic.Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.addAppender(appender);
     }
-
+    
     private static void escape(String s, StringBuilder sb) {
         final int len = s.length();
         for (int i = 0; i < len; i++) {
