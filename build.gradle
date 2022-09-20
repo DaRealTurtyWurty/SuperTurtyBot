@@ -93,13 +93,6 @@ shadowJar {
     mergeServiceFiles()
 }
 
-task relocateShadowJar(type: ConfigureShadowRelocation) {
-    target = tasks.shadowJar
-    prefix = "turtybot.shading"
-}
-
-tasks.shadowJar.dependsOn tasks.relocateShadowJar
-
 compileJava.options.encoding = "UTF-8"
 
 tasks.withType(JavaCompile) {
