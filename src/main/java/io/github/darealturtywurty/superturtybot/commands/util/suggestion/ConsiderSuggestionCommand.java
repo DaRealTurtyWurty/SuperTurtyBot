@@ -9,7 +9,7 @@ import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import io.github.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public class ConsiderSuggestionCommand extends CoreCommand {

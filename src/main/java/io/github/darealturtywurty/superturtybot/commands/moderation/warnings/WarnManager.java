@@ -3,6 +3,7 @@ package io.github.darealturtywurty.superturtybot.commands.moderation.warnings;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math3.util.Pair;
 import org.bson.conversions.Bson;
@@ -16,8 +17,8 @@ import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 public class WarnManager {
     private WarnManager() {
@@ -87,7 +88,7 @@ public class WarnManager {
                     .queue(success -> {
                     }, error -> {
                     }));
-            guild.kick(user, kickReason).queue();
+            guild.kick(user).reason(kickReason).queue();
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(),
@@ -102,7 +103,7 @@ public class WarnManager {
                     .queue(success -> {
                     }, error -> {
                     }));
-            guild.ban(user, 0, banReason).queue();
+            guild.ban(user, 0, TimeUnit.DAYS).reason(banReason).queue();
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(),

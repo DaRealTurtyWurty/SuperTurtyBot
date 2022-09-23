@@ -84,7 +84,6 @@ import io.github.darealturtywurty.superturtybot.commands.util.GithubRepositoryCo
 import io.github.darealturtywurty.superturtybot.commands.util.HighlightCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.MojangStatusCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.PollCommand;
-import io.github.darealturtywurty.superturtybot.commands.util.ReactionRoleCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.RolesCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.ServerInfoCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.StrawpollCommand;
@@ -99,7 +98,7 @@ import io.github.darealturtywurty.superturtybot.commands.util.suggestion.Suggest
 import io.github.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -112,25 +111,29 @@ public class CommandHook extends ListenerAdapter {
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
-    
+
     private Set<CoreCommand> commands = new HashSet<>();
-    
+
     private CommandHook() {
     }
-    
+
     public Set<CoreCommand> getCommands() {
         return Set.of(this.commands.toArray(new CoreCommand[0]));
     }
-    
+
     @Override
     public void onReady(ReadyEvent event) {
         super.onReady(event);
         this.commands.clear();
         this.commands.addAll(registerCommands(event.getJDA()));
-        
+
         printCommandList(event.getJDA(), this.commands);
+
+        // if (TurtyBot.getYoutube() == null) {
+        // TurtyBot.setYoutubeListener(new YoutubeListener(event.getJDA()));
+        // }
     }
-    
+
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription());
@@ -138,33 +141,33 @@ public class CommandHook extends ListenerAdapter {
             if (!options.isEmpty()) {
                 data.addOptions(options);
             }
-            
+
             final List<SubcommandData> subcommands = cmd.createSubcommands();
             if (!subcommands.isEmpty()) {
                 data.addSubcommands(subcommands);
             }
-            
+
             updates.addCommands(data);
         }
-        
+
         if (cmd.types.messageCtx()) {
             updates.addCommands(Commands.message(cmd.getRichName()));
         }
-        
+
         if (cmd.types.userCtx()) {
             updates.addCommands(Commands.user(cmd.getRichName()));
         }
     }
-    
+
     private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
         final List<TextChannel> channels = jda.getTextChannelsByName("command-list", true);
         if (channels.isEmpty())
             return;
-        
+
         final TextChannel cmdList = channels.get(0);
         if (cmdList == null)
             return;
-        
+
         final var builder = new StringBuilder();
         final var previous = new AtomicReference<CoreCommand>();
         final var slashes = new AtomicInteger();
@@ -177,17 +180,17 @@ public class CommandHook extends ListenerAdapter {
                 } else if (previous.get() == null) {
                     builder.append("**" + cmd.getCategory().getName() + "**\n");
                 }
-                
+
                 builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
                 previous.set(cmd);
-                
+
                 if (cmd.types.slash()) {
                     slashes.incrementAndGet();
                 } else {
                     prefixes.incrementAndGet();
                 }
             });
-        
+
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
             success.sendMessage("\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get()
@@ -195,7 +198,7 @@ public class CommandHook extends ListenerAdapter {
             cmdList.delete().queue();
         });
     }
-
+    
     private static Set<CoreCommand> registerCommands(JDA jda) {
         final Set<CoreCommand> cmds = new HashSet<>();
         // Core
@@ -208,7 +211,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new RestartCommand());
         cmds.add(new ServerConfigCommand());
         // cmds.add(new UserConfigCommand());
-        
+
         // Utility
         cmds.add(new BotInfoCommand());
         cmds.add(new UserInfoCommand());
@@ -225,10 +228,11 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ConsiderSuggestionCommand());
         cmds.add(new MojangStatusCommand());
         cmds.add(new HighlightCommand());
-        cmds.add(new ReactionRoleCommand());
+        // cmds.add(new RoleSelectionCommand());
         cmds.add(new TopicCommand());
         cmds.add(new WouldYouRatherCommand());
-        
+        // cmds.add(new YoutubeNotificationsCommand());
+
         // Moderation
         cmds.add(new BanCommand());
         cmds.add(new UnbanCommand());
@@ -243,7 +247,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SlowmodeCommand());
         cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
-        
+
         // NSFW
         NSFWCommandList.addAll(cmds);
         cmds.add(new HentaiCommand());
@@ -261,7 +265,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new LoliCommand());
         cmds.add(new OrgasmCommand());
         cmds.add(new Rule34Command());
-        
+
         // Music
         cmds.add(new JoinCommand());
         cmds.add(new LeaveCommand());
@@ -278,7 +282,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SearchCommand());
         cmds.add(new LyricsCommand());
         cmds.add(new RemoveDuplicatesCommand());
-        
+
         // Image
         cmds.add(new HttpCatCommand());
         cmds.add(new MemeCommand());
@@ -286,7 +290,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new InspiroBotCommand());
         cmds.add(new HttpDogCommand());
         cmds.add(new ImageCommand());
-        
+
         // Fun
         cmds.add(new AdviceCommand());
         // cmds.add(new AmongUsCommand());
@@ -299,20 +303,20 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-        
+
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         cmds.add(new XPInventoryCommand());
-        
+
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
             cmds.forEach(cmd -> registerCommand(cmd, updates, guild));
             updates.queue();
         });
-        
+
         cmds.forEach(jda::addEventListener);
-        
+
         return cmds;
     }
 }

@@ -24,6 +24,7 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Sugge
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
 
 public class Database {
     private static final Database DATABASE = new Database();
@@ -37,6 +38,7 @@ public class Database {
     public final MongoCollection<Showcase> starboard;
     public final MongoCollection<GuildConfig> guildConfig;
     public final MongoCollection<UserConfig> userConfig;
+    public final MongoCollection<YoutubeNotifier> youtubeNotifier;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -57,12 +59,14 @@ public class Database {
         this.starboard = database.getCollection("starboard", Showcase.class);
         this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
+        this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
         
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
         final Bson channelIndex = Indexes.descending("channel");
         final Bson messageIndex = Indexes.descending("message");
         final Bson guildUserIndex = Indexes.compoundIndex(guildIndex, userIndex);
+
         this.levelling.createIndex(guildUserIndex);
         this.counting.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("users")));
         this.suggestions.createIndex(guildUserIndex);
@@ -72,6 +76,8 @@ public class Database {
         this.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
         this.guildConfig.createIndex(guildIndex);
         this.userConfig.createIndex(guildUserIndex);
+        this.youtubeNotifier
+            .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
     }
     
     public static Database getDatabase() {

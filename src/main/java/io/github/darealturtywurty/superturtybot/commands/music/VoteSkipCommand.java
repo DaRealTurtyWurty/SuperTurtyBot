@@ -3,7 +3,7 @@ package io.github.darealturtywurty.superturtybot.commands.music;
 import io.github.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
-import net.dv8tion.jda.api.entities.AudioChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class VoteSkipCommand extends CoreCommand {

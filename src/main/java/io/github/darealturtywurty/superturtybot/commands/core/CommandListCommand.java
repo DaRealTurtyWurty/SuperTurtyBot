@@ -20,8 +20,8 @@ import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -32,57 +32,57 @@ public class CommandListCommand extends CoreCommand {
     public CommandListCommand() {
         super(new Types(true, false, false, false));
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.STRING, "category", "The category to get the list of commands from.", false)
                 .setAutoComplete(true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-
+    
     @Override
     public String getDescription() {
         return "Retrieves the list of commands.";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/commands\n/commands [category]";
     }
-
+    
     @Override
     public String getName() {
         return "commands";
     }
-
+    
     @Override
     public String getRichName() {
         return "Command List";
     }
-
+    
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
         if (!event.getName().equals(getName()))
             return;
-        
+
         final String term = event.getFocusedOption().getValue();
         final List<String> categories = CommandCategory.getCategories().stream()
             .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase()))
             .filter(category -> {
                 if (!event.isFromGuild() || !category.isNSFW())
                     return true;
-
-                final TextChannel channel = (TextChannel) event.getChannel();
+                
+                final TextChannel channel = event.getChannel().asTextChannel();
                 return channel.isNSFW();
             }).limit(25).map(CommandCategory::getName).map(String::toLowerCase).toList();
         event.replyChoiceStrings(categories).queue();
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final OptionMapping categoryOption = event.getOption("category");
@@ -94,24 +94,24 @@ public class CommandListCommand extends CoreCommand {
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final String category = categoryOption.getAsString();
         if (CommandCategory.byName(category) == null) {
             event.deferReply(true).setContent("You must provide a valid category!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         final var embed = commandsEmbed(category,
             event.getChannel() instanceof final TextChannel tChannel && tChannel.isNSFW() || !event.isFromGuild());
         if (embed == null) {
             event.deferReply(true).setContent("You must provide a valid category!").mentionRepliedUser(false).queue();
             return;
         }
-
+        
         setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
-
+    
     private static EmbedBuilder categoriesEmbed(@Nullable Guild guild, @Nullable Member member, boolean allowNSFW) {
         final var embed = new EmbedBuilder();
         embed.setTitle("Categories:");
@@ -124,10 +124,10 @@ public class CommandListCommand extends CoreCommand {
                 (category.isNSFW() ? "⚠️Warning: NSFW⚠️\n" : "")
                     + String.format("`/commands %s`", category.getName().toLowerCase()),
                 true));
-
+        
         return embed;
     }
-
+    
     private static EmbedBuilder commandsEmbed(String categoryStr, boolean allowNSFW) {
         final var category = CommandCategory.byName(categoryStr);
         final var embed = new EmbedBuilder();
@@ -136,7 +136,7 @@ public class CommandListCommand extends CoreCommand {
         if (category.isNSFW()) {
             if (!allowNSFW)
                 return null;
-
+            
             final List<NSFWCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
                 .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW).map(NSFWCommand.class::cast)
                 .collect(Collectors.toList());
@@ -148,10 +148,10 @@ public class CommandListCommand extends CoreCommand {
                         cmdsString.append("`" + cmd.getName() + "`, ");
                         toRemove.add(cmd);
                     });
-
+                
                 cmdsString.delete(cmdsString.length() - 2, cmdsString.length());
                 cmdsString.append("\n");
-
+                
                 toRemove.forEach(cmds::remove);
                 toRemove.clear();
             }
@@ -167,15 +167,15 @@ public class CommandListCommand extends CoreCommand {
                         cmdsString.append("`" + cmd.getName() + "`, ");
                         toRemove.add(cmd);
                     });
-
+                
                 if (!toRemove.isEmpty()) {
                     cmdsString.delete(cmdsString.length() - 2, cmdsString.length());
                 } else {
                     cmdsString.append("Not Yet Implemented");
                 }
-
+                
                 cmdsString.append("\n");
-
+                
                 toRemove.forEach(cmds::remove);
                 toRemove.clear();
             }
@@ -185,13 +185,13 @@ public class CommandListCommand extends CoreCommand {
                 .sorted(Comparator.comparing(CoreCommand::getName))
                 .forEachOrdered(cmd -> cmdsString.append("`" + cmd.getName() + "`\n"));
         }
-
+        
         embed.setDescription(cmdsString.toString());
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.BLUE);
         return embed;
     }
-
+    
     private static void setAuthor(EmbedBuilder embed, boolean fromGuild, User author, Member member) {
         if (fromGuild) {
             embed.setFooter(member.getEffectiveName() + "#" + author.getDiscriminator(),

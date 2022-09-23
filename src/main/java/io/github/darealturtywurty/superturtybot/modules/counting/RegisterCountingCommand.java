@@ -6,7 +6,7 @@ import org.apache.commons.text.WordUtils;
 
 import io.github.darealturtywurty.superturtybot.core.command.CommandCategory;
 import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;

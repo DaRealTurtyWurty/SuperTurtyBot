@@ -12,7 +12,7 @@ import io.github.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -88,7 +88,7 @@ public class KickCommand extends CoreCommand {
                     }, error -> {
                     }));
             
-            event.getGuild().kick(member, reason).queue(success -> {
+            event.getGuild().kick(member).reason(finalReason).queue(success -> {
                 event.deferReply().setContent("Successfully kicked " + member.getAsMention() + "!")
                     .mentionRepliedUser(false).queue();
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
