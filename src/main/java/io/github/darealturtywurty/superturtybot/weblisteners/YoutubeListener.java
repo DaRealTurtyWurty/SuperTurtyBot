@@ -34,6 +34,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 
 import io.github.darealturtywurty.superturtybot.core.ShutdownHooks;
+import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
 import io.javalin.Javalin;
@@ -53,58 +54,58 @@ public class YoutubeListener {
     private static final String CALLBACK_URL = "http://%s:8912/youtube";
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-
+    
     private final DocumentBuilder documentBuilder;
-
+    
     public YoutubeListener(JDA jda) {
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        
+
         try {
             this.documentBuilder = factory.newDocumentBuilder();
         } catch (final ParserConfigurationException exception) {
             throw new IllegalStateException("Unable to create document builder!", exception);
         }
-
-        createServer(jda);
         
+        createServer(jda);
+
         // Re-subscribe every 4 days 23 hours
         EXECUTOR.scheduleAtFixedRate(
             () -> Database.getDatabase().youtubeNotifier.find()
                 .forEach(notifier -> subscribe(notifier.getGuild(), notifier.getYoutubeChannel())),
             0, 119, TimeUnit.HOURS);
     }
-    
+
     public void subscribe(long guildId, String channelId) {
         subscribe(guildId, channelId, false);
     }
-
+    
     public void subscribe(long guildId, String channelId, boolean unsubscribe) {
         final Optional<YoutubeNotifier> optional = getYoutubeNotifier(guildId);
         if (optional.isEmpty())
             return;
-
+        
         final String callbackURL = CALLBACK_URL.formatted(getIP().orElseThrow());
         final String topicURL = TOPIC_URL.formatted(channelId);
         System.out.println(callbackURL);
         System.out.println(topicURL);
-        
+
         final Map<String, String> params = Map.of("hub.callback", callbackURL, "hub.topic", topicURL, "hub.mode",
             unsubscribe ? "unsubscribe" : "subscribe", "hub.verify", "sync");
-
+        
         final List<String> listParams = params.entrySet().stream()
             .map(entry -> entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)).toList();
         final String strParams = String.join("&", listParams);
         final Request request = new Request.Builder().method("POST", RequestBody.create(new byte[0]))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .url(YoutubeListener.SUBSCRIBE_URL + "?" + strParams).build();
-
+        
         HTTP_CLIENT.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException exception) {
                 throw new IllegalStateException("An error has occured " + (unsubscribe ? "unsubcribing" : "subscribing")
                     + " channel ID: " + channelId, exception);
             }
-
+            
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful())
@@ -112,7 +113,7 @@ public class YoutubeListener {
             }
         });
     }
-
+    
     private void createServer(JDA jda) {
         final Javalin app = Javalin.create(config -> {
             final var server = new Server();
@@ -122,32 +123,34 @@ public class YoutubeListener {
             server.setConnectors(new Connector[] { connector });
             config.server(() -> server);
         });
-
+        
         app.post("/youtube", context -> {
             final Map<String, String> params = context.pathParamMap();
-            System.out.println(params);
+            params.forEach((key, val) -> {
+                Constants.LOGGER.warn(key + "=" + val);
+            });
             if (params.containsKey("hub.challenge")) {
                 final byte[] response = params.get("hub.challenge").getBytes(StandardCharsets.UTF_8);
                 context.res.setStatus(HttpURLConnection.HTTP_OK);
                 context.result(response);
                 return;
             }
-            
+
             final Optional<Video> parsed = parseVideo(context.bodyAsInputStream());
             final Video video = parsed.orElseThrow(
                 () -> new IllegalStateException("No valid video was provided!\n\n ```xml\n" + context.body() + "```"));
-
+            
             final List<YoutubeNotifier> notifiers = new ArrayList<>();
             Database.getDatabase().youtubeNotifier.find(Filters.eq("videoId", video.videoId)).forEach(notifiers::add);
             notifiers.stream().filter(notifier -> notifier.getYoutubeChannel().equals(video.channel().id())
                 && !notifier.getStoredVideos().contains(video.videoId())).forEach(notifier -> {
                     final Guild guild = jda.getGuildById(notifier.getGuild());
-
+                    
                     notifier.getStoredVideos().add(video.videoId());
                     final Bson filter = getFilter(guild.getIdLong());
                     Database.getDatabase().youtubeNotifier.updateOne(filter,
                         Updates.set("storedVideos", notifier.getStoredVideos()));
-
+                    
                     final long videoChannel = notifier.getChannel();
                     final TextChannel channel = guild.getTextChannelById(videoChannel);
                     if (channel == null || !channel.canTalk())
@@ -156,12 +159,12 @@ public class YoutubeListener {
                         + video.channel().name() + "** called **" + video.title() + "**!\n" + video.url()).queue();
                 });
         });
-
+        
         app.start(8912);
-
+        
         ShutdownHooks.register(app::close);
     }
-
+    
     private Optional<Video> parseVideo(InputStream input) {
         Document document;
         try {
@@ -170,7 +173,7 @@ public class YoutubeListener {
             exception.printStackTrace();
             return Optional.empty();
         }
-        
+
         final Node entry = document.getElementsByTagName("entry").item(0);
         final NodeList entryChildren = entry.getChildNodes();
         final String id = entryChildren.item(0).getNodeValue();
@@ -186,7 +189,7 @@ public class YoutubeListener {
         return Optional.of(new Video(id, videoId, title, url, new Video.Channel(channelId, channelName, channelURL),
             LocalDate.parse(publishedAt), LocalDate.parse(updatedAt)));
     }
-
+    
     public static Optional<String> getIP() {
         try {
             final URL whatismyip = new URL("http://checkip.amazonaws.com");
@@ -198,20 +201,20 @@ public class YoutubeListener {
             return Optional.empty();
         }
     }
-    
+
     private static Bson getFilter(long guildId) {
         return Filters.eq("guild", guildId);
     }
-    
+
     private static Optional<YoutubeNotifier> getYoutubeNotifier(long guildId) {
         final Bson filter = getFilter(guildId);
         final YoutubeNotifier notifier = Database.getDatabase().youtubeNotifier.find(filter).first();
         if (notifier == null)
             return Optional.empty();
-        
+
         return Optional.of(notifier);
     }
-    
+
     private static record Video(String id, String videoId, String title, String url, Channel channel,
         LocalDate publishedAt, LocalDate updatedAt) {
         private static record Channel(String id, String name, String url) {
