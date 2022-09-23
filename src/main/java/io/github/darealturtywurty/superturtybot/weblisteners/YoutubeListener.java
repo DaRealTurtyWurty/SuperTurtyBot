@@ -22,6 +22,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.bson.conversions.Bson;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -111,7 +114,15 @@ public class YoutubeListener {
     }
 
     private void createServer(JDA jda) {
-        final Javalin app = Javalin.create();
+        final Javalin app = Javalin.create(config -> {
+            final var server = new Server();
+            final var connector = new ServerConnector(server);
+            connector.setHost(getIP().orElse("0.0.0.0"));
+            connector.setPort(8912);
+            server.setConnectors(new Connector[] { connector });
+            config.server(() -> server);
+        });
+
         app.post("/youtube", context -> {
             final Map<String, String> params = context.pathParamMap();
             System.out.println(params);
