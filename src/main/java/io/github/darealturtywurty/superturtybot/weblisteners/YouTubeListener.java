@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -29,6 +30,7 @@ import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -79,13 +81,17 @@ public class YouTubeListener {
                         });
                         
                         notifiers.forEach(notifier -> {
+                            if (!notifier.getYoutubeChannel().equals(video.channel().id()))
+                                return;
+                            
                             final Guild guild = jda.getGuildById(notifier.getGuild());
                             if (guild == null)
                                 return;
 
                             notifier.getStoredVideos().add(video.videoId());
                             final Bson filter = getFilter(guild.getIdLong());
-                            Database.getDatabase().youtubeNotifier.updateOne(filter,
+                            Database.getDatabase().youtubeNotifier.updateOne(
+                                Filters.and(filter, Filters.eq("youtubeChannel", notifier.getYoutubeChannel())),
                                 Updates.set("storedVideos", notifier.getStoredVideos()));
 
                             final long videoChannel = notifier.getChannel();
@@ -95,7 +101,7 @@ public class YouTubeListener {
                             channel
                                 .sendMessage(notifier.getMention() + " A new video was just released by **"
                                     + video.channel().name() + "** called **" + video.title() + "**!\n" + video.url())
-                                .queue();
+                                .setAllowedMentions(EnumSet.allOf(MentionType.class)).queue();
                         });
                     });
                 }
