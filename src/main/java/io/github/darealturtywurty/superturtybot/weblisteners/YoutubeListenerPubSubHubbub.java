@@ -46,7 +46,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class YoutubeListener {
+public class YoutubeListenerPubSubHubbub {
     private static final String TOPIC_URL = "https://www.youtube.com/xml/feeds/videos.xml?channel_id=%s";
     private static final String SUBSCRIBE_URL = "https://pubsubhubbub.appspot.com/subscribe";
     private static final String CALLBACK_URL = "http://%s:8912/youtube";
@@ -55,7 +55,7 @@ public class YoutubeListener {
     
     private final DocumentBuilder documentBuilder;
     
-    public YoutubeListener(JDA jda) {
+    public YoutubeListenerPubSubHubbub(JDA jda) {
         final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
         try {
@@ -93,7 +93,7 @@ public class YoutubeListener {
         final String strParams = String.join("&", listParams);
         final Request request = new Request.Builder().method("POST", RequestBody.create(new byte[0]))
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .url(YoutubeListener.SUBSCRIBE_URL + "?" + strParams).build();
+            .url(YoutubeListenerPubSubHubbub.SUBSCRIBE_URL + "?" + strParams).build();
         
         HTTP_CLIENT.newCall(request).enqueue(new Callback() {
             @Override

@@ -14,7 +14,7 @@ import io.github.darealturtywurty.superturtybot.modules.AutoModerator;
 import io.github.darealturtywurty.superturtybot.modules.StarboardManager;
 import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
-import io.github.darealturtywurty.superturtybot.weblisteners.YoutubeListener;
+import io.github.darealturtywurty.superturtybot.weblisteners.YoutubeListenerPubSubHubbub;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
@@ -24,9 +24,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class TurtyBot {
-    private static YoutubeListener youtube = null;
+    private static YoutubeListenerPubSubHubbub youtube = null;
 
-    public static YoutubeListener getYoutube() {
+    public static YoutubeListenerPubSubHubbub getYoutube() {
         return TurtyBot.youtube;
     }
 
@@ -40,7 +40,7 @@ public class TurtyBot {
         loadRegisterers();
     }
     
-    public static void setYoutubeListener(YoutubeListener listener) {
+    public static void setYoutubeListener(YoutubeListenerPubSubHubbub listener) {
         if (TurtyBot.youtube != null)
             return;
 
