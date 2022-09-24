@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import org.bson.conversions.Bson;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -82,36 +84,61 @@ public class YoutubeListener {
         final Optional<YoutubeNotifier> optional = getYoutubeNotifier(guildId);
         if (optional.isEmpty())
             return;
+            
+        // final String callbackURL = CALLBACK_URL.formatted(getIP().orElseThrow());
+        // final String topicURL = TOPIC_URL.formatted(channelId);
+        // System.out.println(callbackURL);
+        // System.out.println(topicURL);
         
-        final String callbackURL = CALLBACK_URL.formatted(getIP().orElseThrow());
-        final String topicURL = TOPIC_URL.formatted(channelId);
-        System.out.println(callbackURL);
-        System.out.println(topicURL);
-
-        final Map<String, String> params = Map.of("hub.callback", callbackURL, "hub.topic", topicURL, "hub.mode",
+        // final Map<String, String> params = Map.of("hub.callback", callbackURL, "hub.topic", topicURL, "hub.mode",
+        // unsubscribe ? "unsubscribe" : "subscribe", "hub.verify", "sync");
+        //
+        // final List<String> listParams = params.entrySet().stream().map(entry -> entry.getKey() + "=" +
+        // entry.getValue())
+        // .toList();
+        // final String strParams = String.join("&", listParams);
+        // final Request request = new Request.Builder().method("POST", RequestBody.create(new byte[0]))
+        // .header("Content-Type", "application/x-www-form-urlencoded")
+        // .url(YoutubeListener.SUBSCRIBE_URL + "?" + strParams).build();
+        // Constants.LOGGER.warn(YoutubeListener.SUBSCRIBE_URL + "?" + strParams);
+        //
+        // HTTP_CLIENT.newCall(request).enqueue(new Callback() {
+        // @Override
+        // public void onFailure(Call call, IOException exception) {
+        // throw new IllegalStateException("An error has occured " + (unsubscribe ? "unsubcribing" : "subscribing")
+        // + " channel ID: " + channelId, exception);
+        // }
+        //
+        // @Override
+        // public void onResponse(Call call, Response response) throws IOException {
+        // if (!response.isSuccessful())
+        // throw new IOException("Unexpected code " + response.code());
+        // }
+        // });
+        
+        final var params = Map.of("hub.callback", "http:// + " + getIP().orElse("0.0.0.0") + ":8912/youtube",
+            "hub.topic", "https://www.youtube.com/xml/feeds/videos.xml?channel_id=" + channelId, "hub.mode",
             unsubscribe ? "unsubscribe" : "subscribe", "hub.verify", "sync");
         
-        final List<String> listParams = params.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
-            .toList();
-        final String strParams = String.join("&", listParams);
-        final Request request = new Request.Builder().method("POST", RequestBody.create(new byte[0]))
+        HTTP_CLIENT.newCall(new Request.Builder().method("POST", RequestBody.create(new byte[0]))
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .url(YoutubeListener.SUBSCRIBE_URL + "?" + strParams).build();
-        Constants.LOGGER.warn(YoutubeListener.SUBSCRIBE_URL + "?" + strParams);
+            .url("https://pubsubhubbub.appspot.com/subscribe?" + String.join("&", params.entrySet().stream()
+                .map(it -> (it.getKey() + "=" + URLEncoder.encode(it.getValue(), StandardCharsets.UTF_8))).toList()))
+            .build()).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+                    throw new IllegalStateException("An error has occured "
+                        + (unsubscribe ? "unsubcribing" : "subscribing") + " channel ID: " + channelId, exception);
+                }
+                
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (!response.isSuccessful())
+                        throw new IOException("Unexpected code " + response.code());
+                    
+                }
+            });
         
-        HTTP_CLIENT.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException exception) {
-                throw new IllegalStateException("An error has occured " + (unsubscribe ? "unsubcribing" : "subscribing")
-                    + " channel ID: " + channelId, exception);
-            }
-            
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful())
-                    throw new IOException("Unexpected code " + response.code());
-            }
-        });
     }
     
     private void createServer(JDA jda) {
