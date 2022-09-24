@@ -128,8 +128,10 @@ public class YoutubeListener {
         app.post("/youtube", context -> {
             final Map<String, List<String>> params = context.queryParamMap();
             params.forEach((key, val) -> Constants.LOGGER.warn(key + "=" + String.join(",", val)));
+            Constants.LOGGER.warn("bruh");
 
             if (params.containsKey("hub.challenge")) {
+                Constants.LOGGER.warn("bruh2");
                 final byte[] response = params.get("hub.challenge").get(0).getBytes(StandardCharsets.UTF_8);
                 context.res.setStatus(HttpURLConnection.HTTP_OK);
                 context.result(response);
