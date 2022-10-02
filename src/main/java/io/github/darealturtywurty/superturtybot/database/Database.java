@@ -22,6 +22,7 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Level
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotifier;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
@@ -39,6 +40,7 @@ public class Database {
     public final MongoCollection<GuildConfig> guildConfig;
     public final MongoCollection<UserConfig> userConfig;
     public final MongoCollection<YoutubeNotifier> youtubeNotifier;
+    public final MongoCollection<TwitchNotifier> twitchNotifier;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -60,6 +62,7 @@ public class Database {
         this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
         this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
+        this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
         
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -78,6 +81,7 @@ public class Database {
         this.userConfig.createIndex(guildUserIndex);
         this.youtubeNotifier
             .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
+        this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
     }
     
     public static Database getDatabase() {

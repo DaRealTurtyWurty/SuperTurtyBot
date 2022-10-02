@@ -129,6 +129,10 @@ public final class Environment {
     public String spotifySecret() {
         return getString("SPOTIFY_CLIENT_SECRET");
     }
+
+    public String twitchOAuthToken() {
+        return getString("TWITCH_OAUTH_TOKEN");
+    }
     
     public String urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
