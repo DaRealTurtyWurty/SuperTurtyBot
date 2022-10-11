@@ -9,9 +9,9 @@ import io.github.darealturtywurty.superturtybot.Environment;
 import io.github.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class AutoModerator extends ListenerAdapter {
@@ -19,32 +19,32 @@ public class AutoModerator extends ListenerAdapter {
         .compile("(https?:\\/\\/)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com\\/invite)\\/[^\s\\/]+?(?=\b)");
     public static final AutoModerator INSTANCE = new AutoModerator();
     public static final Set<String> SCAM_DOMAINS = new HashSet<>();
-
+    
     private AutoModerator() {
     }
-
+    
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage()
             || event.getAuthor().isSystem())
             return;
-
+        
         // amongusDetection(event.getMessage());
         discordInvites(event.getMessage());
         // scamDetection(event.getMessage());
     }
-
+    
     @Override
     public void onMessageUpdate(MessageUpdateEvent event) {
         if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage()
             || event.getAuthor().isSystem() || event.getMember().isOwner())
             return;
-
+        
         // amongusDetection(event.getMessage());
         discordInvites(event.getMessage());
         // scamDetection(event.getMessage());
     }
-
+    
     @Override
     public void onReady(ReadyEvent event) {
         /*
@@ -58,7 +58,7 @@ public class AutoModerator extends ListenerAdapter {
          * exception.getMessage()); }
          */
     }
-
+    
     // TODO: Fix dumpy URL and also cooldown it
     private void amongusDetection(final Message message) {
         final User user = message.getAuthor();
@@ -69,7 +69,7 @@ public class AutoModerator extends ListenerAdapter {
             message.reply(Constants.BEAN_DUMPY_URL).queue();
         }
     }
-
+    
     private void discordInvites(Message message) {
         if (INVITE_REGEX.matcher(message.getContentRaw()).find()) {
             message.delete()
@@ -78,7 +78,7 @@ public class AutoModerator extends ListenerAdapter {
                     .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
         }
     }
-
+    
     private void scamDetection(Message message) {
         final String content = message.getContentRaw().toLowerCase().trim().replace("https://", "")
             .replace("http://", "").replace("www.", "").replace("/", "");
@@ -96,7 +96,7 @@ public class AutoModerator extends ListenerAdapter {
                 }
             }
         }
-
+        
         for (final String part : parts) {
             if (SCAM_DOMAINS.contains(part)) {
                 message.delete().queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention()

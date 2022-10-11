@@ -13,9 +13,8 @@ import org.jetbrains.annotations.Nullable;
 
 import com.codepoetics.ambivalence.Either;
 import com.dunctebot.sourcemanagers.DuncteBotSources;
-import com.github.topislavalinkplugins.topissourcemanagers.applemusic.AppleMusicSourceManager;
-import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
-import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager;
+import com.github.topisenpai.lavasrc.applemusic.AppleMusicSourceManager;
+import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -43,11 +42,8 @@ public final class AudioManager {
         AudioSourceManagers.registerLocalSource(AUDIO_MANAGER);
 
         // Spotify
-        final var spotifyConfig = new SpotifyConfig();
-        spotifyConfig.setClientId(Environment.INSTANCE.spotifyID());
-        spotifyConfig.setClientSecret(Environment.INSTANCE.spotifySecret());
-        spotifyConfig.setCountryCode("US");
-        AUDIO_MANAGER.registerSourceManager(new SpotifySourceManager(null, spotifyConfig, AUDIO_MANAGER));
+        AUDIO_MANAGER.registerSourceManager(new SpotifySourceManager(null, Environment.INSTANCE.spotifyID(),
+            Environment.INSTANCE.spotifySecret(), "US", AUDIO_MANAGER));
 
         // Apple Music
         AUDIO_MANAGER.registerSourceManager(new AppleMusicSourceManager(null, "US", AUDIO_MANAGER));
@@ -139,7 +135,7 @@ public final class AudioManager {
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
                 playlist.getTracks().forEach(track -> track.setUserData(user.getIdLong()));
-                
+
                 if (toPlay.startsWith("ytsearch:")) {
                     manager.musicScheduler.queue(playlist.getTracks().get(0));
 
@@ -188,7 +184,7 @@ public final class AudioManager {
             public void trackLoaded(AudioTrack track) {
                 manager.musicScheduler.queue(track);
                 track.setUserData(user.getIdLong());
-                
+
                 final AudioTrack nowPlaying = manager.musicScheduler.getCurrentlyPlaying();
                 if (nowPlaying.equals(track)) {
                     manager.musicScheduler.setAudioChannel(audioChannel);
