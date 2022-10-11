@@ -61,7 +61,7 @@ dependencies {
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
     implementation group: "com.object-refinery", name: "orsoncharts", version: "1.7" 
     
-    implementation group: "org.graalvm.js", name: "js", version: "22.2.0"
+    implementation group: "org.graalvm.js", name: "js", version: "22.2.0.1"
     implementation group: "com.codepoetics", name: "ambivalence", version: "0.2"
     
     implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-alpha.21"
