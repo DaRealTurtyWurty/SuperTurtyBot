@@ -20,6 +20,7 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Guild
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
+import io.github.darealturtywurty.superturtybot.database.pojos.collections.SteamNotifier;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotifier;
@@ -29,7 +30,7 @@ import io.github.darealturtywurty.superturtybot.database.pojos.collections.Youtu
 
 public class Database {
     private static final Database DATABASE = new Database();
-    
+
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
     public final MongoCollection<Suggestion> suggestions;
@@ -41,17 +42,18 @@ public class Database {
     public final MongoCollection<UserConfig> userConfig;
     public final MongoCollection<YoutubeNotifier> youtubeNotifier;
     public final MongoCollection<TwitchNotifier> twitchNotifier;
-
+    public final MongoCollection<SteamNotifier> steamNotifier;
+    
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
         final CodecRegistry codecRegistry = CodecRegistries
             .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
-        
+
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
         final MongoDatabase database = client.getDatabase("TurtyBot");
-        
+
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
         this.suggestions = database.getCollection("suggestions", Suggestion.class);
@@ -63,13 +65,14 @@ public class Database {
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
         this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
         this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
-        
+        this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
+
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
         final Bson channelIndex = Indexes.descending("channel");
         final Bson messageIndex = Indexes.descending("message");
         final Bson guildUserIndex = Indexes.compoundIndex(guildIndex, userIndex);
-
+        
         this.levelling.createIndex(guildUserIndex);
         this.counting.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("users")));
         this.suggestions.createIndex(guildUserIndex);
@@ -82,12 +85,13 @@ public class Database {
         this.youtubeNotifier
             .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
         this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
+        this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
     }
-    
+
     public static Database getDatabase() {
         return DATABASE;
     }
-    
+
     private static MongoClient connect(CodecRegistry codec) {
         final ConnectionString connectionString = new ConnectionString(
             "mongodb+srv://" + Environment.INSTANCE.mongoUsername() + ":" + Environment.INSTANCE.mongoPassword()

@@ -1,4 +1,4 @@
-package io.github.darealturtywurty.superturtybot.weblisteners;
+package io.github.darealturtywurty.superturtybot.weblisteners.social;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

@@ -83,23 +83,23 @@ import io.github.darealturtywurty.superturtybot.commands.util.CurseforgeCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.GithubRepositoryCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.HighlightCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.MojangStatusCommand;
+import io.github.darealturtywurty.superturtybot.commands.util.NotifierCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.PollCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.RolesCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.ServerInfoCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.StrawpollCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.StrawpollResultsCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.TopicCommand;
-import io.github.darealturtywurty.superturtybot.commands.util.TwitchNotificationsCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.UserInfoCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.WouldYouRatherCommand;
-import io.github.darealturtywurty.superturtybot.commands.util.YoutubeNotificationsCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSuggestionCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import io.github.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import io.github.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-import io.github.darealturtywurty.superturtybot.weblisteners.TwitchListener;
-import io.github.darealturtywurty.superturtybot.weblisteners.YouTubeListener;
+import io.github.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
+import io.github.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
+import io.github.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -133,15 +133,16 @@ public class CommandHook extends ListenerAdapter {
 
         printCommandList(event.getJDA(), this.commands);
         
-        // if (TurtyBot.getYoutube() == null) {
-        // TurtyBot.setYoutubeListener(new YoutubeListenerPubSubHubbub(event.getJDA()));
-        // }
         if (!YouTubeListener.isRunning()) {
             YouTubeListener.runExecutor(event.getJDA());
         }
 
         if (!TwitchListener.isInitialized()) {
             TwitchListener.initialize(event.getJDA());
+        }
+        
+        if (!SteamListener.isRunning()) {
+            SteamListener.runExecutor(event.getJDA());
         }
     }
 
@@ -242,8 +243,7 @@ public class CommandHook extends ListenerAdapter {
         // cmds.add(new RoleSelectionCommand());
         cmds.add(new TopicCommand());
         cmds.add(new WouldYouRatherCommand());
-        cmds.add(new YoutubeNotificationsCommand());
-        cmds.add(new TwitchNotificationsCommand());
+        cmds.add(new NotifierCommand());
 
         // Moderation
         cmds.add(new BanCommand());

@@ -1,4 +1,4 @@
-package io.github.darealturtywurty.superturtybot.weblisteners;
+package io.github.darealturtywurty.superturtybot.weblisteners.social;
 
 import java.io.IOException;
 import java.io.InputStream;
