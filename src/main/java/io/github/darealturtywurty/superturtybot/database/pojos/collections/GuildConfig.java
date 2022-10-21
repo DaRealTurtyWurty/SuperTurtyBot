@@ -1,5 +1,10 @@
 package io.github.darealturtywurty.superturtybot.database.pojos.collections;
 
+import java.util.List;
+import java.util.stream.Stream;
+
+import com.google.common.primitives.Longs;
+
 public class GuildConfig {
     private long guild;
 
@@ -28,6 +33,10 @@ public class GuildConfig {
     private boolean hasLevelUpChannel;
     private long levelUpMessageChannel;
     private boolean shouldEmbedLevelUpMessage;
+
+    // Misc
+    private boolean shouldModeratorsJoinThreads;
+    private String autoThreadChannels;
 
     public GuildConfig() {
         this(0L);
@@ -61,16 +70,24 @@ public class GuildConfig {
         this.hasLevelUpChannel = false;
         this.levelUpMessageChannel = 0L;
         this.shouldEmbedLevelUpMessage = true;
+        
+        // Misc
+        this.shouldModeratorsJoinThreads = true;
+        this.autoThreadChannels = "";
     }
-    
+
     public boolean areLevelUpMessagesDisabled() {
         return this.disableLevelUpMessages;
+    }
+
+    public String getAutoThreadChannels() {
+        return this.autoThreadChannels;
     }
     
     public String getDisabledLevellingChannels() {
         return this.disabledLevellingChannels;
     }
-
+    
     public long getGuild() {
         return this.guild;
     }
@@ -106,7 +123,7 @@ public class GuildConfig {
     public long getModLogging() {
         return this.modLogging;
     }
-    
+
     public String getShowcaseChannels() {
         return this.showcaseChannels;
     }
@@ -130,7 +147,7 @@ public class GuildConfig {
     public boolean isBotStarsCount() {
         return this.botStarsCount;
     }
-
+    
     public boolean isLevellingEnabled() {
         return this.levellingEnabled;
     }
@@ -141,6 +158,10 @@ public class GuildConfig {
 
     public boolean isStarboardMediaOnly() {
         return this.starboardMediaOnly;
+    }
+
+    public void setAutoThreadChannels(String autoThreadChannels) {
+        this.autoThreadChannels = autoThreadChannels;
     }
 
     public void setBotStarsCount(boolean botStarsCount) {
@@ -203,6 +224,10 @@ public class GuildConfig {
         this.shouldEmbedLevelUpMessage = shouldEmbedLevelUpMessage;
     }
     
+    public void setShouldModeratorsJoinThreads(boolean shouldModeratorsJoinThreads) {
+        this.shouldModeratorsJoinThreads = shouldModeratorsJoinThreads;
+    }
+    
     public void setShowcaseChannels(String showcaseChannels) {
         this.showcaseChannels = showcaseChannels;
     }
@@ -218,16 +243,24 @@ public class GuildConfig {
     public void setStarboardMediaOnly(boolean starboardMediaOnly) {
         this.starboardMediaOnly = starboardMediaOnly;
     }
-    
+
     public void setStarEmoji(String starEmoji) {
         this.starEmoji = starEmoji;
     }
-
+    
     public void setSuggestions(long suggestions) {
         this.suggestions = suggestions;
     }
-    
+
     public boolean shouldEmbedLevelUpMessage() {
         return this.shouldEmbedLevelUpMessage;
+    }
+    
+    public boolean shouldModeratorsJoinThreads() {
+        return this.shouldModeratorsJoinThreads;
+    }
+
+    public static List<Long> getChannels(String str) {
+        return Stream.of(str.split("[\s;]")).map(Longs::tryParse).toList();
     }
 }

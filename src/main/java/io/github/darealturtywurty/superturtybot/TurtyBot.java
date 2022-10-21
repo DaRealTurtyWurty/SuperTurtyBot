@@ -12,6 +12,7 @@ import io.github.darealturtywurty.superturtybot.core.command.CommandHook;
 import io.github.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import io.github.darealturtywurty.superturtybot.modules.AutoModerator;
 import io.github.darealturtywurty.superturtybot.modules.StarboardManager;
+import io.github.darealturtywurty.superturtybot.modules.ThreadManager;
 import io.github.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import io.github.darealturtywurty.superturtybot.registry.Registerer;
 import net.dv8tion.jda.api.JDABuilder;
@@ -78,18 +79,20 @@ public class TurtyBot {
         
         // Add the starboard manager so that the bot can listen for messages in showcases and respond to reactions
         builder.addEventListeners(StarboardManager.INSTANCE);
+        
+        // Add the thread manager so that we can create threads automatically and also add moderators to threads
+        builder.addEventListeners(ThreadManager.INSTANCE);
     }
     
-    @SuppressWarnings("deprecation")
     private static void loadRegisterers() {
         final var reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(""))
             .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
             .filterInputsBy(new FilterBuilder().includePackage("io")));
         reflections.getTypesAnnotatedWith(Registerer.class).forEach(clazz -> {
             try {
-                clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
+                clazz.getDeclaredConstructor().newInstance();
+            } catch (final Exception exception) {
+                exception.printStackTrace();
             }
         });
     }
