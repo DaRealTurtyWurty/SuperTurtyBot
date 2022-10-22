@@ -44,18 +44,18 @@ public class SteamListener {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final SteamWebApiClient CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(
         Environment.INSTANCE.steamKey()).build();
-    private static final String APP_DETAILS_URL = "https://store.steampowered.com/api/appdetails?appids=%s";
-
+    private static final String APP_DETAILS_URL = "https://store.steampowered.com/api/appdetails?appids=%d";
+    
     public static boolean isRunning() {
         return IS_RUNNING.get();
     }
-    
+
     public static void runExecutor(JDA jda) {
         if (IS_RUNNING.get())
             return;
-        
+
         IS_RUNNING.set(true);
-        
+
         EXECUTOR.scheduleAtFixedRate(() -> {
             final Map<Integer, List<SteamNotifier>> appGuildMap = new HashMap<>();
             Database.getDatabase().steamNotifier.find().forEach(notifier -> {
@@ -67,18 +67,18 @@ public class SteamListener {
                 } else {
                     notifiers = appGuildMap.get(appId);
                 }
-                
+
                 notifiers.add(notifier);
             });
-            
+
             for (final Entry<Integer, List<SteamNotifier>> entry : appGuildMap.entrySet()) {
                 final int appId = entry.getKey();
-                
+
                 final List<SteamNotifier> notifiers = entry.getValue();
                 if (notifiers.isEmpty()) {
                     continue;
                 }
-                
+
                 final GetNewsForAppRequest request = SteamWebApiRequestFactory.createGetNewsForAppRequest(appId, 1,
                     MessageEmbed.DESCRIPTION_MAX_LENGTH);
                 try {
@@ -103,16 +103,16 @@ public class SteamListener {
             }
         }, 0, 30, TimeUnit.MINUTES);
     }
-    
+
     private static SteamAppNews constructPojo(Newsitem news) {
         return new SteamAppNews(news.getAuthor(), news.getContents(), news.getDate(), news.getFeedlabel(),
             news.getFeedname(), news.getGid(), news.getIsExternalUrl(), news.getTitle(), news.getUrl(),
             news.getAdditionalProperties());
     }
-    
+
     private static EmbedBuilder getFormattedChanges(SteamAppNews original, SteamAppNews current) {
         final var embed = new EmbedBuilder();
-        
+
         class Utils {
             void appendChange(String name, Function<SteamAppNews, String> str) {
                 embed.addField(name,
@@ -121,30 +121,30 @@ public class SteamListener {
                         + str.apply(current) + "`\n",
                     false);
             }
-            
+
             void compareAndAdd(String name, Function<SteamAppNews, String> str) {
                 if (compareData(str)) {
                     appendChange(name, str);
                 }
             }
-            
+
             boolean compareData(Function<SteamAppNews, String> str) {
                 return !str.apply(original).equals(str.apply(current));
             }
-            
+
             String getEmojiForChange(String old, String current) {
                 if (old.isBlank() && !current.isBlank())
                     return "🟩";
-                
+
                 if (current.isBlank() && !old.isBlank())
                     return "🟥";
-                
+
                 return "🟨";
             }
         }
-        
+
         final var utils = new Utils();
-        
+
         utils.compareAndAdd("Title", SteamAppNews::getTitle);
         utils.compareAndAdd("URL", SteamAppNews::getUrl);
         utils.compareAndAdd("Author", SteamAppNews::getAuthor);
@@ -153,10 +153,10 @@ public class SteamListener {
         utils.compareAndAdd("Feed Label", SteamAppNews::getFeedlabel);
         utils.compareAndAdd("Feed Name", SteamAppNews::getFeedname);
         utils.compareAndAdd("Group ID", SteamAppNews::getGid);
-        
+
         return embed;
     }
-
+    
     private static Optional<String> getGameBanner(int appId) {
         try {
             final URLConnection connection = new URL(APP_DETAILS_URL.formatted(appId)).openConnection();
@@ -169,7 +169,7 @@ public class SteamListener {
             return Optional.empty();
         }
     }
-
+    
     private static Optional<String> getGameName(int appId) {
         try {
             final URLConnection connection = new URL(APP_DETAILS_URL.formatted(appId)).openConnection();
@@ -182,7 +182,7 @@ public class SteamListener {
             return Optional.empty();
         }
     }
-
+    
     private static boolean isNew(SteamAppNews original, SteamAppNews current) {
         return !original.getAuthor().equals(current.getAuthor())
             || !original.getContents().equals(current.getContents()) || original.getDate() != current.getDate()
@@ -192,7 +192,7 @@ public class SteamListener {
             || !original.getUrl().equals(current.getUrl())
             || !original.getAdditionalProperties().equals(current.getAdditionalProperties());
     }
-    
+
     private static void sendUpdate(JDA jda, SteamNotifier notifier, SteamAppNews original, SteamAppNews current,
         EmbedBuilder changed) {
         final Guild guild = jda.getGuildById(notifier.getGuild());
@@ -200,13 +200,13 @@ public class SteamListener {
             Database.getDatabase().steamNotifier.deleteMany(Filters.eq("guild", notifier.getGuild()));
             return;
         }
-        
+
         final TextChannel channel = guild.getTextChannelById(notifier.getChannel());
         if (channel == null) {
             Database.getDatabase().steamNotifier.deleteMany(Filters.eq("channel", notifier.getGuild()));
             return;
         }
-
+        
         final String name = getGameName(notifier.getAppId()).orElse("undefined");
         final String thumbnailURL = getGameBanner(notifier.getAppId()).orElse(null);
         changed.setTitle(name, original.getUrl().isBlank() ? null : original.getUrl());
