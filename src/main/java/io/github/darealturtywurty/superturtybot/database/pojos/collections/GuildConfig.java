@@ -7,11 +7,11 @@ import com.google.common.primitives.Longs;
 
 public class GuildConfig {
     private long guild;
-
+    
     // Channels
     private long modLogging;
     private long suggestions;
-    
+
     // Showcases
     private long starboard;
     private boolean starboardEnabled;
@@ -20,7 +20,7 @@ public class GuildConfig {
     private String showcaseChannels;
     private boolean starboardMediaOnly;
     private String starEmoji;
-    
+
     // Levelling
     private String levelRoles;
     private long levelCooldown;
@@ -33,22 +33,23 @@ public class GuildConfig {
     private boolean hasLevelUpChannel;
     private long levelUpMessageChannel;
     private boolean shouldEmbedLevelUpMessage;
-
+    
     // Misc
     private boolean shouldModeratorsJoinThreads;
     private String autoThreadChannels;
-
+    private boolean shouldCreateGists;
+    
     public GuildConfig() {
         this(0L);
     }
-
+    
     public GuildConfig(long guildId) {
         this.guild = guildId;
-        
+
         // Channels
         this.modLogging = 0L;
         this.suggestions = 0L;
-        
+
         // Showcases
         this.starboard = 0L;
         this.starboardEnabled = false;
@@ -57,7 +58,7 @@ public class GuildConfig {
         this.showcaseChannels = "";
         this.starboardMediaOnly = true;
         this.starEmoji = "⭐";
-        
+
         // Levelling
         this.levelRoles = "";
         this.levelCooldown = 25000L;
@@ -70,10 +71,11 @@ public class GuildConfig {
         this.hasLevelUpChannel = false;
         this.levelUpMessageChannel = 0L;
         this.shouldEmbedLevelUpMessage = true;
-        
+
         // Misc
         this.shouldModeratorsJoinThreads = true;
         this.autoThreadChannels = "";
+        this.shouldCreateGists = true;
     }
 
     public boolean areLevelUpMessagesDisabled() {
@@ -99,31 +101,31 @@ public class GuildConfig {
     public int getLevellingItemChance() {
         return this.levellingItemChance;
     }
-
+    
     public String getLevelRoles() {
         return this.levelRoles;
     }
-
+    
     public long getLevelUpMessageChannel() {
         return this.levelUpMessageChannel;
     }
-
+    
     public int getMaxXP() {
         return this.maxXP;
     }
-
+    
     public int getMinimumStars() {
         return this.minimumStars;
     }
-
+    
     public int getMinXP() {
         return this.minXP;
     }
-
+    
     public long getModLogging() {
         return this.modLogging;
     }
-
+    
     public String getShowcaseChannels() {
         return this.showcaseChannels;
     }
@@ -135,35 +137,39 @@ public class GuildConfig {
     public String getStarEmoji() {
         return this.starEmoji;
     }
-    
+
     public long getSuggestions() {
         return this.suggestions;
     }
-    
+
     public boolean hasLevelUpChannel() {
         return this.hasLevelUpChannel;
     }
-    
+
     public boolean isBotStarsCount() {
         return this.botStarsCount;
     }
-    
+
     public boolean isLevellingEnabled() {
         return this.levellingEnabled;
+    }
+
+    public boolean shouldCreateGists() {
+        return this.shouldCreateGists;
     }
 
     public boolean isStarboardEnabled() {
         return this.starboardEnabled;
     }
-
+    
     public boolean isStarboardMediaOnly() {
         return this.starboardMediaOnly;
     }
-
+    
     public void setAutoThreadChannels(String autoThreadChannels) {
         this.autoThreadChannels = autoThreadChannels;
     }
-
+    
     public void setBotStarsCount(boolean botStarsCount) {
         this.botStarsCount = botStarsCount;
     }
@@ -171,7 +177,7 @@ public class GuildConfig {
     public void setDisabledLevellingChannels(String disabledLevellingChannels) {
         this.disabledLevellingChannels = disabledLevellingChannels;
     }
-    
+
     public void setDisableLevelUpMessages(boolean disableLevelUpMessages) {
         this.disableLevelUpMessages = disableLevelUpMessages;
     }
@@ -179,15 +185,15 @@ public class GuildConfig {
     public void setGuild(long guild) {
         this.guild = guild;
     }
-
+    
     public void setHasLevelUpChannel(boolean hasLevelUpChannel) {
         this.hasLevelUpChannel = hasLevelUpChannel;
     }
-
+    
     public void setLevelCooldown(long levelCooldown) {
         this.levelCooldown = levelCooldown;
     }
-
+    
     public void setLevellingEnabled(boolean levellingEnabled) {
         this.levellingEnabled = levellingEnabled;
     }
@@ -195,23 +201,23 @@ public class GuildConfig {
     public void setLevellingItemChance(int levellingItemChance) {
         this.levellingItemChance = levellingItemChance;
     }
-    
+
     public void setLevelRoles(String levelRoles) {
         this.levelRoles = levelRoles;
     }
-    
+
     public void setLevelUpMessageChannel(long levelUpMessageChannel) {
         this.levelUpMessageChannel = levelUpMessageChannel;
     }
-    
+
     public void setMaxXP(int maxXP) {
         this.maxXP = maxXP;
     }
-    
+
     public void setMinimumStars(int minimumStars) {
         this.minimumStars = minimumStars;
     }
-    
+
     public void setMinXP(int minXP) {
         this.minXP = minXP;
     }
@@ -219,47 +225,51 @@ public class GuildConfig {
     public void setModLogging(long modLogging) {
         this.modLogging = modLogging;
     }
-
+    
+    public void setShouldCreateGists(boolean shouldCreateGists) {
+        this.shouldCreateGists = shouldCreateGists;
+    }
+    
     public void setShouldEmbedLevelUpMessage(boolean shouldEmbedLevelUpMessage) {
         this.shouldEmbedLevelUpMessage = shouldEmbedLevelUpMessage;
     }
-    
+
     public void setShouldModeratorsJoinThreads(boolean shouldModeratorsJoinThreads) {
         this.shouldModeratorsJoinThreads = shouldModeratorsJoinThreads;
     }
-    
+
     public void setShowcaseChannels(String showcaseChannels) {
         this.showcaseChannels = showcaseChannels;
     }
-    
+
     public void setStarboard(long starboard) {
         this.starboard = starboard;
     }
-    
+
     public void setStarboardEnabled(boolean starboardEnabled) {
         this.starboardEnabled = starboardEnabled;
     }
-    
+
     public void setStarboardMediaOnly(boolean starboardMediaOnly) {
         this.starboardMediaOnly = starboardMediaOnly;
     }
-
+    
     public void setStarEmoji(String starEmoji) {
         this.starEmoji = starEmoji;
     }
-    
+
     public void setSuggestions(long suggestions) {
         this.suggestions = suggestions;
     }
-
+    
     public boolean shouldEmbedLevelUpMessage() {
         return this.shouldEmbedLevelUpMessage;
     }
-    
+
     public boolean shouldModeratorsJoinThreads() {
         return this.shouldModeratorsJoinThreads;
     }
-
+    
     public static List<Long> getChannels(String str) {
         return Stream.of(str.split("[\s;]")).map(Longs::tryParse).toList();
     }
