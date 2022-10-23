@@ -20,3 +20,6 @@ bin
 
 # Ignore logs 
 *.log
+
+# Ignore temp
+*.txt
