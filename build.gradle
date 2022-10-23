@@ -79,7 +79,7 @@ dependencies {
 }
 
 application {
-    mainClass = "io.github.darealturtywurty.superturtybot.TurtyBot"
+    mainClass = "dev.darealturtywurty.superturtybot.TurtyBot"
 }
 
 jar {
@@ -87,7 +87,7 @@ jar {
         attributes(
             "Implementation-Title": "SuperTurtyBot",
             "Implementation-Version": "1.0-alpha",
-            "Main-Class": "io.github.darealturtywurty.superturtybot.TurtyBot"
+            "Main-Class": "dev.darealturtywurty.superturtybot.TurtyBot"
         )
     }
 }
