@@ -93,6 +93,8 @@ jar {
 }
 
 shadowJar {
+    zip64 true
+
     dependencies {
         exclude(dependency("junit:junit:4.13.2"))
     }
