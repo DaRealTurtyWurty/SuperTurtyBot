@@ -142,6 +142,22 @@ public final class Environment {
         return getString("TWITCH_OAUTH_TOKEN");
     }
     
+    public String twitterApiKey() {
+        return getString("TWITTER_API_KEY");
+    }
+
+    public String twitterAPIKeySecret() {
+        return getString("TWITTER_API_KEY_SECRET");
+    }
+    
+    public String twitterAppId() {
+        return getString("TWITTER_APP_ID");
+    }
+
+    public String twitterBearerToken() {
+        return getString("TWITTER_BEARER_TOKEN");
+    }
+
     public String urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
     }
