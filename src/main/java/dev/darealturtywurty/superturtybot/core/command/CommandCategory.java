@@ -1,8 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
-import java.util.Set;
-
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 public interface CommandCategory {
     CommandCategory CORE = create("Core", "🌍");
@@ -13,6 +13,7 @@ public interface CommandCategory {
     CommandCategory MUSIC = create("Music", "🎶");
     CommandCategory IMAGE = create("Image", "🖼️");
     CommandCategory LEVELLING = create("Levelling", "🔝");
+    CommandCategory ECONOMY = create("Economy", "💲");
     
     String getEmoji();
     
