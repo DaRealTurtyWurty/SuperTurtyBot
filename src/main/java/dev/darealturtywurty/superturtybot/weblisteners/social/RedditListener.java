@@ -10,6 +10,7 @@ import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
+// TODO: Have this actually work as a subscription
 public class RedditListener {
     private static final RssReader READER = new RssReader();
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
@@ -22,7 +23,10 @@ public class RedditListener {
 
         try {
             final Stream<Item> stream = READER.read("https://www.reddit.com/r/memes/new/.rss");
+            // TODO: Get from guild config
             final TextChannel channel = jda.getTextChannelById(1033381901530046574L);
+            if (channel == null)
+                return;
             stream.forEach(item -> channel.sendMessage(item.getTitle().orElse("no bitches")).queue());
         } catch (final IOException exception) {
             exception.printStackTrace();
