@@ -1,33 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import dev.darealturtywurty.superturtybot.commands.core.CommandListCommand;
-import dev.darealturtywurty.superturtybot.commands.core.EvalCommand;
-import dev.darealturtywurty.superturtybot.commands.core.HelpCommand;
-import dev.darealturtywurty.superturtybot.commands.core.PingCommand;
-import dev.darealturtywurty.superturtybot.commands.core.RestartCommand;
-import dev.darealturtywurty.superturtybot.commands.core.ShutdownCommand;
-import dev.darealturtywurty.superturtybot.commands.core.TagCommand;
+import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.AdviceCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.CoinFlipCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.EightBallCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.InternetRulesCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.MemeCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.MinecraftUserSkinCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.MinecraftUserUUIDCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.MinecraftUsernameCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.ProgrammingMemeCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.ReverseTextCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.UpsideDownTextCommand;
-import dev.darealturtywurty.superturtybot.commands.fun.UrbanDictionaryCommand;
+import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.HttpCatCommand;
 import dev.darealturtywurty.superturtybot.commands.image.HttpDogCommand;
 import dev.darealturtywurty.superturtybot.commands.image.ImageCommand;
@@ -35,65 +10,14 @@ import dev.darealturtywurty.superturtybot.commands.image.InspiroBotCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.XPInventoryCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.BeanCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.KickCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.PurgeCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.RemoveTimeoutCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.SlowmodeCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.TimeoutCommand;
-import dev.darealturtywurty.superturtybot.commands.moderation.UnbanCommand;
+import dev.darealturtywurty.superturtybot.commands.moderation.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
-import dev.darealturtywurty.superturtybot.commands.music.ClearCommand;
-import dev.darealturtywurty.superturtybot.commands.music.JoinCommand;
-import dev.darealturtywurty.superturtybot.commands.music.LeaveCommand;
-import dev.darealturtywurty.superturtybot.commands.music.LyricsCommand;
-import dev.darealturtywurty.superturtybot.commands.music.NowPlayingCommand;
-import dev.darealturtywurty.superturtybot.commands.music.PauseCommand;
-import dev.darealturtywurty.superturtybot.commands.music.PlayCommand;
-import dev.darealturtywurty.superturtybot.commands.music.QueueCommand;
-import dev.darealturtywurty.superturtybot.commands.music.RemoveCommand;
-import dev.darealturtywurty.superturtybot.commands.music.RemoveDuplicatesCommand;
-import dev.darealturtywurty.superturtybot.commands.music.ResumeCommand;
-import dev.darealturtywurty.superturtybot.commands.music.SearchCommand;
-import dev.darealturtywurty.superturtybot.commands.music.ShuffleCommand;
-import dev.darealturtywurty.superturtybot.commands.music.SkipCommand;
-import dev.darealturtywurty.superturtybot.commands.music.VolumeCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiAnalCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiAssCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiBoobjobCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiBoobsCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiFoxCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiKemonomimiCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiMidriffCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiNekoCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiTentacleCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiThighCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.HentaiYaoiCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.LoliCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommandList;
-import dev.darealturtywurty.superturtybot.commands.nsfw.OrgasmCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.Rule34Command;
-import dev.darealturtywurty.superturtybot.commands.util.BotInfoCommand;
-import dev.darealturtywurty.superturtybot.commands.util.CurseforgeCommand;
-import dev.darealturtywurty.superturtybot.commands.util.FactCommand;
-import dev.darealturtywurty.superturtybot.commands.util.GithubRepositoryCommand;
-import dev.darealturtywurty.superturtybot.commands.util.HighlightCommand;
-import dev.darealturtywurty.superturtybot.commands.util.MojangStatusCommand;
-import dev.darealturtywurty.superturtybot.commands.util.NotifierCommand;
-import dev.darealturtywurty.superturtybot.commands.util.PeriodicTableCommand;
-import dev.darealturtywurty.superturtybot.commands.util.PollCommand;
-import dev.darealturtywurty.superturtybot.commands.util.RolesCommand;
-import dev.darealturtywurty.superturtybot.commands.util.ServerInfoCommand;
-import dev.darealturtywurty.superturtybot.commands.util.StrawpollCommand;
-import dev.darealturtywurty.superturtybot.commands.util.StrawpollResultsCommand;
-import dev.darealturtywurty.superturtybot.commands.util.TopicCommand;
-import dev.darealturtywurty.superturtybot.commands.util.UserInfoCommand;
-import dev.darealturtywurty.superturtybot.commands.util.WouldYouRatherCommand;
+import dev.darealturtywurty.superturtybot.commands.music.*;
+import dev.darealturtywurty.superturtybot.commands.nsfw.*;
+import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
@@ -114,12 +38,16 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class CommandHook extends ListenerAdapter {
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
     
-    private Set<CoreCommand> commands = new HashSet<>();
+    private final Set<CoreCommand> commands = new HashSet<>();
     
     private CommandHook() {
     }
@@ -271,6 +199,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SlowmodeCommand());
         cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
+        cmds.add(new ReportCommand());
         
         // NSFW
         NSFWCommandList.addAll(cmds);

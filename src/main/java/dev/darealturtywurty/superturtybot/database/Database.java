@@ -1,10 +1,5 @@
 package dev.darealturtywurty.superturtybot.database;
 
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.conversions.Bson;
-
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -12,21 +7,13 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
-
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Counting;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.SteamNotifier;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotifier;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
+import org.bson.conversions.Bson;
 
 public class Database {
     private static final Database DATABASE = new Database();
@@ -43,7 +30,8 @@ public class Database {
     public final MongoCollection<YoutubeNotifier> youtubeNotifier;
     public final MongoCollection<TwitchNotifier> twitchNotifier;
     public final MongoCollection<SteamNotifier> steamNotifier;
-    
+    public MongoCollection<Report> reports;
+
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
@@ -66,6 +54,7 @@ public class Database {
         this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
         this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
+        this.reports = database.getCollection("reports", Report.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -86,6 +75,7 @@ public class Database {
             .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
         this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
         this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
+        this.reports.createIndex(guildIndex);
     }
 
     public static Database getDatabase() {

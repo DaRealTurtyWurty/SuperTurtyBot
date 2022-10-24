@@ -1,19 +1,10 @@
 package dev.darealturtywurty.superturtybot;
 
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
-
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
-import dev.darealturtywurty.superturtybot.modules.AutoModerator;
-import dev.darealturtywurty.superturtybot.modules.GistManager;
-import dev.darealturtywurty.superturtybot.modules.StarboardManager;
-import dev.darealturtywurty.superturtybot.modules.ThreadManager;
+import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,9 +14,13 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
 public class TurtyBot {
-
     public static void main(String[] args) throws InvalidTokenException {
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(),
             Environment.INSTANCE.loggingWebhookToken());
@@ -81,11 +76,14 @@ public class TurtyBot {
         // Add the starboard manager so that the bot can listen for messages in showcases and respond to reactions
         builder.addEventListeners(StarboardManager.INSTANCE);
 
-        // Add the thread manager so that we can create threads automatically and also add moderators to threads
+        // Add the thread manager so that the bot can create threads automatically and also add moderators to threads
         builder.addEventListeners(ThreadManager.INSTANCE);
 
-        // Add the gist manager so that turtybot can create gists for text files upon user adding reaction
+        // Add the gist manager so that the bot can create gists for text files upon user adding reaction
         builder.addEventListeners(GistManager.INSTANCE);
+
+        // Add the logging manager so that the bot can log messages to a discord channel
+        builder.addEventListeners(LoggingManager.INSTANCE);
     }
 
     private static void loadRegisterers() {
