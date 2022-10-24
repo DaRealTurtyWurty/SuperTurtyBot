@@ -67,4 +67,9 @@ public class ReportCommand extends CoreCommand {
                     false, true);
         });
     }
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
+    }
 }

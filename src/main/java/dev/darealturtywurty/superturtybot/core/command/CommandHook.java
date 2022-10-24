@@ -200,6 +200,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
         cmds.add(new ReportCommand());
+        cmds.add(new ReportsCommand());
         
         // NSFW
         NSFWCommandList.addAll(cmds);

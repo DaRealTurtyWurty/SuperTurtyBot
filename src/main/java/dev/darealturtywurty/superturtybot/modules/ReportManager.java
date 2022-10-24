@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class ReportManager {
@@ -37,5 +39,15 @@ public class ReportManager {
     public static String truncate(String str, int maxLength) {
         if (str == null || str.isBlank()) return str;
         return str.length() > maxLength ? str.substring(0, maxLength - 3) + "..." : str;
+    }
+
+    public static List<Report> getReports(Guild guild, User user) {
+        if (guild == null || user == null)
+            return List.of();
+
+        return Database.getDatabase().reports.find(
+                               Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("reported",
+                                       user.getIdLong())))
+                                             .into(new ArrayList<>());
     }
 }
