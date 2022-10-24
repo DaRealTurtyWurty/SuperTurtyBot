@@ -178,7 +178,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ConsiderSuggestionCommand());
         cmds.add(new MojangStatusCommand());
         cmds.add(new HighlightCommand());
-        // cmds.add(new RoleSelectionCommand());
+        cmds.add(new RoleSelectionCommand());
         cmds.add(new TopicCommand());
         cmds.add(new WouldYouRatherCommand());
         cmds.add(new NotifierCommand());
