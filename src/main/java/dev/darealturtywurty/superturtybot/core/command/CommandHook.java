@@ -246,7 +246,6 @@ public class CommandHook extends ListenerAdapter {
         
         // Fun
         cmds.add(new AdviceCommand());
-        // cmds.add(new AmongUsCommand());
         cmds.add(new CoinFlipCommand());
         cmds.add(new EightBallCommand());
         cmds.add(new InternetRulesCommand());
