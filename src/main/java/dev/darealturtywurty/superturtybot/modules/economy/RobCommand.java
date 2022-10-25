@@ -1,21 +1,9 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-
-import org.apache.commons.io.IOUtils;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -26,6 +14,16 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.io.IOUtils;
+
+import java.awt.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RobCommand extends EconomyCommand {
     private static final Responses RESPONSES;

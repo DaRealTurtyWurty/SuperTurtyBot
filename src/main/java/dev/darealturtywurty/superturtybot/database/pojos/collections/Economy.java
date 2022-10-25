@@ -7,6 +7,11 @@ public class Economy {
     private int wallet;
     private int bank;
     private long nextRobTime;
+    private long nextWorkTime;
+    private long nextDaily;
+    private long nextWeekly;
+    private long nextMonthly;
+    private long nextYearly;
     
     public Economy() {
         this(0, 0);
@@ -19,6 +24,11 @@ public class Economy {
         this.wallet = 0;
         this.bank = 0;
         this.nextRobTime = 0;
+        this.nextWorkTime = 0;
+        this.nextDaily = 0;
+        this.nextWeekly = 0;
+        this.nextMonthly = 0;
+        this.nextYearly = 0;
     }
     
     public void addBank(int amount) {
@@ -79,5 +89,45 @@ public class Economy {
 
     public void setWallet(int wallet) {
         this.wallet = wallet;
+    }
+
+    public void setNextWorkTime(long nextWorkTime) {
+        this.nextWorkTime = nextWorkTime;
+    }
+
+    public long getNextWorkTime() {
+        return this.nextWorkTime;
+    }
+
+    public long getNextDaily() {
+        return this.nextDaily;
+    }
+
+    public void setNextDaily(long nextDaily) {
+        this.nextDaily = nextDaily;
+    }
+
+    public long getNextWeekly() {
+        return this.nextWeekly;
+    }
+
+    public void setNextWeekly(long nextWeekly) {
+        this.nextWeekly = nextWeekly;
+    }
+
+    public long getNextMonthly() {
+        return this.nextMonthly;
+    }
+
+    public void setNextMonthly(long nextMonthly) {
+        this.nextMonthly = nextMonthly;
+    }
+
+    public long getNextYearly() {
+        return this.nextYearly;
+    }
+
+    public void setNextYearly(long nextYearly) {
+        this.nextYearly = nextYearly;
     }
 }
