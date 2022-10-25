@@ -29,7 +29,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class RobCommand extends EconomyCommand {
     private static final Responses RESPONSES;
-    
+
     static {
         JsonObject json;
         try {
@@ -39,53 +39,53 @@ public class RobCommand extends EconomyCommand {
         } catch (JsonSyntaxException | IOException exception) {
             throw new IllegalStateException("Unable to parse economy rob responses!", exception);
         }
-        
+
         final List<String> success = new ArrayList<>();
         final List<String> fail = new ArrayList<>();
-        
+
         json.getAsJsonArray("success").forEach(element -> success.add(element.getAsString()));
         json.getAsJsonArray("fail").forEach(element -> fail.add(element.getAsString()));
-        
+
         RESPONSES = new Responses(success, fail);
     }
-    
+
     public RobCommand() {
     }
-
+    
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to rob", true));
     }
-
+    
     @Override
     public String getDescription() {
         return "Robs a user of the money in their economy wallet.";
     }
-
+    
     @Override
     public String getHowToUse() {
         return "/rob [user]";
     }
-
+    
     @Override
     public String getName() {
         return "rob";
     }
-
+    
     @Override
     public String getRichName() {
         return "Rob";
     }
-
+    
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-
+        
         final Guild guild = event.getGuild();
-
+        
         final Economy account = EconomyManager.fetchAccount(guild, event.getUser());
         final long nextRobTime = account.getNextRobTime();
         if (nextRobTime > System.currentTimeMillis()) {
@@ -93,24 +93,24 @@ public class RobCommand extends EconomyCommand {
                 .formatted((nextRobTime - System.currentTimeMillis()) / 1000));
             return;
         }
-
+        
         final User user = event.getOption("user").getAsUser();
         if (!guild.isMember(user)) {
             reply(event, "❌ The user to rob must be in this server!", false, true);
             return;
         }
-        
+
         account.setNextRobTime(System.currentTimeMillis() + 60 * 120 * 1000);
         Database.getDatabase().economy.updateOne(
             Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
             Updates.set("nextRobTime", account.getNextRobTime()));
-
+        
         final Economy robAccount = EconomyManager.fetchAccount(guild, user);
         if (robAccount.getWallet() <= 0) {
             reply(event, "❌ Better luck next time, this user's wallet is empty!", false, true);
             return;
         }
-
+        
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
             final int robbedAmount = random.nextInt(1, robAccount.getWallet());
@@ -125,7 +125,7 @@ public class RobCommand extends EconomyCommand {
             account.removeWallet(fineAmount);
             robAccount.addWallet(fineAmount);
         }
-        
+
         Database.getDatabase().economy.updateOne(
             Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
             Updates.set("wallet", account.getWallet()));
@@ -133,18 +133,18 @@ public class RobCommand extends EconomyCommand {
             Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong())),
             Updates.set("wallet", robAccount.getWallet()));
     }
-    
+
     public static record Responses(List<String> success, List<String> fail) {
         public String getSuccess(User robber, User robbed, int amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                 .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", Integer.toString(amount)).replace("<>", "$");
         }
-
+        
         public String getFail(User robber, User robbed, int amount) {
             return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                 .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", Integer.toString(amount)).replace("<>", "$");
         }
     }
 }
