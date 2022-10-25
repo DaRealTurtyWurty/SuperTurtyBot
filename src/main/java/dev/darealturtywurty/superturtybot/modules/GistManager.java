@@ -44,7 +44,7 @@ public class GistManager extends ListenerAdapter {
         final Guild guild = event.getGuild();
         final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
             .first();
-        if (config == null || !config.shouldCreateGists())
+        if (config == null || !config.isShouldCreateGists())
             return;
         
         event.retrieveMessage().queue(message -> {
@@ -116,7 +116,7 @@ public class GistManager extends ListenerAdapter {
         final Guild guild = event.getGuild();
         final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
             .first();
-        if (config == null || !config.shouldCreateGists())
+        if (config == null || !config.isShouldCreateGists())
             return;
         
         final List<Attachment> attachments = event.getMessage().getAttachments();

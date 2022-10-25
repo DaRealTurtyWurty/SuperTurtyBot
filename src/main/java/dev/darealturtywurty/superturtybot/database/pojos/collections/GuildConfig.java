@@ -158,7 +158,7 @@ public class GuildConfig {
         this.logRoleDelete = true;
     }
 
-    public boolean areLevelUpMessagesDisabled() {
+    public boolean isDisableLevelUpMessages() {
         return this.disableLevelUpMessages;
     }
 
@@ -226,7 +226,7 @@ public class GuildConfig {
         return this.suggestions;
     }
 
-    public boolean hasLevelUpChannel() {
+    public boolean isHasLevelUpChannel() {
         return this.hasLevelUpChannel;
     }
 
@@ -538,11 +538,11 @@ public class GuildConfig {
         this.suggestions = suggestions;
     }
     
-    public boolean shouldCreateGists() {
+    public boolean isShouldCreateGists() {
         return this.shouldCreateGists;
     }
 
-    public boolean shouldEmbedLevelUpMessage() {
+    public boolean isShouldEmbedLevelUpMessage() {
         return this.shouldEmbedLevelUpMessage;
     }
     
@@ -599,7 +599,7 @@ public class GuildConfig {
         return false;
     }
 
-    public boolean shouldModeratorsJoinThreads() {
+    public boolean isShouldModeratorsJoinThreads() {
         return this.shouldModeratorsJoinThreads;
     }
     

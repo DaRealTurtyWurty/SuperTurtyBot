@@ -128,14 +128,14 @@ public final class LevellingManager extends ListenerAdapter {
              * "` rank card item! Use `/xpinventory` to view your inventory!"); }
              */
             
-            if (!config.areLevelUpMessagesDisabled()) {
+            if (!config.isDisableLevelUpMessages()) {
                 final var embed = new EmbedBuilder();
                 embed.setTimestamp(Instant.now());
                 embed.setDescription(description);
                 embed.setColor(Color.BLUE);
                 
-                if (!config.hasLevelUpChannel()) {
-                    if (config.shouldEmbedLevelUpMessage()) {
+                if (!config.isHasLevelUpChannel()) {
+                    if (config.isShouldEmbedLevelUpMessage()) {
                         event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
                     } else {
                         event.getMessage().reply(description).mentionRepliedUser(false).queue();
@@ -143,12 +143,12 @@ public final class LevellingManager extends ListenerAdapter {
                 } else {
                     final TextChannel channel = event.getJDA().getTextChannelById(config.getLevelUpMessageChannel());
                     if (channel == null) {
-                        if (config.shouldEmbedLevelUpMessage()) {
+                        if (config.isShouldEmbedLevelUpMessage()) {
                             event.getMessage().replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
                         } else {
                             event.getMessage().reply(description).mentionRepliedUser(false).queue();
                         }
-                    } else if (config.shouldEmbedLevelUpMessage()) {
+                    } else if (config.isShouldEmbedLevelUpMessage()) {
                         channel.sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
                     } else {
                         channel.sendMessage(description).mentionRepliedUser(false).queue();

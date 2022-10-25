@@ -31,7 +31,7 @@ public class ThreadManager extends ListenerAdapter {
         final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
             .first();
         
-        if (config == null || !config.shouldModeratorsJoinThreads())
+        if (config == null || !config.isShouldModeratorsJoinThreads())
             return;
         
         final Set<Member> moderators = new HashSet<>();
