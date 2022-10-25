@@ -12,6 +12,7 @@ public class Economy {
     private long nextWeekly;
     private long nextMonthly;
     private long nextYearly;
+    private long nextSexWork;
     
     public Economy() {
         this(0, 0);
@@ -29,6 +30,7 @@ public class Economy {
         this.nextWeekly = 0;
         this.nextMonthly = 0;
         this.nextYearly = 0;
+        this.nextSexWork = 0;
     }
     
     public void addBank(int amount) {
@@ -129,5 +131,13 @@ public class Economy {
 
     public void setNextYearly(long nextYearly) {
         this.nextYearly = nextYearly;
+    }
+
+    public long getNextSexWork() {
+        return this.nextSexWork;
+    }
+
+    public void setNextSexWork(long nextSexWork) {
+        this.nextSexWork = nextSexWork;
     }
 }

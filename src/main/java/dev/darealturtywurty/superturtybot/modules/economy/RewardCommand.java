@@ -52,7 +52,7 @@ public class RewardCommand extends EconomyCommand {
                 int dailyReward = 100;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) dailyReward += 50;
 
-                EconomyManager.addMoney(event.getGuild(), event.getUser(), dailyReward);
+                EconomyManager.addMoney(account, dailyReward, true);
                 account.setNextDaily(System.currentTimeMillis() + 86400000L);
                 EconomyManager.updateAccount(account);
                 reply(event, "✅ You claimed your daily reward of " + dailyReward + "!");
@@ -67,7 +67,7 @@ public class RewardCommand extends EconomyCommand {
                 int weeklyReward = 250;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) weeklyReward += 50;
 
-                EconomyManager.addMoney(event.getGuild(), event.getUser(), weeklyReward);
+                EconomyManager.addMoney(account, weeklyReward, true);
                 account.setNextWeekly(System.currentTimeMillis() + 8400000L * 27);
                 EconomyManager.updateAccount(account);
                 reply(event, "✅ You claimed your weekly reward of " + weeklyReward + "!");
@@ -83,7 +83,7 @@ public class RewardCommand extends EconomyCommand {
                 int monthlyReward = 500;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) monthlyReward += 50;
 
-                EconomyManager.addMoney(event.getGuild(), event.getUser(), monthlyReward);
+                EconomyManager.addMoney(account, monthlyReward, true);
                 account.setNextMonthly(System.currentTimeMillis() + 8400000L * 27 * 31);
                 EconomyManager.updateAccount(account);
                 reply(event, "✅ You claimed your monthly reward of " + monthlyReward + "!");
@@ -98,7 +98,7 @@ public class RewardCommand extends EconomyCommand {
                 int yearlyReward = 750;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) yearlyReward += 50;
 
-                EconomyManager.addMoney(event.getGuild(), event.getUser(), yearlyReward);
+                EconomyManager.addMoney(account, yearlyReward, true);
                 account.setNextYearly(System.currentTimeMillis() + 8400000L * 27 * 31 * 12);
                 EconomyManager.updateAccount(account);
                 reply(event, "✅ You claimed your yearly reward of " + yearlyReward + "!");

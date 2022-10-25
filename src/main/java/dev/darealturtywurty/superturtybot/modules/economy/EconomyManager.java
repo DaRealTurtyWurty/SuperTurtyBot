@@ -17,25 +17,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EconomyManager {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
-    public static int addMoney(Guild guild, User user, int amount) {
-        return addMoney(guild, user, amount, false);
+    private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
+    public static boolean isRunning() {
+        return IS_RUNNING.get();
     }
 
-    public static int addMoney(Guild guild, User user, int amount, boolean bank) {
-        final Economy economy = fetchAccount(guild, user);
-        if (economy == null) return -1;
+    public static int addMoney(Economy account, int amount) {
+        return addMoney(account, amount, false);
+    }
 
+    public static int addMoney(Economy account, int amount, boolean bank) {
         if (bank) {
-            economy.addBank(amount);
-            return economy.getBank();
+            account.addBank(amount);
+            return account.getBank();
+        } else {
+            account.addWallet(amount);
+            return account.getWallet();
         }
-
-        economy.addWallet(amount);
-        return economy.getWallet();
-    }
-
-    public static Optional<Economy> createAccount(Guild guild, User user) {
-        return createAccount(guild, user, false);
     }
 
     public static Optional<Economy> createAccount(Guild guild, User user, boolean bypassCheck) {
@@ -59,52 +57,42 @@ public class EconomyManager {
                 Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()))).first());
     }
 
-    public static int getBalance(Guild guild, User user) {
-        return fetchAccount(guild, user).getBalance();
+    public static int removeMoney(Economy account, int amount) {
+        return removeMoney(account, amount, false);
     }
 
-    public static int getBank(Guild guild, User user) {
-        return fetchAccount(guild, user).getBank();
-    }
-
-    public static int getWallet(Guild guild, User user) {
-        return fetchAccount(guild, user).getWallet();
-    }
-
-    public static int removeMoney(Guild guild, User user, int amount) {
-        return removeMoney(guild, user, amount, false);
-    }
-
-    public static int removeMoney(Guild guild, User user, int amount, boolean bank) {
-        final Economy economy = fetchAccount(guild, user);
-        if (economy == null) return -1;
-
+    public static int removeMoney(Economy account, int amount, boolean bank) {
         if (bank) {
-            economy.removeBank(amount);
-            return economy.getBank();
+            account.removeBank(amount);
+            return account.getBank();
+        } else {
+            account.removeWallet(amount);
+            return account.getWallet();
         }
-
-        economy.removeWallet(amount);
-        return economy.getWallet();
     }
 
-    private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
+    public static void withdraw(Economy account, int amount) {
+        account.removeBank(amount);
+        account.addWallet(amount);
+    }
 
-    public static boolean isRunning() {
-        return IS_RUNNING.get();
+    public static void deposit(Economy account, int amount) {
+        account.removeWallet(amount);
+        account.addBank(amount);
     }
 
     public static void start(JDA jda) {
-        if(isRunning())
+        if (isRunning())
             return;
 
         IS_RUNNING.set(true);
 
         EXECUTOR.scheduleAtFixedRate(() -> {
             Database.getDatabase().economy.find().into(new ArrayList<>()).stream()
-                                          .filter(economy -> economy.getBalance() < 0).forEach(account -> {
+                    .filter(economy -> economy.getBalance() < 0).forEach(account -> {
                         //TODO: Get from guild config
-                        account.removeBank(200);
+                        removeMoney(account, 200, true);
+                        updateAccount(account);
                         jda.getUserById(account.getUser()).openPrivateChannel().queue(channel -> {
                             channel.sendMessage(
                                     ("You have a negative balance in your bank! As such, you have been fined <>%d! " + "Your outstanding balance is %d.").replace(
