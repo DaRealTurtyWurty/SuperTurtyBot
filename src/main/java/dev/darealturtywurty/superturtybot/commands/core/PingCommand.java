@@ -78,8 +78,7 @@ public class PingCommand extends CoreCommand {
                 try {
                     final Process getAddress = nslookup(ip);
                     final String[] lines2 = processToLines(getAddress);
-                    final String name = lines2[3].replace("Name:", "").trim();
-                    address = name;
+                    address = lines2[3].replace("Name:", "").trim();
                 } catch (final IOException exception2) {
                     event.getHook().editOriginal("❌ There was an error pinging this IP!").queue();
                     return;
