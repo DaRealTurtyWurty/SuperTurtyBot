@@ -84,9 +84,9 @@ public class CommandHook extends ListenerAdapter {
         // TODO: Fix this mf
         // TwitterListener.setup();
 
-        if (!EconomyManager.isRunning()) {
-            EconomyManager.start(event.getJDA());
-        }
+        //if (!EconomyManager.isRunning()) {
+        //    EconomyManager.start(event.getJDA());
+        //}
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
@@ -267,14 +267,14 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new XPInventoryCommand());
 
         // Economy
-        cmds.add(new BalanceCommand());
-        cmds.add(new RobCommand());
-        cmds.add(new WorkCommand());
-        cmds.add(new RewardCommand());
-        cmds.add(new WithdrawCommand());
-        cmds.add(new DepositCommand());
-        cmds.add(new CrimeCommand());
-        cmds.add(new SexWorkCommand());
+        //cmds.add(new BalanceCommand());
+        //cmds.add(new RobCommand());
+        //cmds.add(new WorkCommand());
+        //cmds.add(new RewardCommand());
+        //cmds.add(new WithdrawCommand());
+        //cmds.add(new DepositCommand());
+        //cmds.add(new CrimeCommand());
+        //cmds.add(new SexWorkCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
