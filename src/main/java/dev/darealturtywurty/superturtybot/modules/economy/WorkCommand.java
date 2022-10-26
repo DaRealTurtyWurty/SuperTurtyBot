@@ -65,15 +65,15 @@ public class WorkCommand extends EconomyCommand {
             return;
         }
 
-        if (account.getNextWorkTime() > System.currentTimeMillis()) {
-            reply(event, "❌ You must wait " + (account.getNextWorkTime() - System.currentTimeMillis()) / 1000 + "s to "
+        if (account.getNextWork() > System.currentTimeMillis()) {
+            reply(event, "❌ You must wait " + (account.getNextWork() - System.currentTimeMillis()) / 1000 + "s to "
                 + "work again!", false, true);
             return;
         }
 
         final int amount = ThreadLocalRandom.current().nextInt(1000);
         account.setWallet(EconomyManager.addMoney(account, amount));
-        account.setNextWorkTime(System.currentTimeMillis() + 3600000L);
+        account.setNextWork(System.currentTimeMillis() + 3600000L);
         EconomyManager.updateAccount(account);
         reply(event, getResponse(user, amount));
     }

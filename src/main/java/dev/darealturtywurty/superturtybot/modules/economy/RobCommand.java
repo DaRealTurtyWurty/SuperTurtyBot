@@ -85,7 +85,7 @@ public class RobCommand extends EconomyCommand {
         final Guild guild = event.getGuild();
         
         final Economy account = EconomyManager.fetchAccount(guild, event.getUser());
-        final long nextRobTime = account.getNextRobTime();
+        final long nextRobTime = account.getNextRob();
         if (nextRobTime > System.currentTimeMillis()) {
             reply(event, "❌ You must wait another `%d` seconds until you can rob someone!"
                 .formatted((nextRobTime - System.currentTimeMillis()) / 1000));
@@ -98,10 +98,10 @@ public class RobCommand extends EconomyCommand {
             return;
         }
 
-        account.setNextRobTime(System.currentTimeMillis() + 60 * 120 * 1000);
+        account.setNextRob(System.currentTimeMillis() + 60 * 120 * 1000);
         Database.getDatabase().economy.updateOne(
             Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
-            Updates.set("nextRobTime", account.getNextRobTime()));
+            Updates.set("nextRobTime", account.getNextRob()));
         
         final Economy robAccount = EconomyManager.fetchAccount(guild, user);
         if (robAccount.getWallet() <= 0) {
