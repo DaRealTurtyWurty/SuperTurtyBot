@@ -117,7 +117,7 @@ public class RobCommand extends EconomyCommand {
             account.addWallet(robbedAmount);
             robAccount.removeWallet(robbedAmount);
         } else {
-            final int fineAmount = random.nextInt(1, account.getBalance());
+            final int fineAmount = random.nextInt(1, EconomyManager.getBalance(account));
             reply(event, new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.RED)
                 .setDescription(RESPONSES.getFail(event.getUser(), user, fineAmount)));
             account.removeWallet(fineAmount);
@@ -132,7 +132,7 @@ public class RobCommand extends EconomyCommand {
             Updates.set("wallet", robAccount.getWallet()));
     }
 
-    public static record Responses(List<String> success, List<String> fail) {
+    public record Responses(List<String> success, List<String> fail) {
         public String getSuccess(User robber, User robbed, int amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                 .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())

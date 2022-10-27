@@ -26,6 +26,10 @@ public class EconomyManager {
         return addMoney(account, amount, false);
     }
 
+    public static int getBalance(Economy account) {
+        return account.getWallet() + account.getBank();
+    }
+
     public static int addMoney(Economy account, int amount, boolean bank) {
         if (bank) {
             account.addBank(amount);
@@ -89,7 +93,7 @@ public class EconomyManager {
 
         EXECUTOR.scheduleAtFixedRate(() -> {
             Database.getDatabase().economy.find().into(new ArrayList<>()).stream()
-                    .filter(economy -> economy.getBalance() < 0).forEach(account -> {
+                    .filter(account -> getBalance(account) < 0).forEach(account -> {
                         //TODO: Get from guild config
                         removeMoney(account, 200, true);
                         updateAccount(account);
@@ -106,5 +110,13 @@ public class EconomyManager {
     public static void updateAccount(Economy account) {
         Database.getDatabase().economy.replaceOne(Filters.and(Filters.eq("guild", account.getGuild()),
                 Filters.eq("user", account.getUser())), account);
+    }
+
+    public static boolean hasJob(Economy account) {
+        return account.getJob() != null;
+    }
+
+    public static boolean canWork(Economy account) {
+        return hasJob(account) && account.getNextWork() < System.currentTimeMillis();
     }
 }
