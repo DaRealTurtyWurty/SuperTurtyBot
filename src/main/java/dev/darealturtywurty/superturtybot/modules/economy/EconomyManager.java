@@ -18,6 +18,7 @@ public class EconomyManager {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
+
     public static boolean isRunning() {
         return IS_RUNNING.get();
     }
@@ -86,8 +87,7 @@ public class EconomyManager {
     }
 
     public static void start(JDA jda) {
-        if (isRunning())
-            return;
+        if (isRunning()) return;
 
         IS_RUNNING.set(true);
 
@@ -97,7 +97,12 @@ public class EconomyManager {
                         //TODO: Get from guild config
                         removeMoney(account, 200, true);
                         updateAccount(account);
-                        jda.getUserById(account.getUser()).openPrivateChannel().queue(channel -> {
+
+                        User user = jda.getUserById(account.getUser());
+                        if (user == null)
+                            return;
+
+                        user.openPrivateChannel().queue(channel -> {
                             channel.sendMessage(
                                     ("You have a negative balance in your bank! As such, you have been fined <>%d! " + "Your outstanding balance is %d.").replace(
                                             "<>", "$").formatted(200, -account.getBank())).queue();
@@ -108,8 +113,8 @@ public class EconomyManager {
     }
 
     public static void updateAccount(Economy account) {
-        Database.getDatabase().economy.replaceOne(Filters.and(Filters.eq("guild", account.getGuild()),
-                Filters.eq("user", account.getUser())), account);
+        Database.getDatabase().economy.replaceOne(
+                Filters.and(Filters.eq("guild", account.getGuild()), Filters.eq("user", account.getUser())), account);
     }
 
     public static boolean hasJob(Economy account) {
@@ -118,5 +123,15 @@ public class EconomyManager {
 
     public static boolean canWork(Economy account) {
         return hasJob(account) && account.getNextWork() < System.currentTimeMillis();
+    }
+
+    public static int work(Economy account) {
+        if (!canWork(account)) return 0;
+
+        final int amount = account.getJob().getSalary();
+        addMoney(account, amount);
+        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+        updateAccount(account);
+        return amount;
     }
 }

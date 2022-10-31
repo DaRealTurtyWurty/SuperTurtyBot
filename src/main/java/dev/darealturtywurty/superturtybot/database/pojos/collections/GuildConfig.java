@@ -92,6 +92,11 @@ public class GuildConfig {
     private boolean logRoleCreate;
     private boolean logRoleDelete;
 
+    // Economy
+    private boolean economyEnabled;
+    private String economyCurrency;
+    private int dailyFine;
+
     public GuildConfig() {
         this(0L);
     }
@@ -156,6 +161,11 @@ public class GuildConfig {
         this.logMessageUpdate = true;
         this.logRoleCreate = true;
         this.logRoleDelete = true;
+
+        // Economy
+        this.economyEnabled = true;
+        this.economyCurrency = "$";
+        this.dailyFine = 200;
     }
 
     public boolean isDisableLevelUpMessages() {
@@ -544,6 +554,30 @@ public class GuildConfig {
 
     public boolean isShouldEmbedLevelUpMessage() {
         return this.shouldEmbedLevelUpMessage;
+    }
+
+    public boolean isEconomyEnabled() {
+        return this.economyEnabled;
+    }
+
+    public String getEconomyCurrency() {
+        return this.economyCurrency;
+    }
+
+    public int getDailyFine() {
+        return this.dailyFine;
+    }
+
+    public void setEconomyEnabled(boolean economyEnabled) {
+        this.economyEnabled = economyEnabled;
+    }
+
+    public void setEconomyCurrency(String economyCurrency) {
+        this.economyCurrency = economyCurrency;
+    }
+
+    public void setDailyFine(int dailyFine) {
+        this.dailyFine = dailyFine;
     }
     
     public boolean shouldLog(Event event) {

@@ -62,7 +62,7 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                EconomyManager.work(account);
+                int money = EconomyManager.work(account);
 
             }
         }
