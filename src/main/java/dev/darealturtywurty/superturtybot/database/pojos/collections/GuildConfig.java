@@ -1,10 +1,6 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
-import java.util.List;
-import java.util.stream.Stream;
-
 import com.google.common.primitives.Longs;
-
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent;
@@ -31,13 +27,17 @@ import net.dv8tion.jda.api.events.sticker.GuildStickerAddedEvent;
 import net.dv8tion.jda.api.events.sticker.GuildStickerRemovedEvent;
 import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 public class GuildConfig {
     private long guild;
 
     // Channels
     private long modLogging;
     private long suggestions;
-    
+    private String optInChannels;
+
     // Showcases
     private long starboard;
     private boolean starboardEnabled;
@@ -46,7 +46,7 @@ public class GuildConfig {
     private String showcaseChannels;
     private boolean starboardMediaOnly;
     private String starEmoji;
-    
+
     // Levelling
     private String levelRoles;
     private long levelCooldown;
@@ -98,11 +98,12 @@ public class GuildConfig {
 
     public GuildConfig(long guildId) {
         this.guild = guildId;
-        
+
         // Channels
         this.modLogging = 0L;
         this.suggestions = 0L;
-        
+        this.optInChannels = "";
+
         // Showcases
         this.starboard = 0L;
         this.starboardEnabled = false;
@@ -111,7 +112,7 @@ public class GuildConfig {
         this.showcaseChannels = "";
         this.starboardMediaOnly = true;
         this.starEmoji = "⭐";
-        
+
         // Levelling
         this.levelRoles = "";
         this.levelCooldown = 25000L;
@@ -124,7 +125,7 @@ public class GuildConfig {
         this.hasLevelUpChannel = false;
         this.levelUpMessageChannel = 0L;
         this.shouldEmbedLevelUpMessage = true;
-        
+
         // Misc
         this.shouldModeratorsJoinThreads = true;
         this.autoThreadChannels = "";
@@ -361,11 +362,11 @@ public class GuildConfig {
     public void setGuild(long guild) {
         this.guild = guild;
     }
-    
+
     public void setHasLevelUpChannel(boolean hasLevelUpChannel) {
         this.hasLevelUpChannel = hasLevelUpChannel;
     }
-    
+
     public void setLevelCooldown(long levelCooldown) {
         this.levelCooldown = levelCooldown;
     }
@@ -377,11 +378,11 @@ public class GuildConfig {
     public void setLevellingItemChance(int levellingItemChance) {
         this.levellingItemChance = levellingItemChance;
     }
-    
+
     public void setLevelRoles(String levelRoles) {
         this.levelRoles = levelRoles;
     }
-    
+
     public void setLevelUpMessageChannel(long levelUpMessageChannel) {
         this.levelUpMessageChannel = levelUpMessageChannel;
     }
@@ -421,27 +422,27 @@ public class GuildConfig {
     public void setLoggingChannel(long loggingChannel) {
         this.loggingChannel = loggingChannel;
     }
-    
+
     public void setLogGuildUpdate(boolean logGuildUpdate) {
         this.logGuildUpdate = logGuildUpdate;
     }
-    
+
     public void setLogInviteCreate(boolean logInviteCreate) {
         this.logInviteCreate = logInviteCreate;
     }
-    
+
     public void setLogInviteDelete(boolean logInviteDelete) {
         this.logInviteDelete = logInviteDelete;
     }
-    
+
     public void setLogMemberJoin(boolean logMemberJoin) {
         this.logMemberJoin = logMemberJoin;
     }
-    
+
     public void setLogMemberRemove(boolean logMemberRemove) {
         this.logMemberRemove = logMemberRemove;
     }
-    
+
     public void setLogMessageBulkDelete(boolean logMessageBulkDelete) {
         this.logMessageBulkDelete = logMessageBulkDelete;
     }
@@ -461,11 +462,11 @@ public class GuildConfig {
     public void setLogRoleDelete(boolean logRoleDelete) {
         this.logRoleDelete = logRoleDelete;
     }
-    
+
     public void setLogRoleUpdate(boolean logRoleUpdate) {
         this.logRoleUpdate = logRoleUpdate;
     }
-    
+
     public void setLogStickerAdded(boolean logStickerAdded) {
         this.logStickerAdded = logStickerAdded;
     }
@@ -485,23 +486,23 @@ public class GuildConfig {
     public void setLogUnban(boolean logUnban) {
         this.logUnban = logUnban;
     }
-    
+
     public void setMaxXP(int maxXP) {
         this.maxXP = maxXP;
     }
-    
+
     public void setMinimumStars(int minimumStars) {
         this.minimumStars = minimumStars;
     }
-    
+
     public void setMinXP(int minXP) {
         this.minXP = minXP;
     }
-    
+
     public void setModLogging(long modLogging) {
         this.modLogging = modLogging;
     }
-    
+
     public void setShouldCreateGists(boolean shouldCreateGists) {
         this.shouldCreateGists = shouldCreateGists;
     }
@@ -513,23 +514,23 @@ public class GuildConfig {
     public void setShouldModeratorsJoinThreads(boolean shouldModeratorsJoinThreads) {
         this.shouldModeratorsJoinThreads = shouldModeratorsJoinThreads;
     }
-    
+
     public void setShowcaseChannels(String showcaseChannels) {
         this.showcaseChannels = showcaseChannels;
     }
-    
+
     public void setStarboard(long starboard) {
         this.starboard = starboard;
     }
-    
+
     public void setStarboardEnabled(boolean starboardEnabled) {
         this.starboardEnabled = starboardEnabled;
     }
-    
+
     public void setStarboardMediaOnly(boolean starboardMediaOnly) {
         this.starboardMediaOnly = starboardMediaOnly;
     }
-    
+
     public void setStarEmoji(String starEmoji) {
         this.starEmoji = starEmoji;
     }
@@ -537,7 +538,7 @@ public class GuildConfig {
     public void setSuggestions(long suggestions) {
         this.suggestions = suggestions;
     }
-    
+
     public boolean isShouldCreateGists() {
         return this.shouldCreateGists;
     }
@@ -545,64 +546,48 @@ public class GuildConfig {
     public boolean isShouldEmbedLevelUpMessage() {
         return this.shouldEmbedLevelUpMessage;
     }
-    
-    public boolean shouldLog(Event event) {
-        if (event instanceof ChannelCreateEvent)
-            return this.logChannelCreate;
-        if (event instanceof ChannelDeleteEvent)
-            return this.logChannelDelete;
-        if (event instanceof EmojiAddedEvent)
-            return this.logEmojiAdded;
-        if (event instanceof EmojiRemovedEvent)
-            return this.logEmojiRemoved;
-        if (event instanceof GenericChannelUpdateEvent)
-            return this.logChannelUpdate;
-        if (event instanceof GenericEmojiUpdateEvent)
-            return this.logEmojiUpdate;
-        if (event instanceof GenericForumTagUpdateEvent)
-            return this.logForumTagUpdate;
-        if (event instanceof GenericGuildStickerUpdateEvent)
-            return this.logStickerUpdate;
-        if (event instanceof GenericGuildUpdateEvent)
-            return this.logGuildUpdate;
-        if (event instanceof GenericRoleUpdateEvent)
-            return this.logRoleUpdate;
-        if (event instanceof GuildBanEvent)
-            return this.logBan;
-        if (event instanceof GuildInviteCreateEvent)
-            return this.logInviteCreate;
-        if (event instanceof GuildInviteDeleteEvent)
-            return this.logInviteDelete;
-        if (event instanceof GuildMemberJoinEvent)
-            return this.logMemberJoin;
-        if (event instanceof GuildMemberRemoveEvent)
-            return this.logMemberRemove;
-        if (event instanceof GuildStickerAddedEvent)
-            return this.logStickerAdded;
-        if (event instanceof GuildStickerRemovedEvent)
-            return this.logStickerRemove;
-        if (event instanceof GuildMemberUpdateTimeOutEvent)
-            return this.logTimeout;
-        if (event instanceof GuildUnbanEvent)
-            return this.logUnban;
-        if (event instanceof MessageBulkDeleteEvent)
-            return this.logMessageBulkDelete;
-        if (event instanceof MessageDeleteEvent)
-            return this.logMessageDelete;
-        if (event instanceof MessageUpdateEvent)
-            return this.logMessageUpdate;
-        if (event instanceof RoleCreateEvent)
-            return this.logRoleCreate;
-        if (event instanceof RoleDeleteEvent)
-            return this.logRoleDelete;
-        
-        return false;
+
+    public String getOptInChannels() {
+        return this.optInChannels;
+    }
+
+    public void setOptInChannels(String optInChannels) {
+        this.optInChannels = optInChannels;
     }
 
     public boolean isShouldModeratorsJoinThreads() {
         return this.shouldModeratorsJoinThreads;
     }
-    
+
+    public boolean shouldLog(Event event) {
+        if (event instanceof ChannelCreateEvent) return this.logChannelCreate;
+        if (event instanceof ChannelDeleteEvent) return this.logChannelDelete;
+        if (event instanceof EmojiAddedEvent) return this.logEmojiAdded;
+        if (event instanceof EmojiRemovedEvent) return this.logEmojiRemoved;
+        if (event instanceof GenericChannelUpdateEvent) return this.logChannelUpdate;
+        if (event instanceof GenericEmojiUpdateEvent) return this.logEmojiUpdate;
+        if (event instanceof GenericForumTagUpdateEvent) return this.logForumTagUpdate;
+        if (event instanceof GenericGuildStickerUpdateEvent) return this.logStickerUpdate;
+        if (event instanceof GenericGuildUpdateEvent) return this.logGuildUpdate;
+        if (event instanceof GenericRoleUpdateEvent) return this.logRoleUpdate;
+        if (event instanceof GuildBanEvent) return this.logBan;
+        if (event instanceof GuildInviteCreateEvent) return this.logInviteCreate;
+        if (event instanceof GuildInviteDeleteEvent) return this.logInviteDelete;
+        if (event instanceof GuildMemberJoinEvent) return this.logMemberJoin;
+        if (event instanceof GuildMemberRemoveEvent) return this.logMemberRemove;
+        if (event instanceof GuildStickerAddedEvent) return this.logStickerAdded;
+        if (event instanceof GuildStickerRemovedEvent) return this.logStickerRemove;
+        if (event instanceof GuildMemberUpdateTimeOutEvent) return this.logTimeout;
+        if (event instanceof GuildUnbanEvent) return this.logUnban;
+        if (event instanceof MessageBulkDeleteEvent) return this.logMessageBulkDelete;
+        if (event instanceof MessageDeleteEvent) return this.logMessageDelete;
+        if (event instanceof MessageUpdateEvent) return this.logMessageUpdate;
+        if (event instanceof RoleCreateEvent) return this.logRoleCreate;
+        if (event instanceof RoleDeleteEvent) return this.logRoleDelete;
+
+        return false;
+    }
+
     public static List<Long> getChannels(String str) {
         return Stream.of(str.split("[\s;]")).map(Longs::tryParse).toList();
     }

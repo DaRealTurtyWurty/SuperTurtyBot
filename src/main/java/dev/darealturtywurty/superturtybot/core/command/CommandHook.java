@@ -165,6 +165,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new RestartCommand());
         cmds.add(new ServerConfigCommand());
         // cmds.add(new UserConfigCommand());
+        cmds.add(new OptCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());
