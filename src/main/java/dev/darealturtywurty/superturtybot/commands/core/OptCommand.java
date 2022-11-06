@@ -46,7 +46,7 @@ public class OptCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Opt-in/out of channels.";
+        return "Opt-in/out of viewing certain channels.";
     }
 
     @Override
@@ -61,7 +61,7 @@ public class OptCommand extends CoreCommand {
 
     @Override
     public String getHowToUse() {
-        return "/opt <in/out/list>";
+        return "/opt in [channelName]\n/opt out [channelName]\n/opt list";
     }
 
     @Override

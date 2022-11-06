@@ -182,4 +182,15 @@ public class ServerConfigRegistry {
 
                         return true;
                     }).build());
+
+    public static final ServerConfigOption NSFW_CHANNELS = SERVER_CONFIG_OPTIONS.register("nsfw_channels",
+            new ServerConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setNsfwChannels)
+                    .valueFromConfig(GuildConfig::getNsfwChannels).validator((event, value) -> {
+                        final String[] channels = value.split("[\s;]");
+                        for (final String channelStr : channels) {
+                            if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr)) return false;
+                        }
+
+                        return true;
+                    }).build());
 }

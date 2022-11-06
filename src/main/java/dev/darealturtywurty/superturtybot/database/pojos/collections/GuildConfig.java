@@ -37,6 +37,7 @@ public class GuildConfig {
     private long modLogging;
     private long suggestions;
     private String optInChannels;
+    private String nsfwChannels;
 
     // Showcases
     private long starboard;
@@ -103,6 +104,7 @@ public class GuildConfig {
         this.modLogging = 0L;
         this.suggestions = 0L;
         this.optInChannels = "";
+        this.nsfwChannels = "";
 
         // Showcases
         this.starboard = 0L;
@@ -557,6 +559,14 @@ public class GuildConfig {
 
     public boolean isShouldModeratorsJoinThreads() {
         return this.shouldModeratorsJoinThreads;
+    }
+
+    public String getNsfwChannels() {
+        return this.nsfwChannels;
+    }
+
+    public void setNsfwChannels(String nsfwChannels) {
+        this.nsfwChannels = nsfwChannels;
     }
 
     public boolean shouldLog(Event event) {

@@ -33,10 +33,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
 import java.util.*;
@@ -97,9 +94,14 @@ public class CommandHook extends ListenerAdapter {
                 data.addOptions(options);
             }
 
-            final List<SubcommandData> subcommands = cmd.createSubcommands();
-            if (!subcommands.isEmpty()) {
-                data.addSubcommands(subcommands);
+            List<SubcommandGroupData> subcommandGroupData = cmd.createSubcommandGroups();
+            if (!subcommandGroupData.isEmpty()) {
+                data.addSubcommandGroups(subcommandGroupData);
+            } else {
+                final List<SubcommandData> subcommands = cmd.createSubcommands();
+                if (!subcommands.isEmpty()) {
+                    data.addSubcommands(subcommands);
+                }
             }
 
             updates.addCommands(data);
@@ -208,22 +210,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ReportsCommand());
 
         // NSFW
-        NSFWCommandList.addAll(cmds);
-        cmds.add(new HentaiCommand());
-        cmds.add(new HentaiAnalCommand());
-        cmds.add(new HentaiAssCommand());
-        cmds.add(new HentaiBoobjobCommand());
-        cmds.add(new HentaiBoobsCommand());
-        cmds.add(new HentaiFoxCommand());
-        cmds.add(new HentaiKemonomimiCommand());
-        cmds.add(new HentaiMidriffCommand());
-        cmds.add(new HentaiNekoCommand());
-        cmds.add(new HentaiTentacleCommand());
-        cmds.add(new HentaiThighCommand());
-        cmds.add(new HentaiYaoiCommand());
-        cmds.add(new LoliCommand());
-        cmds.add(new OrgasmCommand());
-        cmds.add(new Rule34Command());
+        cmds.add(new NSFWCommand());
 
         // Music
         cmds.add(new JoinCommand());
