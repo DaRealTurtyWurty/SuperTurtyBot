@@ -3,14 +3,18 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import org.apache.commons.io.filefilter.FalseFileFilter;
+import org.apache.commons.text.WordUtils;
 
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -99,8 +103,7 @@ public class EconomyManager {
                         updateAccount(account);
 
                         User user = jda.getUserById(account.getUser());
-                        if (user == null)
-                            return;
+                        if (user == null) return;
 
                         user.openPrivateChannel().queue(channel -> {
                             channel.sendMessage(
@@ -128,10 +131,62 @@ public class EconomyManager {
     public static int work(Economy account) {
         if (!canWork(account)) return 0;
 
-        final int amount = account.getJob().getSalary();
+        final int amount = Math.round(
+                account.getJob().getSalary() * (account.getJobLevel() * account.getJob().getPromotionMultiplier()));
         addMoney(account, amount);
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
         updateAccount(account);
+
+        return amount;
+    }
+
+    public static boolean registerJob(Economy account, String job) {
+        if (hasJob(account)) return false;
+
+        Economy.Job found;
+        try {
+            found = Economy.Job.valueOf(job.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+
+        account.setJob(found);
+        account.setJobLevel(0);
+        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+        updateAccount(account);
+
+        return true;
+    }
+
+    public static void quitJob(Economy account) {
+        account.setJob(null);
+        account.setJobLevel(0);
+        account.setNextWork(System.currentTimeMillis());
+        updateAccount(account);
+    }
+
+    public static EmbedBuilder getJobProfile(Economy account) {
+        final var builder = new EmbedBuilder();
+        builder.setTitle("Job Profile");
+        builder.addField("Job", WordUtils.capitalize(account.getJob().name().toLowerCase()), false);
+        builder.addField("Level", String.valueOf(account.getJobLevel()), false);
+        builder.addField("Salary", String.format("$%d", account.getJob().getSalary()), false);
+        builder.addField("Promotion Multiplier", String.format("x%.2f", account.getJob().getPromotionMultiplier()),
+                false);
+        builder.addField("Work Cooldown", String.format("%d seconds", account.getJob().getWorkCooldownSeconds()),
+                false);
+        builder.addField("Next Work", JobCommand.convertToTimestamp(account.getNextWork()), false);
+
+        return builder;
+    }
+
+    public static int workNoJob(Economy account) {
+        if(account.getNextWork() > System.currentTimeMillis()) return 0;
+
+        final int amount = ThreadLocalRandom.current().nextInt(1000);
+        account.setWallet(EconomyManager.addMoney(account, amount));
+        account.setNextWork(System.currentTimeMillis() + 3600000L);
+        EconomyManager.updateAccount(account);
         return amount;
     }
 }

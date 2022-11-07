@@ -21,6 +21,7 @@ public class Economy {
     private long nextYearly;
 
     private Job job;
+    private int jobLevel;
 
     public Economy() {
         this(0, 0);

@@ -269,12 +269,12 @@ public class CommandHook extends ListenerAdapter {
         // Economy
         cmds.add(new BalanceCommand());
         cmds.add(new RobCommand());
-        cmds.add(new WorkCommand());
         cmds.add(new RewardCommand());
         cmds.add(new WithdrawCommand());
         cmds.add(new DepositCommand());
         cmds.add(new CrimeCommand());
         cmds.add(new SexWorkCommand());
+        cmds.add(new JobCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
