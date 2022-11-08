@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.modules.economy.command.JobCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -191,5 +192,9 @@ public class EconomyManager {
         account.setNextWork(System.currentTimeMillis() + 3600000L);
         EconomyManager.updateAccount(account);
         return amount;
+    }
+
+    public static PublicShop getPublicShop() {
+        return Database.getDatabase().publicShop.find().first();
     }
 }

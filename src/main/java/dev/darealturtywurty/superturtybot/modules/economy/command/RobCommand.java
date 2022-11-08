@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.economy;
+package dev.darealturtywurty.superturtybot.modules.economy.command;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;

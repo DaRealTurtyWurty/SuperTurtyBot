@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.economy;
+package dev.darealturtywurty.superturtybot.modules.economy.command;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import org.apache.commons.io.IOUtils;
 
 import com.google.gson.JsonObject;

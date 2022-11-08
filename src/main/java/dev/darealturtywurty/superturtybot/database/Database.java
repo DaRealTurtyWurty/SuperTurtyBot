@@ -10,6 +10,7 @@ import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
+import dev.darealturtywurty.superturtybot.modules.economy.PublicShop;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -32,6 +33,7 @@ public class Database {
     public final MongoCollection<SteamNotifier> steamNotifier;
     public final MongoCollection<Report> reports;
     public final MongoCollection<Economy> economy;
+    public final MongoCollection<PublicShop> publicShop;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -57,6 +59,7 @@ public class Database {
         this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
         this.reports = database.getCollection("reports", Report.class);
         this.economy = database.getCollection("economy", Economy.class);
+        this.publicShop = database.getCollection("publicShop", PublicShop.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");

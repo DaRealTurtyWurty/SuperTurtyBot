@@ -24,6 +24,7 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestio
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.*;
+import dev.darealturtywurty.superturtybot.modules.economy.command.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;

@@ -1,6 +1,10 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
+import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class Economy {
@@ -23,6 +27,8 @@ public class Economy {
     private Job job;
     private int jobLevel;
 
+    private List<ShopItem> shopItems;
+
     public Economy() {
         this(0, 0);
     }
@@ -30,6 +36,8 @@ public class Economy {
     public Economy(long guild, long user) {
         this.guild = guild;
         this.user = user;
+
+        this.shopItems = new ArrayList<>();
     }
 
     public void addBank(int amount) {

@@ -1,9 +1,10 @@
-package dev.darealturtywurty.superturtybot.modules.economy;
+package dev.darealturtywurty.superturtybot.modules.economy.command;
 
 import java.awt.Color;
 import java.time.Instant;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 

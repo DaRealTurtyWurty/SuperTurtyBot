@@ -1,9 +1,10 @@
-package dev.darealturtywurty.superturtybot.modules.economy;
+package dev.darealturtywurty.superturtybot.modules.economy.command;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
