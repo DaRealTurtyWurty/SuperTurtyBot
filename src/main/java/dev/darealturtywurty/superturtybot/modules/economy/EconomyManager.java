@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.apache.commons.text.WordUtils;
 
 import java.util.ArrayList;
@@ -131,12 +130,16 @@ public class EconomyManager {
     public static int work(Economy account) {
         if (!canWork(account)) return 0;
 
-        final int amount = Math.round(
+        int amount = Math.round(
                 account.getJob().getSalary() * (account.getJobLevel() * account.getJob().getPromotionMultiplier()));
-        addMoney(account, amount);
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
-        updateAccount(account);
+        addMoney(account, amount, true);
 
+        if(ThreadLocalRandom.current().nextInt(100) == account.getJob().getPromotionChance() * 100) {
+            account.setJobLevel(account.getJobLevel() + 1);
+        }
+
+        updateAccount(account);
         return amount;
     }
 

@@ -93,8 +93,19 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
+                int jobLevel = account.getJobLevel();
                 int money = EconomyManager.work(account);
-                reply(event, "✅ You worked and earned %s%d!".formatted(money, "$"), false, true);
+                if (money == 0) {
+                    reply(event, "❌ You are not able to work right now!", false, true);
+                    return;
+                }
+
+                String levelUpMessage = "";
+                if (jobLevel != account.getJobLevel()) {
+                    levelUpMessage = " You were just promoted to level " + account.getJobLevel() + "!";
+                }
+
+                reply(event, "✅ You worked and earned %s%d!%s".formatted("$", money, levelUpMessage));
             }
             case "register" -> {
                 String job = event.getOption("job").getAsString();
@@ -137,6 +148,6 @@ public class JobCommand extends EconomyCommand {
 
     private static String getResponse(User user, int amount) {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size())).replace("<>", "$")
-                .replace("{user}", user.getAsMention()).replace("{amount}", String.valueOf(amount));
+                        .replace("{user}", user.getAsMention()).replace("{amount}", String.valueOf(amount));
     }
 }
