@@ -23,6 +23,7 @@ import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class OptCommand extends CoreCommand {
 
@@ -174,7 +175,8 @@ public class OptCommand extends CoreCommand {
 
             channel.upsertPermissionOverride(event.getMember()).setAllowed(permissions).queue();
 
-            reply(event, "✅ You have opted-in to " + channel.getAsMention() + "!");
+            event.reply("✅ You have opted-in to " + channel.getAsMention() + "!")
+                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
         } else if (subcommand.equals("out")) {
             OptionMapping channelOption = event.getOption("channel");
             if (channelOption != null && (!channelOption.getChannelType().isGuild() || channelOption.getChannelType()
@@ -220,7 +222,9 @@ public class OptCommand extends CoreCommand {
 
             channel.upsertPermissionOverride(event.getMember()).setDenied(permissions).queue();
 
-            reply(event, "✅ You have opted-out of `#" + channel.getName() + "`!");
+            event.reply("✅ You have opted-out of `#" + channel.getName() + "`!")
+                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            ;
         } else if (subcommand.equals("list")) {
             var builder = new StringBuilder("Available channels to opt-in/out of:\n");
             for (long channel : channels) {
@@ -233,7 +237,7 @@ public class OptCommand extends CoreCommand {
                         .append(guildChannel.getType() == ChannelType.TEXT ? "Text" : "Voice").append(")\n");
             }
 
-            reply(event, builder.toString());
+            reply(event, builder.toString(), false, true);
         }
     }
 }
