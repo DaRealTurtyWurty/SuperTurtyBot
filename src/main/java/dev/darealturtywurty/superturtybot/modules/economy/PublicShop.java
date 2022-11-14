@@ -1,21 +1,12 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
-import com.google.gson.JsonObject;
-import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
 import lombok.Data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Data
@@ -32,42 +23,34 @@ public class PublicShop {
     }
 
     public void reloadShop() {
+        this.featuredItems.addAll(List.of(ShopItemRegistry.APPLE, ShopItemRegistry.ORANGE));
+        this.newItems.add(ShopItemRegistry.BANANA);
+        this.discountItems.add(ShopItemRegistry.CHERRY);
+    }
 
+    public boolean isEmpty() {
+        return this.featuredItems.isEmpty() && this.newItems.isEmpty() && this.discountItems.isEmpty();
     }
 
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
     public static boolean isRunning() {
         return IS_RUNNING.get();
     }
 
-    public static JsonObject readShutdownVariables() {
-        try {
-            var toRead = Path.of("../");
-            InputStream content = Files.newInputStream(toRead, StandardOpenOption.READ);
-            JsonObject json = Constants.GSON.fromJson(new InputStreamReader(content), JsonObject.class);
-            content.close();
-            return json;
-        } catch (IOException exception) {
-            throw new IllegalStateException("Unable to read ");
-        }
-    }
-
-    private static int getInitialDelay() {
-        JsonObject shutdown = readShutdownVariables();
-        int timeUntilRefresh = shutdown.get("PublicShopRefreshTime").getAsLong();
-    }
-
-    public static void runShop() {
+    public static void run() {
         if (isRunning()) return;
 
         IS_RUNNING.set(true);
 
-
-        EXECUTOR.scheduleAtFixedRate(PublicShop.INSTANCE::reloadShop, 0, 24, TimeUnit.HOURS);
-        ShutdownHooks.register(() -> {
-
+        EXECUTOR.execute(() -> {
+            while(true) {
+                LocalDateTime time = LocalDateTime.now();
+                if((time.getHour() == 12 && time.getSecond() == 0 && time.getMinute() == 0 && time.getNano() < 5) || PublicShop.INSTANCE.isEmpty()) {
+                    PublicShop.INSTANCE.reloadShop();
+                }
+            }
         });
     }
 }

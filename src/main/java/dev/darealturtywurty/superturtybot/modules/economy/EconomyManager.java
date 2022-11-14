@@ -195,6 +195,6 @@ public class EconomyManager {
     }
 
     public static PublicShop getPublicShop() {
-        return Database.getDatabase().publicShop.find().first();
+        return PublicShop.INSTANCE;
     }
 }

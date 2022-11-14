@@ -88,6 +88,10 @@ public class CommandHook extends ListenerAdapter {
         if (!EconomyManager.isRunning()) {
             EconomyManager.start(event.getJDA());
         }
+
+        if(!PublicShop.isRunning()) {
+            PublicShop.run();
+        }
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
@@ -265,7 +269,7 @@ public class CommandHook extends ListenerAdapter {
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
-        cmds.add(new XPInventoryCommand());
+        // cmds.add(new XPInventoryCommand());
 
         // Economy
         cmds.add(new BalanceCommand());
@@ -276,6 +280,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new CrimeCommand());
         cmds.add(new SexWorkCommand());
         cmds.add(new JobCommand());
+        cmds.add(new ShopCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();

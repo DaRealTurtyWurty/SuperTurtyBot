@@ -14,7 +14,13 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.utils.FileUpload;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
@@ -118,13 +124,63 @@ public class ShopCommand extends CoreCommand {
                 }
 
                 PublicShop shop = EconomyManager.getPublicShop();
-                if (shop.getDiscountItems().isEmpty() && shop.getFeaturedItems().isEmpty() && shop.getNewItems().isEmpty()) {
+                if (shop.getDiscountItems().isEmpty() && shop.getFeaturedItems().isEmpty() && shop.getNewItems()
+                        .isEmpty()) {
                     reply(event, "❌ The shop is currently empty, please come back later!", false, true);
                     return;
                 }
 
-                // TODO: Create an embed with the discounted, featured and new items
+                event.deferReply().queue();
+
+                try {
+                    var boas = new ByteArrayOutputStream();
+                    ImageIO.write(generateShopImage(), "png", boas);
+                    var upload = FileUpload.fromData(boas.toByteArray(), "shop.png");
+                    event.getHook().sendFiles(upload).queue();
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                    event.getHook().editOriginal("❌ An error occurred while generating the shop image!").queue();
+                }
             }
         }
+    }
+
+    private static BufferedImage generateShopImage() {
+        var image = new BufferedImage(700, 500, BufferedImage.TYPE_INT_ARGB);
+        var g2d = image.createGraphics();
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, 0, 700, 500);
+
+        PublicShop shop = EconomyManager.getPublicShop();
+
+        g2d.setFont(g2d.getFont().deriveFont(30f));
+
+        g2d.setColor(Color.RED);
+        int index = 0;
+        for (ShopItem item : shop.getNewItems()) {
+            String text = item.getEmoji() + " " + item.getName();
+            g2d.drawString(text, 10 + (index++ * g2d.getFontMetrics().stringWidth(text) + 5),
+                    g2d.getFontMetrics().getHeight());
+        }
+
+        g2d.setColor(Color.GREEN);
+        index = 0;
+        for (ShopItem item : shop.getDiscountItems()) {
+            String text = item.getEmoji() + " " + item.getName();
+            g2d.drawString(text, 10 + (index++ * g2d.getFontMetrics().stringWidth(text) + 5),
+                    g2d.getFontMetrics().getHeight() * 2);
+        }
+
+        g2d.setColor(Color.BLUE);
+        index = 0;
+        for (ShopItem item : shop.getFeaturedItems()) {
+            String text = item.getEmoji() + " " + item.getName();
+            g2d.drawString(text, 10 + (index++ * g2d.getFontMetrics().stringWidth(text) + 5),
+                    g2d.getFontMetrics().getHeight() * 3);
+        }
+
+        g2d.dispose();
+
+        return image;
     }
 }
