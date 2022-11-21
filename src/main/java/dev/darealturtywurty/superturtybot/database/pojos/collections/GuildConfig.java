@@ -65,6 +65,7 @@ public class GuildConfig {
     private boolean shouldModeratorsJoinThreads;
     private String autoThreadChannels;
     private boolean shouldCreateGists;
+    private boolean warningsModeratorOnly;
 
     // Logging
     private long loggingChannel;
@@ -132,6 +133,7 @@ public class GuildConfig {
         this.shouldModeratorsJoinThreads = true;
         this.autoThreadChannels = "";
         this.shouldCreateGists = true;
+        this.warningsModeratorOnly = false;
 
         // Logging
         this.loggingChannel = 0L;
@@ -239,6 +241,14 @@ public class GuildConfig {
 
     public boolean isLevellingEnabled() {
         return this.levellingEnabled;
+    }
+
+    public boolean isWarningsModeratorOnly() {
+        return warningsModeratorOnly;
+    }
+
+    public void setWarningsModeratorOnly(boolean warningsModeratorOnly) {
+        this.warningsModeratorOnly = warningsModeratorOnly;
     }
 
     public boolean isLogBan() {

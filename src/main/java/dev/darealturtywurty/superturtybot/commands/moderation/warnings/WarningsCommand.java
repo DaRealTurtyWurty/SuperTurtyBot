@@ -1,21 +1,26 @@
 package dev.darealturtywurty.superturtybot.commands.moderation.warnings;
 
-import java.awt.Color;
+import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.awt.*;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class WarningsCommand extends CoreCommand {
     public WarningsCommand() {
@@ -66,7 +71,15 @@ public class WarningsCommand extends CoreCommand {
         }
 
         final User user = event.getOption("user").getAsUser();
-        final Set<Warning> warns = WarnManager.getWarns(event.getGuild(), user);
+
+        Guild guild = event.getGuild();
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        if(config != null && config.isWarningsModeratorOnly() && !event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
+            reply(event, "❌ You must be a moderator to use this command!", false, true);
+            return;
+        }
+
+        final Set<Warning> warns = WarnManager.getWarns(guild, user);
 
         final var embed = new EmbedBuilder();
         embed.setColor(Color.BLUE);
