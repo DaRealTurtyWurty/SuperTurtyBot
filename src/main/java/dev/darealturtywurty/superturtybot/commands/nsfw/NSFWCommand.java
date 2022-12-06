@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.nsfw;
 
+import com.codepoetics.ambivalence.Either;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -13,7 +14,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
+import net.dv8tion.jda.api.utils.FileUpload;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -149,13 +154,40 @@ public class NSFWCommand extends CoreCommand {
         if (reddit != null) {
             event.deferReply().setContent("Loading...").queue();
 
-            final EmbedBuilder embed = RedditUtils.constructEmbed(true, reddit.subreddits());
-            if (embed == null) {
+            final Either<EmbedBuilder, Collection<String>> eitherEmbedOrImages = RedditUtils.constructEmbed(true,
+                    reddit.subreddits());
+            if (eitherEmbedOrImages == null) {
                 event.getHook().editOriginal(
                         "There has been an error processing the command you tried to run. Please try again!").queue();
                 return;
             }
 
+            if (eitherEmbedOrImages.isRight()) {
+                Collection<String> images = eitherEmbedOrImages.right().orElse(List.of());
+                List<FileUpload> uploads = new ArrayList<>();
+
+                int index = 0;
+                for (String image : images) {
+                    try {
+                        URLConnection connection = new URL(image).openConnection();
+                        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                        connection.connect();
+                        uploads.add(
+                                FileUpload.fromData(connection.getInputStream(), "image_%d.png".formatted(index++)));
+                    } catch (IOException exception) {
+                        event.getHook().editOriginal(
+                                        "There has been an error processing the command you tried to run. Please try again!")
+                                .queue();
+                        exception.printStackTrace();
+                        return;
+                    }
+                }
+
+                event.getHook().editOriginal("Gallery 🖼️").flatMap(msg -> msg.replyFiles(uploads)).queue();
+                return;
+            }
+
+            EmbedBuilder embed = eitherEmbedOrImages.left().orElse(null);
             final String mediaURL = embed.build().getTitle();
             if (mediaURL == null) {
                 event.getHook().editOriginal(
@@ -173,8 +205,8 @@ public class NSFWCommand extends CoreCommand {
             }
 
             MessageEmbed builtEmbed = embed.build();
-            event.getHook().editOriginal(builtEmbed.getTitle()).flatMap(msg -> msg.editMessageEmbeds(builtEmbed))
-                    .queue();
+            event.getHook().editOriginal(builtEmbed.getTitle() == null ? "😘" : builtEmbed.getTitle())
+                    .flatMap(msg -> msg.editMessageEmbeds(builtEmbed)).queue();
         }
     }
 }
