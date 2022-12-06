@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -91,8 +92,8 @@ public class NSFWCommand extends CoreCommand {
 
         Guild guild = event.getGuild();
         if (guild != null) {
-            GuildConfig config = Database.getDatabase().guildConfig.find(
-                    Filters.eq("guild", guild.getIdLong())).first();
+            GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
+                    .first();
             if (config == null) {
                 event.deferReply(true).setContent("This server has not been configured yet!").queue();
                 return;
@@ -171,7 +172,9 @@ public class NSFWCommand extends CoreCommand {
                 return;
             }
 
-            event.getHook().editOriginalEmbeds(embed.build()).queue();
+            MessageEmbed builtEmbed = embed.build();
+            event.getHook().editOriginal(builtEmbed.getTitle()).flatMap(msg -> msg.editMessageEmbeds(builtEmbed))
+                    .queue();
         }
     }
 }
