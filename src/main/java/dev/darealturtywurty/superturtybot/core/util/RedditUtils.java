@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
+import kotlin.text.Charsets;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,7 +49,7 @@ public final class RedditUtils {
         RootCommentNode post = findValidPost(subreddit, subreddits);
         
         var embed = new EmbedBuilder();
-        embed.setTitle(post.getSubject().getTitle());
+        embed.setTitle(String.valueOf(Charsets.UTF_8.encode(post.getSubject().getTitle())));
         embed.setDescription(post.getSubject().getBody());
         
         String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
