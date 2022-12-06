@@ -45,9 +45,6 @@ public final class AudioManager {
         AUDIO_MANAGER.registerSourceManager(new SpotifySourceManager(null, Environment.INSTANCE.spotifyID(),
             Environment.INSTANCE.spotifySecret(), "US", AUDIO_MANAGER));
 
-        // Apple Music
-        AUDIO_MANAGER.registerSourceManager(new AppleMusicSourceManager(null, "US", AUDIO_MANAGER));
-
         // Clypit, Speech (TTS), PornHub, Reddit, OCRemix, TikTok, Mixcloud, SoundGasm
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
 

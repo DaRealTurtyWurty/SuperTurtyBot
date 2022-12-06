@@ -808,7 +808,7 @@ public final class ProxyFactory {
         entries.put("isFromGuild", function(args -> event.isFromGuild()));
         entries.put("isAcknowledged", function(args -> event.isAcknowledged()));
         entries.put("id", event.getIdLong());
-        entries.put("commandPath", event.getCommandPath());
+        entries.put("commandPath", event.getCommandString());
         entries.put("commandString", event.getCommandString());
         entries.put("commandType", toProxy(event.getCommandType()));
         entries.put("hook", toProxy(event.getHook()));
@@ -882,7 +882,7 @@ public final class ProxyFactory {
                 "timeJoined", toProxy(threadMember.getTimeJoined()),
                 "user", toProxy(threadMember.getUser()),
                 "isThreadOwner", function(args -> threadMember.isThreadOwner()),
-                "rawFlags", threadMember.getFlagsRaw()
+                "rawFlags", threadMember.getUser().getFlagsRaw()
             )
         );
     }

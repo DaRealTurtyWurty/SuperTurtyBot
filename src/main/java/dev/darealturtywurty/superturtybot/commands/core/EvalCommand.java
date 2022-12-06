@@ -87,7 +87,7 @@ public class EvalCommand extends CoreCommand {
             bindings.put("channelType", ProxyFactory.toProxy(event.getChannelType()));
             bindings.put("member", ProxyFactory.toProxy(event.getMember()));
             bindings.put("commandId", event.getCommandIdLong());
-            bindings.put("commandPath", event.getCommandPath());
+            bindings.put("commandPath", event.getCommandString());
             bindings.put("commandString", event.getCommandString());
             bindings.put("commandType", ProxyFactory.toProxy(event.getCommandType()));
             bindings.put("guildLocale", ProxyFactory.toProxy(event.getGuildLocale()));
