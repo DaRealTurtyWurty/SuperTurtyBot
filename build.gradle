@@ -74,6 +74,9 @@ dependencies {
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.3.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
     implementation group: 'io.javalin', name: 'javalin', version: '5.2.0'
+
+    annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.20"
+    compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.20"
 }
 
 application {
