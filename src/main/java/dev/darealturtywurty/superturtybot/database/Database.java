@@ -15,6 +15,8 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 
+import java.util.List;
+
 public class Database {
     private static final Database DATABASE = new Database();
 
@@ -32,6 +34,7 @@ public class Database {
     public final MongoCollection<SteamNotifier> steamNotifier;
     public final MongoCollection<Report> reports;
     public final MongoCollection<Economy> economy;
+    public final MongoCollection<Quote> quotes;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -57,6 +60,7 @@ public class Database {
         this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
         this.reports = database.getCollection("reports", Report.class);
         this.economy = database.getCollection("economy", Economy.class);
+        this.quotes = database.getCollection("quotes", Quote.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -79,6 +83,7 @@ public class Database {
         this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
         this.reports.createIndex(guildIndex);
         this.economy.createIndex(guildUserIndex);
+        this.quotes.createIndex(guildUserIndex);
     }
 
     public static Database getDatabase() {

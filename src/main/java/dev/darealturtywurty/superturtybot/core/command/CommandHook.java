@@ -191,6 +191,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new NotifierCommand());
         cmds.add(new PeriodicTableCommand());
         cmds.add(new FactCommand());
+        cmds.add(new QuoteCommand());
 
         // Moderation
         cmds.add(new BanCommand());
