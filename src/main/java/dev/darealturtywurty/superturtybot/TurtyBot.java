@@ -21,6 +21,8 @@ import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
 public class TurtyBot {
+    public static final long START_TIME = System.currentTimeMillis();
+
     public static void main(String[] args) throws InvalidTokenException {
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(),
             Environment.INSTANCE.loggingWebhookToken());
