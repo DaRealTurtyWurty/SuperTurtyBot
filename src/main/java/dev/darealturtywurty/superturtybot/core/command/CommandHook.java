@@ -169,7 +169,7 @@ public class CommandHook extends ListenerAdapter {
         // cmds.add(new UserConfigCommand());
         cmds.add(new OptCommand());
         cmds.add(new UptimeCommand());
-        cmds.add(new SystemStatsCommand());
+        //cmds.add(new SystemStatsCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());
