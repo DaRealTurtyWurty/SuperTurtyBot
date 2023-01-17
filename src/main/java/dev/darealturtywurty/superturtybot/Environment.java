@@ -161,4 +161,8 @@ public final class Environment {
     public String urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
     }
+
+    public String youtubeApiKey() {
+        return getString("YOUTUBE_API_KEY");
+    }
 }
