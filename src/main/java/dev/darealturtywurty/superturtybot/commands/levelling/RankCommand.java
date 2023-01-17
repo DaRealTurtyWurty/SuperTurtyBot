@@ -284,15 +284,19 @@ public class RankCommand extends CoreCommand {
             graphics.drawLine(700, 300 + fontMetrics.getDescent(), 2200 - xModifier + textWidth,
                 300 + fontMetrics.getDescent());
 
-            final var xpStr = StringUtils.numberFormat(xp, 0).replace(".0", "");
+            // Level
             final var levelStr = String.valueOf(level);
-            final var nextLevelXPStr = StringUtils.numberFormat(nextLevelXp, 0).replace(".0", "");
             graphics.setColor(card.getLevelTextColor().asColor());
             graphics.drawString("Level " + levelStr, 700, 450);
             graphics.setFont(this.usedFont.deriveFont(75f));
 
+            // XP
+            final var currentXp = xp - LevellingManager.getXPForLevel(level);
+            final var nextXp = nextLevelXp - LevellingManager.getXPForLevel(level);
+            final var xpStr = currentXp + " / " + nextXp + " XP";
+
             graphics.setColor(card.getXpTextColor().asColor());
-            drawRightAlignedString(graphics, xpStr + " / " + nextLevelXPStr, this.usedFont.deriveFont(75f), 2600, 375);
+            drawRightAlignedString(graphics, xpStr, this.usedFont.deriveFont(75f), 2600, 375);
 
             // XP Bar
             if (!card.getXpOutlineImage().isBlank()) {
