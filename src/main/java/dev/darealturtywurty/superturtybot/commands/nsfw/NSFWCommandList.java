@@ -6,7 +6,10 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import okhttp3.Request;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jsoup.Jsoup;
@@ -27,6 +30,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand.addRegenerateButton;
 
 public class NSFWCommandList {
     public record NSFWReddit(String name, String... subreddits) {
@@ -777,24 +782,26 @@ public class NSFWCommandList {
                 "wetmale", "GayThong", "ImaginaryGayBoners", "nsfw_gays"));
     }
 
-    public static void addAll(Map<String, Consumer<SlashCommandInteractionEvent>> map) {
+    public static void addAll(Map<String, Consumer<CommandData>> map) {
         map.put("hentai", event -> {
             final var request = new Request.Builder().url("https://nekobot.xyz/api/image?type=hentai").build();
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(), event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai. Please report the following error to the bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai is unavailable right now. Please try again later!").queue();
+                event.hook().editOriginal("Hentai is unavailable right now. Please try again later!").setFiles()
+                        .setComponents().setEmbeds().queue();
             }
         });
 
@@ -803,19 +810,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai anal. Please report the following error to the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai anal is unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai anal is unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -824,19 +833,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai boobjobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai boobjobs are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai boobjobs are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -845,19 +856,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai boobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai boobs are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai boobs are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -866,19 +879,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai foxes. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai foxes are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai foxes are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -887,19 +902,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai kemonomimi. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai kemonomimi is unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai kemonomimi is unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -908,19 +925,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai midriff. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai midriff is unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai midriff is unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -929,19 +948,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai nekos. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai nekos are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai nekos are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -950,19 +971,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai tentacles. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai tentacles are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai tentacles are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -971,19 +994,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai thighs. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai thighs are unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai thighs are unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -992,19 +1017,21 @@ public class NSFWCommandList {
             try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 final String result = Constants.GSON.fromJson(Objects.requireNonNull(response.body()).string(),
                         JsonObject.class).get("message").getAsString();
-                event.replyEmbeds(
+                event.hook().editOriginalEmbeds(
                                 new EmbedBuilder().setColor(Color.GREEN).setTimestamp(Instant.now()).setImage(result).build())
-                        .queue();
+                        .setFiles().setComponents().queue();
+                addRegenerateButton(event.hook(), event.user(), event.group(),
+                        event.subcommand());
             } catch (final IOException exception) {
                 String strBuilder = "```\n" + exception.getLocalizedMessage() + "\n" + ExceptionUtils.getStackTrace(
                         exception) + "```";
 
-                event.reply(
+                event.hook().editOriginal(
                                 "There was an issue retrieving hentai yaoi. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.deferReply(true).setContent("Hentai yaoi is unavailable right now. Please try again later!")
-                        .queue();
+                event.hook().editOriginal("Hentai yaoi is unavailable right now. Please try again later!")
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
 
@@ -1015,14 +1042,16 @@ public class NSFWCommandList {
 
             final var embed = new EmbedBuilder();
             embed.setTitle("You are under arrest!");
-            embed.setDescription(event.getUser().getAsMention() + ", you have been spotted looking for loli!");
+            embed.setDescription(event.user().getAsMention() + ", you have been spotted looking for loli!");
             embed.setImage(GIFS[ThreadLocalRandom.current().nextInt(GIFS.length)]);
             embed.setTimestamp(Instant.now());
-            event.replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            event.hook().editOriginalEmbeds(embed.build()).setFiles().setComponents().mentionRepliedUser(false).queue();
 
-            if (event.isFromGuild() && Objects.requireNonNull(Objects.requireNonNull(event.getMember()).getVoiceState())
+            if (event.hook().getInteraction().isFromGuild() && Objects.requireNonNull(
+                            Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
                     .inAudioChannel()) {
-                AudioManager.play(event.getGuild(), event.getMember().getVoiceState().getChannel(),
+                AudioManager.play(event.hook().getInteraction().getGuild(),
+                        event.hook().getInteraction().getMember().getVoiceState().getChannel(),
                         Path.of(FBI_AUDIO).toFile());
             }
         });
@@ -1030,10 +1059,11 @@ public class NSFWCommandList {
         map.put("orgasm", event -> {
             final String PATH = "src/main/resources/audio/orgasms/";
 
-            if (!event.isFromGuild() || !Objects.requireNonNull(
-                    Objects.requireNonNull(event.getMember()).getVoiceState()).inAudioChannel()) {
-                event.deferReply(true).setContent("❌ You must be in a server voice channel to use this command!")
-                        .queue();
+            if (!event.hook().getInteraction().isFromGuild() || !Objects.requireNonNull(
+                            Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
+                    .inAudioChannel()) {
+                event.hook().editOriginal("❌ You must be in a server voice channel to use this command!")
+                        .setFiles().setComponents().setEmbeds().queue();
                 return;
             }
 
@@ -1041,18 +1071,20 @@ public class NSFWCommandList {
             try (Stream<Path> paths = Files.list(Path.of(PATH))) {
                 files = paths.map(Path::toFile).collect(Collectors.toList());
             } catch (final IOException exception) {
-                event.deferReply(true).setContent(
+                event.hook().editOriginal(
                         "There has been an issue with the `" + Environment.INSTANCE.defaultPrefix() + "orgasm` command! Please report the following to the bot owner:\n" + exception.getMessage() + "\n" + ExceptionUtils.getMessage(
-                                exception)).queue();
+                                exception)).setFiles().setComponents().setEmbeds().queue();
                 return;
             }
 
             Collections.shuffle(files);
-            AudioManager.play(event.getGuild(), event.getMember().getVoiceState().getChannel(), files.get(0));
+            AudioManager.play(event.hook().getInteraction().getGuild(),
+                    event.hook().getInteraction().getMember().getVoiceState().getChannel(),
+                    files.get(0));
         });
 
         map.put("rule34", event -> {
-            String searchTerm = Objects.requireNonNull(event.getOption("search_term")).getAsString();
+            String searchTerm = event.rule34SearchTerm().orElse("");
             try {
                 final String encodedInput = URLEncoder.encode(searchTerm.trim().replace(" ", "_"),
                         StandardCharsets.UTF_8);
@@ -1091,7 +1123,8 @@ public class NSFWCommandList {
                 }
 
                 if (images.isEmpty()) {
-                    event.deferReply(true).setContent("No results found for `" + searchTerm + "`.").queue();
+                    event.hook().editOriginal("No results found for `" + searchTerm + "`.").setFiles().setComponents()
+                            .setEmbeds().queue();
                     return;
                 }
 
@@ -1099,21 +1132,62 @@ public class NSFWCommandList {
                 final Document imagePage = Jsoup.connect("https://rule34.xxx/" + images.get(0)).get();
                 final Element image = imagePage.selectFirst("img#image");
                 if (image == null) {
-                    event.deferReply(true).setContent("No results found for `" + searchTerm + "`.").queue();
+                    event.hook().editOriginal("No results found for `" + searchTerm + "`.").setFiles().setComponents()
+                            .setEmbeds().queue();
                     return;
                 }
 
                 final String imageURL = image.attr("src");
-                event.reply(imageURL).queue();
+                event.hook().editOriginal(imageURL).queue();
             } catch (final IOException exception) {
-                event.deferReply(true)
-                        .setContent("There was an issue accessing the rule34 database! Please try again later.")
-                        .queue();
+                event.hook().editOriginal("There was an issue accessing the rule34 database! Please try again later.")
+                        .setFiles().setComponents().setEmbeds().queue();
             } catch (final NullPointerException exception) {
-                event.deferReply(true).setContent(
+                event.hook().editOriginal(
                                 "I have not found any rule34 for '" + searchTerm.trim() + "'! This could however be a bug, feel free to try again.")
-                        .queue();
+                        .setFiles().setComponents().setEmbeds().queue();
             }
         });
+    }
+
+    public record CommandData(InteractionHook hook, User user, String group, String subcommand,
+                              Optional<String> rule34SearchTerm) {
+        public static CommandData from(final SlashCommandInteractionEvent event) {
+            return new NSFWCommandList.CommandData(event.getHook(), event.getUser(), event.getSubcommandGroup(),
+                    event.getSubcommandName(),
+                    event.getOption("search_term", Optional.empty(),
+                            optionMapping -> Optional.of(optionMapping.getAsString())));
+        }
+
+        public static CommandData from(final ButtonInteractionEvent event) {
+            if (!Objects.requireNonNull(event.getButton().getId()).startsWith("regenerate-"))
+                return null;
+
+            String[] split = event.getButton().getId().split("-");
+            if (split.length != 5) {
+                event.getHook().editOriginal(
+                                "There has been an error processing the command you tried to run. Please try again!")
+                        .setFiles().setComponents().setEmbeds().queue();
+                return null;
+            }
+
+            long messageId = Long.parseLong(split[1]);
+            long userId = Long.parseLong(split[2]);
+            String group = split[3];
+            String subcommand = split[4];
+
+            if (event.getMessageIdLong() != messageId) {
+                return null;
+            }
+
+            if (event.getUser().getIdLong() != userId) {
+                event.getHook().editOriginal("You do not have permission to regenerate this command!")
+                        .setFiles().setComponents().setEmbeds().queue();
+                return null;
+            }
+
+            return new NSFWCommandList.CommandData(event.getHook(), event.getUser(), group,
+                    subcommand, Optional.empty());
+        }
     }
 }
