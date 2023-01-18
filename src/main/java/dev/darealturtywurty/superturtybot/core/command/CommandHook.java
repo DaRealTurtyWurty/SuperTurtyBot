@@ -214,6 +214,7 @@ public class CommandHook extends ListenerAdapter {
 
         // NSFW
         cmds.add(new NSFWCommand());
+        cmds.add(new GuessSexPositionCommand());
 
         // Music
         cmds.add(new JoinCommand());
