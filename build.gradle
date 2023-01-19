@@ -73,7 +73,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.4.1'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.3.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '5.2.0'
+    implementation group: 'io.javalin', name: 'javalin', version: '5.3.1'
 
     implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.0'
 
