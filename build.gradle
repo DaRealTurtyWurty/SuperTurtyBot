@@ -55,7 +55,7 @@ dependencies {
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
     implementation group: "com.github.jan-tennert", name: "R6StatsJava", version: "1.3.4"
     
-    implementation group: "org.jfree", name: "jfreechart", version: "1.5.3"
+    implementation group: "org.jfree", name: "jfreechart", version: "1.5.4"
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
     implementation group: "com.object-refinery", name: "orsoncharts", version: "1.7" 
     
