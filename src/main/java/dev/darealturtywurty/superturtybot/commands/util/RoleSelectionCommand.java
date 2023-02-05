@@ -11,18 +11,18 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Component;
-import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
-import net.dv8tion.jda.internal.interactions.component.SelectMenuImpl;
 
 import java.time.Instant;
 import java.util.List;
@@ -104,8 +104,8 @@ public class RoleSelectionCommand extends CoreCommand {
     }
 
     @Override
-    public void onGenericSelectMenuInteraction(GenericSelectMenuInteractionEvent event) {
-        if (!event.isFromGuild()) return;
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        if (!event.isFromGuild() || event.getGuild() == null) return;
 
         final String id = event.getComponentId();
         if (!id.startsWith("role-selection-")) return;
@@ -121,8 +121,8 @@ public class RoleSelectionCommand extends CoreCommand {
 
         final Member member = event.getMember();
         final Guild guild = event.getGuild();
-        List<String> values = event.getValues().stream().filter(String.class::isInstance).map(String.class::cast)
-                .toList();
+        List<String> values = event.getValues();
+
         for (final String value : values) {
             long roleId;
             try {
@@ -140,6 +140,12 @@ public class RoleSelectionCommand extends CoreCommand {
                 return;
             }
 
+            if (member == null) {
+                event.deferReply(true).setContent("❌ You are not a member of this server!").mentionRepliedUser(false)
+                        .queue();
+                return;
+            }
+
             if (member.getRoles().contains(role)) {
                 guild.removeRoleFromMember(member, role).queue();
             } else {
@@ -152,28 +158,38 @@ public class RoleSelectionCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
-        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+        final Member member = event.getMember();
+        if (member == null) {
+            reply(event, "❌ You are not a member of this server!", false, true);
+            return;
+        }
+
+        if (!member.hasPermission(Permission.MANAGE_SERVER)) {
             reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
         }
 
-        event.deferReply(true).queue();
         final String subcommand = event.getSubcommandName();
+        if (subcommand == null) {
+            reply(event, "❌ The subcommand that you have selected is invalid!", false, true);
+            return;
+        }
+
         switch (subcommand) {
             case "create" -> {
                 final TextChannel channel = event.getOption("channel", null,
                         mapping -> mapping.getChannelType().isMessage() ? mapping.getAsChannel()
                                 .asTextChannel() : null);
 
-                final String title = event.getOption("title").getAsString();
-                final Role role = event.getOption("role").getAsRole();
-                final String emoji = event.getOption("emoji").getAsString();
-                final String description = event.getOption("description").getAsString();
+                final String title = event.getOption("title", "Unknown", OptionMapping::getAsString);
+                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+                final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
+                final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
                 final int color = event.getOption("embed_color", 0x0000FF, OptionMapping::getAsInt);
 
                 if ((channel == null) || (channel.getGuild().getIdLong() != event.getGuild().getIdLong())) {
@@ -181,7 +197,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                if (role.getGuild().getIdLong() != event.getGuild().getIdLong()) {
+                if (role == null || role.getGuild().getIdLong() != event.getGuild().getIdLong()) {
                     reply(event, "❌ The role that you have specified is invalid!", false, true);
                     return;
                 }
@@ -200,9 +216,9 @@ public class RoleSelectionCommand extends CoreCommand {
                 embed.setTitle(title);
                 embed.setColor(color);
                 embed.setTimestamp(Instant.now());
-                embed.setFooter(event.getMember().getEffectiveName() + event.getUser().getDiscriminator(),
-                        event.getMember().getEffectiveAvatarUrl());
-                embed.addField(emoji + " " + role.getAsMention(), description, false);
+                embed.setFooter(member.getEffectiveName() + member.getUser().getDiscriminator(),
+                        member.getEffectiveAvatarUrl());
+                embed.addField(emoji + " `@" + role.getName() + "`", description, false);
 
                 channel.sendMessageEmbeds(embed.build()).queue(msg -> {
                     msg.editMessageComponents(ActionRow.of(StringSelectMenu.create("role-selection-" + msg.getId())
@@ -213,7 +229,7 @@ public class RoleSelectionCommand extends CoreCommand {
             }
 
             case "add" -> {
-                String messageURL = event.getOption("message-url").getAsString();
+                String messageURL = event.getOption("message-url", "Unknown", OptionMapping::getAsString);
                 if (!messageURL.startsWith("https://discord.com/channels/")) {
                     reply(event, "❌ The message URL that you have provided is invalid!", false, true);
                     return;
@@ -268,14 +284,19 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                final Role role = event.getOption("role").getAsRole();
-                final String emoji = event.getOption("emoji").getAsString();
-                final String description = event.getOption("description").getAsString();
+                if (message.getAuthor().getIdLong() != event.getJDA().getSelfUser().getIdLong()) {
+                    reply(event, "❌ The message URL that you have provided is invalid!", false, true);
+                    return;
+                }
+
+                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+                final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
+                final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
 
                 StringSelectMenu menu = null;
-                for (final Component component : message.getComponents()) {
+                for (final LayoutComponent component : message.getComponents()) {
                     if (component instanceof final ActionRow row) {
-                        for (final Component column : row.getComponents()) {
+                        for (final ItemComponent column : row.getComponents()) {
                             if (column instanceof final StringSelectMenu selection) {
                                 menu = selection;
                                 break;
@@ -303,15 +324,16 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                menu.getOptions()
+                StringSelectMenu.Builder menuBuilder = menu.createCopy();
+                menuBuilder.getOptions()
                         .add(SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
                                 .withDescription(description));
-                message.editMessageComponents(ActionRow.of(menu)).queue();
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).queue();
                 reply(event, "✅ I have added the role to the role selection menu!");
             }
 
             case "remove" -> {
-                String messageURL = event.getOption("message-url").getAsString();
+                String messageURL = event.getOption("message-url", "Unknown", OptionMapping::getAsString);
                 if (!messageURL.startsWith("https://discord.com/channels/")) {
                     reply(event, "❌ The message URL that you have provided is invalid!", false, true);
                     return;
@@ -366,7 +388,12 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                final Role role = event.getOption("role").getAsRole();
+                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+
+                if (role == null) {
+                    reply(event, "❌ The role that you have provided is invalid!", false, true);
+                    return;
+                }
 
                 StringSelectMenu menu = null;
                 for (final Component component : message.getComponents()) {
@@ -392,13 +419,14 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                menu.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
-                message.editMessageComponents(ActionRow.of(menu)).queue();
+                StringSelectMenu.Builder menuBuilder = menu.createCopy();
+                menuBuilder.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).queue();
                 reply(event, "✅ I have removed the role from the role selection menu!");
             }
 
             case "delete" -> {
-                String messageURL = event.getOption("message-url").getAsString();
+                String messageURL = event.getOption("message-url", "Unknown", OptionMapping::getAsString);
                 if (!messageURL.startsWith("https://discord.com/channels/")) {
                     reply(event, "❌ The message URL that you have provided is invalid!", false, true);
                     return;
