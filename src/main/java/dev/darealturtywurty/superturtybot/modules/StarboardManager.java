@@ -1,18 +1,7 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import java.awt.Color;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-
 import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -21,17 +10,22 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.bson.conversions.Bson;
+
+import java.awt.*;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class StarboardManager extends ListenerAdapter {
     public static final StarboardManager INSTANCE = new StarboardManager();
@@ -166,6 +160,11 @@ public final class StarboardManager extends ListenerAdapter {
     private static CompletableFuture<Long> sendStarboard(JDA jda, TextChannel channel, Bson filter, Showcase showcase) {
         final var future = new CompletableFuture<Long>();
         final TextChannel original = jda.getTextChannelById(showcase.getChannel());
+        if(original == null) {
+            future.complete(-1L);
+            return future;
+        }
+
         original.retrieveMessageById(showcase.getMessage()).queue(msg -> {
             final User author = msg.getAuthor();
             final Member member = original.getGuild().getMember(author);
@@ -182,7 +181,7 @@ public final class StarboardManager extends ListenerAdapter {
                     .addField("Source", "[Jump]" + "(" + msg.getJumpUrl() + ")", false)
                     .setImage(msg.getEmbeds().isEmpty()
                         ? msg.getAttachments().isEmpty() ? null : msg.getAttachments().get(0).getUrl()
-                        : msg.getEmbeds().get(0).getImage().getUrl())
+                        : msg.getEmbeds().get(0).getImage() == null ? null : msg.getEmbeds().get(0).getImage().getUrl())
                     .build())
                 .queue(ms -> future.complete(ms.getIdLong()));
         }, error -> {
