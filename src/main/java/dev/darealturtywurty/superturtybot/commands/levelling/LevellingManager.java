@@ -23,8 +23,7 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,18 +32,11 @@ public final class LevellingManager extends ListenerAdapter {
     private final Map<Long, Set<Long>> disabledChannels = new HashMap<>();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
     private final List<Long> disabledGuilds = List.of();
-    private final Timer cooldownTimer = new Timer();
 
     private LevellingManager() {
-        final var cooldownManager = new CooldownManager();
-        this.cooldownTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                cooldownManager.run();
-            }
-        }, 0, 1000);
-
-        ShutdownHooks.register(this.cooldownTimer::cancel);
+        ScheduledExecutorService cooldownScheduler = Executors.newSingleThreadScheduledExecutor();
+        cooldownScheduler.scheduleAtFixedRate(new CooldownManager(), 0, 1000, TimeUnit.MILLISECONDS);
+        ShutdownHooks.register(cooldownScheduler::shutdown);
     }
 
     public boolean areLevelsEnabled(Guild guild) {
@@ -53,8 +45,7 @@ public final class LevellingManager extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem() || event.getAuthor()
-                .isBot()) return;
+        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem() || event.getAuthor().isBot()) return;
 
         final Guild guild = event.getGuild();
 
@@ -65,7 +56,7 @@ public final class LevellingManager extends ListenerAdapter {
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong())) return;
 
         Member member = event.getMember();
-        if (!cooldown(guild, member, config)) return;
+        if (member == null || !cooldown(guild, member, config)) return;
 
         int xp = addXP(guild, member.getUser(),
                 ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP()),
@@ -102,11 +93,11 @@ public final class LevellingManager extends ListenerAdapter {
     public int addXP(Guild guild, User user, int xp, @Nullable LevelUpMessage levelUpMessage) {
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
 
-        final Levelling userProfile = Database.getDatabase().levelling.find(filter).first();
-        if (userProfile == null) {
-            return 0;
-        }
+        Member member = guild.getMember(user);
+        if (member == null)
+            return -1;
 
+        final Levelling userProfile = getProfile(guild, member);
         final List<Bson> updates = new ArrayList<>();
 
         final int level = userProfile.getLevel();
@@ -130,14 +121,7 @@ public final class LevellingManager extends ListenerAdapter {
         }
 
         Database.getDatabase().levelling.updateOne(filter, updates);
-
-        final var member = guild.getMember(user);
-        if (member == null) {
-            return currentXP;
-        }
-
         updateLevelRoles(guild, member, newLevel);
-
         return currentXP;
     }
 
@@ -157,8 +141,9 @@ public final class LevellingManager extends ListenerAdapter {
         final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
         final var levelRoles = getLevelRoles(config);
         final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
-                .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue).map(guild::getRoleById)
-                .filter(Objects::nonNull).toList();
+                                         .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
+                                         .map(guild::getRoleById)
+                                         .filter(Objects::nonNull).toList();
         guild.modifyMemberRoles(member, toAddRoles, null).queue();
     }
 
@@ -199,7 +184,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         final Map<String, Rarity> canAdd = new HashMap<>();
         RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values()
-                .forEach(item -> canAdd.put(item.getName(), item.rarity));
+                                            .forEach(item -> canAdd.put(item.getName(), item.rarity));
 
         inventory.forEach(canAdd::remove);
 
@@ -214,8 +199,8 @@ public final class LevellingManager extends ListenerAdapter {
         if (config.getLevelRoles().isEmpty()) return Map.of();
 
         return Stream.of(config.getLevelRoles().split("[\s;]")).map(it -> it.split("->"))
-                .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
-                .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
+                     .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
+                     .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }
 
     public static int getLevelForXP(final int xp) {
