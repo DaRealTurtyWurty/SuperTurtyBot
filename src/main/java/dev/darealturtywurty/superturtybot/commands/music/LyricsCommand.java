@@ -1,12 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -20,6 +14,13 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+
+import java.awt.*;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class LyricsCommand extends CoreCommand {
     private static final Map<Long, String> ID_LYRIC_MAP = new HashMap<>();
@@ -153,8 +154,13 @@ public class LyricsCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
         
         try {
-            final SongSearch search = Constants.GENIUS_LYRICS
-                .search(AudioManager.getCurrentlyPlaying(event.getGuild()).getInfo().title);
+            AudioTrack playing = AudioManager.getCurrentlyPlaying(event.getGuild());
+            if(playing == null) {
+                event.getHook().editOriginal("❌ There are no lyrics found for this song!").queue();
+                return;
+            }
+
+            final SongSearch search = Constants.GENIUS_LYRICS.search(playing.getInfo().title);
             final LinkedList<Hit> hits = search.getHits();
             if (hits.isEmpty()) {
                 event.getHook().editOriginal("❌ There are no lyrics found for this song!").queue();
