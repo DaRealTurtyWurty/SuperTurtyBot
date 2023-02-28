@@ -9,21 +9,20 @@ import dev.darealturtywurty.superturtybot.commands.image.ImageCommand;
 import dev.darealturtywurty.superturtybot.commands.image.InspiroBotCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
-import dev.darealturtywurty.superturtybot.commands.levelling.XPInventoryCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.music.*;
-import dev.darealturtywurty.superturtybot.commands.nsfw.*;
+import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
+import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-import dev.darealturtywurty.superturtybot.modules.economy.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -185,7 +184,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ApproveSuggestionCommand());
         cmds.add(new DenySuggestionCommand());
         cmds.add(new ConsiderSuggestionCommand());
-        cmds.add(new MojangStatusCommand());
         cmds.add(new HighlightCommand());
         cmds.add(new RoleSelectionCommand());
         cmds.add(new TopicCommand());
@@ -257,7 +255,7 @@ public class CommandHook extends ListenerAdapter {
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
-        cmds.add(new XPInventoryCommand());
+        //cmds.add(new XPInventoryCommand());
 
         // Economy
         //cmds.add(new BalanceCommand());
