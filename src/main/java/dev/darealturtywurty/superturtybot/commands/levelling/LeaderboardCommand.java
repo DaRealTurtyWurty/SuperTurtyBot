@@ -1,28 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.bson.conversions.Bson;
-
 import com.google.common.collect.Lists;
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -35,6 +14,18 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bson.conversions.Bson;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class LeaderboardCommand extends CoreCommand {
     private static final Color GOLD_COLOR = Color.decode("#ffd700");
@@ -48,8 +39,9 @@ public class LeaderboardCommand extends CoreCommand {
         final var graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
         try {
             this.usedFont = Font
-                .createFont(Font.TRUETYPE_FONT, TurtyBot.class.getResourceAsStream("/fonts/JetBrainsMono-Medium.ttf"))
-                .deriveFont(72f);
+                    .createFont(Font.TRUETYPE_FONT,
+                            TurtyBot.class.getResourceAsStream("/fonts/JetBrainsMono-Medium.ttf"))
+                    .deriveFont(72f);
         } catch (FontFormatException | IOException exception) {
             throw new IllegalStateException("Unable to load font", exception);
         }
@@ -86,7 +78,7 @@ public class LeaderboardCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             event.deferReply(true).setContent("You can only use this command inside of a server!")
-                .mentionRepliedUser(false).queue();
+                 .mentionRepliedUser(false).queue();
             return;
         }
 
@@ -101,19 +93,22 @@ public class LeaderboardCommand extends CoreCommand {
         }
 
         final List<Levelling> sorted = profiles.stream().sorted(Comparator.comparing(Levelling::getXp).reversed())
-            .toList();
-        
+                                               .filter(profile -> event.getGuild()
+                                                                       .getMemberById(profile.getUser()) != null)
+                                               .toList();
+
         final List<Levelling> top10 = Lists.partition(sorted, 10).get(0);
         try {
             final BufferedImage lb = constructLeaderboard(event.getGuild(), top10);
             final var bao = new ByteArrayOutputStream();
             ImageIO.write(lb, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), "leaderboard.png"))
-                .mentionRepliedUser(false).queue();
+                 .mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             event.getHook().sendMessage(
-                "There has been an issue processing this leaderboard. The bot owner has been informed of this issue.")
-                .mentionRepliedUser(false).queue();
+                         "There has been an issue processing this leaderboard. The bot owner has been informed of " +
+                                 "this issue.")
+                 .mentionRepliedUser(false).queue();
             Constants.LOGGER.error(ExceptionUtils.getStackTrace(exception));
         }
     }
@@ -137,7 +132,7 @@ public class LeaderboardCommand extends CoreCommand {
         graphics.setStroke(new BasicStroke(10));
         graphics.setColor(Color.LIGHT_GRAY);
         graphics.drawLine(600, 300 + metrics.getHeight() / 2 - 20, 600 + guildLength,
-            300 + metrics.getHeight() / 2 - 20);
+                300 + metrics.getHeight() / 2 - 20);
 
         final int startX = 80, startY = 568, partHeight = 140, spacing = 40;
         for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
@@ -165,7 +160,7 @@ public class LeaderboardCommand extends CoreCommand {
 
             final BufferedImage avatarImage = ImageIO.read(new URL(avatarURL));
             graphics.drawImage(avatarImage, startX, startY + (spacing + partHeight) * indexedRank, partHeight,
-                partHeight, null);
+                    partHeight, null);
 
             switch (rank) {
                 case 1:
@@ -186,10 +181,10 @@ public class LeaderboardCommand extends CoreCommand {
 
             graphics.setColor(Color.WHITE);
             graphics.drawString(
-                (username.length() > 15 ? username.substring(0, 15) + "..." : username) + "#" + discriminator
-                    + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
-                    + StringUtils.numberFormat(level, 0).replace(".0", ""),
-                420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
+                    (username.length() > 15 ? username.substring(0, 15) + "..." : username) + "#" + discriminator
+                            + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
+                            + StringUtils.numberFormat(level, 0).replace(".0", ""),
+                    420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
         }
 
         graphics.dispose();
