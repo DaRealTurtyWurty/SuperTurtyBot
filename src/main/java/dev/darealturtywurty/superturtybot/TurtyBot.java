@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot;
 
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.MusicListener;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
@@ -86,6 +87,9 @@ public class TurtyBot {
 
         // Add the logging manager so that the bot can log messages to a discord channel
         builder.addEventListeners(LoggingManager.INSTANCE);
+
+        // Add the music manager so that we can leave voice channels when the bot is idle
+        builder.addEventListeners(MusicListener.INSTANCE);
     }
 
     private static void loadRegisterers() {
