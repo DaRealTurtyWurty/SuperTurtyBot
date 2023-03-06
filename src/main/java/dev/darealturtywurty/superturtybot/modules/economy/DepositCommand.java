@@ -1,7 +1,6 @@
-package dev.darealturtywurty.superturtybot.modules.economy.command;
+package dev.darealturtywurty.superturtybot.modules.economy;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;

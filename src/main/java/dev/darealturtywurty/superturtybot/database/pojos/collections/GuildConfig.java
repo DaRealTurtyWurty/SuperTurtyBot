@@ -566,59 +566,6 @@ public class GuildConfig {
     public void setOptInChannels(String optInChannels) {
         this.optInChannels = optInChannels;
     }
-    
-    public boolean shouldLog(Event event) {
-        if (event instanceof ChannelCreateEvent)
-            return this.logChannelCreate;
-        if (event instanceof ChannelDeleteEvent)
-            return this.logChannelDelete;
-        if (event instanceof EmojiAddedEvent)
-            return this.logEmojiAdded;
-        if (event instanceof EmojiRemovedEvent)
-            return this.logEmojiRemoved;
-        if (event instanceof GenericChannelUpdateEvent)
-            return this.logChannelUpdate;
-        if (event instanceof GenericEmojiUpdateEvent)
-            return this.logEmojiUpdate;
-        if (event instanceof GenericForumTagUpdateEvent)
-            return this.logForumTagUpdate;
-        if (event instanceof GenericGuildStickerUpdateEvent)
-            return this.logStickerUpdate;
-        if (event instanceof GenericGuildUpdateEvent)
-            return this.logGuildUpdate;
-        if (event instanceof GenericRoleUpdateEvent)
-            return this.logRoleUpdate;
-        if (event instanceof GuildBanEvent)
-            return this.logBan;
-        if (event instanceof GuildInviteCreateEvent)
-            return this.logInviteCreate;
-        if (event instanceof GuildInviteDeleteEvent)
-            return this.logInviteDelete;
-        if (event instanceof GuildMemberJoinEvent)
-            return this.logMemberJoin;
-        if (event instanceof GuildMemberRemoveEvent)
-            return this.logMemberRemove;
-        if (event instanceof GuildStickerAddedEvent)
-            return this.logStickerAdded;
-        if (event instanceof GuildStickerRemovedEvent)
-            return this.logStickerRemove;
-        if (event instanceof GuildMemberUpdateTimeOutEvent)
-            return this.logTimeout;
-        if (event instanceof GuildUnbanEvent)
-            return this.logUnban;
-        if (event instanceof MessageBulkDeleteEvent)
-            return this.logMessageBulkDelete;
-        if (event instanceof MessageDeleteEvent)
-            return this.logMessageDelete;
-        if (event instanceof MessageUpdateEvent)
-            return this.logMessageUpdate;
-        if (event instanceof RoleCreateEvent)
-            return this.logRoleCreate;
-        if (event instanceof RoleDeleteEvent)
-            return this.logRoleDelete;
-        
-        return false;
-    }
 
     public boolean isShouldModeratorsJoinThreads() {
         return this.shouldModeratorsJoinThreads;

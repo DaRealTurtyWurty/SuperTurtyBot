@@ -1,10 +1,9 @@
-package dev.darealturtywurty.superturtybot.modules.economy.command;
+package dev.darealturtywurty.superturtybot.modules.economy;
 
 import java.awt.Color;
 import java.time.Instant;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -38,12 +37,12 @@ public class BalanceCommand extends EconomyCommand {
         
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
-        embed.setColor(EconomyManager.getBalance(account) > 0 ? Color.GREEN : Color.RED);
+        embed.setColor(account.getBalance() > 0 ? Color.GREEN : Color.RED);
         embed.setTitle("Economy Balance for: " + event.getUser().getName());
         
         // TODO: Get currency symbol from guild config
         embed.setDescription("**Wallet:** <>%d%n**Bank:** <>%d%n**Total Balance:** <>%d%n".replace("<>", "$")
-            .formatted(account.getWallet(), account.getBank(), EconomyManager.getBalance(account)));
+            .formatted(account.getWallet(), account.getBank(), account.getBalance()));
         
         embed.setFooter(event.getUser().getName() + event.getUser().getDiscriminator(),
             event.getUser().getEffectiveAvatarUrl());

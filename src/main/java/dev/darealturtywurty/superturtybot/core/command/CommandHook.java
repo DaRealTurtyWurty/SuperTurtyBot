@@ -23,7 +23,6 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSugge
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -80,6 +79,10 @@ public class CommandHook extends ListenerAdapter {
 
         // TODO: Fix this mf
         // TwitterListener.setup();
+
+        //if (!EconomyManager.isRunning()) {
+        //    EconomyManager.start(event.getJDA());
+        //}
 
         for (Guild guild : event.getJDA().getGuilds()) {
             TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general"))
@@ -267,6 +270,16 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         //cmds.add(new XPInventoryCommand());
+
+        // Economy
+        //cmds.add(new BalanceCommand());
+        //cmds.add(new RobCommand());
+        //cmds.add(new WorkCommand());
+        //cmds.add(new RewardCommand());
+        //cmds.add(new WithdrawCommand());
+        //cmds.add(new DepositCommand());
+        //cmds.add(new CrimeCommand());
+        //cmds.add(new SexWorkCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();

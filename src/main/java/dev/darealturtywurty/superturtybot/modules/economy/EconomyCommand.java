@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.economy.command;
+package dev.darealturtywurty.superturtybot.modules.economy;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
