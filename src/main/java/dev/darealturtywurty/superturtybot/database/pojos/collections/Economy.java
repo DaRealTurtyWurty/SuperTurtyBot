@@ -1,143 +1,91 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
+import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
 public class Economy {
     private long guild;
     private long user;
-    
+
     private int wallet;
     private int bank;
-    private long nextRobTime;
-    private long nextWorkTime;
+
+    private long nextRob;
+    private long nextWork;
+    private long nextCrime;
+    private long nextSexWork;
+
     private long nextDaily;
     private long nextWeekly;
     private long nextMonthly;
     private long nextYearly;
-    private long nextSexWork;
-    
+
+    private Job job;
+    private int jobLevel;
+
+    private List<ShopItem> shopItems;
+
     public Economy() {
         this(0, 0);
     }
-    
+
     public Economy(long guild, long user) {
         this.guild = guild;
         this.user = user;
-        
-        this.wallet = 0;
-        this.bank = 0;
-        this.nextRobTime = 0;
-        this.nextWorkTime = 0;
-        this.nextDaily = 0;
-        this.nextWeekly = 0;
-        this.nextMonthly = 0;
-        this.nextYearly = 0;
-        this.nextSexWork = 0;
+
+        this.shopItems = new ArrayList<>();
     }
-    
+
     public void addBank(int amount) {
         this.bank += amount;
     }
-    
+
     public void addWallet(int amount) {
         this.wallet += amount;
     }
-    
-    public int getBalance() {
-        return this.wallet + this.bank;
-    }
-    
-    public int getBank() {
-        return this.bank;
-    }
-    
-    public long getGuild() {
-        return this.guild;
-    }
-    
-    public long getNextRobTime() {
-        return this.nextRobTime;
-    }
-    
-    public long getUser() {
-        return this.user;
-    }
-    
-    public int getWallet() {
-        return this.wallet;
-    }
-    
+
     public void removeBank(int amount) {
         this.bank -= amount;
     }
-    
+
     public void removeWallet(int amount) {
         this.wallet -= amount;
     }
-    
-    public void setBank(int bank) {
-        this.bank = bank;
-    }
-    
-    public void setGuild(long guild) {
-        this.guild = guild;
-    }
-    
-    public void setNextRobTime(long nextRobTime) {
-        this.nextRobTime = nextRobTime;
-    }
 
-    public void setUser(long user) {
-        this.user = user;
-    }
+    public enum Job {
+        PROGRAMMER(100, 2, 0.075f, 3600), YOUTUBER(300, 5, 0.01f, 10800), MUSICIAN(50, 20, 0.02f, 7200), ARTIST(50, 20,
+                0.015f, 5400), DOCTOR(1000, 1.125f, 0.25f, 10800), MATHEMATICIAN(150, 1.4f, 0.75f, 1800);
 
-    public void setWallet(int wallet) {
-        this.wallet = wallet;
-    }
+        private final int salary;
+        private final float promotionMultiplier;
+        private final int workCooldownSeconds;
+        private final float promotionChance;
 
-    public void setNextWorkTime(long nextWorkTime) {
-        this.nextWorkTime = nextWorkTime;
-    }
+        Job(int salary, float promotionMultiplier, float promotionChance, int workCooldownSeconds) {
+            this.salary = salary;
+            this.promotionMultiplier = promotionMultiplier;
+            this.promotionChance = promotionChance;
+            this.workCooldownSeconds = workCooldownSeconds;
+        }
 
-    public long getNextWorkTime() {
-        return this.nextWorkTime;
-    }
+        public int getSalary() {
+            return this.salary;
+        }
 
-    public long getNextDaily() {
-        return this.nextDaily;
-    }
+        public float getPromotionMultiplier() {
+            return this.promotionMultiplier;
+        }
 
-    public void setNextDaily(long nextDaily) {
-        this.nextDaily = nextDaily;
-    }
+        public float getPromotionChance() {
+            return this.promotionChance;
+        }
 
-    public long getNextWeekly() {
-        return this.nextWeekly;
-    }
-
-    public void setNextWeekly(long nextWeekly) {
-        this.nextWeekly = nextWeekly;
-    }
-
-    public long getNextMonthly() {
-        return this.nextMonthly;
-    }
-
-    public void setNextMonthly(long nextMonthly) {
-        this.nextMonthly = nextMonthly;
-    }
-
-    public long getNextYearly() {
-        return this.nextYearly;
-    }
-
-    public void setNextYearly(long nextYearly) {
-        this.nextYearly = nextYearly;
-    }
-
-    public long getNextSexWork() {
-        return this.nextSexWork;
-    }
-
-    public void setNextSexWork(long nextSexWork) {
-        this.nextSexWork = nextSexWork;
+        public int getWorkCooldownSeconds() {
+            return this.workCooldownSeconds;
+        }
     }
 }

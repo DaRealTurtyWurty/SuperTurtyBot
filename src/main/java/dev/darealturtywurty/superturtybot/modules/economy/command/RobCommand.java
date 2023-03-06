@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.economy;
+package dev.darealturtywurty.superturtybot.modules.economy.command;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -85,7 +86,7 @@ public class RobCommand extends EconomyCommand {
         final Guild guild = event.getGuild();
         
         final Economy account = EconomyManager.fetchAccount(guild, event.getUser());
-        final long nextRobTime = account.getNextRobTime();
+        final long nextRobTime = account.getNextRob();
         if (nextRobTime > System.currentTimeMillis()) {
             reply(event, "❌ You must wait another `%d` seconds until you can rob someone!"
                 .formatted((nextRobTime - System.currentTimeMillis()) / 1000));
@@ -98,10 +99,10 @@ public class RobCommand extends EconomyCommand {
             return;
         }
 
-        account.setNextRobTime(System.currentTimeMillis() + 60 * 120 * 1000);
+        account.setNextRob(System.currentTimeMillis() + 60 * 120 * 1000);
         Database.getDatabase().economy.updateOne(
             Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
-            Updates.set("nextRobTime", account.getNextRobTime()));
+            Updates.set("nextRobTime", account.getNextRob()));
         
         final Economy robAccount = EconomyManager.fetchAccount(guild, user);
         if (robAccount.getWallet() <= 0) {
@@ -117,7 +118,7 @@ public class RobCommand extends EconomyCommand {
             account.addWallet(robbedAmount);
             robAccount.removeWallet(robbedAmount);
         } else {
-            final int fineAmount = random.nextInt(1, account.getBalance());
+            final int fineAmount = random.nextInt(1, EconomyManager.getBalance(account));
             reply(event, new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.RED)
                 .setDescription(RESPONSES.getFail(event.getUser(), user, fineAmount)));
             account.removeWallet(fineAmount);
@@ -132,7 +133,7 @@ public class RobCommand extends EconomyCommand {
             Updates.set("wallet", robAccount.getWallet()));
     }
 
-    public static record Responses(List<String> success, List<String> fail) {
+    public record Responses(List<String> success, List<String> fail) {
         public String getSuccess(User robber, User robbed, int amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                 .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
