@@ -51,7 +51,7 @@ public class TurtyBot {
         // Disable caching of activity. We can retrieve this when needed.
         builder.disableCache(CacheFlag.ACTIVITY);
 
-        // We dont need to cache overrides and voice states, its an unnecessary load.
+        // We don't need to cache overrides and voice states, its an unnecessary load.
         builder.disableCache(CacheFlag.MEMBER_OVERRIDES);
 
         // Ensure that the emotes, voice states and role tags are being cached

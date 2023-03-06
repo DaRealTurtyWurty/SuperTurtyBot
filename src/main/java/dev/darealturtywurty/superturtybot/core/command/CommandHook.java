@@ -30,6 +30,8 @@ import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
+import net.dv8tion.jda.api.entities.channel.unions.DefaultGuildChannelUnion;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.*;
@@ -83,6 +85,17 @@ public class CommandHook extends ListenerAdapter {
         //if (!EconomyManager.isRunning()) {
         //    EconomyManager.start(event.getJDA());
         //}
+
+        for (Guild guild : event.getJDA().getGuilds()) {
+            DefaultGuildChannelUnion defaultChannel = guild.getDefaultChannel();
+            if (defaultChannel == null) continue;
+
+            StandardGuildMessageChannel channel = defaultChannel.asStandardGuildMessageChannel();
+
+            channel.sendMessage(
+                            "Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.")
+                    .queue();
+        }
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
@@ -127,29 +140,29 @@ public class CommandHook extends ListenerAdapter {
         final var slashes = new AtomicInteger();
         final var prefixes = new AtomicInteger();
         cmds.stream()
-            .sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName()))
-            .forEach(cmd -> {
-                if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
-                    builder.append("\n**" + cmd.getCategory().getName() + "**\n");
-                } else if (previous.get() == null) {
-                    builder.append("**" + cmd.getCategory().getName() + "**\n");
-                }
+                .sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName()))
+                .forEach(cmd -> {
+                    if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
+                        builder.append("\n**" + cmd.getCategory().getName() + "**\n");
+                    } else if (previous.get() == null) {
+                        builder.append("**" + cmd.getCategory().getName() + "**\n");
+                    }
 
-                builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
-                previous.set(cmd);
+                    builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
+                    previous.set(cmd);
 
-                if (cmd.types.slash()) {
-                    slashes.incrementAndGet();
-                } else {
-                    prefixes.incrementAndGet();
-                }
-            });
+                    if (cmd.types.slash()) {
+                        slashes.incrementAndGet();
+                    } else {
+                        prefixes.incrementAndGet();
+                    }
+                });
 
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
             success.sendMessage(
-                           "\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.")
-                   .queue();
+                            "\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.")
+                    .queue();
             cmdList.delete().queue();
         });
     }
