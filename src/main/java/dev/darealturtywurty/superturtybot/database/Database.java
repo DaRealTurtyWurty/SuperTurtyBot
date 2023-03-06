@@ -33,7 +33,6 @@ public class Database {
     public final MongoCollection<TwitchNotifier> twitchNotifier;
     public final MongoCollection<SteamNotifier> steamNotifier;
     public final MongoCollection<Report> reports;
-    public final MongoCollection<Economy> economy;
     public final MongoCollection<Quote> quotes;
 
     public Database() {
@@ -59,7 +58,6 @@ public class Database {
         this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
         this.reports = database.getCollection("reports", Report.class);
-        this.economy = database.getCollection("economy", Economy.class);
         this.quotes = database.getCollection("quotes", Quote.class);
 
         final Bson guildIndex = Indexes.descending("guild");
@@ -82,7 +80,6 @@ public class Database {
         this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
         this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
         this.reports.createIndex(guildIndex);
-        this.economy.createIndex(guildUserIndex);
         this.quotes.createIndex(guildUserIndex);
     }
 
