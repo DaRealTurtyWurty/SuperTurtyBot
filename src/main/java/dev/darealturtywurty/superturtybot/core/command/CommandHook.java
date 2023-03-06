@@ -30,8 +30,6 @@ import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
-import net.dv8tion.jda.api.entities.channel.unions.DefaultGuildChannelUnion;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.*;
@@ -87,10 +85,12 @@ public class CommandHook extends ListenerAdapter {
         //}
 
         for (Guild guild : event.getJDA().getGuilds()) {
-            DefaultGuildChannelUnion defaultChannel = guild.getDefaultChannel();
-            if (defaultChannel == null) continue;
+            TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general"))
+                    .findFirst().orElseGet(
+                            () -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general"))
+                                    .findFirst().orElse(guild.getSystemChannel()));
 
-            StandardGuildMessageChannel channel = defaultChannel.asStandardGuildMessageChannel();
+            if (channel == null) return;
 
             channel.sendMessage(
                             "Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.")
