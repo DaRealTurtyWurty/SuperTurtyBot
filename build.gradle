@@ -69,7 +69,7 @@ dependencies {
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.14.0'
     implementation group: 'com.github.philippheuer.events4j', name: 'events4j-handler-reactor', version: '0.11.0'
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.4.2'
-    implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.4.3'
+    implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.4.4'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
     implementation group: 'io.javalin', name: 'javalin', version: '5.4.0'
 
