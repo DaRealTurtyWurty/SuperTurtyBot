@@ -9,8 +9,7 @@ import java.util.List;
 public enum MathOperation {
     ADD("%s + %s", INT), SUBTRACT("%s - %s", INT), MULTIPLY("%s * %s", INT), DIVIDE("%s / %s", INT),
     MODULO("%s %% %s", INT), SQUARE("%s ^ 2", INT), SQRT("√%s", INT), FLOOR("⌊%s⌋", FLOAT), ROUND("[%s]", FLOAT),
-    CEIL("⌈%s⌉", FLOAT), SINE("sin(%s)", INT), COSINE("cos(%s)", INT), TANGENT("tan(%s)", INT), SECANT("sec(%s)", INT),
-    COSECANT("csc(%s)", INT), COTANGENT("cot(%s)", INT);
+    CEIL("⌈%s⌉", FLOAT);
     
     private final String format;
     private final OperationType operationType;

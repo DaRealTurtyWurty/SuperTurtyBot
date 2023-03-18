@@ -18,39 +18,32 @@ public final class MathHandler {
         if ((int) number != number)
             return floats.get(RANDOM.nextInt(floats.size() - 1));
 
-        if (number == 0 && RANDOM.nextBoolean())
-            return RANDOM.nextBoolean() ? MathOperation.COSINE : MathOperation.SECANT;
+        if (number < -1000) {
+            int random = RANDOM.nextInt(4);
+            return switch (random) {
+                case 0 -> Math.sqrt(number) == (int) Math.sqrt(number) ? MathOperation.SQRT : MathOperation.ADD;
+                case 1 -> !Primes.isPrime((int) number) ? MathOperation.DIVIDE : MathOperation.ADD;
+                case 2 -> MathOperation.MODULO;
+                default -> MathOperation.ADD;
+            };
+        }
 
-        if (number <= 0)
-            return MathOperation.ADD;
-        if (number > 50_000)
-            return MathOperation.MODULO;
-
-        if (number % 30 == 0 && number % 60 != 0 && RANDOM.nextInt(5) == 0)
-            return MathOperation.SINE;
-        if (number % 60 == 0 && RANDOM.nextInt(3) == 0)
-            return MathOperation.COSINE;
-        if ((number == 45 || number == 135 || number == 180) && RANDOM.nextInt(1) == 0)
-            return MathOperation.TANGENT;
-        if ((number == 60 || number == 180 || number == 360) && RANDOM.nextInt(3) == 0)
-            return MathOperation.SECANT;
-        if ((number == 30 || number == 90 || number == 270) && RANDOM.nextInt(2) == 0)
-            return MathOperation.COSECANT;
-        if ((number == 45 || number == 90 || number == 270) && RANDOM.nextInt(1) == 0)
-            return MathOperation.COTANGENT;
+        if (number > 1000) {
+            int random = RANDOM.nextInt(4);
+            return switch (random) {
+                case 0 -> Math.sqrt(number) == (int) Math.sqrt(number) ? MathOperation.SQRT : MathOperation.SUBTRACT;
+                case 1 -> !Primes.isPrime((int) number) ? MathOperation.DIVIDE : MathOperation.SUBTRACT;
+                case 2 -> MathOperation.MODULO;
+                default -> MathOperation.SUBTRACT;
+            };
+        }
 
         final double root = Math.sqrt(number);
-        if (root == (int) root && root != Double.NaN && RANDOM.nextInt(3) == 0 && number != 1)
+        if (root == (int) root && RANDOM.nextInt(3) == 0 && number != 1)
             return MathOperation.SQRT;
 
         final List<MathOperation> ints = new ArrayList<>(MathOperation.getInts());
         ints.remove(MathOperation.SQRT);
-        ints.remove(MathOperation.SINE);
-        ints.remove(MathOperation.COSINE);
-        ints.remove(MathOperation.TANGENT);
-        ints.remove(MathOperation.SECANT);
-        ints.remove(MathOperation.COSECANT);
-        ints.remove(MathOperation.COTANGENT);
 
         if (Primes.isPrime((int) number) || number == 1) {
             ints.remove(MathOperation.DIVIDE);
@@ -94,17 +87,11 @@ public final class MathHandler {
                 yield current / getRandom(divisors);
             }
             case FLOOR -> (float) Math.floor(current);
-            case MULTIPLY -> current * RANDOM.nextInt(2, 25);
+            case MULTIPLY -> current * RANDOM.nextInt(2, current > 100 || current < -100 ? 10 : 15);
             case ROUND -> Math.round(current);
             case SQRT -> (float) Math.sqrt(current);
             case SQUARE -> current * current;
             case SUBTRACT -> current - RANDOM.nextInt(2, 100);
-            case SINE -> (float) Math.sin(current);
-            case COSINE -> (float) Math.cos(current);
-            case TANGENT -> (float) Math.tan(current);
-            case SECANT -> 1.0f / (float) Math.cos(current);
-            case COSECANT -> 1.0f / (float) Math.sin(current);
-            case COTANGENT -> 1.0f / (float) Math.tan(current);
         };
 
         return Pair.of(operation, value);
@@ -130,13 +117,10 @@ public final class MathHandler {
         final String format = operation.getFormat();
         return switch (operation) {
             case ADD -> String.format(format, (int) current, (int) (result - current));
-            case CEIL -> String.format(format, current);
+            case CEIL, ROUND, FLOOR -> String.format(format, current);
             case DIVIDE -> String.format(format, (int) current, (int) (current / result));
-            case FLOOR -> String.format(format, current);
-            case MODULO -> String.format(format, (int) current, (int) (current - result));
+            case MODULO, SUBTRACT -> String.format(format, (int) current, (int) (current - result));
             case MULTIPLY -> String.format(format, (int) current, (int) (result / current));
-            case ROUND -> String.format(format, current);
-            case SUBTRACT -> String.format(format, (int) current, (int) (current - result));
             default -> String.format(format, (int) current);
         };
     }

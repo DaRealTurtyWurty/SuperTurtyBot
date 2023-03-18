@@ -94,6 +94,9 @@ public class GuildConfig {
     private boolean logRoleCreate;
     private boolean logRoleDelete;
 
+    // Counting
+    private int maxCountingSuccession;
+
     public GuildConfig() {
         this(0L);
     }
@@ -161,6 +164,9 @@ public class GuildConfig {
         this.logMessageUpdate = true;
         this.logRoleCreate = true;
         this.logRoleDelete = true;
+
+        // Counting
+        this.maxCountingSuccession = 3;
     }
 
     public boolean isDisableLevelUpMessages() {
@@ -577,6 +583,14 @@ public class GuildConfig {
 
     public void setNsfwChannels(String nsfwChannels) {
         this.nsfwChannels = nsfwChannels;
+    }
+
+    public int getMaxCountingSuccession() {
+        return this.maxCountingSuccession;
+    }
+
+    public void setMaxCountingSuccession(int maxCountingSuccession) {
+        this.maxCountingSuccession = maxCountingSuccession;
     }
 
     public boolean shouldLog(Event event) {

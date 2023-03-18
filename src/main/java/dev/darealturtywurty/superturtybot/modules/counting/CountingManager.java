@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 
@@ -40,6 +41,14 @@ public class CountingManager extends ListenerAdapter {
             return;
         
         final TextChannel channel = event.getChannel().asTextChannel();
+
+        Guild guild = event.getGuild();
+        GuildConfig guildConfig =
+                Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (guildConfig == null)
+            return;
+
+        int maxSuccession = guildConfig.getMaxCountingSuccession();
         
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
             Filters.eq("channel", channel.getIdLong()));
@@ -59,30 +68,29 @@ public class CountingManager extends ListenerAdapter {
         // If the provided value is not valid
         if (Float.isNaN(given))
             return;
-        
+
+        UserData data;
         // If the user is the latest counter
         if (profile.getLatestCounter() == user.getIdLong()) {
             final List<UserData> users = profile.getUsers();
-            final Optional<UserData> optData = users.stream().filter(data -> data.getUser() == user.getIdLong())
+            final Optional<UserData> optData = users.stream().filter(d -> d.getUser() == user.getIdLong())
                 .findFirst();
-            
-            UserData data;
+
             // Check that the user has their data in the database
             if (optData.isPresent()) {
                 data = optData.get();
                 
-                // If the user's current count succession is already greater or equal to 3 then fail
-                if (data.getCurrentCountSuccession() >= 3) {
+                // If the user's current count succession is already greater or equal to maxSuccession then fail
+                if (data.getCurrentCountSuccession() >= maxSuccession) {
                     final float starting = CountingMode.getStartingNumber(mode);
                     final float next = CountingMode.getNextNumber(mode, starting);
                     failChannel(profile, mode, message, filter, updates,
-                        "❌ You cannot count more than 3 times in a row! The next number is: "
-                            + CountingMode.parse(mode, starting, next),
+                        "❌ You cannot count more than %s times in a row! The next number is: %s".formatted(maxSuccession, CountingMode.parse(mode, starting, next)),
                         starting, next);
                     return;
                 }
             } else {
-                // Add their data since its not present but will now need to be
+                // Add their data since it's not present but will now need to be
                 data = new UserData(user.getIdLong());
                 profile.getUsers().add(data);
             }
@@ -96,9 +104,8 @@ public class CountingManager extends ListenerAdapter {
             updates.add(Updates.set("latestCounter", profile.getLatestCounter()));
             
             final List<UserData> users = profile.getUsers();
-            final Optional<UserData> optData = users.stream().filter(data -> data.getUser() == user.getIdLong())
+            final Optional<UserData> optData = users.stream().filter(d -> d.getUser() == user.getIdLong())
                 .findFirst();
-            UserData data;
             if (optData.isPresent()) {
                 data = optData.get();
             } else {
@@ -114,7 +121,7 @@ public class CountingManager extends ListenerAdapter {
         
         final float currentNext = profile.getNextNumber();
         if (currentNext == given) {
-            message.addReaction(Emoji.fromUnicode("✅")).queue();
+            message.addReaction(Emoji.fromUnicode(data.getCurrentCountSuccession() < maxSuccession ? "✅" : "🚫")).queue();
             
             profile.setCurrentNumber(currentNext);
             updates.add(Updates.set("currentNumber", profile.getCurrentNumber()));
@@ -164,10 +171,7 @@ public class CountingManager extends ListenerAdapter {
         }
         
         final float next = CountingMode.getNextNumber(mode, starting);
-        String should = String.valueOf(currentNext);
-        if (should.endsWith(".0")) {
-            should = should.substring(0, should.length() - 2);
-        }
+        String should = CountingMode.parse(mode, starting, currentNext);
         
         failChannel(profile, mode, message, filter, updates,
             "❌ `" + content + "` is not the correct number! It should have been `" + should
@@ -187,9 +191,23 @@ public class CountingManager extends ListenerAdapter {
     public boolean setCountingChannel(Guild guild, TextChannel channel, CountingMode mode) {
         if (isCountingChannel(guild, channel))
             return false;
-        
-        return Database.getDatabase().counting.insertOne(new Counting(guild.getIdLong(), channel.getIdLong(), mode))
-            .getInsertedId() != null;
+
+        var profile = new Counting(guild.getIdLong(), channel.getIdLong(), mode);
+        profile.setCurrentNumber(CountingMode.getStartingNumber(mode));
+
+        String parsed;
+        if(mode == CountingMode.MATHS) {
+            final Pair<MathOperation, Float> next = MathHandler.getNextNumber(profile.getCurrentNumber());
+            profile.setNextNumber(next.getRight());
+            parsed = MathHandler.parse(next.getLeft(), profile.getCurrentNumber(), profile.getNextNumber());
+        } else {
+            profile.setNextNumber(CountingMode.getNextNumber(mode, profile.getCurrentNumber()));
+            parsed = CountingMode.parse(mode, profile.getCurrentNumber(), profile.getNextNumber());
+        }
+
+        channel.sendMessage("The next number is: " + parsed).queue();
+
+        return Database.getDatabase().counting.insertOne(profile).getInsertedId() != null;
     }
     
     private void failChannel(final Counting profile, final CountingMode mode, final Message message, final Bson filter,

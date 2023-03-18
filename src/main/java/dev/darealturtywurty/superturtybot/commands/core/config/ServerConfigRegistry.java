@@ -209,4 +209,9 @@ public class ServerConfigRegistry {
             "warnings_moderator_only", new ServerConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setWarningsModeratorOnly(Boolean.parseBoolean(value))).valueFromConfig(
                     GuildConfig::isWarningsModeratorOnly).build());
+
+    public static final ServerConfigOption MAX_COUNTING_SUCCESSION = SERVER_CONFIG_OPTIONS.register(
+            "max_counting_succession", new ServerConfigOption.Builder().dataType(DataType.INTEGER).serializer(
+                    (config, value) -> config.setMaxCountingSuccession(Integer.parseInt(value))).valueFromConfig(
+                    GuildConfig::getMaxCountingSuccession).build());
 }
