@@ -221,8 +221,11 @@ public class RoleSelectionCommand extends CoreCommand {
                 embed.addField(emoji + " `@" + role.getName() + "`", description, false);
 
                 channel.sendMessageEmbeds(embed.build()).queue(msg -> {
+                    SelectOption option = SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
+                            .withDescription(description);
+
                     msg.editMessageComponents(ActionRow.of(StringSelectMenu.create("role-selection-" + msg.getId())
-                            .addOption(role.getName(), role.getId(), Emoji.fromFormatted(emoji)).build())).queue();
+                            .addOptions(option).setPlaceholder("Select a role").build())).queue();
                     event.getHook().editOriginal("✅ I have created this role selection menu at:\n" + msg.getJumpUrl())
                             .mentionRepliedUser(false).queue();
                 });
@@ -328,7 +331,12 @@ public class RoleSelectionCommand extends CoreCommand {
                 menuBuilder.getOptions()
                         .add(SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
                                 .withDescription(description));
-                message.editMessageComponents(ActionRow.of(menuBuilder.build())).queue();
+                menuBuilder.setMaxValues(menu.getMaxValues() + 1);
+
+                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().get(0));
+                embedBuilder.addField(emoji + " `@" + role.getName() + "`", description, false);
+
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
                 reply(event, "✅ I have added the role to the role selection menu!");
             }
 
@@ -421,7 +429,12 @@ public class RoleSelectionCommand extends CoreCommand {
 
                 StringSelectMenu.Builder menuBuilder = menu.createCopy();
                 menuBuilder.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
-                message.editMessageComponents(ActionRow.of(menuBuilder.build())).queue();
+                menuBuilder.setMaxValues(menu.getMaxValues() - 1);
+
+                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().get(0));
+                embedBuilder.getFields().removeIf(field -> field.getName().equals(role.getName()));
+
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
                 reply(event, "✅ I have removed the role from the role selection menu!");
             }
 
