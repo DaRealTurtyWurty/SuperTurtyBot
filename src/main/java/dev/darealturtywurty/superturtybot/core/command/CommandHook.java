@@ -15,6 +15,7 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWar
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.music.*;
+import dev.darealturtywurty.superturtybot.commands.music.handler.MusicRestartCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
@@ -240,6 +241,11 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SearchCommand());
         cmds.add(new LyricsCommand());
         cmds.add(new RemoveDuplicatesCommand());
+        cmds.add(new LeaveCleanupCommand());
+        cmds.add(new LoopCommand());
+        cmds.add(new MusicRestartCommand());
+        cmds.add(new SeekCommand());
+        cmds.add(new MoveCommand());
 
         // Image
         cmds.add(new HttpCatCommand());

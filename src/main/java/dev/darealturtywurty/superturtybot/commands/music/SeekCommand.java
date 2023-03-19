@@ -8,15 +8,21 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-public class SkipCommand extends CoreCommand {
-    public SkipCommand() {
+import java.util.List;
+
+public class SeekCommand extends CoreCommand {
+    public SeekCommand() {
         super(new Types(true, false, false, false));
     }
 
     @Override
-    public String getAccess() {
-        return "Moderators, Owner of song, Everyone (if owner isn't in VC)";
+    public List<OptionData> createOptions() {
+        return List.of(
+                new OptionData(OptionType.INTEGER, "time", "The time to seek to in the song (in seconds).", true));
     }
 
     @Override
@@ -26,22 +32,22 @@ public class SkipCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Skips the currently playing track";
+        return "Seeks to a specific time in the current song.";
     }
 
     @Override
     public String getName() {
-        return "skip";
+        return "seek";
     }
 
     @Override
     public String getRichName() {
-        return "Skip";
+        return "Seek";
     }
 
     @Override
-    public boolean isServerOnly() {
-        return true;
+    public String getHowToUse() {
+        return "seek <time>";
     }
 
     @Override
@@ -78,15 +84,22 @@ public class SkipCommand extends CoreCommand {
         Long owner = track.getUserData(Long.class);
         if ((owner == null || owner != event.getMember().getIdLong() && !event.getMember()
                 .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
-            reply(event, "❌ You must be the owner of the song or a moderator to skip this track!", false, true);
+            reply(event, "❌ You must be the owner of the song or a moderator to seek through this track!", false, true);
             return;
         }
 
-        if (AudioManager.skip(event.getGuild()) == null) {
-            reply(event, "❌ Unable to skip!", false, true);
+        Integer time = event.getOption("time", null, OptionMapping::getAsInt);
+        if (time == null) {
+            reply(event, "❌ You must provide a time to seek to!", false, true);
             return;
         }
 
-        reply(event, "**" + track.getInfo().title + "** was skipped!");
+        if (time <= 0 || time > track.getDuration() / 1000) {
+            reply(event, "❌ You must provide a time between 0 and the duration of the song!", false, true);
+            return;
+        }
+
+        AudioManager.seek(event.getGuild(), time * 1000);
+        reply(event, "✅ Seeked to " + time + " seconds!", false, true);
     }
 }

@@ -1,21 +1,19 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.managers.AudioManager;
 
-public class LeaveCommand extends CoreCommand {
-    public LeaveCommand() {
+import java.util.List;
+
+public class LeaveCleanupCommand extends CoreCommand {
+
+    public LeaveCleanupCommand() {
         super(new Types(true, false, false, false));
-    }
-
-    @Override
-    public String getAccess() {
-        return "Moderators, Singular Person in VC";
     }
 
     @Override
@@ -25,22 +23,17 @@ public class LeaveCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Leaves the current vc";
+        return "Removes all songs in the queue that were added by users that are no longer in the voice channel.";
     }
 
     @Override
     public String getName() {
-        return "leavevc";
+        return "leavecleanup";
     }
 
     @Override
     public String getRichName() {
-        return "Leave VC";
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
+        return "Leave Cleanup";
     }
 
     @Override
@@ -51,7 +44,7 @@ public class LeaveCommand extends CoreCommand {
             return;
         }
 
-        AudioManager audioManager = event.getGuild().getAudioManager();
+        net.dv8tion.jda.api.managers.AudioManager audioManager = event.getGuild().getAudioManager();
         if (!audioManager.isConnected() || audioManager.getConnectedChannel() == null) {
             event.deferReply(true).setContent("❌ I must be in a voice channel for you to be able to use this command!")
                     .mentionRepliedUser(false).queue();
@@ -74,15 +67,32 @@ public class LeaveCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getMember().hasPermission(channel, Permission.MANAGE_CHANNEL) && channel.getMembers().size() > 2) {
-            event.deferReply(true).setContent(
-                            "❌ You must be a moderator or the only person in the vc for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+        List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
+        if (queue.isEmpty()) {
+            event.deferReply(true).setContent("❌ There are no songs in the queue!").mentionRepliedUser(false).queue();
             return;
         }
 
-        audioManager.closeAudioConnection();
-        event.deferReply().setContent("✅ I have left " + channel.getAsMention() + "!").mentionRepliedUser(false)
-                .queue();
+        int queueSize = queue.size();
+        queue.forEach(track -> {
+            if (track.equals(AudioManager.getCurrentlyPlaying(event.getGuild()))) {
+                return;
+            }
+
+            Long owner = track.getUserData(Long.class);
+            if (owner != null && channel.getMembers().stream().noneMatch(member -> member.getIdLong() == owner)) {
+                AudioManager.removeTrack(event.getGuild(), track);
+            }
+        });
+
+        int removed = queueSize - queue.size();
+        if (removed > 0) {
+            event.deferReply(false).setContent("✅ Removed " + removed + " songs from the queue!")
+                    .mentionRepliedUser(false).queue();
+        } else {
+            event.deferReply(true).setContent(
+                            "❌ There were no songs in the queue that were added by users that are no longer in the voice channel!")
+                    .mentionRepliedUser(false).queue();
+        }
     }
 }

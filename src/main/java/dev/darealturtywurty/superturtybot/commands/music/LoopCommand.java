@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.LoopState;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -9,17 +10,21 @@ import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 import java.util.List;
 
-public class ClearCommand extends CoreCommand {
-    public ClearCommand() {
+public class LoopCommand extends CoreCommand {
+
+    public LoopCommand() {
         super(new Types(true, false, false, false));
     }
 
     @Override
-    public String getAccess() {
-        return "Moderators, Owner of all songs (if present in VC), Everyone (if the owners of the songs are not in VC)";
+    public List<SubcommandData> createSubcommands() {
+        return List.of(new SubcommandData("get", "Get the current loop state"),
+                new SubcommandData("set", "Set the loop state"), new SubcommandData("toggle", "Toggle the loop state"));
     }
 
     @Override
@@ -29,22 +34,22 @@ public class ClearCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Clears the music queue";
+        return "Change the loop state of the music player";
     }
 
     @Override
     public String getName() {
-        return "clearqueue";
+        return "loop";
     }
 
     @Override
     public String getRichName() {
-        return "Clear Queue";
+        return "Loop";
     }
 
     @Override
-    public boolean isServerOnly() {
-        return true;
+    public String getHowToUse() {
+        return "loop <get/set/toggle>";
     }
 
     @Override
@@ -55,7 +60,7 @@ public class ClearCommand extends CoreCommand {
         }
 
         GuildVoiceState voiceState = event.getMember().getVoiceState();
-        if (voiceState == null || voiceState.getChannel() == null) {
+        if (voiceState == null || !voiceState.inAudioChannel() || voiceState.getChannel() == null) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
@@ -72,22 +77,38 @@ public class ClearCommand extends CoreCommand {
             return;
         }
 
-        final List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
-        if (queue.isEmpty()) {
-            reply(event, "❌ The queue is currently empty!", false, true);
+        String sub = event.getSubcommandName();
+        if (sub == null) {
+            reply(event, "❌ You must specify a subcommand!", false, true);
             return;
         }
 
-        if (!event.getMember().hasPermission(channel, Permission.MANAGE_CHANNEL) && channel.getMembers()
-                .size() > 2 && !checkOwnsAll(queue, event.getMember())) {
-            reply(event,
-                    "❌ You must be the owner of all songs in the queue or have the `Manage Channel` permission to use this command!",
-                    false, true);
+        if (!checkOwnsAll(AudioManager.getQueue(event.getGuild()), event.getMember()) && !event.getMember()
+                .hasPermission(channel, Permission.MANAGE_CHANNEL) && channel.getMembers().size() > 2) {
+            reply(event, "❌ You must have the `Manage Channel` permission to use this command!", false, true);
             return;
         }
 
-        AudioManager.clear(event.getGuild());
-        reply(event, "✅ The music queue has now been cleared!");
+        switch (sub) {
+            case "get" ->
+                    reply(event, "The current loop state is: " + AudioManager.getLoopState(event.getGuild()), false,
+                            true);
+            case "set" -> {
+                String loopStateStr = event.getOption("state", null, OptionMapping::getAsString);
+                LoopState loopState = LoopState.fromString(loopStateStr);
+                if (loopState == null) {
+                    reply(event, "❌ You must specify a loop state!", false, true);
+                    return;
+                }
+
+                AudioManager.setLoopState(event.getGuild(), loopState);
+                reply(event, "The loop state has been set to: " + LoopState.asString(loopState), false, true);
+            }
+            case "toggle" -> {
+                LoopState loopState = AudioManager.toggleLoopState(event.getGuild());
+                reply(event, "The loop state has been set to: " + LoopState.asString(loopState), false, true);
+            }
+        }
     }
 
     private static boolean checkOwnsAll(List<AudioTrack> queue, Member member) {

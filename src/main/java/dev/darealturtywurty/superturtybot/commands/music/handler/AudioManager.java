@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.codepoetics.ambivalence.Either;
 import com.dunctebot.sourcemanagers.DuncteBotSources;
-import com.github.topisenpai.lavasrc.applemusic.AppleMusicSourceManager;
 import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -290,5 +289,34 @@ public final class AudioManager {
     @Nullable
     public static AudioTrack skip(Guild guild) {
         return getOrCreate(guild).musicScheduler.skip();
+    }
+
+    public static LoopState getLoopState(Guild guild) {
+        return getOrCreate(guild).musicScheduler.getLoopState();
+    }
+
+    public static void setLoopState(Guild guild, LoopState loopState) {
+        getOrCreate(guild).musicScheduler.setLoopState(loopState);
+    }
+
+    public static LoopState toggleLoopState(Guild guild) {
+        return getOrCreate(guild).musicScheduler.toggleLoopState();
+    }
+
+    public static void restartTrack(Guild guild) {
+        getOrCreate(guild).musicScheduler.restartTrack();
+    }
+
+    public static void seek(Guild guild, int time) {
+        getOrCreate(guild).musicScheduler.seek(time);
+    }
+
+    public static int getTrackPosition(Guild guild, AudioTrack track) {
+        List<AudioTrack> queue = getQueue(guild);
+        return queue.indexOf(track);
+    }
+
+    public static void moveTrack(Guild guild, int from, int to) {
+        getOrCreate(guild).musicScheduler.moveTrack(from, to);
     }
 }

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -18,6 +19,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
     private final List<AudioTrack> queue;
     private AudioChannel currentChannel;
+    private LoopState loopState = LoopState.NONE;
     
     public MusicTrackScheduler(AudioPlayer player) {
         this.player = player;
@@ -46,7 +48,16 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     
     public void nextTrack() {
         if (!this.queue.isEmpty()) {
-            final AudioTrack track = this.queue.remove(0);
+            if(this.loopState == LoopState.SINGLE) {
+                this.player.startTrack(this.queue.get(0), false);
+                return;
+            }
+
+            AudioTrack track = this.queue.remove(0);
+            if(this.loopState == LoopState.ALL) {
+                this.queue.add(track);
+            }
+
             this.player.startTrack(track, false);
         } else {
             this.player.startTrack(null, false);
@@ -136,5 +147,44 @@ public class MusicTrackScheduler extends AudioEventAdapter {
         }
         
         return null;
+    }
+
+    public @NotNull LoopState getLoopState() {
+        return this.loopState;
+    }
+
+    public LoopState toggleLoopState() {
+        return this.loopState = LoopState.values()[(this.loopState.ordinal() + 1) % LoopState.values().length];
+    }
+
+    public void setLoopState(@NotNull LoopState loopState) {
+        this.loopState = loopState;
+    }
+
+    public void restartTrack() {
+        if(getCurrentlyPlaying() != null) {
+            AudioTrack track = getCurrentlyPlaying();
+            track.setPosition(0);
+
+            this.player.startTrack(track, false);
+        }
+    }
+
+    public void seek(int time) {
+        if(getCurrentlyPlaying() != null) {
+            AudioTrack track = getCurrentlyPlaying();
+            track.setPosition(time);
+
+            this.player.startTrack(track, false);
+        }
+    }
+
+    public void moveTrack(int from, int to) {
+        if(from < 0 || from >= this.queue.size() || to <= 0 || to > this.queue.size()) {
+            return;
+        }
+
+        AudioTrack track = this.queue.remove(from);
+        this.queue.add(to, track);
     }
 }

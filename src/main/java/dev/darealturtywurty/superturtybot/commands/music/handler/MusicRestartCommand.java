@@ -1,7 +1,6 @@
-package dev.darealturtywurty.superturtybot.commands.music;
+package dev.darealturtywurty.superturtybot.commands.music.handler;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -9,14 +8,10 @@ import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
-public class SkipCommand extends CoreCommand {
-    public SkipCommand() {
-        super(new Types(true, false, false, false));
-    }
+public class MusicRestartCommand extends CoreCommand {
 
-    @Override
-    public String getAccess() {
-        return "Moderators, Owner of song, Everyone (if owner isn't in VC)";
+    public MusicRestartCommand() {
+        super(new Types(true, false, false, false));
     }
 
     @Override
@@ -26,22 +21,17 @@ public class SkipCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Skips the currently playing track";
+        return "Restarts the current music track.";
     }
 
     @Override
     public String getName() {
-        return "skip";
+        return "musicrestart";
     }
 
     @Override
     public String getRichName() {
-        return "Skip";
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
+        return "Music Restart";
     }
 
     @Override
@@ -78,15 +68,11 @@ public class SkipCommand extends CoreCommand {
         Long owner = track.getUserData(Long.class);
         if ((owner == null || owner != event.getMember().getIdLong() && !event.getMember()
                 .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
-            reply(event, "❌ You must be the owner of the song or a moderator to skip this track!", false, true);
+            reply(event, "❌ You must be the owner of the song or a moderator to restart this track!", false, true);
             return;
         }
 
-        if (AudioManager.skip(event.getGuild()) == null) {
-            reply(event, "❌ Unable to skip!", false, true);
-            return;
-        }
-
-        reply(event, "**" + track.getInfo().title + "** was skipped!");
+        AudioManager.restartTrack(event.getGuild());
+        reply(event, "✅ Restarted the current track!", false, true);
     }
 }

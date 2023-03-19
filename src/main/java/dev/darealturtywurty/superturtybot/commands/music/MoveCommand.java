@@ -8,15 +8,22 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-public class SkipCommand extends CoreCommand {
-    public SkipCommand() {
+import java.util.List;
+
+public class MoveCommand extends CoreCommand {
+    public MoveCommand() {
         super(new Types(true, false, false, false));
     }
 
     @Override
-    public String getAccess() {
-        return "Moderators, Owner of song, Everyone (if owner isn't in VC)";
+    public List<OptionData> createOptions() {
+        return List.of(
+                new OptionData(OptionType.INTEGER, "from", "The position of the song to move", true),
+                new OptionData(OptionType.INTEGER, "to", "The position to move the song to", true));
     }
 
     @Override
@@ -26,22 +33,22 @@ public class SkipCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Skips the currently playing track";
+        return "Moves a song in the queue to a different position.";
     }
 
     @Override
     public String getName() {
-        return "skip";
+        return "move";
     }
 
     @Override
     public String getRichName() {
-        return "Skip";
+        return "Move";
     }
 
     @Override
-    public boolean isServerOnly() {
-        return true;
+    public String getHowToUse() {
+        return "move <from> <to>";
     }
 
     @Override
@@ -82,11 +89,39 @@ public class SkipCommand extends CoreCommand {
             return;
         }
 
-        if (AudioManager.skip(event.getGuild()) == null) {
-            reply(event, "❌ Unable to skip!", false, true);
+        Integer from = event.getOption("from", null, OptionMapping::getAsInt);
+        Integer to = event.getOption("to", null, OptionMapping::getAsInt);
+        if (from == null || to == null) {
+            reply(event, "❌ You must provide a valid position to move the song to!", false, true);
             return;
         }
 
-        reply(event, "**" + track.getInfo().title + "** was skipped!");
+        if(from.equals(to)) {
+            reply(event, "❌ You cannot move a song to the same position!", false, true);
+            return;
+        }
+
+        if (to < from) {
+            reply(event, "❌ You cannot move a song to a position before it!", false, true);
+            return;
+        }
+
+        if(from < 0) {
+            reply(event, "❌ You cannot move a song to a negative position!", false, true);
+            return;
+        }
+
+        if(from > AudioManager.getQueue(event.getGuild()).size() || to > AudioManager.getQueue(event.getGuild()).size()) {
+            reply(event, "❌ You cannot move songs outside the queue bounds.", false, true);
+            return;
+        }
+
+        if (AudioManager.getQueue(event.getGuild()).get(from) == null) {
+            reply(event, "❌ There is no song at position " + from + "!", false, true);
+            return;
+        }
+
+        AudioManager.moveTrack(event.getGuild(), from, to);
+        reply(event, "✅ Moved song from position %d to %d!".formatted(from, to), false, true);
     }
 }
