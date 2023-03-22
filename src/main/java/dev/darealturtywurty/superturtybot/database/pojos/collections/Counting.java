@@ -17,6 +17,7 @@ public class Counting {
     private float currentNumber;
     private float saves;
     private long latestCounter;
+    private long lastCountingMessageMillis;
     
     public Counting() {
     }
@@ -33,6 +34,7 @@ public class Counting {
         this.currentNumber = 0;
         this.saves = 0;
         this.latestCounter = 0;
+        this.lastCountingMessageMillis = 0;
     }
     
     public long getChannel() {
@@ -113,6 +115,14 @@ public class Counting {
     
     public void setUsers(List<UserData> users) {
         this.users = users;
+    }
+
+    public long getLastCountingMessageMillis() {
+        return this.lastCountingMessageMillis;
+    }
+
+    public void setLastCountingMessageMillis(long lastCountingMessageMillis) {
+        this.lastCountingMessageMillis = lastCountingMessageMillis;
     }
     
     public static class UserData {

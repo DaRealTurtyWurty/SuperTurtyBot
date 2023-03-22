@@ -90,7 +90,7 @@ public class CommandHook extends ListenerAdapter {
             if (channel == null) return;
 
             channel.sendMessage(
-                            "Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.")
+                            "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access. My pronouns are she/her, so please respect them!")
                     .queue();
         }
     }

@@ -141,8 +141,10 @@ public class CountingManager extends ListenerAdapter {
 
                 if (mode.shouldNotify()) {
                     channel.sendMessage(
-                            profile.getCurrentCount() + ". The next number is: " + MathHandler.parse(maths.getLeft(),
-                                    currentNext, profile.getNextNumber())).queue();
+                                    profile.getCurrentCount() + ". The next number is: " + MathHandler.parse(maths.getLeft(),
+                                            currentNext, profile.getNextNumber()))
+                            .queue(msg -> profile.setLastCountingMessageMillis(
+                                    msg.getTimeCreated().toInstant().toEpochMilli()));
                 }
             } else {
                 profile.setNextNumber(CountingMode.getNextNumber(mode, currentNext));
@@ -151,7 +153,8 @@ public class CountingManager extends ListenerAdapter {
                 if (mode.shouldNotify()) {
                     channel.sendMessage(
                             profile.getCurrentCount() + ". The next number is: " + CountingMode.parse(mode, currentNext,
-                                    profile.getNextNumber())).queue();
+                                    profile.getNextNumber())).queue(msg -> profile.setLastCountingMessageMillis(
+                            msg.getTimeCreated().toInstant().toEpochMilli()));
                 }
             }
 
@@ -212,12 +215,15 @@ public class CountingManager extends ListenerAdapter {
             parsed = CountingMode.parse(mode, profile.getCurrentNumber(), profile.getNextNumber());
         }
 
-        channel.sendMessage("The next number is: " + parsed).queue();
+        channel.sendMessage("The next number is: " + parsed)
+                .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli()));
 
         return Database.getDatabase().counting.insertOne(profile).getInsertedId() != null;
     }
 
     private void failChannel(final Counting profile, final CountingMode mode, final Message message, final Bson filter, final List<Bson> updates, String response, float startAt, float nextNumber) {
+        if (message.getTimeCreated().toInstant().toEpochMilli() < profile.getLastCountingMessageMillis()) return;
+
         final List<UserData> users = profile.getUsers();
         users.forEach(u -> u.setCurrentCountSuccession(0));
         updates.add(Updates.set("users", users));
@@ -236,8 +242,8 @@ public class CountingManager extends ListenerAdapter {
 
         Database.getDatabase().counting.updateOne(filter, updates);
 
-        message.addReaction(Emoji.fromUnicode("💀"))
-                .queue(success -> message.reply(response).mentionRepliedUser(false).queue());
+        message.addReaction(Emoji.fromUnicode("💀")).queue(success -> message.reply(response).mentionRepliedUser(false)
+                .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli())));
     }
 
     private boolean shouldIgnore(MessageReceivedEvent event) {
