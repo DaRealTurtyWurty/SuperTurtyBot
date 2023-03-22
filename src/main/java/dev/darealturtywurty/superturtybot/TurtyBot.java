@@ -38,7 +38,7 @@ public class TurtyBot {
         // Set the current activity to watching me!
         builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity()));
 
-        // We want to ensure that guild messages, DMs, members, emojis andvoice states are enabled.
+        // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
             GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
 
@@ -51,11 +51,11 @@ public class TurtyBot {
         // Disable caching of activity. We can retrieve this when needed.
         builder.disableCache(CacheFlag.ACTIVITY);
 
-        // We don't need to cache overrides and voice states, its an unnecessary load.
+        // We don't need to cache overrides and voice states, it's an unnecessary load.
         builder.disableCache(CacheFlag.MEMBER_OVERRIDES);
 
-        // Ensure that the emotes, voice states and role tags are being cached
-        builder.enableCache(CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.ROLE_TAGS);
+        // Ensure that the emotes, voice states, role tags and member overrides are being cached
+        builder.enableCache(CacheFlag.EMOJI, CacheFlag.VOICE_STATE, CacheFlag.ROLE_TAGS, CacheFlag.MEMBER_OVERRIDES);
 
         // If the guild size is bigger than this amount then only online members will be
         // cached (reduces bandwidth).
