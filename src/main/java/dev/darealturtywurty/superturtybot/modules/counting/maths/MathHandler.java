@@ -63,7 +63,7 @@ public final class MathHandler {
 
     public static List<Integer> getDivisors(int number) {
         final List<Integer> divisors = new ArrayList<>();
-        for (int i = 2; i < number; i++) {
+        for (int i = 2; i < (number < 0 ? -number : number); i++) {
             if (number % i == 0) {
                 divisors.add(i);
             }

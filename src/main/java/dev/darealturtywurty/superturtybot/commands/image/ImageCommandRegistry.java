@@ -23,22 +23,18 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.requests.RestAction;
 
 public class ImageCommandRegistry {
-    public static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
-    
-    static {
-        new ImageCommandRegistry();
-    }
+    private static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
 
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BIRD = (event, cmd) -> {
         try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/birb").openConnection();
+            final URLConnection connection = new URL("https://some-random-api.ml/img/bird").openConnection();
             final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = body.get("link").getAsString();
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this bird image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this bird image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -62,7 +58,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this bunny image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this bunny image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -98,7 +94,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url + imageId).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this cat image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this cat image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -143,7 +139,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this dog image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this dog image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -165,7 +161,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been a problem gathering this duck image!")
+            event.deferReply(true).setContent("❌ There has been a problem gathering this duck image!")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -179,7 +175,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this fox image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this fox image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -193,7 +189,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this koala image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this koala image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -207,7 +203,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this panda image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this panda image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -221,7 +217,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this raccoon image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this raccoon image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -235,7 +231,7 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this red panda image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this red panda image.")
                 .mentionRepliedUser(false).queue();
         }
     };
@@ -246,12 +242,12 @@ public class ImageCommandRegistry {
             event.deferReply().setContent(page.select("img").first().attr("abs:src")).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             exception.printStackTrace();
-            event.deferReply(true).setContent("â�Œ There has been an issue gathering this snake image.")
+            event.deferReply(true).setContent("❌ There has been an issue gathering this snake image.")
                 .mentionRepliedUser(false).queue();
         }
     };
     
-    public ImageCommandRegistry() {
+    static {
         pexels("bee", 3);
         IMAGE_CMD_TYPES.register("bird", new ImageCommandType(BIRD));
         IMAGE_CMD_TYPES.register("blep", new ImageCommandType(BLEP));
@@ -295,7 +291,11 @@ public class ImageCommandRegistry {
         pexels("zebra", 2);
     }
     
-    private ImageCommandType pexels(String name, int maxPages) {
+    private static ImageCommandType pexels(String name, int maxPages) {
         return IMAGE_CMD_TYPES.register(name, new PexelsImageCommandType(maxPages));
+    }
+
+    public static Registry<ImageCommandType> getImageCommandTypes() {
+        return IMAGE_CMD_TYPES;
     }
 }
