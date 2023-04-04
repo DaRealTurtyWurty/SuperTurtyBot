@@ -92,7 +92,14 @@ public class CommandHook extends ListenerAdapter {
             if (channel == null) return;
 
             // check the last few messages in the channel before sending a startup message
-            channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
+            channel.retrieveMessageById(channel.getLatestMessageIdLong()).queue(message -> {
+                if (message.getContentRaw().equals(STARTUP_MESSAGE) && message.getAuthor().getIdLong() == event.getJDA()
+                        .getSelfUser().getIdLong()) {
+                    return;
+                }
+
+                channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
+            });
         }
     }
 
