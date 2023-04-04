@@ -61,13 +61,16 @@ public final class MathHandler {
         return ints.get(RANDOM.nextInt(ints.size() - 1));
     }
 
-    public static List<Integer> getDivisors(int number) {
-        final List<Integer> divisors = new ArrayList<>();
-        for (int i = 2; i < (number < 0 ? -number : number); i++) {
+    public static List<Float> getDivisors(int number) {
+        final List<Float> divisors = new ArrayList<>();
+        for (float i = 2; i < number; i++) {
             if (number % i == 0) {
                 divisors.add(i);
             }
         }
+
+        if(divisors.isEmpty())
+            divisors.add(2.0F);
 
         return divisors;
     }
@@ -77,13 +80,13 @@ public final class MathHandler {
 
         final float value = switch (operation) {
             case MODULO -> {
-                final List<Integer> nonDivisors = getNonDivisors((int) current);
+                final List<Float> nonDivisors = getNonDivisors((int) current);
                 yield current % getRandom(nonDivisors);
             }
             case ADD -> current + RANDOM.nextInt(2, 100);
             case CEIL -> (float) Math.ceil(current);
             case DIVIDE -> {
-                final List<Integer> divisors = getDivisors((int) current);
+                final List<Float> divisors = getDivisors((int) current);
                 yield current / getRandom(divisors);
             }
             case FLOOR -> (float) Math.floor(current);
@@ -97,13 +100,16 @@ public final class MathHandler {
         return Pair.of(operation, value);
     }
 
-    public static List<Integer> getNonDivisors(int number) {
-        final List<Integer> nonDivisors = new ArrayList<>();
-        for (int i = 2; i < number; i++) {
+    public static List<Float> getNonDivisors(int number) {
+        final List<Float> nonDivisors = new ArrayList<>();
+        for (float i = 2; i < number; i++) {
             if (number % i > 0) {
                 nonDivisors.add(i);
             }
         }
+
+        if(nonDivisors.isEmpty())
+            nonDivisors.add(2.0F);
 
         return nonDivisors;
     }
@@ -125,7 +131,7 @@ public final class MathHandler {
         };
     }
 
-    private static int getRandom(List<Integer> list) {
+    private static float getRandom(List<Float> list) {
         return list.get(RANDOM.nextInt(list.size()));
     }
 }
