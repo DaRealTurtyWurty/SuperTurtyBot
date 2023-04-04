@@ -30,6 +30,7 @@ import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CommandHook extends ListenerAdapter {
+    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you " + "can use, and I'm always adding more! You can see all of my commands by typing " + "`/commands` in any channel that you and I can access. ||My pronouns are she/her," + " so please respect them!||";
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
@@ -89,10 +91,15 @@ public class CommandHook extends ListenerAdapter {
 
             if (channel == null) return;
 
-            channel.sendMessage(
-                            "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access. My pronouns are she/her, so please respect them!")
-                    .queue();
+            // check the last few messages in the channel before sending a startup message
+            channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
         }
+    }
+
+    private static void sendOrDeleteMessages(TextChannel channel, List<Message> messages) {
+        messages.stream().filter(msg -> msg.getContentRaw().equals(STARTUP_MESSAGE) && msg.getAuthor()
+                        .getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst()
+                .ifPresentOrElse(msg -> msg.delete().queue(), () -> channel.sendMessage(STARTUP_MESSAGE).queue());
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
