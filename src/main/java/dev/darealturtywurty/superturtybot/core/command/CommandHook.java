@@ -99,7 +99,8 @@ public class CommandHook extends ListenerAdapter {
     private static void sendOrDeleteMessages(TextChannel channel, List<Message> messages) {
         messages.stream().filter(msg -> msg.getContentRaw().equals(STARTUP_MESSAGE) && msg.getAuthor()
                         .getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst()
-                .ifPresentOrElse(msg -> msg.delete().queue(), () -> channel.sendMessage(STARTUP_MESSAGE).queue());
+                .ifPresent(msg -> msg.delete().queue());
+        channel.sendMessage(STARTUP_MESSAGE).queue();
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
