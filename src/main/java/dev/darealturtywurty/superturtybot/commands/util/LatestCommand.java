@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
+import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -77,6 +78,26 @@ public class LatestCommand extends CoreCommand {
         }
     }
 
+    private static LinkedHashMap<String, Boolean> getAllMinecraftVersions() {
+        try {
+            JsonObject json = Constants.GSON.fromJson(
+                    new InputStreamReader(new URL(MINECRAFT_PISTON_META).openStream()), JsonObject.class);
+
+            JsonArray versions = json.getAsJsonArray("versions");
+            LinkedHashMap<String, Boolean> versionsMap = Maps.newLinkedHashMap();
+            for (JsonElement version : versions) {
+                JsonObject versionObject = version.getAsJsonObject();
+                versionsMap.put(versionObject.get("id").getAsString(),
+                        versionObject.get("type").getAsString().equals("release"));
+            }
+
+            return versionsMap;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            return new LinkedHashMap<>();
+        }
+    }
+
     private static Pair<String, String> getForgeVersions() {
         try {
             JsonObject promos = Constants.GSON.fromJson(new InputStreamReader(new URL(FORGE_PROMOS).openStream()),
@@ -87,8 +108,10 @@ public class LatestCommand extends CoreCommand {
                             entry -> Integer.parseInt(entry.getKey().split("\\.")[1].split("-")[0]))).toList());
             Collections.reverse(elements);
 
-            Map.Entry<String, JsonElement> latestRecommended = elements.get(0);
-            Map.Entry<String, JsonElement> latestLatest = elements.get(1);
+            Map.Entry<String, JsonElement> latestRecommended = elements.stream()
+                    .filter(entry -> entry.getKey().contains("-recommended")).findFirst().orElse(elements.get(0));
+            Map.Entry<String, JsonElement> latestLatest = elements.stream()
+                    .filter(entry -> entry.getKey().contains("-latest")).findFirst().orElse(elements.get(0));
 
             String latestRecommendedVersion = latestRecommended.getKey() + "-" + latestRecommended.getValue()
                     .getAsString();
@@ -140,12 +163,12 @@ public class LatestCommand extends CoreCommand {
         try {
             String parchmentUrl = String.format(PARCHMENT_MAVEN_META, mcVersion);
             var file = new File(mcVersion + "-parchment.xml");
-            if (!file.exists()) {
-                FileUtils.copyURLToFile(new URL(parchmentUrl), file);
-            }
+            FileUtils.copyURLToFile(new URL(parchmentUrl), file);
 
             final String xmlJsonStr = XML.toJSONObject(Files.readString(file.toPath(), StandardCharsets.UTF_8))
                     .toString(1);
+            Files.deleteIfExists(file.toPath());
+
             final JsonObject xmlJson = Constants.GSON.fromJson(xmlJsonStr, JsonObject.class);
             final JsonObject versioning = xmlJson.getAsJsonObject("metadata").getAsJsonObject("versioning");
             final JsonArray versionsArray = versioning.getAsJsonObject("versions").getAsJsonArray("version");
@@ -166,9 +189,29 @@ public class LatestCommand extends CoreCommand {
 
             return results.get(results.size() - 1);
         } catch (IOException exception) {
-            exception.printStackTrace();
             return "Unknown";
         }
+    }
+
+    private static String findLatestParchment(String latestMinecraftVersion) {
+        String latestVersion = getParchmentVersion(latestMinecraftVersion);
+
+        int increment = 0;
+        LinkedHashMap<String, Boolean> versions = null;
+        while (latestVersion.equals("Unknown")) {
+            if (versions == null) {
+                versions = getAllMinecraftVersions();
+            }
+
+            latestMinecraftVersion = versions.keySet().stream().skip(increment++).findFirst().orElse(null);
+            if (latestMinecraftVersion == null) {
+                break;
+            }
+
+            latestVersion = getParchmentVersion(latestMinecraftVersion);
+        }
+
+        return latestMinecraftVersion + "-" + latestVersion;
     }
 
     @Override
@@ -199,7 +242,8 @@ public class LatestCommand extends CoreCommand {
             }
             case "parchment" -> {
                 String latestMinecraftVersion = getMinecraftVersions().getFirst();
-                String latestVersion = getParchmentVersion(latestMinecraftVersion);
+                String latestVersion = findLatestParchment(latestMinecraftVersion);
+
                 event.getHook().editOriginalEmbeds(
                                 new EmbedBuilder().setTitle("Latest Parchment Version").setDescription(latestVersion).build())
                         .queue();
@@ -209,7 +253,7 @@ public class LatestCommand extends CoreCommand {
                 Pair<String, String> forgeVersions = getForgeVersions();
                 Pair<String, String> fabricVersions = getFabricVersions();
                 String latestMinecraftVersion = minecraftVersions.getFirst();
-                String latestParchmentVersion = getParchmentVersion(latestMinecraftVersion);
+                String latestParchmentVersion = findLatestParchment(latestMinecraftVersion);
 
                 event.getHook().editOriginalEmbeds(new EmbedBuilder().setTitle("Latest Versions").addField("Minecraft",
                                 "Release: " + minecraftVersions.getFirst() + "\nSnapshot: " + minecraftVersions.getSecond(),
