@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -178,6 +179,12 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 event.getChannel()
                         .sendMessage("✅ You win! The countries were: " + String.join(", ", game.getCountries()))
                         .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true).queue());
+
+                // remove the button
+                TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
+                if (channel == null) return;
+
+                channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
             } else {
                 List<BufferedImage> images = new ArrayList<>();
                 for (String c : game.getCountries()) {
@@ -191,7 +198,6 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
                 ByteArrayOutputStream baos = createImage(images, width, height);
                 var upload = FileUpload.fromData(baos.toByteArray(), "combined_flags.png");
-
 
                 String toSend = String.format(
                         "Guess the countries that make up the combined flag! (There are %d countries remaining)",
@@ -218,6 +224,12 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                                 "The game has ended! The countries were: " + String.join(", ", game.getCountries()))
                         .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true)
                                 .queue());
+
+                // remove the button
+                TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
+                if (channel == null) return;
+
+                channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
                 return;
             }
 
