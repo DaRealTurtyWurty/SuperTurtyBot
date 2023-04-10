@@ -3,8 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -96,48 +95,58 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         String toSend = String.format("Guess the countries that make up the combined flag! (There are %d countries)",
                 numberOfCountries);
         event.getHook().editOriginal(toSend).setFiles(upload).queue(message -> {
-            var game = new Game(countries.stream().map(Map.Entry::getKey).toList(), event.getGuild().getIdLong(),
-                    event.getChannel().getIdLong(), message.getIdLong(), event.getUser().getIdLong());
-            GAMES.put(message.getIdLong(), game);
+            message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
+                var game = new Game(countries.stream().map(Map.Entry::getKey).toList(), event.getGuild().getIdLong(),
+                        event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
+                        event.getUser().getIdLong());
+                GAMES.put(message.getIdLong(), game);
 
-            message.editMessageComponents(
-                    ActionRow.of(Button.danger("combined-flags-" + message.getId(), Emoji.fromFormatted("❌")))).queue();
+                message.editMessageComponents(
+                                ActionRow.of(Button.danger("combined-flags-" + message.getId(), Emoji.fromFormatted("❌"))))
+                        .queue();
 
-            try {
-                boas.close();
-                upload.close();
-            } catch (IOException exception) {
-                Constants.LOGGER.error(
-                        "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!", exception);
-            }
+                thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
+
+                try {
+                    boas.close();
+                    upload.close();
+                } catch (IOException exception) {
+                    Constants.LOGGER.error(
+                            "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
+                            exception);
+                }
+            });
         });
     }
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if(!event.isFromGuild() || event.getGuild() == null)
-            return;
+        if (!event.isFromGuild() || event.getGuild() == null) return;
 
-        if(event.getButton().getId() == null)
-            return;
+        if (event.getButton().getId() == null) return;
 
-        if(!event.getButton().getId().startsWith("combined-flags-"))
-            return;
+        if (!event.getButton().getId().startsWith("combined-flags-")) return;
 
         long messageId = Long.parseLong(event.getButton().getId().replace("combined-flags-", ""));
+
         Game game = GAMES.get(messageId);
-        if(game == null)
-            return;
+        if (game == null) return;
 
-
-        if(game.getUserId() != event.getUser().getIdLong()) {
+        if (game.getUserId() != event.getUser().getIdLong()) {
             event.deferEdit().setComponents(event.getMessage().getComponents()).queue();
             return;
         }
 
-        String countriesStr = String.join(", ", game.getCountries());
-        event.deferEdit().setContent(String.format("Game cancelled! %s", countriesStr)).setComponents().queue();
         GAMES.remove(messageId, game);
+
+        ThreadChannel thread = event.getGuild().getThreadChannelById(game.getChannelId());
+        if (thread == null) return;
+
+        String countriesStr = String.join(", ", game.getCountries());
+        thread.sendMessage(String.format("Game cancelled! The countries were: %s", countriesStr)).setComponents()
+                .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
+
+        event.editComponents().queue();
     }
 
     @Override
@@ -145,12 +154,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         if (!event.isFromGuild()) return;
 
         // check if the user has a game running
-        Game game = GAMES.values().stream().filter(g -> g.getUserId() == event.getAuthor().getIdLong()).findFirst()
-                .orElse(null);
+        Game game = GAMES.values().stream()
+                .filter(g -> g.getUserId() == event.getAuthor().getIdLong() && g.getGuildId() == event.getGuild()
+                        .getIdLong() && g.getChannelId() == event.getChannel().getIdLong()).findFirst().orElse(null);
         if (game == null) return;
-
-        // check if the message is in the same channel as the game
-        if (game.getChannelId() != event.getChannel().getIdLong()) return;
 
         // check if the message is a valid country
         String country = event.getMessage().getContentRaw().trim();
@@ -168,12 +175,9 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 // remove the game from the map
                 GAMES.remove(game.getMessageId(), game);
 
-                // get the channel and send the message
-                TextChannel chnl = event.getGuild().getTextChannelById(game.getChannelId());
-                if (chnl == null) return;
-
-                chnl.retrieveMessageById(game.getMessageId()).queue(message0 -> message0.reply(
-                        "You win! The countries were: " + String.join(", ", game.getCountries())).queue());
+                event.getChannel()
+                        .sendMessage("✅ You win! The countries were: " + String.join(", ", game.getCountries()))
+                        .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true).queue());
             } else {
                 List<BufferedImage> images = new ArrayList<>();
                 for (String c : game.getCountries()) {
@@ -188,27 +192,20 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 ByteArrayOutputStream baos = createImage(images, width, height);
                 var upload = FileUpload.fromData(baos.toByteArray(), "combined_flags.png");
 
+
                 String toSend = String.format(
                         "Guess the countries that make up the combined flag! (There are %d countries remaining)",
                         images.size());
 
-                Guild guild = event.getJDA().getGuildById(game.getGuildId());
-                if (guild == null) return;
-
-                TextChannel channel = guild.getTextChannelById(game.getChannelId());
-                if (channel == null) return;
-
-                channel.retrieveMessageById(game.getMessageId()).queue(message -> {
-                    message.editMessage(toSend).setFiles(upload).queue($ -> {
-                        try {
-                            baos.close();
-                            upload.close();
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error(
-                                    "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
-                                    exception);
-                        }
-                    });
+                event.getChannel().sendMessage(toSend).setFiles(upload).queue($ -> {
+                    try {
+                        baos.close();
+                        upload.close();
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error(
+                                "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
+                                exception);
+                    }
                 });
             }
         } else {
@@ -217,11 +214,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             if (game.getGuesses().size() == 9) {
                 GAMES.remove(game.getMessageId());
 
-                TextChannel channel = event.getGuild().getTextChannelById(game.getChannelId());
-                if (channel == null) return;
-
-                channel.retrieveMessageById(game.getMessageId()).queue(message0 -> message0.reply(
-                        "The game has ended! The countries were: " + String.join(", ", game.getCountries())).queue());
+                event.getChannel().sendMessage(
+                                "The game has ended! The countries were: " + String.join(", ", game.getCountries()))
+                        .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true)
+                                .queue());
                 return;
             }
 
@@ -270,12 +266,13 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
     private static class Game {
         private final List<String> countries;
-        private final long guildId, channelId, messageId, userId;
+        private final long guildId, ownerChannelId, channelId, messageId, userId;
         private final List<String> guesses = new ArrayList<>();
 
-        public Game(List<String> countries, long guildId, long channelId, long messageId, long userId) {
+        public Game(List<String> countries, long guildId, long ownerChannelId, long channelId, long messageId, long userId) {
             this.countries = countries;
             this.guildId = guildId;
+            this.ownerChannelId = ownerChannelId;
             this.channelId = channelId;
             this.messageId = messageId;
             this.userId = userId;
@@ -287,6 +284,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         public long getGuildId() {
             return this.guildId;
+        }
+
+        public long getOwnerChannelId() {
+            return this.ownerChannelId;
         }
 
         public long getChannelId() {
