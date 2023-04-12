@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.fun;
+package dev.darealturtywurty.superturtybot.modules.minigames;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -46,7 +46,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.FUN;
+        return CommandCategory.MINIGAMES;
     }
 
     @Override
@@ -274,6 +274,11 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         }
 
         return boas;
+    }
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
 
     private static class Game {

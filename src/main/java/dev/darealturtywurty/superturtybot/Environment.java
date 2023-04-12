@@ -165,4 +165,16 @@ public final class Environment {
     public String youtubeApiKey() {
         return getString("YOUTUBE_API_KEY");
     }
+
+    public String geniusClientSecret() {
+        return getString("GENIUS_CLIENT_SECRET");
+    }
+
+    public String geniusClientID() {
+        return getString("GENIUS_CLIENT_ID");
+    }
+
+    public String geniusAccessToken() {
+        return getString("GENIUS_ACCESS_TOKEN");
+    }
 }

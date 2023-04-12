@@ -23,7 +23,10 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSugges
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import dev.darealturtywurty.superturtybot.modules.minigames.TriviaCommand;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
+import dev.darealturtywurty.superturtybot.modules.minigames.GuessCombinedFlagsCommand;
+import dev.darealturtywurty.superturtybot.modules.minigames.GuessTheSongCommand;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -281,13 +284,16 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-        cmds.add(new TriviaCommand());
-        cmds.add(new GuessCombinedFlagsCommand());
 
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         //cmds.add(new XPInventoryCommand());
+
+        // Minigames
+        cmds.add(new TriviaCommand());
+        cmds.add(new GuessCombinedFlagsCommand());
+        cmds.add(new GuessTheSongCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
