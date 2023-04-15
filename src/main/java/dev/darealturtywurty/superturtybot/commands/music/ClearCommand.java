@@ -80,7 +80,8 @@ public class ClearCommand extends CoreCommand {
 
         Member member = event.getMember();
         boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
-        if ((!checkOwnsAll(queue, member) || !isModerator) || channel.getMembers().size() > 2) {
+        // if they are a moderator or the owner of all the songs or the only person in the vc
+        if (!isModerator && !checkOwnsAll(queue, member) && channel.getMembers().size() > 2) {
             reply(event,
                     "❌ You must be the owner of all songs in the queue or have the `Manage Channel` permission to use this command!",
                     false, true);

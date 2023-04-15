@@ -79,8 +79,10 @@ public class SkipCommand extends CoreCommand {
         long songOwnerId = track.getUserData(Long.class);
         Member member = event.getMember();
         boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
-        if ((songOwnerId != member.getIdLong() || !isModerator) || channel.getMembers().size() > 2) {
-            reply(event, "❌ You must be the owner of the song or a moderator to skip this track!", false, true);
+
+        // if they are a moderator or the owner of the song or the only person in the vc
+        if (!isModerator && songOwnerId != member.getIdLong() && channel.getMembers().size() > 2) {
+            reply(event, "❌ You must be a moderator or the owner of the song to skip it!", false, true);
             return;
         }
 
