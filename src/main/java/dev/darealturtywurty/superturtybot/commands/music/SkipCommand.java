@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -75,9 +76,10 @@ public class SkipCommand extends CoreCommand {
             return;
         }
 
-        Long owner = track.getUserData(Long.class);
-        if ((owner == null || owner != event.getMember().getIdLong() && !event.getMember()
-                .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
+        long songOwnerId = track.getUserData(Long.class);
+        Member member = event.getMember();
+        boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
+        if ((songOwnerId != member.getIdLong() || !isModerator) || channel.getMembers().size() > 2) {
             reply(event, "❌ You must be the owner of the song or a moderator to skip this track!", false, true);
             return;
         }

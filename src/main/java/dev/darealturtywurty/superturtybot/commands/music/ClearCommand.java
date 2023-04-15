@@ -78,8 +78,9 @@ public class ClearCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getMember().hasPermission(channel, Permission.MANAGE_CHANNEL) && channel.getMembers()
-                .size() > 2 && !checkOwnsAll(queue, event.getMember())) {
+        Member member = event.getMember();
+        boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
+        if ((!checkOwnsAll(queue, member) || !isModerator) || channel.getMembers().size() > 2) {
             reply(event,
                     "❌ You must be the owner of all songs in the queue or have the `Manage Channel` permission to use this command!",
                     false, true);
