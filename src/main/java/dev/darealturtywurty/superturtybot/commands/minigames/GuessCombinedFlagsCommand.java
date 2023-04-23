@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.minigames;
+package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -61,7 +61,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
     @Override
     public String getRichName() {
-        return "Guess Combined Flags";
+        return "Guess The Combined Flags";
     }
 
     @Override

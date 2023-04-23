@@ -26,54 +26,47 @@ public class ThreadManager extends ListenerAdapter {
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
         Constants.LOGGER.info("Channel created: " + event.toString());
-        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD)
-            return;
+        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
 
         final Guild guild = event.getGuild();
         final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                                                                     .first();
+                .first();
 
-        if (config == null || !config.isShouldModeratorsJoinThreads())
-            return;
+        if (config == null || !config.isShouldModeratorsJoinThreads()) return;
 
         final Set<Member> moderators = new HashSet<>();
-        guild.getRoles().stream()
-             .filter(
-                     role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(
-                             Permission.MESSAGE_MANAGE))
-             .map(guild::findMembersWithRoles).forEach(task -> task.onSuccess(moderators::addAll));
+        guild.getRoles().stream().filter(role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(
+                        Permission.MESSAGE_MANAGE)).map(guild::findMembersWithRoles)
+                .forEach(task -> task.onSuccess(moderators::addAll));
+        if(moderators.isEmpty())
+            return;
+
         final var strBuilder = new StringBuilder();
         moderators.stream().map(Member::getAsMention).forEach(strBuilder::append);
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
-        thread.sendMessage("Beans").queue(
-                message -> message.editMessage(strBuilder).queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS)));
+        thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
+                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS)));
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.isFromThread() || event.isWebhookMessage() || event.getAuthor().isBot()
-                || event.getAuthor().isSystem() || event.getMessage().getContentRaw().isBlank() || event.getMessage()
-                                                                                                        .getType()
-                                                                                                        .isSystem())
-            return;
+        if (!event.isFromGuild() || event.isFromThread() || event.isWebhookMessage() || event.getAuthor()
+                .isBot() || event.getAuthor().isSystem() || event.getMessage().getContentRaw()
+                .isBlank() || event.getMessage().getType().isSystem()) return;
 
         final Guild guild = event.getGuild();
         final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                                                                     .first();
-        if (config == null)
-            return;
+                .first();
+        if (config == null) return;
 
         final List<Long> channels = GuildConfig.getChannels(config.getAutoThreadChannels());
-        if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong()))
-            return;
+        if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong())) return;
 
         final String content = event.getMessage().getContentRaw();
-        event.getMessage()
-             .createThreadChannel(
-                     content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0,
-                             Channel.MAX_NAME_LENGTH) : content)
-             .queue(RestAction.getDefaultSuccess(), ignored -> {
-             });
+        event.getMessage().createThreadChannel(
+                        content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0, Channel.MAX_NAME_LENGTH) : content)
+                .queue(RestAction.getDefaultSuccess(), ignored -> {
+                });
     }
 }

@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.minigames;
+package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.codepoetics.ambivalence.Either;
 import com.github.topisenpai.lavasrc.spotify.SpotifyAudioTrack;
@@ -24,11 +24,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class GuessTheSongCommand extends CoreCommand {
+public class GuessSongCommand extends CoreCommand {
     private static final String PLAYLIST = "https://open.spotify.com/playlist/0Dsp6i8lvmcTg5aiusjnFH";
     private static final Map<Long, Tuple3<Long, AudioTrack, Integer>> GUESS_THE_SONG_TRACKS = new HashMap<>();
 
-    public GuessTheSongCommand() {
+    public GuessSongCommand() {
         super(new Types(true, false, false, false));
     }
 
@@ -39,12 +39,12 @@ public class GuessTheSongCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "The bot will play a small part of a song and you have to guess the name of the song!";
+        return "Guess the title of the song that is currently playing!";
     }
 
     @Override
     public String getName() {
-        return "guessthesong";
+        return "guesssong";
     }
 
     @Override
@@ -230,7 +230,7 @@ public class GuessTheSongCommand extends CoreCommand {
 
     @Override
     public String getHowToUse() {
-        return "/guessthesong\n\n- Type `skip` to skip the current song.\n- Type `hint` to get a hint.\n- Type `give up` to give up on the current song.";
+        return "/guesssong\n\n- Type `skip` to skip the current song.\n- Type `hint` to get a hint.\n- Type `give up` to give up on the current song.";
     }
 
     @Override
