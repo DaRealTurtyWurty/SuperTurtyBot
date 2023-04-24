@@ -32,7 +32,7 @@ public class HigherLowerCommand extends CoreCommand {
     private static final List<String> WORLD_LIST = new ArrayList<>();
 
     private static final String POPULATION_API_URL = "https://countriesnow.space/api/v0.1/countries/population";
-    private static final String WORD_LIST_API_URL = "https://random-word-api.herokuapp.com/all";
+    private static final String WORD_LIST_API_URL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt";
     private static final String WORD_FREQUENCY_API_URL = "https://api.datamuse.com/words?sp=%s&md=f&max=1";
 
     private static final Map<Long, Game> GAMES = new HashMap<>();
@@ -93,14 +93,17 @@ public class HigherLowerCommand extends CoreCommand {
         try (Response response = Constants.HTTP_CLIENT.newCall(wordListRequest).execute()) {
             if (response.isSuccessful()) {
                 String result = response.body() != null ? response.body().string() : null;
-                JsonArray json = Constants.GSON.fromJson(result, JsonArray.class);
-                if (json != null) {
-                    for (JsonElement element : json) {
-                        WORLD_LIST.add(element.getAsString());
-                    }
+                String[] words = result != null ? result.split("\n") : new String[0];
 
-                    System.out.println("Loaded " + WORLD_LIST.size() + " words!");
+                for (String s : words) {
+                    String word = s;
+                    if (word.length() < 3) continue;
+
+                    word = word.toLowerCase(Locale.ROOT).trim();
+                    WORLD_LIST.add(word);
                 }
+
+                System.out.println("Loaded " + WORLD_LIST.size() + " words!");
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to fetch word list!", exception);
@@ -116,7 +119,6 @@ public class HigherLowerCommand extends CoreCommand {
         return List.of(new SubcommandData("population", "Population of countries"),
                 new SubcommandData("area", "Area of countries"),
                 new SubcommandData("word_frequency", "Word frequency in the English language"),
-                new SubcommandData("price", "Price of items"),
                 new SubcommandData("trending", "Trending Google searches"));
     }
 
@@ -147,7 +149,7 @@ public class HigherLowerCommand extends CoreCommand {
 
     @Override
     public String getHowToUse() {
-        return "/higherlower population|area|word_frequency|price|trending";
+        return "/higherlower population|area|word_frequency|trending";
     }
 
     @Override
@@ -262,28 +264,6 @@ public class HigherLowerCommand extends CoreCommand {
 
                     message.editMessageComponents(actionRow).queue();
                 });
-            }
-            case "price" -> {
-                event.deferReply().queue();
-
-                AmazonUtility.UPCInformation upcInformation = AmazonUtility.getRandomItem().upcInformation();
-
-                // reply with all of the upc information
-                String data = ("""
-                        UPC-E: %s
-                        UPC-A: %s
-                        UCC-13: %s
-                        Product Title: %s
-                        Product Details: %s
-                        Issuing Country: %s
-                        Last Modified: %s
-                        Last Modified By: %s
-                        Pending Requests: %s""").formatted(upcInformation.upcE().orElse("Unknown"),
-                        upcInformation.upcA().orElse("Unknown"), upcInformation.ucc13().orElse("Unknown"),
-                        upcInformation.productTitle(), upcInformation.details().orElse("N/A"),
-                        upcInformation.issuingCountry(), upcInformation.lastModifiedDate(),
-                        upcInformation.lastModifiedBy().orElse("Unknown"), upcInformation.pendingRequests());
-                event.getHook().sendMessage(data).queue();
             }
             case "trending" -> {
                 // TODO
@@ -577,34 +557,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (wordFrequencyGame.getFrequency0() > wordFrequencyGame.getFrequency1()) {
+                if (wordFrequencyGame.getFrequency0() > wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + wordFrequencyGame.getWord0() + " has a higher word frequency than " + wordFrequencyGame.getWord1())
+                                    "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    String word1 = WORLD_LIST.stream().skip((int) (Math.random() * WORLD_LIST.size())).findFirst()
-                            .orElseThrow();
-                    float frequency1 = getWordFrequency(word1);
-
-                    wordFrequencyGame.set0(wordFrequencyGame.getWord1(), wordFrequencyGame.getFrequency1());
-                    wordFrequencyGame.set1(word1, frequency1);
-
-                    String toSend = String.format("Does %s have a higher or lower word frequency than %s?",
-                            wordFrequencyGame.getWord0(), wordFrequencyGame.getWord1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:word_frequency:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:word_frequency:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        wordFrequencyGame.setLatestMessageId(message.getIdLong());
-                    });
+                    findAndSendWord(threadChannel, wordFrequencyGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + wordFrequencyGame.getWord0() + " has a lower word frequency than " + wordFrequencyGame.getWord1())
+                                    "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -616,34 +578,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (wordFrequencyGame.getFrequency0() < wordFrequencyGame.getFrequency1()) {
+                if (wordFrequencyGame.getFrequency0() < wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + wordFrequencyGame.getWord0() + " has a lower word frequency than " + wordFrequencyGame.getWord1())
+                                    "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    String word1 = WORLD_LIST.stream().skip((int) (Math.random() * WORLD_LIST.size())).findFirst()
-                            .orElseThrow();
-                    float frequency1 = getWordFrequency(word1);
-
-                    wordFrequencyGame.set0(wordFrequencyGame.getWord1(), wordFrequencyGame.getFrequency1());
-                    wordFrequencyGame.set1(word1, frequency1);
-
-                    String toSend = String.format("Does %s have a higher or lower word frequency than %s?",
-                            wordFrequencyGame.getWord0(), wordFrequencyGame.getWord1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:word_frequency:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:word_frequency:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        wordFrequencyGame.setLatestMessageId(message.getIdLong());
-                    });
+                    findAndSendWord(threadChannel, wordFrequencyGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + wordFrequencyGame.getWord0() + " has a higher word frequency than " + wordFrequencyGame.getWord1())
+                                    "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -652,6 +596,27 @@ public class HigherLowerCommand extends CoreCommand {
                 event.reply("❌ Unknown option!").setEphemeral(true).queue();
             }
         }
+    }
+
+    private void findAndSendWord(ThreadChannel threadChannel, WordFrequencyGame wordFrequencyGame) {
+        String word1 = WORLD_LIST.stream().skip((int) (Math.random() * WORLD_LIST.size())).findFirst().orElseThrow();
+        float frequency1 = getWordFrequency(word1);
+
+        wordFrequencyGame.set0(wordFrequencyGame.getWord1(), wordFrequencyGame.getFrequency1());
+        wordFrequencyGame.set1(word1, frequency1);
+
+        String toSend = String.format("Does `%s` have a higher or lower word frequency than `%s`?",
+                wordFrequencyGame.getWord0(), wordFrequencyGame.getWord1());
+
+        threadChannel.sendMessage(toSend).queue(message -> {
+            var actionRow = ActionRow.of(
+                    Button.primary("higherlower:word_frequency:higher-" + message.getId(), "Higher"),
+                    Button.primary("higherlower:word_frequency:lower-" + message.getId(), "Lower"));
+
+            message.editMessageComponents(actionRow).queue();
+
+            wordFrequencyGame.setLatestMessageId(message.getIdLong());
+        });
     }
 
     public static abstract class Game {

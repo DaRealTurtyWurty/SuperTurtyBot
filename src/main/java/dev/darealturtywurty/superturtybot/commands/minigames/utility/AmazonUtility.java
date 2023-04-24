@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.minigames;
+package dev.darealturtywurty.superturtybot.commands.minigames.utility;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
