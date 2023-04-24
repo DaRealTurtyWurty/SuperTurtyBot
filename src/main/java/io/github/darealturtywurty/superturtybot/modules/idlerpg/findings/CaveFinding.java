@@ -2,7 +2,11 @@ package io.github.darealturtywurty.superturtybot.modules.idlerpg.findings;
 
 import java.time.Instant;
 
+import com.mongodb.client.model.Updates;
+
+import io.github.darealturtywurty.superturtybot.database.Database;
 import io.github.darealturtywurty.superturtybot.database.pojos.collections.RPGPlayer;
+import io.github.darealturtywurty.superturtybot.modules.idlerpg.commands.RPGCommand;
 import io.github.darealturtywurty.superturtybot.modules.idlerpg.findings.response.ResponseBuilder;
 import io.github.darealturtywurty.superturtybot.modules.idlerpg.pojo.Outcome;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -14,9 +18,9 @@ public class CaveFinding extends Finding {
     public CaveFinding() {
         super(Outcome.UNKNOWN, "Woah, you found a massive cave. I wonder what could be inside?");
     }
-    
+
     @Override
-    protected ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
+    public ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
         return ResponseBuilder.start(jda, player, channel).first(() -> {
             final User user = jda.getUserById(player.getUser());
             final var embed = new EmbedBuilder();
@@ -28,8 +32,21 @@ public class CaveFinding extends Finding {
             final TextChannel textChannel = jda.getTextChannelById(channel);
             textChannel.sendMessage(user.getAsMention()).setEmbeds(embed.build()).queue();
             textChannel.sendMessage("Would you like to explore the cave?").queue();
-        }).condition(event -> "yes".equalsIgnoreCase(event.getMessage().getContentDisplay().trim())).then(event -> {
+        }).condition(event -> "yes".equalsIgnoreCase(event.getMessage().getContentDisplay().trim())).ifTrue(event -> {
+            player.setCaving(true);
+            Database.getDatabase().rpgStats.updateOne(RPGCommand.getFilter(event), Updates.set("caving", true));
+        }).startFinding(FindingRegistry.CAVE)
+            .ifFalse(event -> event.getMessage().reply("Ok, cave avoided!").mentionRepliedUser(false).queue());
+    }
 
-        }).end();
+    public static class CaveOutcomeFinding extends Finding {
+        protected CaveOutcomeFinding() {
+            super(Outcome.UNKNOWN, new String[0]);
+        }
+        
+        @Override
+        public ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
+            return null;
+        }
     }
 }

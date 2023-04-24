@@ -11,8 +11,11 @@ public class RPGPlayer {
     private int money;
 
     private boolean exploring;
+    private boolean caving;
+
     private boolean fighting;
     private boolean mining;
+
     private boolean dead;
     
     public RPGPlayer() {
@@ -30,8 +33,11 @@ public class RPGPlayer {
         this.money = 0;
 
         this.exploring = false;
+        this.caving = false;
+
         this.fighting = false;
         this.mining = false;
+
         this.dead = false;
     }
 
@@ -46,11 +52,11 @@ public class RPGPlayer {
     public long getGuild() {
         return this.guild;
     }
-    
+
     public int getHealth() {
         return this.health;
     }
-    
+
     public int getLevel() {
         return this.level;
     }
@@ -62,15 +68,19 @@ public class RPGPlayer {
     public int getMoney() {
         return this.money;
     }
-
+    
     public long getUser() {
         return this.user;
     }
-
+    
     public int getXp() {
         return this.xp;
     }
-    
+
+    public boolean isCaving() {
+        return this.caving;
+    }
+
     public boolean isDead() {
         return this.dead;
     }
@@ -85,6 +95,10 @@ public class RPGPlayer {
     
     public boolean isMining() {
         return this.mining;
+    }
+    
+    public void setCaving(boolean caving) {
+        this.caving = caving;
     }
     
     public void setDead(boolean dead) {

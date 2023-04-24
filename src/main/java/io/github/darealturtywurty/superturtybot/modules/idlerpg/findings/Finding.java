@@ -13,7 +13,7 @@ public abstract class Finding implements Registerable {
 
     private final Outcome outcome;
     private final String[] foundMessages;
-    
+
     protected Finding(Outcome outcome, String... foundMessages) {
         this.outcome = outcome;
         this.foundMessages = foundMessages;
@@ -22,7 +22,7 @@ public abstract class Finding implements Registerable {
     public String[] getFoundMessages() {
         return this.foundMessages;
     }
-    
+
     @Override
     public String getName() {
         return this.name;
@@ -31,7 +31,9 @@ public abstract class Finding implements Registerable {
     public Outcome getOutcome() {
         return this.outcome;
     }
-    
+
+    public abstract ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel);
+
     public String randomFoundMessage() {
         return this.foundMessages[ThreadLocalRandom.current().nextInt(this.foundMessages.length)];
     }
@@ -41,15 +43,13 @@ public abstract class Finding implements Registerable {
         this.name = name;
         return this;
     }
-    
+
     public void start(JDA jda, RPGPlayer player, long channel) {
         final ResponseBuilder builder = getResponse(null, player, channel);
-        
+
         if (builder != null && !jda.getRegisteredListeners().contains(builder)) {
             jda.addEventListener(builder);
             builder.run();
         }
     }
-    
-    protected abstract ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel);
 }

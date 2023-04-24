@@ -11,7 +11,7 @@ public class PondFinding extends Finding {
     }
 
     @Override
-    protected ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
+    public ResponseBuilder getResponse(JDA jda, RPGPlayer player, long channel) {
         return null;
     }
 }
