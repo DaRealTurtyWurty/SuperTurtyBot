@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
+import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 public class AmazonUtility {
     private static final String RANDOM_UPC_URL = "https://www.upcdatabase.com/random_item.asp";
+    private static final String AMAZON_CATALOG_SEARCH_URL = "https://sellingpartnerapi-na.amazon.com/catalog/2022-04-01/items?keywords=%s&marketplaceIds=EN&pageSize=1";
 
     public static UPCInformation getRandomUPC() {
         Request request = new Request.Builder().url(RANDOM_UPC_URL).build();
@@ -76,8 +78,33 @@ public class AmazonUtility {
         }
     }
 
+    public static JsonObject getAmazonItemInfo(UPCInformation upcInformation) {
+        String keywords = upcInformation.productTitle().replace(" ", ",");
+        var request = new Request.Builder().url(AMAZON_CATALOG_SEARCH_URL.formatted(keywords)).build();
+
+        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IllegalStateException("Unable to get Amazon item info!");
+            }
+
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new IllegalStateException("Unable to get Amazon item info!");
+            }
+
+            return Constants.GSON.fromJson(body.string(), JsonObject.class);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to get Amazon item info!", exception);
+        }
+    }
+
     public static AmazonItem getRandomItem() {
-        return null;
+        var upcInformation = getRandomUPC();
+        JsonObject itemInfo = getAmazonItemInfo(upcInformation);
+
+        System.out.println(itemInfo);
+
+        return new AmazonItem(upcInformation);
     }
 
     public static class AmazonItem {
@@ -85,6 +112,10 @@ public class AmazonUtility {
 
         public AmazonItem(UPCInformation upcInformation) {
             this.upcInformation = upcInformation;
+        }
+
+        public UPCInformation upcInformation() {
+            return this.upcInformation;
         }
     }
 

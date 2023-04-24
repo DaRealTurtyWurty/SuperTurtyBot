@@ -266,7 +266,7 @@ public class HigherLowerCommand extends CoreCommand {
             case "price" -> {
                 event.deferReply().queue();
 
-                AmazonUtility.UPCInformation upcInformation = AmazonUtility.getRandomUPC();
+                AmazonUtility.UPCInformation upcInformation = AmazonUtility.getRandomItem().upcInformation();
 
                 // reply with all of the upc information
                 String data = ("""
