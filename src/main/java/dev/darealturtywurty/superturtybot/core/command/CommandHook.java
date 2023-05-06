@@ -24,6 +24,7 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSugge
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
+import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -84,6 +85,12 @@ public class CommandHook extends ListenerAdapter {
         // TwitterListener.setup();
 
         for (Guild guild : event.getJDA().getGuilds()) {
+            if (guild.getIdLong() == 1096109606452867243L) {
+                guild.getTextChannelById(1096109607820197932L).sendMessage(
+                                "Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you!")
+                        .queue();
+            }
+
             TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general"))
                     .findFirst().orElseGet(
                             () -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general"))
@@ -281,13 +288,18 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-        cmds.add(new TriviaCommand());
-        cmds.add(new GuessCombinedFlagsCommand());
 
         // Levelling
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         //cmds.add(new XPInventoryCommand());
+
+        // Minigames
+        cmds.add(new TriviaCommand());
+        cmds.add(new GuessCombinedFlagsCommand());
+        cmds.add(new GuessSongCommand());
+        cmds.add(new GuessCountryBorderCommand());
+        cmds.add(new HigherLowerCommand());
 
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();

@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.fun;
+package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -79,7 +79,7 @@ public class TriviaCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.FUN;
+        return CommandCategory.MINIGAMES;
     }
 
     @Override
@@ -102,6 +102,11 @@ public class TriviaCommand extends CoreCommand {
         return List.of(new OptionData(OptionType.STRING, "category", "The category of trivia to play", false, true),
                 new OptionData(OptionType.STRING, "difficulty", "The difficulty of the trivia", false).addChoice("Easy",
                         "easy").addChoice("Medium", "medium").addChoice("Hard", "hard"));
+    }
+
+    @Override
+    public boolean isServerOnly() {
+        return true;
     }
 
     @Override

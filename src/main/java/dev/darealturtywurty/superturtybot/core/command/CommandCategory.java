@@ -13,6 +13,7 @@ public interface CommandCategory {
     CommandCategory MUSIC = create("Music", "🎶");
     CommandCategory IMAGE = create("Image", "🖼️");
     CommandCategory LEVELLING = create("Levelling", "🔝");
+    CommandCategory MINIGAMES = create("Minigames", "🎮");
     
     String getEmoji();
     

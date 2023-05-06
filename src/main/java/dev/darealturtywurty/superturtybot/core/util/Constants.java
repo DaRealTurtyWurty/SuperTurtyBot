@@ -12,9 +12,11 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import okhttp3.OkHttpClient;
 
+import java.util.concurrent.TimeUnit;
+
 public final class Constants {
     public static final Logger LOGGER = LoggerFactory.getLogger(TurtyBot.class);
-    public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
+    public static final OkHttpClient HTTP_CLIENT = new OkHttpClient.Builder().readTimeout(30, TimeUnit.SECONDS).build();
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
     public static final String BEAN_DUMPY_URL = "https://media.discordapp.net/attachments/855162784924434442/859517109725954048/dumpy.gif";
     public static final UrlValidator URL_VALIDATOR = new UrlValidator(UrlValidator.ALLOW_2_SLASHES);

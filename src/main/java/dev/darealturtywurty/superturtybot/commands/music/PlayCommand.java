@@ -139,6 +139,11 @@ public class PlayCommand extends CoreCommand {
             return;
         }
 
+        if(AudioManager.isGuessSongRunning(event.getGuild())) {
+            event.deferReply(true).setContent("❌ A guess the song game is currently running!").mentionRepliedUser(false).queue();
+            return;
+        }
+
         final String search = event.getOption("search_term", "", OptionMapping::getAsString).trim();
         final CompletableFuture<Pair<Boolean, String>> future = AudioManager.play(channel,
                 event.getChannel().asTextChannel(), search, event.getUser());

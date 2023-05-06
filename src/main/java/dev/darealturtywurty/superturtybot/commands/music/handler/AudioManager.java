@@ -1,16 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.music.handler;
 
-import java.awt.Color;
-import java.io.File;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
-
 import com.codepoetics.ambivalence.Either;
 import com.dunctebot.sourcemanagers.DuncteBotSources;
 import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
@@ -22,7 +11,6 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -31,6 +19,17 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
+import java.io.File;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public final class AudioManager {
     private static final Map<Long, GuildAudioManager> AUDIO_MANAGERS = new HashMap<>();
@@ -41,8 +40,10 @@ public final class AudioManager {
         AudioSourceManagers.registerLocalSource(AUDIO_MANAGER);
 
         // Spotify
-        AUDIO_MANAGER.registerSourceManager(new SpotifySourceManager(null, Environment.INSTANCE.spotifyID(),
-            Environment.INSTANCE.spotifySecret(), "US", AUDIO_MANAGER));
+        var spotifyManager = new SpotifySourceManager(null, Environment.INSTANCE.spotifyID(),
+                Environment.INSTANCE.spotifySecret(), "US", AUDIO_MANAGER);
+        spotifyManager.setPlaylistPageLimit(30);
+        AUDIO_MANAGER.registerSourceManager(spotifyManager);
 
         // Clypit, Speech (TTS), PornHub, Reddit, OCRemix, TikTok, Mixcloud, SoundGasm
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
@@ -101,8 +102,12 @@ public final class AudioManager {
         getOrCreate(guild).musicScheduler.pause();
     }
 
+    public static boolean addGuessTheSongTrack(Guild guild, AudioTrack track) {
+        return getOrCreate(guild).musicScheduler.addGuessTheSongTrack(track);
+    }
+
     public static CompletableFuture<Pair<Boolean, String>> play(AudioChannel audioChannel, TextChannel textChannel,
-        String toPlay, User user) {
+            String toPlay, User user) {
         final GuildAudioManager manager = getOrCreate(audioChannel.getGuild());
         final var future = new CompletableFuture<Pair<Boolean, String>>();
         AUDIO_MANAGER.loadItemOrdered(manager, toPlay, new AudioLoadResultHandler() {
@@ -110,10 +115,10 @@ public final class AudioManager {
             public void loadFailed(FriendlyException exception) {
                 exception.printStackTrace();
                 textChannel.sendMessage(
-                    "I have failed to load this track. Please report the following to the bot owner: \n\nSeverity: "
-                        + exception.severity.name() + "\nTrack Search: " + toPlay + "\nException: "
-                        + exception.getMessage())
-                    .queue();
+                                "I have failed to load this track. Please report the following to the bot owner: \n\nSeverity: "
+                                        + exception.severity.name() + "\nTrack Search: " + toPlay + "\nException: "
+                                        + exception.getMessage())
+                        .queue();
                 future.complete(Pair.of(false, "load_failed"));
             }
 
@@ -121,7 +126,7 @@ public final class AudioManager {
             public void noMatches() {
                 if (toPlay.startsWith("ytsearch:")) {
                     textChannel.sendMessage("I have not been able to find any matches for search term: `" + toPlay
-                        + "`! If you think that this is not correct, please contact the bot author").queue();
+                            + "`! If you think that this is not correct, please contact the bot author").queue();
                     future.complete(Pair.of(false, "load_failed"));
                 } else {
                     play(audioChannel, textChannel, "ytsearch:" + toPlay, user).thenAccept(future::complete);
@@ -139,11 +144,11 @@ public final class AudioManager {
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.GREEN);
                     embed.setTitle("Added: " + playlist.getTracks().get(0).getInfo().title + " to the queue!",
-                        playlist.getTracks().get(0).getInfo().uri.startsWith("http")
-                            ? playlist.getTracks().get(0).getInfo().uri
-                            : null);
+                            playlist.getTracks().get(0).getInfo().uri.startsWith("http")
+                                    ? playlist.getTracks().get(0).getInfo().uri
+                                    : null);
                     embed.setThumbnail("http://img.youtube.com/vi/" + playlist.getTracks().get(0).getIdentifier()
-                        + "/maxresdefault.jpg");
+                            + "/maxresdefault.jpg");
 
                     textChannel.sendMessageEmbeds(embed.build()).queue();
                 } else {
@@ -153,7 +158,7 @@ public final class AudioManager {
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.GREEN);
                     embed.setTitle("Added: " + playlist.getTracks().size() + " tracks to the queue!",
-                        toPlay.startsWith("http") ? toPlay : null);
+                            toPlay.startsWith("http") ? toPlay : null);
 
                     textChannel.sendMessageEmbeds(embed.build()).queue();
                 }
@@ -166,9 +171,9 @@ public final class AudioManager {
                     playingEmbed.setTimestamp(Instant.now());
                     playingEmbed.setColor(Color.GREEN);
                     playingEmbed.setTitle("Now Playing: " + track.getInfo().title,
-                        track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
+                            track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
                     playingEmbed
-                        .setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
+                            .setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
 
                     textChannel.sendMessageEmbeds(playingEmbed.build()).queue();
                 }
@@ -188,7 +193,7 @@ public final class AudioManager {
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.GREEN);
                     embed.setTitle("Now Playing: " + track.getInfo().title,
-                        track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
+                            track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
                     embed.setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
 
                     textChannel.sendMessageEmbeds(embed.build()).queue();
@@ -197,7 +202,7 @@ public final class AudioManager {
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.GREEN);
                     embed.setTitle("Added: " + track.getInfo().title + " to the queue!",
-                        track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
+                            track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
                     embed.setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
 
                     textChannel.sendMessageEmbeds(embed.build()).queue();
@@ -318,5 +323,50 @@ public final class AudioManager {
 
     public static void moveTrack(Guild guild, int from, int to) {
         getOrCreate(guild).musicScheduler.moveTrack(from, to);
+    }
+
+    public static CompletableFuture<Either<AudioTrack, FriendlyException>> playGuessTheSong(Guild guild, AudioChannel channel, String playlist) {
+        CompletableFuture<Either<AudioTrack, FriendlyException>> future = new CompletableFuture<>();
+
+        GuildAudioManager manager = getOrCreate(guild);
+        AUDIO_MANAGER.loadItemOrdered(manager, playlist, new AudioLoadResultHandler() {
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                future.complete(Either.ofRight(exception));
+            }
+
+            @Override
+            public void noMatches() {
+                future.complete(Either.ofLeft(null));
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                List<AudioTrack> tracks = playlist.getTracks();
+                System.out.println(tracks.size());
+                Collections.shuffle(tracks);
+                AudioTrack track = tracks.get(0);
+                manager.musicScheduler.setAudioChannel(channel);
+                addGuessTheSongTrack(guild, track);
+                future.complete(Either.ofLeft(track));
+            }
+
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                manager.musicScheduler.setAudioChannel(channel);
+                addGuessTheSongTrack(guild, track);
+                future.complete(Either.ofLeft(track));
+            }
+        });
+
+        return future;
+    }
+
+    public static void endGuessTheSong(Guild guild) {
+        getOrCreate(guild).musicScheduler.endGuessTheSong();
+    }
+
+    public static boolean isGuessSongRunning(Guild guild) {
+        return getOrCreate(guild).musicScheduler.isGuessSongRunning();
     }
 }

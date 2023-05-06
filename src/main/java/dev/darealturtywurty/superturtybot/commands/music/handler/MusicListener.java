@@ -31,7 +31,7 @@ public class MusicListener extends ListenerAdapter {
 
             EXECUTOR_SERVICE.schedule(() -> {
                 AudioChannel channel = event.getGuild().getAudioManager().getConnectedChannel();
-                if (channel != null && !AudioManager.isPlaying(event.getGuild())) {
+                if (channel != null && !AudioManager.isPlaying(event.getGuild()) && !AudioManager.isGuessSongRunning(event.getGuild())) {
                     channel.getGuild().getAudioManager().closeAudioConnection();
                 }
             }, 30, TimeUnit.SECONDS);
