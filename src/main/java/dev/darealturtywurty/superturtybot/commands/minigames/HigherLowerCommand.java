@@ -118,8 +118,7 @@ public class HigherLowerCommand extends CoreCommand {
     public List<SubcommandData> createSubcommands() {
         return List.of(new SubcommandData("population", "Population of countries"),
                 new SubcommandData("area", "Area of countries"),
-                new SubcommandData("word_frequency", "Word frequency in the English language"),
-                new SubcommandData("trending", "Trending Google searches"));
+                new SubcommandData("word_frequency", "Word frequency in the English language"));
     }
 
     @Override
@@ -265,9 +264,6 @@ public class HigherLowerCommand extends CoreCommand {
                     message.editMessageComponents(actionRow).queue();
                 });
             }
-            case "trending" -> {
-                // TODO
-            }
             default -> {
                 reply(event, "❌ Unknown subcommand!", false, true);
                 return;
@@ -340,8 +336,7 @@ public class HigherLowerCommand extends CoreCommand {
 
         if (event.getMessageIdLong() != messageId) return;
 
-        Game game = GAMES.entrySet().stream().filter(entry -> entry.getValue().getLatestMessageId() == messageId)
-                .map(Map.Entry::getValue).findFirst().orElse(null);
+        Game game = GAMES.values().stream().filter(g -> g.getLatestMessageId() == messageId).findFirst().orElse(null);
         if (game == null) {
             event.reply("❌ No game is running in this channel!").setEphemeral(true).queue();
             return;
@@ -364,8 +359,18 @@ public class HigherLowerCommand extends CoreCommand {
         }
 
         ThreadChannel threadChannel = event.getGuild().getThreadChannelById(game.getChannelId());
+        if (threadChannel == null) {
+            event.reply("❌ The thread channel for this game was deleted!").setEphemeral(true).queue();
+            return;
+        }
+
         if (game.getLatestMessageId() == game.getMessageId()) {
             TextChannel textChannel = event.getGuild().getTextChannelById(game.getOwnerChannelId());
+            if (textChannel == null) {
+                event.reply("❌ The text channel for this game was deleted!").setEphemeral(true).queue();
+                return;
+            }
+
             textChannel.retrieveMessageById(game.getLatestMessageId())
                     .queue(message -> message.editMessageComponents().queue());
         } else {
@@ -387,29 +392,7 @@ public class HigherLowerCommand extends CoreCommand {
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    Map<String, Pair<Integer, Long>> countryPopulations = new HashMap<>(COUNTRY_POPULATIONS);
-                    countryPopulations.remove(populationGame.getCountry0());
-
-                    Map.Entry<String, Pair<Integer, Long>> country1 = countryPopulations.entrySet().stream()
-                            .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
-
-                    populationGame.set0(populationGame.getCountry1(), populationGame.getYear1(),
-                            populationGame.getPopulation1());
-                    populationGame.set1(country1.getKey(), country1.getValue().getKey(),
-                            country1.getValue().getValue());
-
-                    String toSend = String.format("Does %s have a higher or lower population than %s?",
-                            populationGame.getCountry0(), populationGame.getCountry1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:population:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:population:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        populationGame.setLatestMessageId(message.getIdLong());
-                    });
+                    populations(threadChannel, populationGame);
                 } else {
                     threadChannel.sendMessage(
                                     "❌ Incorrect! " + populationGame.getCountry0() + " has a lower population than " + populationGame.getCountry1())
@@ -430,29 +413,7 @@ public class HigherLowerCommand extends CoreCommand {
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    Map<String, Pair<Integer, Long>> countryPopulations = new HashMap<>(COUNTRY_POPULATIONS);
-                    countryPopulations.remove(populationGame.getCountry0());
-
-                    Map.Entry<String, Pair<Integer, Long>> country1 = countryPopulations.entrySet().stream()
-                            .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
-
-                    populationGame.set0(populationGame.getCountry1(), populationGame.getYear1(),
-                            populationGame.getPopulation1());
-                    populationGame.set1(country1.getKey(), country1.getValue().getKey(),
-                            country1.getValue().getValue());
-
-                    String toSend = String.format("Does %s have a higher or lower population than %s?",
-                            populationGame.getCountry0(), populationGame.getCountry1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:population:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:population:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        populationGame.setLatestMessageId(message.getIdLong());
-                    });
+                    populations(threadChannel, populationGame);
                 } else {
                     threadChannel.sendMessage(
                                     "❌ Incorrect! " + populationGame.getCountry0() + " has a higher population than " + populationGame.getCountry1())
@@ -477,27 +438,7 @@ public class HigherLowerCommand extends CoreCommand {
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    Map<String, Long> countryAreas = new HashMap<>(COUNTRY_AREAS);
-                    countryAreas.remove(areaGame.getCountry0());
-
-                    Map.Entry<String, Long> country1 = countryAreas.entrySet().stream()
-                            .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
-
-                    areaGame.set0(areaGame.getCountry1(), areaGame.getArea1());
-                    areaGame.set1(country1.getKey(), country1.getValue());
-
-                    String toSend = String.format("Does %s have a higher or lower area than %s?",
-                            areaGame.getCountry0(), areaGame.getCountry1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:area:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:area:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        areaGame.setLatestMessageId(message.getIdLong());
-                    });
+                    countryAreas(threadChannel, areaGame);
                 } else {
                     threadChannel.sendMessage(
                                     "❌ Incorrect! " + areaGame.getCountry0() + " has a lower area than " + areaGame.getCountry1())
@@ -518,27 +459,7 @@ public class HigherLowerCommand extends CoreCommand {
                             .queue();
 
                     // change the second country to the first country and get a new country
-                    Map<String, Long> countryAreas = new HashMap<>(COUNTRY_AREAS);
-                    countryAreas.remove(areaGame.getCountry0());
-
-                    Map.Entry<String, Long> country1 = countryAreas.entrySet().stream()
-                            .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
-
-                    areaGame.set0(areaGame.getCountry1(), areaGame.getArea1());
-                    areaGame.set1(country1.getKey(), country1.getValue());
-
-                    String toSend = String.format("Does %s have a higher or lower area than %s?",
-                            areaGame.getCountry0(), areaGame.getCountry1());
-
-                    threadChannel.sendMessage(toSend).queue(message -> {
-                        var actionRow = ActionRow.of(
-                                Button.primary("higherlower:area:higher-" + message.getId(), "Higher"),
-                                Button.primary("higherlower:area:lower-" + message.getId(), "Lower"));
-
-                        message.editMessageComponents(actionRow).queue();
-
-                        areaGame.setLatestMessageId(message.getIdLong());
-                    });
+                    countryAreas(threadChannel, areaGame);
                 } else {
                     threadChannel.sendMessage(
                                     "❌ Incorrect! " + areaGame.getCountry0() + " has a higher area than " + areaGame.getCountry1())
@@ -596,6 +517,52 @@ public class HigherLowerCommand extends CoreCommand {
                 event.reply("❌ Unknown option!").setEphemeral(true).queue();
             }
         }
+    }
+
+    private static void countryAreas(ThreadChannel threadChannel, AreaGame areaGame) {
+        Map<String, Long> countryAreas = new HashMap<>(COUNTRY_AREAS);
+        countryAreas.remove(areaGame.getCountry0());
+
+        Map.Entry<String, Long> country1 = countryAreas.entrySet().stream()
+                .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
+
+        areaGame.set0(areaGame.getCountry1(), areaGame.getArea1());
+        areaGame.set1(country1.getKey(), country1.getValue());
+
+        String toSend = String.format("Does %s have a higher or lower area than %s?", areaGame.getCountry0(),
+                areaGame.getCountry1());
+
+        threadChannel.sendMessage(toSend).queue(message -> {
+            var actionRow = ActionRow.of(Button.primary("higherlower:area:higher-" + message.getId(), "Higher"),
+                    Button.primary("higherlower:area:lower-" + message.getId(), "Lower"));
+
+            message.editMessageComponents(actionRow).queue();
+
+            areaGame.setLatestMessageId(message.getIdLong());
+        });
+    }
+
+    private static void populations(ThreadChannel threadChannel, PopulationGame populationGame) {
+        Map<String, Pair<Integer, Long>> countryPopulations = new HashMap<>(COUNTRY_POPULATIONS);
+        countryPopulations.remove(populationGame.getCountry0());
+
+        Map.Entry<String, Pair<Integer, Long>> country1 = countryPopulations.entrySet().stream()
+                .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
+
+        populationGame.set0(populationGame.getCountry1(), populationGame.getYear1(), populationGame.getPopulation1());
+        populationGame.set1(country1.getKey(), country1.getValue().getKey(), country1.getValue().getValue());
+
+        String toSend = String.format("Does %s have a higher or lower population than %s?",
+                populationGame.getCountry0(), populationGame.getCountry1());
+
+        threadChannel.sendMessage(toSend).queue(message -> {
+            var actionRow = ActionRow.of(Button.primary("higherlower:population:higher-" + message.getId(), "Higher"),
+                    Button.primary("higherlower:population:lower-" + message.getId(), "Lower"));
+
+            message.editMessageComponents(actionRow).queue();
+
+            populationGame.setLatestMessageId(message.getIdLong());
+        });
     }
 
     private void findAndSendWord(ThreadChannel threadChannel, WordFrequencyGame wordFrequencyGame) {
