@@ -46,7 +46,7 @@ public class ChangelogFetcher {
         }
 
         try {
-            return Long.parseLong(Files.readString(lastStartTimePath));
+            return Long.parseLong(Files.readString(lastStartTimePath).trim());
         } catch(IOException exception) {
             Constants.LOGGER.error("Failed to read 'lastStartTime.txt' file", exception);
         }
