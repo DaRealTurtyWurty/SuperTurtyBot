@@ -57,7 +57,7 @@ public class ChangelogFetcher {
     private void fetchChangelog() {
         try {
             Constants.LOGGER.info(new File(".").getAbsolutePath());
-            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory().start();
+            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory(new File(".").getAbsoluteFile()).start();
 
             // Convert InputStream to ReadableByteChannel
             ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
