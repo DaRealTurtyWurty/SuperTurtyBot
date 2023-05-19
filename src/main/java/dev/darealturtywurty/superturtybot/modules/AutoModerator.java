@@ -58,7 +58,7 @@ public class AutoModerator extends ListenerAdapter {
             response.forEach(link -> {
                 final String domain = link.getAsString();
                 SCAM_DOMAINS.add(domain);
-                Constants.LOGGER.info("Scam link added: {}", domain);
+                Constants.LOGGER.debug("Scam link added: {}", domain);
             });
         } catch (final IOException exception) {
             Constants.LOGGER.error("There has been an error accessing: {}\nError Message: {}", "https://phish.sinking.yachts/v2/all", exception.getMessage());
