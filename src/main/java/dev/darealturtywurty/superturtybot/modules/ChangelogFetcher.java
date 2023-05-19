@@ -122,7 +122,7 @@ public class ChangelogFetcher {
     }
 
     public static String formatMillis(long milliseconds) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date(milliseconds);
         return dateFormat.format(date);
     }
