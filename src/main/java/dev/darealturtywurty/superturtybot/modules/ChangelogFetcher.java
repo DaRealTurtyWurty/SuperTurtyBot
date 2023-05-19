@@ -33,7 +33,7 @@ public class ChangelogFetcher {
         fetchChangelog();
         saveLastStartTime();
 
-        System.out.println(this.changelog.size());
+        Constants.LOGGER.info(this.changelog.size() + " git changes found!");
     }
 
     private long fetchLastStartTime() {
@@ -103,7 +103,7 @@ public class ChangelogFetcher {
             // Check if adding the current entry would exceed the character limit
             if (sb.length() + entry.length() <= 2000 - 273) {
                 sb.append("\\- ").append(entry.trim()).append(System.lineSeparator());
-                Constants.LOGGER.debug("Changelog entry: " + entry.trim());
+                Constants.LOGGER.info("Changelog entry: " + entry.trim());
             } else {
                 // If adding the current entry would exceed the limit, break the loop
                 break;
@@ -125,5 +125,13 @@ public class ChangelogFetcher {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date(milliseconds);
         return dateFormat.format(date);
+    }
+
+    public String appendChangelog(String startupMessage) {
+        if(this.changelog.isEmpty())
+            return startupMessage;
+
+        startupMessage += " Here is what's changed since we last spoke:%n%s".formatted(this.getFormattedChangelog());
+        return startupMessage;
     }
 }

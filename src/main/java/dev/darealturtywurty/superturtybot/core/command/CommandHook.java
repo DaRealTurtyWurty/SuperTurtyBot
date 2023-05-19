@@ -24,7 +24,6 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSugges
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -34,7 +33,6 @@ import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -46,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CommandHook extends ListenerAdapter {
-    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access. Here is what's changed since we last spoke:%n%s";
+    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
 
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
@@ -99,8 +97,7 @@ public class CommandHook extends ListenerAdapter {
             TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general")).findFirst().orElseGet(() -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general")).findFirst().orElse(guild.getSystemChannel()));
 
             if (channel == null) return;
-
-            channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
+            sendStartupMessage(channel);
         }
 
         if (!IS_DEV_MODE) {
@@ -108,11 +105,9 @@ public class CommandHook extends ListenerAdapter {
         }
     }
 
-    private static void sendOrDeleteMessages(TextChannel channel, List<Message> messages) {
-        String changelog = ChangelogFetcher.INSTANCE.getFormattedChangelog();
-        String formattedMessage = STARTUP_MESSAGE.formatted(changelog);
-        messages.stream().filter(msg -> msg.getContentRaw().equals(formattedMessage) && msg.getAuthor().getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst().ifPresent(msg -> msg.delete().queue());
-        channel.sendMessage(formattedMessage).queue();
+    private static void sendStartupMessage(TextChannel channel) {
+        String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
+        channel.sendMessage(changelog).queue();
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
