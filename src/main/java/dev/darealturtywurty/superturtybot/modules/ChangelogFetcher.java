@@ -37,17 +37,17 @@ public class ChangelogFetcher {
     }
 
     private long fetchLastStartTime() {
-        if(Files.notExists(lastStartTimePath)) {
+        if (Files.notExists(lastStartTimePath)) {
             try {
                 Files.writeString(lastStartTimePath, "0", StandardOpenOption.CREATE_NEW);
-            } catch(IOException exception) {
+            } catch (IOException exception) {
                 Constants.LOGGER.error("Failed to create 'lastStartTime.txt' file", exception);
             }
         }
 
         try {
             return Long.parseLong(Files.readString(lastStartTimePath).trim());
-        } catch(IOException exception) {
+        } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read 'lastStartTime.txt' file", exception);
         }
 
@@ -56,7 +56,7 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
-            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).start();
+            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory(new File(".")).start();
 
             // Convert InputStream to ReadableByteChannel
             ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
@@ -68,7 +68,7 @@ public class ChangelogFetcher {
             CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
 
             // Read from the ReadableByteChannel and decode it into a String that is added to the changelog
-            while(channel.read(buffer) != -1) {
+            while (channel.read(buffer) != -1) {
                 buffer.flip();
 
                 CharBuffer decoded = decoder.decode(buffer);
@@ -87,7 +87,7 @@ public class ChangelogFetcher {
     private void saveLastStartTime() {
         try {
             Files.writeString(lastStartTimePath, String.valueOf(this.startTime), StandardOpenOption.WRITE);
-        } catch(IOException exception) {
+        } catch (IOException exception) {
             Constants.LOGGER.error("Failed to save 'lastStartTime.txt' file", exception);
         }
     }
@@ -126,8 +126,7 @@ public class ChangelogFetcher {
     }
 
     public String appendChangelog(String startupMessage) {
-        if(this.changelog.isEmpty())
-            return startupMessage;
+        if (this.changelog.isEmpty()) return startupMessage;
 
         startupMessage += " Here is what's changed since we last spoke:%n%s".formatted(this.getFormattedChangelog());
         return startupMessage;
