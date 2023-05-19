@@ -16,6 +16,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -121,10 +124,12 @@ public class ChangelogFetcher {
         return this.lastStartTime;
     }
 
-    public static String formatMillis(long milliseconds) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = new Date(milliseconds);
-        return dateFormat.format(date);
+    public static String formatMillis(long millis) {
+        Instant instant = Instant.ofEpochMilli(millis);
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofPattern("\"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'\"")
+                .withZone(ZoneId.of("UTC"));
+        return formatter.format(instant);
     }
 
     public String appendChangelog(String startupMessage) {
