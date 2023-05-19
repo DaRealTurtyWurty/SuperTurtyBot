@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.commands.image.ImageCommand;
 import dev.darealturtywurty.superturtybot.commands.image.InspiroBotCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
+import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWarnCommand;
@@ -23,8 +24,9 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSugges
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import dev.darealturtywurty.superturtybot.modules.AutoModerator;
+import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -43,10 +45,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CommandHook extends ListenerAdapter {
-    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you " + "can use, and I'm always adding more! You can see all of my commands by typing " + "`/commands` in any channel that you and I can access. ||My pronouns are she/her," + " so please respect them!||";
+    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access. Here is what's changed since we last spoke:%n%s";
+
     protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
+    public static boolean IS_DEV_MODE = false;
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
@@ -86,35 +90,33 @@ public class CommandHook extends ListenerAdapter {
 
         for (Guild guild : event.getJDA().getGuilds()) {
             if (guild.getIdLong() == 1096109606452867243L) {
-                guild.getTextChannelById(1096109607820197932L).sendMessage(
-                                "Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you!")
-                        .queue();
+                guild.getTextChannelById(1096109607820197932L).sendMessage("Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you! Here is the changelog since we last spoke:%n%s".formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
+                IS_DEV_MODE = true;
+                return;
             }
 
-            TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general"))
-                    .findFirst().orElseGet(
-                            () -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general"))
-                                    .findFirst().orElse(guild.getSystemChannel()));
+            TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general")).findFirst().orElseGet(() -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general")).findFirst().orElse(guild.getSystemChannel()));
 
             if (channel == null) return;
 
             // check the last few messages in the channel before sending a startup message
             channel.retrieveMessageById(channel.getLatestMessageIdLong()).queue(message -> {
-                if (message.getContentRaw().equals(STARTUP_MESSAGE) && message.getAuthor().getIdLong() == event.getJDA()
-                        .getSelfUser().getIdLong()) {
+                if (message.getContentRaw().equals(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())) && message.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
                     return;
                 }
 
                 channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
             });
         }
+
+        if (!IS_DEV_MODE) {
+            AutoModerator.INSTANCE.readyUp();
+        }
     }
 
     private static void sendOrDeleteMessages(TextChannel channel, List<Message> messages) {
-        messages.stream().filter(msg -> msg.getContentRaw().equals(STARTUP_MESSAGE) && msg.getAuthor()
-                        .getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst()
-                .ifPresent(msg -> msg.delete().queue());
-        channel.sendMessage(STARTUP_MESSAGE).queue();
+        messages.stream().filter(msg -> msg.getContentRaw().equals(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())) && msg.getAuthor().getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst().ifPresent(msg -> msg.delete().queue());
+        channel.sendMessage(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
@@ -158,30 +160,26 @@ public class CommandHook extends ListenerAdapter {
         final var previous = new AtomicReference<CoreCommand>();
         final var slashes = new AtomicInteger();
         final var prefixes = new AtomicInteger();
-        cmds.stream()
-                .sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName()))
-                .forEach(cmd -> {
-                    if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
-                        builder.append("\n**" + cmd.getCategory().getName() + "**\n");
-                    } else if (previous.get() == null) {
-                        builder.append("**" + cmd.getCategory().getName() + "**\n");
-                    }
+        cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
+            if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
+                builder.append("\n**" + cmd.getCategory().getName() + "**\n");
+            } else if (previous.get() == null) {
+                builder.append("**" + cmd.getCategory().getName() + "**\n");
+            }
 
-                    builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
-                    previous.set(cmd);
+            builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
+            previous.set(cmd);
 
-                    if (cmd.types.slash()) {
-                        slashes.incrementAndGet();
-                    } else {
-                        prefixes.incrementAndGet();
-                    }
-                });
+            if (cmd.types.slash()) {
+                slashes.incrementAndGet();
+            } else {
+                prefixes.incrementAndGet();
+            }
+        });
 
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
-            success.sendMessage(
-                            "\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.")
-                    .queue();
+            success.sendMessage("\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.").queue();
             cmdList.delete().queue();
         });
     }
