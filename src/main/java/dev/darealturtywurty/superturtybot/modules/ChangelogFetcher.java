@@ -56,8 +56,7 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
-            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime))
-                    .directory(new File(".")).start();
+            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).start();
 
             // Convert InputStream to ReadableByteChannel
             ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
@@ -103,7 +102,6 @@ public class ChangelogFetcher {
             // Check if adding the current entry would exceed the character limit
             if (sb.length() + entry.length() <= 2000 - 273) {
                 sb.append("\\- ").append(entry.trim()).append(System.lineSeparator());
-                Constants.LOGGER.info("Changelog entry: " + entry.trim());
             } else {
                 // If adding the current entry would exceed the limit, break the loop
                 break;
