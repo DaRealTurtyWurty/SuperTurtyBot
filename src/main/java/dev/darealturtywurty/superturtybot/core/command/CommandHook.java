@@ -24,6 +24,7 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSugges
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -99,14 +100,7 @@ public class CommandHook extends ListenerAdapter {
 
             if (channel == null) return;
 
-            // check the last few messages in the channel before sending a startup message
-            channel.retrieveMessageById(channel.getLatestMessageIdLong()).queue(message -> {
-                if (message.getContentRaw().equals(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())) && message.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
-                    return;
-                }
-
-                channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
-            });
+            channel.getHistory().retrievePast(10).queue(messages -> sendOrDeleteMessages(channel, messages));
         }
 
         if (!IS_DEV_MODE) {
@@ -115,8 +109,10 @@ public class CommandHook extends ListenerAdapter {
     }
 
     private static void sendOrDeleteMessages(TextChannel channel, List<Message> messages) {
-        messages.stream().filter(msg -> msg.getContentRaw().equals(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())) && msg.getAuthor().getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst().ifPresent(msg -> msg.delete().queue());
-        channel.sendMessage(STARTUP_MESSAGE.formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
+        String changelog = ChangelogFetcher.INSTANCE.getFormattedChangelog();
+        String formattedMessage = STARTUP_MESSAGE.formatted(changelog);
+        messages.stream().filter(msg -> msg.getContentRaw().equals(formattedMessage) && msg.getAuthor().getIdLong() == channel.getJDA().getSelfUser().getIdLong()).findFirst().ifPresent(msg -> msg.delete().queue());
+        channel.sendMessage(formattedMessage).queue();
     }
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
