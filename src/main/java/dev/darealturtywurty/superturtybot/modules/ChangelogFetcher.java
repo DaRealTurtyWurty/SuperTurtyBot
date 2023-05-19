@@ -103,6 +103,7 @@ public class ChangelogFetcher {
             // Check if adding the current entry would exceed the character limit
             if (sb.length() + entry.length() <= 2000 - 273) {
                 sb.append("\\- ").append(entry.trim()).append(System.lineSeparator());
+                Constants.LOGGER.debug("Changelog entry: " + entry.trim());
             } else {
                 // If adding the current entry would exceed the limit, break the loop
                 break;
