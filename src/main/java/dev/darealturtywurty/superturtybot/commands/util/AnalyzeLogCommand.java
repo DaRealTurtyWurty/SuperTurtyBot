@@ -73,7 +73,7 @@ public class AnalyzeLogCommand extends CoreCommand {
             return;
         }
 
-        String[] lines = content.split("\\n(?!\\[)");
+        String[] lines = content.split("\n(?!\\[)");
         Optional<EnvironmentInformation> information = findEnvironmentInformation(lines);
         if (information.isEmpty()) {
             event.getHook().editOriginal("Could not parse environment information!").queue();
