@@ -73,14 +73,14 @@ public class AnalyzeLogCommand extends CoreCommand {
             return;
         }
 
-        String[] lines = content.split("\n");
+        String[] lines = content.split("\\n(?!\\[)");
         Optional<EnvironmentInformation> information = findEnvironmentInformation(lines);
         if (information.isEmpty()) {
             event.getHook().editOriginal("Could not parse environment information!").queue();
             return;
         }
 
-        List<PossibleError> possibleErrors = locateErrors(lines);
+        List<PossibleError> possibleErrors = locateErrors(information.get(), lines);
 
         var embed = new EmbedBuilder()
                 .setTitle("Analyzed %s's log file".formatted(message.getAuthor().getName()))
@@ -169,7 +169,7 @@ public class AnalyzeLogCommand extends CoreCommand {
         return Optional.of(new EnvironmentInformation(javaVersion, operatingSystem, arch, forgeVersion, mcVersion));
     }
 
-    private static List<PossibleError> locateErrors(String[] lines) {
+    private static List<PossibleError> locateErrors(EnvironmentInformation information, String[] lines) {
         List<PossibleError> possibleErrors = new ArrayList<>();
 
         for (String line : lines) {
@@ -392,9 +392,58 @@ public class AnalyzeLogCommand extends CoreCommand {
                 possibleErrors.add(new PossibleError("JVM Crash!", solution));
                 continue;
             }
+
+            // Missing textures in model apollo:test_item#inventory:
+            //    minecraft:textures/atlas/blocks.png:apollo:item/test_item
+            if(line.contains("Missing textures in model")) {
+                String model = line.split("Missing textures in model ")[1].split("#")[0].trim();
+                String[] textures = line.split("Missing textures in model ")[1].split("#")[1].split("\n");
+
+                var solution = new StringBuilder("The model `%s` is missing the following textures:\n".formatted(model));
+                for(String texture : textures) {
+                    solution.append("`%s`\n".formatted(texture.trim()));
+                }
+
+                solution.append("Make sure that the textures exist and are in the correct location!\n");
+                solution.append("You can view information about the model format here: \n\nItems: https://minecraft.fandom.com/wiki/Tutorials/Models#Item_models\nBlocks: https://minecraft.fandom.com/wiki/Tutorials/Models#Block_models\n\n");
+
+                if(isGreaterThanOrEqual(information.mcVersion(), "1.19.3")) {
+                    // note: in 1.19.3+ textures must be in 'item' and 'block' not 'items' and 'blocks'
+                    solution.append("Make sure that the textures exist and are in the correct location!\n");
+                    solution.append("Note: In 1.19.3+ the textures must be in the `item` and `block` folders, not the `items` and `blocks` folders!\n");
+                }
+
+                possibleErrors.add(new PossibleError("Missing textures in model!", solution.toString()));
+                continue;
+            }
         }
 
         return possibleErrors;
+    }
+
+    private static boolean isGreaterThanOrEqual(String versionString, String targetVersionString) {
+        String[] version = versionString.split("\\.");
+        String[] targetVersion = targetVersionString.split("\\.");
+
+        int major = Integer.parseInt(version[0]);
+        int minor = Integer.parseInt(version[1]);
+        int patch = version.length > 2 ? Integer.parseInt(version[2]) : 0;
+
+        int targetMajor = Integer.parseInt(targetVersion[0]);
+        int targetMinor = Integer.parseInt(targetVersion[1]);
+        int targetPatch = targetVersion.length > 2 ? Integer.parseInt(targetVersion[2]) : 0;
+
+        if (major > targetMajor) {
+            return true;
+        } else if (major == targetMajor) {
+            if (minor > targetMinor) {
+                return true;
+            } else if (minor == targetMinor) {
+                return patch >= targetPatch;
+            }
+        }
+
+        return false;
     }
 
     public record EnvironmentInformation(String javaVersion, String operatingSystem, String architecture,
