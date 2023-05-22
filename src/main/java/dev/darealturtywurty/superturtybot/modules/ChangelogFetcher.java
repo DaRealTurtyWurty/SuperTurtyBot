@@ -1,6 +1,14 @@
 package dev.darealturtywurty.superturtybot.modules;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.filter.CommitTimeRevFilter;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,39 +67,20 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
-            Constants.LOGGER.info(new File(".").getAbsoluteFile().toString());
-            Constants.LOGGER.info(formatMillis(lastStartTime));
-            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory(new File(".").getAbsoluteFile()).start();
+            FileRepositoryBuilder builder = new FileRepositoryBuilder();
+            Repository repo = builder.setGitDir(new File(".git")).setMustExist(true).build();
+            Git git = new Git(repo);
+            Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(this.lastStartTime)).call();
+            for (RevCommit commit : logs) {
+                String message = commit.getFullMessage();
+                if (message.startsWith("Merge")) continue;
 
-            // print command and directory
-            Constants.LOGGER.info(process.info().command().toString());
-            Constants.LOGGER.info(process.info().commandLine().toString());
-            Constants.LOGGER.info(process.info().arguments().toString());
-            Constants.LOGGER.info(process.toString());
-
-            // Convert InputStream to ReadableByteChannel
-            ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
-
-            // Create a ByteBuffer to read from the channel
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
-
-            // Create a CharsetDecoder to decode the ByteBuffer
-            CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
-
-            // Read from the ReadableByteChannel and decode it into a String that is added to the changelog
-            while (channel.read(buffer) != -1) {
-                buffer.flip();
-
-                CharBuffer decoded = decoder.decode(buffer);
-                this.changelog.add(decoded.toString());
-
-                buffer.clear();
+                Date date = commit.getAuthorIdent().getWhen();
+                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
+                this.changelog.add(commitMessage);
             }
-
-            // Tell the process to wait
-            process.waitFor();
-        } catch (IOException | InterruptedException exception) {
-            Constants.LOGGER.error("Failed to fetch changelog", exception);
+        } catch (IOException | GitAPIException exception) {
+            Constants.LOGGER.error("Failed to fetch git changes", exception);
         }
     }
 
@@ -111,8 +100,8 @@ public class ChangelogFetcher {
         StringBuilder sb = new StringBuilder();
         for (String entry : this.changelog) {
             // Check if adding the current entry would exceed the character limit
-            if (sb.length() + entry.length() <= 2000 - 273) {
-                sb.append("\\- ").append(entry.trim()).append(System.lineSeparator());
+            if (sb.length() + entry.length() <= 1700) {
+                sb.append(entry.trim()).append(System.lineSeparator());
             } else {
                 // If adding the current entry would exceed the limit, break the loop
                 break;
