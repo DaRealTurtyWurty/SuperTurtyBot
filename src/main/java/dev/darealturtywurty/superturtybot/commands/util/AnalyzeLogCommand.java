@@ -73,7 +73,7 @@ public class AnalyzeLogCommand extends CoreCommand {
             return;
         }
 
-        String[] lines = content.split("\n(?!\\[)");
+        String[] lines = content.split("\n");
         Optional<EnvironmentInformation> information = findEnvironmentInformation(lines);
         if (information.isEmpty()) {
             event.getHook().editOriginal("Could not parse environment information!").queue();
@@ -397,7 +397,8 @@ public class AnalyzeLogCommand extends CoreCommand {
             //    minecraft:textures/atlas/blocks.png:apollo:item/test_item
             if(line.contains("Missing textures in model")) {
                 String model = line.split("Missing textures in model ")[1].split("#")[0].trim();
-                String[] textures = line.split("Missing textures in model ")[1].split("#")[1].split("\n");
+                List<String> textures = new ArrayList<>(List.of(line.split("Missing textures in model ")[1].split("#")[1].split("\n")));
+                textures.remove(0); // remove the first line which is just #inventory
 
                 var solution = new StringBuilder("The model `%s` is missing the following textures:\n".formatted(model));
                 for(String texture : textures) {
