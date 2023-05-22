@@ -65,6 +65,8 @@ public class ChangelogFetcher {
 
             // print command and directory
             Constants.LOGGER.info(process.info().command().toString());
+            Constants.LOGGER.info(process.info().commandLine().toString());
+            Constants.LOGGER.info(process.info().arguments().toString());
 
             // Convert InputStream to ReadableByteChannel
             ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
