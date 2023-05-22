@@ -59,14 +59,15 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
-            Constants.LOGGER.info(new File("").getAbsoluteFile().toString());
+            Constants.LOGGER.info(new File(".").getAbsoluteFile().toString());
             Constants.LOGGER.info(formatMillis(lastStartTime));
-            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory(new File("").getAbsoluteFile()).start();
+            Process process = new ProcessBuilder("git", "log", "--pretty=format:%s", "--since=" + formatMillis(lastStartTime)).directory(new File(".").getAbsoluteFile()).start();
 
             // print command and directory
             Constants.LOGGER.info(process.info().command().toString());
             Constants.LOGGER.info(process.info().commandLine().toString());
             Constants.LOGGER.info(process.info().arguments().toString());
+            Constants.LOGGER.info(process.toString());
 
             // Convert InputStream to ReadableByteChannel
             ReadableByteChannel channel = Channels.newChannel(process.getInputStream());
