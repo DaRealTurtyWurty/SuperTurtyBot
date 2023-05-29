@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ibm.icu.impl.Pair;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -19,6 +17,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class PollCommand extends CoreCommand {
     private static final Map<Integer, String> NUMBER_EMOTE_MAP = new HashMap<>();
@@ -101,8 +100,8 @@ public class PollCommand extends CoreCommand {
         }
 
         final Pair<EmbedBuilder, List<String>> embedAndOptions = createEmbed(event.getUser(), question, options);
-        event.getChannel().sendMessageEmbeds(embedAndOptions.first.build()).queue(msg -> {
-            embedAndOptions.second.forEach(emote -> msg.addReaction(Emoji.fromUnicode(emote)).queue());
+        event.getChannel().sendMessageEmbeds(embedAndOptions.getKey().build()).queue(msg -> {
+            embedAndOptions.getValue().forEach(emote -> msg.addReaction(Emoji.fromUnicode(emote)).queue());
 
             event.deferReply(true).setContent("Successfully created poll!").mentionRepliedUser(false).queue();
         });

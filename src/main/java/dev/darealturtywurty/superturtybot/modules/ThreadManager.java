@@ -25,7 +25,7 @@ public class ThreadManager extends ListenerAdapter {
 
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
-        Constants.LOGGER.info("Channel created: " + event.toString());
+        Constants.LOGGER.debug("Channel created: " + event.toString());
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
 
         final Guild guild = event.getGuild();
@@ -46,7 +46,7 @@ public class ThreadManager extends ListenerAdapter {
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
         thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
-                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS)));
+                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, ignored -> {}, ignored -> {}), ignored -> {}));
     }
 
     @Override
@@ -66,7 +66,6 @@ public class ThreadManager extends ListenerAdapter {
         final String content = event.getMessage().getContentRaw();
         event.getMessage().createThreadChannel(
                         content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0, Channel.MAX_NAME_LENGTH) : content)
-                .queue(RestAction.getDefaultSuccess(), ignored -> {
-                });
+                .queue(RestAction.getDefaultSuccess(), ignored -> {});
     }
 }
