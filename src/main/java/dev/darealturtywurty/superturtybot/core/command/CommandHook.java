@@ -182,7 +182,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new HelpCommand());
         cmds.add(new CommandListCommand());
         cmds.add(new TagCommand());
-        cmds.add(new EvalCommand());
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
         cmds.add(new ServerConfigCommand());
