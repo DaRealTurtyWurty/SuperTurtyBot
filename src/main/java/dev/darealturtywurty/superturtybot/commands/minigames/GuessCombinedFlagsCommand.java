@@ -81,9 +81,9 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         int numberOfCountries = ThreadLocalRandom.current().nextInt(2, 6);
         final List<Map.Entry<String, BufferedImage>> countries = new ArrayList<>(numberOfCountries);
-        for (int $ = 0; $ < numberOfCountries; $++) {
+        for (int index = 0; index < numberOfCountries; index++) {
             countries.add(FLAGS.entrySet().stream().filter(entry -> !countries.contains(entry))
-                    .skip(ThreadLocalRandom.current().nextInt(0, FLAGS.size())).findFirst().orElseThrow());
+                    .skip(ThreadLocalRandom.current().nextInt(0, (FLAGS.size() - index))).findFirst().orElseThrow());
         }
 
         // get the largest with and height using stream
