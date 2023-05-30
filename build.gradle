@@ -63,7 +63,7 @@ dependencies {
     implementation group: "com.github.walkyst", name: "lavaplayer-fork", version: "1.4.0"
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.2"
-    implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "3.2.0"
+    implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "3.2.3"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
 
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.15.0'
