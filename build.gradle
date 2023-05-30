@@ -73,7 +73,7 @@ dependencies {
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
     implementation group: 'io.javalin', name: 'javalin', version: '5.4.2'
 
-    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.1'
+    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.2'
 
     annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.26"
     compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.26"
