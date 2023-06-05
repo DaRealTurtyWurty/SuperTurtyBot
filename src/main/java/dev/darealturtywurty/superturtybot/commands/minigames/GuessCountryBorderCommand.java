@@ -194,7 +194,7 @@ public class GuessCountryBorderCommand extends CoreCommand {
 
             // remove components on original message
             event.getChannel().retrieveMessageById(game.getMessageId())
-                    .queue(message -> message.editMessageComponents().queue());
+                    .queue(message -> message.editMessageComponents().queue(ignored -> {}, ignored -> {}), ignored -> {});
         }
     }
 
