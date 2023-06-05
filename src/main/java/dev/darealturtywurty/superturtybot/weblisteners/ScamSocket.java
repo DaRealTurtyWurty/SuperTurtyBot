@@ -33,10 +33,10 @@ public final class ScamSocket extends WebSocketListener {
             final String domain = elem.getAsString();
             if ("add".equals(type)) {
                 AutoModerator.SCAM_DOMAINS.add(domain);
-                Constants.LOGGER.info("Scam link added: {}", domain);
+                Constants.LOGGER.debug("Scam link added: {}", domain);
             } else if ("remove".equals(type)) {
                 AutoModerator.SCAM_DOMAINS.remove(domain);
-                Constants.LOGGER.info("Scam link removed: {}", domain);
+                Constants.LOGGER.debug("Scam link removed: {}", domain);
             } else {
                 Constants.LOGGER.warn("Unknown scam message type found! Type: \"{}\" for domain: {}", type, domain);
             }

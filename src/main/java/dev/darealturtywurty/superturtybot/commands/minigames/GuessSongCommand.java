@@ -205,11 +205,12 @@ public class GuessSongCommand extends CoreCommand {
             if ("give up".equalsIgnoreCase(message)) {
                 reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
                         .getInfo().author + "`");
+              
                 ThreadChannel thread = event.getGuild().getThreadChannelById(tuple.getT1());
                 if (thread != null) {
                     thread.getManager().setArchived(true).queue();
                 }
-
+              
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
                 return;
@@ -220,6 +221,7 @@ public class GuessSongCommand extends CoreCommand {
                         .getInfo().author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
+              
                 run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
                 return;
             }
