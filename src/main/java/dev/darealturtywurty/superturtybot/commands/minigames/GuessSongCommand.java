@@ -12,17 +12,18 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GuessSongCommand extends CoreCommand {
     private static final String PLAYLIST = "https://open.spotify.com/playlist/0Dsp6i8lvmcTg5aiusjnFH";
@@ -87,45 +88,46 @@ public class GuessSongCommand extends CoreCommand {
             return;
         }
 
-        run(Either.ofLeft(event), event.getGuild(), event.getChannel().asTextChannel(), channel);
+        run(Either.ofLeft(event), event.getGuild(), channel);
     }
 
-    private static void run(Either<SlashCommandInteractionEvent, MessageReceivedEvent> event, Guild guild, TextChannel channel, AudioChannel voiceChannel) {
-        if (event.isLeft()) {
-            reply(event.left().orElse(null), "🎵 Guess the song has started!");
-        } else {
-            reply(event.right().orElse(null), "🎵 Guess the song has started!");
-        }
+    private static void run(Either<SlashCommandInteractionEvent, MessageReceivedEvent> event, Guild guild, AudioChannel voiceChannel) {
+        var threadRef = new AtomicReference<ThreadChannel>();
+        CompletableFuture<Long> messageId = new CompletableFuture<>();
 
-        var messageId = new AtomicLong();
+        event.forEither(slashEvent -> {
+            slashEvent.deferReply().setContent("🎵 Guess the song has started!").flatMap(InteractionHook::retrieveOriginal).queue(msg -> {
+                msg.createThreadChannel("Guess The Song").queue(thread -> {
+                    thread.sendMessage("🎵 Guess the song has started!").queue();
+                    thread.sendMessage("🎵 Loading...")
+                            .queue(message -> messageId.complete(message.getIdLong()));
+                    threadRef.set(thread);
+                });
+            });
+        }, messageEvent -> {
+            messageEvent.getChannel().sendMessage("🎵 Guess the song has started!").queue();
+            messageEvent.getChannel().sendMessage("🎵 Loading...")
+                    .queue(message -> messageId.complete(message.getIdLong()));
+            threadRef.set(messageEvent.getChannel().asThreadChannel());
+        });
 
-        if (event.isLeft()) {
-            event.left().orElse(null).getHook().sendMessage("🎵 Loading...")
-                    .queue(message -> messageId.set(message.getIdLong()));
-        } else {
-            event.right().orElse(null).getChannel().sendMessage("🎵 Loading...")
-                    .queue(message -> messageId.set(message.getIdLong()));
-        }
+        messageId.thenAcceptAsync(id -> {
+            CompletableFuture<Either<AudioTrack, FriendlyException>> future = AudioManager.playGuessTheSong(guild,
+                    voiceChannel, PLAYLIST);
 
-        CompletableFuture<Either<AudioTrack, FriendlyException>> future = AudioManager.playGuessTheSong(guild,
-                voiceChannel, PLAYLIST);
-
-        future.thenAcceptAsync(result -> {
-            if (result.isLeft()) {
-                GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
-                        Tuples.of(channel.getIdLong(), result.left().orElse(null), 0));
-                if (event.isLeft()) {
-                    event.left().orElse(null).getChannel().deleteMessageById(messageId.get()).queue();
-                } else {
-                    event.right().orElse(null).getChannel().deleteMessageById(messageId.get()).queue();
-                }
-            } else {
-                if (event.isLeft()) {
-                    event.left().orElse(null).getHook().editOriginal("❌ Guess the song has failed to start!").queue();
-                } else {
-                    reply(event.right().orElse(null), "❌ Guess the song has failed to start!");
-                }
-            }
+            future.thenAcceptAsync(result -> {
+                result.forEither(track -> {
+                    GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
+                            Tuples.of(threadRef.get().getIdLong(), result.left().orElse(null), 0));
+                    threadRef.get().deleteMessageById(id).queue();
+                }, exception -> {
+                    event.forEither(slashEvent -> {
+                        slashEvent.getHook().editOriginal("❌ Guess the song has failed to start!").queue();
+                    }, messageEvent -> {
+                        messageEvent.getChannel().editMessageById(id, "❌ Guess the song has failed to start!").queue();
+                    });
+                });
+            });
         });
     }
 
@@ -203,6 +205,12 @@ public class GuessSongCommand extends CoreCommand {
             if ("give up".equalsIgnoreCase(message)) {
                 reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
                         .getInfo().author + "`");
+              
+                ThreadChannel thread = event.getGuild().getThreadChannelById(tuple.getT1());
+                if (thread != null) {
+                    thread.getManager().setArchived(true).queue();
+                }
+              
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
                 return;
@@ -213,8 +221,8 @@ public class GuessSongCommand extends CoreCommand {
                         .getInfo().author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
-                run(Either.ofRight(event), guild, event.getChannel().asTextChannel(),
-                        member.getVoiceState().getChannel());
+              
+                run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
                 return;
             }
 

@@ -9,6 +9,9 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -65,6 +68,11 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     }
 
     @Override
+    public List<OptionData> createOptions() {
+        return List.of(new OptionData(OptionType.INTEGER, "number", "The number of flags to combine", false).setRequiredRange(2, 16));
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "This command can only be used in a guild!", false, true);
@@ -79,7 +87,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        int numberOfCountries = ThreadLocalRandom.current().nextInt(2, 6);
+        int numberOfCountries = event.getOption("number", ThreadLocalRandom.current().nextInt(2, 17), OptionMapping::getAsInt);
         final List<Map.Entry<String, BufferedImage>> countries = new ArrayList<>(numberOfCountries);
         for (int index = 0; index < numberOfCountries; index++) {
             countries.add(FLAGS.entrySet().stream().filter(entry -> !countries.contains(entry))
