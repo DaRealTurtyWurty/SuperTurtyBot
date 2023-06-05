@@ -343,8 +343,8 @@ public final class AudioManager {
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
                 List<AudioTrack> tracks = playlist.getTracks();
-                System.out.println(tracks.size());
                 Collections.shuffle(tracks);
+
                 AudioTrack track = tracks.get(0);
                 manager.musicScheduler.setAudioChannel(channel);
                 addGuessTheSongTrack(guild, track);
