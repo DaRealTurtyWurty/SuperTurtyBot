@@ -225,7 +225,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         } else {
             event.getMessage().reply("❌ Was not a correct guess!").queue();
 
-            if (game.getGuesses().size() == 9) {
+            if (game.getIncorrectGuesses() >= 9) {
                 GAMES.remove(game.getMessageId());
 
                 event.getChannel().sendMessage(
@@ -241,7 +241,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 return;
             }
 
-            if (game.getGuesses().size() % 3 == 0) {
+            if (game.getIncorrectGuesses() % 3 == 0) {
                 event.getChannel().sendMessage(
                         "The countries that have been guessed are: " + String.join(", ", game.getGuesses())).queue();
             }
@@ -293,6 +293,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         private final List<String> countries;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
         private final List<String> guesses = new ArrayList<>();
+        private int incorrectGuesses = 0;
 
         public Game(List<String> countries, long guildId, long ownerChannelId, long channelId, long messageId, long userId) {
             this.countries = countries;
@@ -331,6 +332,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             return this.guesses;
         }
 
+        public int getIncorrectGuesses() {
+            return this.incorrectGuesses;
+        }
+
         public boolean chooseCountry(String country) {
             if (this.guesses.contains(country)) {
                 return false;
@@ -344,6 +349,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 }
             }
 
+            this.incorrectGuesses++;
             return false;
         }
 
