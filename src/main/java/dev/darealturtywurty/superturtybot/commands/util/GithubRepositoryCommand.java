@@ -1,6 +1,35 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import net.dv8tion.jda.api.utils.Timestamp;
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
+
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,23 +39,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import java.util.Locale;
 
 public class GithubRepositoryCommand extends CoreCommand {
     public GithubRepositoryCommand() {
@@ -65,27 +81,150 @@ public class GithubRepositoryCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String repositoryName = URLEncoder.encode(event.getOption("repository").getAsString(),
-            StandardCharsets.UTF_8);
+        String rawOption = event.getOption("repository", null, OptionMapping::getAsString);
 
-        Repository repo;
+        if (rawOption == null) {
+            reply(event, "❌ You must provide a repository name!", false, true);
+            return;
+        }
+
+        event.deferReply().queue();
+
+        // https://github.com/owner/repository.git?...
+        if(rawOption.matches("https://github\\.com/[^/]+/[^/]+")) {
+            String[] split = rawOption.split("/");
+            rawOption = split[split.length - 1];
+
+            // remove ?... from the end
+            if(rawOption.contains("?")) {
+                rawOption = rawOption.substring(0, rawOption.indexOf("?"));
+            }
+
+            // remove .git from the end
+            if(rawOption.endsWith(".git")) {
+                rawOption = rawOption.substring(0, rawOption.indexOf(".git"));
+            }
+
+            String owner = split[split.length - 2];
+            String name = split[split.length - 1];
+
+            @NotNull Repository repo;
+            try {
+                repo = findRepo(owner, name);
+            } catch (final IOException exception) {
+                event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + rawOption + "`!")
+                        .mentionRepliedUser(false).queue();
+                return;
+            }
+
+            final EmbedBuilder embed = createEmbed(repo);
+            event.getHook().editOriginalEmbeds(embed.build()).queue();
+            return;
+        }
+
+        final String repositoryName = URLEncoder.encode(rawOption, StandardCharsets.UTF_8);
+
+        List<Repository> repositories;
         try {
-            repo = searchGithubRepo(repositoryName);
+            repositories = searchGithubRepo(repositoryName);
         } catch (final IOException exception) {
-            event.deferReply(true)
-                .setContent("I could not find any repositories matching the name: `" + repositoryName + "`!")
+            event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
                 .mentionRepliedUser(false).queue();
             return;
         }
 
-        if (repo != null) {
-            final EmbedBuilder embed = createEmbed(repo);
-            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
-        } else {
-            event.deferReply(true)
-                .setContent("I could not find any repositories matching the name: `" + repositoryName + "`!")
-                .mentionRepliedUser(false).queue();
+        if (repositories.isEmpty()) {
+            event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
+                    .mentionRepliedUser(false).queue();
+            return;
         }
+
+        if (repositories.size() == 1) {
+            final EmbedBuilder embed = createEmbed(repositories.get(0));
+            event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            return;
+        }
+
+        var contentsBuilder = new PaginatedEmbed.ContentsBuilder();
+        for (final Repository repo : repositories) {
+            String description = repo.description().substring(0, Math.min(repo.description().length(), MessageEmbed.VALUE_MAX_LENGTH));
+            contentsBuilder.field(repo.name() + " - " + repo.url(), description, false);
+        }
+
+        PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contentsBuilder)
+                .title("GitHub Repositories")
+                .description("Here are the repositories I found matching the search term: `" + repositoryName + "`")
+                .color(Color.BLUE)
+                .timestamp(Instant.now())
+                .footer("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl())
+                .authorOnly(event.getUser().getIdLong())
+                .build(event.getJDA());
+
+        embed.send(event.getHook(),
+                () -> event.getHook().editOriginal("I found " + repositories.size() + " repositories matching the search term: `" + repositoryName + "`!")
+                        .mentionRepliedUser(false)
+                        .queue()
+        );
+
+        embed.setOnMessageUpdate(message -> {
+            List<LayoutComponent> components = new ArrayList<>(message.getComponents());
+
+            // get a list of the current page's fields
+            List<Repository> currentRepos = repositories.subList(embed.getPage() * 10, Math.min(repositories.size(), (embed.getPage() + 1) * 10));
+
+            StringSelectMenu menu = StringSelectMenu.create("github-%d-%d-%d-%d".formatted(
+                            event.isFromGuild() ? event.getGuild().getIdLong() : 0,
+                            event.getChannel().getIdLong(),
+                            message.getIdLong(),
+                            event.getUser().getIdLong()))
+                    .setPlaceholder("Select a Repository")
+                    .addOptions(currentRepos.stream().map(repo -> SelectOption.of(repo.name(), repo.authorName() + "::" + repo.name())).toList())
+                    .setRequiredRange(1, 1)
+                    .build();
+
+            components.add(ActionRow.of(menu));
+            message.editMessageComponents(components).queue();
+        });
+    }
+
+    @Override
+    public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
+        String id = event.getComponentId();
+        String[] split = id.split("-");
+
+        String type = split[0];
+        if (!type.equals("github-")) return;
+
+        long guildId = Long.parseLong(split[1]);
+        long channelId = Long.parseLong(split[2]);
+        long messageId = Long.parseLong(split[3]);
+        long userId = Long.parseLong(split[4]);
+
+        Guild guild = event.getGuild();
+        if (guildId == 0 && guild != null) return;
+        else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
+        else if(event.getChannel().getIdLong() != channelId) return;
+        else if(event.getMessageIdLong() != messageId) return;
+        else if(event.getUser().getIdLong() != userId) {
+            event.deferEdit().queue();
+            return;
+        }
+
+        String value = event.getSelectedOptions().get(0).getValue();
+        String[] repoInfo = value.split("::");
+        String author = repoInfo[0];
+        String repoName = repoInfo[1];
+
+        Repository repo;
+        try {
+            repo = findRepo(author, repoName);
+        } catch (final IOException exception) {
+            event.deferEdit().queue();
+            return;
+        }
+
+        EmbedBuilder embed = createEmbed(repo);
+        event.editComponents().setEmbeds(embed.build()).queue();
     }
 
     private static EmbedBuilder createEmbed(Repository repo) {
@@ -96,24 +235,35 @@ public class GithubRepositoryCommand extends CoreCommand {
         embed.setDescription(repo.description);
         embed.addField("Owned By:", repo.authorName, false);
         embed.addField("Link:", repo.url, false);
-        embed.addField("Main Language:", repo.language, false);
-        embed.addField("Default Branch:", repo.defaultBranch, false);
-        embed.addField("Estimate File Size:", repo.estimateSize + "MB", false);
-        embed.addField("⭐:", repo.stars + "", false);
-        embed.addField("🍴", repo.forks + "", false);
-        embed.addField("👁", repo.watchers + "", false);
-        embed.addField("‼", repo.openIssueCount + "", false);
-        embed.addField("Is Archived:", StringUtils.trueFalseToYesNo(repo.archived), false);
-        embed.addField("Is Disabled:", StringUtils.trueFalseToYesNo(repo.disabled), false);
-        embed.addField("Is Fork:", StringUtils.trueFalseToYesNo(repo.isFork), false);
-        embed.addField("Created At:", DateFormat.getDateTimeInstance().format(parseDateTime(repo.creationDate)), false);
-        embed.addField("Last Updated:", DateFormat.getDateTimeInstance().format(parseDateTime(repo.lastUpdated)),
-            false);
-        embed.addField("License:", "Name: " + repo.license.name + " (" + repo.license.key + ")", false);
+
+        embed.addField("Language:", repo.language, true);
+        embed.addField("Default Branch:", repo.defaultBranch, true);
+
+        String license = "%s (%s)".formatted(repo.license.name, repo.license.key.toUpperCase(Locale.ROOT));
+        embed.addField("License:", license, true);
+
+        embed.addField("Size:", repo.estimateSize + "MB", true);
+        embed.addField("Stars:", String.valueOf(repo.stars), true);
+        embed.addField("Forks:", String.valueOf(repo.forks), true);
+
+        embed.addField("Watches:", String.valueOf(repo.watchers), true);
+        embed.addField("Subscribers:", String.valueOf(repo.subscribers), true);
+        embed.addField("Issues:", String.valueOf(repo.openIssueCount), true);
+
+        embed.addField("Archived:", StringUtils.trueFalseToYesNo(repo.archived), true);
+        embed.addField("Disabled:", StringUtils.trueFalseToYesNo(repo.disabled), true);
+        embed.addField("Fork:", StringUtils.trueFalseToYesNo(repo.isFork), true);
+
+        long creationTime = parseDateTime(repo.creationDate).getTime();
+        long lastUpdateTime = parseDateTime(repo.lastUpdated).getTime();
+        embed.addField("Created At:", TimeFormat.DATE_TIME_SHORT.format(creationTime), true);
+        embed.addField("Last Updated At:", TimeFormat.DATE_TIME_SHORT.format(lastUpdateTime), true);
+
         return embed;
     }
 
     private static Repository getDetails(final JsonObject from) {
+        Constants.LOGGER.info("Parsing JSON object: {}", from);
         final String name = from.get("name").getAsString();
         final String authorName = from.get("owner").getAsJsonObject().get("login").getAsString();
         final String url = from.get("html_url").getAsString();
@@ -143,13 +293,14 @@ public class GithubRepositoryCommand extends CoreCommand {
         final int stars = from.get("stargazers_count").getAsInt();
         final int forks = from.get("forks_count").getAsInt();
         final int watchers = from.get("watchers_count").getAsInt();
+        final int subscribers = from.has("subscribers_count") ? from.get("subscribers_count").getAsInt() : 0;
         final int openIssueCount = from.get("open_issues_count").getAsInt();
         final int estimateSize = from.get("size").getAsInt();
         final boolean isFork = from.get("fork").getAsBoolean();
         final boolean isArchived = from.get("archived").getAsBoolean();
         final boolean isDisabled = from.get("disabled").getAsBoolean();
         return new Repository(name, authorName, url, description, language, defaultBranch, createdAt, updatedAt,
-            license, stars, forks, watchers, openIssueCount, estimateSize, isFork, isArchived, isDisabled);
+            license, stars, forks, watchers, subscribers, openIssueCount, estimateSize, isFork, isArchived, isDisabled);
     }
 
     private static Color languageToColor(final String language) {
@@ -169,7 +320,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         }
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "MagicConstant"})
     private static Date parseDateTime(final String dateTime) {
         final int year = Integer.parseInt(dateTime.split("-")[0]);
         final int month = Integer.parseInt(dateTime.split("-")[1]);
@@ -180,25 +331,36 @@ public class GithubRepositoryCommand extends CoreCommand {
         return new Date(year - 1900, month, day, hour, minute, second);
     }
 
-    private static Repository searchGithubRepo(final String repo) throws IOException {
-        final var url = new URL("https://api.github.com/search/repositories?q=" + repo + "&sort=stars&order=desc");
-        final URLConnection urlc = url.openConnection();
-        urlc.addRequestProperty("User-Agent",
+    @NotNull
+    private static List<Repository> searchGithubRepo(final String repo) throws IOException {
+        final var url = new URL("https://api.github.com/search/repositories?q=%s".formatted(repo));
+        final URLConnection connection = url.openConnection();
+        connection.addRequestProperty("User-Agent",
             "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
-        final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(urlc.getInputStream())));
+        final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(connection.getInputStream())));
         final JsonArray items = Constants.GSON.fromJson(result, JsonObject.class).get("items").getAsJsonArray();
-        if (items.size() >= 1) {
-            final JsonObject first = items.get(0).getAsJsonObject();
-            return getDetails(first);
+        final List<Repository> repositories = new ArrayList<>();
+        for (final JsonElement item : items) {
+            repositories.add(getDetails(item.getAsJsonObject()));
         }
-        return null;
+
+        return repositories;
     }
 
-    private static record Repository(String name, String authorName, String url, String description, String language,
+    private static Repository findRepo(String owner, String name) throws IOException {
+        final var url = new URL("https://api.github.com/repos/%s/%s".formatted(owner, name));
+        final URLConnection connection = url.openConnection();
+        connection.addRequestProperty("User-Agent",
+            "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
+        final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(connection.getInputStream())));
+        return getDetails(Constants.GSON.fromJson(result, JsonObject.class));
+    }
+
+    private record Repository(String name, String authorName, String url, String description, String language,
         String defaultBranch, String creationDate, String lastUpdated, License license, int stars, int forks,
-        int watchers, int openIssueCount, int estimateSize, boolean isFork, boolean archived, boolean disabled) {
+        int watchers, int subscribers, int openIssueCount, int estimateSize, boolean isFork, boolean archived, boolean disabled) {
     }
 
-    private static record License(String key, String name) {
+    private record License(String key, String name) {
     }
 }
