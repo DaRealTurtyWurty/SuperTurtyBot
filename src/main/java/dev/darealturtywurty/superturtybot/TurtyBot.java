@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.commands.music.handler.MusicListener;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
+import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
@@ -23,6 +24,7 @@ import org.reflections.util.FilterBuilder;
 
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
+    public static final EventWaiter EVENT_WAITER = new EventWaiter();
 
     public static void main(String[] args) throws InvalidTokenException {
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(),
@@ -90,6 +92,9 @@ public class TurtyBot {
 
         // Add the music manager so that we can leave voice channels when the bot is idle
         builder.addEventListeners(MusicListener.INSTANCE);
+
+        // Add the event waiter so that we can wait for events
+        builder.addEventListeners(EVENT_WAITER);
     }
 
     private static void loadRegisterers() {
