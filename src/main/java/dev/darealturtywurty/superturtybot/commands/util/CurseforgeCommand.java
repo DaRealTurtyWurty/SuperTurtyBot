@@ -1,48 +1,96 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import org.apache.commons.io.IOUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import io.github.matyrobbrt.curseforgeapi.CurseForgeAPI;
+import io.github.matyrobbrt.curseforgeapi.request.AsyncRequest;
+import io.github.matyrobbrt.curseforgeapi.request.Response;
+import io.github.matyrobbrt.curseforgeapi.request.helper.AsyncRequestHelper;
+import io.github.matyrobbrt.curseforgeapi.request.helper.RequestHelper;
+import io.github.matyrobbrt.curseforgeapi.request.query.ModSearchQuery;
+import io.github.matyrobbrt.curseforgeapi.schemas.Category;
+import io.github.matyrobbrt.curseforgeapi.schemas.file.File;
+import io.github.matyrobbrt.curseforgeapi.schemas.game.Game;
+import io.github.matyrobbrt.curseforgeapi.schemas.game.GameVersionsByType;
+import io.github.matyrobbrt.curseforgeapi.schemas.mod.Mod;
+import io.github.matyrobbrt.curseforgeapi.schemas.mod.ModAuthor;
+import io.github.matyrobbrt.curseforgeapi.util.CurseForgeException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.text.WordUtils;
+import org.jetbrains.annotations.NotNull;
 
-// TODO: Take a look at the searching for this command. If it can't be fixed,
-// add pagination
+import javax.security.auth.login.LoginException;
+import java.awt.*;
+import java.time.Instant;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class CurseforgeCommand extends CoreCommand {
+    private static final CurseForgeAPI CURSE_FORGE_API;
+    private static final Map<String, Game> GAMES = new HashMap<>();
+    private static final Map<Game, Set<Category>> CATEGORIES = new HashMap<>();
+
+    static {
+        try {
+            CURSE_FORGE_API = CurseForgeAPI.builder()
+                    .apiKey(Environment.INSTANCE.curseforgeKey())
+                    .build();
+        } catch (LoginException exception) {
+            throw new IllegalStateException("Failed to login to curseforge!", exception);
+        }
+
+        RequestHelper helper = CURSE_FORGE_API.getHelper();
+        try {
+            Response<List<Game>> games = helper.getGames();
+            for (Game game : games.get()) {
+                GAMES.put(game.name(), game);
+            }
+        } catch (CurseForgeException exception) {
+            throw new IllegalStateException("Failed to get games from curseforge!", exception);
+        }
+
+        GAMES.values().forEach(game -> {
+            CATEGORIES.computeIfAbsent(game, key -> {
+                try {
+                    return new HashSet<>(helper.getCategories(game.id()).get());
+                } catch (CurseForgeException exception) {
+                    throw new IllegalStateException("Failed to get categories from curseforge!", exception);
+                }
+            });
+        });
+    }
+
     public CurseforgeCommand() {
         super(new Types(true, false, false, false));
     }
     
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.STRING, "project", "The name of the curseforge project", true));
+        return List.of(new OptionData(OptionType.STRING, "game", "The game to search for", true, true),
+                new OptionData(OptionType.STRING, "search", "The search query", true),
+                new OptionData(OptionType.STRING, "type", "The type of project to search for", false, true),
+                new OptionData(OptionType.STRING, "category", "The category to search for", false, true),
+                new OptionData(OptionType.STRING, "game-version", "The game version to search for", false, true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -55,7 +103,7 @@ public class CurseforgeCommand extends CoreCommand {
     
     @Override
     public String getHowToUse() {
-        return "/curseforge [projectName]";
+        return "/curseforge <game> <search> [type] [category] [game-version]";
     }
     
     @Override
@@ -70,144 +118,252 @@ public class CurseforgeCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String search = URLEncoder.encode(event.getOption("project").getAsString(), StandardCharsets.UTF_8);
-        final JsonObject mod = getMod(listMods(search));
-        event.deferReply().addEmbeds(createModEmbed(mod, search).build()).mentionRepliedUser(false).queue();
-    }
-    
-    private EmbedBuilder createModEmbed(JsonObject modObj, String search) {
-        final var embed = new EmbedBuilder();
-        embed.setTimestamp(Instant.now());
-        embed.setColor(Color.YELLOW);
-        if (modObj == null) {
-            embed.setTitle("No results found for: `" + search + "`");
-            embed.setColor(Color.RED);
-            return embed;
+        String game = event.getOption("game", null, OptionMapping::getAsString);
+        String search = event.getOption("search", null, OptionMapping::getAsString);
+        String type = event.getOption("type", null, OptionMapping::getAsString);
+        String category = event.getOption("category", null, OptionMapping::getAsString);
+
+        if(game == null || search == null) {
+            reply(event, "❌ You must provide a game and search query!", false, true);
+            return;
         }
-        
-        embed.setTitle(modObj.get("name").getAsString());
-        embed.setDescription(modObj.get("summary").getAsString());
-        embed.addField("Downloads", modObj.get("downloadCount").getAsInt() + "", false);
-        
-        var builder = new StringBuilder();
-        final JsonArray categories = modObj.getAsJsonArray("categories");
-        for (final JsonElement element : categories) {
-            final JsonObject category = element.getAsJsonObject();
-            builder.append("\u2022 ").append(category.get("name").getAsString()).append("\n");
+
+        // Check if game exists
+        if(!GAMES.containsKey(game)) {
+            reply(event, "❌ That game does not exist!", false, true);
+            return;
         }
-        
-        String categoriesStr = builder.toString();
-        final String[] categoriesArr = categoriesStr.split("\n");
-        if (categoriesArr.length < 2) {
-            categoriesStr = categoriesStr.replace("\u2022 ", "");
+
+        Game gameObj = GAMES.get(game);
+
+        // Check if type exists
+        int classId = -1;
+        if(type != null) {
+            try {
+                classId = Integer.parseInt(type);
+            } catch (NumberFormatException exception) {
+                reply(event, "❌ That type does not exist!", false, true);
+                return;
+            }
         }
-        
-        embed.addField("Categories", categoriesStr, false);
-        
-        builder = new StringBuilder();
-        final JsonArray authors = modObj.getAsJsonArray("authors");
-        for (final JsonElement element : authors) {
-            final JsonObject author = element.getAsJsonObject();
-            builder.append("\u2022 ").append(author.get("name").getAsString()).append("\n");
+
+        // Check if category exists
+        Category categoryObj = null;
+        if(category != null) {
+            try {
+                categoryObj = CATEGORIES.get(gameObj).stream().filter(cat -> cat.name().equalsIgnoreCase(category)).findFirst().get();
+            } catch (NoSuchElementException exception) {
+                reply(event, "❌ That category does not exist!", false, true);
+                return;
+            }
         }
-        
-        String authorsStr = builder.toString();
-        final String[] authorArr = authorsStr.split("\n");
-        if (authorArr.length < 2) {
-            authorsStr = authorsStr.replace("\u2022 ", "");
-        }
-        
-        embed.addField("Authors", authorsStr, false);
-        
-        if (!modObj.get("logo").isJsonNull()) {
-            embed.setThumbnail(modObj.get("logo").getAsJsonObject().get("url").getAsString());
-        }
-        
-        embed.addField("Updated At",
-            DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.parse(modObj.get("dateModified").getAsString())),
-            false);
-        embed.addField("Created At",
-            DateTimeFormatter.RFC_1123_DATE_TIME.format(OffsetDateTime.parse(modObj.get("dateReleased").getAsString())),
-            false);
-        
-        final JsonArray latestFiles = modObj.getAsJsonArray("latestFiles");
-        if (!latestFiles.isEmpty()) {
-            final List<String> foundVersions = new ArrayList<>();
-            builder = new StringBuilder();
-            for (final JsonElement element : latestFiles) {
-                final JsonObject file = element.getAsJsonObject();
-                final JsonArray gameVersions = file.getAsJsonArray("gameVersions");
-                for (final JsonElement elem : gameVersions) {
-                    final String version = elem.getAsString();
-                    if (!foundVersions.contains(version)) {
-                        foundVersions.add(version);
-                        builder.append("\u2022 ").append(version).append("\n");
-                    }
+
+        event.deferReply().queue();
+
+        AsyncRequestHelper helper = CURSE_FORGE_API.getAsyncHelper();
+        try {
+            ModSearchQuery query = ModSearchQuery.of(gameObj)
+                    .sortField(ModSearchQuery.SortField.NAME)
+                    .searchFilter(search);
+            if(categoryObj != null) {
+                query.category(categoryObj);
+            }
+
+            if(classId != -1) {
+                query.classId(classId);
+            }
+
+            AsyncRequest<Response<List<Mod>>> request = helper.searchMods(query);
+            request.queue(response -> response.ifPresentOrElse(mods -> {
+                if (mods.isEmpty()) {
+                    event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue();
+                    return;
                 }
-            }
-            
-            String versionsStr = builder.toString();
-            final String[] versionsArr = versionsStr.split("\n");
-            if (versionsArr.length < 2) {
-                versionsStr = versionsStr.replace("\u2022 ", "");
-            }
-            
-            embed.addField("Versions", versionsStr, false);
+
+                if(mods.size() == 1) {
+                    EmbedBuilder embed = createEmbed(mods.get(0));
+                    event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(false).queue();
+                    return;
+                }
+
+                var contentsBuilder = new PaginatedEmbed.ContentsBuilder();
+                for (Mod mod : mods) {
+                    contentsBuilder.field(mod.name(), mod.links().websiteUrl());
+                }
+
+                PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contentsBuilder)
+                        .title("Search Results for " + search)
+                        .footer("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl())
+                        .timestamp(Instant.now())
+                        .color(Color.BLUE)
+                        .authorOnly(event.getUser().getIdLong())
+                        .build(event.getJDA());
+
+                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue());
+
+                embed.setOnMessageUpdate(message -> {
+                    // create select menu
+                    List<LayoutComponent> components = new ArrayList<>(message.getComponents());
+
+                    // get a list of the current page's fields
+                    List<Mod> currentMods = mods.subList(embed.getPage() * 10, Math.min(mods.size(), (embed.getPage() + 1) * 10));
+
+                    StringSelectMenu menu = StringSelectMenu.create("curseforge-%d-%d-%d-%d".formatted(
+                                    event.isFromGuild() ? event.getGuild().getIdLong() : 0,
+                                    event.getChannel().getIdLong(),
+                                    message.getIdLong(),
+                                    event.getUser().getIdLong()))
+                            .setPlaceholder("Select a Mod")
+                            .addOptions(currentMods.stream().map(mod -> SelectOption.of(mod.name(), String.valueOf(mod.id()))).toList())
+                            .setRequiredRange(1, 1)
+                            .build();
+
+                    components.add(ActionRow.of(menu));
+                    message.editMessageComponents(components).queue();
+                });
+
+                TurtyBot.EVENT_WAITER.builder(StringSelectInteractionEvent.class)
+                        .condition(interactionEvent -> interactionEvent.getComponentId().startsWith("curseforge-"))
+                        .success(event1 -> {
+                            String componentId = event1.getComponentId();
+                            String[] split = componentId.split("-");
+
+                            long guildId = Long.parseLong(split[1]);
+                            long channelId = Long.parseLong(split[2]);
+                            long messageId = Long.parseLong(split[3]);
+                            long userId = Long.parseLong(split[4]);
+
+                            Guild guild = event1.getGuild();
+                            if (guildId == 0 && guild != null) return;
+                            else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
+                            else if(event1.getChannel().getIdLong() != channelId) return;
+                            else if(event1.getMessageIdLong() != messageId) return;
+                            else if(event1.getUser().getIdLong() != userId) {
+                                event1.deferEdit().queue();
+                                return;
+                            }
+
+                            int value = Integer.parseInt(event1.getSelectedOptions().get(0).getValue());
+                            Mod mod = mods.stream().filter(mod1 -> mod1.id() == value).findFirst().orElse(null);
+                            if(mod == null) {
+                                event1.deferEdit().queue();
+                                return;
+                            }
+
+                            EmbedBuilder embed1 = createEmbed(mod);
+                            event1.deferEdit().setComponents().setEmbeds(embed1.build()).queue();
+
+                            embed.finish();
+                        })
+                        .failure(() -> {})
+                        .build();
+            }, () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue()));
+        } catch (CurseForgeException exception) {
+            event.getHook().editOriginal("❌ Failed to search for projects!").mentionRepliedUser(false).queue();
         }
-        
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if(!event.getName().equals(getName())) return;
+
+        String focusedValue = event.getFocusedOption().getValue();
+        switch (event.getFocusedOption().getName()) {
+            case "game" -> event.replyChoiceStrings(
+                    GAMES.keySet()
+                            .stream()
+                            .filter(game -> containsIgnoreCase(game, focusedValue))
+                            .limit(25)
+                            .toList()
+                ).queue(unused -> {}, throwable -> {});
+
+            case "type" -> {
+                Game typeGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString));
+                if (typeGame == null) {
+                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    return;
+                }
+
+                Set<Category> typeCategories = CATEGORIES.get(typeGame);
+                if (typeCategories == null || typeCategories.isEmpty()) {
+                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    return;
+                }
+
+                event.replyChoices(
+                        typeCategories.stream()
+                                .filter(Category::isClass)
+                                .filter(category -> containsIgnoreCase(category.name(), focusedValue))
+                                .limit(25)
+                                .map(category -> new Command.Choice(category.name(), category.id()))
+                                .toList()
+                        ).queue(unused -> {}, throwable -> {});
+            }
+
+            case "category" -> {
+                Game categoryGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString));
+                if (categoryGame == null) {
+                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    return;
+                }
+
+                Set<Category> categoryCategories = CATEGORIES.get(categoryGame);
+                if (categoryCategories == null || categoryCategories.isEmpty()) {
+                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    return;
+                }
+
+                event.replyChoiceStrings(
+                        categoryCategories.stream()
+                                .map(Category::name)
+                                .filter(name -> containsIgnoreCase(name, focusedValue))
+                                .limit(25)
+                                .toList()
+                ).queue(unused -> {}, throwable -> {});
+            }
+            default -> event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+        }
+    }
+
+    private EmbedBuilder createEmbed(Mod mod) {
+        var embed = new EmbedBuilder();
+        embed.setTitle(mod.name());
+        embed.setThumbnail(mod.logo().url());
+        embed.setDescription(mod.summary());
+        embed.setUrl(mod.links().websiteUrl());
+        embed.setTimestamp(Instant.now());
+
+        embed.addField("Downloads:", String.format("%,d", (long) mod.downloadCount()), true);
+        embed.addField("Featured:", StringUtils.trueFalseToYesNo(mod.isFeatured()), true);
+
+        String status = WordUtils.capitalize(
+                mod.status()
+                .name()
+                .toLowerCase(Locale.ROOT)
+                .replace("_", " ")
+        );
+        embed.addField("Status:", status, true);
+
+        embed.addField("Author:", mod.authors().stream().map(ModAuthor::name).collect(Collectors.joining(", ")), true);
+        embed.addField("Categories:", mod.categories().stream().map(Category::name).collect(Collectors.joining(", ")), true);
+
+        Set<String> versions = new HashSet<>();
+        for (File file : mod.latestFiles()) {
+            versions.addAll(file.gameVersions());
+        }
+
+        embed.addField("Versions:", String.join(", ", versions), true);
+
+        embed.addField("Created:", TimeFormat.DATE_SHORT.format(mod.getDateCreatedAsInstant()), true);
+        embed.addField("Released:", TimeFormat.DATE_SHORT.format(mod.getDateReleasedAsInstant()), true);
+        embed.addField("Updated:", TimeFormat.DATE_SHORT.format(mod.getDateModifiedAsInstant()), true);
+
+        embed.setImage(!mod.screenshots().isEmpty() ? mod.screenshots().get(0).url() : null);
+
         return embed;
     }
-    
-    private JsonObject getMod(String modsStr) {
-        final var mods = Constants.GSON.fromJson(modsStr, JsonObject.class);
-        final JsonArray modArray = mods.getAsJsonArray("data");
-        
-        final List<JsonObject> objs = new ArrayList<>();
-        StreamSupport.stream(modArray.spliterator(), false).map(JsonElement::getAsJsonObject)
-            .sorted(Comparator.comparingInt(obj -> -obj.get("downloadCount").getAsInt())).forEach(objs::add);
-        return objs.isEmpty() ? null : objs.get(0);
-    }
-    
-    private String listCategories() {
-        try {
-            final URLConnection urlc = new URL("https://api.curseforge.com/v1/categories?gameId=432").openConnection();
-            urlc.addRequestProperty("x-api-key", Environment.INSTANCE.curseforgeKey());
-            return IOUtils.toString(urlc.getInputStream(), StandardCharsets.UTF_8);
-        } catch (final IOException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-    
-    private String listGames() {
-        try {
-            final URLConnection urlc = new URL("https://api.curseforge.com/v1/games").openConnection();
-            urlc.addRequestProperty("x-api-key", Environment.INSTANCE.curseforgeKey());
-            return IOUtils.toString(urlc.getInputStream(), StandardCharsets.UTF_8);
-        } catch (final IOException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-    
-    private String listMods(String search) {
-        try {
-            final URLConnection urlc = new URL(
-                "https://api.curseforge.com/v1/mods/search?gameId=432&classId=6&searchFilter=" + search)
-                    .openConnection();
-            urlc.addRequestProperty("x-api-key", Environment.INSTANCE.curseforgeKey());
-            return IOUtils.toString(urlc.getInputStream(), StandardCharsets.UTF_8);
-        } catch (final IOException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-    
-    private void printMods(String search) {
-        final String result = listMods(search);
-        final Iterator<JsonElement> mods = Constants.GSON.fromJson(result, JsonObject.class).getAsJsonArray("data")
-            .iterator();
-        final var builder = new StringBuilder();
-        Stream.generate(() -> null).takeWhile(x -> mods.hasNext()).map(n -> mods.next())
-            .map(JsonElement::getAsJsonObject).map(obj -> obj.get("name").getAsString())
-            .forEach(n -> builder.append(n).append("\n"));
-        Constants.LOGGER.debug(builder.toString());
+
+    private static boolean containsIgnoreCase(String string, String search) {
+        return string.toLowerCase().contains(search.toLowerCase());
     }
 }
