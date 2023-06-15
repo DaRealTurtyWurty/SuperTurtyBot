@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.fun;
+package dev.darealturtywurty.superturtybot.commands.image;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class DeepfryCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.FUN;
+        return CommandCategory.IMAGE;
     }
 
     @Override

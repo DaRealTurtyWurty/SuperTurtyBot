@@ -3,10 +3,7 @@ package dev.darealturtywurty.superturtybot.core.command;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
-import dev.darealturtywurty.superturtybot.commands.image.HttpCatCommand;
-import dev.darealturtywurty.superturtybot.commands.image.HttpDogCommand;
-import dev.darealturtywurty.superturtybot.commands.image.ImageCommand;
-import dev.darealturtywurty.superturtybot.commands.image.InspiroBotCommand;
+import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;
@@ -262,6 +259,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new InspiroBotCommand());
         cmds.add(new HttpDogCommand());
         cmds.add(new ImageCommand());
+        cmds.add(new DeepfryCommand());
+        cmds.add(new CatSaysCommand());
 
         // Fun
         cmds.add(new AdviceCommand());
@@ -274,7 +273,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
-        cmds.add(new DeepfryCommand());
 
         // Levelling
         cmds.add(new RankCommand());
