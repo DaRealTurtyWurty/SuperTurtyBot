@@ -11,7 +11,9 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -253,6 +255,37 @@ public class QuoteCommand extends CoreCommand {
 
             reply(event, embed);
         }
+    }
+
+    @Override
+    protected void runMessageCtx(MessageContextInteractionEvent event) {
+        if (!event.isFromGuild()) {
+            event.reply("❌ This command can only be used in a server!").setEphemeral(true).queue();
+            return;
+        }
+
+        Guild guild = event.getGuild();
+        if (!event.getMember().hasPermission(Permission.VIEW_CHANNEL)) {
+            event.reply("❌ You must be able to read messages to use this command!").setEphemeral(true).queue();
+            return;
+        }
+
+        User user = event.getUser();
+        Message message = event.getTarget();
+
+        event.deferReply().queue();
+
+        List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
+                .into(new ArrayList<>());
+        if (quotes.stream().anyMatch(quote -> quote.getText().equals(message.getContentRaw()))) {
+            event.getHook().editOriginal("❌ That quote already exists!").queue();
+            return;
+        }
+
+        var quote = new Quote(guild.getIdLong(), message.getAuthor().getIdLong(), message.getContentRaw(),
+                message.getTimeCreated().toInstant().toEpochMilli(), user.getIdLong());
+        Database.getDatabase().quotes.insertOne(quote);
+        event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
     }
 
     @Override
