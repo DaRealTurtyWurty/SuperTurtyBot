@@ -20,9 +20,6 @@ import dev.darealturtywurty.superturtybot.commands.music.handler.MusicRestartCom
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
-import dev.darealturtywurty.superturtybot.commands.util.suggestion.ApproveSuggestionCommand;
-import dev.darealturtywurty.superturtybot.commands.util.suggestion.ConsiderSuggestionCommand;
-import dev.darealturtywurty.superturtybot.commands.util.suggestion.DenySuggestionCommand;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
@@ -113,7 +110,7 @@ public class CommandHook extends ListenerAdapter {
 
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
         if (cmd.types.slash()) {
-            final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription());
+            final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
             final List<OptionData> options = cmd.createOptions();
             if (!options.isEmpty()) {
                 data.addOptions(options);
@@ -202,9 +199,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GithubRepositoryCommand());
         cmds.add(new CurseforgeCommand());
         cmds.add(new SuggestCommand());
-        cmds.add(new ApproveSuggestionCommand());
-        cmds.add(new DenySuggestionCommand());
-        cmds.add(new ConsiderSuggestionCommand());
         cmds.add(new HighlightCommand());
         cmds.add(new RoleSelectionCommand());
         cmds.add(new TopicCommand());

@@ -9,7 +9,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.mongodb.client.model.Sorts;
+import net.dv8tion.jda.api.Permission;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.mongodb.client.model.Filters;
@@ -35,7 +38,7 @@ public final class SuggestionManager extends ListenerAdapter {
     
     private SuggestionManager() {
     }
-    
+
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.getUser().isBot() || event.getUser().isSystem())
@@ -86,6 +89,40 @@ public final class SuggestionManager extends ListenerAdapter {
         
         return future;
     }
+
+    @NotNull
+    public static CompletableFuture<Suggestion> deleteSuggestion(Guild guild, TextChannel suggestionChannel, Member member, int suggestionNumber) {
+        final var future = new CompletableFuture<Suggestion>();
+        List<Suggestion> suggestions = new ArrayList<>();
+        Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
+            .forEach(suggestions::add);
+        suggestions = suggestions.stream().sorted(Comparator.comparingLong(Suggestion::getCreatedAt)).collect(Collectors.toList());
+        if (suggestionNumber > suggestions.size()) {
+            future.complete(null);
+            return future;
+        }
+
+        if(suggestionNumber < 0) {
+            future.complete(null);
+            return future;
+        }
+
+        final Suggestion suggestion = suggestions.get(suggestionNumber);
+        if (suggestion.getUser() != member.getIdLong() && !member.hasPermission(Permission.MANAGE_SERVER)) {
+            future.complete(null);
+            return future;
+        }
+
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("message", suggestion.getMessage()));
+        Database.getDatabase().suggestions.deleteOne(filter);
+        suggestionChannel.retrieveMessageById(suggestion.getMessage()).queue(msg -> {
+            msg.delete().queue();
+            future.complete(suggestion);
+        });
+
+        return future;
+    }
     
     public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
         final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
@@ -132,6 +169,7 @@ public final class SuggestionManager extends ListenerAdapter {
         Member responder, int number, String response, SuggestionResponse.Type type) {
         if (number < 0)
             return null;
+
         List<Suggestion> suggestions = new ArrayList<>();
         Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).forEach(suggestions::add);
         
@@ -143,6 +181,8 @@ public final class SuggestionManager extends ListenerAdapter {
         
         final long time = System.currentTimeMillis();
         final Suggestion suggestion = suggestions.get(number);
+        if (suggestion.getUser() != responder.getIdLong() && !responder.hasPermission(Permission.MANAGE_SERVER))
+            return null;
         
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
             Filters.eq("message", suggestion.getMessage()));
