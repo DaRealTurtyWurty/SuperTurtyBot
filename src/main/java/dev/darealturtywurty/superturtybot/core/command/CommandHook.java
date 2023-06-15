@@ -210,6 +210,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new LatestCommand());
         cmds.add(new AnalyzeLogCommand());
         cmds.add(new EmbedCommand());
+        cmds.add(new ReminderCommand());
 
         // Moderation
         cmds.add(new BanCommand());
