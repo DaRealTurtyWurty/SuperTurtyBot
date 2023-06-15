@@ -27,7 +27,6 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestComman
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
@@ -39,6 +38,7 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,7 +62,7 @@ public class CommandHook extends ListenerAdapter {
     }
 
     @Override
-    public void onReady(ReadyEvent event) {
+    public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
         this.commands.clear();
         this.commands.addAll(registerCommands(event.getJDA()));
@@ -154,12 +154,12 @@ public class CommandHook extends ListenerAdapter {
         final var prefixes = new AtomicInteger();
         cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
             if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
-                builder.append("\n**" + cmd.getCategory().getName() + "**\n");
+                builder.append("\n**").append(cmd.getCategory().getName()).append("**\n");
             } else if (previous.get() == null) {
-                builder.append("**" + cmd.getCategory().getName() + "**\n");
+                builder.append("**").append(cmd.getCategory().getName()).append("**\n");
             }
 
-            builder.append("`" + (cmd.types.slash() ? "/" : ".") + cmd.getName() + "`\n");
+            builder.append("`").append(cmd.types.slash() ? "/" : ".").append(cmd.getName()).append("`\n");
             previous.set(cmd);
 
             if (cmd.types.slash()) {
@@ -215,6 +215,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new QuoteCommand());
         cmds.add(new LatestCommand());
         cmds.add(new AnalyzeLogCommand());
+        cmds.add(new EmbedCommand());
 
         // Moderation
         cmds.add(new BanCommand());
