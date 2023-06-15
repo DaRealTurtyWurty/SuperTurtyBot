@@ -11,6 +11,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -29,6 +30,8 @@ import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.bson.conversions.Bson;
 
 import java.awt.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,21 +46,21 @@ public class TagCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommands() {
         return List.of(new SubcommandData("get", "Retrives an existing tag").addOptions(
-            new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true).setAutoComplete(true)),
-
+                new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true, true)
+            ),
             new SubcommandData("create", "Creates a new tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true).setAutoComplete(true),
-                new OptionData(OptionType.STRING, "content", "The content of this tag", true),
-                new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)),
-
+                new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true, true),
+                new OptionData(OptionType.STRING, "content", "The content of this tag (or embed name)", true),
+                new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
+            ),
             new SubcommandData("edit", "Edits an existing tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to edit.", true).setAutoComplete(true),
-                new OptionData(OptionType.STRING, "content", "The new content of this tag", true)),
-
-            new SubcommandData("delete", "Deletes an existing tag")
-                .addOptions(new OptionData(OptionType.STRING, "name", "The name of the tag to delete.", true)
-                    .setAutoComplete(true)),
-
+                new OptionData(OptionType.STRING, "name", "The name of the tag to edit.", true, true),
+                new OptionData(OptionType.STRING, "content", "The new content of this tag (or embed name)", true),
+                new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
+            ),
+            new SubcommandData("delete", "Deletes an existing tag").addOptions(
+                    new OptionData(OptionType.STRING, "name", "The name of the tag to delete.", true, true)
+            ),
             new SubcommandData("list", "List the available tags"));
     }
     
@@ -182,103 +185,142 @@ public class TagCommand extends CoreCommand {
         }
         
         final String subcommand = event.getSubcommandName();
+        if (subcommand == null || subcommand.isBlank()) {
+            reply(event, "❌ You must provide a valid subcommand!", false, true);
+            return;
+        }
+
         switch (subcommand) {
-            case "get":
+            case "get" -> {
                 final OptionMapping tagName = event.getOption("name");
                 if (tagName == null) {
                     event.deferReply(true).setContent("This is not a valid action!").mentionRepliedUser(true).queue();
                     return;
                 }
-                
+
                 final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("name", tagName.getAsString()));
-                
+                        Filters.eq("name", tagName.getAsString()));
                 final Tag tag = Database.getDatabase().tags.find(filter).first();
-                
                 if (tag == null) {
                     reply(event, String.format("❌ I could not find a tag by the name '%s'!", tagName.getAsString()),
-                        false, true);
+                            false, true);
                     return;
                 }
-                
+
                 sendData(event, tag.getData());
-                break;
-            case "create":
+            }
+            case "create" -> {
                 final OptionMapping tagName0 = event.getOption("name");
                 if (tagName0 == null) {
                     event.deferReply(true).setContent("This is not a valid action!").mentionRepliedUser(true).queue();
                     return;
                 }
-                
                 final Bson createFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("name", tagName0.getAsString()));
-                
+                        Filters.eq("name", tagName0.getAsString()));
                 final OptionMapping embedOption = event.getOption("embed");
-                
                 if (Database.getDatabase().tags.find(createFilter).first() != null) {
                     reply(event, "❌ A tag with the name `" + tagName0.getAsString() + "` already exists!", false, true);
                     return;
                 }
-                
+
                 // TODO: Check user permission
                 if (embedOption == null || !embedOption.getAsBoolean()) {
-                    final String content = event.getOption("content").getAsString();
+                    final String content = event.getOption("content", null, OptionMapping::getAsString);
                     Database.getDatabase().tags
-                        .insertOne(new Tag(event.getGuild().getIdLong(), event.getUser().getIdLong(),
-                            tagName0.getAsString(), "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
+                            .insertOne(new Tag(event.getGuild().getIdLong(), event.getUser().getIdLong(),
+                                    tagName0.getAsString(), "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
                     final var embed = new EmbedBuilder();
                     embed.setColor(Color.GREEN);
                     embed.setDescription("✅ Tag `" + tagName0.getAsString() + "` has been created!");
                     embed.setTimestamp(Instant.now());
                     reply(event, embed);
+                    return;
                 }
-                
-                break;
-            case "edit":
+
+                final String content = event.getOption("content", null, OptionMapping::getAsString);
+                long userId = event.getUser().getIdLong();
+                UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
+                if (userEmbeds == null) {
+                    reply(event, "❌ You do not have any embeds! Create one with `/embed create`!", false, true);
+                    return;
+                }
+
+                if (userEmbeds.getEmbed(content).isEmpty()) {
+                    reply(event, "❌ You do not have an embed with that name! Create one with `/embed create`!", false, true);
+                    return;
+                }
+
+                Database.getDatabase().tags.insertOne(new Tag(event.getGuild().getIdLong(), event.getUser().getIdLong(),
+                        tagName0.getAsString(), "{" + "\"embed\":\"" + URLEncoder.encode(content, StandardCharsets.UTF_8) + "\"}"));
+                final var embed = new EmbedBuilder();
+                embed.setColor(Color.GREEN);
+                embed.setDescription("✅ Tag `" + tagName0.getAsString() + "` has been created!");
+                embed.setTimestamp(Instant.now());
+                reply(event, embed);
+            }
+            case "edit" -> {
                 final OptionMapping tagName1 = event.getOption("name");
                 if (tagName1 == null) {
                     reply(event, "❌ This is not a valid action!", false, true);
                     return;
                 }
-                
+
                 final Bson editFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName1.getAsString()));
+                        Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName1.getAsString()));
                 final Tag found = Database.getDatabase().tags.find(editFilter).first();
                 if (found == null) {
                     reply(event, "❌ No tag was found by the name of `" + tagName1.getAsString() + "`!", false, true);
                     return;
                 }
-                
+
                 final String content = event.getOption("content", "", OptionMapping::getAsString);
                 if (content.isBlank()) {
                     reply(event, "❌ You must supply some non-blank content!", false, true);
                     return;
                 }
-                
-                found.setData("{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}");
+
+                boolean isEmbed = event.getOption("embed", false, OptionMapping::getAsBoolean);
+                if(!isEmbed) {
+                    found.setData("{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}");
+                    final Bson update = Updates.set("data", found.getData());
+                    Database.getDatabase().tags.updateOne(editFilter, update);
+                    reply(event, "✅ Tag `" + found.getName() + "` has successfully been updated!");
+                    return;
+                }
+
+                long userId = event.getUser().getIdLong();
+                UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
+                if (userEmbeds == null) {
+                    reply(event, "❌ You do not have any embeds! Create one with `/embed create`!", false, true);
+                    return;
+                }
+
+                if (userEmbeds.getEmbed(content).isEmpty()) {
+                    reply(event, "❌ You do not have an embed with that name! Create one with `/embed create`!", false, true);
+                    return;
+                }
+
+                found.setData("{" + "\"embed\":\"" + URLEncoder.encode(content, StandardCharsets.UTF_8) + "\"}");
                 final Bson update = Updates.set("data", found.getData());
                 Database.getDatabase().tags.updateOne(editFilter, update);
                 reply(event, "✅ Tag `" + found.getName() + "` has successfully been updated!");
-                break;
-            case "delete":
+            }
+            case "delete" -> {
                 final OptionMapping tagName2 = event.getOption("name");
                 if (tagName2 == null) {
                     reply(event, "❌ This is not a valid action!", false, true);
                     return;
                 }
-                
                 final Bson deleteFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                    Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName2.getAsString()));
-                
+                        Filters.eq("user", event.getUser().getIdLong()), Filters.eq("name", tagName2.getAsString()));
                 final DeleteResult result = Database.getDatabase().tags.deleteOne(deleteFilter);
                 if (result.getDeletedCount() < 1) {
                     reply(event, "❌ No tag was found by the name of `" + tagName2.getAsString() + "`!", false, true);
                     return;
                 }
-                
                 reply(event, "✅ Tag `" + tagName2.getAsString() + "` has successfully been deleted!");
-                break;
-            case "list":
+            }
+            case "list" -> {
                 final Bson listFilter = Filters.eq("guild", event.getGuild().getIdLong());
                 final List<Tag> tags = new ArrayList<>();
                 Database.getDatabase().tags.find(listFilter).forEach(tags::add);
@@ -286,30 +328,25 @@ public class TagCommand extends CoreCommand {
                     reply(event, "❌ This server has no tags!", false, true);
                     return;
                 }
-                
                 final var embed = new EmbedBuilder();
                 embed.setColor(Color.BLUE);
                 embed.setTimestamp(Instant.now());
                 embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                    event.getMember().getEffectiveAvatarUrl());
+                        event.getMember().getEffectiveAvatarUrl());
                 embed.setTitle("Tags: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
                 embed.setThumbnail(event.getGuild().getIconUrl());
-                
                 final var future = new CompletableFuture<Boolean>();
                 final var counter = new AtomicInteger();
                 tags.forEach(t -> event.getJDA().retrieveUserById(t.getUser()).queue(user -> {
                     embed.appendDescription("**" + t.getName() + "** - Created By: " + user.getName() + "#"
-                        + user.getDiscriminator() + "\n");
+                            + user.getDiscriminator() + "\n");
                     if (counter.incrementAndGet() >= tags.size()) {
                         future.complete(true);
                     }
                 }, error -> future.complete(false)));
-                
                 future.thenAccept(bool -> reply(event, embed));
-                break;
-            default:
-                reply(event, "⚠️ This command is still a Work In Progress!", false, true);
-                break;
+            }
+            default -> reply(event, "⚠️ This command is still a Work In Progress!", false, true);
         }
     }
 
@@ -318,100 +355,20 @@ public class TagCommand extends CoreCommand {
         if (json.has("message")) {
             reply(event, json.get("message").getAsString());
         } else if (json.has("embed")) {
-            final JsonObject jsonEmbed = json.getAsJsonObject("embed");
-            final var embed = new EmbedBuilder();
-
-            if (jsonEmbed.has("author")) {
-                final JsonElement authorElement = jsonEmbed.get("author");
-                String text = "", url = null, iconUrl = null;
-                if (authorElement.isJsonObject()) {
-                    final JsonObject author = authorElement.getAsJsonObject();
-                    if (author.has("text")) {
-                        text = author.get("text").getAsString();
-                    }
-
-                    if (author.has("url")) {
-                        url = author.get("url").getAsString();
-                    }
-
-                    if (author.has("iconUrl")) {
-                        iconUrl = author.get("iconUrl").getAsString();
-                    }
-                } else {
-                    text = authorElement.getAsString();
-                }
-
-                embed.setAuthor(text, url, iconUrl);
+            long userId = event.getUser().getIdLong();
+            UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
+            if (userEmbeds == null) {
+                reply(event, "❌ You do not have any embeds! Create one with `/embed create`!", false, true);
+                return;
             }
 
-            if (jsonEmbed.has("color")) {
-                final JsonElement colorElement = jsonEmbed.get("color");
-                Color color = Color.BLACK;
-                if (colorElement.isJsonObject()) {
-                    final JsonObject colorObj = colorElement.getAsJsonObject();
-                    color = new Color(colorObj.get("red").getAsInt(), colorObj.get("green").getAsInt(),
-                        colorObj.get("blue").getAsInt(),
-                        colorObj.has("alpha") ? colorObj.get("alpha").getAsInt() : 255);
-                } else if (colorElement.isJsonPrimitive()) {
-                    final JsonPrimitive primitive = colorElement.getAsJsonPrimitive();
-                    if (primitive.isNumber()) {
-                        color = new Color(primitive.getAsInt());
-                    } else {
-                        color = Color.decode(primitive.getAsString());
-                    }
-                }
-
-                embed.setColor(color);
+            EmbedBuilder embed = userEmbeds.getEmbed(json.get("embed").getAsString()).orElse(null);
+            if (embed == null) {
+                reply(event, "❌ You do not have an embed with that name! Create one with `/embed create`!", false, true);
+                return;
             }
 
-            if (jsonEmbed.has("description")) {
-                embed.setDescription(jsonEmbed.get("description").getAsString());
-            }
-
-            if (jsonEmbed.has("footer")) {
-                final JsonElement footerElement = jsonEmbed.get("footer");
-                String text = "", iconUrl = null;
-                if (footerElement.isJsonObject()) {
-                    final JsonObject footer = footerElement.getAsJsonObject();
-                    if (footer.has("text")) {
-                        text = footer.get("text").getAsString();
-                    }
-
-                    if (footer.has("iconUrl")) {
-                        iconUrl = footer.get("iconUrl").getAsString();
-                    }
-                } else {
-                    text = footerElement.getAsString();
-                }
-
-                embed.setFooter(text, iconUrl);
-            }
-
-            if (jsonEmbed.has("image")) {
-                embed.setImage(jsonEmbed.get("image").getAsString());
-            }
-
-            if (jsonEmbed.has("thumbnail")) {
-                embed.setThumbnail(jsonEmbed.get("thumbnail").getAsString());
-            }
-
-            if (jsonEmbed.has("timestamp")) {
-                embed.setTimestamp(Instant.ofEpochMilli(jsonEmbed.get("timestamp").getAsLong()));
-            }
-
-            if (jsonEmbed.has("title")) {
-                final JsonElement title = jsonEmbed.get("title");
-                if (title.isJsonObject()) {
-                    final JsonObject titleJson = title.getAsJsonObject();
-                    if (titleJson.has("url")) {
-                        embed.setTitle(titleJson.get("text").getAsString(), titleJson.get("url").getAsString());
-                    } else {
-                        embed.setTitle(titleJson.get("text").getAsString());
-                    }
-                } else {
-                    embed.setTitle(jsonEmbed.get("title").getAsString());
-                }
-            }
+            reply(event, embed);
         }
     }
 }
