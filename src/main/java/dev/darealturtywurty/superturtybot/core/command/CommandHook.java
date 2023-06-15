@@ -274,6 +274,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MinecraftUsernameCommand());
         cmds.add(new MinecraftUserUUIDCommand());
         cmds.add(new MinecraftUserSkinCommand());
+        cmds.add(new DeepfryCommand());
 
         // Levelling
         cmds.add(new RankCommand());
