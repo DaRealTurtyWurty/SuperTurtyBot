@@ -53,7 +53,7 @@ dependencies {
     implementation group: "org.jsoup", name: "jsoup", version: "1.15.4"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
-    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.1'
+    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.3'
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.7.5'
     
     implementation group: "org.jfree", name: "jfreechart", version: "1.5.4"
