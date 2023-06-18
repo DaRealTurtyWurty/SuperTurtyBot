@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
@@ -22,7 +23,10 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class OptCommand extends CoreCommand {
@@ -74,7 +78,7 @@ public class OptCommand extends CoreCommand {
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
         if (!event.getName().equals(getName())) return;
 
-        if (!event.getSubcommandName().equals("in")) return;
+        if (!"in".equals(event.getSubcommandName())) return;
 
         Guild guild = event.getGuild();
         if (guild == null) return;
@@ -98,7 +102,7 @@ public class OptCommand extends CoreCommand {
         event.replyChoices(GuildConfig.getChannels(config.getOptInChannels()).stream()
                 .filter(channel -> !userChannels.contains(channel))
                 .map(channel -> guild.getChannels().stream().filter(guildChannel -> guildChannel.getIdLong() == channel)
-                        .findFirst().orElse(null)).filter(channel -> channel != null).map(GuildChannel::getName)
+                        .findFirst().orElse(null)).filter(Objects::nonNull).map(GuildChannel::getName)
                 .map(channel -> new Command.Choice(channel, channel)).toList()).queue();
     }
 
@@ -128,116 +132,129 @@ public class OptCommand extends CoreCommand {
             return;
         }
 
-        if (subcommand.equals("in")) {
-            String channelStr = event.getOption("channel").getAsString();
-            if (channelStr == null || channelStr.isBlank()) {
-                reply(event, "❌ You must specify a channel!", false, true);
-                return;
-            }
-
-            StandardGuildChannel channel = (StandardGuildChannel) guild.getChannels(true).stream()
-                    .filter(c -> c.getName()
-                            .equals(channelStr) && c.getType() != ChannelType.CATEGORY && c.getType() != ChannelType.GUILD_NEWS_THREAD && c.getType() != ChannelType.GUILD_PRIVATE_THREAD && c.getType() != ChannelType.GUILD_PUBLIC_THREAD && c.getType() != ChannelType.PRIVATE && c.getType() != ChannelType.GROUP)
-                    .findFirst().orElse(null);
-            if (channel == null) {
-                reply(event, "❌ That channel does not exist!", false, true);
-                return;
-            }
-
-            if (!channels.contains(channel.getIdLong())) {
-                reply(event, "❌ This channel is not available to be opted-into!", false, true);
-                return;
-            }
-
-            Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
-                    Filters.eq("guild", guild.getIdLong()));
-            UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
-            if (userConfig == null) {
-                userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
-                Database.getDatabase().userConfig.insertOne(userConfig);
-            }
-
-            List<Long> userChannels = userConfig.getOptInChannels();
-            if (userChannels.contains(channel.getIdLong())) {
-                reply(event, "❌ You are already opted-into this channel!", false, true);
-                return;
-            }
-
-            userChannels.add(channel.getIdLong());
-            userConfig.setOptInChannels(userChannels);
-            Database.getDatabase().userConfig.updateOne(userFilter, Updates.set("optInChannels", userChannels));
-
-            List<Permission> permissions = Lists.newArrayList(Permission.VIEW_CHANNEL, Permission.MESSAGE_HISTORY);
-            if (channel.getType().isAudio()) {
-                permissions.add(Permission.VOICE_CONNECT);
-                permissions.add(Permission.VOICE_USE_VAD);
-            }
-
-            channel.upsertPermissionOverride(event.getMember()).setAllowed(permissions).queue();
-
-            event.reply("✅ You have opted-in to " + channel.getAsMention() + "!")
-                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-        } else if (subcommand.equals("out")) {
-            OptionMapping channelOption = event.getOption("channel");
-            if (channelOption != null && (!channelOption.getChannelType().isGuild() || channelOption.getChannelType()
-                    .isThread())) {
-                reply(event, "❌ You must specify a text or voice channel!", false, true);
-                return;
-            }
-
-            StandardGuildChannel channel = channelOption.getAsChannel().asStandardGuildChannel();
-            if (channel.getGuild().getIdLong() != guild.getIdLong()) {
-                reply(event, "❌ You must specify a channel in this server!", false, true);
-                return;
-            }
-
-            if (!channels.contains(channel.getIdLong())) {
-                reply(event, "❌ This channel is not available to be opted-out of!", false, true);
-                return;
-            }
-
-            Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
-                    Filters.eq("guild", guild.getIdLong()));
-            UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
-            if (userConfig == null) {
-                userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
-                Database.getDatabase().userConfig.insertOne(userConfig);
-            }
-
-            List<Long> userChannels = userConfig.getOptInChannels();
-            if (!userChannels.contains(channel.getIdLong())) {
-                reply(event, "❌ You are not opted-into this channel!", false, true);
-                return;
-            }
-
-            userChannels.remove(channel.getIdLong());
-            userConfig.setOptInChannels(userChannels);
-            Database.getDatabase().userConfig.updateOne(userFilter, Updates.set("optInChannels", userChannels));
-
-            List<Permission> permissions = Lists.newArrayList(Permission.VIEW_CHANNEL, Permission.MESSAGE_HISTORY);
-            if (channel.getType().isAudio()) {
-                permissions.add(Permission.VOICE_CONNECT);
-                permissions.add(Permission.VOICE_USE_VAD);
-            }
-
-            channel.upsertPermissionOverride(event.getMember()).setDenied(permissions).queue();
-
-            event.reply("✅ You have opted-out of `#" + channel.getName() + "`!")
-                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
-            ;
-        } else if (subcommand.equals("list")) {
-            var builder = new StringBuilder("Available channels to opt-in/out of:\n");
-            for (long channel : channels) {
-                GuildChannel guildChannel = guild.getChannelById(StandardGuildChannel.class, channel);
-                if (guildChannel == null) {
-                    continue;
+        switch (subcommand) {
+            case "in" -> {
+                String channelStr = event.getOption("channel").getAsString();
+                if (channelStr.isBlank()) {
+                    reply(event, "❌ You must specify a channel!", false, true);
+                    return;
                 }
 
-                builder.append("- `#").append(guildChannel.getName()).append("` (")
-                        .append(guildChannel.getType() == ChannelType.TEXT ? "Text" : "Voice").append(")\n");
-            }
+                StandardGuildChannel channel = (StandardGuildChannel) guild.getChannels(true).stream()
+                        .filter(c -> c.getName()
+                                .equals(channelStr) && c.getType() != ChannelType.CATEGORY && c.getType() != ChannelType.GUILD_NEWS_THREAD && c.getType() != ChannelType.GUILD_PRIVATE_THREAD && c.getType() != ChannelType.GUILD_PUBLIC_THREAD && c.getType() != ChannelType.PRIVATE && c.getType() != ChannelType.GROUP)
+                        .findFirst().orElse(null);
+                if (channel == null) {
+                    reply(event, "❌ That channel does not exist!", false, true);
+                    return;
+                }
 
-            reply(event, builder.toString(), false, true);
+                if (!channels.contains(channel.getIdLong())) {
+                    reply(event, "❌ This channel is not available to be opted-into!", false, true);
+                    return;
+                }
+
+                Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
+                        Filters.eq("guild", guild.getIdLong()));
+                UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
+                if (userConfig == null) {
+                    userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
+                    Database.getDatabase().userConfig.insertOne(userConfig);
+                }
+
+                List<Long> userChannels = userConfig.getOptInChannels();
+                if (userChannels.contains(channel.getIdLong())) {
+                    reply(event, "❌ You are already opted-into this channel!", false, true);
+                    return;
+                }
+
+                userChannels.add(channel.getIdLong());
+                userConfig.setOptInChannels(userChannels);
+                Database.getDatabase().userConfig.updateOne(userFilter, Updates.set("optInChannels", userChannels));
+
+                List<Permission> permissions = Lists.newArrayList(Permission.VIEW_CHANNEL, Permission.MESSAGE_HISTORY);
+                if (channel.getType().isAudio()) {
+                    permissions.add(Permission.VOICE_CONNECT);
+                    permissions.add(Permission.VOICE_USE_VAD);
+                }
+
+                channel.upsertPermissionOverride(event.getMember()).setAllowed(permissions).queue();
+
+                event.reply("✅ You have opted-in to " + channel.getAsMention() + "!")
+                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            }
+            case "out" -> {
+                OptionMapping channelOption = event.getOption("channel");
+                if (channelOption != null && (!channelOption.getChannelType().isGuild() || channelOption.getChannelType()
+                        .isThread())) {
+                    reply(event, "❌ You must specify a text or voice channel!", false, true);
+                    return;
+                }
+
+                StandardGuildChannel channel = channelOption.getAsChannel().asStandardGuildChannel();
+                if (channel.getGuild().getIdLong() != guild.getIdLong()) {
+                    reply(event, "❌ You must specify a channel in this server!", false, true);
+                    return;
+                }
+
+                if (!channels.contains(channel.getIdLong())) {
+                    reply(event, "❌ This channel is not available to be opted-out of!", false, true);
+                    return;
+                }
+
+                Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
+                        Filters.eq("guild", guild.getIdLong()));
+                UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
+                if (userConfig == null) {
+                    userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
+                    Database.getDatabase().userConfig.insertOne(userConfig);
+                }
+
+                List<Long> userChannels = userConfig.getOptInChannels();
+                if (!userChannels.contains(channel.getIdLong())) {
+                    reply(event, "❌ You are not opted-into this channel!", false, true);
+                    return;
+                }
+
+                userChannels.remove(channel.getIdLong());
+                userConfig.setOptInChannels(userChannels);
+                Database.getDatabase().userConfig.updateOne(userFilter, Updates.set("optInChannels", userChannels));
+
+                List<Permission> permissions = Lists.newArrayList(Permission.VIEW_CHANNEL, Permission.MESSAGE_HISTORY);
+                if (channel.getType().isAudio()) {
+                    permissions.add(Permission.VOICE_CONNECT);
+                    permissions.add(Permission.VOICE_USE_VAD);
+                }
+
+                channel.upsertPermissionOverride(event.getMember()).setDenied(permissions).queue();
+
+                event.reply("✅ You have opted-out of `#" + channel.getName() + "`!")
+                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+            }
+            case "list" -> {
+                event.deferReply().queue();
+
+                var contents = new PaginatedEmbed.ContentsBuilder();
+                for (long channelId : channels) {
+                    GuildChannel channel = guild.getChannelById(StandardGuildChannel.class, channelId);
+                    if (channel == null)
+                        continue;
+
+                    contents.field("#" + channel.getName(), "Type: " + (channel.getType() == ChannelType.TEXT ? "Text" : "Voice"));
+                }
+
+                PaginatedEmbed embed = new PaginatedEmbed.Builder(15, contents)
+                        .title("Available channels to opt-in/out of:")
+                        .description("Use `/opt channel in <channel>` or `/opt channel out <channel>` to opt-in/out of a channel.")
+                        .timestamp(Instant.now())
+                        .color(Color.GREEN)
+                        .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                        .authorOnly(event.getUser().getIdLong())
+                        .thumbnail(event.getGuild().getIconUrl())
+                        .build(event.getJDA());
+
+                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No channels available to opt-in/out of!").queue());
+            }
         }
     }
 }
