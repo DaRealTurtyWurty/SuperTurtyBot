@@ -1,19 +1,19 @@
 package dev.darealturtywurty.superturtybot.commands.core;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -35,8 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TagCommand extends CoreCommand {
     public TagCommand() {
@@ -49,7 +47,7 @@ public class TagCommand extends CoreCommand {
                 new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true, true)
             ),
             new SubcommandData("create", "Creates a new tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true, true),
+                new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true),
                 new OptionData(OptionType.STRING, "content", "The content of this tag (or embed name)", true),
                 new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
             ),
@@ -322,29 +320,32 @@ public class TagCommand extends CoreCommand {
             }
             case "list" -> {
                 final Bson listFilter = Filters.eq("guild", event.getGuild().getIdLong());
-                final List<Tag> tags = new ArrayList<>();
-                Database.getDatabase().tags.find(listFilter).forEach(tags::add);
+                List<Tag> tags = Database.getDatabase().tags.find(listFilter).into(new ArrayList<>());
                 if (tags.isEmpty()) {
                     reply(event, "❌ This server has no tags!", false, true);
                     return;
                 }
-                final var embed = new EmbedBuilder();
-                embed.setColor(Color.BLUE);
-                embed.setTimestamp(Instant.now());
-                embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                        event.getMember().getEffectiveAvatarUrl());
-                embed.setTitle("Tags: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
-                embed.setThumbnail(event.getGuild().getIconUrl());
-                final var future = new CompletableFuture<Boolean>();
-                final var counter = new AtomicInteger();
-                tags.forEach(t -> event.getJDA().retrieveUserById(t.getUser()).queue(user -> {
-                    embed.appendDescription("**" + t.getName() + "** - Created By: " + user.getName() + "#"
-                            + user.getDiscriminator() + "\n");
-                    if (counter.incrementAndGet() >= tags.size()) {
-                        future.complete(true);
-                    }
-                }, error -> future.complete(false)));
-                future.thenAccept(bool -> reply(event, embed));
+
+                event.deferReply().queue();
+
+                var contents = new PaginatedEmbed.ContentsBuilder();
+                for (Tag tag : tags) {
+                    User user = event.getJDA().getUserById(tag.getUser());
+                    String name = user == null ? "Unknown" : user.getName();
+                    contents.field(tag.getName(), "Created by: " + name);
+                }
+
+                PaginatedEmbed embed = new PaginatedEmbed.Builder(15, contents)
+                        .title("Tags for " + event.getGuild().getName())
+                        .description("Use `/tag <name>` to view a tag!")
+                        .color(Color.GREEN)
+                        .timestamp(Instant.now())
+                        .authorOnly(event.getUser().getIdLong())
+                        .footer("Requested by " + event.getUser().getName(), event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
+                        .thumbnail(event.getGuild().getIconUrl())
+                        .build(event.getJDA());
+
+                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No tags were found!").mentionRepliedUser(false).queue());
             }
             default -> reply(event, "⚠️ This command is still a Work In Progress!", false, true);
         }
