@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -18,6 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -25,6 +27,7 @@ import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -279,12 +282,26 @@ public class EmbedCommand extends CoreCommand {
             return;
         }
 
-        var embed = new EmbedBuilder();
-        embed.setTitle(event.getUser().getName() + "'s Embeds");
-        embed.setColor(event.getMember() != null ? event.getMember().getColorRaw() : Color.BLUE.getRGB());
-        String embeds = userEmbeds.getEmbeds().keySet().stream().map(name -> "\\- " + name).collect(Collectors.joining("\n"));
-        embed.setDescription(embeds.isBlank() ? "You don't have any embeds!" : embeds);
-        event.replyEmbeds(embed.build()).queue();
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        for(var entry : userEmbeds.getEmbeds().entrySet()) {
+            Optional<EmbedBuilder> embed = userEmbeds.getEmbed(entry.getKey());
+            if(embed.isEmpty()) continue;
+
+            contents.field(entry.getKey(), embed.get().build().getTitle());
+        }
+
+        event.deferReply().queue();
+
+        PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
+                .title(event.getUser().getName() + "'s Embeds")
+                .description("Use `/embed view <name>` to view an embed")
+                .color(event.getMember() == null ? Color.GRAY : new Color(event.getMember().getColorRaw()))
+                .timestamp(Instant.now())
+                .authorOnly(event.getUser().getIdLong())
+                .thumbnail(event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
+                .build(event.getJDA());
+
+        embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No embeds found!").queue());
     }
 
     private void runAddFieldEmbed(SlashCommandInteractionEvent event) {
