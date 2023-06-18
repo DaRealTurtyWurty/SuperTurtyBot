@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Quote;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -60,14 +61,15 @@ public class QuoteCommand extends CoreCommand {
 
     @Override
     public List<SubcommandData> createSubcommands() {
-        return List.of(new SubcommandData("add", "Adds a quote.").addOption(OptionType.STRING, "text",
-                                "The text of the quote.", true)
+        return List.of(new SubcommandData("add", "Adds a quote.")
+                        .addOption(OptionType.STRING, "text", "The text of the quote.", true)
                         .addOption(OptionType.USER, "user", "The user who said the quote.", true),
-                new SubcommandData("remove", "Removes a quote.").addOption(OptionType.INTEGER, "number",
-                        "The number of the quote to remove.", true),
+                new SubcommandData("remove", "Removes a quote.")
+                        .addOption(OptionType.INTEGER, "number", "The number of the quote to remove.", true),
                 new SubcommandData("list", "Lists" + " all quotes."),
-                new SubcommandData("get", "Gets a quote.").addOption(OptionType.INTEGER, "number",
-                        "The number of the quote to get.", true), new SubcommandData("random", "Gets a random quote."));
+                new SubcommandData("get", "Gets a quote.")
+                        .addOption(OptionType.INTEGER, "number", "The number of the quote to get.", true),
+                new SubcommandData("random", "Gets a random quote."));
     }
 
     @Override
@@ -83,7 +85,7 @@ public class QuoteCommand extends CoreCommand {
         }
 
         Guild guild = event.getGuild();
-        if (event.getSubcommandName().equals("add")) {
+        if ("add".equals(event.getSubcommandName())) {
             final var text = event.getOption("text").getAsString();
             final var user = event.getOption("user").getAsUser();
             if (!guild.isMember(user)) {
@@ -158,7 +160,7 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        if (event.getSubcommandName().equals("remove")) {
+        if ("remove".equals(event.getSubcommandName())) {
             int number = event.getOption("number").getAsInt();
             List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                     .into(new ArrayList<>());
@@ -187,7 +189,7 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        if (event.getSubcommandName().equals("list")) {
+        if ("list".equals(event.getSubcommandName())) {
             List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                     .into(new ArrayList<>());
             if (quotes.isEmpty()) {
@@ -195,21 +197,29 @@ public class QuoteCommand extends CoreCommand {
                 return;
             }
 
-            var embed = new EmbedBuilder();
-            embed.setTitle("Quotes");
-            embed.setColor(Color.GREEN);
-            embed.setFooter("Requested by " + event.getUser().getAsTag(), event.getUser().getEffectiveAvatarUrl());
-            for (var quote : quotes) {
-                embed.addField("Quote #" + (quotes.indexOf(quote) + 1),
-                        quote.getText() + "\n*- " + event.getJDA().getUserById(quote.getUser()).getAsTag() + "*",
-                        false);
+            event.deferReply().queue();
+
+            var contents = new PaginatedEmbed.ContentsBuilder();
+            for (int index = 0; index < quotes.size(); index++) {
+                Quote quote = quotes.get(index);
+                contents.field("Quote #" + (index + 1), quote.getText());
             }
 
-            reply(event, embed);
+            PaginatedEmbed embed = new PaginatedEmbed.Builder(2, contents)
+                    .title("Quotes in " + guild.getName())
+                    .color(Color.GREEN)
+                    .timestamp(Instant.now())
+                    .authorOnly(event.getUser().getIdLong())
+                    .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                    .thumbnail(guild.getIconUrl())
+                    .build(event.getJDA());
+
+            embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No quotes found!").queue());
+
             return;
         }
 
-        if (event.getSubcommandName().equals("random")) {
+        if ("random".equals(event.getSubcommandName())) {
             List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                     .into(new ArrayList<>());
             if (quotes.isEmpty()) {
@@ -223,9 +233,9 @@ public class QuoteCommand extends CoreCommand {
             embed.setTitle("Quote #" + (index + 1));
             embed.setColor(Color.GREEN);
             embed.setDescription(quote.getText() + "\n*- " + event.getJDA().getUserById(quote.getUser())
-                    .getAsTag() + ", " + Instant.ofEpochMilli(quote.getTimestamp()).atZone(ZoneId.systemDefault())
+                    .getName() + ", " + Instant.ofEpochMilli(quote.getTimestamp()).atZone(ZoneId.systemDefault())
                     .toLocalDate().getYear() + "*");
-            embed.setFooter("Added by " + event.getJDA().getUserById(quote.getAddedBy()).getAsTag(),
+            embed.setFooter("Added by " + event.getJDA().getUserById(quote.getAddedBy()).getName(),
                     event.getJDA().getUserById(quote.getAddedBy()).getEffectiveAvatarUrl());
             embed.setTimestamp(Instant.ofEpochMilli(quote.getTimestamp()));
 
@@ -233,7 +243,7 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        if (event.getSubcommandName().equals("get")) {
+        if ("get".equals(event.getSubcommandName())) {
             int number = event.getOption("number").getAsInt();
             List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                     .into(new ArrayList<>());
@@ -246,10 +256,10 @@ public class QuoteCommand extends CoreCommand {
             var embed = new EmbedBuilder();
             embed.setTitle("Quote #" + number);
             embed.setColor(Color.GREEN);
-            embed.setDescription(quote.getText() + "\n*- " + event.getJDA().getUserById(quote.getUser())
-                    .getAsTag() + ", " + Instant.ofEpochMilli(quote.getTimestamp()).atZone(ZoneId.systemDefault())
-                    .toLocalDate().getYear() + "*");
-            embed.setFooter("Added by " + event.getJDA().getUserById(quote.getAddedBy()).getAsTag(),
+            embed.setDescription(quote.getText() + "\n*\\- " + event.getJDA().getUserById(quote.getUser()).getName() +
+                    ", " + Instant.ofEpochMilli(quote.getTimestamp()).atZone(ZoneId.systemDefault()).toLocalDate().getYear() +
+                    "*");
+            embed.setFooter("Added by " + event.getJDA().getUserById(quote.getAddedBy()).getName(),
                     event.getJDA().getUserById(quote.getAddedBy()).getEffectiveAvatarUrl());
             embed.setTimestamp(Instant.ofEpochMilli(quote.getTimestamp()));
 
@@ -279,6 +289,11 @@ public class QuoteCommand extends CoreCommand {
                 .into(new ArrayList<>());
         if (quotes.stream().anyMatch(quote -> quote.getText().equals(message.getContentRaw()))) {
             event.getHook().editOriginal("❌ That quote already exists!").queue();
+            return;
+        }
+
+        if (message.getContentRaw().isBlank() || message.getContentRaw().length() < 4) {
+            event.getHook().editOriginal("❌ That message is empty/too short!").queue();
             return;
         }
 
