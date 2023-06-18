@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bson.conversions.Bson;
 
@@ -107,7 +108,7 @@ public class HighlightCommand extends CoreCommand {
         for (final Highlighter highlighter : Database.getDatabase().highlighters.find(filter)) {
             event.getGuild().retrieveMemberById(highlighter.getUser()).queue(
                 member -> performHighlight(event, content, highlighter, member),
-                error -> highlightFailed(event, content, highlighter, error));
+                error -> highlightFailed(event, content, error));
         }
     }
     
@@ -115,6 +116,11 @@ public class HighlightCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             reply(event, "❌ This command can only be used inside a server!", false, true);
+            return;
+        }
+
+        if(event.getSubcommandName() == null || event.getSubcommandName().isBlank()) {
+            reply(event, "❌ You must specify a subcommand!", false, true);
             return;
         }
         
@@ -170,8 +176,7 @@ public class HighlightCommand extends CoreCommand {
         }
     }
     
-    private static void createHighlighter(SlashCommandInteractionEvent event, final String text,
-        final boolean caseSensitive) {
+    private static void createHighlighter(SlashCommandInteractionEvent event, final String text, final boolean caseSensitive) {
         final Highlighter highlighter = new Highlighter(event.getGuild().getIdLong(), event.getUser().getIdLong(), text,
             caseSensitive);
         Database.getDatabase().highlighters.insertOne(highlighter);
@@ -196,8 +201,7 @@ public class HighlightCommand extends CoreCommand {
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
     
-    private static void highlightFailed(MessageReceivedEvent event, final String content, final Highlighter highlighter,
-        Throwable error) {
+    private static void highlightFailed(MessageReceivedEvent event, final String content, Throwable error) {
         Constants.LOGGER.error(
             "There has been a major error with the highlight command!\n{}\n{}\n{}\n{}\n{}\n{}\n\n{}\n{}", content,
             event.getChannel().getIdLong(), event.getGuild().getIdLong(), event.getMessageId(), error.getMessage(),
@@ -205,28 +209,29 @@ public class HighlightCommand extends CoreCommand {
     }
     
     private static void listHighlighters(SlashCommandInteractionEvent event, Set<Highlighter> highlighters) {
-        final var embed = new EmbedBuilder();
-        embed.setTimestamp(Instant.now());
-        embed.setColor(Color.BLUE);
-        embed.setTitle("**" + event.getUser().getName() + "'s Highlighters:**");
-        final List<Highlighter> guildHighlighters = highlighters.stream()
-            .sorted(Comparator.comparing(Highlighter::getTimeAdded)).toList();
-        
-        boolean none = true;
-        if (!guildHighlighters.isEmpty()) {
-            final var builder = new StringBuilder();
-            guildHighlighters.stream().forEachOrdered(
-                highlighter -> builder.append("`" + StringUtils.truncateString(highlighter.getText(), 15) + "`"
-                    + " (ID: **" + highlighter.asUUID().toString() + "**)\n"));
-            embed.appendDescription(builder.toString());
-            none = false;
+        event.deferReply().queue();
+
+        if(highlighters.isEmpty()) {
+            event.getHook().sendMessage("❌ No highlighters found!").queue();
+            return;
         }
-        
-        if (none) {
-            embed.addField("N/A", "N/A", false);
+
+        List<Highlighter> sorted = highlighters.stream().sorted(Comparator.comparing(Highlighter::getTimeAdded)).toList();
+
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        for (Highlighter highlighter : sorted) {
+            contents.field("ID: " + highlighter.getUuid(), highlighter.getText());
         }
-        
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+
+        PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
+                .title(event.getUser().getName() + "'s Highlighters")
+                .color(event.getMember() == null ? Color.BLUE : new Color(event.getMember().getColorRaw()))
+                .timestamp(Instant.now())
+                .description("Here are your highlighters!")
+                .thumbnail(event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
+                .build(event.getJDA());
+
+        embed.send(event.getHook(), () -> event.getHook().sendMessage("No highlighters found!").queue());
     }
     
     private static void performHighlight(MessageReceivedEvent event, final String content,
@@ -243,7 +248,7 @@ public class HighlightCommand extends CoreCommand {
                         + StringUtils.truncateString(highlighter.getText(), 15) + "`).\n\n"
                         + event.getMessage().getJumpUrl()).queue());
             }
-        } catch (final IllegalStateException | IllegalArgumentException exception) {
+        } catch (final IllegalStateException | IllegalArgumentException ignored) {
             
         }
     }
