@@ -208,6 +208,8 @@ public class ReminderCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (Reminder reminder : reminders) {
             String after = "\nChannel: <#" + reminder.getChannel() + ">\nTime: " + TimeFormat.RELATIVE.format(reminder.getTime());
