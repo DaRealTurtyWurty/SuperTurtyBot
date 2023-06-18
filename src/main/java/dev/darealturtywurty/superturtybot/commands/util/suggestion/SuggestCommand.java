@@ -134,8 +134,7 @@ public class SuggestCommand extends CoreCommand {
                             ? "https://discord.com/channels/" + event.getGuild().getIdLong() + "/"
                             + suggestionChannel.getIdLong() + "/" + sug.getMessage()
                             : "");
-            embed.setFooter("Created by: " + event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                    event.getMember().getEffectiveAvatarUrl());
+            embed.setFooter("Created by: " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         });

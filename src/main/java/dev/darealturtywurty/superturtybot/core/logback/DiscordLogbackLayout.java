@@ -180,7 +180,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
                 return null;
             String name = null;
             if (obj instanceof final User user) {
-                name = user.getAsTag();
+                name = user.getName();
             } else if (obj instanceof final Role role) {
                 name = role.getName();
             } else if (obj instanceof final GuildChannel channel) {

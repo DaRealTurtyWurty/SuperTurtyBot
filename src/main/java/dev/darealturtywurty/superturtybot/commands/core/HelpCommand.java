@@ -67,7 +67,8 @@ public class HelpCommand extends CoreCommand {
             .filter(cmd -> cmd.getName().contains(term)).filter(cmd -> {
                 if (!event.isFromGuild() || !(cmd instanceof NSFWCommand))
                     return true;
-                final TextChannel channel = (TextChannel) event.getChannel();
+
+                final TextChannel channel = event.getChannel().asTextChannel();
                 return channel.isNSFW();
             }).limit(25).map(CoreCommand::getName).toList();
         event.replyChoiceStrings(commands).queue();
@@ -127,10 +128,9 @@ public class HelpCommand extends CoreCommand {
 
     private static void setAuthor(EmbedBuilder embed, boolean fromGuild, User author, Member member) {
         if (fromGuild) {
-            embed.setFooter(member.getEffectiveName() + "#" + author.getDiscriminator(),
-                member.getEffectiveAvatarUrl());
+            embed.setFooter(member.getUser().getName(), member.getEffectiveAvatarUrl());
         } else {
-            embed.setFooter(author.getName() + "#" + author.getDiscriminator(), author.getEffectiveAvatarUrl());
+            embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
         }
     }
 }

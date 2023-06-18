@@ -147,15 +147,13 @@ public class LeaderboardCommand extends CoreCommand {
             final int rank = indexedRank + 1;
 
             final User user = guild.getJDA().getUserById(id);
-            String avatarURL, username, discriminator;
+            String avatarURL, username;
             if (user == null) {
                 avatarURL = "https://discord.com/assets/1f0bfc0865d324c2587920a7d80c609b.png";
                 username = "Unknown";
-                discriminator = "0000";
             } else {
                 avatarURL = user.getEffectiveAvatarUrl();
                 username = user.getName();
-                discriminator = user.getDiscriminator();
             }
 
             final BufferedImage avatarImage = ImageIO.read(new URL(avatarURL));
@@ -163,25 +161,17 @@ public class LeaderboardCommand extends CoreCommand {
                     partHeight, null);
 
             switch (rank) {
-                case 1:
-                    graphics.setColor(GOLD_COLOR);
-                    break;
-                case 2:
-                    graphics.setColor(SILVER_COLOR);
-                    break;
-                case 3:
-                    graphics.setColor(BRONZE_COLOR);
-                    break;
-                default:
-                    graphics.setColor(Color.LIGHT_GRAY);
-                    break;
+                case 1 -> graphics.setColor(GOLD_COLOR);
+                case 2 -> graphics.setColor(SILVER_COLOR);
+                case 3 -> graphics.setColor(BRONZE_COLOR);
+                default -> graphics.setColor(Color.LIGHT_GRAY);
             }
 
             graphics.drawString("#" + rank, 240, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
 
             graphics.setColor(Color.WHITE);
             graphics.drawString(
-                    (username.length() > 15 ? username.substring(0, 15) + "..." : username) + "#" + discriminator
+                    (username.length() > 15 ? username.substring(0, 20) + "..." : username)
                             + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
                             + StringUtils.numberFormat(level, 0).replace(".0", ""),
                     420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);

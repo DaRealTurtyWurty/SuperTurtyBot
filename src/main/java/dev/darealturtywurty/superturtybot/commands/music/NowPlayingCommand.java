@@ -81,8 +81,7 @@ public class NowPlayingCommand extends CoreCommand {
             + StringUtils.millisecondsFormatted(nowPlaying.getDuration()) + "**] "
             + makeProgresssBar(nowPlaying.getDuration(), nowPlaying.getPosition(), 12) + " (" + percentage + "%)");
         embed.setThumbnail("http://img.youtube.com/vi/" + nowPlaying.getIdentifier() + "/maxresdefault.jpg");
-        embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-            event.getUser().getEffectiveAvatarUrl());
+        embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
         
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }

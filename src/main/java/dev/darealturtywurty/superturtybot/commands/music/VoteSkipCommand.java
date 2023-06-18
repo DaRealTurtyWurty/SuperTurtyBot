@@ -63,5 +63,6 @@ public class VoteSkipCommand extends CoreCommand {
             reply(event, "❌ Nothing is playing right now!", false, true);
         }
 
+        // TODO: Implement vote-skip
     }
 }

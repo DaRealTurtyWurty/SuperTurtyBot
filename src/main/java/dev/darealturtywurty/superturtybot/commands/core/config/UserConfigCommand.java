@@ -108,8 +108,7 @@ public class UserConfigCommand extends CoreCommand {
                 configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**: `" + value + "`\n"));
                 embed.setFooter("For server: " + event.getGuild().getName(), event.getGuild().getIconUrl());
                 embed.setColor(event.getMember().getColorRaw());
-                embed.setTitle(
-                    "User Config for: " + event.getUser().getName() + "#" + event.getUser().getDiscriminator());
+                embed.setTitle("User Config for: " + event.getUser().getName());
                 embed.setTimestamp(Instant.now());
                 embed.setThumbnail(event.getMember().getEffectiveAvatarUrl());
                 reply(event, embed);

@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -17,7 +18,7 @@ public interface CommandCategory {
     
     String getEmoji();
     
-    String getName();
+    @NotNull String getName();
     
     default boolean isNSFW() {
         return false;
@@ -37,7 +38,7 @@ public interface CommandCategory {
             }
             
             @Override
-            public String getName() {
+            public @NotNull String getName() {
                 return name;
             }
         };
@@ -54,7 +55,7 @@ public interface CommandCategory {
             }
             
             @Override
-            public String getName() {
+            public @NotNull String getName() {
                 return name;
             }
             

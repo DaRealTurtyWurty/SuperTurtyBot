@@ -86,11 +86,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 .setTitle("Analyzed %s's log file".formatted(message.getAuthor().getName()))
                 .setColor(Color.BLUE)
                 .setTimestamp(message.getTimeCreated().toInstant())
-                .setFooter("Requested by %s#%s".formatted(
-                                event.getUser().getName(),
-                                event.getUser().getDiscriminator()),
-                        event.getUser().getEffectiveAvatarUrl()
-                );
+                .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
 
         embed.addField("Environment Information",
                 "Minecraft Version: %s%nForge Version: %s%nJava Version: %s%nOperating System: %s%nArchitecture: %s"
@@ -274,7 +270,7 @@ public class AnalyzeLogCommand extends CoreCommand {
 
             if (line.contains("Using missing texture")) {
                 if (line.contains("file") && line.contains("not found")) {
-                    String location = line.split("Using missing texture file, file ")[1].split(" not found")[0].trim();
+                    String location = line.split("Using missing texture, file ")[1].split(" not found")[0].trim();
 
                     String solution = "Your texture file (which should be located at `%s`) is missing!%n".formatted(location);
                     solution += "Make sure that the texture file exists at that location!";

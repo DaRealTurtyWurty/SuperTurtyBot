@@ -1,8 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.time.Instant;
-import java.util.List;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
@@ -13,6 +10,9 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.time.Instant;
+import java.util.List;
 
 public class UserInfoCommand extends CoreCommand {
     public UserInfoCommand() {
@@ -95,7 +95,7 @@ public class UserInfoCommand extends CoreCommand {
     
     private static EmbedBuilder createEmbed(Member member) {
         final var embed = new EmbedBuilder();
-        embed.setTitle("User Info for user: " + member.getUser().getName() + "#" + member.getUser().getDiscriminator());
+        embed.setTitle("User Info for user: " + member.getUser().getName());
         embed.setTimestamp(Instant.now());
         embed.setColor(member.getColorRaw());
         embed.addField("Nickname", member.getNickname() == null ? "N/A" : member.getNickname(), false);
@@ -103,13 +103,13 @@ public class UserInfoCommand extends CoreCommand {
         embed.addField("Online Status", StringUtils.convertOnlineStatus(member.getOnlineStatus()), false);
         
         final var perms = new StringBuilder();
-        member.getPermissions().forEach(perm -> perms.append("`" + perm.getName() + "`, "));
+        member.getPermissions().forEach(perm -> perms.append("`").append(perm.getName()).append("`, "));
         perms.delete(perms.length() - 2, perms.length());
         embed.addField("Permissions", perms.toString(), false);
         
         if (!member.getRoles().isEmpty()) {
             final var roles = new StringBuilder();
-            member.getRoles().forEach(role -> roles.append(role.getAsMention() + ", "));
+            member.getRoles().forEach(role -> roles.append(role.getAsMention()).append(", "));
             
             roles.delete(roles.length() - 2, roles.length());
             embed.addField("Roles", roles.toString(), false);

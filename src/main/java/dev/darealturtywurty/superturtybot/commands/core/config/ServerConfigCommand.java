@@ -1,21 +1,8 @@
 package dev.darealturtywurty.superturtybot.commands.core.config;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.apache.commons.text.WordUtils;
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -29,6 +16,17 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.apache.commons.text.WordUtils;
+import org.bson.conversions.Bson;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ServerConfigCommand extends CoreCommand {
     public ServerConfigCommand() {
@@ -90,9 +88,13 @@ public class ServerConfigCommand extends CoreCommand {
         
         final String term = event.getFocusedOption().getValue();
         
-        final List<String> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry().entrySet().stream()
-            .map(Entry::getValue).map(ServerConfigOption::getSaveName).filter(key -> key.contains(term)).limit(25)
-            .toList();
+        final List<String> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+                .values()
+                .stream()
+                .map(ServerConfigOption::getSaveName)
+                .filter(key -> key.contains(term))
+                .limit(25)
+                .toList();
         event.replyChoiceStrings(keys).queue();
     }
     
@@ -116,8 +118,10 @@ public class ServerConfigCommand extends CoreCommand {
         embed.setDescription(
             "Thank you for adding me to your server! The following are the default config settings. You can change them with `/serverconfig set [key] [value]`\n");
         embed.setColor(Color.CYAN);
-        final List<ServerConfigOption> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry().entrySet()
-            .stream().map(Entry::getValue).toList();
+        final List<ServerConfigOption> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+                .values()
+                .stream()
+                .toList();
         keys.forEach(option -> embed.appendDescription(
             "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(found.get()) + "`\n"));
         defaultChannel.sendMessageEmbeds(embed.build()).queue();
@@ -140,13 +144,13 @@ public class ServerConfigCommand extends CoreCommand {
             if (key == null) {
                 // Get all data
                 final Map<String, Object> configValues = new HashMap<>();
-                ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry().entrySet().stream().map(Entry::getValue)
-                    .forEach(
-                        option -> configValues.put(option.getRichName(), option.getValueFromConfig().apply(config)));
+                ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+                        .values()
+                        .forEach(option -> configValues.put(option.getRichName(), option.getValueFromConfig().apply(config)));
+
                 final var embed = new EmbedBuilder();
                 configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**: `" + value + "`\n"));
-                embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                    event.getMember().getEffectiveAvatarUrl());
+                embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("Server Config for: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
                 embed.setTimestamp(Instant.now());
@@ -158,8 +162,10 @@ public class ServerConfigCommand extends CoreCommand {
             // Get data by the given key
             final String copyKey = key.trim();
             final Optional<ServerConfigOption> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
-                .entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(copyKey))
-                .map(Entry::getValue).findFirst();
+                    .values()
+                    .stream()
+                    .filter(serverConfigOption -> serverConfigOption.getSaveName().equals(copyKey))
+                    .findFirst();
             
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
@@ -178,9 +184,12 @@ public class ServerConfigCommand extends CoreCommand {
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
             
-            final Optional<Entry<String, ServerConfigOption>> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS
-                .getRegistry().entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(key))
-                .findFirst();
+            final Optional<Entry<String, ServerConfigOption>> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue().getSaveName().equals(key))
+                    .findFirst();
+
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
                 return;

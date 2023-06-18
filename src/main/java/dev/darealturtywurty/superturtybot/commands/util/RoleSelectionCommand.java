@@ -216,8 +216,7 @@ public class RoleSelectionCommand extends CoreCommand {
                 embed.setTitle(title);
                 embed.setColor(color);
                 embed.setTimestamp(Instant.now());
-                embed.setFooter(member.getEffectiveName() + member.getUser().getDiscriminator(),
-                        member.getEffectiveAvatarUrl());
+                embed.setFooter(member.getUser().getName(), member.getEffectiveAvatarUrl());
                 embed.addField(emoji + " `@" + role.getName() + "`", description, false);
 
                 channel.sendMessageEmbeds(embed.build()).queue(msg -> {

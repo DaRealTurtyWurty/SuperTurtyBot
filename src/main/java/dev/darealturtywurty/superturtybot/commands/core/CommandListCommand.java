@@ -124,6 +124,8 @@ public class CommandListCommand extends CoreCommand {
 
     private static EmbedBuilder commandsEmbed(String categoryStr, boolean allowNSFW) {
         final var category = CommandCategory.byName(categoryStr);
+        if (category == null) return null;
+
         final var embed = new EmbedBuilder();
         embed.setTitle("Commands for category: " + category.getName());
         final var cmdsString = new StringBuilder();
@@ -132,10 +134,10 @@ public class CommandListCommand extends CoreCommand {
 
             final List<NSFWCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
                     .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW).map(NSFWCommand.class::cast)
-                    .collect(Collectors.toList());
+                    .toList();
 
             cmds.stream().sorted(Comparator.comparing(CoreCommand::getName))
-                    .forEachOrdered(cmd -> cmdsString.append("`" + cmd.getName() + "`, "));
+                    .forEachOrdered(cmd -> cmdsString.append("`").append(cmd.getName()).append("`, "));
 
             cmdsString.delete(cmdsString.length() - 2, cmdsString.length());
         } else if (category == CommandCategory.IMAGE) {
@@ -143,11 +145,11 @@ public class CommandListCommand extends CoreCommand {
                     .filter(cmd -> cmd.getCategory() == CommandCategory.IMAGE).map(AbstractImageCommand.class::cast)
                     .collect(Collectors.toList());
             for (final var imageCategory : ImageCategory.values()) {
-                cmdsString.append("**" + StringUtils.capitalize(imageCategory.name().toLowerCase()) + "**\n");
+                cmdsString.append("**").append(StringUtils.capitalize(imageCategory.name().toLowerCase())).append("**\n");
                 final List<AbstractImageCommand> toRemove = new ArrayList<>();
                 cmds.stream().filter(cmd -> cmd.getImageCategory() == imageCategory)
                         .sorted(Comparator.comparing(CoreCommand::getName)).forEachOrdered(cmd -> {
-                            cmdsString.append("`" + cmd.getName() + "`, ");
+                            cmdsString.append("`").append(cmd.getName()).append("`, ");
                             toRemove.add(cmd);
                         });
 
@@ -166,7 +168,7 @@ public class CommandListCommand extends CoreCommand {
             CommandHook.INSTANCE.getCommands().stream()
                     .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
                     .sorted(Comparator.comparing(CoreCommand::getName))
-                    .forEachOrdered(cmd -> cmdsString.append("`" + cmd.getName() + "`\n"));
+                    .forEachOrdered(cmd -> cmdsString.append("`").append(cmd.getName()).append("`\n"));
         }
 
         embed.setDescription(cmdsString.toString());
@@ -177,10 +179,9 @@ public class CommandListCommand extends CoreCommand {
 
     private static void setAuthor(EmbedBuilder embed, boolean fromGuild, User author, Member member) {
         if (fromGuild) {
-            embed.setFooter(member.getEffectiveName() + "#" + author.getDiscriminator(),
-                    member.getEffectiveAvatarUrl());
+            embed.setFooter(member.getUser().getName(), member.getEffectiveAvatarUrl());
         } else {
-            embed.setFooter(author.getName() + "#" + author.getDiscriminator(), author.getEffectiveAvatarUrl());
+            embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
         }
     }
 }

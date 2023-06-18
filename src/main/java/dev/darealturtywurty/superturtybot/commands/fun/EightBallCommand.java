@@ -83,8 +83,7 @@ public class EightBallCommand extends CoreCommand {
             embed.setTitle("8 Ball 🎱");
             embed.setDescription("You asked: " + question + "\n My answer: "
                 + URLDecoder.decode(result.get("answer").getAsString(), StandardCharsets.UTF_8).replace("€“", ""));
-            embed.setFooter(event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                event.getUser().getEffectiveAvatarUrl());
+            embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             event.deferReply(true)
