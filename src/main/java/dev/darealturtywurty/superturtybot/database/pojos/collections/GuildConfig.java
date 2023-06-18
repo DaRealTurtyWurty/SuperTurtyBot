@@ -28,6 +28,7 @@ import net.dv8tion.jda.api.events.sticker.GuildStickerRemovedEvent;
 import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class GuildConfig {
@@ -623,6 +624,6 @@ public class GuildConfig {
     }
 
     public static List<Long> getChannels(String str) {
-        return Stream.of(str.split("[\s;]")).map(Longs::tryParse).toList();
+        return Stream.of(str.split("[ ;]")).map(Longs::tryParse).filter(Objects::nonNull).toList();
     }
 }
