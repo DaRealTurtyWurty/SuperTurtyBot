@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.WebhookClient;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -45,6 +46,10 @@ public class PaginatedEmbed extends ListenerAdapter {
 
     private Consumer<Message> onMessageUpdate = ignored -> {};
     private int page;
+
+    private long guildId;
+    private long channelId;
+    private long messageId;
 
     private PaginatedEmbed(Builder builder, JDA jda) {
         this.pageSize = builder.pageSize;
@@ -146,6 +151,12 @@ public class PaginatedEmbed extends ListenerAdapter {
     }
 
     private Optional<ActionRow> createActionRow(long guildId, long channelId, long messageId) {
+        if(this.guildId == 0 && this.channelId == 0 && this.messageId == 0) {
+            this.guildId = guildId;
+            this.channelId = channelId;
+            this.messageId = messageId;
+        }
+
         Button first = Button.primary("pagination_first-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("⏮"));
         Button previous = Button.primary("pagination_previous-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("◀"));
         Button next = Button.primary("pagination_next-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("▶"));
@@ -184,10 +195,10 @@ public class PaginatedEmbed extends ListenerAdapter {
 
         Guild guild = event.getGuild();
         if (guildId == 0 && guild != null) return;
-        else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
-        else if(event.getChannel().getIdLong() != channelId) return;
-        else if(event.getMessageIdLong() != messageId) return;
-        else if (this.authorId > 0 && event.getUser().getIdLong() != authorId) {
+        if (guildId != 0 && guild != null && guild.getIdLong() != guildId || this.guildId != guildId) return;
+        if(event.getChannel().getIdLong() != channelId || this.channelId != channelId) return;
+        if(event.getMessageIdLong() != messageId || this.messageId != messageId) return;
+        if (this.authorId > 0 && event.getUser().getIdLong() != authorId) {
             event.deferEdit().queue();
             return;
         }
@@ -197,20 +208,28 @@ public class PaginatedEmbed extends ListenerAdapter {
             case "previous" -> page--;
             case "next" -> page++;
             case "last" -> page = (contents.size() - 1) / pageSize;
-            default -> {
-                event.deferEdit().queue();
-                return;
-            }
         }
 
+        event.deferEdit().queue();
+
         MessageEmbed embed = createEmbed();
-        event.editMessageEmbeds(embed).queue(hook -> {
+        event.getHook().editOriginalEmbeds(embed).queue(msg -> {
             Optional<ActionRow> optional = createActionRow(guildId, channelId, messageId);
             optional.ifPresentOrElse(
-                    row -> hook.editOriginalComponents(row).queue(this.onMessageUpdate),
-                    () -> hook.retrieveOriginal().queue(this.onMessageUpdate)
+                    row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
+                    () -> this.onMessageUpdate.accept(msg)
             );
         });
+    }
+
+    @Override
+    public void onMessageDelete(@NotNull MessageDeleteEvent event) {
+        if (!event.isFromGuild()) return;
+        if (event.getGuild().getIdLong() != this.guildId) return;
+        if (event.getChannel().getIdLong() != this.channelId) return;
+        if (event.getMessageIdLong() != this.messageId) return;
+
+        finish();
     }
 
     public void setOnMessageUpdate(Consumer<Message> onMessageUpdate) {
@@ -241,7 +260,7 @@ public class PaginatedEmbed extends ListenerAdapter {
         private String url;
         private String imageUrl;
         private TemporalAccessor timestamp;
-        private long authorId = -1;
+        private long authorId = 0;
 
         public Builder(int pageSize, ContentsBuilder contentsBuilder) {
             this.pageSize = pageSize;
