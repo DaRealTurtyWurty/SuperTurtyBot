@@ -1,23 +1,22 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import com.codepoetics.ambivalence.Either;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class SearchCommand extends CoreCommand {
     public SearchCommand() {
@@ -67,37 +66,47 @@ public class SearchCommand extends CoreCommand {
         }
 
         final String search = event.getOption("search_term").getAsString().trim();
+
+        event.deferReply().queue();
+
         final CompletableFuture<Either<List<AudioTrack>, FriendlyException>> future = AudioManager
             .search(event.getGuild(), "ytsearch:" + search);
         future.thenAccept(either -> {
             if (either.isLeft()) {
                 final List<AudioTrack> results = either.left().orElse(List.of());
                 if (results.isEmpty()) {
-                    reply(event, "❌ No results have been found!", false, true);
-                } else {
-                    final List<AudioTrack> truncated = results.stream().limit(5).toList();
+                    event.getHook().editOriginal("❌ No results found for `" + search + "`!").queue();
+                    return;
+                }
 
-                    final var strBuilder = new StringBuilder();
-                    int index = 1;
-                    for (final AudioTrack result : truncated) {
-                        strBuilder.append(index++ + ". **"
-                            + result.getInfo().title.replace("*", "\\*").replace("_", "\\_").replace("~", "\\~")
-                            + "**\nPosted By: " + result.getInfo().author + "\nLink: " + result.getInfo().uri
-                            + "\nDuration: [" + StringUtils.millisecondsFormatted(result.getDuration()) + "]\n\n");
+                var contents = new PaginatedEmbed.ContentsBuilder();
+                for (AudioTrack track : results) {
+                    String title = track.getInfo().title.replace("*", "\\*").replace("_", "\\_").replace("~", "\\~");
+                    String author = track.getInfo().author.trim();
+                    if (author.length() > 20) {
+                        author = author.substring(0, 20) + "...";
                     }
 
-                    reply(event,
-                        new EmbedBuilder().setColor(Color.BLUE).setTimestamp(Instant.now())
-                            .setFooter(
-                                "Searched By: " + event.getUser().getName() + "#" + event.getUser().getDiscriminator(),
-                                event.getUser().getEffectiveAvatarUrl())
-                            .setDescription(strBuilder).setTitle("Search results for: " + search));
+                    String uri = track.getInfo().uri.trim();
+                    String duration = StringUtils.millisecondsFormatted(track.getDuration());
+
+                    contents.field(title, "Artist: %s\nLink: %s\nDuration: [%s]".formatted(author, uri, duration));
                 }
+
+                PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
+                        .title("Search results for: " + search)
+                        .description("Searched By: " + event.getUser().getAsMention())
+                        .color(Color.BLUE)
+                        .footer("Searched By: " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                        .thumbnail(event.getGuild().getIconUrl())
+                        .timestamp(Instant.now())
+                        .build(event.getJDA());
+
+                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No results found for `" + search + "`!").queue());
             } else {
                 final FriendlyException exception = either.right().orElse(
                     new FriendlyException("Results are missing and error is not present!", Severity.SUSPICIOUS, null));
-                reply(event, "❌ There has been an error loading the results: " + exception.getLocalizedMessage(), false,
-                    true);
+                event.getHook().editOriginal("❌ There has been an error loading the results: " + exception.getLocalizedMessage()).queue();
             }
         });
     }
