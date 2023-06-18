@@ -3,24 +3,24 @@ package dev.darealturtywurty.superturtybot.commands.moderation.warnings;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.awt.*;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
 
 public class WarningsCommand extends CoreCommand {
     public WarningsCommand() {
@@ -80,29 +80,58 @@ public class WarningsCommand extends CoreCommand {
         }
 
         final Set<Warning> warns = WarnManager.getWarns(guild, user);
-
-        final var embed = new EmbedBuilder();
-        embed.setColor(Color.BLUE);
-        embed.setTitle(user.getName() + "'s warnings!");
         if (warns.isEmpty()) {
-            embed.setDescription("This user has no warns!");
-        } else {
-            embed.setDescription("This user has " + warns.size() + " warns!");
-            final var index = new AtomicInteger(1);
-            for (final var warn : warns) {
-                event.getJDA().retrieveUserById(warn.getWarner())
-                    .queue(warner -> embed.addField("Warn #" + index.getAndIncrement(),
-                        "Reason: `" + warn.getReason() + "`\nUUID: `" + warn.getUuid() + "`\nModerator: "
-                            + warner.getAsMention() + "\nOccured On: "
-                            + StringUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)),
-                        false));
-            }
+            reply(event, "❌ This user has no warns!", false, true);
+            return;
         }
 
-        embed.setTimestamp(Instant.now());
-        embed.setFooter(event.getMember().getEffectiveName() + "#" + event.getUser().getDiscriminator(),
-            event.getMember().getEffectiveAvatarUrl());
+        event.deferReply().queue();
 
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        final List<Warning> sortedWarns = warns.stream().sorted(Comparator.comparing(Warning::getWarnedAt)).toList();
+
+        CompletableFuture<?> completed = new CompletableFuture<>();
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        for (int index = 0; index < sortedWarns.size(); index++) {
+            Warning warning = sortedWarns.get(index);
+
+            int finalIndex = index;
+            event.getJDA().retrieveUserById(warning.getWarner()).queue(warner -> {
+                contents.field("Warn #" + finalIndex, "Reason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                        warning.getReason(),
+                        warning.getUuid(),
+                        warner.getAsMention(),
+                        TimeFormat.RELATIVE.format(warning.getWarnedAt()))
+                );
+
+                if (finalIndex == sortedWarns.size() - 1) {
+                    completed.complete(null);
+                }
+            }, error -> {
+                contents.field("Warn #" + finalIndex, "Reason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                        warning.getReason(),
+                        warning.getUuid(),
+                        "Unknown",
+                        TimeFormat.RELATIVE.format(warning.getWarnedAt()))
+                );
+
+                if (finalIndex == sortedWarns.size() - 1) {
+                    completed.complete(null);
+                }
+            });
+        }
+
+        completed.thenRun(() -> {
+            PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
+                    .title(user.getName() + "'s warnings!")
+                    .description("This user has " + warns.size() + " warns!")
+                    .color(Color.BLUE)
+                    .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                    .timestamp(Instant.now())
+                    .thumbnail(user.getEffectiveAvatarUrl())
+                    .authorOnly(event.getUser().getIdLong())
+                    .build(event.getJDA());
+
+            embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ This user has no warnings!").queue());
+        });
     }
 }

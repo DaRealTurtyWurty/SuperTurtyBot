@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Report;
 import dev.darealturtywurty.superturtybot.modules.ReportManager;
 import net.dv8tion.jda.api.Permission;
@@ -10,7 +11,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class ReportsCommand extends CoreCommand {
     public ReportsCommand() {
@@ -78,15 +82,35 @@ public class ReportsCommand extends CoreCommand {
             return;
         }
 
-        var builder = new StringBuilder();
+        var contents = new PaginatedEmbed.ContentsBuilder();
+
+        CompletableFuture<?> future = new CompletableFuture<>();
         for (int index = 0; index < reports.size(); index++) {
             Report report = reports.get(index);
-            User reporter = event.getJDA().getUserById(report.getReporter());
-            builder.append(String.format("**%d.** %s - `%s`%n", index + 1, reporter.getAsMention(),
-                    ReportManager.truncate(report.getReason(), 256)));
+
+            int finalIndex = index;
+            event.getJDA().retrieveUserById(report.getReporter()).queue(reporter -> {
+                contents.field(String.format("Reported by %s", reporter.getName()),
+                        ReportManager.truncate(report.getReason(), 256));
+
+                if (finalIndex == reports.size() - 1) {
+                    future.complete(null);
+                }
+            });
         }
 
-        reply(event, String.format("Reports for %s:%n%s", user.getAsMention(), builder));
+        future.thenRun(() -> {
+            PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
+                    .title(String.format("Reports for %s", user.getName()))
+                    .description(user.getName() + " has " + reports.size() + " reports")
+                    .color(Color.RED)
+                    .timestamp(Instant.now())
+                    .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                    .authorOnly(event.getUser().getIdLong())
+                    .build(event.getJDA());
+
+            embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ User has no reports!").queue());
+        });
     }
 
     @Override
