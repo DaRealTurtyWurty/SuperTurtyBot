@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class MusicTrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
@@ -19,6 +20,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     private AudioChannel currentChannel;
     private LoopState loopState = LoopState.NONE;
     private AudioTrack guessTheSongTrack;
+    private final Map<UUID, Consumer<AudioTrack>> onTrackEnd = new HashMap<>();
 
     public MusicTrackScheduler(AudioPlayer player) {
         this.player = player;
@@ -30,6 +32,16 @@ public class MusicTrackScheduler extends AudioEventAdapter {
                 }
             }
         });
+    }
+
+    public UUID addTrackEndListener(Consumer<AudioTrack> consumer) {
+        UUID uuid = UUID.randomUUID();
+        this.onTrackEnd.put(uuid, consumer);
+        return uuid;
+    }
+
+    public void removeTrackEndListener(UUID uuid) {
+        this.onTrackEnd.remove(uuid);
     }
 
     public boolean addGuessTheSongTrack(AudioTrack track) {
@@ -89,6 +101,8 @@ public class MusicTrackScheduler extends AudioEventAdapter {
         } else if (endReason.mayStartNext) {
             nextTrack();
         }
+
+        this.onTrackEnd.values().forEach(consumer -> consumer.accept(track));
     }
 
     public void pause() {

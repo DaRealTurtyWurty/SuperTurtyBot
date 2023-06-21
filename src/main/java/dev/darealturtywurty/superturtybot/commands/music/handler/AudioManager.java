@@ -56,7 +56,7 @@ public final class AudioManager {
 
         ShutdownHooks.register(() -> {
             AUDIO_MANAGER.shutdown();
-            AUDIO_MANAGERS.values().forEach(manager -> manager.player.destroy());
+            AUDIO_MANAGERS.values().forEach(manager -> manager.getPlayer().destroy());
         });
     }
 
@@ -64,12 +64,12 @@ public final class AudioManager {
     }
 
     public static void clear(Guild guild) {
-        getOrCreate(guild).musicScheduler.clear();
+        getOrCreate(guild).getMusicScheduler().clear();
     }
 
     @Nullable
     public static AudioTrack getCurrentlyPlaying(Guild guild) {
-        return getOrCreate(guild).musicScheduler.getCurrentlyPlaying();
+        return getOrCreate(guild).getMusicScheduler().getCurrentlyPlaying();
     }
 
     public static GuildAudioManager getOrCreate(Guild guild) {
@@ -83,27 +83,27 @@ public final class AudioManager {
     }
 
     public static List<AudioTrack> getQueue(Guild guild) {
-        return getOrCreate(guild).musicScheduler.getQueue();
+        return getOrCreate(guild).getMusicScheduler().getQueue();
     }
 
     public static int getVolume(Guild guild) {
-        return getOrCreate(guild).musicScheduler.getVolume();
+        return getOrCreate(guild).getMusicScheduler().getVolume();
     }
 
     public static boolean isPaused(Guild guild) {
-        return getOrCreate(guild).musicScheduler.isPaused();
+        return getOrCreate(guild).getMusicScheduler().isPaused();
     }
 
     public static boolean isPlaying(Guild guild) {
-        return getOrCreate(guild).musicScheduler.getCurrentlyPlaying() != null;
+        return getOrCreate(guild).getMusicScheduler().getCurrentlyPlaying() != null;
     }
 
     public static void pause(Guild guild) {
-        getOrCreate(guild).musicScheduler.pause();
+        getOrCreate(guild).getMusicScheduler().pause();
     }
 
     public static boolean addGuessTheSongTrack(Guild guild, AudioTrack track) {
-        return getOrCreate(guild).musicScheduler.addGuessTheSongTrack(track);
+        return getOrCreate(guild).getMusicScheduler().addGuessTheSongTrack(track);
     }
 
     public static CompletableFuture<Pair<Boolean, String>> play(AudioChannel audioChannel, TextChannel textChannel,
@@ -138,7 +138,7 @@ public final class AudioManager {
                 playlist.getTracks().forEach(track -> track.setUserData(user.getIdLong()));
 
                 if (toPlay.startsWith("ytsearch:")) {
-                    manager.musicScheduler.queue(playlist.getTracks().get(0));
+                    manager.getMusicScheduler().queue(playlist.getTracks().get(0));
 
                     final var embed = new EmbedBuilder();
                     embed.setTimestamp(Instant.now());
@@ -152,7 +152,7 @@ public final class AudioManager {
 
                     textChannel.sendMessageEmbeds(embed.build()).queue();
                 } else {
-                    playlist.getTracks().forEach(manager.musicScheduler::queue);
+                    playlist.getTracks().forEach(manager.getMusicScheduler()::queue);
 
                     final var embed = new EmbedBuilder();
                     embed.setTimestamp(Instant.now());
@@ -164,8 +164,8 @@ public final class AudioManager {
                 }
 
                 final AudioTrack track = playlist.getTracks().get(0);
-                if (manager.musicScheduler.getCurrentlyPlaying().equals(track)) {
-                    manager.musicScheduler.setAudioChannel(audioChannel);
+                if (manager.getMusicScheduler().getCurrentlyPlaying().equals(track)) {
+                    manager.getMusicScheduler().setAudioChannel(audioChannel);
 
                     final var playingEmbed = new EmbedBuilder();
                     playingEmbed.setTimestamp(Instant.now());
@@ -183,12 +183,12 @@ public final class AudioManager {
 
             @Override
             public void trackLoaded(AudioTrack track) {
-                manager.musicScheduler.queue(track);
+                manager.getMusicScheduler().queue(track);
                 track.setUserData(user.getIdLong());
 
-                final AudioTrack nowPlaying = manager.musicScheduler.getCurrentlyPlaying();
+                final AudioTrack nowPlaying = manager.getMusicScheduler().getCurrentlyPlaying();
                 if (nowPlaying.equals(track)) {
-                    manager.musicScheduler.setAudioChannel(audioChannel);
+                    manager.getMusicScheduler().setAudioChannel(audioChannel);
                     final var embed = new EmbedBuilder();
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.GREEN);
@@ -235,23 +235,23 @@ public final class AudioManager {
 
             @Override
             public void trackLoaded(AudioTrack track) {
-                manager.musicScheduler.setAudioChannel(channel);
-                manager.musicScheduler.queue(track);
+                manager.getMusicScheduler().setAudioChannel(channel);
+                manager.getMusicScheduler().queue(track);
             }
         });
     }
 
     public static boolean removeTrack(Guild guild, AudioTrack track) {
-        return getOrCreate(guild).musicScheduler.removeTrack(track);
+        return getOrCreate(guild).getMusicScheduler().removeTrack(track);
     }
 
     @Nullable
     public static AudioTrack removeTrack(Guild guild, int index) {
-        return getOrCreate(guild).musicScheduler.removeTrack(index);
+        return getOrCreate(guild).getMusicScheduler().removeTrack(index);
     }
 
     public static void resume(Guild guild) {
-        getOrCreate(guild).musicScheduler.resume();
+        getOrCreate(guild).getMusicScheduler().resume();
     }
 
     public static CompletableFuture<Either<List<AudioTrack>, FriendlyException>> search(Guild guild, String term) {
@@ -283,37 +283,37 @@ public final class AudioManager {
     }
 
     public static int setVolume(Guild guild, int volume) {
-        getOrCreate(guild).musicScheduler.setVolume(volume);
+        getOrCreate(guild).getMusicScheduler().setVolume(volume);
         return getVolume(guild);
     }
 
     public static void shuffle(Guild guild) {
-        getOrCreate(guild).musicScheduler.shuffle();
+        getOrCreate(guild).getMusicScheduler().shuffle();
     }
 
     @Nullable
     public static AudioTrack skip(Guild guild) {
-        return getOrCreate(guild).musicScheduler.skip();
+        return getOrCreate(guild).getMusicScheduler().skip();
     }
 
     public static LoopState getLoopState(Guild guild) {
-        return getOrCreate(guild).musicScheduler.getLoopState();
+        return getOrCreate(guild).getMusicScheduler().getLoopState();
     }
 
     public static void setLoopState(Guild guild, LoopState loopState) {
-        getOrCreate(guild).musicScheduler.setLoopState(loopState);
+        getOrCreate(guild).getMusicScheduler().setLoopState(loopState);
     }
 
     public static LoopState toggleLoopState(Guild guild) {
-        return getOrCreate(guild).musicScheduler.toggleLoopState();
+        return getOrCreate(guild).getMusicScheduler().toggleLoopState();
     }
 
     public static void restartTrack(Guild guild) {
-        getOrCreate(guild).musicScheduler.restartTrack();
+        getOrCreate(guild).getMusicScheduler().restartTrack();
     }
 
     public static void seek(Guild guild, int time) {
-        getOrCreate(guild).musicScheduler.seek(time);
+        getOrCreate(guild).getMusicScheduler().seek(time);
     }
 
     public static int getTrackPosition(Guild guild, AudioTrack track) {
@@ -322,7 +322,7 @@ public final class AudioManager {
     }
 
     public static void moveTrack(Guild guild, int from, int to) {
-        getOrCreate(guild).musicScheduler.moveTrack(from, to);
+        getOrCreate(guild).getMusicScheduler().moveTrack(from, to);
     }
 
     public static CompletableFuture<Either<AudioTrack, FriendlyException>> playGuessTheSong(Guild guild, AudioChannel channel, String playlist) {
@@ -346,14 +346,14 @@ public final class AudioManager {
                 Collections.shuffle(tracks);
 
                 AudioTrack track = tracks.get(0);
-                manager.musicScheduler.setAudioChannel(channel);
+                manager.getMusicScheduler().setAudioChannel(channel);
                 addGuessTheSongTrack(guild, track);
                 future.complete(Either.ofLeft(track));
             }
 
             @Override
             public void trackLoaded(AudioTrack track) {
-                manager.musicScheduler.setAudioChannel(channel);
+                manager.getMusicScheduler().setAudioChannel(channel);
                 addGuessTheSongTrack(guild, track);
                 future.complete(Either.ofLeft(track));
             }
@@ -363,10 +363,10 @@ public final class AudioManager {
     }
 
     public static void endGuessTheSong(Guild guild) {
-        getOrCreate(guild).musicScheduler.endGuessTheSong();
+        getOrCreate(guild).getMusicScheduler().endGuessTheSong();
     }
 
     public static boolean isGuessSongRunning(Guild guild) {
-        return getOrCreate(guild).musicScheduler.isGuessSongRunning();
+        return getOrCreate(guild).getMusicScheduler().isGuessSongRunning();
     }
 }
