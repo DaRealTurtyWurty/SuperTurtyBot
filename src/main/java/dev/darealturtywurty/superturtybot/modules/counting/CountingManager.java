@@ -124,7 +124,7 @@ public class CountingManager extends ListenerAdapter {
         }
 
         final float currentNext = profile.getNextNumber();
-        if (currentNext == given) {
+        if (MathHandler.to1DecimalPlace(currentNext) == MathHandler.to1DecimalPlace(given)) {
             message.addReaction(Emoji.fromUnicode(data.getCurrentCountSuccession() < maxSuccession ? "✅" : "🚫"))
                     .queue();
 
@@ -176,6 +176,8 @@ public class CountingManager extends ListenerAdapter {
             if (should.endsWith(".0")) {
                 should = should.substring(0, should.length() - 2);
             }
+
+            should = String.format("%.1f", Float.parseFloat(should));
 
             failChannel(profile, mode, message, filter, updates,
                     "❌ `" + content + "` is not the correct number! It should have been `" + should + "`. The next number is: **" + MathHandler.parse(

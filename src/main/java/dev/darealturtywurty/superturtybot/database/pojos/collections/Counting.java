@@ -18,6 +18,8 @@ public class Counting {
     private float saves;
     private long latestCounter;
     private long lastCountingMessageMillis;
+
+    private String additionalData;
     
     public Counting() {
     }
@@ -35,6 +37,8 @@ public class Counting {
         this.saves = 0;
         this.latestCounter = 0;
         this.lastCountingMessageMillis = 0;
+
+        this.additionalData = "";
     }
     
     public long getChannel() {
@@ -123,6 +127,14 @@ public class Counting {
 
     public void setLastCountingMessageMillis(long lastCountingMessageMillis) {
         this.lastCountingMessageMillis = lastCountingMessageMillis;
+    }
+
+    public String getAdditionalData() {
+        return this.additionalData;
+    }
+
+    public void setAdditionalData(String additionalData) {
+        this.additionalData = additionalData;
     }
     
     public static class UserData {

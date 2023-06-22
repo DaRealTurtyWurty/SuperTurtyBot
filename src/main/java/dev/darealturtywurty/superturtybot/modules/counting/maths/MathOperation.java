@@ -7,9 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum MathOperation {
-    ADD("%s + %s", INT), SUBTRACT("%s - %s", INT), MULTIPLY("%s * %s", INT), DIVIDE("%s / %s", INT),
-    MODULO("%s %% %s", INT), SQUARE("%s ^ 2", INT), SQRT("√%s", INT), FLOOR("⌊%s⌋", FLOAT), ROUND("[%s]", FLOAT),
-    CEIL("⌈%s⌉", FLOAT);
+    ADD("%.1f + %.1f", INT), SUBTRACT("%.1f - %.1f", INT), MULTIPLY("%.1f * %.1f", INT), DIVIDE("%.1f / %.1f", INT),
+    MODULO("%.1f %% %.1f", INT), SQUARE("%.1f ^ 2", INT), SQRT("√%.1f", INT), FLOOR("⌊%.1f⌋", FLOAT), ROUND("[%.1f]", FLOAT),
+    CEIL("⌈%.1f⌉", FLOAT);
     
     private final String format;
     private final OperationType operationType;

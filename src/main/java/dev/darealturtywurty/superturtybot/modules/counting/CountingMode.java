@@ -115,7 +115,7 @@ public enum CountingMode {
     
     private static float tryParseFloat(String str) {
         try {
-            return Float.parseFloat(str.split("/s*")[0]);
+            return Float.parseFloat(str.trim());
         } catch (final NumberFormatException exception) {
             return Float.NaN;
         }
