@@ -84,10 +84,10 @@ public class MusicTrackScheduler extends AudioEventAdapter {
 
             AudioTrack track = this.queue.remove(0);
             if (this.loopState == LoopState.ALL) {
-                this.queue.add(track);
+                this.queue.add(track.makeClone());
             }
 
-            this.player.startTrack(track, false);
+            this.player.startTrack(track.makeClone(), false);
         } else {
             this.player.startTrack(null, false);
         }

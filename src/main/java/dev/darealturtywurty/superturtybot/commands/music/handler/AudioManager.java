@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.commands.music.handler.filter.FilterChainConfiguration;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -368,5 +369,9 @@ public final class AudioManager {
 
     public static boolean isGuessSongRunning(Guild guild) {
         return getOrCreate(guild).getMusicScheduler().isGuessSongRunning();
+    }
+
+    public static FilterChainConfiguration getFilterConfiguration(Guild guild) {
+        return getOrCreate(guild).getFilterChainConfiguration();
     }
 }
