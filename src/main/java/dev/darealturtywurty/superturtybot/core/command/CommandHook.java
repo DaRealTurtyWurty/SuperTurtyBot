@@ -253,6 +253,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MusicRestartCommand());
         cmds.add(new SeekCommand());
         cmds.add(new MoveCommand());
+        cmds.add(new VoteSkipCommand());
         //cmds.add(new FilterCommand());
         //cmds.add(new FilterConfigCommand());
         // TODO: Come back to filters at some point

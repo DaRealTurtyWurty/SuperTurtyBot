@@ -1,9 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.music.handler;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.player.event.TrackEndEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
@@ -12,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class MusicTrackScheduler extends AudioEventAdapter {
@@ -20,7 +19,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     private AudioChannel currentChannel;
     private LoopState loopState = LoopState.NONE;
     private AudioTrack guessTheSongTrack;
-    private final Map<UUID, Consumer<AudioTrack>> onTrackEnd = new HashMap<>();
+    private final Map<UUID, Consumer<AudioTrack>> onTrackEnd = new ConcurrentHashMap<>();
 
     public MusicTrackScheduler(AudioPlayer player) {
         this.player = player;
@@ -42,6 +41,10 @@ public class MusicTrackScheduler extends AudioEventAdapter {
 
     public void removeTrackEndListener(UUID uuid) {
         this.onTrackEnd.remove(uuid);
+    }
+
+    public int getListenerCount() {
+        return this.onTrackEnd.size();
     }
 
     public boolean addGuessTheSongTrack(AudioTrack track) {

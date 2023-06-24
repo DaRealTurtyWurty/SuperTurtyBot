@@ -6,7 +6,6 @@ import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.handler.MusicTrackScheduler;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
@@ -26,14 +25,12 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BooleanSupplier;
 
 public class VoteSkipCommand extends CoreCommand {
     private static final Map<Long, VoteSkip> VOTE_SKIPS = new HashMap<>();
 
-    protected VoteSkipCommand() {
+    public VoteSkipCommand() {
         super(new Types(true, false, false, false));
     }
 
@@ -104,18 +101,25 @@ public class VoteSkipCommand extends CoreCommand {
         AudioChannel audioChannel = event.getMember().getVoiceState().getChannel();
         GuildMessageChannel messageChannel = event.getChannel().asGuildMessageChannel();
 
+        int memberCount = (int) Math.ceil(audioChannel.getMembers().size() * 0.5);
+        if(memberCount <= 1) {
+            AudioManager.skip(event.getGuild());
+            event.getHook().editOriginal("✅ " + event.getUser().getAsMention() + " has skipped the current track!").queue();
+            return;
+        }
+
         // send skip embed message
         var embed = new EmbedBuilder();
         embed.setTitle("Vote-skip for `" + track.getInfo().title + "`");
         embed.setDescription("Vote-skip for `" + track.getInfo().title + "` has been initiated by " + event.getUser().getAsMention() + "!");
         embed.addField("Time Remaining", "1 minute", false);
-        embed.addField("Votes Needed", "1/" + (int) Math.ceil(audioChannel.getMembers().size() * 0.5), false);
+        embed.addField("Votes Needed", "1/" + memberCount, false);
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.RED);
         embed.setFooter("Vote-skip initiated by " + event.getMember().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
         event.getHook().editOriginalEmbeds(embed.build()).queue(msg -> {
-            Button voteButton = Button.primary("vote_skip-%d-%d".formatted(guild.getIdLong(), initiatorId), Emoji.fromFormatted("✅"));
+            Button voteButton = Button.primary("vote_skip-%d-%d".formatted(guild.getIdLong(), initiatorId), "Vote");
             msg.editMessageComponents(ActionRow.of(voteButton)).queue();
 
             AtomicReference<UUID> uuidReference = new AtomicReference<>();
@@ -210,22 +214,22 @@ public class VoteSkipCommand extends CoreCommand {
 
         private void onFinish(Guild guild, GuildMessageChannel messageChannel) {
             VOTE_SKIPS.remove(guild.getIdLong());
-            messageChannel.deleteMessageById(skipMessageId).queue();
+            messageChannel.deleteMessageById(skipMessageId).queue(ignored -> {
+                if (!isVoteSkipped()) {
+                    messageChannel.sendMessage("❌ Vote-skip for `" + track.getInfo().title + "` has failed!").queue();
+                    return;
+                }
 
-            if (!isVoteSkipped()) {
-                messageChannel.sendMessage("❌ Vote-skip for `" + track.getInfo().title + "` has failed!").queue();
-                return;
-            }
+                if (Objects.equals(AudioManager.getCurrentlyPlaying(guild), track)) {
+                    AudioManager.skip(guild);
+                    messageChannel.sendMessage("✅ Vote-skip for `" + track.getInfo().title + "` has passed!").queue();
+                } else {
+                    messageChannel.sendMessage("❌ Vote-skip for `" + track.getInfo().title + "` has failed!").queue();
+                }
 
-            if (Objects.equals(AudioManager.getCurrentlyPlaying(guild), track)) {
-                AudioManager.skip(guild);
-                messageChannel.sendMessage("✅ Vote-skip for `" + track.getInfo().title + "` has passed!").queue();
-            } else {
-                messageChannel.sendMessage("❌ Vote-skip for `" + track.getInfo().title + "` has failed!").queue();
-            }
-
-            MusicTrackScheduler scheduler = AudioManager.getOrCreate(guild).getMusicScheduler();
-            scheduler.removeTrackEndListener(listenerUUID.get());
+                MusicTrackScheduler scheduler = AudioManager.getOrCreate(guild).getMusicScheduler();
+                scheduler.removeTrackEndListener(listenerUUID.get());
+            }, ignored -> {});
         }
     }
 }
