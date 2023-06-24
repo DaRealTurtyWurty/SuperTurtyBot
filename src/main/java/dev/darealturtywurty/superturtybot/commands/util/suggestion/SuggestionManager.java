@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.mongodb.client.model.Sorts;
 import net.dv8tion.jda.api.Permission;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 
-import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
@@ -124,8 +123,8 @@ public final class SuggestionManager extends ListenerAdapter {
     }
     
     public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
 
         TextChannel channel = guild.getTextChannelById(config.getSuggestions());
         if (channel == null) {

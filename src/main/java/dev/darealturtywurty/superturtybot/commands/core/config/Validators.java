@@ -1,9 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.core.config;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.function.BiPredicate;
-
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Message.MentionType;
@@ -11,6 +7,9 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.util.List;
+import java.util.function.BiPredicate;
 
 public final class Validators {
     public static final BiPredicate<SlashCommandInteractionEvent, String> TEXT_CHANNEL_VALIDATOR = (event, str) -> {
@@ -28,8 +27,7 @@ public final class Validators {
         List<TextChannel> possibleMatches = guild.getTextChannelsByName(str, false);
         if (possibleMatches.isEmpty()) {
             possibleMatches = guild.getTextChannelsByName(str, true);
-            if (possibleMatches.isEmpty())
-                return false;
+            return !possibleMatches.isEmpty();
         }
 
         return true;
@@ -38,12 +36,8 @@ public final class Validators {
     public static final BiPredicate<SlashCommandInteractionEvent, String> GUILD_CHANNEL_VALIDATOR = (event, str) -> {
         final Guild guild = event.getGuild();
         GuildChannel channel = guild.getChannelById(StandardGuildChannel.class, str);
-        if (channel != null) {
-            if (channel.getType().isThread() || !channel.getType().isGuild() || channel.getGuild().getIdLong() != guild.getIdLong())
-                return false;
-
-            return true;
-        }
+        if (channel != null)
+            return !channel.getType().isThread() && channel.getType().isGuild() && channel.getGuild().getIdLong() == guild.getIdLong();
 
         if (MentionType.CHANNEL.getPattern().matcher(str).matches()) {
             final String id = str.replace("<#", "").replace(">", "");
@@ -56,4 +50,14 @@ public final class Validators {
 
     public static final BiPredicate<SlashCommandInteractionEvent, String> EMOJI_VALIDATOR = (event,
         str) -> Message.MentionType.EMOJI.getPattern().matcher(str).matches();
+
+    public static final BiPredicate<SlashCommandInteractionEvent, String> ROLE_VALIDATOR = (event, str) -> {
+        final Guild guild = event.getGuild();
+        if (MentionType.ROLE.getPattern().matcher(str).matches()) {
+            final String id = str.replace("<@&", "").replace(">", "");
+            return guild.getRoleById(id) != null;
+        }
+
+        return guild.getRolesByName(str, false).size() > 0;
+    };
 }

@@ -32,7 +32,6 @@ public class UserConfigCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
-    //@formatter:off
     @Override
     public List<SubcommandData> createSubcommands() {
         return List.of(
@@ -42,7 +41,6 @@ public class UserConfigCommand extends CoreCommand {
                 .addOption(OptionType.STRING, "key", "The data key to change", true, true)
                 .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
-    //@formatter:on
 
     @Override
     public CommandCategory getCategory() {
@@ -81,16 +79,22 @@ public class UserConfigCommand extends CoreCommand {
         
         final String term = event.getFocusedOption().getValue();
         
-        final List<String> keys = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry().entrySet().stream()
-            .map(Entry::getValue).map(UserConfigOption::getSaveName).filter(key -> key.contains(term)).limit(25)
-            .toList();
+        final List<String> keys = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
+                .values()
+                .stream()
+                .map(UserConfigOption::getSaveName)
+                .filter(key -> key.contains(term))
+                .limit(25)
+                .toList();
         event.replyChoiceStrings(keys).queue();
     }
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong())
+        if (!event.isFromGuild()) {
+            reply(event, "❌ This command can only be used in a server!", false, true);
             return;
+        }
 
         final String subcommand = event.getSubcommandName();
         if ("get".equalsIgnoreCase(subcommand)) {
@@ -129,6 +133,7 @@ public class UserConfigCommand extends CoreCommand {
             final UserConfigOption option = found.get();
             final Object value = option.getValueFromConfig().apply(config);
             reply(event, "✅ The value assigned to `" + option.getRichName() + "` is `" + value + "`!");
+            return;
         }
 
         if ("set".equalsIgnoreCase(subcommand)) {
@@ -158,18 +163,22 @@ public class UserConfigCommand extends CoreCommand {
                 reply(event, "❌ `" + value + "` is not a valid input for `" + option.getRichName() + "`!", false, true);
                 return;
             }
+
+            event.deferReply().queue();
             
             option.serialize(config, value);
             final Bson update = Updates.set(option.getSaveName(), option.getValueFromConfig().apply(config));
-            final UpdateResult result = Database.getDatabase().guildConfig.updateOne(filter, update);
+            final UpdateResult result = Database.getDatabase().userConfig.updateOne(filter, update);
             if (result.getModifiedCount() > 0) {
-                reply(event, "✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!");
+                event.getHook().editOriginal("✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!").mentionRepliedUser(false).queue();
                 return;
             }
 
-            reply(event, "❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!", false,
-                true);
+            event.getHook().editOriginal("❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!").mentionRepliedUser(false).queue();
+            return;
         }
+
+        reply(event, "❌ `" + subcommand + "` is not a valid subcommand!", false, true);
     }
 
     private static UserConfig get(Bson filter, Guild guild, User user) {

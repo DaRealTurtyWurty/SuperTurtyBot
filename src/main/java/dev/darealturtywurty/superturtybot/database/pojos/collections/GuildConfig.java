@@ -67,6 +67,7 @@ public class GuildConfig {
     private String autoThreadChannels;
     private boolean shouldCreateGists;
     private boolean warningsModeratorOnly;
+    private long patronRole;
 
     // Logging
     private long loggingChannel;
@@ -138,6 +139,7 @@ public class GuildConfig {
         this.autoThreadChannels = "";
         this.shouldCreateGists = true;
         this.warningsModeratorOnly = false;
+        this.patronRole = 0L;
 
         // Logging
         this.loggingChannel = 0L;
@@ -592,6 +594,14 @@ public class GuildConfig {
 
     public void setMaxCountingSuccession(int maxCountingSuccession) {
         this.maxCountingSuccession = maxCountingSuccession;
+    }
+
+    public long getPatronRole() {
+        return this.patronRole;
+    }
+
+    public void setPatronRole(long patronRole) {
+        this.patronRole = patronRole;
     }
 
     public boolean shouldLog(Event event) {

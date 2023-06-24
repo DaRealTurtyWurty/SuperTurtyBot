@@ -19,14 +19,14 @@ import dev.darealturtywurty.superturtybot.registry.Registerable;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.internal.utils.Checks;
 
-public class ServerConfigOption implements Registerable {
+public class GuildConfigOption implements Registerable {
     private String name;
     private final DataType dataType;
     private final BiConsumer<GuildConfig, String> serializer;
     private final BiPredicate<SlashCommandInteractionEvent, String> validator;
     private final Function<GuildConfig, Object> valueFromConfig;
     
-    private ServerConfigOption(Builder builder) {
+    private GuildConfigOption(Builder builder) {
         this.dataType = builder.dataType;
         this.serializer = builder.serializer;
         this.validator = builder.validator;
@@ -75,8 +75,8 @@ public class ServerConfigOption implements Registerable {
         private BiPredicate<SlashCommandInteractionEvent, String> validator = (dataType, str) -> true;
         private Function<GuildConfig, Object> valueFromConfig = config -> null;
 
-        public ServerConfigOption build() {
-            return new ServerConfigOption(this);
+        public GuildConfigOption build() {
+            return new GuildConfigOption(this);
         }
 
         public Builder dataType(@NotNull DataType dataType) {

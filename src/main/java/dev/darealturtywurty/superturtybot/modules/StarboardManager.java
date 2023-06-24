@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
@@ -43,8 +43,8 @@ public final class StarboardManager extends ListenerAdapter {
             || event.getUser().isBot() || event.getUser().isSystem())
             return;
         
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(event.getGuild());
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, event.getGuild());
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
 
         if (!config.getStarEmoji().equals(event.getReaction().getEmoji().getFormatted()))
             return;
@@ -118,8 +118,8 @@ public final class StarboardManager extends ListenerAdapter {
 
         final TextChannel channel = event.getChannel().asTextChannel();
 
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(event.getGuild());
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, event.getGuild());
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
         final List<Long> channels = GuildConfig.getChannels(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
@@ -137,8 +137,8 @@ public final class StarboardManager extends ListenerAdapter {
     }
 
     private static CompletableFuture<TextChannel> getStarboard(Guild guild) {
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
         if (!config.isStarboardEnabled())
             return CompletableFuture.completedFuture(null);
         

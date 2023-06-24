@@ -16,19 +16,33 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.ext.java7.PathArgumentType;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+import java.nio.file.Path;
+
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
 
     public static void main(String[] args) throws InvalidTokenException {
-        DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(),
-            Environment.INSTANCE.loggingWebhookToken());
+        ArgumentParser parser = ArgumentParsers.newFor("TurtyBot").build().defaultHelp(true).description("A multipurpose bot for discord.");
+        parser.addArgument("-env", "--environment")
+                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+                .setDefault(Path.of("./.env"))
+                .help("The path to the environment file.");
+
+        Namespace namespace = parser.parseArgsOrFail(args);
+        Environment.INSTANCE.load(namespace.get("environment"));
+
+        DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
         
         final var jdaBuilder = JDABuilder.createDefault(args.length < 1 ? Environment.INSTANCE.botToken() : args[0]);
         configureBuilder(jdaBuilder);

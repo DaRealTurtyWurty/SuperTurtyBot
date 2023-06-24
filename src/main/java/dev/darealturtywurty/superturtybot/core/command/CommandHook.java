@@ -1,7 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
 import dev.darealturtywurty.superturtybot.commands.core.*;
-import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
@@ -179,11 +180,12 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new TagCommand());
         cmds.add(new ShutdownCommand());
         cmds.add(new RestartCommand());
-        cmds.add(new ServerConfigCommand());
-        // cmds.add(new UserConfigCommand());
+        cmds.add(new GuildConfigCommand());
+        cmds.add(new UserConfigCommand());
         cmds.add(new OptCommand());
         cmds.add(new UptimeCommand());
         //cmds.add(new SystemStatsCommand());
+        //cmds.add(new TestCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());
@@ -251,6 +253,9 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MusicRestartCommand());
         cmds.add(new SeekCommand());
         cmds.add(new MoveCommand());
+        //cmds.add(new FilterCommand());
+        //cmds.add(new FilterConfigCommand());
+        // TODO: Come back to filters at some point
 
         // Image
         cmds.add(new HttpCatCommand());

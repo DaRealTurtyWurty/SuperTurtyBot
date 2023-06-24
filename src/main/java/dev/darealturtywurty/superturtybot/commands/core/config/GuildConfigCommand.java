@@ -28,8 +28,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ServerConfigCommand extends CoreCommand {
-    public ServerConfigCommand() {
+public class GuildConfigCommand extends CoreCommand {
+    public GuildConfigCommand() {
         super(new Types(true, false, false, false));
     }
     
@@ -88,10 +88,10 @@ public class ServerConfigCommand extends CoreCommand {
         
         final String term = event.getFocusedOption().getValue();
         
-        final List<String> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+        final List<String> keys = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                 .values()
                 .stream()
-                .map(ServerConfigOption::getSaveName)
+                .map(GuildConfigOption::getSaveName)
                 .filter(key -> key.contains(term))
                 .limit(25)
                 .toList();
@@ -118,7 +118,7 @@ public class ServerConfigCommand extends CoreCommand {
         embed.setDescription(
             "Thank you for adding me to your server! The following are the default config settings. You can change them with `/serverconfig set [key] [value]`\n");
         embed.setColor(Color.CYAN);
-        final List<ServerConfigOption> keys = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+        final List<GuildConfigOption> keys = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                 .values()
                 .stream()
                 .toList();
@@ -144,7 +144,7 @@ public class ServerConfigCommand extends CoreCommand {
             if (key == null) {
                 // Get all data
                 final Map<String, Object> configValues = new HashMap<>();
-                ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+                GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                         .values()
                         .forEach(option -> configValues.put(option.getRichName(), option.getValueFromConfig().apply(config)));
 
@@ -161,10 +161,10 @@ public class ServerConfigCommand extends CoreCommand {
             
             // Get data by the given key
             final String copyKey = key.trim();
-            final Optional<ServerConfigOption> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+            final Optional<GuildConfigOption> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                     .values()
                     .stream()
-                    .filter(serverConfigOption -> serverConfigOption.getSaveName().equals(copyKey))
+                    .filter(guildConfigOption -> guildConfigOption.getSaveName().equals(copyKey))
                     .findFirst();
             
             if (found.isEmpty()) {
@@ -172,7 +172,7 @@ public class ServerConfigCommand extends CoreCommand {
                 return;
             }
             
-            final ServerConfigOption option = found.get();
+            final GuildConfigOption option = found.get();
             final Object value = option.getValueFromConfig().apply(config);
             reply(event, "✅ The value assigned to `" + option.getRichName() + "` is `" + value + "`!");
         }
@@ -184,7 +184,7 @@ public class ServerConfigCommand extends CoreCommand {
             final Bson filter = getFilter(event.getGuild());
             final GuildConfig config = get(filter, event.getGuild());
             
-            final Optional<Entry<String, ServerConfigOption>> found = ServerConfigRegistry.SERVER_CONFIG_OPTIONS.getRegistry()
+            final Optional<Entry<String, GuildConfigOption>> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                     .entrySet()
                     .stream()
                     .filter(entry -> entry.getValue().getSaveName().equals(key))
@@ -195,7 +195,7 @@ public class ServerConfigCommand extends CoreCommand {
                 return;
             }
             
-            final ServerConfigOption option = found.get().getValue();
+            final GuildConfigOption option = found.get().getValue();
             if (Boolean.FALSE.equals(option.getDataType().validator.apply(value))) {
                 reply(event,
                     "❌ `" + value + "` is not the right data type! `" + option.getRichName() + "` requires a `"

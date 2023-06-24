@@ -9,8 +9,12 @@ import dev.darealturtywurty.superturtybot.core.util.BotUtils;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -169,7 +173,32 @@ public class LeaderboardCommand extends CoreCommand {
 
             graphics.drawString("#" + rank, 240, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
 
-            graphics.setColor(Color.WHITE);
+            {
+                Member member = guild.getMemberById(id);
+                GuildConfig guildConfig = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+
+                long patronRoleId = guildConfig != null ? guildConfig.getPatronRole() : 0L;
+                Role patronRole = guild.getRoleById(patronRoleId);
+
+                boolean isPatron = patronRole != null && member != null && member.getRoles().contains(patronRole);
+                boolean isBooster = member != null && member.isBoosting();
+                boolean isOwner = member != null && member.isOwner();
+
+                if (isPatron || isBooster || isOwner) {
+                    UserConfig userConfig = Database.getDatabase().userConfig.find(
+                            Filters.and(Filters.eq("user", id), Filters.eq("guild", guild.getIdLong()))
+                    ).first();
+
+                    if (userConfig != null) {
+                        graphics.setColor(Color.decode(userConfig.getLeaderboardColor()));
+                    } else {
+                        graphics.setColor(Color.WHITE);
+                    }
+                } else {
+                    graphics.setColor(Color.WHITE);
+                }
+            }
+
             graphics.drawString(
                     (username.length() > 15 ? username.substring(0, 20) + "..." : username)
                             + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "

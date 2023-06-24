@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.levelling;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-import dev.darealturtywurty.superturtybot.commands.core.config.ServerConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
@@ -49,8 +49,8 @@ public final class LevellingManager extends ListenerAdapter {
 
         final Guild guild = event.getGuild();
 
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
 
         final List<Long> disabledChannels = GuildConfig.getChannels(config.getDisabledLevellingChannels());
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong())) return;
@@ -113,8 +113,8 @@ public final class LevellingManager extends ListenerAdapter {
             updates.add(Updates.set("level", newLevel));
 
             if (levelUpMessage != null) {
-                final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
-                final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+                final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+                final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
 
                 sendLevelUpMessage(config, guild.getMember(user), newLevel, levelUpMessage.sendTo().orElse(null));
             }
@@ -136,8 +136,8 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     private void updateLevelRoles(Guild guild, Member member, int level) {
-        final Bson serverConfigFilter = ServerConfigCommand.getFilter(guild);
-        final GuildConfig config = ServerConfigCommand.get(serverConfigFilter, guild);
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
         final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
         final var levelRoles = getLevelRoles(config);
         final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)

@@ -7,12 +7,13 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Activity.ActivityType;
 
+import java.nio.file.Path;
+
 public final class Environment {
     public static final Environment INSTANCE = new Environment();
-    private final Dotenv env = Dotenv.load();
+    private Dotenv env;
 
-    private Environment() {
-    }
+    private Environment() {}
 
     public String activity() {
         return getString("ACTIVITY");
@@ -176,5 +177,12 @@ public final class Environment {
 
     public String geniusAccessToken() {
         return getString("GENIUS_ACCESS_TOKEN");
+    }
+
+    public void load(Path environment) {
+        if(this.env != null)
+            throw new IllegalStateException("Environment already loaded!");
+
+        this.env = Dotenv.configure().directory(environment.toString()).load();
     }
 }
