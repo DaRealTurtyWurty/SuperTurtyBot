@@ -8,7 +8,7 @@ import dev.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
 
 public enum CountingMode {
     NORMAL, REVERSE, DECIMAL, MATHS(true), BINARY, TERNARY, QUATERNARY, QUINARY, SENARY, SEPTENARY, OCTAL, NONARY,
-    UNDECIMAL, DUODECIMAL, TRIDECIMAL, TETRADECIMAL, PENTADECIMAL, HEXADECIMAL, BASE32, BASE48, BASE64, BASE96, SQUARES,
+    UNDECIMAL, DUODECIMAL, TRIDECIMAL, TETRADECIMAL, PENTADECIMAL, HEXADECIMAL, BASE36, SQUARES,
     TRIANGULAR, PENTAGONAL, HEXAGONAL, CUBES, PRIMES, ABUNDENT, COMPOSITE, ODD, EVEN, FIBONACCI, LUCAS, GOLOMB, HAPPY,
     LUCKY;
     
@@ -70,10 +70,7 @@ public enum CountingMode {
             case TETRADECIMAL -> Integer.toString((int) result, 14);
             case PENTADECIMAL -> Integer.toString((int) result, 15);
             case HEXADECIMAL -> Integer.toHexString((int) result);
-            case BASE32 -> Integer.toString((int) result, 32);
-            case BASE48 -> Integer.toString((int) result, 48);
-            case BASE64 -> Integer.toString((int) result, 64);
-            case BASE96 -> Integer.toString((int) result, 96);
+            case BASE36 -> Integer.toString((int) result, 36);
             default -> String.valueOf((int) result);
         };
     }
@@ -104,10 +101,7 @@ public enum CountingMode {
             case TETRADECIMAL -> tryParseInt(str, 14);
             case PENTADECIMAL -> tryParseInt(str, 15);
             case HEXADECIMAL -> tryParseInt(str, 16);
-            case BASE32 -> tryParseInt(str, 32);
-            case BASE48 -> tryParseInt(str, 48);
-            case BASE64 -> tryParseInt(str, 64);
-            case BASE96 -> tryParseInt(str, 96);
+            case BASE36 -> tryParseInt(str, 36);
         
             default -> tryParseFloat(str);
         };

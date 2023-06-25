@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -24,20 +26,6 @@ import net.dv8tion.jda.api.requests.RestAction;
 
 public class ImageCommandRegistry {
     private static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
-
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BIRD = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/bird").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this bird image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BLEP = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");
@@ -166,76 +154,6 @@ public class ImageCommandRegistry {
         }
     };
     
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> FOX = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/fox").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this fox image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
-    
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> KOALA = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/koala").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this koala image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
-    
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> PANDA = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/panda").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this panda image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
-    
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> RACCOON = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/raccoon").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this raccoon image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
-    
-    private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> RED_PANDA = (event, cmd) -> {
-        try {
-            final URLConnection connection = new URL("https://some-random-api.ml/img/red_panda").openConnection();
-            final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
-            final String url = body.get("link").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("❌ There has been an issue gathering this red panda image.")
-                .mentionRepliedUser(false).queue();
-        }
-    };
-    
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> SNAKE = (event, cmd) -> {
         try {
             final Document page = Jsoup.connect("https://generatorfun.com/random-snake-image").get();
@@ -249,7 +167,7 @@ public class ImageCommandRegistry {
     
     static {
         pexels("bee", 3);
-        IMAGE_CMD_TYPES.register("bird", new ImageCommandType(BIRD));
+        pexels("bird", 3);
         IMAGE_CMD_TYPES.register("blep", new ImageCommandType(BLEP));
         IMAGE_CMD_TYPES.register("bunny", new ImageCommandType(BUNNY));
         IMAGE_CMD_TYPES.register("catbomb", new ImageCommandType(CAT_BOMB));
@@ -264,21 +182,20 @@ public class ImageCommandRegistry {
         pexels("elephant", 3);
         IMAGE_CMD_TYPES.register("foodporn", new PexelsImageCommandType(3, "food"));
         pexels("forest", 3);
-        IMAGE_CMD_TYPES.register("fox", new ImageCommandType(FOX));
+        pexels("fox", 3);
         pexels("giraffe", 3);
         pexels("gorilla", 1);
         pexels("horse", 3);
         pexels("insect", 3);
         pexels("jellyfish", 3);
-        IMAGE_CMD_TYPES.register("koala", new ImageCommandType(KOALA));
+        pexels("koala", 2);
         pexels("lion", 3);
         pexels("monkey", 3);
         pexels("nature", 3);
         pexels("owl", 3);
-        IMAGE_CMD_TYPES.register("panda", new ImageCommandType(PANDA));
+        pexels("panda", 3);
         pexels("pig", 2);
-        IMAGE_CMD_TYPES.register("raccoon", new ImageCommandType(RACCOON));
-        IMAGE_CMD_TYPES.register("redpanda", new ImageCommandType(RED_PANDA));
+        pexels("racoon", 3);
         pexels("sheep", 3);
         IMAGE_CMD_TYPES.register("snake", new ImageCommandType(SNAKE));
         pexels("space", 3);

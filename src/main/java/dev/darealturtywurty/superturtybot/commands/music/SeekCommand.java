@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -81,8 +82,8 @@ public class SeekCommand extends CoreCommand {
             return;
         }
 
-        Long owner = track.getUserData(Long.class);
-        if ((owner == null || owner != event.getMember().getIdLong() && !event.getMember()
+        TrackData data = track.getUserData(TrackData.class);
+        if (data == null || (data.getUserId() != event.getMember().getIdLong() && !event.getMember()
                 .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
             reply(event, "❌ You must be the owner of the song or a moderator to seek through this track!", false, true);
             return;

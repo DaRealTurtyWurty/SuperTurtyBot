@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -79,8 +80,12 @@ public class LeaveCleanupCommand extends CoreCommand {
                 return;
             }
 
-            Long owner = track.getUserData(Long.class);
-            if (owner != null && channel.getMembers().stream().noneMatch(member -> member.getIdLong() == owner)) {
+            TrackData trackData = track.getUserData(TrackData.class);
+            if (trackData == null)
+                return;
+
+            long owner = trackData.getUserId();
+            if (channel.getMembers().stream().noneMatch(member -> member.getIdLong() == owner)) {
                 AudioManager.removeTrack(event.getGuild(), track);
             }
         });

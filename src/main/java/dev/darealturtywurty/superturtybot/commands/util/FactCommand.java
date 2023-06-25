@@ -41,19 +41,23 @@ public class FactCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         try {
             final URLConnection connection = new URL(ENDPOINT).openConnection();
             final JsonObject json = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             if (json.has("error")) {
                 final String error = json.get("error").getAsString();
-                event.reply(error).setEphemeral(true).mentionRepliedUser(false).queue();
+                event.getHook().sendMessage("❌ " + error).queue();
                 return;
             }
             
-            reply(event, json.get("fact").getAsString());
+            final String fact = json.get("fact").getAsString();
+            event.getHook().sendMessage(fact).queue();
         } catch (final IOException exception) {
-            reply(event, "❌ Something went wrong!", false, true);
+            event.getHook().sendMessage("❌ Failed to get fact!").queue();
+            exception.printStackTrace();
         }
     }
 }

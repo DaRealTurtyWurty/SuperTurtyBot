@@ -27,8 +27,7 @@ public class RegisterCountingCommand extends CoreCommand {
                 .addChoice("octal", "octal").addChoice("nonary", "nonary").addChoice("undecimal", "undecimal")
                 .addChoice("duodecimal", "duodecimal").addChoice("tridecimal", "tridecimal")
                 .addChoice("tetradecimal", "tetradecimal").addChoice("pentadecimal", "pentadecimal")
-                .addChoice("hexadecimal", "hexadecimal").addChoice("base32", "base32").addChoice("base48", "base48")
-                .addChoice("base64", "base64").addChoice("base96", "base96").addChoice("squares", "squares"),
+                .addChoice("hexadecimal", "hexadecimal").addChoice("base36", "base36").addChoice("squares", "squares"),
             new OptionData(OptionType.BOOLEAN, "unregister", "Whether or not to unregister this channel", false));
     }
     

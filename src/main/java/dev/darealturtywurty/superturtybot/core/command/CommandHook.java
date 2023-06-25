@@ -14,7 +14,7 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWar
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.music.*;
-import dev.darealturtywurty.superturtybot.commands.music.handler.MusicRestartCommand;
+import dev.darealturtywurty.superturtybot.commands.music.MusicRestartCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
@@ -85,7 +85,7 @@ public class CommandHook extends ListenerAdapter {
 
         for (Guild guild : event.getJDA().getGuilds()) {
             if (guild.getIdLong() == 1096109606452867243L) {
-                guild.getTextChannelById(1096109607820197932L).sendMessage("Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you! Here is the changelog since we last spoke:%n%s".formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
+                //guild.getTextChannelById(1122294244917391411L).sendMessage("Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you! Here is the changelog since we last spoke:%n%s".formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
                 IS_DEV_MODE = true;
                 return;
             }
@@ -254,6 +254,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SeekCommand());
         cmds.add(new MoveCommand());
         cmds.add(new VoteSkipCommand());
+        cmds.add(new SaveSongCommand());
         //cmds.add(new FilterCommand());
         //cmds.add(new FilterConfigCommand());
         // TODO: Come back to filters at some point

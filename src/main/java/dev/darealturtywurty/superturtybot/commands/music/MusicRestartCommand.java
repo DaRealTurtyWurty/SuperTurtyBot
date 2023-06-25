@@ -1,6 +1,8 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -9,7 +11,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class MusicRestartCommand extends CoreCommand {
-
     public MusicRestartCommand() {
         super(new Types(true, false, false, false));
     }
@@ -65,8 +66,8 @@ public class MusicRestartCommand extends CoreCommand {
             return;
         }
 
-        Long owner = track.getUserData(Long.class);
-        if ((owner == null || owner != event.getMember().getIdLong() && !event.getMember()
+        TrackData trackData = track.getUserData(TrackData.class);
+        if (trackData == null || (trackData.getUserId() != event.getMember().getIdLong() && !event.getMember()
                 .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
             reply(event, "❌ You must be the owner of the song or a moderator to restart this track!", false, true);
             return;

@@ -176,6 +176,9 @@ public final class SuggestionManager extends ListenerAdapter {
         
         suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt))
             .collect(Collectors.toList());
+
+        if (number > suggestions.size())
+            return null;
         
         final long time = System.currentTimeMillis();
         final Suggestion suggestion = suggestions.get(number);

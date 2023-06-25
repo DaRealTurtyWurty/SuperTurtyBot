@@ -81,7 +81,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     public void nextTrack() {
         if (!this.queue.isEmpty()) {
             if (this.loopState == LoopState.SINGLE) {
-                this.player.startTrack(this.queue.get(0), false);
+                this.player.startTrack(this.queue.get(0).makeClone(), false);
                 return;
             }
 
@@ -230,10 +230,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
             return;
 
         if (getCurrentlyPlaying() != null) {
-            AudioTrack track = getCurrentlyPlaying();
-            track.setPosition(time);
-
-            this.player.startTrack(track, false);
+            this.player.getPlayingTrack().setPosition(time);
         }
     }
 

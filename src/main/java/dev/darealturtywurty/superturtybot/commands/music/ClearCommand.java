@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -93,8 +94,14 @@ public class ClearCommand extends CoreCommand {
     }
 
     private static boolean checkOwnsAll(List<AudioTrack> queue, Member member) {
-        long trackMatch = queue.stream().map(track -> track.getUserData(Long.class))
-                .filter(owner -> owner != null && owner == member.getIdLong()).count();
+        long trackMatch = queue.stream()
+                .map(track -> {
+                    TrackData data = track.getUserData(TrackData.class);
+                    return data == null ? 0L : data.getUserId();
+                })
+                .filter(owner -> owner == member.getIdLong())
+                .count();
+
         return trackMatch == queue.size();
     }
 }

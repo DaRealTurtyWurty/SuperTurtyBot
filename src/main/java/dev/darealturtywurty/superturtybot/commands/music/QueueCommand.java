@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
@@ -83,8 +84,9 @@ public class QueueCommand extends CoreCommand {
 
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (AudioTrack track : queue) {
+            TrackData trackData = track.getUserData(TrackData.class);
             contents.field("[" + StringUtils.millisecondsFormatted(track.getDuration()) + "] - " + track.getInfo().title.trim(),
-                    "[Link](%s)\nAdded by: %s".formatted(track.getInfo().uri, event.getGuild().getMemberById(track.getUserData(Long.class)).getAsMention()));
+                    "[Link](%s)\nAdded by: %s".formatted(track.getInfo().uri, trackData == null ? "Unknown" : event.getGuild().getMemberById(trackData.getUserId()).getAsMention()));
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)

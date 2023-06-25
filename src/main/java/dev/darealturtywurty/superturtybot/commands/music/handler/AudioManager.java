@@ -3,6 +3,8 @@ package dev.darealturtywurty.superturtybot.commands.music.handler;
 import com.codepoetics.ambivalence.Either;
 import com.dunctebot.sourcemanagers.DuncteBotSources;
 import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -15,8 +17,11 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.handler.filter.FilterChainConfiguration;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
@@ -25,12 +30,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public final class AudioManager {
     private static final Map<Long, GuildAudioManager> AUDIO_MANAGERS = new HashMap<>();
@@ -136,7 +144,7 @@ public final class AudioManager {
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                playlist.getTracks().forEach(track -> track.setUserData(user.getIdLong()));
+                playlist.getTracks().forEach(track -> track.setUserData(new TrackData(user.getIdLong(), toPlay)));
 
                 if (toPlay.startsWith("ytsearch:")) {
                     manager.getMusicScheduler().queue(playlist.getTracks().get(0));
@@ -165,7 +173,7 @@ public final class AudioManager {
                 }
 
                 final AudioTrack track = playlist.getTracks().get(0);
-                if (manager.getMusicScheduler().getCurrentlyPlaying().equals(track)) {
+                if (Objects.equals(manager.getMusicScheduler().getCurrentlyPlaying(), track)) {
                     manager.getMusicScheduler().setAudioChannel(audioChannel);
 
                     final var playingEmbed = new EmbedBuilder();
@@ -185,10 +193,10 @@ public final class AudioManager {
             @Override
             public void trackLoaded(AudioTrack track) {
                 manager.getMusicScheduler().queue(track);
-                track.setUserData(user.getIdLong());
+                track.setUserData(new TrackData(user.getIdLong(), null));
 
                 final AudioTrack nowPlaying = manager.getMusicScheduler().getCurrentlyPlaying();
-                if (nowPlaying.equals(track)) {
+                if (Objects.equals(nowPlaying, track)) {
                     manager.getMusicScheduler().setAudioChannel(audioChannel);
                     final var embed = new EmbedBuilder();
                     embed.setTimestamp(Instant.now());
@@ -373,5 +381,119 @@ public final class AudioManager {
 
     public static FilterChainConfiguration getFilterConfiguration(Guild guild) {
         return getOrCreate(guild).getFilterChainConfiguration();
+    }
+
+    public static Pair<Boolean, String> saveSong(User user, String name, String url) {
+        if (user.isBot() || user.isSystem())
+            return Pair.of(false, "You cannot save songs");
+
+        if (!url.startsWith("http"))
+            return Pair.of(false, "URL is invalid");
+
+        try {
+            new URL(url).openConnection();
+        } catch (IOException exception) {
+            return Pair.of(false, "URL is invalid");
+        }
+
+        if (name.length() > 64)
+            return Pair.of(false, "Name is too long");
+        if(name.isBlank() || name.length() < 3)
+            return Pair.of(false, "Name is too short");
+
+        SavedSongs songs = Database.getDatabase().savedSongs.find(Filters.eq("user", user.getIdLong())).first();
+        if (songs == null) {
+            songs = new SavedSongs(user.getIdLong());
+            Database.getDatabase().savedSongs.insertOne(songs);
+        }
+
+        if(songs.getSongs() == null)
+            songs.setSongs(new HashMap<>());
+
+        if(songs.getSongs().size() > 25)
+            return Pair.of(false, "You cannot save more than 25 songs");
+
+        if(songs.getSongs()
+                .entrySet()
+                .stream()
+                .anyMatch(entry ->
+                        entry.getKey().equalsIgnoreCase(name) &&
+                                entry.getValue().equalsIgnoreCase(url))) {
+            return Pair.of(false, "You already have a song with that name or url");
+        }
+
+        songs.getSongs().put(name, url);
+        Database.getDatabase().savedSongs.updateOne(Filters.eq("user", user.getIdLong()), Updates.set("songs", songs.getSongs()));
+        return Pair.of(true, "Song saved");
+    }
+
+    public static Pair<Boolean, String> removeSongs(User user, @Nullable String name, @Nullable String url) {
+        if(name == null && url == null)
+            return Pair.of(false, "You must specify a name or url");
+
+        if (user.isBot() || user.isSystem())
+            return Pair.of(false, "You cannot remove songs");
+
+        SavedSongs songs = Database.getDatabase().savedSongs.find(Filters.eq("user", user.getIdLong())).first();
+        if (songs == null || songs.getSongs() == null || songs.getSongs().isEmpty())
+            return Pair.of(false, "You do not have any saved songs");
+
+        Map<String, String> matches = songs.getSongs()
+                .entrySet()
+                .stream()
+                .filter(entry -> name != null ? entry.getKey().equalsIgnoreCase(name) : entry.getValue().equalsIgnoreCase(url))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if(matches.isEmpty())
+            return Pair.of(false, "You do not have a song with that name or url");
+
+        matches.forEach((key, value) -> songs.getSongs().remove(key, value));
+        Database.getDatabase().savedSongs.updateOne(Filters.eq("user", user.getIdLong()), Updates.set("songs", songs.getSongs()));
+        return Pair.of(true, "Songs removed");
+    }
+
+    public static Map<String, String> getSavedSongs(User user) {
+        SavedSongs songs = Database.getDatabase().savedSongs.find(Filters.eq("user", user.getIdLong())).first();
+        if (songs == null || songs.getSongs() == null || songs.getSongs().isEmpty())
+            return new HashMap<>();
+
+        return songs.getSongs();
+    }
+
+    public static Pair<Boolean, String> clearSavedSongs(User user) {
+        if (user.isBot() || user.isSystem())
+            return Pair.of(false, "You cannot clear songs");
+
+        SavedSongs songs = Database.getDatabase().savedSongs.find(Filters.eq("user", user.getIdLong())).first();
+        if (songs == null || songs.getSongs() == null || songs.getSongs().isEmpty())
+            return Pair.of(false, "You do not have any saved songs");
+
+        songs.getSongs().clear();
+        Database.getDatabase().savedSongs.updateOne(Filters.eq("user", user.getIdLong()), Updates.set("songs", songs.getSongs()));
+        return Pair.of(true, "Songs cleared");
+    }
+
+    public static void playSongs(TextChannel channel, Member member, Collection<String> songList, boolean shuffle) {
+        List<String> songs = new ArrayList<>(songList);
+        if(shuffle)
+            Collections.shuffle(songs);
+
+        AudioChannel audioChannel = member.getVoiceState().getChannel();
+        List<CompletableFuture<Pair<Boolean, String>>> results = new ArrayList<>();
+        songs.forEach(song -> results.add(play(audioChannel, channel, song, member.getUser())));
+
+        CompletableFuture.allOf(results.toArray(new CompletableFuture[0])).thenRun(() -> {
+            int failed = 0;
+            for (CompletableFuture<Pair<Boolean, String>> result : results) {
+                try {
+                    Pair<Boolean, String> pair = result.get();
+                    if (!pair.getLeft())
+                        failed++;
+                } catch (InterruptedException | ExecutionException ignored) {
+                    failed++;
+                }
+            }
+
+            channel.sendMessage("Finished adding saved songs, " + failed + " failed!").queue();
+        });
     }
 }

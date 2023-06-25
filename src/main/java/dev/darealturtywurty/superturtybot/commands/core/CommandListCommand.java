@@ -2,6 +2,9 @@ package dev.darealturtywurty.superturtybot.commands.core;
 
 import dev.darealturtywurty.superturtybot.commands.image.AbstractImageCommand;
 import dev.darealturtywurty.superturtybot.commands.image.AbstractImageCommand.ImageCategory;
+import dev.darealturtywurty.superturtybot.commands.image.ImageCommand;
+import dev.darealturtywurty.superturtybot.commands.image.ImageCommandRegistry;
+import dev.darealturtywurty.superturtybot.commands.image.ImageCommandType;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
@@ -21,8 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,38 +134,13 @@ public class CommandListCommand extends CoreCommand {
         if (category.isNSFW()) {
             if (!allowNSFW) return null;
 
-            final List<NSFWCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
-                    .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW).map(NSFWCommand.class::cast)
-                    .toList();
+            final List<CoreCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
+                    .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW).toList();
 
             cmds.stream().sorted(Comparator.comparing(CoreCommand::getName))
                     .forEachOrdered(cmd -> cmdsString.append("`").append(cmd.getName()).append("`, "));
 
             cmdsString.delete(cmdsString.length() - 2, cmdsString.length());
-        } else if (category == CommandCategory.IMAGE) {
-            final List<AbstractImageCommand> cmds = CommandHook.INSTANCE.getCommands().stream()
-                    .filter(cmd -> cmd.getCategory() == CommandCategory.IMAGE).map(AbstractImageCommand.class::cast)
-                    .collect(Collectors.toList());
-            for (final var imageCategory : ImageCategory.values()) {
-                cmdsString.append("**").append(StringUtils.capitalize(imageCategory.name().toLowerCase())).append("**\n");
-                final List<AbstractImageCommand> toRemove = new ArrayList<>();
-                cmds.stream().filter(cmd -> cmd.getImageCategory() == imageCategory)
-                        .sorted(Comparator.comparing(CoreCommand::getName)).forEachOrdered(cmd -> {
-                            cmdsString.append("`").append(cmd.getName()).append("`, ");
-                            toRemove.add(cmd);
-                        });
-
-                if (!toRemove.isEmpty()) {
-                    cmdsString.delete(cmdsString.length() - 2, cmdsString.length());
-                } else {
-                    cmdsString.append("Not Yet Implemented");
-                }
-
-                cmdsString.append("\n");
-
-                toRemove.forEach(cmds::remove);
-                toRemove.clear();
-            }
         } else {
             CommandHook.INSTANCE.getCommands().stream()
                     .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))

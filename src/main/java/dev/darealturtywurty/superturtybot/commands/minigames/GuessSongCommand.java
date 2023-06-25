@@ -88,6 +88,11 @@ public class GuessSongCommand extends CoreCommand {
             return;
         }
 
+        if(AudioManager.getCurrentlyPlaying(event.getGuild()) != null) {
+            reply(event, "❌ There is already a song playing!", false, true);
+            return;
+        }
+
         run(Either.ofLeft(event), event.getGuild(), channel);
     }
 
@@ -98,10 +103,10 @@ public class GuessSongCommand extends CoreCommand {
         event.forEither(slashEvent -> {
             slashEvent.deferReply().setContent("🎵 Guess the song has started!").flatMap(InteractionHook::retrieveOriginal).queue(msg -> {
                 msg.createThreadChannel("Guess The Song").queue(thread -> {
-                    thread.sendMessage("🎵 Guess the song has started!").queue();
                     thread.sendMessage("🎵 Loading...")
                             .queue(message -> messageId.complete(message.getIdLong()));
                     threadRef.set(thread);
+                    thread.addThreadMember(slashEvent.getUser()).queue();
                 });
             });
         }, messageEvent -> {
@@ -232,6 +237,8 @@ public class GuessSongCommand extends CoreCommand {
                 reply(event, "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
+
+                run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
             }
         }
     }

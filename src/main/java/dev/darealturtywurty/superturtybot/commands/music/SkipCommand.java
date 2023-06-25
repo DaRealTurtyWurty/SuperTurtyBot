@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
@@ -76,12 +77,12 @@ public class SkipCommand extends CoreCommand {
             return;
         }
 
-        long songOwnerId = track.getUserData(Long.class);
+        TrackData trackData = track.getUserData(TrackData.class);
         Member member = event.getMember();
         boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
 
         // if they are a moderator or the owner of the song or the only person in the vc
-        if (!isModerator && songOwnerId != member.getIdLong() && channel.getMembers().size() > 2) {
+        if (!isModerator && (trackData == null || trackData.getUserId() != member.getIdLong()) && channel.getMembers().size() > 2) {
             reply(event, "❌ You must be a moderator or the owner of the song to skip it!", false, true);
             return;
         }

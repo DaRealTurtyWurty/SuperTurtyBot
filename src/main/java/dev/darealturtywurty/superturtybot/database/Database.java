@@ -34,6 +34,7 @@ public class Database {
     public final MongoCollection<Quote> quotes;
     public final MongoCollection<UserEmbeds> userEmbeds;
     public final MongoCollection<Reminder> reminders;
+    public final MongoCollection<SavedSongs> savedSongs;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -61,6 +62,7 @@ public class Database {
         this.quotes = database.getCollection("quotes", Quote.class);
         this.userEmbeds = database.getCollection("userEmbeds", UserEmbeds.class);
         this.reminders = database.getCollection("reminders", Reminder.class);
+        this.savedSongs = database.getCollection("savedSongs", SavedSongs.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -85,6 +87,7 @@ public class Database {
         this.quotes.createIndex(guildUserIndex);
         this.userEmbeds.createIndex(userIndex);
         this.reminders.createIndex(guildUserIndex);
+        this.savedSongs.createIndex(userIndex);
     }
 
     public static Database getDatabase() {
