@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -25,10 +26,8 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -105,12 +104,12 @@ public class QuoteCommand extends CoreCommand {
             }
 
             if (text.length() > 1000) {
-                reply(event, "❌ That quote is too long!", false, true);
+                reply(event, "❌ That quote must be at maximum 100 characters!", false, true);
                 return;
             }
 
             if (text.isBlank() || text.length() < 3) {
-                reply(event, "❌ That quote is too short!", false, true);
+                reply(event, "❌ That quote must be at least 3 characters.", false, true);
                 return;
             }
 
@@ -128,33 +127,22 @@ public class QuoteCommand extends CoreCommand {
                 AtomicReference<Message> found = new AtomicReference<>();
                 for (var message : messages) {
                     if (message.getAuthor().getIdLong() != user.getIdLong() || !message.getContentRaw()
-                            .equalsIgnoreCase(text)) {
+                            .toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT))) {
                         continue;
                     }
 
                     found.set(message);
                 }
 
-                if (found.get() == null) {
-                    event.getHook().retrieveOriginal().queue(original -> {
-                        var confirmButton = Button.primary(
-                                "quote_confirm-" + guild.getId() + "-" + user.getId() + "-" + event.getUser()
-                                        .getId() + "-" + original.getId(), "✅");
-                        var cancelButton = Button.danger(
-                                "quote_cancel-" + guild.getId() + "-" + user.getId() + "-" + event.getUser()
-                                        .getId() + "-" + original.getId(), "❌");
-                        event.getHook().editOriginal(
-                                        "❓That quote was not found in the last 100 messages! Are you sure you typed it correctly?")
-                                .setActionRow(confirmButton, cancelButton).queue();
-
-                        QUOTE_MESSAGE_IDS.put(original.getIdLong(), text);
-                    });
-                } else {
+                if (found.get() != null) {
                     var quote = new Quote(guild.getIdLong(), user.getIdLong(), text,
                             found.get().getTimeCreated().toInstant().toEpochMilli(), event.getUser().getIdLong());
                     Database.getDatabase().quotes.insertOne(quote);
-                    event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
+                    event.getHook().editOriginal("✅ Quote added! #" + (quotes.size())).queue();
+                    return;
                 }
+
+                event.getHook().editOriginal("❌ That quote was not found!").queue();
             });
 
             return;
@@ -244,10 +232,13 @@ public class QuoteCommand extends CoreCommand {
         }
 
         if ("get".equals(event.getSubcommandName())) {
-            int number = event.getOption("number").getAsInt();
+            int number = event.getOption("number", 0, optionMapping -> (int) Math.min(Integer.MAX_VALUE, optionMapping.getAsLong()));
             List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                     .into(new ArrayList<>());
-            if (number < 1 || number > quotes.size()) {
+            if (number < 1)
+                number = 1;
+
+            if (number > quotes.size()) {
                 reply(event, "❌ That quote does not exist!", false, true);
                 return;
             }
@@ -292,8 +283,8 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        if (message.getContentRaw().isBlank() || message.getContentRaw().length() < 4) {
-            event.getHook().editOriginal("❌ That message is empty/too short!").queue();
+        if (message.getContentRaw().isBlank() || message.getContentRaw().length() < 3) {
+            event.getHook().editOriginal("❌ That message must be at least 4 characters.").queue();
             return;
         }
 

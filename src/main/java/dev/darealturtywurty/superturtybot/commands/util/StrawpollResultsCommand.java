@@ -99,7 +99,12 @@ public class StrawpollResultsCommand extends CoreCommand {
         final String result = IOUtils.toString(new BufferedReader(new InputStreamReader(input)));
         input.close();
 
-        final var response = Constants.GSON.fromJson(result, JsonObject.class).get("content").getAsJsonObject()
+        JsonObject jsonObject = Constants.GSON.fromJson(result, JsonObject.class);
+        if(!jsonObject.has("content")) {
+            throw new IllegalStateException("Invalid strawpoll ID!");
+        }
+
+        final var response = jsonObject.get("content").getAsJsonObject()
             .get("poll").getAsJsonObject();
         final var answers = response.getAsJsonArray("poll_answers");
         final Map<String, Double> resultMap = new HashMap<>();

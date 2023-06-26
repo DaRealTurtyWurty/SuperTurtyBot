@@ -32,8 +32,7 @@ public class GuildConfigCommand extends CoreCommand {
     public GuildConfigCommand() {
         super(new Types(true, false, false, false));
     }
-    
-    //@formatter:off
+
     @Override
     public List<SubcommandData> createSubcommands() {
         return List.of(
@@ -43,7 +42,6 @@ public class GuildConfigCommand extends CoreCommand {
                 .addOption(OptionType.STRING, "key", "The data key to change", true, true)
                 .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
-    //@formatter:on
     
     @Override
     public String getAccess() {
@@ -149,7 +147,7 @@ public class GuildConfigCommand extends CoreCommand {
                         .forEach(option -> configValues.put(option.getRichName(), option.getValueFromConfig().apply(config)));
 
                 final var embed = new EmbedBuilder();
-                configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**: `" + value + "`\n"));
+                configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n"));
                 embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("Server Config for: " + event.getGuild().getName(), event.getGuild().getVanityUrl());

@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -17,6 +19,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.io.IOUtils;
 
 public class PeriodicTableCommand extends CoreCommand {
     private static final String ENDPOINT = "https://api.popcat.xyz/periodic-table?element=%s";
@@ -62,8 +65,14 @@ public class PeriodicTableCommand extends CoreCommand {
         final String urlStr = ENDPOINT.formatted(element);
         try {
             final URLConnection connection = new URL(urlStr).openConnection();
-            final JsonObject json = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                JsonObject.class);
+            final JsonElement jsonElem = Constants.GSON.fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.ISO_8859_1), JsonElement.class);
+            if(jsonElem.isJsonPrimitive()) {
+                reply(event, "❌ Element not found!", false, true);
+                return;
+            }
+
+            final JsonObject json = jsonElem.getAsJsonObject();
+
             if (json.has("error")) {
                 final String error = json.get("error").getAsString();
                 event.reply(error).setEphemeral(true).mentionRepliedUser(false).queue();

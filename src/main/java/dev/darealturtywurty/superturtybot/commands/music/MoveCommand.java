@@ -7,11 +7,13 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -83,21 +85,10 @@ public class MoveCommand extends CoreCommand {
             return;
         }
 
-        TrackData data = track.getUserData(TrackData.class);
-        if (data == null || (data.getUserId() != event.getMember().getIdLong() && !event.getMember()
-                .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
-            reply(event, "❌ You must be the owner of the song or a moderator to skip this track!", false, true);
-            return;
-        }
+        int from = event.getOption("from", 0, OptionMapping::getAsInt);
+        int to = event.getOption("to", 0, OptionMapping::getAsInt);
 
-        Integer from = event.getOption("from", null, OptionMapping::getAsInt);
-        Integer to = event.getOption("to", null, OptionMapping::getAsInt);
-        if (from == null || to == null) {
-            reply(event, "❌ You must provide a valid position to move the song to!", false, true);
-            return;
-        }
-
-        if(from.equals(to)) {
+        if(from == to) {
             reply(event, "❌ You cannot move a song to the same position!", false, true);
             return;
         }
@@ -112,13 +103,30 @@ public class MoveCommand extends CoreCommand {
             return;
         }
 
-        if(from > AudioManager.getQueue(event.getGuild()).size() || to > AudioManager.getQueue(event.getGuild()).size()) {
+        if(from >= AudioManager.getQueue(event.getGuild()).size() || to >= AudioManager.getQueue(event.getGuild()).size()) {
             reply(event, "❌ You cannot move songs outside the queue bounds.", false, true);
             return;
         }
 
         if (AudioManager.getQueue(event.getGuild()).get(from) == null) {
             reply(event, "❌ There is no song at position " + from + "!", false, true);
+            return;
+        }
+
+        AudioTrack fromTrack = AudioManager.getQueue(event.getGuild()).get(from);
+        AudioTrack toTrack = AudioManager.getQueue(event.getGuild()).get(to);
+
+        Member member = event.getMember();
+        boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
+
+        TrackData fromTrackData = fromTrack.getUserData(TrackData.class);
+        TrackData toTrackData = toTrack.getUserData(TrackData.class);
+
+        // if they are a moderator or the owner of both songs or the only person in the vc
+        if (isModerator || (fromTrackData != null && toTrackData != null && fromTrackData.getUserId() == member.getIdLong()
+                && toTrackData.getUserId() == member.getIdLong()) || channel.getMembers().size() < 2) {
+            AudioManager.moveTrack(event.getGuild(), from, to);
+            reply(event, "✅ Moved song from position %d to %d!".formatted(from, to), false, true);
             return;
         }
 

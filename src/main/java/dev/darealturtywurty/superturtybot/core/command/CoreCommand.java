@@ -13,6 +13,7 @@ import java.util.List;
 
 public abstract class CoreCommand extends ListenerAdapter implements BotCommand {
     public final Types types;
+    private String commandId;
 
     protected CoreCommand(Types types) {
         this.types = types;
@@ -84,6 +85,17 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         runUserCtx(event);
+    }
+
+    public void setCommandId(String id) {
+        if (this.commandId != null)
+            throw new IllegalStateException("Command ID already set!");
+
+        this.commandId = id;
+    }
+
+    public String getCommandId() {
+        return this.commandId;
     }
 
     protected void runGuildMessage(MessageReceivedEvent event) {

@@ -106,7 +106,7 @@ public final class SuggestionManager extends ListenerAdapter {
         }
 
         final Suggestion suggestion = suggestions.get(suggestionNumber);
-        if (suggestion.getUser() != member.getIdLong() && !member.hasPermission(Permission.MANAGE_SERVER)) {
+        if (suggestion.getUser() != member.getIdLong() || !member.hasPermission(Permission.MANAGE_SERVER)) {
             future.complete(null);
             return future;
         }
@@ -168,17 +168,13 @@ public final class SuggestionManager extends ListenerAdapter {
         if (number < 0)
             return null;
 
-        List<Suggestion> suggestions = new ArrayList<>();
-        Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).forEach(suggestions::add);
+        List<Suggestion> suggestions = Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).into(new ArrayList<>());
         
-        if (number > suggestions.size())
+        if (number >= suggestions.size())
             return null;
         
         suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt))
             .collect(Collectors.toList());
-
-        if (number > suggestions.size())
-            return null;
         
         final long time = System.currentTimeMillis();
         final Suggestion suggestion = suggestions.get(number);

@@ -28,8 +28,8 @@ public class PurgeCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-            new OptionData(OptionType.INTEGER, "amount", "The number of messages to delete.", false).setRequiredRange(1,
-                500),
+            new OptionData(OptionType.INTEGER, "amount", "The number of messages to delete.", false)
+                    .setRequiredRange(1, 500),
             new OptionData(OptionType.USER, "user", "The user to delete messages from.", false),
             new OptionData(OptionType.STRING, "reason", "The reason for the purging", false));
     }
@@ -77,14 +77,14 @@ public class PurgeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
-            event.deferReply().setContent("I can only perform this action inside of servers!").mentionRepliedUser(false)
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
+            event.deferReply().setContent("❌ I can only perform this action inside of servers!").mentionRepliedUser(false)
                 .queue();
             return;
         }
 
         if (!event.getMember().hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
-            event.deferReply(true).setContent("You require the `Manage Messages` permission to perform this action!")
+            event.deferReply(true).setContent("❌ You require the `Manage Messages` permission to perform this action!")
                 .mentionRepliedUser(false).queue();
             return;
         }
@@ -97,7 +97,7 @@ public class PurgeCommand extends CoreCommand {
 
         final OptionMapping userOption = event.getOption("user");
 
-        CompletableFuture<List<Message>> messages = null;
+        CompletableFuture<List<Message>> messages;
         if (userOption != null) {
             messages = getMessagesByUser(event.getMessageChannel(), amount, userOption.getAsUser());
         } else {
@@ -110,8 +110,6 @@ public class PurgeCommand extends CoreCommand {
             event.deferReply(true).setContent("I have found " + msgs.size() + " messages, I will now start purging!")
                 .mentionRepliedUser(false).queue();
 
-            final List<AtomicBoolean> complete = new ArrayList<>();
-            msgs.forEach(msg -> complete.add(new AtomicBoolean(false)));
             CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
                 .thenAccept(action -> event.getMessageChannel().sendMessage(
                     event.getMember().getAsMention() + " ✅ I have successfully purged " + msgs.size() + " messages!")

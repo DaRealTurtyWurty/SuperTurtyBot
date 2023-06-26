@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import java.util.List;
 
+import net.dv8tion.jda.api.Permission;
 import org.apache.commons.math3.util.Pair;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -65,9 +66,14 @@ public class SlowmodeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getChannelType() != ChannelType.TEXT) {
+        if (!event.isFromGuild() || event.getChannelType() != ChannelType.TEXT || event.getMember() == null) {
             event.deferReply(true).setContent("This command can only be used in channels that allow for slowmode!")
                 .mentionRepliedUser(false).queue();
+            return;
+        }
+
+        if(!event.getMember().hasPermission(event.getChannel().asTextChannel(), Permission.MANAGE_CHANNEL)) {
+            event.deferReply(true).setContent("❌ You do not have permission to use this command!").mentionRepliedUser(false).queue();
             return;
         }
 

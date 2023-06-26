@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.time.Instant;
 import java.util.List;
@@ -116,15 +117,15 @@ public class UserInfoCommand extends CoreCommand {
         }
         
         if (member.isBoosting()) {
-            embed.addField("Time Boosted", StringUtils.formatTime(member.getTimeBoosted()), false);
+            embed.addField("Time Boosted", TimeFormat.TIME_SHORT.format(member.getTimeBoosted()), false);
         }
         
         if (member.isTimedOut()) {
-            embed.addField("Timeout End", StringUtils.formatTime(member.getTimeOutEnd()), false);
+            embed.addField("Timeout End", TimeFormat.TIME_SHORT.format(member.getTimeOutEnd()), false);
         }
         
-        embed.addField("Created At", StringUtils.formatTime(member.getTimeCreated()), false);
-        embed.addField("Joined At", StringUtils.formatTime(member.getTimeJoined()), false);
+        embed.addField("Created", TimeFormat.RELATIVE.format(member.getTimeCreated()), false);
+        embed.addField("Joined", TimeFormat.RELATIVE.format(member.getTimeJoined()), false);
         embed.addField("Is Owner", StringUtils.trueFalseToYesNo(member.isOwner()), true);
         embed.addField("Is Bot", StringUtils.trueFalseToYesNo(member.getUser().isBot()), true);
         embed.addField("Is System", StringUtils.trueFalseToYesNo(member.getUser().isSystem()), true);

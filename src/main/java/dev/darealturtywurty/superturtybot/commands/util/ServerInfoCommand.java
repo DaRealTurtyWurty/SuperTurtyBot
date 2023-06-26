@@ -10,6 +10,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 public class ServerInfoCommand extends CoreCommand {
     public ServerInfoCommand() {
@@ -62,14 +63,14 @@ public class ServerInfoCommand extends CoreCommand {
         embed.setTitle(guild.getName());
         embed.setDescription(guild.getDescription());
         
-        embed.addField("Boost Count", guild.getBoostCount() + "", true);
-        embed.addField("Categories", guild.getCategories().size() + "", true);
-        embed.addField("Text Channels", guild.getTextChannels().size() + "", true);
-        embed.addField("Voice Channels", guild.getVoiceChannels().size() + "", true);
-        embed.addField("Emotes", guild.getEmojis().size() + "", true);
-        embed.addField("Members", guild.getMemberCount() + "", true);
+        embed.addField("Boost Count", String.valueOf(guild.getBoostCount()), true);
+        embed.addField("Categories", String.valueOf(guild.getCategories().size()), true);
+        embed.addField("Text Channels", String.valueOf(guild.getTextChannels().size()), true);
+        embed.addField("Voice Channels", String.valueOf(guild.getVoiceChannels().size()), true);
+        embed.addField("Emotes", String.valueOf(guild.getEmojis().size()), true);
+        embed.addField("Members", String.valueOf(guild.getMemberCount()), true);
         
-        embed.addField("Created At", StringUtils.formatTime(guild.getTimeCreated()), false);
+        embed.addField("Created", TimeFormat.RELATIVE.format(guild.getTimeCreated()), false);
         
         embed.addField("Notification Level", BotUtils.convertNotificationLevel(guild.getDefaultNotificationLevel()),
             true);
@@ -83,13 +84,13 @@ public class ServerInfoCommand extends CoreCommand {
         
         if (guild.getBoostCount() > 0) {
             final var boosters = new StringBuilder();
-            guild.getBoosters().forEach(booster -> boosters.append(booster.getAsMention() + ", "));
+            guild.getBoosters().forEach(booster -> boosters.append(booster.getAsMention()).append(", "));
             boosters.delete(boosters.length() - 1, boosters.length());
             embed.addField("Boosters", boosters.toString(), false);
         }
         
         final var roles = new StringBuilder();
-        guild.getRoles().forEach(role -> roles.append(role.getAsMention() + ", "));
+        guild.getRoles().forEach(role -> roles.append(role.getAsMention()).append(", "));
         roles.delete(roles.length() - 2, roles.length());
         embed.addField("Roles", roles.toString(), false);
         

@@ -51,21 +51,38 @@ public class ReportCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
-            reply(event, "You can only use this command in a server!", false, true);
+            reply(event, "❌ You can only use this command in a server!", false, true);
             return;
         }
 
         User user = event.getOption("user").getAsUser();
         User reporter = event.getUser();
+
+        if (user.isBot()) {
+            reply(event, "❌ You cannot report a bot!", false, true);
+            return;
+        }
+
+        if(user.isSystem()) {
+            reply(event, "❌ You cannot report a system user!", false, true);
+            return;
+        }
+
+        if (user.getIdLong() == reporter.getIdLong()) {
+            reply(event, "❌ You cannot report yourself!", false, true);
+            return;
+        }
+
         String reason = event.getOption("reason").getAsString();
         Optional<Report> report = ReportManager.reportUser(event.getGuild(), user, reporter, reason);
-        report.ifPresentOrElse(ignored -> {
-            reply(event,
-                    "Successfully reported " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "`");
-        }, () -> {
-            reply(event, "Failed to report " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "1",
-                    false, true);
-        });
+        report.ifPresentOrElse(
+                ignored -> reply(event,
+                        "✅ Successfully reported " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "`"),
+                () -> reply(event,
+                        "❌ Failed to report " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "1",
+                        false,
+                        true)
+        );
     }
 
     @Override

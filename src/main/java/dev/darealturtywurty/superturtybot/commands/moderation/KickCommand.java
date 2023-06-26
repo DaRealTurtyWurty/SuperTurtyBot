@@ -68,11 +68,14 @@ public class KickCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild())
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
+            event.deferReply(true).setContent("❌ This command can only be used in a server!")
+                .mentionRepliedUser(false).queue();
             return;
+        }
         
         final Member member = event.getOption("member").getAsMember();
-        if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.KICK_MEMBERS)
+        if (event.getMember().hasPermission(event.getGuildChannel(), Permission.KICK_MEMBERS)
             && member != null) {
             String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
             if (reason.length() > 512) {
@@ -93,7 +96,7 @@ public class KickCommand extends CoreCommand {
                     .mentionRepliedUser(false).queue();
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has banned "
+                    BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has kicked "
                         + member.getAsMention() + " for reason: `" + finalReason + "`!", false);
                 }
             }, error -> {

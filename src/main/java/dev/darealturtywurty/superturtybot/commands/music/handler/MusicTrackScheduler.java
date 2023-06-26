@@ -221,7 +221,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
             AudioTrack track = getCurrentlyPlaying();
             track.setPosition(0);
 
-            this.player.startTrack(track, false);
+            this.player.startTrack(track.makeClone(), false);
         }
     }
 

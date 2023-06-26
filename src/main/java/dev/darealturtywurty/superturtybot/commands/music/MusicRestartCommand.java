@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -67,8 +68,11 @@ public class MusicRestartCommand extends CoreCommand {
         }
 
         TrackData trackData = track.getUserData(TrackData.class);
-        if (trackData == null || (trackData.getUserId() != event.getMember().getIdLong() && !event.getMember()
-                .hasPermission(channel, Permission.MANAGE_CHANNEL)) || channel.getMembers().size() > 2) {
+        Member member = event.getMember();
+        boolean isModerator = member.hasPermission(channel, Permission.MANAGE_CHANNEL);
+
+        // if they are a moderator or the owner of the song or the only person in the vc
+        if (!isModerator && (trackData == null || trackData.getUserId() != member.getIdLong()) && channel.getMembers().size() > 2) {
             reply(event, "❌ You must be the owner of the song or a moderator to restart this track!", false, true);
             return;
         }

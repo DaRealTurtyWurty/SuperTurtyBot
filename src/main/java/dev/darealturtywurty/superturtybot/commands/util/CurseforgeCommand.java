@@ -61,7 +61,7 @@ public class CurseforgeCommand extends CoreCommand {
         try {
             Response<List<Game>> games = helper.getGames();
             for (Game game : games.get()) {
-                GAMES.put(game.name(), game);
+                GAMES.put(game.name().toUpperCase(Locale.ROOT), game);
             }
         } catch (CurseForgeException exception) {
             throw new IllegalStateException("Failed to get games from curseforge!", exception);
@@ -129,12 +129,12 @@ public class CurseforgeCommand extends CoreCommand {
         }
 
         // Check if game exists
-        if(!GAMES.containsKey(game)) {
+        if(!GAMES.containsKey(game.toUpperCase(Locale.ROOT))) {
             reply(event, "❌ That game does not exist!", false, true);
             return;
         }
 
-        Game gameObj = GAMES.get(game);
+        Game gameObj = GAMES.get(game.toUpperCase(Locale.ROOT));
 
         // Check if type exists
         int classId = -1;
@@ -278,7 +278,7 @@ public class CurseforgeCommand extends CoreCommand {
                 ).queue(unused -> {}, throwable -> {});
 
             case "type" -> {
-                Game typeGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString));
+                Game typeGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
                 if (typeGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
                     return;
@@ -301,7 +301,7 @@ public class CurseforgeCommand extends CoreCommand {
             }
 
             case "category" -> {
-                Game categoryGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString));
+                Game categoryGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
                 if (categoryGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
                     return;

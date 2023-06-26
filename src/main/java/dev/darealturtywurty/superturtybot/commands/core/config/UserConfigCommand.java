@@ -109,7 +109,7 @@ public class UserConfigCommand extends CoreCommand {
                 UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry().entrySet().stream().map(Entry::getValue).forEach(
                     option -> configValues.put(option.getRichName(), option.getValueFromConfig().apply(config)));
                 final var embed = new EmbedBuilder();
-                configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**: `" + value + "`\n"));
+                configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n"));
                 embed.setFooter("For server: " + event.getGuild().getName(), event.getGuild().getIconUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("User Config for: " + event.getUser().getName());

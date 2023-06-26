@@ -102,6 +102,10 @@ public class SuggestCommand extends CoreCommand {
             return;
         }
 
+        if(!"add".equalsIgnoreCase(subcommand)) {
+            // check permission
+        }
+
         switch (subcommand) {
             case "add" -> runAddSuggestion(event, suggestionChannel);
             case "approve" -> runApproveSuggestion(event, suggestionChannel);

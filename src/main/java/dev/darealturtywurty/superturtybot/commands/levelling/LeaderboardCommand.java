@@ -200,7 +200,7 @@ public class LeaderboardCommand extends CoreCommand {
             }
 
             graphics.drawString(
-                    (username.length() > 15 ? username.substring(0, 20) + "..." : username)
+                    (username.length() > 15 ? username.substring(0, Math.min(20, username.length())) + "..." : username)
                             + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
                             + StringUtils.numberFormat(level, 0).replace(".0", ""),
                     420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);

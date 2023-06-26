@@ -84,12 +84,9 @@ public class BanCommand extends CoreCommand {
         
         final User user = event.getOption("user").getAsUser();
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
-            boolean canInteract = true;
-            if (event.getOption("user").getAsMember() != null
-                && !event.getInteraction().getMember().canInteract(event.getOption("user").getAsMember())) {
-                canInteract = false;
-            }
-            
+            boolean canInteract = event.getOption("user").getAsMember() == null
+                    || event.getInteraction().getMember().canInteract(event.getOption("user").getAsMember());
+
             if (canInteract) {
                 final int deleteDays = event.getOption("delete_days", 0, OptionMapping::getAsInt);
                 String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);

@@ -296,7 +296,12 @@ public class CommandHook extends ListenerAdapter {
         jda.getGuilds().forEach(guild -> {
             final CommandListUpdateAction updates = guild.updateCommands();
             cmds.forEach(cmd -> registerCommand(cmd, updates, guild));
-            updates.queue();
+            updates.queue(registered ->
+                    registered.forEach(cmd ->
+                            cmds.stream()
+                                    .filter(c -> c.getName().equals(cmd.getName()))
+                                    .findFirst()
+                                    .ifPresent(coreCommand -> coreCommand.setCommandId(cmd.getId()))));
         });
 
         cmds.forEach(jda::addEventListener);

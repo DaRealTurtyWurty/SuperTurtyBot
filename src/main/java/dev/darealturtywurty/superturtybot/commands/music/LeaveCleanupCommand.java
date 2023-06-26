@@ -74,23 +74,22 @@ public class LeaveCleanupCommand extends CoreCommand {
             return;
         }
 
+        AudioTrack currentlyPlaying = AudioManager.getCurrentlyPlaying(event.getGuild());
         int queueSize = queue.size();
-        queue.forEach(track -> {
-            if (track.equals(AudioManager.getCurrentlyPlaying(event.getGuild()))) {
-                return;
-            }
+        for (AudioTrack track : queue) {
+            if (track.equals(currentlyPlaying))
+                continue;
 
             TrackData trackData = track.getUserData(TrackData.class);
             if (trackData == null)
-                return;
+                continue;
 
-            long owner = trackData.getUserId();
-            if (channel.getMembers().stream().noneMatch(member -> member.getIdLong() == owner)) {
+            if (channel.getMembers().stream().noneMatch(member -> member.getIdLong() == trackData.getUserId())) {
                 AudioManager.removeTrack(event.getGuild(), track);
             }
-        });
+        }
 
-        int removed = queueSize - queue.size();
+        int removed = queueSize - AudioManager.getQueue(event.getGuild()).size();
         if (removed > 0) {
             event.deferReply(false).setContent("✅ Removed " + removed + " songs from the queue!")
                     .mentionRepliedUser(false).queue();

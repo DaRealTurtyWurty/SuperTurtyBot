@@ -71,10 +71,7 @@ public class UnbanCommand extends CoreCommand {
 
         final User user = event.getOption("user").getAsUser();
         if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
-            boolean canInteract = true;
-            if (event.getOption("user").getAsMember() != null) {
-                canInteract = false;
-            }
+            boolean canInteract = event.getOption("user").getAsMember() == null;
 
             if (canInteract) {
                 user.openPrivateChannel().queue(channel -> channel

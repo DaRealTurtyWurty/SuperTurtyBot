@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import com.google.gson.JsonObject;
@@ -61,34 +62,26 @@ public class EightBallCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         final String question = event.getOption("question").getAsString();
         try {
             final URLConnection connection = new URL(
-                "https://8ball.delegator.com/magic/JSON/" + URLEncoder.encode(question, StandardCharsets.UTF_8))
+                "https://www.eightballapi.com/api?question=%s&biased=true".formatted(URLEncoder.encode(question, StandardCharsets.UTF_8)))
                     .openConnection();
             final JsonObject result = Constants.GSON
-                .fromJson(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8), JsonObject.class)
-                .getAsJsonObject("magic");
+                .fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8), JsonObject.class);
 
             final var embed = new EmbedBuilder();
-            final Color color = switch (result.get("type").getAsString()) {
-                case "affirmitive" -> Color.GREEN;
-                case "neutral" -> Color.BLUE;
-                case "contrary" -> Color.RED;
-                default -> Color.BLACK;
-            };
-
-            embed.setColor(color);
+            embed.setColor(Color.PINK);
             embed.setTimestamp(Instant.now());
             embed.setTitle("8 Ball 🎱");
             embed.setDescription("You asked: " + question + "\n My answer: "
-                + URLDecoder.decode(result.get("answer").getAsString(), StandardCharsets.UTF_8).replace("€“", ""));
+                + URLDecoder.decode(result.get("reading").getAsString(), StandardCharsets.UTF_8).replace("€“", ""));
             embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
-            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            event.getHook().sendMessageEmbeds(embed.build()).queue();
         } catch (final IOException exception) {
-            event.deferReply(true)
-                .setContent("There has been an issue processing this command! Please try again later.")
-                .mentionRepliedUser(false).queue();
+            event.getHook().sendMessage("❌ There has been an issue with the 8 Ball command!").queue();
             Constants.LOGGER.error("There has been an issue with the 8 Ball command:\nException: {}\n{}",
                 exception.getMessage(), ExceptionUtils.getStackTrace(exception));
         }
