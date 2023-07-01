@@ -33,6 +33,9 @@ jobs:
       - name: Execute Gradle shadowJar
         run: ./gradlew shadowJar
 
+      - name: List files
+        run: ls -Rla
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
