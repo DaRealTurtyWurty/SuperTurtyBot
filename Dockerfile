@@ -6,7 +6,7 @@ COPY build.gradle ./
 COPY src/ src/
 RUN gradle installDist
 RUN gradle wrapper
-RUN ls -Rla
+RUN ls
 FROM openjdk:18
 WORKDIR /opt/SuperTurtyBot/
 COPY --from=builder /home/gradle/source/build/install/SuperTurtyBot/ ./
