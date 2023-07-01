@@ -1,6 +1,7 @@
 name: Publish Dockerfile to GitHub Packages
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 
