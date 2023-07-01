@@ -24,6 +24,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle shadowJar
+        run: ./gradlew shadowJar
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
