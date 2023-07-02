@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.commands.music.handler.MusicListener;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
@@ -33,6 +34,8 @@ public class TurtyBot {
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
 
     public static void main(String[] args) throws InvalidTokenException {
+        Constants.LOGGER.info("Starting TurtyBot...");
+
         ArgumentParser parser = ArgumentParsers.newFor("TurtyBot").build().defaultHelp(true).description("A multipurpose bot for discord.");
         parser.addArgument("-env", "--environment")
                 .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
@@ -42,12 +45,21 @@ public class TurtyBot {
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
 
+        Constants.LOGGER.info("Loaded environment file!");
+
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
+
+        Constants.LOGGER.info("Setup logging!");
         
         final var jdaBuilder = JDABuilder.createDefault(args.length < 1 ? Environment.INSTANCE.botToken() : args[0]);
         configureBuilder(jdaBuilder);
         jdaBuilder.build();
+
+        Constants.LOGGER.info("Setup JDA!");
+
         loadRegisterers();
+
+        Constants.LOGGER.info("Loaded registries!");
     }
 
     private static void configureBuilder(JDABuilder builder) {
