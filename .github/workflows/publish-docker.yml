@@ -36,11 +36,24 @@ jobs:
       - name: List files
         run: ls -Rla
 
+      - name: Move JAR file to artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: jar-file
+          path: build/libs/SuperTurtyBot-all.jar
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build Docker image
         run: |
           mkdir temp
           cp $GITHUB_WORKSPACE/build/libs/SuperTurtyBot-all.jar temp/SuperTurtyBot.jar
-          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+          docker build -t ghcr.io/darealturtywurty/superturtybot:latest .
           rm -rf temp
 
       - name: Push Docker image
