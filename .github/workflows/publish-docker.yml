@@ -36,8 +36,12 @@ jobs:
       - name: List files
         run: ls -Rla
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4.1.1
-        with:
-          push: true
-          tags: ghcr.io/darealturtywurty/superturtybot:latest
+      - name: Build Docker image
+        run: |
+          mkdir temp
+          cp $GITHUB_WORKSPACE/build/libs/SuperTurtyBot-all.jar temp/SuperTurtyBot.jar
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+          rm -rf temp
+
+      - name: Push Docker image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
