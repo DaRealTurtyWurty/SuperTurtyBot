@@ -46,6 +46,7 @@ public class TurtyBot {
         Environment.INSTANCE.load(namespace.get("environment"));
 
         Constants.LOGGER.info("Loaded environment file!");
+        Constants.LOGGER.info("Loaded token: " + Environment.INSTANCE.botToken());
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
 
