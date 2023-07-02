@@ -17,13 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3.5.3
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2.2.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
@@ -35,12 +28,6 @@ jobs:
 
       - name: List files
         run: ls -Rla
-
-      - name: Move JAR file to artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: jar-file
-          path: build/libs/SuperTurtyBot-all.jar
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
