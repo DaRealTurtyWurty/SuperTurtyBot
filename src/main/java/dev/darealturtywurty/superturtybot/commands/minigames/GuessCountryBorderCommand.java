@@ -32,13 +32,13 @@ public class GuessCountryBorderCommand extends CoreCommand {
     private static final Map<String, BufferedImage> BORDERS = new HashMap<>();
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    static {
-        try {
-            Files.walkFileTree(Path.of("src/main/resources/country_outlines/"), new BorderFileVisitor());
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not load borders!", exception);
-        }
-    }
+//    static {
+//        try {
+//            Files.walkFileTree(Path.of("src/main/resources/country_outlines/"), new BorderFileVisitor());
+//        } catch (IOException exception) {
+//            throw new IllegalStateException("Could not load borders!", exception);
+//        }
+//    }
 
     public GuessCountryBorderCommand() {
         super(new Types(true, false, false, false));
