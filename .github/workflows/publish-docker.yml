@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: darealturtywurty/superturtybot
 
 jobs:
   publish:
@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir temp
           cp $GITHUB_WORKSPACE/build/libs/SuperTurtyBot-all.jar temp/SuperTurtyBot.jar
-          docker build -t ghcr.io/darealturtywurty/superturtybot:latest .
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
           rm -rf temp
 
       - name: Push Docker image
