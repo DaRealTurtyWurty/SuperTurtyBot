@@ -9,18 +9,18 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
-    <root level="DEBUG">
+    <root level="WARN">
         <appender-ref ref="CHANNEL"/>
     </root>
 
     <!--Make all useless loggers shut up -->
-    <logger name="io.netty.buffer.AbstractByteBufAllocator" level="DEBUG"/>
-    <logger name="io.netty.buffer.PooledByteBufAllocator" level="DEBUG"/>
-    <logger name="org.mongodb" level="DEBUG"/>
-    <logger name="net.dv8tion.jda.internal.requests" level="DEBUG" />
-    <logger name="net.dv8tion.jda.api.utils.SessionControllerAdapter" level="DEBUG" />
-    <logger name="net.dv8tion.jda.internal.handle.GuildSetupController" level="DEBUG" />
+    <logger name="io.netty.buffer.AbstractByteBufAllocator" level="WARN"/>
+    <logger name="io.netty.buffer.PooledByteBufAllocator" level="WARN"/>
+    <logger name="org.mongodb" level="WARN"/>
+    <logger name="net.dv8tion.jda.internal.requests" level="WARN" />
+    <logger name="net.dv8tion.jda.api.utils.SessionControllerAdapter" level="WARN" />
+    <logger name="net.dv8tion.jda.internal.handle.GuildSetupController" level="WARN" />
 </configuration>
