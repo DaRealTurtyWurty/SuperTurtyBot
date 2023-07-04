@@ -13,6 +13,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.handler.filter.FilterChainConfiguration;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
@@ -37,12 +38,14 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public final class AudioManager {
     private static final Map<Long, GuildAudioManager> AUDIO_MANAGERS = new HashMap<>();
     public static final AudioPlayerManager AUDIO_MANAGER = new DefaultAudioPlayerManager();
+    public static final List<String> GUESS_THE_SONG_TRACKS = new ArrayList<>();
 
     static {
         // Local Files (mp3, ogg, etc)
@@ -338,35 +341,62 @@ public final class AudioManager {
         CompletableFuture<Either<AudioTrack, FriendlyException>> future = new CompletableFuture<>();
 
         GuildAudioManager manager = getOrCreate(guild);
-        AUDIO_MANAGER.loadItemOrdered(manager, playlist, new AudioLoadResultHandler() {
-            @Override
-            public void loadFailed(FriendlyException exception) {
-                future.complete(Either.ofRight(exception));
-            }
+        if(GUESS_THE_SONG_TRACKS.isEmpty()) {
+            AUDIO_MANAGER.loadItemOrdered(manager, playlist, new AudioLoadResultHandler() {
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    future.complete(Either.ofRight(exception));
+                }
 
-            @Override
-            public void noMatches() {
-                future.complete(Either.ofLeft(null));
-            }
+                @Override
+                public void noMatches() {
+                    future.complete(Either.ofLeft(null));
+                }
 
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                List<AudioTrack> tracks = playlist.getTracks();
-                Collections.shuffle(tracks);
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    GUESS_THE_SONG_TRACKS.addAll(playlist.getTracks().stream().map(track -> track.getInfo().uri).toList());
 
-                AudioTrack track = tracks.get(0);
-                manager.getMusicScheduler().setAudioChannel(channel);
-                addGuessTheSongTrack(guild, track);
-                future.complete(Either.ofLeft(track));
-            }
+                    List<AudioTrack> tracks = playlist.getTracks();
+                    AudioTrack track = tracks.get(ThreadLocalRandom.current().nextInt(tracks.size()));
+                    manager.getMusicScheduler().setAudioChannel(channel);
+                    addGuessTheSongTrack(guild, track);
+                    future.complete(Either.ofLeft(track));
+                }
 
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                manager.getMusicScheduler().setAudioChannel(channel);
-                addGuessTheSongTrack(guild, track);
-                future.complete(Either.ofLeft(track));
-            }
-        });
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    manager.getMusicScheduler().setAudioChannel(channel);
+                    addGuessTheSongTrack(guild, track);
+                    future.complete(Either.ofLeft(track));
+                }
+            });
+        } else {
+            String url = GUESS_THE_SONG_TRACKS.get(ThreadLocalRandom.current().nextInt(GUESS_THE_SONG_TRACKS.size()));
+            AUDIO_MANAGER.loadItemOrdered(manager, url, new AudioLoadResultHandler() {
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    future.complete(Either.ofRight(exception));
+                }
+
+                @Override
+                public void noMatches() {
+                    future.complete(Either.ofLeft(null));
+                }
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    future.complete(Either.ofLeft(null));
+                }
+
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    manager.getMusicScheduler().setAudioChannel(channel);
+                    addGuessTheSongTrack(guild, track);
+                    future.complete(Either.ofLeft(track));
+                }
+            });
+        }
 
         return future;
     }

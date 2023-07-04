@@ -2,26 +2,34 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.codepoetics.ambivalence.Either;
 import com.github.topisenpai.lavasrc.spotify.SpotifyAudioTrack;
+import com.mongodb.client.model.Filters;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import org.bson.conversions.Bson;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -237,6 +245,20 @@ public class GuessSongCommand extends CoreCommand {
                 reply(event, "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
+
+                GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                if(config == null) {
+                    config = new GuildConfig(guild.getIdLong());
+                    Database.getDatabase().guildConfig.insertOne(config);
+                }
+
+                if(config.isLevellingEnabled()) {
+                    User user = event.getAuthor();
+
+                    // get xp relative to the current position in the song
+                    int xp = (int) (1000 * (track.getPosition() / track.getDuration()));
+                    LevellingManager.INSTANCE.addXP(guild, user, xp, new LevellingManager.LevelUpMessage(guild, Optional.of(event.getMessage())));
+                }
 
                 run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
             }
