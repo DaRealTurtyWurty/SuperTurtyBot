@@ -37,78 +37,78 @@ public class HigherLowerCommand extends CoreCommand {
 
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    static {
-        var populationRequest = new Request.Builder().url(POPULATION_API_URL).build();
-
-        try (Response response = Constants.HTTP_CLIENT.newCall(populationRequest).execute()) {
-            if (response.isSuccessful()) {
-                String result = response.body() != null ? response.body().string() : null;
-                JsonObject json = Constants.GSON.fromJson(result, JsonObject.class);
-                if (json != null && !json.get("error").getAsBoolean()) {
-                    boolean foundAfghanistan = false;
-
-                    JsonArray data = json.getAsJsonArray("data");
-                    for (JsonElement datum : data) {
-                        JsonObject country = datum.getAsJsonObject();
-                        if ("Afghanistan".equalsIgnoreCase(country.get("country").getAsString()))
-                            foundAfghanistan = true;
-
-                        if (!foundAfghanistan) continue;
-
-                        String countryName = country.get("country").getAsString();
-                        JsonArray populationCounts = country.getAsJsonArray("populationCounts");
-                        JsonObject object = StreamSupport.stream(populationCounts.spliterator(), false)
-                                .map(JsonElement::getAsJsonObject)
-                                .max(Comparator.comparingLong(value -> value.getAsJsonObject().get("year").getAsLong()))
-                                .orElseThrow();
-
-                        COUNTRY_POPULATIONS.put(countryName,
-                                Pair.of(object.get("year").getAsInt(), object.get("value").getAsLong()));
-                    }
-
-                    System.out.println("Loaded " + COUNTRY_POPULATIONS.size() + " country populations!");
-                }
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to fetch country populations!", exception);
-        }
-
-        try {
-            var landAreaPath = Path.of("src/main/resources/country_land_area.json");
-            JsonArray landAreaJson = Constants.GSON.fromJson(Files.readString(landAreaPath), JsonArray.class);
-            if (landAreaJson != null) {
-                for (JsonElement element : landAreaJson) {
-                    JsonObject object = element.getAsJsonObject();
-                    COUNTRY_AREAS.put(object.get("country").getAsString(), object.get("landAreaKm").getAsLong());
-                }
-
-                System.out.println("Loaded " + COUNTRY_AREAS.size() + " country land areas!");
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to fetch country land areas!", exception);
-        }
-
-        Request wordListRequest = new Request.Builder().url(WORD_LIST_API_URL).build();
-
-        try (Response response = Constants.HTTP_CLIENT.newCall(wordListRequest).execute()) {
-            if (response.isSuccessful()) {
-                String result = response.body() != null ? response.body().string() : null;
-                String[] words = result != null ? result.split("\n") : new String[0];
-
-                for (String s : words) {
-                    String word = s;
-                    if (word.length() < 3) continue;
-
-                    word = word.toLowerCase(Locale.ROOT).trim();
-                    WORLD_LIST.add(word);
-                }
-
-                System.out.println("Loaded " + WORLD_LIST.size() + " words!");
-            }
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to fetch word list!", exception);
-        }
-    }
+//    static {
+//        var populationRequest = new Request.Builder().url(POPULATION_API_URL).build();
+//
+//        try (Response response = Constants.HTTP_CLIENT.newCall(populationRequest).execute()) {
+//            if (response.isSuccessful()) {
+//                String result = response.body() != null ? response.body().string() : null;
+//                JsonObject json = Constants.GSON.fromJson(result, JsonObject.class);
+//                if (json != null && !json.get("error").getAsBoolean()) {
+//                    boolean foundAfghanistan = false;
+//
+//                    JsonArray data = json.getAsJsonArray("data");
+//                    for (JsonElement datum : data) {
+//                        JsonObject country = datum.getAsJsonObject();
+//                        if ("Afghanistan".equalsIgnoreCase(country.get("country").getAsString()))
+//                            foundAfghanistan = true;
+//
+//                        if (!foundAfghanistan) continue;
+//
+//                        String countryName = country.get("country").getAsString();
+//                        JsonArray populationCounts = country.getAsJsonArray("populationCounts");
+//                        JsonObject object = StreamSupport.stream(populationCounts.spliterator(), false)
+//                                .map(JsonElement::getAsJsonObject)
+//                                .max(Comparator.comparingLong(value -> value.getAsJsonObject().get("year").getAsLong()))
+//                                .orElseThrow();
+//
+//                        COUNTRY_POPULATIONS.put(countryName,
+//                                Pair.of(object.get("year").getAsInt(), object.get("value").getAsLong()));
+//                    }
+//
+//                    System.out.println("Loaded " + COUNTRY_POPULATIONS.size() + " country populations!");
+//                }
+//            }
+//        } catch (IOException exception) {
+//            throw new IllegalStateException("Failed to fetch country populations!", exception);
+//        }
+//
+//        try {
+//            var landAreaPath = Path.of("src/main/resources/country_land_area.json");
+//            JsonArray landAreaJson = Constants.GSON.fromJson(Files.readString(landAreaPath), JsonArray.class);
+//            if (landAreaJson != null) {
+//                for (JsonElement element : landAreaJson) {
+//                    JsonObject object = element.getAsJsonObject();
+//                    COUNTRY_AREAS.put(object.get("country").getAsString(), object.get("landAreaKm").getAsLong());
+//                }
+//
+//                System.out.println("Loaded " + COUNTRY_AREAS.size() + " country land areas!");
+//            }
+//        } catch (IOException exception) {
+//            throw new IllegalStateException("Failed to fetch country land areas!", exception);
+//        }
+//
+//        Request wordListRequest = new Request.Builder().url(WORD_LIST_API_URL).build();
+//
+//        try (Response response = Constants.HTTP_CLIENT.newCall(wordListRequest).execute()) {
+//            if (response.isSuccessful()) {
+//                String result = response.body() != null ? response.body().string() : null;
+//                String[] words = result != null ? result.split("\n") : new String[0];
+//
+//                for (String s : words) {
+//                    String word = s;
+//                    if (word.length() < 3) continue;
+//
+//                    word = word.toLowerCase(Locale.ROOT).trim();
+//                    WORLD_LIST.add(word);
+//                }
+//
+//                System.out.println("Loaded " + WORLD_LIST.size() + " words!");
+//            }
+//        } catch (IOException exception) {
+//            throw new IllegalStateException("Failed to fetch word list!", exception);
+//        }
+//    }
 
     public HigherLowerCommand() {
         super(new Types(true, false, false, false));
