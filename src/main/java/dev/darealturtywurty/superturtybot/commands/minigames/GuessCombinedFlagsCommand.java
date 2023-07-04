@@ -35,13 +35,13 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     private static final Map<String, BufferedImage> FLAGS = new HashMap<>();
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-//    static {
-//        try {
-//            Files.walkFileTree(Path.of("src/main/resources/flags/"), new FlagFileVisitor());
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Could not load flags!", exception);
-//        }
-//    }
+    static {
+        try {
+            Files.walkFileTree(Path.of("src/main/resources/flags/"), new FlagFileVisitor());
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not load flags!", exception);
+        }
+    }
 
     public GuessCombinedFlagsCommand() {
         super(new Types(true, false, false, false));
