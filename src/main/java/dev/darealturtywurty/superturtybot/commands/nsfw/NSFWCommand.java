@@ -177,7 +177,7 @@ public class NSFWCommand extends CoreCommand {
             }
 
             if (eitherEmbedOrImages.isRight()) {
-                Collection<String> images = eitherEmbedOrImages.toOptional().orElse(List.of())
+                Collection<String> images = eitherEmbedOrImages.toOptional().orElse(List.of());
                 List<FileUpload> uploads = new ArrayList<>();
 
                 int index = 0;
@@ -202,10 +202,16 @@ public class NSFWCommand extends CoreCommand {
                 return;
             }
 
-            EmbedBuilder embed = eitherEmbedOrImages.left().orElse(null);
+            EmbedBuilder embed = eitherEmbedOrImages.isLeft() ? eitherEmbedOrImages.getLeft() : null;
+            if (embed == null) {
+                hook.editOriginal("❌ There has been an error processing the command you tried to run. Please try again!")
+                        .setComponents().setEmbeds().setFiles().queue();
+                return;
+            }
+
             final String mediaURL = embed.build().getTitle();
             if (mediaURL == null) {
-                hook.editOriginal("There has been an error processing the command you tried to run. Please try again!")
+                hook.editOriginal("❌ There has been an error processing the command you tried to run. Please try again!")
                         .setComponents().setEmbeds().setFiles().queue();
                 return;
             }
