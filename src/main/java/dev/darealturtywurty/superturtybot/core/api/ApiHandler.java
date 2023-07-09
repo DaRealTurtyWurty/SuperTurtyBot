@@ -26,7 +26,7 @@ public class ApiHandler {
     private static final String BASE_URL = "https://api.turtywurty.dev/";
 
     public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
-        try(Response response = makeRequest("geo/flag/" + cca3)) {
+        try(Response response = makeRequest("geo/flag?cca3=" + cca3)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -64,7 +64,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
-        try(Response response = makeRequest("geo/outline/" + cca3)) {
+        try(Response response = makeRequest("geo/outline?cca3=" + cca3)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -102,7 +102,7 @@ public class ApiHandler {
     }
 
     public static Either<Territory, HttpStatus> getTerritoryData(String cca3) {
-        try(Response response = makeRequest("geo/data/" + cca3)) {
+        try(Response response = makeRequest("geo/data?cca3=" + cca3)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
