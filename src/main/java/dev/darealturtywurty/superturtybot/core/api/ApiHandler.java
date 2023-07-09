@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -154,7 +155,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -211,7 +212,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -232,7 +233,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -255,7 +256,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -280,7 +281,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -303,7 +304,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -329,7 +330,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -353,7 +354,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -378,7 +379,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -400,7 +401,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -425,7 +426,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -473,7 +474,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -509,7 +510,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -531,7 +532,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -553,7 +554,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -575,7 +576,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -597,7 +598,7 @@ public class ApiHandler {
             if(body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() < 1)
+            if(body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String json = body.string();
@@ -611,6 +612,32 @@ public class ApiHandler {
             BufferedImage image = ImageIO.read(stream);
 
             return Either.left(new Geoguesser(country, image));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<Territory>, HttpStatus> getAllTerritories() {
+        try(Response response = makeRequest("geo/data/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if(json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+
+            List<Territory> territories = new ArrayList<>();
+            for(JsonElement element : array) {
+                territories.add(Constants.GSON.fromJson(element, Territory.class));
+            }
+
+            return Either.left(territories);
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -176,7 +176,17 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         // check if the message is a valid territory
         String territory = event.getMessage().getContentRaw().trim();
-        if (game.getTerritories().keySet().stream().noneMatch(t -> t.equalsIgnoreCase(territory))) return;
+
+        Either<List<Territory>, HttpStatus> result = ApiHandler.getAllTerritories();
+        if (result.isRight()) {
+            Constants.LOGGER.error("An error occurred while trying to get all territories! Status code: {}",
+                    result.getRight().getCode());
+            reply(event, "❌ An error occurred while trying to get all territories!");
+            return;
+        }
+
+        // check if the territory is valid
+        if (result.getLeft().stream().map(Territory::getName).noneMatch(t -> t.equalsIgnoreCase(territory))) return;
 
         // check if the territory has already been guessed
         if (game.getGuesses().stream().anyMatch(t -> t.equalsIgnoreCase(territory))) return;
