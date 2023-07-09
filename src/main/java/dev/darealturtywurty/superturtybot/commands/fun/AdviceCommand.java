@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -13,6 +14,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class AdviceCommand extends CoreCommand {
     public AdviceCommand() {
@@ -38,7 +40,12 @@ public class AdviceCommand extends CoreCommand {
     public String getRichName() {
         return "Advice";
     }
-    
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         try {

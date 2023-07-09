@@ -1,8 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
+import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
+import dev.darealturtywurty.superturtybot.core.api.pojo.Territory;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.Either;
+import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -15,6 +19,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -22,26 +27,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class GuessCombinedFlagsCommand extends CoreCommand {
-    private static final Map<String, BufferedImage> FLAGS = new HashMap<>();
     private static final Map<Long, Game> GAMES = new HashMap<>();
-
-//    static {
-//        try {
-//            Files.walkFileTree(Path.of("src/main/resources/flags/"), new FlagFileVisitor());
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Could not load flags!", exception);
-//        }
-//    }
 
     public GuessCombinedFlagsCommand() {
         super(new Types(true, false, false, false));
@@ -54,7 +46,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Guess the countries that make up the combined flag!";
+        return "Guess the territories that make up the combined flag!";
     }
 
     @Override
@@ -73,6 +65,11 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     }
 
     @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "This command can only be used in a guild!", false, true);
@@ -87,25 +84,36 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        int numberOfCountries = event.getOption("number", ThreadLocalRandom.current().nextInt(2, 17), OptionMapping::getAsInt);
-        final List<Map.Entry<String, BufferedImage>> countries = new ArrayList<>(numberOfCountries);
-        for (int index = 0; index < numberOfCountries; index++) {
-            countries.add(FLAGS.entrySet().stream().filter(entry -> !countries.contains(entry))
-                    .skip(ThreadLocalRandom.current().nextInt(0, (FLAGS.size() - index))).findFirst().orElseThrow());
+        int numberOfTerritories = event.getOption("number", ThreadLocalRandom.current().nextInt(2, 17), OptionMapping::getAsInt);
+        final Map<String, BufferedImage> territories = new HashMap<>(numberOfTerritories);
+        for (int index = 0; index < numberOfTerritories; index++) {
+            Either<Pair<BufferedImage, Territory>, HttpStatus> result = ApiHandler.getFlag();
+            if (result.isLeft()) {
+                Pair<BufferedImage, Territory> pair = result.getLeft();
+                if (territories.containsKey(pair.getRight().getName())) {
+                    index--;
+                    continue;
+                }
+
+                territories.put(pair.getRight().getName(), pair.getLeft());
+            } else {
+                reply(event, "❌ An error occurred while trying to get a flag!", false, true);
+                return;
+            }
         }
 
         // get the largest with and height using stream
-        int width = countries.stream().mapToInt(entry -> entry.getValue().getWidth()).max().orElse(0);
-        int height = countries.stream().mapToInt(entry -> entry.getValue().getHeight()).max().orElse(0);
+        int width = territories.values().stream().mapToInt(BufferedImage::getWidth).max().orElse(0);
+        int height = territories.values().stream().mapToInt(BufferedImage::getHeight).max().orElse(0);
 
-        ByteArrayOutputStream boas = createImage(countries.stream().map(Map.Entry::getValue).toList(), width, height);
+        ByteArrayOutputStream boas = createImage(territories.values().stream().toList(), width, height);
         var upload = FileUpload.fromData(boas.toByteArray(), "combined_flags.png");
 
-        String toSend = String.format("Guess the countries that make up the combined flag! (There are %d countries)",
-                numberOfCountries);
+        String toSend = String.format("Guess the territories that make up the combined flag! (There are %d territories)",
+                numberOfTerritories);
         event.getHook().editOriginal(toSend).setFiles(upload).queue(message -> {
             message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                var game = new Game(countries.stream().map(Map.Entry::getKey).toList(), event.getGuild().getIdLong(),
+                var game = new Game(territories, event.getGuild().getIdLong(),
                         event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
                         event.getUser().getIdLong());
                 GAMES.put(message.getIdLong(), game);
@@ -131,9 +139,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) return;
-
         if (event.getButton().getId() == null) return;
-
         if (!event.getButton().getId().startsWith("combined-flags-")) return;
 
         long messageId = Long.parseLong(event.getButton().getId().replace("combined-flags-", ""));
@@ -151,15 +157,15 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         ThreadChannel thread = event.getGuild().getThreadChannelById(game.getChannelId());
         if (thread == null) return;
 
-        String countriesStr = String.join(", ", game.getCountries());
-        thread.sendMessage(String.format("Game cancelled! The countries were: %s", countriesStr)).setComponents()
+        String territoriesStr = String.join(", ", game.getTerritories().keySet());
+        thread.sendMessage(String.format("Game cancelled! The territories were: %s", territoriesStr)).setComponents()
                 .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
         event.editComponents().queue();
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.isFromGuild()) return;
 
         // check if the user has a game running
@@ -168,15 +174,15 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                         .getIdLong() && g.getChannelId() == event.getChannel().getIdLong()).findFirst().orElse(null);
         if (game == null) return;
 
-        // check if the message is a valid country
-        String country = event.getMessage().getContentRaw().trim();
-        if (FLAGS.keySet().stream().noneMatch(c -> c.equalsIgnoreCase(country))) return;
+        // check if the message is a valid territory
+        String territory = event.getMessage().getContentRaw().trim();
+        if (game.getTerritories().keySet().stream().noneMatch(t -> t.equalsIgnoreCase(territory))) return;
 
-        // check if the country has already been guessed
-        if (game.getGuesses().stream().anyMatch(c -> c.equalsIgnoreCase(country))) return;
+        // check if the territory has already been guessed
+        if (game.getGuesses().stream().anyMatch(t -> t.equalsIgnoreCase(territory))) return;
 
-        // add the country to the game
-        if (game.chooseCountry(country)) {
+        // add the territory to the game
+        if (game.chooseTerritory(territory)) {
             event.getMessage().reply("✅ Correct guess!").queue();
 
             // check if the game has ended
@@ -185,7 +191,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 GAMES.remove(game.getMessageId(), game);
 
                 event.getChannel()
-                        .sendMessage("✅ You win! The countries were: " + String.join(", ", game.getCountries()))
+                        .sendMessage("✅ You win! The territories were: " + String.join(", ", game.getTerritories().keySet()))
                         .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true).queue());
 
                 // remove the button
@@ -195,9 +201,9 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
             } else {
                 List<BufferedImage> images = new ArrayList<>();
-                for (String c : game.getCountries()) {
-                    if (game.getGuesses().stream().noneMatch(co -> co.equalsIgnoreCase(c))) {
-                        images.add(FLAGS.get(c));
+                for (String t : game.getTerritories().keySet()) {
+                    if (game.getGuesses().stream().noneMatch(te -> te.equalsIgnoreCase(t))) {
+                        images.add(game.getTerritories().get(t));
                     }
                 }
 
@@ -208,7 +214,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 var upload = FileUpload.fromData(baos.toByteArray(), "combined_flags.png");
 
                 String toSend = String.format(
-                        "Guess the countries that make up the combined flag! (There are %d countries remaining)",
+                        "Guess the territories that make up the combined flag! (There are %d territories remaining)",
                         images.size());
 
                 event.getChannel().sendMessage(toSend).setFiles(upload).queue($ -> {
@@ -229,7 +235,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 GAMES.remove(game.getMessageId());
 
                 event.getChannel().sendMessage(
-                                "The game has ended! The countries were: " + String.join(", ", game.getCountries()))
+                                "The game has ended! The territories were: " + String.join(", ", game.getTerritories().keySet()))
                         .queue($ -> ((ThreadChannel) event.getChannel()).getManager().setArchived(true).setLocked(true)
                                 .queue());
 
@@ -243,13 +249,13 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
             if (game.getIncorrectGuesses() % 3 == 0) {
                 event.getChannel().sendMessage(
-                        "The countries that have been guessed are: " + String.join(", ", game.getGuesses())).queue();
+                        "The territories that have been guessed are: " + String.join(", ", game.getGuesses())).queue();
             }
         }
     }
 
     private static ByteArrayOutputStream createImage(List<BufferedImage> images, int width, int height) {
-        int numberOfCountries = images.size();
+        int numberOfTerritories = images.size();
 
         // create a new image with the largest width and height
         var combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -262,7 +268,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, combined.getWidth(), combined.getHeight());
 
-        Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f / numberOfCountries);
+        Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f / numberOfTerritories);
         graphics.setComposite(composite);
 
         for (var image : images) {
@@ -290,13 +296,13 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     }
 
     private static class Game {
-        private final List<String> countries;
+        private final Map<String, BufferedImage> territories;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
         private final List<String> guesses = new ArrayList<>();
         private int incorrectGuesses = 0;
 
-        public Game(List<String> countries, long guildId, long ownerChannelId, long channelId, long messageId, long userId) {
-            this.countries = countries;
+        public Game(Map<String, BufferedImage> territories, long guildId, long ownerChannelId, long channelId, long messageId, long userId) {
+            this.territories = territories;
             this.guildId = guildId;
             this.ownerChannelId = ownerChannelId;
             this.channelId = channelId;
@@ -304,8 +310,8 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             this.userId = userId;
         }
 
-        public List<String> getCountries() {
-            return this.countries;
+        public Map<String, BufferedImage> getTerritories() {
+            return this.territories;
         }
 
         public long getGuildId() {
@@ -336,15 +342,15 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             return this.incorrectGuesses;
         }
 
-        public boolean chooseCountry(String country) {
-            if (this.guesses.contains(country)) {
+        public boolean chooseTerritory(String territory) {
+            if (this.guesses.contains(territory)) {
                 return false;
             }
 
-            this.guesses.add(country);
+            this.guesses.add(territory);
 
-            for (var c : this.countries) {
-                if (c.equalsIgnoreCase(country)) {
+            for (var c : this.territories.keySet()) {
+                if (c.equalsIgnoreCase(territory)) {
                     return true;
                 }
             }
@@ -354,23 +360,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         }
 
         public boolean hasWon() {
-            List<String> countries = this.countries.stream().map(String::toLowerCase).map(String::trim).toList();
+            List<String> territories = this.territories.keySet().stream().map(String::toLowerCase).map(String::trim).toList();
             List<String> guesses = this.guesses.stream().map(String::toLowerCase).map(String::trim).toList();
 
-            return new HashSet<>(guesses).containsAll(countries);
-        }
-    }
-
-    private static class FlagFileVisitor extends SimpleFileVisitor<Path> {
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            if (file.toString().endsWith(".png")) {
-                final BufferedImage image = ImageIO.read(file.toFile());
-                final String name = file.getFileName().toString().replace(".png", "").replace("_", " ");
-                FLAGS.put(name, image);
-            }
-
-            return FileVisitResult.CONTINUE;
+            return new HashSet<>(guesses).containsAll(territories);
         }
     }
 }

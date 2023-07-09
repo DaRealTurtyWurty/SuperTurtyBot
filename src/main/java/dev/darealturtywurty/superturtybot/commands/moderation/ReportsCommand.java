@@ -10,11 +10,13 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ReportsCommand extends CoreCommand {
     public ReportsCommand() {
@@ -55,6 +57,11 @@ public class ReportsCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return "/reports [user]";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 1L);
     }
 
     @Override

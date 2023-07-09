@@ -16,12 +16,14 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ReminderCommand extends CoreCommand {
     public ReminderCommand() {
@@ -78,6 +80,11 @@ public class ReminderCommand extends CoreCommand {
     @Override
     public boolean isServerOnly() {
         return true;
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

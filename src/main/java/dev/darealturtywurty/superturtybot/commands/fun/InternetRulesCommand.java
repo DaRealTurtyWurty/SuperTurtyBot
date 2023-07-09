@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -16,6 +17,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class InternetRulesCommand extends CoreCommand {
     private static final List<String> RULES = new ArrayList<>();
@@ -43,6 +45,11 @@ public class InternetRulesCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List
             .of(new OptionData(OptionType.INTEGER, "rule_number", "The rule number", true).setRequiredRange(1, 100));
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 1L);
     }
 
     @Override

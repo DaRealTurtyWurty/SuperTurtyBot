@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 public class HigherLowerCommand extends CoreCommand {
@@ -149,6 +150,11 @@ public class HigherLowerCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return "/higherlower population|area|word_frequency|trending";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 10L);
     }
 
     @Override

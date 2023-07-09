@@ -1,10 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TopicCommand extends CoreCommand {
     private static final String[] TOPICS = { "If you were in a circus, which character would you be?",
@@ -125,6 +127,11 @@ public class TopicCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Topic";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
     
     @Override

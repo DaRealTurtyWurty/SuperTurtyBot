@@ -7,6 +7,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class PeriodicTableCommand extends CoreCommand {
     private static final String ENDPOINT = "https://api.popcat.xyz/periodic-table?element=%s";
@@ -57,6 +59,11 @@ public class PeriodicTableCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Periodic Table";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

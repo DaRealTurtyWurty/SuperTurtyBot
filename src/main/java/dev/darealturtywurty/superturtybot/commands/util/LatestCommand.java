@@ -21,6 +21,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class LatestCommand extends CoreCommand {
@@ -60,6 +61,11 @@ public class LatestCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Latest";
+    }
+
+    @Override
+    public org.apache.commons.lang3.tuple.Pair<TimeUnit, Long> getRatelimit() {
+        return org.apache.commons.lang3.tuple.Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     private static Pair<String, String> getMinecraftVersions() {

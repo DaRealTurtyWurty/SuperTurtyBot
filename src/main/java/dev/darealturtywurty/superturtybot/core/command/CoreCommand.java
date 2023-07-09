@@ -7,11 +7,18 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public abstract class CoreCommand extends ListenerAdapter implements BotCommand {
+    private static final Map<Long, Pair<String, Long>> RATELIMITS = new ConcurrentHashMap<>();
+
     public final Types types;
     private String commandId;
 
@@ -32,17 +39,19 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     @Override
-    public void onMessageContextInteraction(MessageContextInteractionEvent event) {
+    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
         super.onMessageContextInteraction(event);
 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx())
             return;
 
-        runMessageCtx(event);
+        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+            runMessageCtx(event);
+        }
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         super.onMessageReceived(event);
 
         final String content = event.getMessage().getContentRaw().toLowerCase();
@@ -54,37 +63,43 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!this.types.normal())
             return;
 
-        runNormalMessage(event);
+        if(validateRatelimit(event.getAuthor().getIdLong(), end -> reply(event, "❌ You are being ratelimited! You can use the command again " + end + "!"))) {
+            runNormalMessage(event);
 
-        if (event.isFromGuild()) {
-            if (event.isFromThread()) {
-                runThreadMessage(event);
+            if (event.isFromGuild()) {
+                if (event.isFromThread()) {
+                    runThreadMessage(event);
+                    return;
+                }
+
+                runGuildMessage(event);
                 return;
             }
 
-            runGuildMessage(event);
-            return;
+            runPrivateMessage(event);
         }
-
-        runPrivateMessage(event);
     }
 
     @Override
-    public final void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+    public final void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         super.onSlashCommandInteraction(event);
         if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
             return;
 
-        runSlash(event);
+        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+            runSlash(event);
+        }
     }
 
     @Override
-    public void onUserContextInteraction(UserContextInteractionEvent event) {
+    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
         super.onUserContextInteraction(event);
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
             return;
 
-        runUserCtx(event);
+        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+            runUserCtx(event);
+        }
     }
 
     public void setCommandId(String id) {
@@ -124,6 +139,33 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
     protected void runUserCtx(UserContextInteractionEvent event) {
 
+    }
+
+    private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {
+        Pair<TimeUnit, Long> ratelimit = getRatelimit();
+        if(ratelimit.getRight() > 0) {
+            long length = TimeUnit.MILLISECONDS.convert(ratelimit.getRight(), ratelimit.getLeft());
+            if(RATELIMITS.containsKey(user)) {
+                Pair<String, Long> pair = RATELIMITS.get(user);
+                if(pair.getLeft().equalsIgnoreCase(getCommandId())) {
+                    long endTime = pair.getRight();
+                    long currentTime = System.currentTimeMillis();
+
+                    if(currentTime >= endTime) {
+                        RATELIMITS.put(user, Pair.of(getCommandId(), System.currentTimeMillis() + length));
+                        return true;
+                    } else {
+                        ratelimitResponse.accept(TimeFormat.RELATIVE.format(endTime));
+                        return false;
+                    }
+                }
+            } else {
+                RATELIMITS.put(user, Pair.of(getCommandId(), System.currentTimeMillis() + length));
+                return true;
+            }
+        }
+
+        return true;
     }
 
     protected static void reply(MessageReceivedEvent event, String message) {

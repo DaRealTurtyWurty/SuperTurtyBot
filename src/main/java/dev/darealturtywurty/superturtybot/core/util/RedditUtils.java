@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.core.util;
 
-import com.codepoetics.ambivalence.Either;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,6 +50,11 @@ public final class RedditUtils {
 
         final SubredditReference subreddit = getRandomSubreddit(subreddits);
         RootCommentNode post = findValidPost(subreddit, subreddits);
+        int attempts = 0;
+        while (post == null) {
+            post = findValidPost(subreddit, subreddits);
+            if (attempts++ > 10) return null;
+        }
 
         var embed = new EmbedBuilder();
         embed.setTitle(new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array()));
@@ -61,12 +65,14 @@ public final class RedditUtils {
                 List<String> images = post.getSubject().getPreview().getImages().stream()
                         .map(SubmissionPreview.ImageSet::getSource).map(SubmissionPreview.Variation::getUrl)
                         .map(url -> url.replace("external-preview", "i").replace("preview", "i")).toList();
-                return Either.ofRight(images);
+                return Either.right(images);
             }
         }
 
         String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
                 .getUrl();
+        if (mediaURL == null || mediaURL.isBlank()) return null;
+
         if(mediaURL.contains("reddit.com/gallery")) {
             String json = mediaURL.replace("gallery", "comments") + ".json";
             try {
@@ -89,14 +95,14 @@ public final class RedditUtils {
                     images.add("https://i.redd.it/%s.%s".formatted(media, type));
                 }
 
-                return Either.ofRight(images);
+                return Either.right(images);
             } catch(IOException exception) {
                 exception.printStackTrace();
                 return null;
             }
         }
 
-        if (requireMedia && (mediaURL == null || mediaURL.isBlank())) {
+        if (requireMedia && mediaURL.isBlank()) {
             post = findValidPost(subreddit, subreddits);
             if (post == null) return null;
 
@@ -106,7 +112,7 @@ public final class RedditUtils {
             if (mediaURL == null || mediaURL.isBlank()) return null;
         }
 
-        if (mediaURL != null && !mediaURL.isBlank() && verifyVideo(mediaURL)) {
+        if (!mediaURL.isBlank() && verifyVideo(mediaURL)) {
             mediaURL = StringUtils.replaceHTMLCodes(mediaURL);
             if (mediaURL.contains("redgifs") || mediaURL.contains("xvideos") || mediaURL.contains(
                     "xhamster") || mediaURL.contains("xxx") || mediaURL.contains("porn") || mediaURL.contains(
@@ -115,7 +121,7 @@ public final class RedditUtils {
                     "imgur")) {
                 embed = new EmbedBuilder();
                 embed.setTitle(mediaURL);
-                return Either.ofLeft(embed);
+                return Either.left(embed);
             }
 
             embed.setImage(mediaURL);
@@ -123,7 +129,7 @@ public final class RedditUtils {
         }
 
         embed.setTimestamp(Instant.now());
-        return Either.ofLeft(embed);
+        return Either.left(embed);
     }
 
     @Nullable

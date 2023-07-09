@@ -5,12 +5,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class InspiroBotCommand extends AbstractImageCommand {
     public InspiroBotCommand() {
@@ -30,6 +32,16 @@ public class InspiroBotCommand extends AbstractImageCommand {
     @Override
     public String getName() {
         return "inspirobot";
+    }
+
+    @Override
+    public String getRichName() {
+        return "InspiroBot";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
     
     @Override

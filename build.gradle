@@ -60,7 +60,6 @@ dependencies {
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
     implementation group: "com.object-refinery", name: "orsoncharts", version: "1.7" 
 
-    implementation group: "com.codepoetics", name: "ambivalence", version: "0.2"
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
     implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.9"

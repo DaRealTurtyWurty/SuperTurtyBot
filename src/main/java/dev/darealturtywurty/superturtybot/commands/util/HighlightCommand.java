@@ -28,6 +28,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.jetbrains.annotations.NotNull;
 
 public class HighlightCommand extends CoreCommand {
     public HighlightCommand() {
@@ -97,7 +98,7 @@ public class HighlightCommand extends CoreCommand {
     }
     
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot()
             || event.getAuthor().isSystem())
             return;

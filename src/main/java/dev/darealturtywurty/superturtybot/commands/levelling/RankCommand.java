@@ -1,16 +1,24 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.TexturePaint;
+import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.BotUtils;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.RankCard;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.conversions.Bson;
+import org.jetbrains.annotations.Nullable;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.font.LineMetrics;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
@@ -25,27 +33,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-
-import javax.imageio.ImageIO;
-
-import org.bson.conversions.Bson;
-import org.jetbrains.annotations.Nullable;
-
-import com.mongodb.client.model.Filters;
-
-import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.BotUtils;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.RankCard;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.utils.FileUpload;
+import java.util.concurrent.TimeUnit;
 
 public class RankCommand extends CoreCommand {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.#");
@@ -68,6 +56,11 @@ public class RankCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to gain rank information about", false));
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 1L);
     }
 
     @Override

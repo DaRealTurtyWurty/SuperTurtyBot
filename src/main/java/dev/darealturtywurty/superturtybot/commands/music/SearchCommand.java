@@ -1,22 +1,24 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import com.codepoetics.ambivalence.Either;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Either;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class SearchCommand extends CoreCommand {
     public SearchCommand() {
@@ -59,6 +61,11 @@ public class SearchCommand extends CoreCommand {
     }
 
     @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
@@ -73,7 +80,7 @@ public class SearchCommand extends CoreCommand {
             .search(event.getGuild(), "ytsearch:" + search);
         future.thenAccept(either -> {
             if (either.isLeft()) {
-                final List<AudioTrack> results = either.left().orElse(List.of());
+                final List<AudioTrack> results = either.getLeft();
                 if (results.isEmpty()) {
                     event.getHook().editOriginal("❌ No results found for `" + search + "`!").queue();
                     return;
@@ -104,7 +111,7 @@ public class SearchCommand extends CoreCommand {
 
                 embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No results found for `" + search + "`!").queue());
             } else {
-                final FriendlyException exception = either.right().orElse(
+                final FriendlyException exception = either.toOptional().orElse(
                     new FriendlyException("Results are missing and error is not present!", Severity.SUSPICIOUS, null));
                 event.getHook().editOriginal("❌ There has been an error loading the results: " + exception.getLocalizedMessage()).queue();
             }

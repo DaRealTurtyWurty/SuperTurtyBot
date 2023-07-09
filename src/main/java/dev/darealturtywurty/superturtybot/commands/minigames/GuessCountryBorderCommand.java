@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -27,18 +28,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class GuessCountryBorderCommand extends CoreCommand {
     private static final Map<String, BufferedImage> BORDERS = new HashMap<>();
     private static final Map<Long, Game> GAMES = new HashMap<>();
-
-//    static {
-//        try {
-//            Files.walkFileTree(Path.of("src/main/resources/country_outlines/"), new BorderFileVisitor());
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Could not load borders!", exception);
-//        }
-//    }
 
     public GuessCountryBorderCommand() {
         super(new Types(true, false, false, false));
@@ -67,6 +61,11 @@ public class GuessCountryBorderCommand extends CoreCommand {
     @Override
     public boolean isServerOnly() {
         return true;
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override
@@ -151,7 +150,7 @@ public class GuessCountryBorderCommand extends CoreCommand {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.isFromGuild()) return;
 
         // check if the user has a game running

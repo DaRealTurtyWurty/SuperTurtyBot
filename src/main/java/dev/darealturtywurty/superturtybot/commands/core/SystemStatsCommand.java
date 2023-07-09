@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 import oshi.SystemInfo;
 import oshi.hardware.NetworkIF;
 
@@ -15,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.TimeUnit;
 
 public class SystemStatsCommand extends CoreCommand {
     public SystemStatsCommand() {
@@ -39,6 +41,11 @@ public class SystemStatsCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "System Stats";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 15L);
     }
 
     @Override

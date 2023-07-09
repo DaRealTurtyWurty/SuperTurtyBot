@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import okhttp3.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class TriviaCommand extends CoreCommand {
     private static final List<TriviaData> CACHED_TRIVIA = new ArrayList<>();
@@ -66,6 +68,11 @@ public class TriviaCommand extends CoreCommand {
 
     public record TriviaData(String selectMenuId, long guildId, long channelId, long messageId, long userId,
                              TriviaQuestion question) {
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

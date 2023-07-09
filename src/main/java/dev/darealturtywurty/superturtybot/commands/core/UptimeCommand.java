@@ -4,6 +4,9 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.concurrent.TimeUnit;
 
 public class UptimeCommand extends CoreCommand {
     public UptimeCommand() {
@@ -36,6 +39,11 @@ public class UptimeCommand extends CoreCommand {
         String formatted = millisecondsFormatted(uptime);
 
         reply(event, "The bot has been running for `" + formatted + "`!");
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 5L);
     }
 
     public static String millisecondsFormatted(long millis) {

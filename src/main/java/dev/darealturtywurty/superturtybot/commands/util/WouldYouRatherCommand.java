@@ -1,11 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class WouldYouRatherCommand extends CoreCommand {
     private static final String[] QUESTIONS = {
@@ -269,6 +271,11 @@ public class WouldYouRatherCommand extends CoreCommand {
     @Override
     public boolean isServerOnly() {
         return true;
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

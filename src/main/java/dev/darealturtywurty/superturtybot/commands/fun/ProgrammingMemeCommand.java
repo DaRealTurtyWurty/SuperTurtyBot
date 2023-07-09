@@ -7,6 +7,9 @@ import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.concurrent.TimeUnit;
 
 public class ProgrammingMemeCommand extends CoreCommand {
     public ProgrammingMemeCommand() {
@@ -31,6 +34,11 @@ public class ProgrammingMemeCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Programming Meme";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
     
     @Override

@@ -23,9 +23,11 @@ import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RoleSelectionCommand extends CoreCommand {
     public RoleSelectionCommand() {
@@ -101,6 +103,11 @@ public class RoleSelectionCommand extends CoreCommand {
     @Override
     public boolean isServerOnly() {
         return true;
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 1L);
     }
 
     @Override

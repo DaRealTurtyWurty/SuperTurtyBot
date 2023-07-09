@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
-import com.codepoetics.ambivalence.Either;
 import com.github.topisenpai.lavasrc.spotify.SpotifyAudioTrack;
 import com.mongodb.client.model.Filters;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -10,6 +9,7 @@ import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
@@ -23,7 +23,9 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
@@ -31,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GuessSongCommand extends CoreCommand {
@@ -59,6 +62,11 @@ public class GuessSongCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Guess The Song";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 30L);
     }
 
     @Override
@@ -101,14 +109,14 @@ public class GuessSongCommand extends CoreCommand {
             return;
         }
 
-        run(Either.ofLeft(event), event.getGuild(), channel);
+        run(Either.left(event), event.getGuild(), channel);
     }
 
     private static void run(Either<SlashCommandInteractionEvent, MessageReceivedEvent> event, Guild guild, AudioChannel voiceChannel) {
         var threadRef = new AtomicReference<ThreadChannel>();
         CompletableFuture<Long> messageId = new CompletableFuture<>();
 
-        event.forEither(slashEvent -> {
+        event.forEach(slashEvent -> {
             slashEvent.deferReply().setContent("🎵 Guess the song has started!").flatMap(InteractionHook::retrieveOriginal).queue(msg -> {
                 msg.createThreadChannel("Guess The Song").queue(thread -> {
                     thread.sendMessage("🎵 Loading...")
@@ -129,12 +137,12 @@ public class GuessSongCommand extends CoreCommand {
                     voiceChannel, PLAYLIST);
 
             future.thenAcceptAsync(result -> {
-                result.forEither(track -> {
+                result.forEach(track -> {
                     GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
-                            Tuples.of(threadRef.get().getIdLong(), result.left().orElse(null), 0));
+                            Tuples.of(threadRef.get().getIdLong(), result.isLeft() ? result.getLeft() : null, 0));
                     threadRef.get().deleteMessageById(id).queue();
                 }, exception -> {
-                    event.forEither(slashEvent -> {
+                    event.forEach(slashEvent -> {
                         slashEvent.getHook().editOriginal("❌ Guess the song has failed to start!").queue();
                     }, messageEvent -> {
                         messageEvent.getChannel().editMessageById(id, "❌ Guess the song has failed to start!").queue();
@@ -145,7 +153,7 @@ public class GuessSongCommand extends CoreCommand {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || !event.isFromGuild()) return;
 
         Guild guild = event.getGuild();
@@ -235,7 +243,7 @@ public class GuessSongCommand extends CoreCommand {
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
               
-                run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
+                run(Either.right(event), event.getGuild(), member.getVoiceState().getChannel());
                 return;
             }
 
@@ -260,7 +268,7 @@ public class GuessSongCommand extends CoreCommand {
                     LevellingManager.INSTANCE.addXP(guild, user, xp, new LevellingManager.LevelUpMessage(guild, Optional.of(event.getMessage())));
                 }
 
-                run(Either.ofRight(event), event.getGuild(), member.getVoiceState().getChannel());
+                run(Either.right(event), event.getGuild(), member.getVoiceState().getChannel());
             }
         }
     }

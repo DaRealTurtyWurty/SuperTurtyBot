@@ -8,6 +8,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -30,6 +31,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class MinecraftUserSkinCommand extends CoreCommand {
     public MinecraftUserSkinCommand() {
@@ -66,7 +68,12 @@ public class MinecraftUserSkinCommand extends CoreCommand {
     public String getRichName() {
         return "Minecraft Skin";
     }
-    
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         final Message message = event.getMessage();

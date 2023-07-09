@@ -1,7 +1,9 @@
 package dev.darealturtywurty.superturtybot.modules.counting;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -64,6 +66,11 @@ public class RegisterCountingCommand extends CoreCommand {
     @Override
     public boolean isServerOnly() {
         return true;
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

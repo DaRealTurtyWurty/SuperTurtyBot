@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Duration;
 import java.time.ZoneId;
@@ -47,6 +48,11 @@ public class WordleCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Wordle";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     private static class GenerateWordleTask implements Runnable {

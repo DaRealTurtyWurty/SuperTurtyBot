@@ -6,10 +6,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import dev.darealturtywurty.superturtybot.core.util.Either;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.codepoetics.ambivalence.Either;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -69,21 +71,26 @@ public class UrbanDictionaryCommand extends CoreCommand {
     }
 
     @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String searchTerm = URLEncoder.encode(event.getOption("search_term").getAsString().toLowerCase().trim(),
             StandardCharsets.UTF_8);
         final Pair<Boolean, Either<String, EmbedBuilder>> returned = makeRequest(searchTerm);
         if (Boolean.FALSE.equals(returned.getLeft())) {
-            event.deferReply(true).setContent(returned.getRight().left().toOptional().get()).mentionRepliedUser(false)
+            event.deferReply(true).setContent(returned.getRight().getLeft()).mentionRepliedUser(false)
                 .queue();
             return;
         }
 
         if (returned.getRight().isLeft()) {
-            event.deferReply().setContent(returned.getRight().left().toOptional().get()).mentionRepliedUser(false)
+            event.deferReply().setContent(returned.getRight().getLeft()).mentionRepliedUser(false)
                 .queue();
         } else {
-            event.deferReply().addEmbeds(returned.getRight().right().toOptional().get().build())
+            event.deferReply().addEmbeds(returned.getRight().getRight().build())
                 .mentionRepliedUser(false).queue();
         }
     }
@@ -95,10 +102,21 @@ public class UrbanDictionaryCommand extends CoreCommand {
                 .addHeader("X-RapidAPI-Host", "mashape-community-urban-dictionary.p.rapidapi.com")
                 .addHeader("X-RapidAPI-Key", Environment.INSTANCE.urbanDictionaryKey()).build();
             final Response response = CLIENT.newCall(request).execute();
-            final JsonObject json = Constants.GSON.fromJson(response.body().string(), JsonObject.class);
+
+            ResponseBody body = response.body();
+            if (body == null) {
+                return Pair.of(false, Either.left("Failed to connect!"));
+            }
+
+            String bodyString = body.string();
+            if(bodyString.isBlank()) {
+                return Pair.of(false, Either.left("Failed to connect!"));
+            }
+
+            final JsonObject json = Constants.GSON.fromJson(bodyString, JsonObject.class);
             final JsonArray list = json.getAsJsonArray("list");
             if (list.isEmpty())
-                return Pair.of(false, Either.ofLeft("No Results Found!"));
+                return Pair.of(false, Either.left("No Results Found!"));
 
             final JsonObject first = list.get(0).getAsJsonObject();
 
@@ -114,11 +132,11 @@ public class UrbanDictionaryCommand extends CoreCommand {
 
             response.close();
 
-            return Pair.of(true, Either.ofRight(embed));
+            return Pair.of(true, Either.right(embed));
         } catch (final IOException exception) {
-            return Pair.of(false, Either.ofLeft("Failed to connect!"));
+            return Pair.of(false, Either.left("Failed to connect!"));
         } catch (final JsonParseException | NullPointerException exception) {
-            return Pair.of(false, Either.ofLeft(
+            return Pair.of(false, Either.left(
                 "There has been an issue accessing our database! " + "The bot owner has been notified of this issue!"));
         }
     }

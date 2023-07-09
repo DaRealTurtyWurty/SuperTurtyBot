@@ -27,6 +27,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 
 import java.awt.*;
@@ -35,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class TagCommand extends CoreCommand {
     public TagCommand() {
@@ -80,6 +82,11 @@ public class TagCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return "/tag get [name]\n/tag create [name] [content]\n/tag create [name] [content] [isEmbed]\n/tag edit [name]\n/tag delete [name]\n/tag list";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

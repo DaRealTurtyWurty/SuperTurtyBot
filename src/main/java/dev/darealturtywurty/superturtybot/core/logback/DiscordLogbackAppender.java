@@ -93,31 +93,15 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
         for (int i = 0; i < len; i++) {
             final char ch = s.charAt(i);
             switch (ch) {
-                case '"':
-                    sb.append("\\\"");
-                    break;
-                case '\\':
-                    sb.append("\\\\");
-                    break;
-                case '\b':
-                    sb.append("\\b");
-                    break;
-                case '\f':
-                    sb.append("\\f");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                case '/':
-                    sb.append("\\/");
-                    break;
-                default:
+                case '"' -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\b' -> sb.append("\\b");
+                case '\f' -> sb.append("\\f");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                case '/' -> sb.append("\\/");
+                default -> {
                     // Reference: http://www.unicode.org/versions/Unicode5.1.0/
                     if (ch <= '\u001F' || ch >= '\u007F' && ch <= '\u009F' || ch >= '\u2000' && ch <= '\u20FF') {
                         final String ss = Integer.toHexString(ch);
@@ -127,6 +111,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
                     } else {
                         sb.append(ch);
                     }
+                }
             }
         }
     }

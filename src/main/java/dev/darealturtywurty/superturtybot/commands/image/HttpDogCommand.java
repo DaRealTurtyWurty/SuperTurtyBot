@@ -6,12 +6,14 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class HttpDogCommand extends AbstractImageCommand {
     private static final Map<Integer, String> STATUS_CODES = new HashMap<>();
@@ -122,6 +124,11 @@ public class HttpDogCommand extends AbstractImageCommand {
     @Override
     public String getRichName() {
         return "HTTP Dog";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override

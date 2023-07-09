@@ -1,9 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.nsfw;
 
-import com.codepoetics.ambivalence.Either;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Either;
 import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
@@ -21,12 +21,14 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class NSFWCommand extends CoreCommand {
@@ -87,6 +89,11 @@ public class NSFWCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "NSFW (Not Safe For Work - 18+)";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     @Override
@@ -170,7 +177,7 @@ public class NSFWCommand extends CoreCommand {
             }
 
             if (eitherEmbedOrImages.isRight()) {
-                Collection<String> images = eitherEmbedOrImages.right().orElse(List.of());
+                Collection<String> images = eitherEmbedOrImages.toOptional().orElse(List.of())
                 List<FileUpload> uploads = new ArrayList<>();
 
                 int index = 0;

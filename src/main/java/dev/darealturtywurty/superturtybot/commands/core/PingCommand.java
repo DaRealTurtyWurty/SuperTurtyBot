@@ -3,6 +3,9 @@ package dev.darealturtywurty.superturtybot.commands.core;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.concurrent.TimeUnit;
 
 public class PingCommand extends CoreCommand {
     public PingCommand() {
@@ -27,6 +30,11 @@ public class PingCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Ping";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 2L);
     }
 
     @Override

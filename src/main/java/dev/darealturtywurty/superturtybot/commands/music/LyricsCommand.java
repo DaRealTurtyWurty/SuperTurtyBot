@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class LyricsCommand extends CoreCommand {
     private static final Map<Long, String> ID_LYRIC_MAP = new HashMap<>();
@@ -47,6 +49,11 @@ public class LyricsCommand extends CoreCommand {
     @Override
     public String getRichName() {
         return "Song Lyrics";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 2L);
     }
     
     @Override

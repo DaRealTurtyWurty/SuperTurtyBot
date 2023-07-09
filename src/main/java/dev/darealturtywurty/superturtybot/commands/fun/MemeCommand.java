@@ -7,6 +7,9 @@ import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.concurrent.TimeUnit;
 
 public class MemeCommand extends CoreCommand {
     public MemeCommand() {
@@ -32,7 +35,12 @@ public class MemeCommand extends CoreCommand {
     public String getRichName() {
         return "Meme";
     }
-    
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 5L);
+    }
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().setContent("Loading meme...").queue();

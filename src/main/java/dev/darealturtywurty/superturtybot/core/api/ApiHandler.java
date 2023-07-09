@@ -1,0 +1,626 @@
+package dev.darealturtywurty.superturtybot.core.api;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.core.api.pojo.*;
+import dev.darealturtywurty.superturtybot.core.api.request.*;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.CoupledPair;
+import dev.darealturtywurty.superturtybot.core.util.Either;
+import io.javalin.http.HttpStatus;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.ApiStatus;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.List;
+
+public class ApiHandler {
+    private static final String BASE_URL = "https://api.turtywurty.dev/";
+
+    public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
+        try(Response response = makeRequest("geo/flag/" + cca3)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            return Either.left(ImageIO.read(body.byteStream()));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Pair<BufferedImage, Territory>, HttpStatus> getFlag() {
+        try(Response response = makeRequest("geo/flag/random")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            Territory territory = Constants.GSON.fromJson(object.get("territory"), Territory.class);
+
+            String base64 = object.get("image").getAsString();
+            byte[] bytes = Base64.getDecoder().decode(base64);
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
+
+            return Either.left(Pair.of(image, territory));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
+        try(Response response = makeRequest("geo/outline/" + cca3)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            return Either.left(ImageIO.read(body.byteStream()));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Pair<BufferedImage, Territory>, HttpStatus> getOutline() {
+        try(Response response = makeRequest("geo/outline/random")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            Territory territory = Constants.GSON.fromJson(object.get("territory"), Territory.class);
+
+            String base64 = object.get("image").getAsString();
+            byte[] bytes = Base64.getDecoder().decode(base64);
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
+
+            return Either.left(Pair.of(image, territory));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Territory, HttpStatus> getTerritoryData(String cca3) {
+        try(Response response = makeRequest("geo/data/" + cca3)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() == 0)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            return Either.left(Constants.GSON.fromJson(body.string(), Territory.class));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Territory, HttpStatus> getTerritoryData() {
+        return getTerritoryData("random");
+    }
+
+    public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
+        StringBuilder path = new StringBuilder("words");
+        requestData.getLength().ifPresent(length -> {
+            if(path.length() > 5)
+                path.append("&length=").append(length);
+            else
+                path.append("?length=").append(length);
+        });
+
+        requestData.getStartsWith().ifPresent(startsWith -> {
+            if(path.length() > 5)
+                path.append("&startsWith=").append(startsWith);
+            else
+                path.append("?startsWith=").append(startsWith);
+        });
+
+        requestData.getAmount().ifPresent(amount -> {
+            if(path.length() > 5)
+                path.append("&amount=").append(amount);
+            else
+                path.append("?amount=").append(amount);
+        });
+
+        try(Response response = makeRequest(path.toString())) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
+            return Either.left(words);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<String>, HttpStatus> getWords(RandomWordRequest requestData) {
+        StringBuilder path = new StringBuilder("words/random");
+        requestData.getLength().ifPresent(length -> {
+            if(path.length() > 5)
+                path.append("&length=").append(length);
+            else
+                path.append("?length=").append(length);
+        });
+
+        requestData.getMinLength().ifPresent(minLength -> {
+            if(path.length() > 5)
+                path.append("&minLength=").append(minLength);
+            else
+                path.append("?minLength=").append(minLength);
+        });
+
+        requestData.getMaxLength().ifPresent(maxLength -> {
+            if(path.length() > 5)
+                path.append("&maxLength=").append(maxLength);
+            else
+                path.append("?maxLength=").append(maxLength);
+        });
+
+        requestData.getStartsWith().ifPresent(startsWith -> {
+            if(path.length() > 5)
+                path.append("&startsWith=").append(startsWith);
+            else
+                path.append("?startsWith=").append(startsWith);
+        });
+
+        requestData.getAmount().ifPresent(amount -> {
+            if(path.length() > 5)
+                path.append("&amount=").append(amount);
+            else
+                path.append("?amount=").append(amount);
+        });
+
+        try(Response response = makeRequest(path.toString())) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
+            return Either.left(words);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<CoupledPair<MinecraftVersion>, HttpStatus> getLatestMinecraft() {
+        try(Response response = makeRequest("minecraft/latest")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String release = object.get("release").getAsString();
+            String snapshot = object.get("snapshot").getAsString();
+            return Either.left(new CoupledPair<>(new MinecraftVersion(release, true), new MinecraftVersion(snapshot, false)));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<MinecraftVersion>, HttpStatus> getAllMinecraft() {
+        try(Response response = makeRequest("minecraft/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<MinecraftVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new MinecraftVersion(obj.get("version").getAsString(), obj.get("isRelease").getAsBoolean()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<CoupledPair<ForgeVersion>, HttpStatus> getLatestForge() {
+        try(Response response = makeRequest("minecraft/forge/latest")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String recommended = object.get("recommended").getAsString();
+            String latest = object.get("latest").getAsString();
+            return Either.left(new CoupledPair<>(new ForgeVersion(recommended, true), new ForgeVersion(latest, false)));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<ForgeVersion>, HttpStatus> getAllForge() {
+        try(Response response = makeRequest("minecraft/forge/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<ForgeVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new ForgeVersion(obj.get("version").getAsString(), obj.get("isRecommended").getAsBoolean()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @ApiStatus.Experimental
+    public static Either<CoupledPair<FabricVersion>, HttpStatus> getLatestFabric() {
+        try(Response response = makeRequest("minecraft/fabric/latest")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String loader = object.get("loader").getAsString();
+            String yarn = object.get("yarn").getAsString();
+            return Either.left(new CoupledPair<>(new FabricVersion(loader, true), new FabricVersion(yarn, false)));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @ApiStatus.Experimental
+    public static Either<List<FabricVersion>, HttpStatus> getAllFabric() {
+        try(Response response = makeRequest("minecraft/fabric/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<FabricVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new FabricVersion(obj.get("version").getAsString(), obj.get("isLoader").getAsBoolean()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<ParchmentVersion, HttpStatus> getLatestParchment() {
+        try(Response response = makeRequest("minecraft/parchment/latest")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String version = object.get("version").getAsString();
+            return Either.left(new ParchmentVersion(version));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<ParchmentVersion>, HttpStatus> getAllParchment() {
+        try(Response response = makeRequest("minecraft/parchment/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<ParchmentVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new ParchmentVersion(obj.get("version").getAsString()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<ParchmentVersion, HttpStatus> getParchment(String version) {
+        try(Response response = makeRequest("minecraft/parchment/" + version)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String parchmentVersion = object.get("version").getAsString();
+            return Either.left(new ParchmentVersion(parchmentVersion));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> resize(ImageResizeRequest requestData) {
+        if(requestData.getWidth().orElse(1) < 1) {
+            return Either.right(HttpStatus.BAD_REQUEST);
+        }
+        
+        if(requestData.getHeight().orElse(1) < 1) {
+            return Either.right(HttpStatus.BAD_REQUEST);
+        }
+        
+        String imgUrl = requestData.getUrl();
+
+        String pathStr = "image/resize?url=" + imgUrl;
+        var path = new StringBuilder(pathStr);
+        requestData.getWidth().ifPresent(width -> {
+            if(path.length() > pathStr.length())
+                path.append("&length=").append(width);
+            else
+                path.append("?length=").append(width);
+        });
+
+        requestData.getHeight().ifPresent(height -> {
+            if(path.length() > pathStr.length())
+                path.append("&height=").append(height);
+            else
+                path.append("?height=").append(height);
+        });
+        
+        try(Response response = makeRequest(path.toString())) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String base64Img = body.string();
+            byte[] bytes = Base64.getDecoder().decode(base64Img);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+            return Either.left(image);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> rotate(ImageRotateRequest requestData) {
+        if(requestData.getAngle().orElse(0) % 90 != 0)
+            return Either.right(HttpStatus.BAD_REQUEST);
+
+        String imgUrl = requestData.getUrl();
+
+        String pathStr = "image/rotate?url=" + imgUrl;
+        var path = new StringBuilder(pathStr);
+        requestData.getAngle().ifPresent(angle -> {
+            if(path.length() > pathStr.length())
+                path.append("&angle=").append(angle);
+            else
+                path.append("?angle=").append(angle);
+        });
+
+        try(Response response = makeRequest(path.toString())) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String base64Img = body.string();
+            byte[] bytes = Base64.getDecoder().decode(base64Img);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+            return Either.left(image);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> flip(String imgUrl, FlipType flipType) {
+        try(Response response = makeRequest("image/flip?url=%s&flipType=%s".formatted(imgUrl, flipType.name()))) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String base64Img = body.string();
+            byte[] bytes = Base64.getDecoder().decode(base64Img);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+            return Either.left(image);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequest requestData) {
+        try(Response response = makeRequest("image/flagify?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String base64Img = body.string();
+            byte[] bytes = Base64.getDecoder().decode(base64Img);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+            return Either.left(image);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<BufferedImage, HttpStatus> lgbtify(String imgUrl) {
+        try(Response response = makeRequest("image/lgbt?url=" + imgUrl)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String base64Img = body.string();
+            byte[] bytes = Base64.getDecoder().decode(base64Img);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+            return Either.left(image);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Geoguesser, HttpStatus> geoguesser() {
+        try(Response response = makeRequest("geo/guesser")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() < 1)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String country = object.get("country").getAsString();
+
+            String base64 = object.get("image").getAsString();
+            byte[] bytes = Base64.getDecoder().decode(base64);
+            var stream = new ByteArrayInputStream(bytes);
+            BufferedImage image = ImageIO.read(stream);
+
+            return Either.left(new Geoguesser(country, image));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static Response makeRequest(String path) {
+        try {
+            return Constants.HTTP_CLIENT.newCall(new Request.Builder().url(BASE_URL + path).build()).execute();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to make request!", exception);
+        }
+    }
+}
