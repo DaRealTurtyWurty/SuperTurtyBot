@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.core.api.pojo;
 
 import java.util.Objects;
 
-public class Territory {
+public class Region {
     private double population;
     private String name;
     private String cca3;
@@ -14,7 +14,7 @@ public class Territory {
     private String flag;
     private String outline;
 
-    public Territory(double population, String name, String cca3, String cca2, String region, double landAreaKm, double densityMi, String flag, String outline) {
+    public Region(double population, String name, String cca3, String cca2, String region, double landAreaKm, double densityMi, String flag, String outline) {
         this.population = population;
         this.name = name;
         this.cca3 = cca3;
@@ -26,7 +26,7 @@ public class Territory {
         this.outline = outline;
     }
 
-    public Territory() {
+    public Region() {
         this(0, "", "", "", "", 0, 0, "", "");
     }
 
@@ -106,7 +106,7 @@ public class Territory {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Territory that = (Territory) o;
+        Region that = (Region) o;
         return Double.compare(that.population, population) == 0 && Double.compare(that.landAreaKm, landAreaKm) == 0 && Double.compare(that.densityMi, densityMi) == 0 && Objects.equals(name, that.name) && Objects.equals(cca3, that.cca3) && Objects.equals(cca2, that.cca2) && Objects.equals(region, that.region) && Objects.equals(flag, that.flag) && Objects.equals(outline, that.outline);
     }
 

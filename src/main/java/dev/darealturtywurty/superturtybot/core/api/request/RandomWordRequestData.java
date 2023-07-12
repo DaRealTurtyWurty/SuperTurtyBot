@@ -4,12 +4,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public class RandomWordRequest {
+public class RandomWordRequestData {
     private final Optional<Integer> length, minLength, maxLength;
     private final Optional<String> startsWith;
     private final Optional<Integer> amount;
 
-    private RandomWordRequest(Integer length, Integer minLength, Integer maxLength, String startsWith, Integer amount) {
+    private RandomWordRequestData(Integer length, Integer minLength, Integer maxLength, String startsWith, Integer amount) {
         this.length = Optional.ofNullable(length);
         this.minLength = Optional.ofNullable(minLength);
         this.maxLength = Optional.ofNullable(maxLength);
@@ -100,12 +100,12 @@ public class RandomWordRequest {
             return this;
         }
 
-        public RandomWordRequest build() {
-            return new RandomWordRequest(length, minLength, maxLength, startsWith, amount);
+        public RandomWordRequestData build() {
+            return new RandomWordRequestData(length, minLength, maxLength, startsWith, amount);
         }
     }
 
-    public static RandomWordRequest blank() {
-        return new RandomWordRequest(null, null, null, null, null);
+    public static RandomWordRequestData blank() {
+        return new RandomWordRequestData(null, null, null, null, null);
     }
 }

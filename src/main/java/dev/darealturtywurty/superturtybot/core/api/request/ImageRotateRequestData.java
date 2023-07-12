@@ -2,11 +2,11 @@ package dev.darealturtywurty.superturtybot.core.api.request;
 
 import java.util.Optional;
 
-public class ImageRotateRequest {
+public class ImageRotateRequestData {
     private final Optional<Integer> angle;
     private final String url;
 
-    private ImageRotateRequest(String url, Integer angle) {
+    private ImageRotateRequestData(String url, Integer angle) {
         this.url = url;
         this.angle = Optional.ofNullable(angle);
     }
@@ -41,8 +41,8 @@ public class ImageRotateRequest {
             return this;
         }
 
-        public ImageRotateRequest build() {
-            return new ImageRotateRequest(url, angle);
+        public ImageRotateRequestData build() {
+            return new ImageRotateRequestData(url, angle);
         }
     }
 }

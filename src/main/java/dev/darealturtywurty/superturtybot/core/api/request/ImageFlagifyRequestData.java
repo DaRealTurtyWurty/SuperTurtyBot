@@ -1,10 +1,10 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
-public class ImageFlagifyRequest {
+public class ImageFlagifyRequestData {
     private final int colors;
     private final String url;
 
-    private ImageFlagifyRequest(String url, int colors) {
+    private ImageFlagifyRequestData(String url, int colors) {
         this.url = url;
         this.colors = colors;
     }
@@ -42,8 +42,8 @@ public class ImageFlagifyRequest {
             return this;
         }
 
-        public ImageFlagifyRequest build() {
-            return new ImageFlagifyRequest(url, colors);
+        public ImageFlagifyRequestData build() {
+            return new ImageFlagifyRequestData(url, colors);
         }
     }
 }

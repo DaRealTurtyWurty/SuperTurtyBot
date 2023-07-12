@@ -41,8 +41,20 @@ public class ApiHandler {
         }
     }
 
-    public static Either<Pair<BufferedImage, Territory>, HttpStatus> getFlag() {
-        try(Response response = makeRequest("geo/flag/random")) {
+    public static Either<Pair<BufferedImage, Region>, HttpStatus> getFlag(RegionExcludeRequestData requestData) {
+        String path = "geo/flag/random";
+        if (requestData.hasExclusions()) {
+            path += "?exclude=";
+            for (String exclusionType : requestData.getExclusions()) {
+                path += exclusionType + ",";
+            }
+
+            path = path.substring(0, path.length() - 1);
+        }
+
+        System.out.println(path);
+
+        try(Response response = makeRequest(path)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -52,16 +64,20 @@ public class ApiHandler {
 
             String json = body.string();
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
-            Territory territory = Constants.GSON.fromJson(object.get("territory"), Territory.class);
+            Region region = Constants.GSON.fromJson(object.get("region"), Region.class);
 
             String base64 = object.get("image").getAsString();
             byte[] bytes = Base64.getDecoder().decode(base64);
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
 
-            return Either.left(Pair.of(image, territory));
+            return Either.left(Pair.of(image, region));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public static Either<Pair<BufferedImage, Region>, HttpStatus> getFlag() {
+        return getFlag(RegionExcludeRequestData.empty());
     }
 
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
@@ -79,8 +95,18 @@ public class ApiHandler {
         }
     }
 
-    public static Either<Pair<BufferedImage, Territory>, HttpStatus> getOutline() {
-        try(Response response = makeRequest("geo/outline/random")) {
+    public static Either<Pair<BufferedImage, Region>, HttpStatus> getOutline(RegionExcludeRequestData requestData) {
+        String path = "geo/outline/random";
+        if (requestData.hasExclusions()) {
+            path += "?exclude=";
+            for (String exclusionType : requestData.getExclusions()) {
+                path += exclusionType + ",";
+            }
+
+            path = path.substring(0, path.length() - 1);
+        }
+
+        try(Response response = makeRequest(path)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -90,19 +116,23 @@ public class ApiHandler {
 
             String json = body.string();
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
-            Territory territory = Constants.GSON.fromJson(object.get("territory"), Territory.class);
+            Region region = Constants.GSON.fromJson(object.get("region"), Region.class);
 
             String base64 = object.get("image").getAsString();
             byte[] bytes = Base64.getDecoder().decode(base64);
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
 
-            return Either.left(Pair.of(image, territory));
+            return Either.left(Pair.of(image, region));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public static Either<Territory, HttpStatus> getTerritoryData(String cca3) {
+    public static Either<Pair<BufferedImage, Region>, HttpStatus> getOutline() {
+        return getOutline(RegionExcludeRequestData.empty());
+    }
+
+    public static Either<Region, HttpStatus> getTerritoryData(String cca3) {
         try(Response response = makeRequest("geo/data?cca3=" + cca3)) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
@@ -114,14 +144,82 @@ public class ApiHandler {
             if(body.contentLength() == 0)
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            return Either.left(Constants.GSON.fromJson(body.string(), Territory.class));
+            return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public static Either<Territory, HttpStatus> getTerritoryData() {
-        return getTerritoryData("random");
+    public static Either<Region, HttpStatus> getTerritoryData(RegionExcludeRequestData requestData) {
+        String path = "geo/data/random";
+        if (requestData.hasExclusions()) {
+            path += "?exclude=";
+            for (String exclusionType : requestData.getExclusions()) {
+                path += exclusionType + ",";
+            }
+
+            path = path.substring(0, path.length() - 1);
+        }
+
+        try(Response response = makeRequest(path)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if(body.contentLength() == 0)
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Region, HttpStatus> getTerritoryData() {
+        return getTerritoryData(RegionExcludeRequestData.empty());
+    }
+
+    public static Either<List<Region>, HttpStatus> getAllRegions(RegionExcludeRequestData requestData) {
+        String path = "geo/data/all";
+        if (requestData.hasExclusions()) {
+            path += "?exclude=";
+            for (String exclusionType : requestData.getExclusions()) {
+                path += exclusionType + ",";
+            }
+
+            path = path.substring(0, path.length() - 1);
+        }
+
+        try(Response response = makeRequest(path)) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if(json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+
+            List<Region> territories = new ArrayList<>();
+            for(JsonElement element : array) {
+                territories.add(Constants.GSON.fromJson(element, Region.class));
+            }
+
+            return Either.left(territories);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<Region>, HttpStatus> getAllRegions() {
+        return getAllRegions(RegionExcludeRequestData.empty());
     }
 
     public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
@@ -167,7 +265,7 @@ public class ApiHandler {
         }
     }
 
-    public static Either<List<String>, HttpStatus> getWords(RandomWordRequest requestData) {
+    public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/random");
         requestData.getLength().ifPresent(length -> {
             if(path.length() > 5)
@@ -439,7 +537,7 @@ public class ApiHandler {
         }
     }
 
-    public static Either<BufferedImage, HttpStatus> resize(ImageResizeRequest requestData) {
+    public static Either<BufferedImage, HttpStatus> resize(ImageResizeRequestData requestData) {
         if(requestData.getWidth().orElse(1) < 1) {
             return Either.right(HttpStatus.BAD_REQUEST);
         }
@@ -487,7 +585,7 @@ public class ApiHandler {
         }
     }
 
-    public static Either<BufferedImage, HttpStatus> rotate(ImageRotateRequest requestData) {
+    public static Either<BufferedImage, HttpStatus> rotate(ImageRotateRequestData requestData) {
         if(requestData.getAngle().orElse(0) % 90 != 0)
             return Either.right(HttpStatus.BAD_REQUEST);
 
@@ -545,7 +643,7 @@ public class ApiHandler {
         }
     }
 
-    public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequest requestData) {
+    public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequestData requestData) {
         try(Response response = makeRequest("image/flagify?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
             if(response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
@@ -612,32 +710,6 @@ public class ApiHandler {
             BufferedImage image = ImageIO.read(stream);
 
             return Either.left(new Geoguesser(country, image));
-        } catch (IOException ignored) {
-            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public static Either<List<Territory>, HttpStatus> getAllTerritories() {
-        try(Response response = makeRequest("geo/data/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if(body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            String json = body.string();
-            if(json.isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
-            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-
-            List<Territory> territories = new ArrayList<>();
-            for(JsonElement element : array) {
-                territories.add(Constants.GSON.fromJson(element, Territory.class));
-            }
-
-            return Either.left(territories);
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }

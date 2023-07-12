@@ -2,12 +2,12 @@ package dev.darealturtywurty.superturtybot.core.api.request;
 
 import java.util.Optional;
 
-public class ImageResizeRequest {
+public class ImageResizeRequestData {
     private final Optional<Integer> width;
     private final Optional<Integer> height;
     private final String url;
 
-    private ImageResizeRequest(String url, Integer width, Integer height) {
+    private ImageResizeRequestData(String url, Integer width, Integer height) {
         this.url = url;
         this.width = Optional.ofNullable(width);
         this.height = Optional.ofNullable(height);
@@ -68,8 +68,8 @@ public class ImageResizeRequest {
             return this;
         }
 
-        public ImageResizeRequest build() {
-            return new ImageResizeRequest(url, width, height);
+        public ImageResizeRequestData build() {
+            return new ImageResizeRequestData(url, width, height);
         }
     }
 }
