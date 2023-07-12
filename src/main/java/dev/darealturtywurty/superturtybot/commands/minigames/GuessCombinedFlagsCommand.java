@@ -103,6 +103,8 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         int numberOfRegions = event.getOption("number", ThreadLocalRandom.current().nextInt(2, 17), OptionMapping::getAsInt);
         final Map<String, BufferedImage> regions = new HashMap<>(numberOfRegions);
+
+        int attempts = 0;
         for (int index = 0; index < numberOfRegions; index++) {
             RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
             if (excludeTerritories) {
@@ -112,17 +114,20 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             }
 
             Either<Pair<BufferedImage, Region>, HttpStatus> result = ApiHandler.getFlag(builder.build());
+            attempts++;
             if (result.isLeft()) {
                 Pair<BufferedImage, Region> pair = result.getLeft();
                 if (regions.containsKey(pair.getRight().getName())) {
                     index--;
-                    continue;
+                } else {
+                    regions.put(pair.getRight().getName(), pair.getLeft());
                 }
-
-                regions.put(pair.getRight().getName(), pair.getLeft());
             } else {
-                System.out.println(result.getRight());
-                event.getHook().sendMessage("❌ An error occurred while getting the flags!").queue();
+                index--;
+            }
+
+            if (attempts >= numberOfRegions * 4) {
+                event.getHook().sendMessage("❌ Could not find enough regions!").queue();
                 return;
             }
         }
