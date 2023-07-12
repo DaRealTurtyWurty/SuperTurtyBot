@@ -1,14 +1,22 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
+import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
+import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
+import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.Either;
+import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -19,22 +27,16 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class GuessCountryBorderCommand extends CoreCommand {
-    private static final Map<String, BufferedImage> BORDERS = new HashMap<>();
+public class GuessRegionBorderCommand extends CoreCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    public GuessCountryBorderCommand() {
+    public GuessRegionBorderCommand() {
         super(new Types(true, false, false, false));
     }
 
@@ -45,17 +47,17 @@ public class GuessCountryBorderCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Guess the country that has the border shown.";
+        return "Guess the region that has the border shown.";
     }
 
     @Override
     public String getName() {
-        return "guesscountryborder";
+        return "guessborder";
     }
 
     @Override
     public String getRichName() {
-        return "Guess The Country's Border";
+        return "Guess The Region's Border";
     }
 
     @Override
@@ -69,41 +71,102 @@ public class GuessCountryBorderCommand extends CoreCommand {
     }
 
     @Override
+    public List<OptionData> createOptions() {
+        return List.of(
+                new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.", false),
+                new OptionData(OptionType.BOOLEAN, "exclude-mainland", "Whether or not to exclude mainland regions from the game.", false),
+                new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether or not to exclude countries from the game.", false),
+                new OptionData(OptionType.BOOLEAN, "exclude-territories", "Whether or not to exclude territories from the game.", false)
+        );
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "This command can only be used in a server!", false, true);
+            reply(event, "❌ This command can only be used in a server!", false, true);
+            return;
+        }
+
+        if (event.getChannel() instanceof ThreadChannel) {
+            reply(event, "❌ This command cannot be used in a thread!", false, true);
             return;
         }
 
         if (GAMES.values().stream().anyMatch(
                 game -> game.guildId == event.getGuild().getIdLong() && game.userId == event.getUser().getIdLong())) {
-            reply(event, "You already have a game running in this server!", false, true);
+            reply(event, "❌ You already have a game running in this server!", false, true);
+            return;
+        }
+
+        boolean excludeIslands = event.getOption("exclude-islands", false, OptionMapping::getAsBoolean);
+        boolean excludeMainland = event.getOption("exclude-mainland", false, OptionMapping::getAsBoolean);
+        boolean excludeCountries = event.getOption("exclude-countries", false, OptionMapping::getAsBoolean);
+        boolean excludeTerritories = event.getOption("exclude-territories", false, OptionMapping::getAsBoolean);
+
+        if (excludeIslands && excludeMainland && excludeCountries && excludeTerritories) {
+            reply(event, "❌ You cannot exclude all types of regions!", false, true);
+            return;
+        }
+
+        if (excludeIslands && excludeMainland) {
+            reply(event, "❌ You cannot exclude both islands and mainland regions!", false, true);
+            return;
+        }
+
+        if (excludeCountries && excludeTerritories) {
+            reply(event, "❌ You cannot exclude both countries and territories!", false, true);
             return;
         }
 
         event.deferReply().queue();
 
-        final var country = BORDERS.entrySet().stream().skip((int) (Math.random() * BORDERS.size())).findFirst()
-                .orElseThrow();
+        RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
+        if (excludeIslands) {
+            builder.excludeIslands();
+        } else if (excludeMainland) {
+            builder.excludeMainland();
+        }
+
+        if (excludeCountries) {
+            builder.excludeCountries();
+        } else if (excludeTerritories) {
+            builder.excludeTerritories();
+        }
+
+        Either<Pair<BufferedImage, Region>, HttpStatus> result = ApiHandler.getOutline(builder.build());
+        if (result.isRight()) {
+            reply(event, "❌ An error occurred while trying to get the image!", false, true);
+            return;
+        }
+
+        Pair<BufferedImage, Region> region = result.getLeft();
 
         var baos = new ByteArrayOutputStream();
         try {
-            ImageIO.write(country.getValue(), "png", baos);
+            ImageIO.write(region.getKey(), "png", baos);
         } catch (IOException exception) {
-            reply(event, "An error occurred while trying to send the image!", false, true);
+            reply(event, "❌ An error occurred while trying to send the image!", false, true);
             return;
         }
 
         var upload = FileUpload.fromData(baos.toByteArray(), "border.png");
-        event.getHook().editOriginal("Guess the country that has the border shown!").setFiles(upload).queue(message -> {
+        event.getHook().editOriginal("Guess the region that has the border shown!").setFiles(upload).queue(message -> {
             message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                final var game = new Game(country.getKey(), event.getGuild().getIdLong(),
+                Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
+                if (matchingRegions.isRight()) {
+                    Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
+                            matchingRegions.getRight().getCode());
+                    event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
+                    return;
+                }
+
+                final var game = new Game(region.getValue(), event.getGuild().getIdLong(),
                         event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
-                        event.getUser().getIdLong());
+                        event.getUser().getIdLong(), matchingRegions.getLeft());
                 GAMES.put(message.getIdLong(), game);
 
                 message.editMessageComponents(
-                                ActionRow.of(Button.danger("country-border-" + message.getId(), Emoji.fromFormatted("❌"))))
+                                ActionRow.of(Button.danger("region-border-" + message.getId(), Emoji.fromFormatted("❌"))))
                         .queue();
 
                 thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
@@ -126,9 +189,9 @@ public class GuessCountryBorderCommand extends CoreCommand {
 
         if (event.getButton().getId() == null) return;
 
-        if (!event.getButton().getId().startsWith("country-border-")) return;
+        if (!event.getButton().getId().startsWith("region-border-")) return;
 
-        long messageId = Long.parseLong(event.getButton().getId().replace("country-border-", ""));
+        long messageId = Long.parseLong(event.getButton().getId().replace("region-border-", ""));
 
         Game game = GAMES.get(messageId);
         if (game == null) return;
@@ -143,7 +206,7 @@ public class GuessCountryBorderCommand extends CoreCommand {
         ThreadChannel thread = event.getGuild().getThreadChannelById(game.getChannelId());
         if (thread == null) return;
 
-        thread.sendMessage(String.format("Game cancelled! The country was: %s", game.getCountry())).setComponents()
+        thread.sendMessage(String.format("Game cancelled! The region was: %s", game.getRegion().getName())).setComponents()
                 .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
         event.editComponents().queue();
@@ -159,14 +222,14 @@ public class GuessCountryBorderCommand extends CoreCommand {
                         .getIdLong() && g.getChannelId() == event.getChannel().getIdLong()).findFirst().orElse(null);
         if (game == null) return;
 
-        // check if the message is a valid country
-        String country = event.getMessage().getContentRaw().trim();
-        if (BORDERS.keySet().stream().noneMatch(c -> c.equalsIgnoreCase(country))) return;
+        // check if the message is a valid region
+        String region = event.getMessage().getContentRaw().trim();
+        if (game.getPossibleRegions().stream().noneMatch(region1 -> region1.getName().equalsIgnoreCase(region))) return;
 
-        // check if the country is correct
-        if (game.guess(country)) {
+        // check if the region is correct
+        if (game.guess(region)) {
             var thread = (ThreadChannel) event.getChannel();
-            thread.sendMessage(String.format("Correct! The country was: %s", game.getCountry()))
+            thread.sendMessage(String.format("Correct! The region was: %s", game.getRegion().getName()))
                     .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             GAMES.remove(game.getMessageId(), game);
@@ -186,7 +249,7 @@ public class GuessCountryBorderCommand extends CoreCommand {
 
         if (game.getGuesses().size() >= 9) {
             var thread = (ThreadChannel) event.getChannel();
-            thread.sendMessage(String.format("Game over! The country was: %s", game.getCountry())).setComponents()
+            thread.sendMessage(String.format("Game over! The region was: %s", game.getRegion().getName())).setComponents()
                     .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             GAMES.remove(game.getMessageId(), game);
@@ -198,21 +261,23 @@ public class GuessCountryBorderCommand extends CoreCommand {
     }
 
     public static class Game {
-        private final String country;
+        private final Region region;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
         private final List<String> guesses = new ArrayList<>();
+        private final List<Region> possibleRegions;
 
-        public Game(String country, long guildId, long ownerChannelId, long channelId, long messageId, long userId) {
-            this.country = country;
+        public Game(Region region, long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> possibleRegions) {
+            this.region = region;
             this.guildId = guildId;
             this.ownerChannelId = ownerChannelId;
             this.channelId = channelId;
             this.messageId = messageId;
             this.userId = userId;
+            this.possibleRegions = possibleRegions;
         }
 
-        public String getCountry() {
-            return this.country;
+        public Region getRegion() {
+            return this.region;
         }
 
         public long getGuildId() {
@@ -239,26 +304,17 @@ public class GuessCountryBorderCommand extends CoreCommand {
             return this.guesses;
         }
 
+        public List<Region> getPossibleRegions() {
+            return this.possibleRegions;
+        }
+
         public boolean guess(String guess) {
             if (this.guesses.contains(guess)) return false;
 
             this.guesses.add(guess);
 
             guess = guess.trim();
-            return guess.equalsIgnoreCase(this.country) || guess.equalsIgnoreCase(this.country.replace(" ", ""));
-        }
-    }
-
-    public static class BorderFileVisitor extends SimpleFileVisitor<Path> {
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            if (file.toString().endsWith(".png")) {
-                final BufferedImage image = ImageIO.read(file.toFile());
-                final String name = file.getFileName().toString().replace(".png", "").replace("_", " ");
-                BORDERS.put(name, image);
-            }
-
-            return FileVisitResult.CONTINUE;
+            return guess.equalsIgnoreCase(this.region.getName()) || guess.equalsIgnoreCase(this.region.getName().replace(" ", ""));
         }
     }
 }

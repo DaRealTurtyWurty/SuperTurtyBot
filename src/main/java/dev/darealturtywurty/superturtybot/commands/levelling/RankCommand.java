@@ -88,13 +88,15 @@ public class RankCommand extends CoreCommand {
             return 0;
 
         final Bson filter = Filters.eq("guild", member.getGuild().getIdLong());
-        List<Levelling> profiles = new ArrayList<>();
-        Database.getDatabase().levelling.find(filter).forEach(profiles::add);
-        profiles = profiles.stream().sorted(Comparator.comparing(Levelling::getXp).reversed()).toList();
+        List<Levelling> profiles = Database.getDatabase().levelling.find(filter).into(new ArrayList<>());
+        profiles = profiles.stream()
+                .filter(profile -> member.getGuild().getMemberById(profile.getUser()) != null)
+                .sorted(Comparator.comparing(Levelling::getXp).reversed())
+                .toList();
 
         final Optional<Levelling> found = profiles.stream().filter(profile -> profile.getUser() == member.getIdLong())
             .findFirst();
-        if (!found.isPresent()) {
+        if (found.isEmpty()) {
             final var profile = new Levelling(member.getGuild().getIdLong(), member.getIdLong());
             Database.getDatabase().levelling.insertOne(profile);
             return profiles.size() + 1;

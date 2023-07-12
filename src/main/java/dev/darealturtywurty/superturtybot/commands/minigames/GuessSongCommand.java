@@ -250,24 +250,25 @@ public class GuessSongCommand extends CoreCommand {
             AudioTrackInfo info = track.getInfo();
             if (message.equalsIgnoreCase(info.title) || (message.length() >= 4 && info.title.toLowerCase()
                     .startsWith(message.toLowerCase()))) {
-                reply(event, "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`");
-                GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
-                AudioManager.endGuessTheSong(guild);
-
                 GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
                 if(config == null) {
                     config = new GuildConfig(guild.getIdLong());
                     Database.getDatabase().guildConfig.insertOne(config);
                 }
 
+                String replyContent = "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`";
                 if(config.isLevellingEnabled()) {
                     User user = event.getAuthor();
 
                     // get xp relative to the current position in the song
                     int xp = (int) (1000 * (track.getPosition() / track.getDuration()));
                     LevellingManager.INSTANCE.addXP(guild, user, xp, new LevellingManager.LevelUpMessage(guild, Optional.of(event.getMessage())));
+                    replyContent += ". You gained " + xp + " XP!";
                 }
 
+                reply(event, replyContent);
+                GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
+                AudioManager.endGuessTheSong(guild);
                 run(Either.right(event), event.getGuild(), member.getVoiceState().getChannel());
             }
         }

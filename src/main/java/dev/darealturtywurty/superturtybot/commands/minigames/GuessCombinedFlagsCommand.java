@@ -104,16 +104,18 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         int numberOfRegions = event.getOption("number", ThreadLocalRandom.current().nextInt(2, 17), OptionMapping::getAsInt);
         final Map<String, BufferedImage> regions = new HashMap<>(numberOfRegions);
 
+        RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
+        if (excludeTerritories) {
+            builder.excludeTerritories();
+        } else if (excludeCountries) {
+            builder.excludeCountries();
+        }
+
+        RegionExcludeRequestData data = builder.build();
+
         int attempts = 0;
         for (int index = 0; index < numberOfRegions; index++) {
-            RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
-            if (excludeTerritories) {
-                builder.excludeTerritories();
-            } else if (excludeCountries) {
-                builder.excludeCountries();
-            }
-
-            Either<Pair<BufferedImage, Region>, HttpStatus> result = ApiHandler.getFlag(builder.build());
+            Either<Pair<BufferedImage, Region>, HttpStatus> result = ApiHandler.getFlag(data);
             attempts++;
             if (result.isLeft()) {
                 Pair<BufferedImage, Region> pair = result.getLeft();
@@ -143,22 +145,17 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 numberOfRegions);
         event.getHook().editOriginal(toSend).setFiles(upload).queue(message -> {
             message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
-                if (excludeTerritories) {
-                    builder.excludeTerritories();
-                }
-
-                Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
+                Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(data);
                 if (matchingRegions.isRight()) {
                     Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
                             matchingRegions.getRight().getCode());
-                    event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue();
+                    event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
                     return;
                 }
 
                 var game = new Game(regions, event.getGuild().getIdLong(),
                         event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
-                        event.getUser().getIdLong(), matchingRegions.getLeft(), excludeTerritories);
+                        event.getUser().getIdLong(), matchingRegions.getLeft());
 
                 GAMES.put(message.getIdLong(), game);
 
@@ -346,10 +343,9 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         private final long guildId, ownerChannelId, channelId, messageId, userId;
         private final List<String> guesses = new ArrayList<>();
         private final List<Region> possibleRegions;
-        private final boolean excludeTerritories;
         private int incorrectGuesses = 0;
 
-        public Game(Map<String, BufferedImage> regions, long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> possibleRegions, boolean excludeTerritories) {
+        public Game(Map<String, BufferedImage> regions, long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> possibleRegions) {
             this.regions = regions;
             this.guildId = guildId;
             this.ownerChannelId = ownerChannelId;
@@ -357,7 +353,6 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             this.messageId = messageId;
             this.userId = userId;
             this.possibleRegions = possibleRegions;
-            this.excludeTerritories = excludeTerritories;
         }
 
         public Map<String, BufferedImage> getRegions() {
@@ -394,10 +389,6 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         public List<Region> getPossibleRegions() {
             return this.possibleRegions;
-        }
-
-        public boolean isExcludeTerritories() {
-            return this.excludeTerritories;
         }
 
         public boolean chooseRegion(String region) {

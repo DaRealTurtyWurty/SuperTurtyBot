@@ -54,6 +54,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         final List<Long> disabledChannels = GuildConfig.getChannels(config.getDisabledLevellingChannels());
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong())) return;
+        if(event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong())) return;
 
         Member member = event.getMember();
         if (member == null || !cooldown(guild, member, config)) return;

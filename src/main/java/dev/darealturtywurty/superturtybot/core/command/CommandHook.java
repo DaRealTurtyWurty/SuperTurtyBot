@@ -290,7 +290,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new TriviaCommand());
         cmds.add(new GuessCombinedFlagsCommand());
         cmds.add(new GuessSongCommand());
-        cmds.add(new GuessCountryBorderCommand());
+        cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
 
         jda.getGuilds().forEach(guild -> {
