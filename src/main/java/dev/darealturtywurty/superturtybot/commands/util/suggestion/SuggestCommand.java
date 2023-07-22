@@ -12,6 +12,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -94,7 +95,7 @@ public class SuggestCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
@@ -111,6 +112,10 @@ public class SuggestCommand extends CoreCommand {
 
         if(!"add".equalsIgnoreCase(subcommand)) {
             // check permission
+            if(!event.getMember().hasPermission(suggestionChannel, Permission.MANAGE_CHANNEL)) {
+                reply(event, "❌ You do not have permission to use this command!", false, true);
+                return;
+            }
         }
 
         switch (subcommand) {
