@@ -107,6 +107,8 @@ public class HighlightCommand extends CoreCommand {
         
         final String content = event.getMessage().getContentRaw();
         for (final Highlighter highlighter : Database.getDatabase().highlighters.find(filter)) {
+            if (highlighter == null) continue;
+
             event.getGuild().retrieveMemberById(highlighter.getUser()).queue(
                 member -> performHighlight(event, content, highlighter, member),
                 error -> highlightFailed(event, content, error));
@@ -203,7 +205,7 @@ public class HighlightCommand extends CoreCommand {
     }
     
     private static void highlightFailed(MessageReceivedEvent event, final String content, Throwable error) {
-        Constants.LOGGER.error(
+        Constants.LOGGER.debug(
             "There has been a major error with the highlight command!\n{}\n{}\n{}\n{}\n{}\n{}\n\n{}\n{}", content,
             event.getChannel().getIdLong(), event.getGuild().getIdLong(), event.getMessageId(), error.getMessage(),
             ExceptionUtils.getMessage(error), error.getMessage(), ExceptionUtils.getMessage(error));
