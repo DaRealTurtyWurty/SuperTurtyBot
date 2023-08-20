@@ -1,12 +1,15 @@
 package dev.darealturtywurty.superturtybot.database.pojos;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class SteamAppNews {
     private String author;
     private String contents;
-    private int date;
+    private long date;
     private String feedlabel;
     private String feedname;
     private String gid;
@@ -19,7 +22,7 @@ public class SteamAppNews {
         this("", "", -1, "", "", "", false, "", "", new HashMap<>());
     }
     
-    public SteamAppNews(String author, String contents, int date, String feedlabel, String feedname, String gid,
+    public SteamAppNews(String author, String contents, long date, String feedlabel, String feedname, String gid,
         boolean isExternalUrl, String title, String url, Map<String, Object> additionalProperties) {
         this.author = author;
         this.contents = contents;
@@ -32,43 +35,7 @@ public class SteamAppNews {
         this.url = url;
         this.additionalProperties = additionalProperties;
     }
-    
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-    
-    public String getAuthor() {
-        return this.author;
-    }
-    
-    public String getContents() {
-        return this.contents;
-    }
-    
-    public int getDate() {
-        return this.date;
-    }
-    
-    public String getFeedlabel() {
-        return this.feedlabel;
-    }
-    
-    public String getFeedname() {
-        return this.feedname;
-    }
-    
-    public String getGid() {
-        return this.gid;
-    }
-    
-    public String getTitle() {
-        return this.title;
-    }
-    
-    public String getUrl() {
-        return this.url;
-    }
-    
+
     public boolean isExternalUrl() {
         return this.isExternalUrl;
     }
@@ -85,7 +52,7 @@ public class SteamAppNews {
         this.contents = contents;
     }
     
-    public void setDate(int date) {
+    public void setDate(long date) {
         this.date = date;
     }
     
