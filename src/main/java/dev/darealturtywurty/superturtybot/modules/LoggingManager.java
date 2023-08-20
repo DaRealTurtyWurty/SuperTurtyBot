@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import lombok.Getter;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -20,6 +21,7 @@ import net.dv8tion.jda.api.events.channel.update.GenericChannelUpdateEvent;
 import net.dv8tion.jda.api.events.emoji.EmojiAddedEvent;
 import net.dv8tion.jda.api.events.emoji.EmojiRemovedEvent;
 import net.dv8tion.jda.api.events.emoji.update.GenericEmojiUpdateEvent;
+import net.dv8tion.jda.api.events.guild.GuildAuditLogEntryCreateEvent;
 import net.dv8tion.jda.api.events.guild.GuildBanEvent;
 import net.dv8tion.jda.api.events.guild.GuildUnbanEvent;
 import net.dv8tion.jda.api.events.guild.invite.GuildInviteCreateEvent;
@@ -84,7 +86,13 @@ public class LoggingManager extends ListenerAdapter {
             event.getGuild().retrieveAuditLogs().type(ActionType.CHANNEL_CREATE).queue(entries -> {
                 User user = entries.get(0).getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Channel %s was created by %s!", event.getChannel().getAsMention(), userName).queue();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0x00FF00);
+                builder.setAuthor("Channel Created", null, guild.getIconUrl());
+                builder.addField("Channel", event.getChannel().getAsMention(), true);
+                builder.addField("Created By", userName, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -97,7 +105,18 @@ public class LoggingManager extends ListenerAdapter {
             guild.retrieveAuditLogs().type(ActionType.CHANNEL_DELETE).queue(entries -> {
                 User user = entries.get(0).getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Channel %s was deleted by %s!", event.getChannel().getName(), userName).queue();
+                String channelName = event.getChannel().getName();
+                String channelType = event.getChannel().getType().name();
+                String timeCreated = TimeFormat.DATE_TIME_LONG.format(event.getChannel().getTimeCreated());
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Channel Deleted", null, guild.getIconUrl());
+                builder.addField("Channel", channelName, true);
+                builder.addField("Channel Type", channelType, true);
+                builder.addField("Time Created", timeCreated, true);
+                builder.addField("Deleted By", userName, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -109,7 +128,14 @@ public class LoggingManager extends ListenerAdapter {
             guild.retrieveAuditLogs().type(ActionType.EMOJI_CREATE).queue(entries -> {
                 User user = entries.get(0).getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Emoji %s was added by %s!", event.getEmoji().getAsMention(), userName).queue();
+                String emoji = event.getEmoji().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0x00FF00);
+                builder.setAuthor("Emoji Created", null, guild.getIconUrl());
+                builder.addField("Emoji", emoji, true);
+                builder.addField("Created By", userName, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -121,7 +147,14 @@ public class LoggingManager extends ListenerAdapter {
             guild.retrieveAuditLogs().type(ActionType.EMOJI_DELETE).queue(entries -> {
                 User user = entries.get(0).getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Emoji %s was removed by %s!", event.getEmoji().getAsMention(), userName).queue();
+                String emojiName = event.getEmoji().getName();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Emoji Deleted", null, guild.getIconUrl());
+                builder.addField("Emoji", emojiName, true);
+                builder.addField("Deleted By", userName, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -135,9 +168,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                StringBuilder changes = new StringBuilder();
-                entry.getChanges().values().forEach(change -> changes.append(change.toString()).append("\n"));
-                channel.sendMessageFormat("Channel %s was updated by %s! Changes:\n%s", event.getChannel().getName(), userName, changes).queue();
+                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+                String channelName = event.getChannel().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Channel Updated", null, guild.getIconUrl());
+                builder.addField("Channel", channelName, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Change", change, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -150,9 +190,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                StringBuilder changes = new StringBuilder();
-                entry.getChanges().values().forEach(change -> changes.append(change.toString()).append("\n"));
-                channel.sendMessageFormat("Emoji %s was updated by %s! Changes:\n%s", event.getEmoji().getName(), userName, changes).queue();
+                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+                String emoji = event.getEmoji().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Emoji Updated", null, guild.getIconUrl());
+                builder.addField("Emoji", emoji, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Change", change, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -160,13 +207,23 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onGenericForumTagUpdate(GenericForumTagUpdateEvent event) {
         Guild guild = event.getChannel().getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(
-                channel -> channel.sendMessageFormat("Forum tag `%s` had the property `%s` changed from `%s` to `%s`!",
-                        event.getTag().getName(),
-                        event.getPropertyIdentifier(),
-                        event.getOldValue(),
-                        event.getNewValue()
-                ).queue());
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
+            String tag = event.getTag().getName();
+            String property = event.getPropertyIdentifier();
+            Object oldVal = event.getOldValue();
+            Object newVal = event.getNewValue();
+            String oldValStr = oldVal == null ? "" : oldVal.toString();
+            String newValStr = newVal == null ? "" : newVal.toString();
+
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Forum Tag Updated", null, guild.getIconUrl());
+            builder.addField("Tag", tag, true);
+            builder.addField("Property", property, true);
+            builder.addField("Old Value", oldValStr, true);
+            builder.addField("New Value", newValStr, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        });
     }
 
     @Override
@@ -177,9 +234,18 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                StringBuilder changes = new StringBuilder();
-                entry.getChanges().values().forEach(change -> changes.append(change.toString()).append("\n"));
-                channel.sendMessageFormat("Sticker %s was updated by %s! Changes:\n%s", event.getSticker().getName(), userName, changes).queue();
+                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+                String sticker = event.getSticker().getName();
+                String url = event.getSticker().getIconUrl();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Sticker Updated", null, guild.getIconUrl());
+                builder.addField("Sticker", sticker, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Change", change, false);
+                builder.setThumbnail(url);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -192,9 +258,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                StringBuilder changes = new StringBuilder();
-                entry.getChanges().values().forEach(change -> changes.append(change.toString()).append("\n"));
-                channel.sendMessageFormat("Guild %s was updated by %s! Changes:\n%s", event.getGuild().getName(), userName, changes).queue();
+                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+                String guildName = guild.getName();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Guild Updated", null, guild.getIconUrl());
+                builder.addField("Guild", guildName, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Change", change, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -207,9 +280,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                StringBuilder changes = new StringBuilder();
-                entry.getChanges().values().forEach(change -> changes.append(change.toString()).append("\n"));
-                channel.sendMessageFormat("Role %s was updated by %s! Changes:\n%s", event.getRole().getName(), userName, changes).queue();
+                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+                String role = event.getRole().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Role Updated", null, guild.getIconUrl());
+                builder.addField("Role", role, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Change", change, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -223,7 +303,15 @@ public class LoggingManager extends ListenerAdapter {
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
                 String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
-                channel.sendMessageFormat("User %s was banned by %s for reason:\n%s", event.getUser().getAsMention(), userName, reason).queue();
+                String banner = event.getUser().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Member Banned", null, guild.getIconUrl());
+                builder.addField("Banned Member", userName, true);
+                builder.addField("Banned By", banner, true);
+                builder.addField("Reason", reason, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -236,7 +324,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Invite %s was created by %s!", event.getUrl(), userName).queue();
+                String url = event.getUrl();
+                String channelName = event.getChannel().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0x00FF00);
+                builder.setAuthor("Invite Created", null, guild.getIconUrl());
+                builder.addField("Invite", url, true);
+                builder.addField("Created By", userName, true);
+                builder.addField("Channel", channelName, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -249,7 +346,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Invite %s was deleted by %s!", event.getUrl(), userName).queue();
+                String url = event.getUrl();
+                String channelName = event.getChannel().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Invite Deleted", null, guild.getIconUrl());
+                builder.addField("Invite", url, true);
+                builder.addField("Deleted By", userName, true);
+                builder.addField("Channel", channelName, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -258,7 +364,15 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            channel.sendMessageFormat("User %s joined!", event.getUser().getAsMention()).queue();
+            String userName = event.getUser().getAsMention();
+            String memberCount = String.valueOf(guild.getMemberCount());
+
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Member Joined", null, guild.getIconUrl());
+            builder.addField("Member", userName, true);
+            builder.addField("Member Number", memberCount, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
         });
     }
 
@@ -266,7 +380,13 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildMemberRemove(GuildMemberRemoveEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            channel.sendMessageFormat("User %s left!", event.getUser().getAsMention()).queue();
+            String userName = event.getUser().getAsMention();
+
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Member Left", null, guild.getIconUrl());
+            builder.addField("Member", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
         });
     }
 
@@ -281,13 +401,18 @@ public class LoggingManager extends ListenerAdapter {
             String formatExtension = sticker.getFormatType().getExtension();
             String format = formatName + "(" + formatExtension + ")";
             User user = sticker.retrieveOwner().complete();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String url = sticker.getIconUrl();
 
-            channel.sendMessageFormat("Sticker %s was added by %s!\n Description: %s\nFormat: %s",
-                    name,
-                    user.getAsMention(),
-                    description,
-                    format
-            ).queue();
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Sticker Added", null, guild.getIconUrl());
+            builder.addField("Sticker", name, true);
+            builder.addField("Description", description, true);
+            builder.addField("Format", format, true);
+            builder.addField("Added By", userName, true);
+            builder.setThumbnail(url);
+            channel.sendMessageEmbeds(builder.build()).queue();
         });
     }
 
@@ -299,7 +424,14 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("Sticker %s was removed by %s!", event.getSticker().getName(), userName).queue();
+                String name = event.getSticker().getName();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Sticker Removed", null, guild.getIconUrl());
+                builder.addField("Sticker", name, true);
+                builder.addField("Removed By", userName, true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -315,7 +447,16 @@ public class LoggingManager extends ListenerAdapter {
                 String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
                 TemporalAccessor timeOutEnd = event.getNewTimeOutEnd() == null ? Instant.now() : event.getNewTimeOutEnd();
                 String time = TimeFormat.RELATIVE.format(timeOutEnd);
-                channel.sendMessageFormat("User %s's timeout has been updated by %s for reason:\n%s\nNew timeout end: %s", event.getUser().getAsMention(), userName, reason, time).queue();
+                String timeoutedUserName = event.getUser().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFFFF00);
+                builder.setAuthor("Member Timeout Updated", null, guild.getIconUrl());
+                builder.addField("Member", timeoutedUserName, true);
+                builder.addField("Updated By", userName, true);
+                builder.addField("Timeout End", time, true);
+                builder.addField("Reason", reason, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -329,7 +470,15 @@ public class LoggingManager extends ListenerAdapter {
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
                 String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
-                channel.sendMessageFormat("User %s was unbanned by %s for reason:\n%s", event.getUser().getAsMention(), userName, reason).queue();
+                String unbannedUserName = event.getUser().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0x00FF00);
+                builder.setAuthor("Member Unbanned", null, guild.getIconUrl());
+                builder.addField("Member", unbannedUserName, true);
+                builder.addField("Unbanned By", userName, true);
+                builder.addField("Reason", reason, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -342,11 +491,16 @@ public class LoggingManager extends ListenerAdapter {
                 AuditLogEntry entry = entries.get(0);
                 User user = entry.getUser();
                 String userName = user == null ? "Unknown" : user.getAsMention();
-                channel.sendMessageFormat("%s messages were deleted by %s in channel %s",
-                        event.getMessageIds().size(),
-                        userName,
-                        event.getChannel().getAsMention()
-                ).queue();
+                int size = event.getMessageIds().size();
+                String channelName = event.getChannel().getAsMention();
+
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Bulk Message Delete", null, guild.getIconUrl());
+                builder.addField("Channel", channelName, true);
+                builder.addField("Deleted By", userName, true);
+                builder.addField("Number of Messages", String.valueOf(size), true);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -357,14 +511,21 @@ public class LoggingManager extends ListenerAdapter {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
             List<MessageData> messages = MESSAGE_CACHE.get(event.getChannel().getIdLong());
+            long messageId = event.getMessageIdLong();
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Message Deleted", null, guild.getIconUrl());
+            builder.addField("Message ID", String.valueOf(messageId), true);
+            builder.addField("Channel", event.getChannel().getAsMention(), true);
+
             if (messages == null || messages.isEmpty()) {
-                channel.sendMessageFormat("Message %s was deleted", event.getMessageId()).queue();
+                channel.sendMessageEmbeds(builder.build()).queue();
                 return;
             }
 
             Optional<MessageData> optional = messages.stream().filter(data -> data.getId() == event.getMessageIdLong()).findFirst();
             if (optional.isEmpty()) {
-                channel.sendMessageFormat("Message %s was deleted", event.getMessageId()).queue();
+                channel.sendMessageEmbeds(builder.build()).queue();
                 return;
             }
 
@@ -372,12 +533,10 @@ public class LoggingManager extends ListenerAdapter {
             String content = data.getContent();
             User author = event.getJDA().getUserById(data.getAuthor());
             String authorName = author == null ? "Unknown" : author.getAsMention();
-            channel.sendMessageFormat("Message `%s` in channel %s has been deleted! Info:\nAuthor:%s\nContent:%s",
-                    data.getId(),
-                    event.getChannel().getAsMention(),
-                    authorName,
-                    content.substring(0, Math.min(content.length(), 512)) + (content.length() > 512 ? "..." : "")
-            ).queue();
+            String truncated = content.substring(0, Math.min(content.length(), 512)) + (content.length() > 512 ? "..." : "");
+            builder.addField("Author", authorName, true);
+            builder.addField("Content", truncated.isBlank() ? "`" + truncated + "`" : truncated, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
 
             messages.remove(data);
         });
@@ -387,8 +546,19 @@ public class LoggingManager extends ListenerAdapter {
     public void onMessageReactionRemoveAll(MessageReactionRemoveAllEvent event) {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(
-                channel -> channel.sendMessageFormat("All reactions were removed from message:\n%s", event.getJumpUrl()).queue());
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
+            String channelName = event.getChannel().getAsMention();
+            String messageId = event.getMessageId();
+            String jumpUrl = event.getJumpUrl();
+
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("All Reactions Removed", null, guild.getIconUrl());
+            builder.addField("Channel", channelName, true);
+            builder.addField("Message ID", messageId, true);
+            builder.addField("Jump URL", jumpUrl, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        });
     }
 
     @Override
@@ -398,8 +568,16 @@ public class LoggingManager extends ListenerAdapter {
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
             List<MessageData> messages = MESSAGE_CACHE.computeIfAbsent(event.getChannel().getIdLong(), id -> new ArrayList<>());
             Optional<MessageData> optional = messages.stream().filter(data -> data.getId() == event.getMessageIdLong()).findFirst();
+
+            long messageId = event.getMessageIdLong();
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Message Edited", null, guild.getIconUrl());
+            builder.addField("Message ID", String.valueOf(messageId), true);
+            builder.addField("Channel", event.getChannel().getAsMention(), true);
+
             if (optional.isEmpty()) {
-                channel.sendMessageFormat("Message %s was edited", event.getMessageId()).queue();
+                channel.sendMessageEmbeds(builder.build()).queue();
                 messages.add(new MessageData(event.getMessageIdLong(), event.getAuthor().getIdLong(), event.getMessage().getContentRaw()));
                 return;
             }
@@ -408,13 +586,12 @@ public class LoggingManager extends ListenerAdapter {
             String content = data.getContent();
             User author = event.getJDA().getUserById(data.getAuthor());
             String authorName = author == null ? "Unknown" : author.getAsMention();
-            channel.sendMessageFormat("Message `%s` in channel %s has been edited! Info:\nAuthor:%s\nOld Content:%s\nNew Content:%s",
-                    data.getId(),
-                    event.getChannel().getAsMention(),
-                    authorName,
-                    content.substring(0, Math.min(content.length(), 512)) + (content.length() > 512 ? "..." : ""),
-                    event.getMessage().getContentRaw().substring(0, Math.min(event.getMessage().getContentRaw().length(), 512)) + (event.getMessage().getContentRaw().length() > 512 ? "..." : "")
-            ).queue();
+            String truncatedOld = content.substring(0, Math.min(content.length(), 512)) + (content.length() > 512 ? "..." : "");
+            String truncatedNew = event.getMessage().getContentRaw().substring(0, Math.min(event.getMessage().getContentRaw().length(), 512)) + (event.getMessage().getContentRaw().length() > 512 ? "..." : "");
+            builder.addField("Author", authorName, true);
+            builder.addField("Old Content", truncatedOld.isBlank() ? "`" + truncatedOld + "`" : truncatedOld, false);
+            builder.addField("New Content", truncatedNew.isBlank() ? "`" + truncatedNew + "`" : truncatedNew, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
 
             data.setContent(event.getMessage().getContentRaw());
             messages.remove(data);
@@ -437,18 +614,22 @@ public class LoggingManager extends ListenerAdapter {
                 String hex = String.format("#%06x", color);
                 String hoisted = role.isHoisted() ? "Yes" : "No";
                 String mentionable = role.isMentionable() ? "Yes" : "No";
-                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
                 String position = "#" + role.getPosition() + 1;
+                String mention = role.getAsMention();
+                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
 
-                channel.sendMessageFormat("Role %s was created by %s! Info:\nColor:%s\nHoisted:%s\nMentionable:%s\nPermissions:%s\nPosition:%s",
-                        roleName,
-                        userName,
-                        hex,
-                        hoisted,
-                        mentionable,
-                        permissions,
-                        position
-                ).queue();
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0x00FF00);
+                builder.setAuthor("Role Created", null, guild.getIconUrl());
+                builder.addField("Name", roleName, true);
+                builder.addField("Color", hex, true);
+                builder.addField("Hoisted", hoisted, true);
+                builder.addField("Mentionable", mentionable, true);
+                builder.addField("Position", position, true);
+                builder.addField("Created By", userName, true);
+                builder.addField("Mention", mention, true);
+                builder.addField("Permissions", permissions, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
@@ -468,18 +649,20 @@ public class LoggingManager extends ListenerAdapter {
                 String hex = String.format("#%06x", color);
                 String hoisted = role.isHoisted() ? "Yes" : "No";
                 String mentionable = role.isMentionable() ? "Yes" : "No";
-                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
                 String position = "#" + role.getPosition() + 1;
+                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
 
-                channel.sendMessageFormat("Role %s was deleted by %s! Info:\nColor:%s\nHoisted:%s\nMentionable:%s\nPermissions:%s\nPosition:%s",
-                        roleName,
-                        userName,
-                        hex,
-                        hoisted,
-                        mentionable,
-                        permissions,
-                        position
-                ).queue();
+                EmbedBuilder builder = new EmbedBuilder();
+                builder.setColor(0xFF0000);
+                builder.setAuthor("Role Deleted", null, guild.getIconUrl());
+                builder.addField("Name", roleName, true);
+                builder.addField("Color", hex, true);
+                builder.addField("Hoisted", hoisted, true);
+                builder.addField("Mentionable", mentionable, true);
+                builder.addField("Position", position, true);
+                builder.addField("Deleted By", userName, true);
+                builder.addField("Permissions", permissions, false);
+                channel.sendMessageEmbeds(builder.build()).queue();
             });
         });
     }
