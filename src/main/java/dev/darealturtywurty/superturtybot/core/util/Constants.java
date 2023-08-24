@@ -10,6 +10,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 public final class Constants {
@@ -19,7 +20,8 @@ public final class Constants {
     public static final String BEAN_DUMPY_URL = "https://media.discordapp.net/attachments/855162784924434442/859517109725954048/dumpy.gif";
     public static final UrlValidator URL_VALIDATOR = new UrlValidator(UrlValidator.ALLOW_2_SLASHES);
     public static final GLA GENIUS_LYRICS = new GLA();
-    
+    public static final Path WORDLE_FILE = Path.of("wordle.txt");
+
     static {
         ShutdownHooks.register(() -> ShutdownHooks.shutdownOkHttpClient(HTTP_CLIENT));
     }

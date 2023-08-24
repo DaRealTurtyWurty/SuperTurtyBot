@@ -60,9 +60,9 @@ public class CommandHook extends ListenerAdapter {
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
         this.commands.clear();
-        this.commands.addAll(registerCommands(event.getJDA()));
-
+        this.commands.addAll(loadCommands(event.getJDA()));
         printCommandList(event.getJDA(), this.commands);
+        registerCommands(event.getJDA(), this.commands);
 
         if (!YouTubeListener.isRunning()) {
             YouTubeListener.runExecutor(event.getJDA());
@@ -171,7 +171,18 @@ public class CommandHook extends ListenerAdapter {
         });
     }
 
-    private static Set<CoreCommand> registerCommands(JDA jda) {
+    private static void registerCommands(JDA jda, Set<CoreCommand> cmds) {
+        CommandListUpdateAction updates = jda.updateCommands();
+        cmds.forEach(cmd -> registerCommand(cmd, updates, null));
+        updates.queue(registered ->
+                registered.forEach(command ->
+                        cmds.stream()
+                                .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
+                                .findFirst()
+                                .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
+    }
+
+    private static Set<CoreCommand> loadCommands(JDA jda) {
         final Set<CoreCommand> cmds = new HashSet<>();
         // Core
         cmds.add(new PingCommand());
@@ -292,17 +303,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessSongCommand());
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
-
-        jda.getGuilds().forEach(guild -> {
-            final CommandListUpdateAction updates = guild.updateCommands();
-            cmds.forEach(cmd -> registerCommand(cmd, updates, guild));
-            updates.queue(registered ->
-                    registered.forEach(cmd ->
-                            cmds.stream()
-                                    .filter(c -> c.getName().equals(cmd.getName()))
-                                    .findFirst()
-                                    .ifPresent(coreCommand -> coreCommand.setCommandId(cmd.getId()))));
-        });
 
         cmds.forEach(jda::addEventListener);
 

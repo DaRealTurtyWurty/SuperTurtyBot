@@ -115,7 +115,7 @@ public class LeaderboardCommand extends CoreCommand {
             ImageIO.write(lb, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), "leaderboard.png"))
                  .mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
+        } catch (final IOException | NullPointerException exception) {
             event.getHook().sendMessage(
                          "There has been an issue processing this leaderboard. The bot owner has been informed of " +
                                  "this issue.")
@@ -124,7 +124,7 @@ public class LeaderboardCommand extends CoreCommand {
         }
     }
 
-    private BufferedImage constructLeaderboard(Guild guild, List<Levelling> profiles) throws IOException {
+    private BufferedImage constructLeaderboard(Guild guild, List<Levelling> profiles) throws IOException, NullPointerException {
         final BufferedImage template = getTemplate();
 
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -217,7 +217,7 @@ public class LeaderboardCommand extends CoreCommand {
         return buffer;
     }
 
-    private static BufferedImage getTemplate() throws IOException {
+    private static BufferedImage getTemplate() throws IOException, NullPointerException {
         return ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/leaderboard.png"));
     }
 }
