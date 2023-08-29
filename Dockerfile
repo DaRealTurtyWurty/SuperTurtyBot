@@ -1,7 +1,5 @@
-FROM ubuntu:latest
-RUN sudo apt update && sudo apt upgrade
-RUN sudo apt install ffmpeg
-RUN ffmpeg -version
+FROM ubuntu:20.04
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends ffmpeg
 
 FROM openjdk:20
 WORKDIR /opt/SuperTurtyBot/
