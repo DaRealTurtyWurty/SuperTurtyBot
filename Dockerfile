@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 # Install FFmpeg, OpenJDK, and other necessary packages
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg openjdk-20-jdk && \
+    apt-get install -y --no-install-recommends ffmpeg openjdk-20 && \
     apt-get clean
 	
 WORKDIR /opt/SuperTurtyBot/
