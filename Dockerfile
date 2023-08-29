@@ -1,11 +1,10 @@
-FROM ubuntu:20.04
-
-# Install FFmpeg, OpenJDK, and other necessary packages
+FROM ubuntu:20.04 AS ffmpeg-installer
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg openjdk-20 && \
-    apt-get clean
-	
-WORKDIR /opt/SuperTurtyBot/
+    apt-get install -y --no-install-recommends ffmpeg
 
+# Final stage with OpenJDK 20 and copied FFmpeg
+FROM openjdk:20
+WORKDIR /opt/SuperTurtyBot/
+COPY --from=ffmpeg-installer /usr/bin/ffmpeg /usr/bin/ffmpeg
 COPY build/libs/SuperTurtyBot-all.jar SuperTurtyBot.jar
 CMD ["java", "-jar", "SuperTurtyBot.jar", "-env", "/env/.env"]
