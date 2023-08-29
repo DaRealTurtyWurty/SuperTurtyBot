@@ -84,10 +84,11 @@ public class CommandHook extends ListenerAdapter {
         // TwitterListener.setup();
 
         for (Guild guild : event.getJDA().getGuilds()) {
+            guild.updateCommands().queue();
             if (guild.getIdLong() == 1096109606452867243L) {
                 //guild.getTextChannelById(1122294244917391411L).sendMessage("Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you! Here is the changelog since we last spoke:%n%s".formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
                 IS_DEV_MODE = true;
-                return;
+                continue;
             }
 
             TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general")).findFirst().orElseGet(() -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general")).findFirst().orElse(guild.getSystemChannel()));

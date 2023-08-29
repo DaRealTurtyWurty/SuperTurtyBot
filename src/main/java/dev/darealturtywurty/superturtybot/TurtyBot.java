@@ -121,6 +121,9 @@ public class TurtyBot {
 
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);
+
+        // Add file conversion manager so that we can convert files
+        builder.addEventListeners(FileConversionManager.INSTANCE);
     }
 
     private static void loadRegisterers() {
