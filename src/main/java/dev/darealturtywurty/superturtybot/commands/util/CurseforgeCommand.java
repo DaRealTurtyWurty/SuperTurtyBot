@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import io.github.matyrobbrt.curseforgeapi.CurseForgeAPI;
@@ -46,36 +47,38 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class CurseforgeCommand extends CoreCommand {
-    private static final CurseForgeAPI CURSE_FORGE_API;
+    private static CurseForgeAPI CURSE_FORGE_API;
     private static final Map<String, Game> GAMES = new HashMap<>();
     private static final Map<Game, Set<Category>> CATEGORIES = new HashMap<>();
 
     static {
-        try {
-            CURSE_FORGE_API = CurseForgeAPI.builder()
-                    .apiKey(Environment.INSTANCE.curseforgeKey())
-                    .build();
-        } catch (LoginException exception) {
-            throw new IllegalStateException("Failed to login to curseforge!", exception);
-        }
-
-        RequestHelper helper = CURSE_FORGE_API.getHelper();
-        try {
-            Response<List<Game>> games = helper.getGames();
-            for (Game game : games.get()) {
-                GAMES.put(game.name().toUpperCase(Locale.ROOT), game);
+        Environment.INSTANCE.curseforgeKey().ifPresent(apiKey -> {
+            try {
+                CURSE_FORGE_API = CurseForgeAPI.builder()
+                        .apiKey(apiKey)
+                        .build();
+            } catch (LoginException exception) {
+                throw new IllegalStateException("Failed to login to curseforge!", exception);
             }
-        } catch (CurseForgeException exception) {
-            throw new IllegalStateException("Failed to get games from curseforge!", exception);
-        }
 
-        GAMES.values().forEach(game -> {
-            CATEGORIES.computeIfAbsent(game, key -> {
-                try {
-                    return new HashSet<>(helper.getCategories(game.id()).get());
-                } catch (CurseForgeException exception) {
-                    throw new IllegalStateException("Failed to get categories from curseforge!", exception);
+            RequestHelper helper = CURSE_FORGE_API.getHelper();
+            try {
+                Response<List<Game>> games = helper.getGames();
+                for (Game game : games.get()) {
+                    GAMES.put(game.name().toUpperCase(Locale.ROOT), game);
                 }
+            } catch (CurseForgeException exception) {
+                throw new IllegalStateException("Failed to get games from curseforge!", exception);
+            }
+
+            GAMES.values().forEach(game -> {
+                CATEGORIES.computeIfAbsent(game, key -> {
+                    try {
+                        return new HashSet<>(helper.getCategories(game.id()).get());
+                    } catch (CurseForgeException exception) {
+                        throw new IllegalStateException("Failed to get categories from curseforge!", exception);
+                    }
+                });
             });
         });
     }
@@ -125,6 +128,12 @@ public class CurseforgeCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        if (Environment.INSTANCE.curseforgeKey().isEmpty()) {
+            reply(event, "❌ This command has been disabled by the bot owner!", false, true);
+            Constants.LOGGER.error("CurseForge API key has not been set!");
+            return;
+        }
+
         String game = event.getOption("game", null, OptionMapping::getAsString);
         String search = event.getOption("search", null, OptionMapping::getAsString);
         String type = event.getOption("type", null, OptionMapping::getAsString);

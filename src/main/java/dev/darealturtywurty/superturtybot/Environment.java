@@ -1,13 +1,13 @@
 package dev.darealturtywurty.superturtybot;
 
-import org.jetbrains.annotations.NotNull;
-
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Activity.ActivityType;
 
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.Optional;
 
 public final class Environment {
     public static final Environment INSTANCE = new Environment();
@@ -15,151 +15,151 @@ public final class Environment {
 
     private Environment() {}
 
-    public String activity() {
+    public Optional<String> activity() {
         return getString("ACTIVITY");
     }
 
-    public String botToken() {
+    public Optional<String> botToken() {
         return getString("BOT_TOKEN");
     }
 
-    public String curseforgeKey() {
+    public Optional<String> curseforgeKey() {
         return getString("CURSEFORGE_KEY");
     }
 
-    public String defaultPrefix() {
+    public Optional<String> defaultPrefix() {
         return getString("DEFAULT_PREFIX");
     }
 
-    public String githubOAuthToken() {
+    public Optional<String> githubOAuthToken() {
         return getString("GITHUB_OAUTH_TOKEN");
     }
 
-    public String loggingWebhookId() {
+    public Optional<String> loggingWebhookId() {
         return getString("LOGGING_WEBHOOK_ID");
     }
 
-    public String loggingWebhookToken() {
+    public Optional<String> loggingWebhookToken() {
         return getString("LOGGING_WEBHOOK_TOKEN");
     }
 
-    public String mongoPassword() {
+    public Optional<String> mongoPassword() {
         return getString("MONGO_PASSWORD");
     }
 
-    public String mongoUsername() {
+    public Optional<String> mongoUsername() {
         return getString("MONGO_USERNAME");
     }
 
-    public long ownerId() {
+    public Optional<Long> ownerId() {
         return getLong("OWNER_ID");
     }
 
-    public String pexelsKey() {
+    public Optional<String> pexelsKey() {
         return getString("PEXELS_KEY");
     }
 
-    public String r6StatsKey() {
+    public Optional<String> r6StatsKey() {
         return getString("R6_STATS_KEY");
     }
 
-    public String redditClientId() {
+    public Optional<String> redditClientId() {
         return getString("REDDIT_CLIENT_ID");
     }
 
-    public String redditClientSecret() {
+    public Optional<String> redditClientSecret() {
         return getString("REDDIT_CLIENT_SECRET");
     }
     
-    public String spotifyID() {
+    public Optional<String> spotifyID() {
         return getString("SPOTIFY_CLIENT_ID");
     }
 
-    public String spotifySecret() {
+    public Optional<String> spotifySecret() {
         return getString("SPOTIFY_CLIENT_SECRET");
     }
     
-    public String steamKey() {
+    public Optional<String> steamKey() {
         return getString("STEAM_KEY");
     }
 
-    public String twitchOAuthToken() {
+    public Optional<String> twitchOAuthToken() {
         return getString("TWITCH_OAUTH_TOKEN");
     }
     
-    public String twitterApiKey() {
+    public Optional<String> twitterApiKey() {
         return getString("TWITTER_API_KEY");
     }
 
-    public String twitterAPIKeySecret() {
+    public Optional<String> twitterAPIKeySecret() {
         return getString("TWITTER_API_KEY_SECRET");
     }
     
-    public String twitterAppId() {
+    public Optional<String> twitterAppId() {
         return getString("TWITTER_APP_ID");
     }
 
-    public String twitterBearerToken() {
+    public Optional<String> twitterBearerToken() {
         return getString("TWITTER_BEARER_TOKEN");
     }
 
-    public String urbanDictionaryKey() {
+    public Optional<String> urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
     }
 
-    public String youtubeApiKey() {
+    public Optional<String> youtubeApiKey() {
         return getString("YOUTUBE_API_KEY");
     }
 
-    public String geniusClientSecret() {
+    public Optional<String> geniusClientSecret() {
         return getString("GENIUS_CLIENT_SECRET");
     }
 
-    public String geniusClientID() {
+    public Optional<String> geniusClientID() {
         return getString("GENIUS_CLIENT_ID");
     }
 
-    public String geniusAccessToken() {
+    public Optional<String> geniusAccessToken() {
         return getString("GENIUS_ACCESS_TOKEN");
     }
 
-    public double getDouble(String key) throws IllegalStateException {
+    public Optional<Double> getDouble(String key){
         try {
-            return Double.parseDouble(getString(key));
+            return getString(key).map(Double::parseDouble);
         } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an double!", exception);
+            return Optional.empty();
         }
     }
 
-    public float getFloat(String key) throws IllegalStateException {
+    public Optional<Float> getFloat(String key) {
         try {
-            return Float.parseFloat(getString(key));
+            return getString(key).map(Float::parseFloat);
         } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an float!", exception);
+            return Optional.empty();
         }
     }
 
-    public int getInteger(String key) throws IllegalStateException {
+    public Optional<Integer> getInteger(String key) {
         try {
-            return Integer.parseInt(getString(key));
+            return getString(key).map(Integer::parseInt);
         } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an integer!", exception);
+            return Optional.empty();
         }
     }
 
-    public long getLong(String key) throws IllegalStateException {
+    public Optional<Long> getLong(String key) {
         try {
-            return Long.parseLong(getString(key));
+            return getString(key).map(Long::parseLong);
         } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an long!", exception);
+            return Optional.empty();
         }
     }
 
-    public @NotNull String getString(String key) throws IllegalStateException {
+    public Optional<String> getString(String key) {
         try {
-            return this.env.get(key);
+            return Optional.ofNullable(this.env.get(key));
         } catch (final NullPointerException exception) {
-            throw new IllegalStateException("'" + key + "' does not exist in this .env!", exception);
+            return Optional.empty();
         }
     }
 
@@ -169,12 +169,8 @@ public final class Environment {
     }
 
     public Activity.ActivityType activityType() {
-        final String strType = getString("ACTIVITY_TYPE");
-        try {
-            return ActivityType.valueOf(strType.toUpperCase());
-        } catch (IllegalArgumentException ignored) {
-            return Activity.ActivityType.PLAYING;
-        }
+        Optional<String> activityType = getString("ACTIVITY_TYPE");
+        return activityType.map(s -> ActivityType.valueOf(s.toUpperCase(Locale.ROOT))).orElse(ActivityType.PLAYING);
     }
 
     public void load(Path environment) {

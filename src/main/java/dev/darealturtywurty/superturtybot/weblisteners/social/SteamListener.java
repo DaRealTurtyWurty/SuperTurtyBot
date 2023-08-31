@@ -42,9 +42,14 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 public class SteamListener {
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final SteamWebApiClient CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(
-        Environment.INSTANCE.steamKey()).build();
+    private static SteamWebApiClient CLIENT;
     private static final String APP_DETAILS_URL = "https://store.steampowered.com/api/appdetails?appids=%d";
+
+    static {
+        Environment.INSTANCE.steamKey().ifPresentOrElse(
+                key -> CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(key).build(),
+                () -> Constants.LOGGER.error("Steam API Key has not been set!"));
+    }
     
     public static boolean isRunning() {
         return IS_RUNNING.get();
@@ -55,6 +60,9 @@ public class SteamListener {
             return;
 
         IS_RUNNING.set(true);
+
+        if (CLIENT == null)
+            return;
 
         EXECUTOR.scheduleAtFixedRate(() -> {
             final Map<Integer, List<SteamNotifier>> appGuildMap = new HashMap<>();

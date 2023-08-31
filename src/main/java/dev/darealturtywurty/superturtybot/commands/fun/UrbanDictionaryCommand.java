@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import dev.darealturtywurty.superturtybot.core.util.Either;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -77,7 +78,13 @@ public class UrbanDictionaryCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String searchTerm = URLEncoder.encode(event.getOption("search_term").getAsString().toLowerCase().trim(),
+        if (Environment.INSTANCE.urbanDictionaryKey().isEmpty()) {
+            reply(event, "❌ This command has been disabled by the bot owner!", false, true);
+            Constants.LOGGER.warn("Urban Dictionary API Key is not set!");
+            return;
+        }
+
+        final String searchTerm = URLEncoder.encode(event.getOption("search_term", "", OptionMapping::getAsString).toLowerCase().trim(),
             StandardCharsets.UTF_8);
         final Pair<Boolean, Either<String, EmbedBuilder>> returned = makeRequest(searchTerm);
         if (Boolean.FALSE.equals(returned.getLeft())) {
@@ -100,7 +107,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
             final Request request = new Request.Builder()
                 .url("https://mashape-community-urban-dictionary.p.rapidapi.com/define?term=" + searchTerm).get()
                 .addHeader("X-RapidAPI-Host", "mashape-community-urban-dictionary.p.rapidapi.com")
-                .addHeader("X-RapidAPI-Key", Environment.INSTANCE.urbanDictionaryKey()).build();
+                .addHeader("X-RapidAPI-Key", Environment.INSTANCE.urbanDictionaryKey().get()).build();
             final Response response = CLIENT.newCall(request).execute();
 
             ResponseBody body = response.body();

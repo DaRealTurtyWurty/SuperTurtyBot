@@ -30,14 +30,16 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 public final class RedditUtils {
-    public static final RedditClient REDDIT;
+    public static RedditClient REDDIT;
 
     static {
-        final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId(),
-                Environment.INSTANCE.redditClientSecret(), UUID.randomUUID());
-        final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot", "1.0.0-alpha", "TurtyWurty");
-        REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
-        REDDIT.setLogHttp(false);
+        if(Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
+            final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
+                    Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
+            final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot", "1.0.0-alpha", "TurtyWurty");
+            REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
+            REDDIT.setLogHttp(false);
+        }
     }
 
     private RedditUtils() {

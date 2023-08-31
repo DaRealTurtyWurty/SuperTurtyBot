@@ -78,7 +78,7 @@ public class HelpCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final OptionMapping cmdOption = event.getOption("command");
         if (cmdOption == null) {
-            final var embed = commandless(Environment.INSTANCE.defaultPrefix());
+            final var embed = commandless();
             setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
@@ -99,7 +99,7 @@ public class HelpCommand extends CoreCommand {
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
 
-    private EmbedBuilder commandless(String prefix) {
+    private EmbedBuilder commandless() {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GREEN);
@@ -114,7 +114,7 @@ public class HelpCommand extends CoreCommand {
 
     private EmbedBuilder constructEmbed(EmbedBuilder embed, CoreCommand cmd) {
         embed.setDescription(String.format("Information about command: **`%s%s`**",
-            cmd.types.slash() ? "/" : Environment.INSTANCE.defaultPrefix(), cmd.getName()));
+            cmd.types.slash() ? "/" : Environment.INSTANCE.defaultPrefix().orElse(""), cmd.getName()));
         embed.addField("Name: ", cmd.getRichName() + " (" + cmd.getName() + ")", false);
         embed.addField("Description: ", cmd.getDescription(), false);
         embed.addField("Category: ", cmd.getCategory().getName(), false);

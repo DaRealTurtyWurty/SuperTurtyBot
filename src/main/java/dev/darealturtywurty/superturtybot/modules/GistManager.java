@@ -3,13 +3,11 @@ package dev.darealturtywurty.superturtybot.modules;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
 import org.eclipse.egit.github.core.client.GitHubClient;
@@ -26,19 +24,30 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 public class GistManager extends ListenerAdapter {
-    private static final GitHubClient GITHUB = new GitHubClient()
-        .setOAuth2Token(Environment.INSTANCE.githubOAuthToken());
-    private static final GistService GIST = new GistService(GITHUB);
+    private static GitHubClient GITHUB;
+    private static GistService GIST;
+
+    static {
+        Environment.INSTANCE.githubOAuthToken().ifPresentOrElse(token -> {
+            GITHUB = new GitHubClient().setOAuth2Token(token);
+            GIST = new GistService(GITHUB);
+        }, () -> Constants.LOGGER.error("GitHub OAuth Token has not been set!"));
+    }
+
     private static final List<String> ACCEPTED_EXTENSIONS = List.of("txt", "gradle", "log", "java", "txt", "kt",
         "groovy", "js", "json", "kts");
 
     public static final GistManager INSTANCE = new GistManager();
     
     @Override
-    public void onMessageReactionAdd(MessageReactionAddEvent event) {
-        if (!event.isFromGuild() || event.getUser().isBot() || event.getUser().isSystem())
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        if (GITHUB == null || GIST == null)
+            return;
+
+        if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
             return;
 
         final Guild guild = event.getGuild();
@@ -108,7 +117,10 @@ public class GistManager extends ListenerAdapter {
     }
     
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        if (GITHUB == null || GIST == null)
+            return;
+
         if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot()
             || event.getAuthor().isSystem())
             return;
@@ -144,7 +156,7 @@ public class GistManager extends ListenerAdapter {
     }
 
     private static boolean isValidAttachment(Attachment attachment) {
-        return !attachment.isImage() && !attachment.isVideo()
-            && ACCEPTED_EXTENSIONS.contains(attachment.getFileExtension().toLowerCase());
+        return !attachment.isImage() && !attachment.isVideo() && attachment.getFileExtension() != null
+            && ACCEPTED_EXTENSIONS.contains(attachment.getFileExtension().toLowerCase(Locale.ROOT));
     }
 }

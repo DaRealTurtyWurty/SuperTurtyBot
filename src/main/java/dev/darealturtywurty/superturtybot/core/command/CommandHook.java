@@ -66,19 +66,24 @@ public class CommandHook extends ListenerAdapter {
     public void onReady(@NotNull ReadyEvent event) {
         JDA jda = event.getJDA();
 
-        // Remove any existing commands
-        this.commands.forEach(jda::removeEventListener);
-        this.commands.clear();
+        if(this.commands.isEmpty()) {
+            // Add all commands
+            this.commands.addAll(createCommands());
+            this.commands.forEach(jda::addEventListener);
 
-        // Add all commands
-        this.commands.addAll(createCommands());
-        this.commands.forEach(jda::addEventListener);
+            // Register all global commands
+            List<CoreCommand> globalCommands = this.commands.stream().filter(CoreCommand::isNotServerOnly).toList();
+            registerCommands(jda, globalCommands);
 
-        // Register all global commands
-        registerCommands(jda, this.commands.stream().filter(CoreCommand::isNotServerOnly).toList());
+            // Register all guild commands
+            List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
+            for (Guild guild : event.getJDA().getGuilds()) {
+                registerCommands(guild, guildCommands);
+            }
 
-        // Print command list
-        printCommandList(jda, this.commands);
+            // Print command list
+            printCommandList(jda, this.commands);
+        }
 
         // Initialize all listeners
         init(jda);
@@ -88,8 +93,6 @@ public class CommandHook extends ListenerAdapter {
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         Guild guild = event.getGuild();
 
-        registerCommands(guild, this.commands.stream().filter(CoreCommand::isServerOnly).toList());
-
         TextChannel generalChannel = guild.getTextChannels()
                 .stream()
                 .filter(channel -> channel.getName().equals("general"))
@@ -97,6 +100,12 @@ public class CommandHook extends ListenerAdapter {
                 .orElseGet(guild::getSystemChannel);
 
         sendStartupMessage(generalChannel);
+
+        if(this.commands.isEmpty())
+            return;
+
+        List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
+        registerCommands(guild, guildCommands);
     }
 
     private static void init(JDA jda) {
@@ -126,7 +135,7 @@ public class CommandHook extends ListenerAdapter {
             IS_DEV_MODE = true;
         }
 
-        if (!IS_DEV_MODE) {
+        if (!isDevMode()) {
             AutoModerator.INSTANCE.initialize();
         }
     }
@@ -194,7 +203,7 @@ public class CommandHook extends ListenerAdapter {
                                 .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
     }
 
-    private void registerCommands(Guild guild, Collection<CoreCommand> commands) {
+    private static void registerCommands(Guild guild, Collection<CoreCommand> commands) {
         CommandListUpdateAction updates = guild.updateCommands();
         commands.forEach(cmd -> registerCommand(cmd, updates));
         updates.queue(registered -> {
@@ -291,7 +300,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ClearWarningsCommand());
         cmds.add(new WarningsCommand());
         cmds.add(new SlowmodeCommand());
-        cmds.add(new BeanCommand());
         cmds.add(new RegisterCountingCommand());
         cmds.add(new ReportCommand());
         cmds.add(new ReportsCommand());

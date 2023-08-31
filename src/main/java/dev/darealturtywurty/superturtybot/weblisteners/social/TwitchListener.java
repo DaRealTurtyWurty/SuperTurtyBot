@@ -11,6 +11,7 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.mongodb.client.model.Filters;
 
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -25,12 +26,14 @@ public class TwitchListener {
             return;
 
         IS_INITIALIZED.set(true);
-        
-        twitchClient = TwitchClientBuilder.builder().withDefaultEventHandler(ReactorEventHandler.class)
-            .withDefaultAuthToken(new OAuth2Credential("twitch", Environment.INSTANCE.twitchOAuthToken()))
-            .withEnableHelix(true).build();
 
-        twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> handleGoLive(jda, event));
+        Environment.INSTANCE.twitchOAuthToken().ifPresentOrElse(token -> {
+            twitchClient = TwitchClientBuilder.builder().withDefaultEventHandler(ReactorEventHandler.class)
+                .withDefaultAuthToken(new OAuth2Credential("twitch", token))
+                .withEnableHelix(true).build();
+
+            twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> handleGoLive(jda, event));
+        }, () -> Constants.LOGGER.error("Twitch OAuth Token has not been set!"));
     }
 
     public static boolean isInitialized() {

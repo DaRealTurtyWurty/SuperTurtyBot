@@ -1072,7 +1072,7 @@ public class NSFWCommandList {
                 files = paths.map(Path::toFile).collect(Collectors.toList());
             } catch (final IOException exception) {
                 event.hook().editOriginal(
-                        "There has been an issue with the `" + Environment.INSTANCE.defaultPrefix() + "orgasm` command! Please report the following to the bot owner:\n" + exception.getMessage() + "\n" + ExceptionUtils.getMessage(
+                        "There has been an issue with the `" + Environment.INSTANCE.defaultPrefix().orElse("") + "orgasm` command! Please report the following to the bot owner:\n" + exception.getMessage() + "\n" + ExceptionUtils.getMessage(
                                 exception)).setFiles().setComponents().setEmbeds().queue();
                 return;
             }

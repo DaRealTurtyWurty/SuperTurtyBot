@@ -434,9 +434,9 @@ public class ApiHandler {
             String json = body.string();
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
-            String loader = object.get("loader").getAsString();
-            String yarn = object.get("yarn").getAsString();
-            return Either.left(new CoupledPair<>(new FabricVersion(loader, true), new FabricVersion(yarn, false)));
+            String stable = object.get("stable").getAsString();
+            String unstable = object.get("unstable").getAsString();
+            return Either.left(new CoupledPair<>(new FabricVersion(stable, true), new FabricVersion(unstable, false)));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -460,7 +460,57 @@ public class ApiHandler {
             List<FabricVersion> versions = array.asList()
                     .stream()
                     .map(JsonElement::getAsJsonObject)
-                    .map(obj -> new FabricVersion(obj.get("version").getAsString(), obj.get("isLoader").getAsBoolean()))
+                    .map(obj -> new FabricVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @ApiStatus.Experimental
+    public static Either<CoupledPair<QuiltVersion>, HttpStatus> getLatestQuilt() {
+        try(Response response = makeRequest("minecraft/quilt/latest")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if (body.string().isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String stable = object.get("stable").getAsString();
+            String unstable = object.get("unstable").getAsString();
+            return Either.left(new CoupledPair<>(new QuiltVersion(stable, true), new QuiltVersion(unstable, false)));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @ApiStatus.Experimental
+    public static Either<List<QuiltVersion>, HttpStatus> getAllQuilt() {
+        try(Response response = makeRequest("minecraft/quilt/all")) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            if (body.string().isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            String json = body.string();
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<QuiltVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new QuiltVersion(obj.get("version").getAsString(), obj.get("isRelease").getAsBoolean()))
                     .toList();
             return Either.left(versions);
         } catch (IOException ignored) {

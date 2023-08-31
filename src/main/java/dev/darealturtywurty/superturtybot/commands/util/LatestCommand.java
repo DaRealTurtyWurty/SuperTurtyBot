@@ -165,6 +165,30 @@ public class LatestCommand extends CoreCommand {
         }
     }
 
+    private static Pair<String, String> getQuiltVersions() {
+        try {
+            JsonArray json = Constants.GSON.fromJson(new InputStreamReader(new URL(FABRIC_LOADER_META).openStream()),
+                    JsonArray.class);
+
+            String latestLatest = json.get(0).getAsJsonObject().get("version").getAsString();
+            String latestStable;
+            for (JsonElement jsonElement : json) {
+                if (jsonElement.isJsonObject() && jsonElement.getAsJsonObject().has("stable")) {
+                    boolean stable = jsonElement.getAsJsonObject().get("stable").getAsBoolean();
+                    if (stable) {
+                        latestStable = jsonElement.getAsJsonObject().get("version").getAsString();
+                        return new Pair<>(latestStable, latestLatest);
+                    }
+                }
+            }
+
+            return new Pair<>("None", latestLatest);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            return new Pair<>("Unknown", "Unknown");
+        }
+    }
+
     private static String getParchmentVersion(String mcVersion) {
         try {
             String parchmentUrl = String.format(PARCHMENT_MAVEN_META, mcVersion);

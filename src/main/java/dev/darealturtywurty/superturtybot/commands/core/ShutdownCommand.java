@@ -38,7 +38,7 @@ public class ShutdownCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId())
+        if (Environment.INSTANCE.ownerId().map(id -> event.getAuthor().getIdLong() == id).orElse(false))
             return;
 
         event.getMessage().reply("😩 Shutting down! 😩").mentionRepliedUser(false).queue();

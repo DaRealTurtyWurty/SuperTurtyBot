@@ -50,10 +50,13 @@ public final class AudioManager {
         AudioSourceManagers.registerLocalSource(AUDIO_MANAGER);
 
         // Spotify
-        var spotifyManager = new SpotifySourceManager(null, Environment.INSTANCE.spotifyID(),
-                Environment.INSTANCE.spotifySecret(), "US", AUDIO_MANAGER);
-        spotifyManager.setPlaylistPageLimit(30);
-        AUDIO_MANAGER.registerSourceManager(spotifyManager);
+        if(Environment.INSTANCE.spotifyID().isPresent() && Environment.INSTANCE.spotifySecret().isPresent()) {
+            var spotifyManager = new SpotifySourceManager(null, Environment.INSTANCE.spotifyID().get(),
+                    Environment.INSTANCE.spotifySecret().get(), "US", AUDIO_MANAGER);
+
+            spotifyManager.setPlaylistPageLimit(30);
+            AUDIO_MANAGER.registerSourceManager(spotifyManager);
+        }
 
         // Clypit, Speech (TTS), PornHub, Reddit, OCRemix, TikTok, Mixcloud, SoundGasm
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");

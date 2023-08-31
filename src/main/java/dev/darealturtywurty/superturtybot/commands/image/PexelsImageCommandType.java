@@ -57,7 +57,7 @@ public class PexelsImageCommandType extends ImageCommandType {
             int count = 0;
             while (url != null) {
                 final URLConnection connection = new URL(url).openConnection();
-                connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey());
+                connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey().get());
                 
                 JsonObject response;
                 try {
@@ -109,6 +109,12 @@ public class PexelsImageCommandType extends ImageCommandType {
     
     private static BiConsumer<SlashCommandInteractionEvent, ImageCommandType> createRunner() {
         return (event, cmd) -> {
+            if(Environment.INSTANCE.pexelsKey().isEmpty()) {
+                event.reply("❌ This command has been disabled by the bot owner!").mentionRepliedUser(false).queue();
+                Constants.LOGGER.warn("Pexels API key has not been set!");
+                return;
+            }
+
             final PexelsImageCommandType pexelsCmd = (PexelsImageCommandType) cmd;
             event.deferReply().setContent("Loading " + WordUtils.capitalize(pexelsCmd.searchTerm) + " image...")
                 .mentionRepliedUser(false).queue(msg -> {

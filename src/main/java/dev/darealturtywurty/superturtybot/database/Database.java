@@ -9,6 +9,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -95,6 +96,11 @@ public class Database {
     }
 
     private static MongoClient connect(CodecRegistry codec) {
+        if (Environment.INSTANCE.mongoUsername().isEmpty() || Environment.INSTANCE.mongoPassword().isEmpty()) {
+            Constants.LOGGER.error("MongoDB username or password have not been set!");
+            return MongoClients.create();
+        }
+
         final ConnectionString connectionString = new ConnectionString(
             "mongodb+srv://" + Environment.INSTANCE.mongoUsername() + ":" + Environment.INSTANCE.mongoPassword()
                 + "@turtybot.omb6j.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");

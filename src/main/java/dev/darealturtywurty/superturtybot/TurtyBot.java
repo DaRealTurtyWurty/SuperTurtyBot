@@ -44,27 +44,27 @@ public class TurtyBot {
 
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
-
         Constants.LOGGER.info("Loaded environment file!");
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
-
         Constants.LOGGER.info("Setup logging!");
-        
-        final var jdaBuilder = JDABuilder.createDefault(Environment.INSTANCE.botToken());
-        configureBuilder(jdaBuilder);
-        jdaBuilder.build();
 
-        Constants.LOGGER.info("Setup JDA!");
+        Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
+            final var jdaBuilder = JDABuilder.createDefault(token);
+            configureBuilder(jdaBuilder);
+            jdaBuilder.build();
+            Constants.LOGGER.info("Setup JDA!");
+        }, () -> {
+            throw new InvalidTokenException("Bot token is not present in .env!");
+        });
 
         loadRegisterers();
-
         Constants.LOGGER.info("Loaded registries!");
     }
 
     private static void configureBuilder(JDABuilder builder) {
         // Set the current activity to watching me!
-        builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity()));
+        builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));
 
         // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,

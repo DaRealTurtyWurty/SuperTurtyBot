@@ -77,10 +77,10 @@ public class RainbowSixStatusCommand extends CoreCommand {
 
             var embed = new EmbedBuilder();
             embed.setTitle("Rainbow Six Siege Status");
-            embed.setColor(Color.MAGENTA);
+            embed.setColor(new Color(0xff930b));
             embed.setTimestamp(Instant.now());
             embed.setFooter("Requested by " + event.getUser().getAsTag(), event.getUser().getEffectiveAvatarUrl());
-            embed.setThumbnail("https://i.pinimg.com/736x/4c/95/99/4c9599d6ade28c1258060a6fca2b6788.jpg");
+            embed.setThumbnail("https://pbs.twimg.com/media/FFjdfYeXIAMkL8e?format=jpg&name=large");
 
             var description = new StringBuilder("The status of Rainbow Six Siege servers.\n\n");
 

@@ -87,6 +87,11 @@ public class PlayCommand extends CoreCommand {
             return;
         }
 
+        if(Environment.INSTANCE.youtubeApiKey().isEmpty()) {
+            event.replyChoices().queue();
+            return;
+        }
+
         final String searchTerm = URLEncoder.encode(event.getOption("search_term", "", OptionMapping::getAsString),
                 StandardCharsets.UTF_8);
         if (searchTerm.isBlank()) {
@@ -158,7 +163,7 @@ public class PlayCommand extends CoreCommand {
     public static CompletableFuture<List<YouTubeSearchResult>> youtubeSearch(String term) {
         final CompletableFuture<List<YouTubeSearchResult>> future = new CompletableFuture<>();
         Constants.HTTP_CLIENT.newCall(
-                new Request.Builder().url(YOUTUBE_SEARCH_API.formatted(Environment.INSTANCE.youtubeApiKey(), term))
+                new Request.Builder().url(YOUTUBE_SEARCH_API.formatted(Environment.INSTANCE.youtubeApiKey().get(), term))
                         .build()).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException exception) {

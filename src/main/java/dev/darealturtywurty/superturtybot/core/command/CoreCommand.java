@@ -81,8 +81,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
         final String content = event.getMessage().getContentRaw().toLowerCase();
         if (event.isWebhookMessage() || event.getAuthor().isBot()
-            || !content.startsWith((Environment.INSTANCE.defaultPrefix() + getName() + " ").toLowerCase())
-                && !(Environment.INSTANCE.defaultPrefix() + getName()).equals(content))
+            || !content.startsWith((Environment.INSTANCE.defaultPrefix().orElse("") + getName() + " ").toLowerCase())
+                && !(Environment.INSTANCE.defaultPrefix().orElse("") + getName()).equals(content))
             return;
 
         if (!this.types.normal())

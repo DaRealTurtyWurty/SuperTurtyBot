@@ -176,7 +176,17 @@ public class CommandListCommand extends CoreCommand {
                             .stream()
                             .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
                             .filter(cmd -> {
-                                List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(cmd.getCommandId());
+                                String commandId;
+                                if(cmd.isServerOnly()) {
+                                    commandId = cmd.getCommandId(guild.getIdLong());
+                                } else {
+                                    commandId = cmd.getCommandId();
+                                }
+
+                                if (commandId == null)
+                                    return false;
+
+                                List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(commandId);
                                 return privileges == null || privileges.isEmpty() || privileges.stream()
                                         .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
                             })

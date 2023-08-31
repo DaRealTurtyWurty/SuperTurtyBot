@@ -67,7 +67,7 @@ public class AutoModerator extends ListenerAdapter {
     private void amongusDetection(final Message message) {
         final User user = message.getAuthor();
         final String shortenedText = message.getContentRaw().toLowerCase().trim();
-        if (shortenedText.contains(" sus ") || "sus".equals(shortenedText) || shortenedText.contains("amogus") || shortenedText.contains("amongus") && !shortenedText.startsWith(Environment.INSTANCE.defaultPrefix()) && !user.isBot() && !message.isWebhookMessage()) {
+        if (shortenedText.contains(" sus ") || "sus".equals(shortenedText) || shortenedText.contains("amogus") || shortenedText.contains("amongus") && (Environment.INSTANCE.defaultPrefix().isPresent() && !shortenedText.startsWith(Environment.INSTANCE.defaultPrefix().get())) && !user.isBot() && !message.isWebhookMessage()) {
             message.reply(Constants.BEAN_DUMPY_URL).queue();
         }
     }

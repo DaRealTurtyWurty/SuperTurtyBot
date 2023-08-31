@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,10 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
         return this.layout != null ? this.layout.doLayout(event) : event.getFormattedMessage();
     }
     
-    public static void setup(String webhookId, String webhookToken) throws ClassCastException {
+    public static void setup(Optional<String> webhookId, Optional<String> webhookToken) throws ClassCastException {
+        if (webhookId.isEmpty() || webhookToken.isEmpty())
+            return;
+
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         
         final var appender = new DiscordLogbackAppender();
@@ -81,7 +85,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
         layout.start();
         appender.setLayout(layout);
         
-        appender.login(webhookId, webhookToken);
+        appender.login(webhookId.get(), webhookToken.get());
         appender.start();
         
         final ch.qos.logback.classic.Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
