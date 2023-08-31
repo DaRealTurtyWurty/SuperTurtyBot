@@ -19,12 +19,6 @@ public final class Environment {
         return getString("ACTIVITY");
     }
 
-    public Activity.ActivityType activityType() {
-        final String strType = getString("ACTIVITY_TYPE");
-        final Activity.ActivityType type = ActivityType.valueOf(strType.toUpperCase());
-        return type == null ? Activity.ActivityType.PLAYING : type;
-    }
-
     public String botToken() {
         return getString("BOT_TOKEN");
     }
@@ -35,51 +29,6 @@ public final class Environment {
 
     public String defaultPrefix() {
         return getString("DEFAULT_PREFIX");
-    }
-
-    @NotNull
-    public double getDouble(String key) throws IllegalStateException {
-        try {
-            return Double.parseDouble(getString(key));
-        } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an double!", exception);
-        }
-    }
-
-    @NotNull
-    public float getFloat(String key) throws IllegalStateException {
-        try {
-            return Float.parseFloat(getString(key));
-        } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an float!", exception);
-        }
-    }
-
-    @NotNull
-    public int getInteger(String key) throws IllegalStateException {
-        try {
-            return Integer.parseInt(getString(key));
-        } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an integer!", exception);
-        }
-    }
-
-    @NotNull
-    public long getLong(String key) throws IllegalStateException {
-        try {
-            return Long.parseLong(getString(key));
-        } catch (final NumberFormatException exception) {
-            throw new IllegalStateException("'" + key + "' is not an long!", exception);
-        }
-    }
-
-    @NotNull
-    public String getString(String key) throws IllegalStateException {
-        try {
-            return this.env.get(key);
-        } catch (final NullPointerException exception) {
-            throw new IllegalStateException("'" + key + "' does not exist in this .env!", exception);
-        }
     }
 
     public String githubOAuthToken() {
@@ -108,11 +57,6 @@ public final class Environment {
 
     public String pexelsKey() {
         return getString("PEXELS_KEY");
-    }
-
-    public void print() {
-        this.env.entries(Dotenv.Filter.DECLARED_IN_ENV_FILE)
-            .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));
     }
 
     public String r6StatsKey() {
@@ -177,6 +121,60 @@ public final class Environment {
 
     public String geniusAccessToken() {
         return getString("GENIUS_ACCESS_TOKEN");
+    }
+
+    public double getDouble(String key) throws IllegalStateException {
+        try {
+            return Double.parseDouble(getString(key));
+        } catch (final NumberFormatException exception) {
+            throw new IllegalStateException("'" + key + "' is not an double!", exception);
+        }
+    }
+
+    public float getFloat(String key) throws IllegalStateException {
+        try {
+            return Float.parseFloat(getString(key));
+        } catch (final NumberFormatException exception) {
+            throw new IllegalStateException("'" + key + "' is not an float!", exception);
+        }
+    }
+
+    public int getInteger(String key) throws IllegalStateException {
+        try {
+            return Integer.parseInt(getString(key));
+        } catch (final NumberFormatException exception) {
+            throw new IllegalStateException("'" + key + "' is not an integer!", exception);
+        }
+    }
+
+    public long getLong(String key) throws IllegalStateException {
+        try {
+            return Long.parseLong(getString(key));
+        } catch (final NumberFormatException exception) {
+            throw new IllegalStateException("'" + key + "' is not an long!", exception);
+        }
+    }
+
+    public @NotNull String getString(String key) throws IllegalStateException {
+        try {
+            return this.env.get(key);
+        } catch (final NullPointerException exception) {
+            throw new IllegalStateException("'" + key + "' does not exist in this .env!", exception);
+        }
+    }
+
+    public void print() {
+        this.env.entries(Dotenv.Filter.DECLARED_IN_ENV_FILE)
+                .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));
+    }
+
+    public Activity.ActivityType activityType() {
+        final String strType = getString("ACTIVITY_TYPE");
+        try {
+            return ActivityType.valueOf(strType.toUpperCase());
+        } catch (IllegalArgumentException ignored) {
+            return Activity.ActivityType.PLAYING;
+        }
     }
 
     public void load(Path environment) {
