@@ -2,13 +2,11 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.google.gson.JsonArray;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.io.IOException;
@@ -49,7 +47,7 @@ public class AutoModerator extends ListenerAdapter {
         scamDetection(event.getMessage());
     }
 
-    public void readyUp() {
+    public void initialize() {
         try {
             final URLConnection connection = new URL("https://phish.sinking.yachts/v2/all").openConnection();
             connection.addRequestProperty("X-Identity", "TurtyBot#8108");

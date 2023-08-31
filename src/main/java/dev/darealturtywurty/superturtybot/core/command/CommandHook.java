@@ -14,7 +14,6 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWar
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
 import dev.darealturtywurty.superturtybot.commands.music.*;
-import dev.darealturtywurty.superturtybot.commands.music.MusicRestartCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
@@ -22,34 +21,41 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestComman
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
-import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
-import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
-import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
-import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CommandHook extends ListenerAdapter {
-    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
-
-    protected static final Set<CommandCategory> CATEGORIES = new HashSet<>();
-    protected static final Map<Long, Set<CoreCommand>> JDA_COMMANDS = new HashMap<>();
     public static final CommandHook INSTANCE = new CommandHook();
-    public static boolean IS_DEV_MODE = false;
+
+    private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
+    private static final Set<CommandCategory> CATEGORIES = new HashSet<>();
+    private static boolean IS_DEV_MODE = false;
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
     private CommandHook() {
+    }
+
+    public static Set<CommandCategory> getCategories() {
+        return CATEGORIES;
+    }
+
+    public static boolean isDevMode() {
+        return IS_DEV_MODE;
     }
 
     public Set<CoreCommand> getCommands() {
@@ -58,56 +64,150 @@ public class CommandHook extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        super.onReady(event);
-        this.commands.clear();
-        this.commands.addAll(loadCommands(event.getJDA()));
-        printCommandList(event.getJDA(), this.commands);
-        registerCommands(event.getJDA(), this.commands);
+        JDA jda = event.getJDA();
 
+        // Remove any existing commands
+        this.commands.forEach(jda::removeEventListener);
+        this.commands.clear();
+
+        // Add all commands
+        this.commands.addAll(createCommands());
+        this.commands.forEach(jda::addEventListener);
+
+        // Register all global commands
+        registerCommands(jda, this.commands.stream().filter(CoreCommand::isNotServerOnly).toList());
+
+        // Print command list
+        printCommandList(jda, this.commands);
+
+        // Initialize all listeners
+        init(jda);
+    }
+
+    @Override
+    public void onGuildReady(@NotNull GuildReadyEvent event) {
+        Guild guild = event.getGuild();
+
+        registerCommands(guild, this.commands.stream().filter(CoreCommand::isServerOnly).toList());
+
+        TextChannel generalChannel = guild.getTextChannels()
+                .stream()
+                .filter(channel -> channel.getName().equals("general"))
+                .findFirst()
+                .orElseGet(guild::getSystemChannel);
+
+        sendStartupMessage(generalChannel);
+    }
+
+    private static void init(JDA jda) {
         if (!YouTubeListener.isRunning()) {
-            YouTubeListener.runExecutor(event.getJDA());
+            YouTubeListener.runExecutor(jda);
         }
 
         if (!TwitchListener.isInitialized()) {
-            TwitchListener.initialize(event.getJDA());
+            TwitchListener.initialize(jda);
         }
 
         if (!SteamListener.isRunning()) {
-            SteamListener.runExecutor(event.getJDA());
+            SteamListener.runExecutor(jda);
         }
 
         if (!RedditListener.isInitialized()) {
-            RedditListener.initialize(event.getJDA());
+            RedditListener.initialize(jda);
         }
 
         // TODO: Fix this mf
-        // TwitterListener.setup();
+//        if (!TwitterListener.isInitialized()) {
+//            TwitterListener.initialize(jda);
+//        }
 
-        for (Guild guild : event.getJDA().getGuilds()) {
-            guild.updateCommands().queue();
-            if (guild.getIdLong() == 1096109606452867243L) {
-                //guild.getTextChannelById(1122294244917391411L).sendMessage("Hello everyone! I am now online. I am currently in development mode. So please help me test my commands. <@309776610255437824> May have something specific that he wants help testing, so that would be the first priority. Thank you! Here is the changelog since we last spoke:%n%s".formatted(ChangelogFetcher.INSTANCE.getFormattedChangelog())).queue();
-                IS_DEV_MODE = true;
-                continue;
-            }
-
-            TextChannel channel = guild.getTextChannels().stream().filter(c -> c.getName().equals("general")).findFirst().orElseGet(() -> guild.getTextChannels().stream().filter(c -> c.getName().contains("general")).findFirst().orElse(guild.getSystemChannel()));
-
-            if (channel == null) return;
-            sendStartupMessage(channel);
+        Guild devGuild = jda.getGuildById(1096109606452867243L);
+        if (devGuild != null) {
+            IS_DEV_MODE = true;
         }
 
         if (!IS_DEV_MODE) {
-            AutoModerator.INSTANCE.readyUp();
+            AutoModerator.INSTANCE.initialize();
         }
     }
 
-    private static void sendStartupMessage(TextChannel channel) {
+    private static void sendStartupMessage(@Nullable TextChannel channel) {
+        if (channel == null) return;
+
         String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
         channel.sendMessage(changelog).queue();
     }
 
-    protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates, Guild guild) {
+    private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
+        final List<TextChannel> channels = jda.getTextChannelsByName("command-list", true);
+        if (channels.isEmpty()) return;
+
+        final TextChannel cmdList = channels.get(0);
+        if (cmdList == null) return;
+
+        final var builder = new StringBuilder();
+        final var previous = new AtomicReference<CoreCommand>();
+        final var slashes = new AtomicInteger();
+        final var prefixes = new AtomicInteger();
+        final var guild = new AtomicInteger();
+        final var global = new AtomicInteger();
+        cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
+            if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
+                builder.append("\n**").append(cmd.getCategory().getName()).append("**\n");
+            } else if (previous.get() == null) {
+                builder.append("**").append(cmd.getCategory().getName()).append("**\n");
+            }
+
+            builder.append("`").append(cmd.types.slash() ? "/" : ".").append(cmd.getName()).append("`\n");
+            previous.set(cmd);
+
+            if (cmd.types.slash()) {
+                slashes.incrementAndGet();
+            } else {
+                prefixes.incrementAndGet();
+            }
+
+            if (cmd.isServerOnly()) {
+                guild.incrementAndGet();
+            } else {
+                global.incrementAndGet();
+            }
+        });
+
+        cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
+            success.sendMessage(builder.toString()).queue();
+            success.sendMessage("\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** guild commands.\nThere are **%d** global commands.".formatted(
+                    slashes.get(), prefixes.get(), guild.get(), global.get()))
+                    .queue();
+            cmdList.delete().queue();
+        });
+    }
+
+    private static void registerCommands(JDA jda, Collection<CoreCommand> commands) {
+        CommandListUpdateAction updates = jda.updateCommands();
+        commands.forEach(cmd -> registerCommand(cmd, updates));
+        updates.queue(registered ->
+                registered.forEach(command ->
+                        commands.stream()
+                                .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
+                                .findFirst()
+                                .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
+    }
+
+    private void registerCommands(Guild guild, Collection<CoreCommand> commands) {
+        CommandListUpdateAction updates = guild.updateCommands();
+        commands.forEach(cmd -> registerCommand(cmd, updates));
+        updates.queue(registered -> {
+            for (Command command : registered) {
+                commands.stream()
+                        .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
+                        .findFirst()
+                        .ifPresent(registeredCommand -> registeredCommand.setCommandId(guild.getIdLong(), command.getId()));
+            }
+        });
+    }
+
+    protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates) {
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
             final List<OptionData> options = cmd.createOptions();
@@ -137,53 +237,7 @@ public class CommandHook extends ListenerAdapter {
         }
     }
 
-    private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
-        final List<TextChannel> channels = jda.getTextChannelsByName("command-list", true);
-        if (channels.isEmpty()) return;
-
-        final TextChannel cmdList = channels.get(0);
-        if (cmdList == null) return;
-
-        final var builder = new StringBuilder();
-        final var previous = new AtomicReference<CoreCommand>();
-        final var slashes = new AtomicInteger();
-        final var prefixes = new AtomicInteger();
-        cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
-            if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
-                builder.append("\n**").append(cmd.getCategory().getName()).append("**\n");
-            } else if (previous.get() == null) {
-                builder.append("**").append(cmd.getCategory().getName()).append("**\n");
-            }
-
-            builder.append("`").append(cmd.types.slash() ? "/" : ".").append(cmd.getName()).append("`\n");
-            previous.set(cmd);
-
-            if (cmd.types.slash()) {
-                slashes.incrementAndGet();
-            } else {
-                prefixes.incrementAndGet();
-            }
-        });
-
-        cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
-            success.sendMessage(builder.toString()).queue();
-            success.sendMessage("\n\nThere are **" + slashes.get() + "** slash commands.\nThere are **" + prefixes.get() + "** prefix commands.").queue();
-            cmdList.delete().queue();
-        });
-    }
-
-    private static void registerCommands(JDA jda, Set<CoreCommand> cmds) {
-        CommandListUpdateAction updates = jda.updateCommands();
-        cmds.forEach(cmd -> registerCommand(cmd, updates, null));
-        updates.queue(registered ->
-                registered.forEach(command ->
-                        cmds.stream()
-                                .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
-                                .findFirst()
-                                .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
-    }
-
-    private static Set<CoreCommand> loadCommands(JDA jda) {
+    private static Set<CoreCommand> createCommands() {
         final Set<CoreCommand> cmds = new HashSet<>();
         // Core
         cmds.add(new PingCommand());
@@ -304,8 +358,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessSongCommand());
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
-
-        cmds.forEach(jda::addEventListener);
 
         return cmds;
     }

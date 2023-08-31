@@ -20,7 +20,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     private static final Map<Long, Pair<String, Long>> RATELIMITS = new ConcurrentHashMap<>();
 
     public final Types types;
-    private String commandId;
+
+    // -1 = Global
+    private final Map<Long, String> commandIds = new ConcurrentHashMap<>();
 
     protected CoreCommand(Types types) {
         this.types = types;
@@ -36,6 +38,29 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     
     public boolean isServerOnly() {
         return false;
+    }
+
+    final boolean isNotServerOnly() {
+        return !isServerOnly();
+    }
+
+    public void setCommandId(long guildId, String id) {
+        if (this.commandIds.containsKey(guildId))
+            throw new IllegalStateException("Command ID already set!");
+
+        this.commandIds.put(guildId, id);
+    }
+
+    public void setCommandId(String id) {
+        setCommandId(-1L, id);
+    }
+
+    public String getCommandId(long guildId) {
+        return this.commandIds.get(guildId);
+    }
+
+    public String getCommandId() {
+        return getCommandId(-1L);
     }
 
     @Override
@@ -102,44 +127,19 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         }
     }
 
-    public void setCommandId(String id) {
-        if (this.commandId != null)
-            throw new IllegalStateException("Command ID already set!");
+    protected void runGuildMessage(MessageReceivedEvent event) {}
 
-        this.commandId = id;
-    }
+    protected void runMessageCtx(MessageContextInteractionEvent event) {}
 
-    public String getCommandId() {
-        return this.commandId;
-    }
+    protected void runNormalMessage(MessageReceivedEvent event) {}
 
-    protected void runGuildMessage(MessageReceivedEvent event) {
+    protected void runPrivateMessage(MessageReceivedEvent event) {}
 
-    }
+    protected void runSlash(SlashCommandInteractionEvent event) {}
 
-    protected void runMessageCtx(MessageContextInteractionEvent event) {
+    protected void runThreadMessage(MessageReceivedEvent event) {}
 
-    }
-
-    protected void runNormalMessage(MessageReceivedEvent event) {
-
-    }
-
-    protected void runPrivateMessage(MessageReceivedEvent event) {
-
-    }
-
-    protected void runSlash(SlashCommandInteractionEvent event) {
-
-    }
-
-    protected void runThreadMessage(MessageReceivedEvent event) {
-
-    }
-
-    protected void runUserCtx(UserContextInteractionEvent event) {
-
-    }
+    protected void runUserCtx(UserContextInteractionEvent event) {}
 
     private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {
         Pair<TimeUnit, Long> ratelimit = getRatelimit();

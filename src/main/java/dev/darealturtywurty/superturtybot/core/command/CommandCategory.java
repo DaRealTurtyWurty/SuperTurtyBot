@@ -43,7 +43,7 @@ public interface CommandCategory {
             }
         };
         
-        CommandHook.CATEGORIES.add(category);
+        CommandHook.getCategories().add(category);
         return category;
     }
     
@@ -65,11 +65,11 @@ public interface CommandCategory {
             }
         };
         
-        CommandHook.CATEGORIES.add(category);
+        CommandHook.getCategories().add(category);
         return category;
     }
     
     static Set<CommandCategory> getCategories() {
-        return Set.of(CommandHook.CATEGORIES.toArray(new CommandCategory[0]));
+        return Set.of(CommandHook.getCategories().toArray(new CommandCategory[0]));
     }
 }
