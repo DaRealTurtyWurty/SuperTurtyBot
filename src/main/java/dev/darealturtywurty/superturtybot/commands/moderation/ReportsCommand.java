@@ -89,6 +89,8 @@ public class ReportsCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
         var contents = new PaginatedEmbed.ContentsBuilder();
 
         CompletableFuture<?> future = new CompletableFuture<>();

@@ -102,7 +102,7 @@ public class Database {
         }
 
         final ConnectionString connectionString = new ConnectionString(
-            "mongodb+srv://" + Environment.INSTANCE.mongoUsername() + ":" + Environment.INSTANCE.mongoPassword()
+            "mongodb+srv://" + Environment.INSTANCE.mongoUsername().get() + ":" + Environment.INSTANCE.mongoPassword().get()
                 + "@turtybot.omb6j.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
         final MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connectionString)
             .applicationName("TurtyBot").codecRegistry(codec).build();
