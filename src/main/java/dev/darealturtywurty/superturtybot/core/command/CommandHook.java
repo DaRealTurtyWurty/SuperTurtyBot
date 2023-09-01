@@ -156,8 +156,12 @@ public class CommandHook extends ListenerAdapter {
 
         final var builder = new StringBuilder();
         final var previous = new AtomicReference<CoreCommand>();
+
         final var slashes = new AtomicInteger();
         final var prefixes = new AtomicInteger();
+        final var messageCtx = new AtomicInteger();
+        final var userCtx = new AtomicInteger();
+
         final var guild = new AtomicInteger();
         final var global = new AtomicInteger();
         cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
@@ -172,8 +176,18 @@ public class CommandHook extends ListenerAdapter {
 
             if (cmd.types.slash()) {
                 slashes.incrementAndGet();
-            } else {
+            }
+
+            if(cmd.types.normal()) {
                 prefixes.incrementAndGet();
+            }
+
+            if(cmd.types.messageCtx()) {
+                messageCtx.incrementAndGet();
+            }
+
+            if(cmd.types.userCtx()) {
+                userCtx.incrementAndGet();
             }
 
             if (cmd.isServerOnly()) {
@@ -185,8 +199,8 @@ public class CommandHook extends ListenerAdapter {
 
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
-            success.sendMessage("\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** guild commands.\nThere are **%d** global commands.".formatted(
-                    slashes.get(), prefixes.get(), guild.get(), global.get()))
+            success.sendMessage("\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** message context commands.\nThere are **%d** user context commands.\nThere are **%d** guild commands.\nThere are **%d** global commands.".formatted(
+                    slashes.get(), prefixes.get(), messageCtx.get(), userCtx.get(), guild.get(), global.get()))
                     .queue();
             cmdList.delete().queue();
         });
