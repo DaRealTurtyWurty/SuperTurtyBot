@@ -27,12 +27,12 @@ public class ApiHandler {
     private static final String BASE_URL = "https://api.turtywurty.dev/";
 
     public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
-        try(Response response = makeRequest("geo/flag?cca3=" + cca3)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("geo/flag?cca3=" + cca3)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             return Either.left(ImageIO.read(body.byteStream()));
@@ -54,12 +54,12 @@ public class ApiHandler {
 
         System.out.println(path);
 
-        try(Response response = makeRequest(path)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             String json = body.string();
@@ -81,12 +81,12 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
-        try(Response response = makeRequest("geo/outline?cca3=" + cca3)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("geo/outline?cca3=" + cca3)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             return Either.left(ImageIO.read(body.byteStream()));
@@ -106,12 +106,12 @@ public class ApiHandler {
             path = path.substring(0, path.length() - 1);
         }
 
-        try(Response response = makeRequest(path)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             String json = body.string();
@@ -133,15 +133,15 @@ public class ApiHandler {
     }
 
     public static Either<Region, HttpStatus> getTerritoryData(String cca3) {
-        try(Response response = makeRequest("geo/data?cca3=" + cca3)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("geo/data?cca3=" + cca3)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() == 0)
+            if (body.contentLength() == 0)
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
@@ -161,15 +161,15 @@ public class ApiHandler {
             path = path.substring(0, path.length() - 1);
         }
 
-        try(Response response = makeRequest(path)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.contentLength() == 0)
+            if (body.contentLength() == 0)
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
@@ -193,22 +193,22 @@ public class ApiHandler {
             path = path.substring(0, path.length() - 1);
         }
 
-        try(Response response = makeRequest(path)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             String json = body.string();
-            if(json.isBlank())
+            if (json.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
 
             List<Region> territories = new ArrayList<>();
-            for(JsonElement element : array) {
+            for (JsonElement element : array) {
                 territories.add(Constants.GSON.fromJson(element, Region.class));
             }
 
@@ -225,38 +225,37 @@ public class ApiHandler {
     public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
         StringBuilder path = new StringBuilder("words");
         requestData.getLength().ifPresent(length -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&length=").append(length);
             else
                 path.append("?length=").append(length);
         });
 
         requestData.getStartsWith().ifPresent(startsWith -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&startsWith=").append(startsWith);
             else
                 path.append("?startsWith=").append(startsWith);
         });
 
         requestData.getAmount().ifPresent(amount -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&amount=").append(amount);
             else
                 path.append("?amount=").append(amount);
         });
 
-        try(Response response = makeRequest(path.toString())) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path.toString())) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
@@ -268,52 +267,52 @@ public class ApiHandler {
     public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/random");
         requestData.getLength().ifPresent(length -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&length=").append(length);
             else
                 path.append("?length=").append(length);
         });
 
         requestData.getMinLength().ifPresent(minLength -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&minLength=").append(minLength);
             else
                 path.append("?minLength=").append(minLength);
         });
 
         requestData.getMaxLength().ifPresent(maxLength -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&maxLength=").append(maxLength);
             else
                 path.append("?maxLength=").append(maxLength);
         });
 
         requestData.getStartsWith().ifPresent(startsWith -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&startsWith=").append(startsWith);
             else
                 path.append("?startsWith=").append(startsWith);
         });
 
         requestData.getAmount().ifPresent(amount -> {
-            if(path.length() > 5)
+            if (path.length() > 5)
                 path.append("&amount=").append(amount);
             else
                 path.append("?amount=").append(amount);
         });
 
-        try(Response response = makeRequest(path.toString())) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path.toString())) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            String json = body.string();
+            if (json.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String json = body.string();
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
@@ -323,18 +322,18 @@ public class ApiHandler {
     }
 
     public static Either<CoupledPair<MinecraftVersion>, HttpStatus> getLatestMinecraft() {
-        try(Response response = makeRequest("minecraft/latest")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/latest")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            String json = body.string();
+            if (json.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String json = body.string();
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String release = object.get("release").getAsString();
@@ -346,18 +345,17 @@ public class ApiHandler {
     }
 
     public static Either<List<MinecraftVersion>, HttpStatus> getAllMinecraft() {
-        try(Response response = makeRequest("minecraft/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/all")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<MinecraftVersion> versions = array.asList()
                     .stream()
@@ -371,18 +369,17 @@ public class ApiHandler {
     }
 
     public static Either<CoupledPair<ForgeVersion>, HttpStatus> getLatestForge() {
-        try(Response response = makeRequest("minecraft/forge/latest")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/forge/latest")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String recommended = object.get("recommended").getAsString();
@@ -394,18 +391,17 @@ public class ApiHandler {
     }
 
     public static Either<List<ForgeVersion>, HttpStatus> getAllForge() {
-        try(Response response = makeRequest("minecraft/forge/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/forge/all")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<ForgeVersion> versions = array.asList()
                     .stream()
@@ -420,18 +416,17 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<CoupledPair<FabricVersion>, HttpStatus> getLatestFabric() {
-        try(Response response = makeRequest("minecraft/fabric/latest")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/fabric/latest")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String stable = object.get("stable").getAsString();
@@ -444,18 +439,17 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<List<FabricVersion>, HttpStatus> getAllFabric() {
-        try(Response response = makeRequest("minecraft/fabric/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/fabric/all")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<FabricVersion> versions = array.asList()
                     .stream()
@@ -470,18 +464,17 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<CoupledPair<QuiltVersion>, HttpStatus> getLatestQuilt() {
-        try(Response response = makeRequest("minecraft/quilt/latest")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/quilt/latest")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String stable = object.get("stable").getAsString();
@@ -494,18 +487,17 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<List<QuiltVersion>, HttpStatus> getAllQuilt() {
-        try(Response response = makeRequest("minecraft/quilt/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/quilt/all")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<QuiltVersion> versions = array.asList()
                     .stream()
@@ -519,18 +511,17 @@ public class ApiHandler {
     }
 
     public static Either<ParchmentVersion, HttpStatus> getLatestParchment() {
-        try(Response response = makeRequest("minecraft/parchment/latest")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/parchment/latest")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String version = object.get("version").getAsString();
@@ -541,18 +532,17 @@ public class ApiHandler {
     }
 
     public static Either<List<ParchmentVersion>, HttpStatus> getAllParchment() {
-        try(Response response = makeRequest("minecraft/parchment/all")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/parchment/all")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<ParchmentVersion> versions = array.asList()
                     .stream()
@@ -566,18 +556,17 @@ public class ApiHandler {
     }
 
     public static Either<ParchmentVersion, HttpStatus> getParchment(String version) {
-        try(Response response = makeRequest("minecraft/parchment/" + version)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("minecraft/parchment/" + version)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String parchmentVersion = object.get("version").getAsString();
@@ -588,41 +577,41 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> resize(ImageResizeRequestData requestData) {
-        if(requestData.getWidth().orElse(1) < 1) {
+        if (requestData.getWidth().orElse(1) < 1) {
             return Either.right(HttpStatus.BAD_REQUEST);
         }
-        
-        if(requestData.getHeight().orElse(1) < 1) {
+
+        if (requestData.getHeight().orElse(1) < 1) {
             return Either.right(HttpStatus.BAD_REQUEST);
         }
-        
+
         String imgUrl = requestData.getUrl();
 
         String pathStr = "image/resize?url=" + imgUrl;
         var path = new StringBuilder(pathStr);
         requestData.getWidth().ifPresent(width -> {
-            if(path.length() > pathStr.length())
+            if (path.length() > pathStr.length())
                 path.append("&length=").append(width);
             else
                 path.append("?length=").append(width);
         });
 
         requestData.getHeight().ifPresent(height -> {
-            if(path.length() > pathStr.length())
+            if (path.length() > pathStr.length())
                 path.append("&height=").append(height);
             else
                 path.append("?height=").append(height);
         });
-        
-        try(Response response = makeRequest(path.toString())) {
-            if(response.code() != HttpStatus.OK.getCode())
+
+        try (Response response = makeRequest(path.toString())) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            if (body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -636,7 +625,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> rotate(ImageRotateRequestData requestData) {
-        if(requestData.getAngle().orElse(0) % 90 != 0)
+        if (requestData.getAngle().orElse(0) % 90 != 0)
             return Either.right(HttpStatus.BAD_REQUEST);
 
         String imgUrl = requestData.getUrl();
@@ -644,21 +633,21 @@ public class ApiHandler {
         String pathStr = "image/rotate?url=" + imgUrl;
         var path = new StringBuilder(pathStr);
         requestData.getAngle().ifPresent(angle -> {
-            if(path.length() > pathStr.length())
+            if (path.length() > pathStr.length())
                 path.append("&angle=").append(angle);
             else
                 path.append("?angle=").append(angle);
         });
 
-        try(Response response = makeRequest(path.toString())) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest(path.toString())) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            if (body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -672,15 +661,15 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> flip(String imgUrl, FlipType flipType) {
-        try(Response response = makeRequest("image/flip?url=%s&flipType=%s".formatted(imgUrl, flipType.name()))) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("image/flip?url=%s&flipType=%s".formatted(imgUrl, flipType.name()))) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            if (body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -694,15 +683,15 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequestData requestData) {
-        try(Response response = makeRequest("image/flagify?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("image/flagify?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            if (body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -716,15 +705,15 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> lgbtify(String imgUrl) {
-        try(Response response = makeRequest("image/lgbt?url=" + imgUrl)) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("image/lgbt?url=" + imgUrl)) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
+            if (body.string().isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             String base64Img = body.string();
@@ -738,18 +727,17 @@ public class ApiHandler {
     }
 
     public static Either<Geoguesser, HttpStatus> geoguesser() {
-        try(Response response = makeRequest("geo/guesser")) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("geo/guesser")) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if(body.string().isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
             String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String country = object.get("country").getAsString();
