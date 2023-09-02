@@ -70,7 +70,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx())
             return;
 
-        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+        if (validateRatelimit(event.getUser().getIdLong(),
+                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                        .setEphemeral(true).queue())) {
             runMessageCtx(event);
         }
     }
@@ -88,7 +90,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!this.types.normal())
             return;
 
-        if(validateRatelimit(event.getAuthor().getIdLong(), end -> reply(event, "❌ You are being ratelimited! You can use the command again " + end + "!"))) {
+        if(validateRatelimit(event.getAuthor().getIdLong(),
+                end -> reply(event, "❌ You are being ratelimited! You can use the command again " + end + "!"))) {
             runNormalMessage(event);
 
             if (event.isFromGuild()) {
@@ -111,7 +114,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
             return;
 
-        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+        if (validateRatelimit(event.getUser().getIdLong(),
+                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                        .setEphemeral(true).queue())) {
             runSlash(event);
         }
     }
@@ -122,7 +127,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
             return;
 
-        if (validateRatelimit(event.getUser().getIdLong(), end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!").setEphemeral(true).queue())) {
+        if (validateRatelimit(event.getUser().getIdLong(),
+                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                        .setEphemeral(true).queue())) {
             runUserCtx(event);
         }
     }
@@ -147,12 +154,12 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             long length = TimeUnit.MILLISECONDS.convert(ratelimit.getRight(), ratelimit.getLeft());
             if(RATELIMITS.containsKey(user)) {
                 Pair<String, Long> pair = RATELIMITS.get(user);
-                if(pair.getLeft().equalsIgnoreCase(getCommandId())) {
+                if(pair.getLeft().equalsIgnoreCase(getName())) {
                     long endTime = pair.getRight();
                     long currentTime = System.currentTimeMillis();
 
                     if(currentTime >= endTime) {
-                        RATELIMITS.put(user, Pair.of(getCommandId(), System.currentTimeMillis() + length));
+                        RATELIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
                         return true;
                     } else {
                         ratelimitResponse.accept(TimeFormat.RELATIVE.format(endTime));
@@ -160,7 +167,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                     }
                 }
             } else {
-                RATELIMITS.put(user, Pair.of(getCommandId(), System.currentTimeMillis() + length));
+                RATELIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
                 return true;
             }
         }
