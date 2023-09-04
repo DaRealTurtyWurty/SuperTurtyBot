@@ -358,6 +358,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ImageCommand());
         cmds.add(new DeepfryCommand());
         cmds.add(new CatSaysCommand());
+        cmds.add(new FlagifyCommand());
+        cmds.add(new LGBTifyCommand());
 
         // Fun
         cmds.add(new AdviceCommand());

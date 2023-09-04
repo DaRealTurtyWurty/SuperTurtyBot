@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music.manager;
 
 import com.dunctebot.sourcemanagers.DuncteBotSources;
 import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
@@ -13,7 +13,10 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.commands.music.handler.filter.FilterChainConfiguration;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.GuildAudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.LoopState;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
+import dev.darealturtywurty.superturtybot.commands.music.manager.filter.FilterChainConfiguration;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.Either;

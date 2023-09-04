@@ -1,7 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
-import dev.darealturtywurty.superturtybot.commands.music.handler.filter.*;
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.filter.*;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;

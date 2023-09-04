@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler.filter;
+package dev.darealturtywurty.superturtybot.commands.music.manager.filter;
 
 import com.github.natanbc.lavadsp.lowpass.LowPassPcmAudioFilter;
 import com.google.gson.JsonObject;

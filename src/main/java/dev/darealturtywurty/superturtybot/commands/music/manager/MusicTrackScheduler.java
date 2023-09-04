@@ -1,10 +1,11 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music.manager;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.player.event.TrackEndEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.LoopState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +20,7 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     private AudioChannel currentChannel;
     private LoopState loopState = LoopState.NONE;
     private AudioTrack guessTheSongTrack;
+    private boolean isRecording = false;
     private final Map<UUID, Consumer<AudioTrack>> onTrackEnd = new ConcurrentHashMap<>();
 
     public MusicTrackScheduler(AudioPlayer player) {
@@ -253,5 +255,13 @@ public class MusicTrackScheduler extends AudioEventAdapter {
 
     public boolean isGuessSongRunning() {
         return this.guessTheSongTrack != null;
+    }
+
+    public boolean isRecording() {
+        return this.isRecording;
+    }
+
+    public void setRecording(boolean isRecording) {
+        this.isRecording = isRecording;
     }
 }

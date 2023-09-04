@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler.filter;
+package dev.darealturtywurty.superturtybot.commands.music.manager.filter;
 
 import com.google.gson.JsonObject;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;

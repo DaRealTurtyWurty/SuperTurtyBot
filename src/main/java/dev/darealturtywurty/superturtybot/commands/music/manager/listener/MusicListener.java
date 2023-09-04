@@ -1,5 +1,6 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music.manager.listener;
 
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
