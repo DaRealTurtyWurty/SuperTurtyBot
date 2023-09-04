@@ -13,10 +13,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class SteamOwnedGamesCommand extends CoreCommand {
 
@@ -28,8 +30,7 @@ public class SteamOwnedGamesCommand extends CoreCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.STRING, "steamid", "The steamid of the user.", true)
-                .setAutoComplete(true));
+        return List.of(new OptionData(OptionType.STRING, "steamid", "The steamid of the user.", true));
     }
 
     @Override
@@ -49,9 +50,12 @@ public class SteamOwnedGamesCommand extends CoreCommand {
 
     @Override
     public String getRichName() {
-        return "owned-game";
+        return "Owned Games";
     }
-
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 15L);
+    }
     private List<Game> getUserOwnGames(String steamID){
         try {
             SteamWebApiClient client = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();

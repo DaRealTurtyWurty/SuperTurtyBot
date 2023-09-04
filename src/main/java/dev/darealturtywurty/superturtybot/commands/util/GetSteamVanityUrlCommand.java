@@ -14,9 +14,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class GetSteamVanityUrlCommand extends CoreCommand {
 
@@ -27,8 +29,7 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.STRING, "vanityurl", "The steam username of the user.", true)
-                .setAutoComplete(true));
+        return List.of(new OptionData(OptionType.STRING, "vanityurl", "The steam username of the user.", true));
     }
 
     @Override
@@ -46,9 +47,16 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
         return "vanityurl";
     }
 
+
+
     @Override
     public String getRichName() {
-        return "vanityurl";
+        return "Vanity Url";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 15L);
     }
 
     public static SteamVanityUrlResponse deserializeVanityUrl(String json) {
