@@ -301,8 +301,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new ReminderCommand());
         cmds.add(new RainbowSixStatusCommand());
         cmds.add(new WeatherCommand());
-        cmds.add(new SteamOwnedGamesCommand());
-        cmds.add(new GetSteamVanityUrlCommand());
+        cmds.add(new SteamGamesCommand());
+        cmds.add(new SteamIDCommand());
 
         // Moderation
         cmds.add(new BanCommand());
