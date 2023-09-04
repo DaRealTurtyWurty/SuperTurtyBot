@@ -69,6 +69,11 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
 
         String rawOption = event.getOption("vanityurl", null, OptionMapping::getAsString);
 
+        if (rawOption == null) {
+            reply(event, "❌ You must provide a Steam vanity URL!", false, true);
+            return;
+        }
+
         String steamVanityUrl = "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key="+ Environment.INSTANCE.steamKey().get() + "&vanityurl=";
 
         final Request request = new Request.Builder().url(steamVanityUrl + rawOption).get().build();
@@ -79,6 +84,7 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
 
             if(json.steamid == null){
                 reply(event, "❌ You must provide a valid steam vanity url!", false, true);
+                return;
             }
 
             var embed = new EmbedBuilder()
@@ -90,12 +96,9 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
             event.deferReply().addEmbeds(embed).queue();
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            reply(event, "Failed to response!");
         }
-        if (rawOption == null) {
-            reply(event, "❌ You must provide a Steam vanity URL!", false, true);
-            return;
-        }
+
     }
 
     public static class SteamVanityUrlResponse{

@@ -26,6 +26,7 @@ public class SteamOwnedGamesCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
+    SteamWebApiClient client = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();
 
 
     @Override
@@ -45,7 +46,7 @@ public class SteamOwnedGamesCommand extends CoreCommand {
 
     @Override
     public String getName() {
-        return "owned-game";
+        return "owned-games";
     }
 
     @Override
@@ -58,16 +59,15 @@ public class SteamOwnedGamesCommand extends CoreCommand {
     }
     private List<Game> getUserOwnGames(String steamID){
         try {
-            SteamWebApiClient client = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();
 
             GetOwnedGamesRequest gameRequest = new GetOwnedGamesRequest.GetOwnedGamesRequestBuilder(steamID).includeAppInfo(true).includePlayedFreeGames(true).buildRequest();
 
             GetOwnedGames reqGame = client.<GetOwnedGames>processRequest(gameRequest);
 
-            List<Game> game = reqGame.getResponse().getGames();
-            game = game.stream().sorted(Comparator.comparingLong(Game::getPlaytimeForever).reversed()).toList();
+            List<Game> games = reqGame.getResponse().getGames();
+            games = games.stream().sorted(Comparator.comparingLong(Game::getPlaytimeForever).reversed()).toList();
 
-            return game;
+            return games;
         } catch (final SteamApiException exception) {
             exception.printStackTrace();
         }
@@ -79,14 +79,17 @@ public class SteamOwnedGamesCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event){
         String rawOption = event.getOption("steamid", null, OptionMapping::getAsString);
 
+        if (rawOption == null) {
+            reply(event, "❌ You must provide a steamID!", false, true);
+            return;
+        }
+
         event.deferReply().queue();
         List<Game> gameList = getUserOwnGames(rawOption);
 
         var contents = new PaginatedEmbed.ContentsBuilder();
-        for (int index = 0; index < gameList.size(); index++) {
-            Game game = gameList.get(index);
+        for (Game game : gameList) {
             long convertMinutesToHours = game.getPlaytimeForever() / 60;
-
             String sHour = String.valueOf(convertMinutesToHours);
             contents.field("\n" + game.getName(), sHour + "h", false);
         }
@@ -99,10 +102,7 @@ public class SteamOwnedGamesCommand extends CoreCommand {
 
         embed.send(event.getHook(),() -> event.getHook().editOriginal("❌ Failed to send page!").queue());
 
-        if (rawOption == null) {
-            reply(event, "❌ You must provide a steamID!", false, true);
-            return;
-        }
+
 
     }
 }
