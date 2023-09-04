@@ -55,7 +55,7 @@ public class SteamOwnedGamesCommand extends CoreCommand {
     }
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 15L);
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
     private List<Game> getUserOwnGames(String steamID){
         try {

@@ -56,7 +56,7 @@ public class GetSteamVanityUrlCommand extends CoreCommand {
 
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 15L);
+        return Pair.of(TimeUnit.SECONDS, 5L);
     }
 
     public static SteamVanityUrlResponse deserializeVanityUrl(String json) {
