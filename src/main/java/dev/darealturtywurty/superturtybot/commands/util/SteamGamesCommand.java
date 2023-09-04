@@ -99,6 +99,8 @@ public class SteamGamesCommand extends CoreCommand {
         var embed = new PaginatedEmbed.Builder(5, contents)
                 .title("Steam ID: " + steamId)
                 .color(0x66c0f4)
+                .description("Total Games: %s".formatted(games.size()))
+                .authorOnly(event.getUser().getIdLong())
                 .build(event.getJDA());
 
         embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list games!").queue());
