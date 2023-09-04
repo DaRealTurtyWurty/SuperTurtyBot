@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
@@ -18,6 +19,8 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -99,7 +102,15 @@ public class CommandHook extends ListenerAdapter {
                 .findFirst()
                 .orElseGet(guild::getSystemChannel);
 
-        sendStartupMessage(generalChannel);
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (config == null) {
+            config = new GuildConfig(guild.getIdLong());
+            Database.getDatabase().guildConfig.insertOne(config);
+        }
+
+        if(config.isShouldSendStartupMessage()) {
+            sendStartupMessage(generalChannel);
+        }
 
         if(this.commands.isEmpty())
             return;
