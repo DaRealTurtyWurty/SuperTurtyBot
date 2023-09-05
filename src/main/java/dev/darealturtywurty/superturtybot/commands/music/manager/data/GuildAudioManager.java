@@ -1,8 +1,10 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music.manager.data;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import dev.darealturtywurty.superturtybot.commands.music.handler.filter.FilterChainConfiguration;
+import dev.darealturtywurty.superturtybot.commands.music.manager.MusicTrackScheduler;
+import dev.darealturtywurty.superturtybot.commands.music.manager.filter.FilterChainConfiguration;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.AudioPlayerSendHandler;
 
 public class GuildAudioManager {
     private final AudioPlayer player;

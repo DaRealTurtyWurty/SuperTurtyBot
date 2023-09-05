@@ -611,10 +611,10 @@ public class ApiHandler {
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
+            String base64Img = body.string();
+            if (base64Img.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String base64Img = body.string();
             byte[] bytes = Base64.getDecoder().decode(base64Img);
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
@@ -647,10 +647,10 @@ public class ApiHandler {
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
+            String base64Img = body.string();
+            if (base64Img.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String base64Img = body.string();
             byte[] bytes = Base64.getDecoder().decode(base64Img);
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
@@ -669,10 +669,10 @@ public class ApiHandler {
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
+            String base64Img = body.string();
+            if (base64Img.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String base64Img = body.string();
             byte[] bytes = Base64.getDecoder().decode(base64Img);
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
@@ -683,7 +683,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequestData requestData) {
-        try (Response response = makeRequest("image/flagify?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
+        try (Response response = makeRequest("image/flag?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -691,10 +691,10 @@ public class ApiHandler {
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
+            String base64Img = body.string();
+            if (base64Img.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String base64Img = body.string();
             byte[] bytes = Base64.getDecoder().decode(base64Img);
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
@@ -713,10 +713,10 @@ public class ApiHandler {
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            if (body.string().isBlank())
+            String base64Img = body.string();
+            if (base64Img.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            String base64Img = body.string();
             byte[] bytes = Base64.getDecoder().decode(base64Img);
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);

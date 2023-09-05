@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.nsfw;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;

@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;

@@ -39,9 +39,9 @@ dependencies {
     implementation group: "commons-validator", name: "commons-validator", version: "1.7"
     
     implementation group: "org.eclipse.mylyn.github", name: "org.eclipse.egit.github.core", version: '3.4.0.201406110918-r'
-    implementation group: "org.eclipse.jgit", name: "org.eclipse.jgit", version: '6.6.0.202305301015-r'
+    implementation group: "org.eclipse.jgit", name: "org.eclipse.jgit", version: '6.6.1.202309021850-r'
     
-    implementation group: "org.mongodb", name: "mongodb-driver-sync", version: "4.9.1"
+    implementation group: "org.mongodb", name: "mongodb-driver-sync", version: "4.10.2"
     implementation group: "org.mongodb.morphia", name: "morphia", version: "1.3.2"
     implementation group: "io.github.cdimascio", name: "dotenv-java", version: "3.0.0"
     implementation group: "org.spongepowered", name: "configurate-hocon", version: "4.1.2"
@@ -63,16 +63,16 @@ dependencies {
 
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
-    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.9"
-    implementation group: "com.github.walkyst", name: "lavaplayer-fork", version: "1.4.0"
+    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.13"
+    implementation group: "com.github.walkyst", name: "lavaplayer-fork", version: "1.4.3"
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
-    implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.2"
+    implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.4"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "3.2.9"
 
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.16.0'
     implementation group: 'com.github.philippheuer.events4j', name: 'events4j-handler-reactor', version: '0.12.1'
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.7.0'
-    implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.4.6'
+    implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.5.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
     implementation group: 'io.javalin', name: 'javalin', version: '5.6.2'
 

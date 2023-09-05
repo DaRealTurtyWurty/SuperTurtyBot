@@ -220,4 +220,9 @@ public class GuildConfigRegistry {
                                                     (config, value) -> config.setPatronRole(Long.parseLong(value)))
                                             .valueFromConfig(GuildConfig::getPatronRole)
                                             .validator(Validators.ROLE_VALIDATOR).build());
+
+    public static final GuildConfigOption SHOULD_SEND_STARTUP_MESSAGE = GUILD_CONFIG_OPTIONS.register(
+            "should_send_startup_message", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
+                    (config, value) -> config.setShouldSendStartupMessage(Boolean.parseBoolean(value))).valueFromConfig(
+                    GuildConfig::isShouldSendStartupMessage).build());
 }

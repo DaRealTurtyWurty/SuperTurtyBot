@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.music.handler;
+package dev.darealturtywurty.superturtybot.commands.music.manager.handler;
 
 import java.nio.ByteBuffer;
 

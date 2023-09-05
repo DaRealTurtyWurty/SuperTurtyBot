@@ -2,25 +2,17 @@ package dev.darealturtywurty.superturtybot.commands.music;
 
 import java.awt.Color;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Lists;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
-import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class QueueCommand extends CoreCommand {
     public QueueCommand() {

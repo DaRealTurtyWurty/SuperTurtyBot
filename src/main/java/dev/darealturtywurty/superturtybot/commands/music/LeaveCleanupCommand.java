@@ -1,8 +1,8 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import dev.darealturtywurty.superturtybot.commands.music.handler.AudioManager;
-import dev.darealturtywurty.superturtybot.commands.music.handler.TrackData;
+import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.entities.GuildVoiceState;

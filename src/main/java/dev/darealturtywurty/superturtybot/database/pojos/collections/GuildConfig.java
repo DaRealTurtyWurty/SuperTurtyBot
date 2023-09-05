@@ -68,6 +68,7 @@ public class GuildConfig {
     private boolean shouldCreateGists;
     private boolean warningsModeratorOnly;
     private long patronRole;
+    private boolean shouldSendStartupMessage;
 
     // Logging
     private long loggingChannel;
@@ -140,6 +141,7 @@ public class GuildConfig {
         this.shouldCreateGists = true;
         this.warningsModeratorOnly = false;
         this.patronRole = 0L;
+        this.shouldSendStartupMessage = true;
 
         // Logging
         this.loggingChannel = 0L;
@@ -258,6 +260,10 @@ public class GuildConfig {
 
     public void setWarningsModeratorOnly(boolean warningsModeratorOnly) {
         this.warningsModeratorOnly = warningsModeratorOnly;
+    }
+
+    public boolean isShouldSendStartupMessage() {
+        return shouldSendStartupMessage;
     }
 
     public boolean isLogBan() {
@@ -406,6 +412,10 @@ public class GuildConfig {
 
     public void setLevelUpMessageChannel(long levelUpMessageChannel) {
         this.levelUpMessageChannel = levelUpMessageChannel;
+    }
+
+    public void setShouldSendStartupMessage(boolean shouldSendStartupMessage) {
+        this.shouldSendStartupMessage = shouldSendStartupMessage;
     }
 
     public void setLogBan(boolean logBan) {

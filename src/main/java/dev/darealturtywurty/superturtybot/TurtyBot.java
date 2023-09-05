@@ -1,7 +1,7 @@
 package dev.darealturtywurty.superturtybot;
 
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
-import dev.darealturtywurty.superturtybot.commands.music.handler.MusicListener;
+import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;

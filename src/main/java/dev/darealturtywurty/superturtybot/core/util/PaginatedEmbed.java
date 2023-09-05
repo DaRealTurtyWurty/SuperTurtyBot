@@ -332,6 +332,11 @@ public class PaginatedEmbed extends ListenerAdapter {
             return this;
         }
 
+        public Builder color(int color) {
+            this.color = new Color(color);
+            return this;
+        }
+
         public Builder url(String url) {
             this.url = url;
             return this;
