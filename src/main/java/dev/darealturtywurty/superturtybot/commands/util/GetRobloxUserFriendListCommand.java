@@ -113,7 +113,6 @@ public class GetRobloxUserFriendListCommand extends CoreCommand {
                 contents.field(data.name, data.id +
                         "\n**Display Name**: " + data.displayName +
                         "\n**Has Verified Badge**: " + data.hasVerifiedBadge +
-                        "\n**Description**: " + data.description +
                         "\n**Is Online**: " + data.isOnline +
                         "\n**Is Deleted**: " + data.isDeleted);
             }
