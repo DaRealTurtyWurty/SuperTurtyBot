@@ -152,7 +152,7 @@ public class GetRobloxUserFriendListCommand extends CoreCommand {
         private String created;
         private boolean isBanned;
         private String externalAppDisplayName;
-        private int id;
+        private long id;
         private String name;
         private String displayName;
 

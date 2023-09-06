@@ -141,7 +141,7 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
 
     @Data
     public class FavoriteGameData{
-        private int id;
+        private long id;
         private String name;
         private String description;
         private Creator creator;
@@ -152,12 +152,12 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
     }
     @Data
     class Creator{
-        private int id;
+        private long id;
         private String group;
     }
     @Data
     class RootPlace{
-        private int id;
+        private long id;
         private String type;
     }
 

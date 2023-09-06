@@ -143,7 +143,7 @@ public class GetRobloxUserNameCommand extends CoreCommand {
     public class PlayerData{
         private String[] previousUsernames;
         private boolean hasVerifiedBadge;
-        private int id;
+        private long id;
         private String name;
         private String displayName;
     }
