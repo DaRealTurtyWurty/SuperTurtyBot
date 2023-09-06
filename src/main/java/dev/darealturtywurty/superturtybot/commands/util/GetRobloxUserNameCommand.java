@@ -79,6 +79,7 @@ public class GetRobloxUserNameCommand extends CoreCommand {
                         .sendMessage("❌ Failed to get response!")
                         .mentionRepliedUser(false)
                         .queue();
+                return;
             }
 
             ResponseBody body = response.body();
@@ -126,12 +127,12 @@ public class GetRobloxUserNameCommand extends CoreCommand {
             embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list roblox user!").queue());
 
         }catch(IOException exception){
-            reply(event, "Failed to response!");
+            reply(event, "❌ Failed to response!");
             Constants.LOGGER.error("Failed to get response!", exception);
         }
     }
-
-    public class RobloxUserNameInfo{
+    @Data
+    private class RobloxUserNameInfo{
         List<PlayerData> data;
         private static RobloxUserNameInfo fromJsonString(String json) {
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);

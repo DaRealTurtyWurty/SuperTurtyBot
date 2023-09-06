@@ -66,6 +66,7 @@ public class GetRobloxUserAvatarCommand extends CoreCommand {
        String RobloxAvatarUrl = "https://avatar.roblox.com/v1/users/%s/avatar"
                .formatted(robloxUserId);
 
+        event.deferReply().addEmbeds().queue();
 
        final Request request = new Request.Builder().url(RobloxAvatarUrl).get().build();
 
@@ -75,6 +76,7 @@ public class GetRobloxUserAvatarCommand extends CoreCommand {
                        .sendMessage("❌ Failed to get response!")
                        .mentionRepliedUser(false)
                        .queue();
+               return;
            }
 
            ResponseBody body = response.body();
@@ -112,16 +114,15 @@ public class GetRobloxUserAvatarCommand extends CoreCommand {
                    .setColor(0xf4dcb4)
                    .build();
 
-           event.deferReply().addEmbeds(embed).queue();
            event.getHook().sendMessageEmbeds(embed);
 
        }catch(IOException exception){
-           reply(event, "Failed to response!");
+           reply(event, "❌ Failed to response!");
            Constants.LOGGER.error("Failed to get response!", exception);
        }
     }
     @Data
-    public class PlayerProfile {
+    private class PlayerProfile {
         private Scales scales;
         private String playerAvatarType;
         private BodyColors bodyColors;
