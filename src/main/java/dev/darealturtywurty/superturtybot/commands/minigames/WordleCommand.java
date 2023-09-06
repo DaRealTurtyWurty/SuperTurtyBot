@@ -6,40 +6,86 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.CoupledPair;
+import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
 import lombok.Getter;
-import lombok.Setter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
     private static final String API_URL = "https://api.turtywurty.dev/words/random?length=5";
+    public static final Path WORDLE_FILE = Path.of("wordle.json");
     private static final BufferedImage DEFAULT_IMAGE;
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final Map<Long, List<Game>> GAMES = new HashMap<>();
+    private static final Map<Long, List<Game>> GUILD_GAMES = new HashMap<>();
+    private static final Map<Long, Game> DM_GAMES = new HashMap<>();
+
+    private static final Map<Character, CoupledPair<Integer>> LETTER_POSITIONS = new HashMap<>();
+
+    static {
+        List<Character> topRow = List.of('Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P');
+        List<Character> middleRow = List.of('A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L');
+        List<Character> bottomRow = List.of('Z', 'X', 'C', 'V', 'B', 'N', 'M');
+
+        final int width = 85, spacing = 10;
+
+        final int topRowStartX = 131;
+        final int topRowStartY = 958;
+        for (int column = 0; column < topRow.size(); column++) {
+            char character = topRow.get(column);
+            int x = topRowStartX + (column * (width + spacing));
+            LETTER_POSITIONS.put(character, new CoupledPair<>(x, topRowStartY));
+        }
+
+        final int middleRowStartX = 178;
+        final int middleRowStartY = 1068;
+        for (int column = 0; column < middleRow.size(); column++) {
+            char character = middleRow.get(column);
+            int x = middleRowStartX + (column * (width + spacing));
+            LETTER_POSITIONS.put(character, new CoupledPair<>(x, middleRowStartY));
+        }
+
+        final int bottomRowStartX = 273;
+        final int bottomRowStartY = 1178;
+        for (int column = 0; column < bottomRow.size(); column++) {
+            char character = bottomRow.get(column);
+            int x = bottomRowStartX + (column * (width + spacing));
+            LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
+        }
+    }
 
     static {
         fetchTodayWords();
@@ -82,7 +128,7 @@ public class WordleCommand extends CoreCommand {
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+        event.deferReply().queue(hook -> {}, error -> {});
 
         if (!event.isFromGuild()) {
             runGlobal(event);
@@ -107,7 +153,7 @@ public class WordleCommand extends CoreCommand {
 
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            IOUtils.write(stream.toByteArray(), new BufferedOutputStream(Files.newOutputStream(Constants.WORDLE_FILE)));
+            ImageIO.write(image, "png", stream);
             byte[] data = stream.toByteArray();
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
 
@@ -143,15 +189,16 @@ public class WordleCommand extends CoreCommand {
 
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            IOUtils.write(stream.toByteArray(), new BufferedOutputStream(Files.newOutputStream(Constants.WORDLE_FILE)));
+            ImageIO.write(image, "png", stream);
             byte[] data = stream.toByteArray();
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
 
             event.getChannel()
                     .asTextChannel()
-                    .createThreadChannel(event.getUser().getName() + "'s Wordle Game")
+                    .createThreadChannel(event.getUser().getName() + "'s Wordle Game", true)
                     .setInvitable(false)
                     .queue(thread -> {
+                        thread.addThreadMember(event.getUser()).queue();
                         thread.sendMessage("Can you guess today's word? You have 6 tries!")
                                 .setFiles(upload)
                                 .queue(message -> {
@@ -182,83 +229,178 @@ public class WordleCommand extends CoreCommand {
             long userId = event.getUser().getIdLong();
 
             var game = new Game(word, guildId, channelId, messageId, userId);
-            GAMES.computeIfAbsent(channelId, id -> new ArrayList<>()).add(game);
+            if(guildId != null) {
+                GUILD_GAMES.computeIfAbsent(channelId, id -> new ArrayList<>()).add(game);
+            } else {
+                DM_GAMES.put(userId, game);
+            }
+
+            createEventWaiter(event.getGuild(), game).build();
         });
 
-        return createImage(word, List.of());
+        return createImage(new ArrayList<>(), (letterIndex, character) -> Game.LetterState.NOT_GUESSED, character -> new Color(0x6D7C87));
     }
 
-    private static BufferedImage createImage(String word, List<String> guesses) {
-//        try {
-//            Graphics2D graphics = DEFAULT_IMAGE.createGraphics();
-//
-//        } catch (IOException exception) {
-//
-//        }
-
-        return null;
+    private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Guild guild, Game game) {
+        return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                .condition(event -> {
+                    String content = event.getMessage().getContentRaw();
+                            return ((event.isFromGuild() && event.getGuild().getIdLong() == guild.getIdLong())
+                                        || !event.isFromGuild())
+                                    && event.getChannel().getIdLong() == game.getChannelId()
+                                    && event.getAuthor().getIdLong() == game.getUserId()
+                                    && (content.length() == 5
+                                        && content.matches("[a-zA-Z]+")
+                                        || content.equalsIgnoreCase("give up"));
+                        }
+                )
+                .success(event -> {
+                    if(handleResponse(event, game)) {
+                        createEventWaiter(guild, game).build();
+                    }
+                });
     }
 
-    @Getter
-    public static class Game {
-        private final String word;
-        private final List<Character> guessed;
-        private final List<Character> correct;
-        private final List<Character> incorrect;
-        @Setter
-        private int tries;
-
-        private final @Nullable Long guildId;
-        private final long channelId;
-        private final long messageId;
-        private final long userId;
-
-        public Game(String word, @Nullable Long guildId, long channelId, long messageId, long userId) {
-            this.word = word;
-            this.tries = 6;
-            this.guessed = new ArrayList<>();
-            this.correct = new ArrayList<>();
-            this.incorrect = new ArrayList<>();
-
-            this.guildId = guildId;
-            this.channelId = channelId;
-            this.messageId = messageId;
-            this.userId = userId;
-        }
-
-        public boolean isOver() {
-            return tries == 0 || correct.size() == word.length();
-        }
-
-        public boolean isWon() {
-            return correct.size() == word.length();
-        }
-
-        public boolean isLost() {
-            return tries == 0;
-        }
-
-        // TODO: Got here!
-        public boolean guess(String guess) {
-            if (guess.length() != 1) {
-                return false;
-            }
-
-            char character = guess.charAt(0);
-            if (guessed.contains(character)) {
-                return false;
-            }
-
-            guessed.add(character);
-            if (word.indexOf(character) != -1) {
-                correct.add(character);
-                return true;
+    private static boolean handleResponse(MessageReceivedEvent event, Game game) {
+        Message message = event.getMessage();
+        String content = message.getContentRaw();
+        if(content.equalsIgnoreCase("give up")) {
+            if(event.isFromGuild()) {
+                endGame(event.getGuild(), game);
             } else {
-                incorrect.add(character);
-                tries--;
-                return false;
+                endGame(event.getAuthor(), game);
+            }
+
+            return false;
+        }
+
+        if(game.guess(content)) {
+            sendUpdatedImage(event.getChannel(), game);
+
+            if(event.isFromGuild()) {
+                endGame(event.getGuild(), game);
+            } else {
+                endGame(event.getAuthor(), game);
+            }
+
+            return false;
+        }
+
+        sendUpdatedImage(event.getChannel(), game);
+        return true;
+    }
+
+    private static void sendUpdatedImage(MessageChannel channel, Game game) {
+        try {
+            BufferedImage image = createImage(game.getGuesses(), game::getLetterState, game::getCharacterColor);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            byte[] data = baos.toByteArray();
+            FileUpload upload = FileUpload.fromData(data, "wordle.png");
+            channel.sendFiles(upload).queue();
+        } catch (IOException exception) {
+            Constants.LOGGER.error("An error occurred whilst sending end game image!", exception);
+        }
+    }
+
+    private static void endGame(@NotNull Guild guild, @NotNull Game game) {
+        List<Game> games = GUILD_GAMES.computeIfAbsent(guild.getIdLong(), id -> new ArrayList<>());
+        games.remove(game);
+
+        if (games.isEmpty()) {
+            GUILD_GAMES.remove(guild.getIdLong());
+        }
+
+        ThreadChannel thread = guild.getThreadChannelById(game.getChannelId());
+        if (thread == null) return;
+
+        if (game.isWon()) {
+            thread.sendMessage("Congratulations! You won! The word was: " + game.getWord())
+                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+            return;
+        }
+
+        if (game.isLost()) {
+            thread.sendMessage("You lost! The word was: " + game.getWord())
+                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+            return;
+        }
+
+        thread.sendMessage("The game has ended! The word was: " + game.getWord())
+                .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+    }
+
+    private static void endGame(@NotNull User user, @NotNull Game game) {
+        DM_GAMES.remove(user.getIdLong());
+
+        user.openPrivateChannel().queue(channel -> {
+            if (channel == null) return;
+
+            if (game.isWon()) {
+                channel.sendMessage("Congratulations! You won! The word was: " + game.getWord()).queue();
+                return;
+            }
+
+            if (game.isLost()) {
+                channel.sendMessage("You lost! The word was: " + game.getWord()).queue();
+                return;
+            }
+
+            channel.sendMessage("The game has ended! The word was: " + game.getWord()).queue();
+        }, ignored -> {});
+    }
+
+    private static BufferedImage createImage(List<String> guesses, BiFunction<Integer, Character, Game.LetterState> letterStateGetter, Function<Character, Color> characterColorGetter) {
+        BufferedImage image = new BufferedImage(DEFAULT_IMAGE.getWidth(), DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        FontMetrics metrics = graphics.getFontMetrics();
+
+        graphics.drawImage(DEFAULT_IMAGE, 0, 0, null);
+
+        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        graphics.setColor(new Color(0x151515));
+        graphics.setFont(new Font("Arial", Font.BOLD, 50));
+
+        final int startX = 280, startY = 70, spacing = 36, guessedSize = 100;
+        for (int guessIndex = 0; guessIndex < guesses.size(); guessIndex++) {
+            String guess = guesses.get(guessIndex);
+            for (int letterIndex = 0; letterIndex < guess.toCharArray().length; letterIndex++) {
+                char character = guess.charAt(letterIndex);
+                graphics.setColor(letterStateGetter.apply(letterIndex, character).getColor());
+
+                graphics.fillRect(
+                        startX + (letterIndex * (guessedSize + spacing)),
+                        startY + (guessIndex * (guessedSize + spacing)),
+                        guessedSize,
+                        guessedSize);
+
+                graphics.setColor(Color.BLACK);
+
+                String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
+                graphics.drawString(
+                        characterStr,
+                        startX + (letterIndex * (guessedSize + spacing)) + guessedSize / 2 - metrics.stringWidth(characterStr),
+                        startY + (guessIndex * (guessedSize + spacing)) + guessedSize / 2 + (metrics.getAscent() - metrics.getDescent()) / 2);
             }
         }
+
+        final int letterWidth = 85, letterHeight = 100;
+        int ascent = metrics.getAscent();
+        int descent = metrics.getDescent();
+        LETTER_POSITIONS.forEach((character, position) -> {
+            graphics.setColor(characterColorGetter.apply(character));
+            graphics.fillRect(position.getLeft(), position.getRight(), letterWidth, letterHeight);
+
+            graphics.setColor(Color.BLACK);
+
+            String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
+            graphics.drawString(
+                    characterStr,
+                    position.getLeft() + letterWidth / 2 - metrics.stringWidth(characterStr),
+                    position.getRight() + letterHeight / 2 + (ascent - descent) / 2);
+        });
+
+        return image;
     }
 
     private static long getInitialDelay() {
@@ -303,7 +445,7 @@ public class WordleCommand extends CoreCommand {
                 jsonToStore.addProperty(entry.getKey().toString(), entry.getValue());
             }
 
-            Files.writeString(Constants.WORDLE_FILE, Constants.GSON.toJson(jsonToStore), StandardCharsets.UTF_8);
+            Files.writeString(WORDLE_FILE, Constants.GSON.toJson(jsonToStore), StandardCharsets.UTF_8);
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to fetch word from API!", exception);
         }
@@ -353,9 +495,14 @@ public class WordleCommand extends CoreCommand {
 
     private static void fetchTodayWords() {
         try {
-            if (Files.exists(Constants.WORDLE_FILE)) {
-                String jsonStr = Files.readString(Constants.WORDLE_FILE, StandardCharsets.UTF_8);
+            if (Files.exists(WORDLE_FILE)) {
+                String jsonStr = Files.readString(WORDLE_FILE, StandardCharsets.UTF_8);
                 JsonObject json = Constants.GSON.fromJson(jsonStr, JsonObject.class);
+                if (json == null) {
+                    fetchAndStoreWords();
+                    fetchTodayWords();
+                    return;
+                }
 
                 String word = json.get("word").getAsString();
                 if (isValidWord(word)) {
@@ -363,6 +510,9 @@ public class WordleCommand extends CoreCommand {
                 } else {
                     fetchAndStoreWords();
                 }
+
+                if(!json.has("guild_words"))
+                    return;
 
                 JsonObject guildWords = json.get("guild_words").getAsJsonObject();
                 for (String guildId : guildWords.keySet()) {
@@ -382,5 +532,121 @@ public class WordleCommand extends CoreCommand {
 
     private static boolean isValidWord(String word) {
         return word.length() == 5 && word.matches("[a-zA-Z]+") && !word.isBlank() && !word.contains(" ");
+    }
+
+    @Getter
+    public static class Game {
+        private final List<String> guesses = new ArrayList<>();
+
+        private final String word;
+        private int tries;
+
+        private final @Nullable Long guildId;
+        private final long channelId;
+        private final long messageId;
+        private final long userId;
+
+        public Game(String word, @Nullable Long guildId, long channelId, long messageId, long userId) {
+            this.word = word;
+            this.tries = 6;
+
+            this.guildId = guildId;
+            this.channelId = channelId;
+            this.messageId = messageId;
+            this.userId = userId;
+        }
+
+        public boolean isLost() {
+            return tries == 0 || guesses.size() >= 6;
+        }
+
+        public boolean guess(String guess) {
+            if(!isValidWord(guess))
+                return false;
+
+            if(guesses.contains(guess))
+                return false;
+
+            guesses.add(guess);
+
+            if(guess.equalsIgnoreCase(this.word))
+                return true;
+
+            if (isWon() || isLost())
+                return true;
+
+            tries--;
+            return false;
+        }
+
+        public LetterState getLetterState(int letterIndex, char character) {
+            if (this.word.charAt(letterIndex) == character) {
+                return LetterState.CORRECT;
+            }
+
+            if (this.word.contains(String.valueOf(character))) {
+                return LetterState.WRONG_POSITION;
+            }
+
+            return LetterState.NOT_GUESSED;
+        }
+
+        /**
+         * Gets the color of the character.
+         * <p>
+         * The color is based on the letter state of the character.
+         * - If the character is in the word and is part of one of the guesses but not at the right index then the color is yellow.
+         * - If the character is in the word and is part of one of the guesses and is at the right index then the color is green.
+         * - If the character is not in the word and is part of one of the guesses then the color is red.
+         * - If the character is not in the word and is not part of one of the guesses then the color is white.
+         *
+         * @param character The character to get the color of.
+         * @return The color of the character.
+         */
+        public Color getCharacterColor(Character character) {
+            String lowercaseWord = word.toLowerCase();
+            char lowercaseChar = Character.toLowerCase(character);
+            boolean isInWord = lowercaseWord.contains(String.valueOf(lowercaseChar));
+            boolean isAtCorrectIndex = false;
+            Color color = Color.WHITE; // Default color is white
+
+            for (String guess : guesses) {
+                String lowercaseGuess = guess.toLowerCase();
+                if (lowercaseGuess.contains(String.valueOf(lowercaseChar))) {
+                    if (isInWord) {
+                        // Check if the character is at the right index
+                        isAtCorrectIndex = lowercaseWord.indexOf(lowercaseChar) == lowercaseGuess.indexOf(lowercaseChar);
+                        if (isAtCorrectIndex) {
+                            color = Color.GREEN; // Green has the highest priority
+                            return color;
+                        } else {
+                            color = Color.YELLOW; // Yellow has the second highest priority
+                        }
+                    } else {
+                        color = Color.RED; // Red has the third highest priority
+                    }
+                }
+            }
+
+            return color;
+        }
+
+        public boolean isWon() {
+            return guesses.stream().anyMatch(word -> word.equalsIgnoreCase(this.word));
+        }
+
+        public enum LetterState {
+            CORRECT(Color.GREEN),
+            INCORRECT(Color.RED),
+            WRONG_POSITION(Color.YELLOW),
+            NOT_GUESSED(Color.WHITE);
+
+            @Getter
+            private final Color color;
+
+            LetterState(Color color) {
+                this.color = color;
+            }
+        }
     }
 }
