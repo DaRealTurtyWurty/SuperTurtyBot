@@ -56,6 +56,7 @@ dependencies {
     implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.5'
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.7.8'
     implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.7.0'
+    implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
     
     implementation group: "org.jfree", name: "jfreechart", version: "1.5.4"
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
