@@ -241,7 +241,8 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                 TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
                 if (channel == null) return;
 
-                channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
+                channel.retrieveMessageById(game.getMessageId())
+                        .queue(message -> message.editMessageComponents().queue());
             } else {
                 List<BufferedImage> images = new ArrayList<>();
                 for (String region1 : game.getRegions().keySet()) {

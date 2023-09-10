@@ -183,17 +183,17 @@ public class ApiHandler {
     }
 
     public static Either<List<Region>, HttpStatus> getAllRegions(RegionExcludeRequestData requestData) {
-        String path = "geo/data/all";
+        StringBuilder path = new StringBuilder("geo/data/all");
         if (requestData.hasExclusions()) {
-            path += "?exclude=";
+            path.append("?exclude=");
             for (String exclusionType : requestData.getExclusions()) {
-                path += exclusionType + ",";
+                path.append(exclusionType).append(",");
             }
 
-            path = path.substring(0, path.length() - 1);
+            path = new StringBuilder(path.substring(0, path.length() - 1));
         }
 
-        try (Response response = makeRequest(path)) {
+        try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -267,35 +267,35 @@ public class ApiHandler {
     public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/random");
         requestData.getLength().ifPresent(length -> {
-            if (path.length() > 5)
+            if (path.length() > 12)
                 path.append("&length=").append(length);
             else
                 path.append("?length=").append(length);
         });
 
         requestData.getMinLength().ifPresent(minLength -> {
-            if (path.length() > 5)
+            if (path.length() > 12)
                 path.append("&minLength=").append(minLength);
             else
                 path.append("?minLength=").append(minLength);
         });
 
         requestData.getMaxLength().ifPresent(maxLength -> {
-            if (path.length() > 5)
+            if (path.length() > 12)
                 path.append("&maxLength=").append(maxLength);
             else
                 path.append("?maxLength=").append(maxLength);
         });
 
         requestData.getStartsWith().ifPresent(startsWith -> {
-            if (path.length() > 5)
+            if (path.length() > 12)
                 path.append("&startsWith=").append(startsWith);
             else
                 path.append("?startsWith=").append(startsWith);
         });
 
         requestData.getAmount().ifPresent(amount -> {
-            if (path.length() > 5)
+            if (path.length() > 12)
                 path.append("&amount=").append(amount);
             else
                 path.append("?amount=").append(amount);
@@ -316,6 +316,27 @@ public class ApiHandler {
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<Boolean, HttpStatus> isWord(String word) {
+        try (Response response = makeRequest("words/validate?word=" + word)) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            return Either.left(object.get("valid").getAsBoolean());
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }

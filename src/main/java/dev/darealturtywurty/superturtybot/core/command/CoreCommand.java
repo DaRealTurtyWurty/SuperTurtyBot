@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public abstract class CoreCommand extends ListenerAdapter implements BotCommand {
-    private static final Map<Long, Pair<String, Long>> RATELIMITS = new ConcurrentHashMap<>();
+    protected static final Map<Long, Pair<String, Long>> RATELIMITS = new ConcurrentHashMap<>();
 
     public final Types types;
 

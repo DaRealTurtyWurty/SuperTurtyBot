@@ -401,6 +401,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessSongCommand());
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
+        cmds.add(new WordleCommand());
 
         return cmds;
     }

@@ -1,8 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -129,6 +133,16 @@ public class UserInfoCommand extends CoreCommand {
         embed.addField("Is Owner", StringUtils.trueFalseToYesNo(member.isOwner()), true);
         embed.addField("Is Bot", StringUtils.trueFalseToYesNo(member.getUser().isBot()), true);
         embed.addField("Is System", StringUtils.trueFalseToYesNo(member.getUser().isSystem()), true);
+
+        WordleProfile profile = Database.getDatabase().wordleProfiles.find(Filters.eq("user", member.getIdLong())).first();
+        if (profile != null) {
+            WordleStreakData streakData = profile.getStreaks().stream().filter(streak -> streak.getGuild() == member.getGuild().getIdLong()).findFirst().orElse(null);
+            if (streakData != null) {
+                embed.addField("Wordle Streak", streakData.getStreak() + " days", true);
+                embed.addField("Wordle Best Streak", streakData.getBestStreak() + " days", true);
+            }
+        }
+
         embed.setThumbnail(member.getEffectiveAvatarUrl());
         
         embed.setFooter("ID: " + member.getIdLong());
