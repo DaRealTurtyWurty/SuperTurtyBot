@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class GetWikipediaPageCommand extends CoreCommand {
-    Wiki wiki = new Wiki.Builder().build();
+    private static final Wiki WIKI = new Wiki.Builder().build();
 
     public GetWikipediaPageCommand() {
-        super(new Types(true,false,false,false));
+        super(new Types(true, false, false, false));
     }
 
     @Override
@@ -53,29 +53,28 @@ public class GetWikipediaPageCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        String pageName = event.getOption("page-name", null, OptionMapping::getAsString);
+        if(pageName == null) {
+            reply(event, "❌ You must supply a page to view", false, true);
+            return;
+        }
 
         event.deferReply().queue();
 
-        String pageName = event.getOption("page-name", null, OptionMapping::getAsString).trim();
-
-
-        var embed = new EmbedBuilder()
+        event.getHook().sendMessageEmbeds(new EmbedBuilder()
                 .setTitle("Wiki Name: %s".formatted(pageName))
-                .setDescription(wiki.getTextExtract(pageName).substring(0, Math.min(wiki.getTextExtract(pageName).length(), 300)) + " ...")
+                .setDescription(WIKI.getTextExtract(pageName).substring(0, Math.min(WIKI.getTextExtract(pageName).length(), 300)) + " ...")
                 .setColor(0xACABAD)
                 .setImage(getImageUrl(pageName))
-                .setFooter("Author name: " + wiki.getPageCreator(pageName))
-                .build();
-
-        event.getHook().sendMessageEmbeds(embed).queue();
-
+                .setFooter("Author name: " + WIKI.getPageCreator(pageName))
+                .build()).queue();
     }
 
-    private String getImageUrl(String pageName){
-        List<String> imageNames = wiki.getImagesOnPage(pageName);
+    private static String getImageUrl(String pageName){
+        List<String> imageNames = WIKI.getImagesOnPage(pageName);
         String url = null;
         if(!imageNames.isEmpty()) {
-            List<ImageInfo> imageInfos = wiki.getImageInfo(imageNames.get(0));
+            List<ImageInfo> imageInfos = WIKI.getImageInfo(imageNames.get(0));
             url = imageInfos.isEmpty() ? null : imageInfos.get(0).url.toString();
         }
         return url;
