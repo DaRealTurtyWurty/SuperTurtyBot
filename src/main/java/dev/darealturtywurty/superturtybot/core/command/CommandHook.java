@@ -336,6 +336,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GetRobloxUserNameCommand());
         cmds.add(new GetRobloxUserFriendListCommand());
         cmds.add(new GetRobloxUserFavoriteGameCommand());
+        cmds.add(new GetWikipediaPageCommand());
 
         // Moderation
         cmds.add(new BanCommand());
