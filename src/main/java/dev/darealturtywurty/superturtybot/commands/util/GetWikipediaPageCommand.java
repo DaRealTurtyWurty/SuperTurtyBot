@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class GetWikipediaPageCommand extends CoreCommand {
+    Wiki wiki = new Wiki.Builder().build();
+
     public GetWikipediaPageCommand() {
         super(new Types(true,false,false,false));
     }
@@ -41,7 +43,7 @@ public class GetWikipediaPageCommand extends CoreCommand {
 
     @Override
     public String getRichName() {
-        return "Wikipedia page";
+        return "Wikipedia Page";
     }
 
     @Override
@@ -51,34 +53,31 @@ public class GetWikipediaPageCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+
+        event.deferReply().queue();
+
         String pageName = event.getOption("page-name", null, OptionMapping::getAsString).trim();
 
-        if(pageName == null){
-            reply(event, "❌ You must provide a valid wiki name!", false, true);
-            return;
-        }
 
-        Wiki wiki = new Wiki.Builder().build();
+        var embed = new EmbedBuilder()
+                .setTitle("Wiki Name: %s".formatted(pageName))
+                .setDescription(wiki.getTextExtract(pageName).substring(0, Math.min(wiki.getTextExtract(pageName).length(), 300)) + " ...")
+                .setColor(0xACABAD)
+                .setImage(getImageUrl(pageName))
+                .setFooter("Author name: " + wiki.getPageCreator(pageName))
+                .build();
 
-        if(wiki == null){
-            reply(event, "❌ Failed to get response!", false, true);
-            return;
-        }
+        event.getHook().sendMessageEmbeds(embed).queue();
 
+    }
+
+    private String getImageUrl(String pageName){
         List<String> imageNames = wiki.getImagesOnPage(pageName);
         String url = null;
         if(!imageNames.isEmpty()) {
             List<ImageInfo> imageInfos = wiki.getImageInfo(imageNames.get(0));
             url = imageInfos.isEmpty() ? null : imageInfos.get(0).url.toString();
         }
-
-        var embed = new EmbedBuilder()
-                .setTitle("Wiki Name: %s".formatted(pageName))
-                .setDescription(wiki.getTextExtract(pageName).substring(0,300) + " ...")
-                .setColor(0xACABAD)
-                .setImage(url)
-                .setFooter("Author name: " + wiki.getPageCreator(pageName))
-                .build();
-        event.deferReply().addEmbeds(embed).queue();
+        return url;
     }
 }
