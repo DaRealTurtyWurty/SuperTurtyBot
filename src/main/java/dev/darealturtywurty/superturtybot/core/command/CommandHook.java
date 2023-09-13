@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -46,7 +47,14 @@ public class CommandHook extends ListenerAdapter {
 
     private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
     private static final Set<CommandCategory> CATEGORIES = new HashSet<>();
+
+    private static final CompletableFuture<Boolean> CHECKING_FOR_DEV_GUILD = new CompletableFuture<>();
+    private static boolean CHECKED_FOR_DEV_GUILD = false;
     private static boolean IS_DEV_MODE = false;
+
+    static {
+        CHECKING_FOR_DEV_GUILD.thenAccept(ignored -> CHECKED_FOR_DEV_GUILD = true);
+    }
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
@@ -59,6 +67,14 @@ public class CommandHook extends ListenerAdapter {
 
     public static boolean isDevMode() {
         return IS_DEV_MODE;
+    }
+
+    public static boolean isCheckingForDevGuild() {
+        return !CHECKED_FOR_DEV_GUILD;
+    }
+
+    public static CompletableFuture<Boolean> getCheckingForDevGuild() {
+        return CHECKING_FOR_DEV_GUILD;
     }
 
     public Set<CoreCommand> getCommands() {
@@ -145,6 +161,8 @@ public class CommandHook extends ListenerAdapter {
         if (devGuild != null) {
             IS_DEV_MODE = true;
         }
+
+        CHECKING_FOR_DEV_GUILD.complete(isDevMode());
 
         if (!isDevMode()) {
             AutoModerator.INSTANCE.initialize();
@@ -402,6 +420,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessSongCommand());
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
+        cmds.add(new WordleCommand());
 
         return cmds;
     }

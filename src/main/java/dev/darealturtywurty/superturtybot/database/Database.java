@@ -36,6 +36,7 @@ public class Database {
     public final MongoCollection<UserEmbeds> userEmbeds;
     public final MongoCollection<Reminder> reminders;
     public final MongoCollection<SavedSongs> savedSongs;
+    public final MongoCollection<WordleProfile> wordleProfiles;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -64,6 +65,7 @@ public class Database {
         this.userEmbeds = database.getCollection("userEmbeds", UserEmbeds.class);
         this.reminders = database.getCollection("reminders", Reminder.class);
         this.savedSongs = database.getCollection("savedSongs", SavedSongs.class);
+        this.wordleProfiles = database.getCollection("wordleProfiles", WordleProfile.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -89,6 +91,7 @@ public class Database {
         this.userEmbeds.createIndex(userIndex);
         this.reminders.createIndex(guildUserIndex);
         this.savedSongs.createIndex(userIndex);
+        this.wordleProfiles.createIndex(userIndex);
     }
 
     public static Database getDatabase() {

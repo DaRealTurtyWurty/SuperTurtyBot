@@ -1,13 +1,21 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
+import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.CoupledPair;
+import dev.darealturtywurty.superturtybot.core.util.Either;
 import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
+import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -17,7 +25,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +34,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,12 +47,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+@SuppressWarnings("SuspiciousNameCombination")
 public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
-    private static final String API_URL = "https://api.turtywurty.dev/words/random?length=5";
-    public static final Path WORDLE_FILE = Path.of("wordle.json");
+    private static final RandomWordRequestData REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
+    public static final Path WORDLE_FILE = Path.of("./wordle.json");
     private static final BufferedImage DEFAULT_IMAGE;
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -85,13 +92,15 @@ public class WordleCommand extends CoreCommand {
             int x = bottomRowStartX + (column * (width + spacing));
             LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
         }
-    }
 
-    static {
-        fetchTodayWords();
-        EXECUTOR.scheduleAtFixedRate(WordleCommand::fetchAndStoreWords, getInitialDelay(), 24, TimeUnit.HOURS);
+        loadTodaysWords();
+        EXECUTOR.scheduleAtFixedRate(() -> {
+            fetchAndStoreWords();
+            RATELIMITS.clear();
+        }, getInitialDelay(), 24, TimeUnit.HOURS);
 
         try {
+            //noinspection DataFlowIssue
             DEFAULT_IMAGE = ImageIO.read(TurtyBot.class.getResourceAsStream("/wordle.png"));
         } catch (IOException | NullPointerException exception) {
             throw new IllegalStateException("Failed to load default image!", exception);
@@ -124,7 +133,7 @@ public class WordleCommand extends CoreCommand {
 
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 5L);
+        return Pair.of(TimeUnit.DAYS, 1L);
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
@@ -137,8 +146,34 @@ public class WordleCommand extends CoreCommand {
         }
     }
 
+    private static WordleProfile getProfile(long userId) {
+        WordleProfile profile = Database.getDatabase().wordleProfiles.find(Filters.eq("user", userId)).first();
+        if (profile == null) {
+            profile = new WordleProfile(userId);
+            Database.getDatabase().wordleProfiles.insertOne(profile);
+        }
+
+        return profile;
+    }
+
     private static void runGlobal(SlashCommandInteractionEvent event) {
-        String word = GLOBAL_WORD.get();
+        // check if game is already running
+        if (DM_GAMES.containsKey(event.getUser().getIdLong())) {
+            event.getHook().sendMessage("❌ You already have a game running!").queue();
+            return;
+        }
+
+        WordleProfile profile = getProfile(event.getUser().getIdLong());
+        Optional<WordleStreakData> streakData = profile.getStreaks()
+                .stream()
+                .filter(streak -> streak.getGuild() == 0L)
+                .findFirst();
+        if(streakData.isPresent() && streakData.get().isHasPlayedToday()) {
+            event.getHook().sendMessage("❌ You have already played today!").queue();
+            return;
+        }
+
+        String word = getOrFetch();
         if (word == null) {
             event.getHook().sendMessage("❌ The word of the day has not been set yet!").queue();
             return;
@@ -146,10 +181,6 @@ public class WordleCommand extends CoreCommand {
 
         CompletableFuture<Message> messageFuture = new CompletableFuture<>();
         BufferedImage image = createGame(event, word, messageFuture);
-        if (image == null) {
-            event.getHook().sendMessage("❌ An error occurred while creating the game!").queue();
-            return;
-        }
 
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -160,7 +191,15 @@ public class WordleCommand extends CoreCommand {
             event.getHook()
                     .sendMessage("Can you guess today's word? You have 6 tries!")
                     .setFiles(upload)
-                    .queue(messageFuture::complete);
+                    .queue(message -> {
+                        try {
+                            upload.close();
+                        } catch (IOException exception) {
+                            Constants.LOGGER.error("An error occurred while closing the file upload!", exception);
+                        } finally {
+                            messageFuture.complete(message);
+                        }
+                    });
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while creating the game!").queue();
             Constants.LOGGER.error("An error occurred while creating the game!", exception);
@@ -174,6 +213,23 @@ public class WordleCommand extends CoreCommand {
             return;
         }
 
+        // check if game is already running
+        List<Game> games = GUILD_GAMES.computeIfAbsent(guild.getIdLong(), id -> new ArrayList<>());
+        if(games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong())) {
+            event.getHook().sendMessage("❌ You already have a game running!").queue();
+            return;
+        }
+
+        WordleProfile profile = getProfile(event.getUser().getIdLong());
+        Optional<WordleStreakData> streakData = profile.getStreaks()
+                .stream()
+                .filter(streak -> streak.getGuild() == guild.getIdLong())
+                .findFirst();
+        if(streakData.isPresent() && streakData.get().isHasPlayedToday()) {
+            event.getHook().sendMessage("❌ You have already played today!").queue();
+            return;
+        }
+
         String word = getOrFetch(guild.getIdLong());
         if (word == null) {
             event.getHook().sendMessage("❌ The word of the day has not been set yet!").queue();
@@ -182,15 +238,12 @@ public class WordleCommand extends CoreCommand {
 
         CompletableFuture<Message> messageFuture = new CompletableFuture<>();
         BufferedImage image = createGame(event, word, messageFuture);
-        if (image == null) {
-            event.getHook().sendMessage("❌ An error occurred while creating the game!").queue();
-            return;
-        }
 
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             ImageIO.write(image, "png", stream);
             byte[] data = stream.toByteArray();
+            //noinspection resource
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
 
             event.getChannel()
@@ -249,11 +302,8 @@ public class WordleCommand extends CoreCommand {
                                         || !event.isFromGuild())
                                     && event.getChannel().getIdLong() == game.getChannelId()
                                     && event.getAuthor().getIdLong() == game.getUserId()
-                                    && (content.length() == 5
-                                        && content.matches("[a-zA-Z]+")
-                                        || content.equalsIgnoreCase("give up"));
-                        }
-                )
+                                    && (!isInvalidWord(content) || content.equalsIgnoreCase("give up"));
+                        })
                 .success(event -> {
                     if(handleResponse(event, game)) {
                         createEventWaiter(guild, game).build();
@@ -303,6 +353,31 @@ public class WordleCommand extends CoreCommand {
         }
     }
 
+    private static void updateDatabase(long guild, Game game, boolean won) {
+        WordleProfile profile = getProfile(game.getUserId());
+        WordleStreakData streakData = profile.getStreaks()
+                .stream()
+                .filter(streak -> streak.getGuild() == guild)
+                .findFirst().orElse(null);
+        if (streakData == null) {
+            streakData = new WordleStreakData();
+            streakData.setGuild(guild);
+            profile.getStreaks().add(streakData);
+        }
+
+        streakData.setHasPlayedToday(true);
+        if(won) {
+            streakData.setStreak(streakData.getStreak() + 1);
+            if(streakData.getStreak() > streakData.getBestStreak()) {
+                streakData.setBestStreak(streakData.getStreak());
+            }
+        } else {
+            streakData.setStreak(0);
+        }
+
+        Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", game.getUserId()), profile);
+    }
+
     private static void endGame(@NotNull Guild guild, @NotNull Game game) {
         List<Game> games = GUILD_GAMES.computeIfAbsent(guild.getIdLong(), id -> new ArrayList<>());
         games.remove(game);
@@ -317,12 +392,16 @@ public class WordleCommand extends CoreCommand {
         if (game.isWon()) {
             thread.sendMessage("Congratulations! You won! The word was: " + game.getWord())
                     .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+
+            updateDatabase(guild.getIdLong(), game, true);
             return;
         }
 
         if (game.isLost()) {
             thread.sendMessage("You lost! The word was: " + game.getWord())
                     .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+
+            updateDatabase(guild.getIdLong(), game, false);
             return;
         }
 
@@ -338,11 +417,15 @@ public class WordleCommand extends CoreCommand {
 
             if (game.isWon()) {
                 channel.sendMessage("Congratulations! You won! The word was: " + game.getWord()).queue();
+
+                updateDatabase(0L, game, true);
                 return;
             }
 
             if (game.isLost()) {
                 channel.sendMessage("You lost! The word was: " + game.getWord()).queue();
+
+                updateDatabase(0L, game, false);
                 return;
             }
 
@@ -389,7 +472,7 @@ public class WordleCommand extends CoreCommand {
         int descent = metrics.getDescent();
         LETTER_POSITIONS.forEach((character, position) -> {
             graphics.setColor(characterColorGetter.apply(character));
-            graphics.fillRect(position.getLeft(), position.getRight(), letterWidth, letterHeight);
+            graphics.fillRoundRect(position.getLeft(), position.getRight(), letterWidth, letterHeight, 25, 25);
 
             graphics.setColor(Color.BLACK);
 
@@ -419,119 +502,134 @@ public class WordleCommand extends CoreCommand {
     }
 
     private static void fetchAndStoreWords() {
+        resetDaily();
+        fetchWordForGlobal();
+
+        List<Long> guildIds = new ArrayList<>(GUILD_WORDS.keySet());
+        GUILD_WORDS.clear();
+        for (long guildId : guildIds) {
+            fetchWordForGuild(guildId, false);
+        }
+
+        writeToFile();
+    }
+
+    private static void writeToFile() {
         try {
-            String json = IOUtils.toString(new URL(API_URL), StandardCharsets.UTF_8);
-            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-            if (array.isEmpty()) {
-                fetchAndStoreWords();
-                return;
-            }
+            var json = new JsonObject();
+            json.addProperty("global", GLOBAL_WORD.get());
 
-            String word = array.get(0).getAsString();
-            if (!isValidWord(word)) {
-                fetchAndStoreWords();
-                return;
-            }
-
-            GLOBAL_WORD.set(word);
-
+            var guildWords = new JsonObject();
             for (Map.Entry<Long, String> entry : GUILD_WORDS.entrySet()) {
-                fetchWordForGuild(entry.getKey());
+                guildWords.addProperty(String.valueOf(entry.getKey()), entry.getValue());
             }
+            json.add("guild_words", guildWords);
 
-            JsonObject jsonToStore = new JsonObject();
-            jsonToStore.addProperty("word", GLOBAL_WORD.get());
-            for (Map.Entry<Long, String> entry : GUILD_WORDS.entrySet()) {
-                jsonToStore.addProperty(entry.getKey().toString(), entry.getValue());
-            }
-
-            Files.writeString(WORDLE_FILE, Constants.GSON.toJson(jsonToStore), StandardCharsets.UTF_8);
+            Files.writeString(WORDLE_FILE, Constants.GSON.toJson(json), StandardCharsets.UTF_8);
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to fetch word from API!", exception);
         }
     }
 
-    private static void fetchWordForGuild(long guildId) throws IOException {
-        String json = IOUtils.toString(new URL(API_URL), StandardCharsets.UTF_8);
-        JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+    private static void fetchWordForGlobal() {
+        GLOBAL_WORD.set(null);
+        fetchWord().ifPresent(GLOBAL_WORD::set);
+    }
 
-        int attempts = 0;
-        while (array.isEmpty() && attempts < 5) {
-            json = IOUtils.toString(new URL(API_URL), StandardCharsets.UTF_8);
-            array = Constants.GSON.fromJson(json, JsonArray.class);
-            attempts++;
+    private static void fetchWordForGuild(long guildId, boolean update){
+        fetchWord().ifPresent(word -> GUILD_WORDS.put(guildId, word));
+
+        if (update) {
+            writeToFile();
+        }
+    }
+
+    private static String getOrFetch() {
+        String word = GLOBAL_WORD.get();
+        if (word == null) {
+            word = fetchWord().orElse(null);
+            GLOBAL_WORD.set(word);
         }
 
-        if (array.isEmpty())
-            return;
-
-        String word = array.get(0).getAsString();
-        attempts = 0;
-        while (!isValidWord(word) && attempts < 5) {
-            json = IOUtils.toString(new URL(API_URL), StandardCharsets.UTF_8);
-            array = Constants.GSON.fromJson(json, JsonArray.class);
-            word = array.get(0).getAsString();
-            attempts++;
-        }
-
-        if (!isValidWord(word))
-            return;
-
-        GUILD_WORDS.put(guildId, word);
+        return word;
     }
 
     private static String getOrFetch(long guildId) {
-        String word = GUILD_WORDS.get(guildId);
-        if (word == null) {
-            try {
-                fetchWordForGuild(guildId);
-            } catch (IOException exception) {
-                throw new IllegalStateException("Failed to fetch word from API!", exception);
-            }
+        if (!GUILD_WORDS.containsKey(guildId) || GUILD_WORDS.get(guildId) == null) {
+            fetchWordForGuild(guildId, true);
         }
 
         return GUILD_WORDS.get(guildId);
     }
 
-    private static void fetchTodayWords() {
+    private static Optional<String> fetchWord() {
+        Either<List<String>, HttpStatus> words = ApiHandler.getWords(REQUEST_DATA);
+        if (words.isLeft()) {
+            List<String> wordList = words.getLeft();
+            if (wordList.isEmpty()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(wordList.get(0));
+        }
+
+        Constants.LOGGER.warn("Failed to fetch word from API! Status: {}", words.getRight());
+        return Optional.empty();
+    }
+
+    private static void loadTodaysWords() {
         try {
-            if (Files.exists(WORDLE_FILE)) {
-                String jsonStr = Files.readString(WORDLE_FILE, StandardCharsets.UTF_8);
-                JsonObject json = Constants.GSON.fromJson(jsonStr, JsonObject.class);
-                if (json == null) {
-                    fetchAndStoreWords();
-                    fetchTodayWords();
-                    return;
-                }
+            if(Files.notExists(WORDLE_FILE)) {
+                Files.createDirectories(WORDLE_FILE.getParent());
+                Files.createFile(WORDLE_FILE);
 
-                String word = json.get("word").getAsString();
-                if (isValidWord(word)) {
-                    GLOBAL_WORD.set(word);
-                } else {
-                    fetchAndStoreWords();
-                }
+                fetchAndStoreWords();
+                return;
+            }
 
-                if(!json.has("guild_words"))
-                    return;
+            String json = Files.readString(WORDLE_FILE);
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
-                JsonObject guildWords = json.get("guild_words").getAsJsonObject();
-                for (String guildId : guildWords.keySet()) {
-                    if (!guildId.matches("[0-9]+"))
-                        continue;
+            String globalWord;
+            if(object.has("global")) {
+                globalWord = object.get("global").getAsString();
+                GLOBAL_WORD.set(globalWord);
+            } else {
+                fetchWordForGlobal();
+            }
 
-                    String guildWord = guildWords.get(guildId).getAsString();
-                    if (isValidWord(guildWord)) {
-                        GUILD_WORDS.put(Long.parseLong(guildId), guildWord);
-                    }
+            if(object.has("guild_words")) {
+                JsonObject guildWords = object.getAsJsonObject("guild_words");
+                for (Map.Entry<String, JsonElement> entry : guildWords.entrySet()) {
+                    String word = entry.getValue().getAsString();
+                    GUILD_WORDS.put(Long.parseLong(entry.getKey()), word);
                 }
             }
         } catch (IOException exception) {
-            throw new IllegalStateException("Failed to read word from file!", exception);
+            Constants.LOGGER.error("Failed to load today's words!", exception);
         }
     }
 
-    private static boolean isValidWord(String word) {
-        return word.length() == 5 && word.matches("[a-zA-Z]+") && !word.isBlank() && !word.contains(" ");
+    private static boolean isInvalidWord(String word) {
+        return word.length() != 5
+                || !word.matches("[a-zA-Z]+")
+                || word.isBlank()
+                || word.contains(" ")
+                || !ApiHandler.isWord(word).converge(Boolean::booleanValue, httpStatus -> false);
+    }
+
+    private static void resetDaily() {
+        List<WordleProfile> profiles = Database.getDatabase().wordleProfiles.find().into(new ArrayList<>());
+        for (WordleProfile profile : profiles) {
+            for (WordleStreakData streak : profile.getStreaks()) {
+                if (streak.isHasPlayedToday())
+                    streak.setHasPlayedToday(false);
+                else
+                    streak.setStreak(0);
+            }
+
+            Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", profile.getUser()), profile);
+        }
     }
 
     @Getter
@@ -561,9 +659,6 @@ public class WordleCommand extends CoreCommand {
         }
 
         public boolean guess(String guess) {
-            if(!isValidWord(guess))
-                return false;
-
             if(guesses.contains(guess))
                 return false;
 
@@ -608,7 +703,7 @@ public class WordleCommand extends CoreCommand {
             char lowercaseChar = Character.toLowerCase(character);
             boolean isInWord = lowercaseWord.contains(String.valueOf(lowercaseChar));
             boolean isAtCorrectIndex = false;
-            Color color = Color.WHITE; // Default color is white
+            Color color = LetterState.NOT_GUESSED.getColor(); // Default color is white
 
             for (String guess : guesses) {
                 String lowercaseGuess = guess.toLowerCase();
@@ -617,13 +712,13 @@ public class WordleCommand extends CoreCommand {
                         // Check if the character is at the right index
                         isAtCorrectIndex = lowercaseWord.indexOf(lowercaseChar) == lowercaseGuess.indexOf(lowercaseChar);
                         if (isAtCorrectIndex) {
-                            color = Color.GREEN; // Green has the highest priority
+                            color = LetterState.CORRECT.getColor(); // Green has the highest priority
                             return color;
                         } else {
-                            color = Color.YELLOW; // Yellow has the second highest priority
+                            color = LetterState.WRONG_POSITION.getColor(); // Yellow has the second highest priority
                         }
                     } else {
-                        color = Color.RED; // Red has the third highest priority
+                        color = LetterState.INCORRECT.getColor(); // Red has the third highest priority
                     }
                 }
             }
@@ -639,7 +734,7 @@ public class WordleCommand extends CoreCommand {
             CORRECT(Color.GREEN),
             INCORRECT(Color.RED),
             WRONG_POSITION(Color.YELLOW),
-            NOT_GUESSED(Color.WHITE);
+            NOT_GUESSED(new Color(0x6D7C87));
 
             @Getter
             private final Color color;
