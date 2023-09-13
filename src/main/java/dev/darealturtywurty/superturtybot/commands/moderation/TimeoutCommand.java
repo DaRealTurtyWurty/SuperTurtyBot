@@ -84,7 +84,7 @@ public class TimeoutCommand extends CoreCommand {
             final long duration = event.getOption("duration", 15L, OptionMapping::getAsLong);
             member.getUser().openPrivateChannel()
                 .queue(channel -> channel.sendMessage(
-                    "You have been put on timeout for " + duration + "seconds in `" + event.getGuild().getName() + "`!")
+                    "You have been put on timeout for " + duration + " seconds in `" + event.getGuild().getName() + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));
