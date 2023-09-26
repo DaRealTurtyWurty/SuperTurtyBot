@@ -1,0 +1,32 @@
+{
+  "responses": [
+    "You cut your neighbour's grass and earnt <>{amount}!",
+    "Great work, {user}! You put your carpentry skills to good use today, crafting a beautiful bookshelf for your friend, and earned <>{amount} in the process.",
+    "You're a lifesaver, {user}! By babysitting your neighbor's adorable twins, you've made <>{amount} for a fun day filled with games and laughter.",
+    "Awesome job! Your attention to detail while painting Mrs. Johnson's fence paid off big time with <>{amount} in your pocket.",
+    "You've got a green thumb! Tending to Mr. Smith's garden and landscaping has earned you <>{amount} today.",
+    "You're a great friend, {user}! You helped your friend move into their new apartment and earned <>{amount} in the process.",
+    "Another successful computer repair! By fixing your co-worker's laptop, you've added <>{amount} to your piggy bank.",
+    "Well done, {user}! Your dog-walking skills have not only kept the neighborhood pups happy but also earned you <>{amount} today.",
+    "Your tutoring session was a hit! You helped your cousin with math and earned <>{amount} for your patience and expertise.",
+    "Nice hustle, {user}! By cleaning out your friend's garage and organizing it, you've made <>{amount} and created some much-needed space.",
+    "You're a true handyman! By fixing the leaky faucet in your aunt's kitchen, you've earned <>{amount} and her eternal gratitude.",
+    "Great job as a personal shopper! You saved your neighbor hours of shopping by picking up groceries and earned <>{amount} as a thank you.",
+    "Kudos! By assisting with event planning, you've earned <>{amount} while making your friend's special day even more memorable.",
+    "Fantastic job! You've made <>{amount} by offering your photography expertise for that family portrait session.",
+    "You're a great teacher! By helping your friend's child with their homework, you've earned <>{amount} and helped them learn something new.",
+    "You're a star! By cleaning and detailing cars in the neighborhood, you've earned <>{amount} while making vehicles shine.",
+    "Bravo! You've earned <>{amount} by delivering delicious homemade meals to busy professionals in your area.",
+    "You're a great listener! By offering your advice and expertise, you've earned <>{amount} while helping your friend through a tough time.",
+    "Impressive! Your organization skills came in handy as you decluttered and reorganized your uncle's attic, earning <>{amount} in the process.",
+    "You've earned <>{amount} for hunting down all the missing socks in your friend's laundry - they can finally have matching pairs again!",
+    "Congratulations on making <>{amount} by organizing a competitive rock, paper, scissors tournament in your neighborhood. Who knew that would be so popular?",
+    "You've earned <>{amount} for being a professional pet psychic and helping your neighbor's cat overcome its fear of cucumbers.",
+    "Great job as a \"human scarecrow\"! You've protected the farmer's crops from pesky birds and made <>{amount}.",
+    "You've earned <>{amount} for creating a unique interpretive dance to explain quantum physics concepts to your little sister. She's now acing her science class.",
+    "Kudos for selling <>{amount} worth of your handmade paperclip sculptures at the local flea market - your creativity knows no bounds!",
+    "You've made <>{amount} by participating in a competitive thumb-wrestling league. Your thumbs are now legendary in your town.",
+    "Well done on earning <>{amount} for being a professional snail walker, helping snails cross the sidewalk safely during the rainy season.",
+    "You've earned <>{amount} for creating a guided meditation experience where you help people find their inner zen while petting friendly hedgehogs."
+  ]
+}
