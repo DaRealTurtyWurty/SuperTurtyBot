@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
@@ -25,8 +26,6 @@ import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
-import dev.darealturtywurty.superturtybot.modules.economy.PublicShop;
-import dev.darealturtywurty.superturtybot.modules.economy.command.*;
 import dev.darealturtywurty.superturtybot.weblisteners.social.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -440,6 +439,9 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new WithdrawCommand());
         cmds.add(new SlotsCommand());
         cmds.add(new SetMoneyCommand());
+        cmds.add(new CrashCommand());
+        cmds.add(new LoanCommand());
+        cmds.add(new DonateCommand());
 
         return cmds;
     }

@@ -1,7 +1,8 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
+import dev.darealturtywurty.superturtybot.modules.economy.Loan;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
-import lombok.Data;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +25,16 @@ public class Economy {
     private long nextMonthly;
     private long nextYearly;
 
+    private long nextLoan;
+
     private Job job;
     private int jobLevel;
 
     private long totalBetLoss;
     private long totalBetWin;
 
-    private List<ShopItem> shopItems;
+    private List<ShopItem> shopItems = new ArrayList<>();
+    private List<Loan> loans = new ArrayList<>();
 
     public Economy() {
         this(0, 0);
@@ -39,8 +43,6 @@ public class Economy {
     public Economy(long guild, long user) {
         this.guild = guild;
         this.user = user;
-
-        this.shopItems = new ArrayList<>();
     }
 
     public void addBank(int amount) {
@@ -59,6 +61,9 @@ public class Economy {
         this.wallet -= amount;
     }
 
+    @Getter
+    @AllArgsConstructor
+    @ToString
     public enum Job {
         PROGRAMMER(100, 2, 0.075f, 450),
         YOUTUBER(300, 5, 0.01f, 1350),
@@ -69,30 +74,7 @@ public class Economy {
 
         private final int salary;
         private final float promotionMultiplier;
-        private final int workCooldownSeconds;
         private final float promotionChance;
-
-        Job(int salary, float promotionMultiplier, float promotionChance, int workCooldownSeconds) {
-            this.salary = salary;
-            this.promotionMultiplier = promotionMultiplier;
-            this.promotionChance = promotionChance;
-            this.workCooldownSeconds = workCooldownSeconds;
-        }
-
-        public int getSalary() {
-            return this.salary;
-        }
-
-        public float getPromotionMultiplier() {
-            return this.promotionMultiplier;
-        }
-
-        public float getPromotionChance() {
-            return this.promotionChance;
-        }
-
-        public int getWorkCooldownSeconds() {
-            return this.workCooldownSeconds;
-        }
+        private final int workCooldownSeconds;
     }
 }

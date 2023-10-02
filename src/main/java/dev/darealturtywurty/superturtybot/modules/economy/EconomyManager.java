@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
 import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.text.WordUtils;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
@@ -157,12 +159,16 @@ public class EconomyManager {
     public static int work(Economy account) {
         if (!canWork(account)) return 0;
 
-        int amount = Math.max(10, Math.round(
-                account.getJob().getSalary() * (account.getJobLevel() * account.getJob().getPromotionMultiplier())));
-        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
-        addMoney(account, amount, true);
+        int salary = account.getJob().getSalary();
+        int jobLevel = account.getJobLevel();
+        float multiplier = account.getJob().getPromotionMultiplier() + 1;
+        int amount = Math.round(salary * (1 + (jobLevel * multiplier)));
+        int earned = Math.max(10, amount);
 
-        if(ThreadLocalRandom.current().nextInt(100) == account.getJob().getPromotionChance() * 100) {
+        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+        addMoney(account, earned, true);
+
+        if(ThreadLocalRandom.current().nextInt(100) == (int) (account.getJob().getPromotionChance() * 100)) {
             account.setJobLevel(account.getJobLevel() + 1);
         }
 
@@ -220,7 +226,63 @@ public class EconomyManager {
         return amount;
     }
 
+    public static void betWin(Economy account, int amount) {
+        account.setTotalBetWin(account.getTotalBetWin() + amount);
+    }
+
+    public static void betLoss(Economy account, int amount) {
+        account.setTotalBetLoss(account.getTotalBetLoss() + amount);
+    }
+
     public static PublicShop getPublicShop() {
         return PublicShop.INSTANCE;
+    }
+
+    public static void setNextWork(Economy account, long time) {
+        account.setNextWork(time);
+    }
+
+    public static float getCreditScore(Economy account) {
+        long totalBet = account.getTotalBetWin() - account.getTotalBetLoss();
+        float score = totalBet / 1000F;
+        if(getBalance(account) < 0) {
+            score *= 0.5f;
+        }
+
+        return score;
+    }
+
+    public static Loan addLoan(Economy account, int amount) {
+        var loan = new Loan(
+                UUID.randomUUID().toString(),
+                amount,
+                getInterestRate(amount),
+                System.currentTimeMillis(),
+                System.currentTimeMillis() + TimeUnit.DAYS.toMillis(getTimeToPayOff(amount)));
+        account.getLoans().add(loan);
+        account.setNextLoan(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+
+        addMoney(account, amount, true);
+        updateAccount(account);
+        return loan;
+    }
+
+    public static boolean payLoan(Economy account, Loan loan, int amount) {
+        int returned = loan.pay(amount);
+        removeMoney(account, amount - returned, true);
+        System.out.println("Amount: " + amount + ", Returned: " + returned);
+        updateAccount(account);
+
+        return loan.isPaidOff();
+    }
+
+    public static int getTimeToPayOff(int amount) {
+        return amount / 1000;
+    }
+
+    public static float getInterestRate(int amount) {
+        if (amount < 5000) return 0.5f;
+
+        return 0.5f + (0.5f * (amount / 5000f));
     }
 }
