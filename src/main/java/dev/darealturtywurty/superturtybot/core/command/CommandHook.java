@@ -332,10 +332,10 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new WeatherCommand());
         cmds.add(new SteamGamesCommand());
         cmds.add(new SteamIDCommand());
-        cmds.add(new GetRobloxUserAvatarCommand());
-        cmds.add(new GetRobloxUserNameCommand());
-        cmds.add(new GetRobloxUserFriendListCommand());
-        cmds.add(new GetRobloxUserFavoriteGameCommand());
+        cmds.add(new RobloxAvatarCommand());
+        cmds.add(new RobloxUsernameCommand());
+        cmds.add(new RobloxFriendsCommand());
+        cmds.add(new FavouriteRobloxGamesCommand());
         cmds.add(new WikipediaCommand());
 
         // Moderation

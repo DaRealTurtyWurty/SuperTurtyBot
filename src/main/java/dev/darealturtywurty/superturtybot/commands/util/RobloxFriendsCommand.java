@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -18,12 +17,13 @@ import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
-    public GetRobloxUserFavoriteGameCommand() {
-        super(new Types(true,false,false,false));
+public class RobloxFriendsCommand extends CoreCommand {
+    public RobloxFriendsCommand() {
+        super(new Types(true, false, false, false));
     }
 
     @Override
@@ -38,17 +38,17 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Returns the user favorite game";
+        return "Returns the friends list of a roblox user.";
     }
 
     @Override
     public String getName() {
-        return "roblox-favorite-game";
+        return "roblox-friends";
     }
 
     @Override
     public String getRichName() {
-        return "Roblox Game";
+        return "Roblox Friends";
     }
 
     @Override
@@ -60,19 +60,21 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         String robloxUserId = event.getOption("userid", null, OptionMapping::getAsString);
 
-        if(robloxUserId == null){
-            reply(event, "❌ You must provide a valid User ID!", false, true);
+        if (robloxUserId == null) {
+            reply(event, "❌ You must provide a valid userid!", false, true);
             return;
         }
 
-        String RobloxSearchForUsernameUrl = "https://games.roblox.com/v2/users/%s/favorite/games"
-                .formatted(robloxUserId);
+        event.deferReply().queue();
 
+        String robloxSearchForUsernameUrl = "https://friends.roblox.com/v1/users/%s/friends".formatted(robloxUserId);
+        final Request request = new Request.Builder()
+                .url(robloxSearchForUsernameUrl)
+                .get()
+                .build();
 
-        final Request request = new Request.Builder().url(RobloxSearchForUsernameUrl).get().build();
-
-        try(Response response = new OkHttpClient().newCall(request).execute()){
-            if(!response.isSuccessful()){
+        try (Response response = new OkHttpClient().newCall(request).execute()) {
+            if (!response.isSuccessful()) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
                         .mentionRepliedUser(false)
@@ -81,15 +83,15 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
             }
 
             ResponseBody body = response.body();
-            if(body == null){
+            if (body == null) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
                         .mentionRepliedUser(false)
                         .queue();
                 return;
             }
-            String bodyString = body.string();
 
+            String bodyString = body.string();
             if (bodyString.isBlank()) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
@@ -98,68 +100,66 @@ public class GetRobloxUserFavoriteGameCommand extends CoreCommand {
                 return;
             }
 
-            RobloxUserFavoriteGame robloxResponse = RobloxUserFavoriteGame.fromJsonString(bodyString);
-
-            List<FavoriteGameData> robloxData = robloxResponse.data;
-
-            if(robloxData.isEmpty()) {
-                reply(event, "❌ Failed to get data!", false, true);
+            RobloxFriendData robloxResponse = RobloxFriendData.fromJsonString(bodyString);
+            List<FriendData> robloxData = robloxResponse.getData();
+            if (robloxData.isEmpty()) {
+                event.getHook()
+                        .sendMessage("❌ Failed to get data!")
+                        .mentionRepliedUser(false)
+                        .queue();
                 return;
             }
-            event.deferReply().queue();
 
             var contents = new PaginatedEmbed.ContentsBuilder();
-
-            for (FavoriteGameData data : robloxData) {
+            for (FriendData data : robloxData) {
                 contents.field(data.name, data.id +
-                        "\n**Created: **" + data.created +
-                        "\n**Updated : **" + data.updated +
-                        "\n**Place visits: **" + data.placeVisits,false);
-
+                        "\n**Display Name**: " + data.displayName +
+                        "\n**Has Verified Badge**: " + data.hasVerifiedBadge +
+                        "\n**Is Online**: " + data.isOnline +
+                        "\n**Is Deleted**: " + data.isDeleted);
             }
 
             var embed = new PaginatedEmbed.Builder(5, contents)
-                    .title("UserId: " + robloxUserId)
+                    .title("Roblox UserID: " + robloxUserId)
                     .color(0xecbc4c)
                     .authorOnly(event.getUser().getIdLong())
+                    .timestamp(Instant.now())
                     .build(event.getJDA());
 
-            embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list roblox user!").queue());
-
-        }catch(IOException exception){
-            reply(event, "❌ Failed to response!");
+            embed.send(event.getHook(),
+                    () -> event.getHook().editOriginal("❌ Failed to list roblox friends!").queue());
+        } catch (IOException exception) {
+            event.getHook()
+                    .sendMessage("❌ Failed to get response!")
+                    .mentionRepliedUser(false)
+                    .queue();
             Constants.LOGGER.error("Failed to get response!", exception);
         }
     }
+
     @Data
-    private class RobloxUserFavoriteGame{
-        List<FavoriteGameData> data;
-        private static RobloxUserFavoriteGame fromJsonString(String json) {
+    public static class RobloxFriendData {
+        private List<FriendData> data;
+
+        private static RobloxFriendData fromJsonString(String json) {
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
-            return Constants.GSON.fromJson(object, RobloxUserFavoriteGame.class);
+            return Constants.GSON.fromJson(object, RobloxFriendData.class);
         }
     }
 
     @Data
-    public class FavoriteGameData{
+    public static class FriendData {
+        private boolean isOnline;
+        private boolean isDeleted;
+        private int friendFrequentScore;
+        private int friendFrequentRank;
+        private boolean hasVerifiedBadge;
+        private String description;
+        private String created;
+        private boolean isBanned;
+        private String externalAppDisplayName;
         private long id;
         private String name;
-        private String description;
-        private Creator creator;
-        private RootPlace rootPlace;
-        private String created;
-        private String updated;
-        private int placeVisits;
+        private String displayName;
     }
-    @Data
-    class Creator{
-        private long id;
-        private String group;
-    }
-    @Data
-    class RootPlace{
-        private long id;
-        private String type;
-    }
-
 }
