@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import dev.darealturtywurty.superturtybot.modules.economy.Loan;
+import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
 import lombok.*;
 
@@ -35,6 +36,7 @@ public class Economy {
 
     private List<ShopItem> shopItems = new ArrayList<>();
     private List<Loan> loans = new ArrayList<>();
+    private List<Property> properties = new ArrayList<>();
 
     public Economy() {
         this(0, 0);

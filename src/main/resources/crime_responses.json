@@ -1,0 +1,33 @@
+{
+  "success": [
+    "You successfully pick-pocketed a random NPC and gained <>{amount}!",
+    "You hacked into a secure server and stole <>{amount} worth of valuable data!",
+    "You pulled off a daring heist and escaped with <>{amount} in cash!",
+    "You conned a wealthy individual and swindled them out of <>{amount}!",
+    "You masterminded a clever smuggling operation and profited <>{amount}!",
+    "You stole all the cookies from the cookie jar and earned <>{amount}!",
+    "You spray-painted a silly face on a wall and got rewarded with <>{amount}!",
+    "You stole a car and sold it for <>{amount}!",
+    "You pulled off the ultimate prank and made <>{amount} by selling whoopee cushions!",
+    "You stole a bunch of candy from a baby and sold it for <>{amount}!",
+    "You were caught jaywalking, but instead of a fine, you received <>{amount}!",
+    "You organized a flash mob of dancing penguins and made <>{amount} from the entertainment!",
+    "You pulled off a successful prank call and got rewarded with <>{amount}!",
+    "You became a professional bubble wrap popper and earned <>{amount}!",
+    "You photo-bombed a celebrity picture by showing your ass and got paid <>{amount}!",
+    "You sold an 'air guitar' to a gullible buyer and made <>{amount}!",
+    "You organized a spontaneous flash mob of synchronized swimming in a public fountain and made <>{amount}!",
+    "You started a food fight at a fancy restaurant and got rewarded with <>{amount}!"
+  ],
+  "fail": [
+    "You tried to pickpocket someone, but they caught you red-handed and you lost <>{amount}!",
+    "You attempted to hack into a secure server, but triggered an alarm and had to flee empty-handed!",
+    "You planned a heist, but tripped the alarm system and left with nothing but <>{amount} in damages!",
+    "You tried to scam someone, but they saw through your scheme and you ended up losing <>{amount}!",
+    "You attempted to pull off a grand con, but your target outsmarted you and you walked away with empty pockets!",
+    "You tried to steal a rubber chicken, but ended up slipping on a banana peel and lost <>{amount}!",
+    "You attempted to pull off a prank involving whoopee cushions, but accidentally sat on one yourself and lost <>{amount} in embarrassment!",
+    "You attempted to spray-paint a silly face on a wall, but the paint can exploded and you lost <>{amount} worth of colorful chaos!",
+    "You tried to organize a flash mob of dancing penguins, but they all waddled away and you ended up losing <>{amount} in happy feet!"
+  ]
+}

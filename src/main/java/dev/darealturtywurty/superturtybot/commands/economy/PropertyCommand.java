@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.time.Instant;
 import java.util.List;
@@ -181,6 +182,14 @@ public class PropertyCommand extends EconomyCommand {
                 return;
             }
 
+            properties.removeIf(property -> !includeSold && !property.hasOwner());
+            properties.removeIf(property -> !includeRented && property.hasRent());
+
+            if (properties.isEmpty()) {
+                hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
+                return;
+            }
+
             var contents = new PaginatedEmbed.ContentsBuilder();
             var embed = new PaginatedEmbed.Builder(5, contents)
                     .title(isSelf ? "Your Properties" : member.getEffectiveName() + "'s Properties")
@@ -191,16 +200,22 @@ public class PropertyCommand extends EconomyCommand {
                     .authorOnly(event.getUser().getIdLong());
 
             for (Property property : properties) {
-                contents.field(property.getName(), "Value: " + property.getValue() + "\n" +
-                        "Rent Price: " + property.getRentPrice() + "\n" +
-                        "Renting: " + property.isRenting() + "\n" +
-                        "Sold: " + property.isSold() + "\n" +
-                        "Upgrades: " + property.getUpgrades().size() + "\n" +
-                        "Upgrades Value: " + property.getUpgrades().stream().mapToInt(Upgrade::getValue).sum() + "\n" +
-                        "Upgrades Rent Price: " + property.getUpgrades().stream().mapToInt(Upgrade::getRentPrice).sum() + "\n" +
-                        "Upgrades Renting: " + property.getUpgrades().stream().anyMatch(Upgrade::isRenting) + "\n" +
-                        "Upgrades Sold: " + property.getUpgrades().stream().anyMatch(Upgrade::isSold()), false);
+                contents.field(property.getName(), "Value: " + property.calculateCurrentWorth() + "\n" +
+                        "Rent Price: " + property.getRent().getCurrentRent() + "\n" +
+                        "Renting: " + property.hasRent() + "\n" +
+                        "Sold: " + !property.hasOwner() + "\n" +
+                        "Description: " + property.getDescription() + "\n" +
+                        "Upgrade Level: " + property.getUpgradeLevel() + "\n" +
+                        "Mortgaged: " + property.isMortgaged() + "\n" +
+                        "Mortgage Paid Off: " + property.isPaidOff() + "\n" +
+                        "Previous Owners: " + (property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0) + "\n" +
+                        "Estate Tax: " + property.getEstateTax() + "\n" +
+                        "Buy Date: " + TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()) + "\n" +
+                        "Owner: " + (property.hasOwner() ? guild.getMemberById(property.getOwner()).getEffectiveName() : "None") + "\n" +
+                        "Mortgage: " + (property.isMortgaged() ? property.getMortgage().getAmount() : "None"), false);
             }
+
+            embed.build(event.getJDA()).send(event.getHook());
         }, ignored -> {
             hookReply(event, "❌ That user is not in this server!");
         });

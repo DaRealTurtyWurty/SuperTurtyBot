@@ -442,6 +442,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new CrashCommand());
         cmds.add(new LoanCommand());
         cmds.add(new DonateCommand());
+        // cmds.add(new PropertyCommand());
 
         return cmds;
     }
