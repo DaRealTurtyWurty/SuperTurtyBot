@@ -15,6 +15,7 @@ public interface CommandCategory {
     CommandCategory IMAGE = create("Image", "🖼️");
     CommandCategory LEVELLING = create("Levelling", "🔝");
     CommandCategory MINIGAMES = create("Minigames", "🎮");
+    CommandCategory ECONOMY = create("Economy", "💰");
     
     String getEmoji();
     

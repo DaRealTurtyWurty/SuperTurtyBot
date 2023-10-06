@@ -225,4 +225,13 @@ public class GuildConfigRegistry {
             "should_send_startup_message", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setShouldSendStartupMessage(Boolean.parseBoolean(value))).valueFromConfig(
                     GuildConfig::isShouldSendStartupMessage).build());
+
+    public static final GuildConfigOption ECONOMY_CURRENCY = GUILD_CONFIG_OPTIONS.register("economy_currency",
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setEconomyCurrency)
+                                            .valueFromConfig(GuildConfig::getEconomyCurrency).build());
+
+    public static final GuildConfigOption DEFAULT_BALANCE = GUILD_CONFIG_OPTIONS.register("default_balance",
+            new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
+                                                    (config, value) -> config.setDefaultBalance(Integer.parseInt(value)))
+                                            .valueFromConfig(GuildConfig::getDefaultBalance).build());
 }
