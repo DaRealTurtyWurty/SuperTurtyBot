@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import com.google.common.primitives.Longs;
+import dev.darealturtywurty.superturtybot.commands.core.config.CommandPermission;
 import lombok.*;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
@@ -28,6 +29,7 @@ import net.dv8tion.jda.api.events.sticker.GuildStickerAddedEvent;
 import net.dv8tion.jda.api.events.sticker.GuildStickerRemovedEvent;
 import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -107,6 +109,11 @@ public class GuildConfig {
     // Counting
     private int maxCountingSuccession;
 
+    // Music
+    private boolean canAddPlaylists;
+    private List<CommandPermission> musicPermissions;
+    private int maxSongsPerUser;
+
     public GuildConfig() {
         this(0L);
     }
@@ -185,6 +192,9 @@ public class GuildConfig {
         // Counting
         this.maxCountingSuccession = 3;
 
+        // Music
+        this.canAddPlaylists = true;
+        this.musicPermissions = new ArrayList<>();
     }
 
     public boolean shouldLog(Event event) {

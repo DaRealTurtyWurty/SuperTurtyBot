@@ -9,6 +9,9 @@ import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GuildConfigRegistry {
     public static final Registry<GuildConfigOption> GUILD_CONFIG_OPTIONS = new Registry<>();
 
@@ -239,4 +242,67 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                                                     (config, value) -> config.setEconomyEnabled(Boolean.parseBoolean(value)))
                                             .valueFromConfig(GuildConfig::isEconomyEnabled).build());
+
+    public static final GuildConfigOption CAN_ADD_PLAYLISTS = GUILD_CONFIG_OPTIONS.register("can_add_playlists",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
+                                                    (config, value) -> config.setCanAddPlaylists(Boolean.parseBoolean(value)))
+                                            .valueFromConfig(GuildConfig::isCanAddPlaylists).build());
+
+    public static final GuildConfigOption MAX_SONGS_PER_USER = GUILD_CONFIG_OPTIONS.register("max_songs_per_user",
+            new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
+                                                    (config, value) -> config.setMaxSongsPerUser(Integer.parseInt(value)))
+                                            .valueFromConfig(GuildConfig::getMaxSongsPerUser).build());
+
+    public static final GuildConfigOption MUSIC_PERMISSIONS = GUILD_CONFIG_OPTIONS.register("music_permissions",
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer((guildConfig, s) -> {
+                        // format:
+                        // command:(role:permission);(role:permission);(role:permission)-command:(role:permission);(role:permission);(role:permission)
+
+                        final String[] commands = s.split("-");
+                        List<CommandPermission> permissions = new ArrayList<>();
+                        for (final String command : commands) {
+                            final String[] commandAndPermissions = command.split(":");
+                            final String[] permissionsStr = commandAndPermissions[1].split(";");
+                            List<CommandPermission.Permission> perms = new ArrayList<>();
+                            for (final String permission : permissionsStr) {
+                                final String[] roleAndPermission = permission.split(";");
+                                long roleId = 0L;
+                                try {
+                                    roleId = Long.parseLong(roleAndPermission[0]);
+                                } catch (final NumberFormatException ignored) {
+                                }
+
+                                perms.add(new CommandPermission.Permission(roleId, roleAndPermission[1]));
+                            }
+
+                            var cmdPermission = new CommandPermission(commandAndPermissions[0]);
+                            cmdPermission.setPermissions(perms);
+                            permissions.add(cmdPermission);
+                        }
+
+                        guildConfig.setMusicPermissions(permissions);
+                    })
+                    .valueFromConfig(GuildConfig::getMusicPermissions).validator((event, value) -> {
+                        final String[] commands = value.split("-");
+                        for (final String command : commands) {
+                            final String[] commandAndPermissions = command.split(":");
+                            final String[] permissionsStr = commandAndPermissions[1].split(";");
+                            for (final String permission : permissionsStr) {
+                                final String[] roleAndPermission = permission.split(";");
+                                if (roleAndPermission.length != 2) return false;
+                                long roleId = 0L;
+                                try {
+                                    roleId = Long.parseLong(roleAndPermission[0]);
+                                } catch (final NumberFormatException ignored) {
+                                }
+
+                                if (roleId != 0L) {
+                                    final Role role = event.getGuild().getRoleById(roleId);
+                                    if (role == null) return false;
+                                }
+                            }
+                        }
+
+                        return true;
+                    }).build());
 }

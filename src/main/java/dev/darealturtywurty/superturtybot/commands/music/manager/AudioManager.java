@@ -21,6 +21,7 @@ import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -36,8 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -53,7 +54,7 @@ public final class AudioManager {
         AudioSourceManagers.registerLocalSource(AUDIO_MANAGER);
 
         // Spotify
-        if(Environment.INSTANCE.spotifyID().isPresent() && Environment.INSTANCE.spotifySecret().isPresent()) {
+        if (Environment.INSTANCE.spotifyID().isPresent() && Environment.INSTANCE.spotifySecret().isPresent()) {
             var spotifyManager = new SpotifySourceManager(null, Environment.INSTANCE.spotifyID().get(),
                     Environment.INSTANCE.spotifySecret().get(), "US", AUDIO_MANAGER);
 
@@ -123,19 +124,19 @@ public final class AudioManager {
     }
 
     public static CompletableFuture<Pair<Boolean, String>> play(AudioChannel audioChannel, TextChannel textChannel,
-            String toPlay, User user) {
+                                                                String toPlay, User user) {
         final GuildAudioManager manager = getOrCreate(audioChannel.getGuild());
         final var future = new CompletableFuture<Pair<Boolean, String>>();
         AUDIO_MANAGER.loadItemOrdered(manager, toPlay, new AudioLoadResultHandler() {
             @Override
             public void loadFailed(FriendlyException exception) {
-                exception.printStackTrace();
                 textChannel.sendMessage(
                                 "I have failed to load this track. Please report the following to the bot owner: \n\nSeverity: "
                                         + exception.severity.name() + "\nTrack Search: " + toPlay + "\nException: "
                                         + exception.getMessage())
                         .queue();
                 future.complete(Pair.of(false, "load_failed"));
+                Constants.LOGGER.error("Track failed to load!", exception);
             }
 
             @Override
@@ -151,6 +152,21 @@ public final class AudioManager {
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                if (textChannel != null) {
+                    Guild guild = textChannel.getGuild();
+                    GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                    if (config == null) {
+                        config = new GuildConfig(guild.getIdLong());
+                        Database.getDatabase().guildConfig.insertOne(config);
+                    }
+
+                    if (!config.isCanAddPlaylists()) {
+                        textChannel.sendMessage("❌ You cannot add playlists!").queue();
+                        future.complete(Pair.of(false, "load_failed"));
+                        return;
+                    }
+                }
+
                 playlist.getTracks().forEach(track -> track.setUserData(new TrackData(user.getIdLong(), toPlay)));
 
                 if (toPlay.startsWith("ytsearch:")) {
@@ -345,7 +361,7 @@ public final class AudioManager {
         CompletableFuture<Either<AudioTrack, FriendlyException>> future = new CompletableFuture<>();
 
         GuildAudioManager manager = getOrCreate(guild);
-        if(GUESS_THE_SONG_TRACKS.isEmpty()) {
+        if (GUESS_THE_SONG_TRACKS.isEmpty()) {
             AUDIO_MANAGER.loadItemOrdered(manager, playlist, new AudioLoadResultHandler() {
                 @Override
                 public void loadFailed(FriendlyException exception) {
@@ -432,7 +448,7 @@ public final class AudioManager {
 
         if (name.length() > 64)
             return Pair.of(false, "Name is too long");
-        if(name.isBlank() || name.length() < 3)
+        if (name.isBlank() || name.length() < 3)
             return Pair.of(false, "Name is too short");
 
         SavedSongs songs = Database.getDatabase().savedSongs.find(Filters.eq("user", user.getIdLong())).first();
@@ -441,13 +457,13 @@ public final class AudioManager {
             Database.getDatabase().savedSongs.insertOne(songs);
         }
 
-        if(songs.getSongs() == null)
+        if (songs.getSongs() == null)
             songs.setSongs(new HashMap<>());
 
-        if(songs.getSongs().size() > 25)
+        if (songs.getSongs().size() > 25)
             return Pair.of(false, "You cannot save more than 25 songs");
 
-        if(songs.getSongs()
+        if (songs.getSongs()
                 .entrySet()
                 .stream()
                 .anyMatch(entry ->
@@ -462,7 +478,7 @@ public final class AudioManager {
     }
 
     public static Pair<Boolean, String> removeSongs(User user, @Nullable String name, @Nullable String url) {
-        if(name == null && url == null)
+        if (name == null && url == null)
             return Pair.of(false, "You must specify a name or url");
 
         if (user.isBot() || user.isSystem())
@@ -477,7 +493,7 @@ public final class AudioManager {
                 .stream()
                 .filter(entry -> name != null ? entry.getKey().equalsIgnoreCase(name) : entry.getValue().equalsIgnoreCase(url))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if(matches.isEmpty())
+        if (matches.isEmpty())
             return Pair.of(false, "You do not have a song with that name or url");
 
         matches.forEach((key, value) -> songs.getSongs().remove(key, value));
@@ -508,7 +524,7 @@ public final class AudioManager {
 
     public static void playSongs(TextChannel channel, Member member, Collection<String> songList, boolean shuffle) {
         List<String> songs = new ArrayList<>(songList);
-        if(shuffle)
+        if (shuffle)
             Collections.shuffle(songs);
 
         AudioChannel audioChannel = member.getVoiceState().getChannel();
