@@ -70,6 +70,10 @@ public class GuildConfig {
     private long patronRole;
     private boolean shouldSendStartupMessage;
 
+    // Economy
+    private String economyCurrency;
+    private int defaultBalance;
+
     // Logging
     private long loggingChannel;
     private boolean logChannelCreate;
@@ -142,6 +146,10 @@ public class GuildConfig {
         this.warningsModeratorOnly = false;
         this.patronRole = 0L;
         this.shouldSendStartupMessage = true;
+
+        // Economy
+        this.economyCurrency = "$";
+        this.defaultBalance = 100;
 
         // Logging
         this.loggingChannel = 0L;
@@ -256,6 +264,14 @@ public class GuildConfig {
 
     public boolean isWarningsModeratorOnly() {
         return warningsModeratorOnly;
+    }
+
+    public String getEconomyCurrency() {
+        return economyCurrency;
+    }
+
+    public int getDefaultBalance() {
+        return defaultBalance;
     }
 
     public void setWarningsModeratorOnly(boolean warningsModeratorOnly) {
@@ -416,6 +432,14 @@ public class GuildConfig {
 
     public void setShouldSendStartupMessage(boolean shouldSendStartupMessage) {
         this.shouldSendStartupMessage = shouldSendStartupMessage;
+    }
+
+    public void setEconomyCurrency(String economyCurrency) {
+        this.economyCurrency = economyCurrency;
+    }
+
+    public void setDefaultBalance(int defaultBalance) {
+        this.defaultBalance = defaultBalance;
     }
 
     public void setLogBan(boolean logBan) {

@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
@@ -24,6 +25,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
+import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.weblisteners.social.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -150,6 +152,10 @@ public class CommandHook extends ListenerAdapter {
 
         if (!RedditListener.isInitialized()) {
             RedditListener.initialize(jda);
+        }
+
+        if(!EconomyManager.isRunning()) {
+            EconomyManager.start(jda);
         }
 
         // TODO: Fix this mf
@@ -332,11 +338,11 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new WeatherCommand());
         cmds.add(new SteamGamesCommand());
         cmds.add(new SteamIDCommand());
-        cmds.add(new GetRobloxUserAvatarCommand());
-        cmds.add(new GetRobloxUserNameCommand());
-        cmds.add(new GetRobloxUserFriendListCommand());
-        cmds.add(new GetRobloxUserFavoriteGameCommand());
-        cmds.add(new GetWikipediaPageCommand());
+        cmds.add(new RobloxAvatarCommand());
+        cmds.add(new RobloxUsernameCommand());
+        cmds.add(new RobloxFriendsCommand());
+        cmds.add(new FavouriteRobloxGamesCommand());
+        cmds.add(new WikipediaCommand());
 
         // Moderation
         cmds.add(new BanCommand());
@@ -421,6 +427,23 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
         cmds.add(new WordleCommand());
+
+        // Economy
+        cmds.add(new BalanceCommand());
+        cmds.add(new CrimeCommand());
+        cmds.add(new DepositCommand());
+        cmds.add(new JobCommand());
+        cmds.add(new RewardCommand());
+        cmds.add(new RobCommand());
+        cmds.add(new SexWorkCommand());
+        cmds.add(new ShopCommand());
+        cmds.add(new WithdrawCommand());
+        cmds.add(new SlotsCommand());
+        cmds.add(new SetMoneyCommand());
+        cmds.add(new CrashCommand());
+        cmds.add(new LoanCommand());
+        cmds.add(new DonateCommand());
+        // cmds.add(new PropertyCommand());
 
         return cmds;
     }
