@@ -69,12 +69,15 @@ public class TimeoutCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild())
+        if (!event.isFromGuild()) {
+            event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
+                .mentionRepliedUser(false).queue();
             return;
+        }
         
         final Member member = event.getOption("member").getAsMember();
         if (member == null) {
-            event.deferReply(true).setContent("You can only timeout someone who is in this server!")
+            event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
@@ -84,13 +87,13 @@ public class TimeoutCommand extends CoreCommand {
             final long duration = event.getOption("duration", 15L, OptionMapping::getAsLong);
             member.getUser().openPrivateChannel()
                 .queue(channel -> channel.sendMessage(
-                    "You have been put on timeout for " + duration + " seconds in `" + event.getGuild().getName() + "`!")
+                    "You have been put on timeout for " + duration + " minutes in `" + event.getGuild().getName() + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));
 
             event.getGuild().timeoutFor(member, duration, TimeUnit.MINUTES).queue(success -> {
-                event.deferReply().setContent("Successfully timed-out " + member.getAsMention() + "!")
+                event.deferReply().setContent("✅ Successfully timed-out " + member.getAsMention() + "!")
                     .mentionRepliedUser(false).queue();
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
@@ -106,12 +109,12 @@ public class TimeoutCommand extends CoreCommand {
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
                     embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
-                    embed.setColor(Color.red);
+                    embed.setColor(Color.RED);
                     event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
                 }
             });
         } else {
-            event.deferReply(true).setContent("You do not have permission to timeout " + member.getAsMention())
+            event.deferReply(true).setContent("❌ You do not have permission to timeout " + member.getAsMention())
                 .mentionRepliedUser(false).queue();
         }
     }
