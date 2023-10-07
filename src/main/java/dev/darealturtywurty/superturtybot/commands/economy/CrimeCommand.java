@@ -1,13 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.TimeFormat;
@@ -57,22 +56,8 @@ public class CrimeCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
-            reply(event, "❌ You must be in a server to use this command!");
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getIdLong()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
-        final Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+        final Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getNextCrime() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You must wait %s before committing another crime!"
                     .formatted(TimeFormat.RELATIVE.format(account.getNextCrime()))).queue();

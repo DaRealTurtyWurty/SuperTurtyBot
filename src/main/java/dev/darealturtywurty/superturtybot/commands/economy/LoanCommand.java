@@ -1,8 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -72,26 +70,12 @@ public class LoanCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getId())).first();
-        if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
-            reply(event, "❌ You must provide a subcommand!", false, true);
+            event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
             return;
         }
-
-        event.deferReply().queue();
 
         Economy account = EconomyManager.getAccount(guild, event.getUser());
 
@@ -184,7 +168,6 @@ public class LoanCommand extends EconomyCommand {
                 }
 
                 PaginatedEmbed.ContentsBuilder contents = new PaginatedEmbed.ContentsBuilder();
-                PaginatedEmbed.Builder builder = new PaginatedEmbed.Builder(5, contents);
                 for (Loan loan : loans) {
                     contents.field("Loan ID: %s".formatted(loan.getId()), """
                             Amount: %s%d
@@ -200,7 +183,14 @@ public class LoanCommand extends EconomyCommand {
                     ), false);
                 }
 
-                builder.build(event.getJDA()).send(event.getHook());
+                PaginatedEmbed.Builder builder = new PaginatedEmbed.Builder(5, contents);
+                builder.title("Your Loans");
+                builder.color(Color.ORANGE);
+                builder.timestamp(Instant.now());
+                builder.authorOnly(event.getUser().getIdLong());
+                builder.footer("Requested by %s".formatted(event.getUser().getEffectiveName()), event.getUser().getEffectiveAvatarUrl());
+                builder.build(event.getJDA()).send(event.getHook(),
+                        () -> event.getHook().editOriginal("❌ Something went wrong while trying to retrieve you your loans!").queue());
             }
 
             case "info" -> {

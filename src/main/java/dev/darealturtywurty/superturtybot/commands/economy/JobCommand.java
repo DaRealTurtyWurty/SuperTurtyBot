@@ -1,13 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -80,27 +79,14 @@ public class JobCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
-            reply(event, "❌ You must specify a subcommand!", false, true);
+            event.getHook().editOriginal("❌ You must specify a subcommand!").queue();
             return;
         }
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getId())).first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
-        Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+        Economy account = EconomyManager.getAccount(guild, event.getUser());
 
         switch (subcommand) {
             case "work" -> {

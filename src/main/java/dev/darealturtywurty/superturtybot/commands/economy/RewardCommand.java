@@ -1,10 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
@@ -39,22 +38,8 @@ public class RewardCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(
-                Filters.eq("guild", event.getGuild().getIdLong())).first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
-        Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+        Economy account = EconomyManager.getAccount(guild, event.getUser());
         final var subcommand = event.getSubcommandName();
         switch (Objects.requireNonNull(subcommand)) {
             case "daily" -> {
@@ -77,8 +62,8 @@ public class RewardCommand extends EconomyCommand {
             case "weekly" -> {
                 if (account.getNextWeekly() > System.currentTimeMillis()) {
                     event.getHook().editOriginal(
-                            "❌ You can next claim your weekly reward %s!"
-                                    .formatted(TimeFormat.RELATIVE.format(account.getNextWeekly())))
+                                    "❌ You can next claim your weekly reward %s!"
+                                            .formatted(TimeFormat.RELATIVE.format(account.getNextWeekly())))
                             .mentionRepliedUser(false).queue();
                     return;
                 }

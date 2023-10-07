@@ -1,10 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -35,21 +34,7 @@ public class WithdrawCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getId()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         int amount = Objects.requireNonNull(event.getOption("amount")).getAsInt();
         if (amount <= 0) {
             event.getHook().editOriginal("❌ You must withdraw at least %s1!"
@@ -57,7 +42,7 @@ public class WithdrawCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+        Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (amount > account.getBank()) {
             event.getHook().editOriginal("❌ You do not have enough money in your bank to withdraw that much!")
                     .queue();

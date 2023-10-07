@@ -1,7 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -35,11 +33,7 @@ public class SetMoneyCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runNormalMessage(MessageReceivedEvent event) {
-        if(!event.isFromGuild())
-            return;
-
-        Guild guild = event.getGuild();
+    protected void runNormalMessage(MessageReceivedEvent event, Guild guild, GuildConfig config) {
         if (event.getAuthor().getIdLong() != guild.getOwnerIdLong()) {
             reply(event, "❌ You must be the owner of the server to use this command!", false);
             return;
@@ -106,31 +100,25 @@ public class SetMoneyCommand extends EconomyCommand {
             return;
         }
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
         Economy account = EconomyManager.getAccount(guild, user1);
         switch (type) {
             case ADD -> {
                 EconomyManager.addMoney(account, amount);
                 reply(event, "✅ Added %s%d to %s's balance!"
-                        .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
+                                .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
                         false);
             }
             case REMOVE -> {
                 EconomyManager.removeMoney(account, amount);
                 reply(event, "✅ Removed %s%d from %s's balance!"
-                        .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
+                                .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
                         false);
             }
             case SET -> {
                 EconomyManager.setMoney(account, amount, true);
                 EconomyManager.setMoney(account, 0, false);
                 reply(event, "✅ Set %s's balance to %s%d!"
-                        .formatted(user1.getAsMention(), config.getEconomyCurrency(), amount),
+                                .formatted(user1.getAsMention(), config.getEconomyCurrency(), amount),
                         false);
             }
             default -> reply(event, "🤓 Hackerman!", false);

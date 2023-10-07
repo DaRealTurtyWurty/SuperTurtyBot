@@ -1,7 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -42,21 +40,15 @@ public class DonateCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if(guild == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         if (event.getOption("user") == null || event.getOption("amount") == null) {
-            reply(event, "❌ You must provide a user and an amount!", false, true);
+            event.getHook().editOriginal("❌ You must provide a user and an amount!").queue();
             return;
         }
 
         User user = event.getOption("user", null, OptionMapping::getAsUser);
         if(user == null) {
-            reply(event, "❌ You must provide a valid user!", false, true);
+            event.getHook().editOriginal("❌ You must provide a valid user!").queue();
             return;
         }
 
@@ -64,27 +56,20 @@ public class DonateCommand extends EconomyCommand {
         guild.retrieveMember(user).queue(future::complete);
 
         if(user.isBot()) {
-            reply(event, "❌ You cannot donate money to a bot!", false, true);
+            event.getHook().editOriginal("❌ You cannot donate money to a bot!").queue();
             return;
         }
 
         if(user.getIdLong() == event.getUser().getIdLong()) {
-            reply(event, "❌ You cannot donate money to yourself!", false, true);
+            event.getHook().editOriginal("❌ You cannot donate money to yourself!").queue();
             return;
         }
 
         int amount = event.getOption("amount", 1, OptionMapping::getAsInt);
         if (amount < 1) {
-            reply(event, "❌ You must provide a valid amount!", false, true);
+            event.getHook().editOriginal("❌ You must donate at least %s1!"
+                    .formatted(config.getEconomyCurrency())).queue();
             return;
-        }
-
-        event.deferReply(true).queue();
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getId())).first();
-        if(config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
         }
 
         Economy account = EconomyManager.getAccount(guild, event.getUser());
@@ -94,7 +79,6 @@ public class DonateCommand extends EconomyCommand {
             return;
         }
 
-        GuildConfig finalConfig = config;
         future.thenAccept(member -> {
             if (member == null) {
                 event.getHook().editOriginal("❌ You must provide a valid user in this server!").queue();
@@ -110,12 +94,12 @@ public class DonateCommand extends EconomyCommand {
             EconomyManager.updateAccount(otherAccount);
 
             event.getHook().editOriginal("✅ Donated %s%d to %s!"
-                    .formatted(finalConfig.getEconomyCurrency(), amount, user.getAsMention())).queue(ignored -> {
+                    .formatted(config.getEconomyCurrency(), amount, user.getAsMention())).queue(ignored -> {
                 MessageChannelUnion channel = event.getChannel();
                 if (channel != null) {
                     channel.sendMessage("Hello %s! %s has donated %s%d to you!"
                             .formatted(user.getAsMention(), event.getUser().getAsMention(),
-                                    finalConfig.getEconomyCurrency(), amount)).queue();
+                                    config.getEconomyCurrency(), amount)).queue();
                 }
             });
         });

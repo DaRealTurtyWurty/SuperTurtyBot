@@ -1,10 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -35,22 +34,8 @@ public class DepositCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getId()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
-        Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+        Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getWallet() <= 0) {
             event.getHook().editOriginal("❌ Your wallet is empty, you cannot deposit!").queue();
             return;
@@ -70,6 +55,7 @@ public class DepositCommand extends EconomyCommand {
         EconomyManager.deposit(account, amount);
         EconomyManager.updateAccount(account);
         event.getHook().editOriginal("✅ You have deposited %s%d into your bank!"
-                .formatted(config.getEconomyCurrency(), amount)).queue();
+                        .formatted(config.getEconomyCurrency(), amount))
+                .queue();
     }
 }

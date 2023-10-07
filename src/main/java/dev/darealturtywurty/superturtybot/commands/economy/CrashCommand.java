@@ -1,9 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -53,22 +51,7 @@ public class CrashCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (!event.isFromGuild() || guild == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         int amount = event.getOption("amount", 1, OptionMapping::getAsInt);
         if (amount < 1) {
             event.getHook().editOriginal("❌ You must bet at least %s1!".formatted(config.getEconomyCurrency())).queue();
@@ -90,7 +73,6 @@ public class CrashCommand extends EconomyCommand {
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
-        final GuildConfig finalConfig = config;
         event.getHook().editOriginal("✅ You have bet %s%d!".formatted(config.getEconomyCurrency(), amount)).queue(message -> {
             message.createThreadChannel(event.getUser().getName() + "'s Crash Game").queue(thread -> {
                 thread.addThreadMember(event.getUser()).queue();
@@ -99,7 +81,7 @@ public class CrashCommand extends EconomyCommand {
 
                         It will increase by a random amount every 2 seconds, however, it will crash at a random point between 1.0x and 10.0x!
                                                 
-                        Good luck!""").formatted(finalConfig.getEconomyCurrency(), amount)).queue(ignored -> {
+                        Good luck!""").formatted(config.getEconomyCurrency(), amount)).queue(ignored -> {
                     var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
                     games.add(game);
 
@@ -109,12 +91,12 @@ public class CrashCommand extends EconomyCommand {
                                     && msgEvent.getChannel().getIdLong() == thread.getIdLong()
                                     && msgEvent.getAuthor().getIdLong() == event.getUser().getIdLong()
                                     && msgEvent.getMessage().getContentRaw().equalsIgnoreCase("cashout"))
-                            .success(msgEvent -> game.cashout(event.getJDA(), finalConfig, account))
+                            .success(msgEvent -> game.cashout(event.getJDA(), config, account))
                             .failure(() -> game.close(thread))
                             .timeout(10, TimeUnit.MINUTES)
                             .build();
 
-                    game.start(event.getJDA(), finalConfig, account);
+                    game.start(event.getJDA(), config, account);
                 });
             });
         });

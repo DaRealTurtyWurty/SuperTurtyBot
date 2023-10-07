@@ -234,4 +234,9 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                                                     (config, value) -> config.setDefaultBalance(Integer.parseInt(value)))
                                             .valueFromConfig(GuildConfig::getDefaultBalance).build());
+
+    public static final GuildConfigOption ECONOMY_ENABLED = GUILD_CONFIG_OPTIONS.register("economy_enabled",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
+                                                    (config, value) -> config.setEconomyEnabled(Boolean.parseBoolean(value)))
+                                            .valueFromConfig(GuildConfig::isEconomyEnabled).build());
 }
