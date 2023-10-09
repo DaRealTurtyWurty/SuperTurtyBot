@@ -64,7 +64,10 @@ public class TopicCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String topic = TOPICS.get(ThreadLocalRandom.current().nextInt(TOPICS.size()));
-        reply(event, topic);
+        reply(event, getRandomTopic());
+    }
+
+    public static String getRandomTopic() {
+        return TOPICS.get(ThreadLocalRandom.current().nextInt(TOPICS.size()));
     }
 }

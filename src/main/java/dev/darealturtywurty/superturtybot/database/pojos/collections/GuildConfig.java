@@ -66,14 +66,6 @@ public class GuildConfig {
     private long levelUpMessageChannel;
     private boolean shouldEmbedLevelUpMessage;
 
-    // Misc
-    private boolean shouldModeratorsJoinThreads;
-    private String autoThreadChannels;
-    private boolean shouldCreateGists;
-    private boolean warningsModeratorOnly;
-    private long patronRole;
-    private boolean shouldSendStartupMessage;
-
     // Economy
     private String economyCurrency;
     private int defaultBalance;
@@ -114,6 +106,19 @@ public class GuildConfig {
     private List<CommandPermission> musicPermissions;
     private int maxSongsPerUser;
 
+    // Chat Revival
+    private boolean chatRevivalEnabled;
+    private int chatRevivalTime;
+    private long chatRevivalChannel;
+
+    // Misc
+    private boolean shouldModeratorsJoinThreads;
+    private String autoThreadChannels;
+    private boolean shouldCreateGists;
+    private boolean warningsModeratorOnly;
+    private long patronRole;
+    private boolean shouldSendStartupMessage;
+
     public GuildConfig() {
         this(0L);
     }
@@ -148,14 +153,6 @@ public class GuildConfig {
         this.hasLevelUpChannel = false;
         this.levelUpMessageChannel = 0L;
         this.shouldEmbedLevelUpMessage = true;
-
-        // Misc
-        this.shouldModeratorsJoinThreads = true;
-        this.autoThreadChannels = "";
-        this.shouldCreateGists = true;
-        this.warningsModeratorOnly = false;
-        this.patronRole = 0L;
-        this.shouldSendStartupMessage = true;
 
         // Economy
         this.economyCurrency = "$";
@@ -195,6 +192,17 @@ public class GuildConfig {
         // Music
         this.canAddPlaylists = true;
         this.musicPermissions = new ArrayList<>();
+
+        // Misc
+        this.shouldModeratorsJoinThreads = true;
+        this.autoThreadChannels = "";
+        this.shouldCreateGists = true;
+        this.warningsModeratorOnly = false;
+        this.patronRole = 0L;
+        this.shouldSendStartupMessage = true;
+        this.chatRevivalEnabled = false;
+        this.chatRevivalTime = 24;
+        this.chatRevivalChannel = 0L;
     }
 
     public boolean shouldLog(Event event) {

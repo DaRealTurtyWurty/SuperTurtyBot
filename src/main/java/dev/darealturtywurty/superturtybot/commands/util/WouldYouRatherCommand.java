@@ -37,7 +37,7 @@ public class WouldYouRatherCommand extends CoreCommand {
     public WouldYouRatherCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
@@ -70,12 +70,16 @@ public class WouldYouRatherCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String question = QUESTIONS.get(ThreadLocalRandom.current().nextInt(QUESTIONS.size()))
-            .replace("{a}", "🅰️").replace("{b}", "🅱️");
-        event.deferReply().setContent(question).mentionRepliedUser(false)
+        event.deferReply().setContent(getRandomQuestion()).mentionRepliedUser(false)
             .queue(hook -> hook.retrieveOriginal().queue(msg -> {
                 msg.addReaction(Emoji.fromUnicode("U+1F170")).queue();
                 msg.addReaction(Emoji.fromUnicode("U+1F171")).queue();
             }));
+    }
+
+    public static String getRandomQuestion() {
+        return QUESTIONS.get(ThreadLocalRandom.current().nextInt(QUESTIONS.size()))
+                .replace("{a}", "🅰️")
+                .replace("{b}", "🅱️");
     }
 }
