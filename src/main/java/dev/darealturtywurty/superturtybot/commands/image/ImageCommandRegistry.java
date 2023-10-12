@@ -204,7 +204,7 @@ public class ImageCommandRegistry {
         pexels("whale", 3);
         pexels("wolf", 2);
         pexels("zebra", 2);
-        IMAGE_CMD_TYPES.register("apod", new ImageCommandType(new NasaCommand()));
+        IMAGE_CMD_TYPES.register("nasa", new ImageCommandType(new NasaCommand()));
     }
     
     private static ImageCommandType pexels(String name, int maxPages) {

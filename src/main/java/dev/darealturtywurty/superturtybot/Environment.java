@@ -123,7 +123,9 @@ public final class Environment {
         return getString("GENIUS_ACCESS_TOKEN");
     }
 
-    public Optional<String> nasaApiKey(){return getString("NASA_KEY");}
+    public Optional<String> nasaApiKey(){
+        return getString("NASA_KEY");
+    }
 
     public Optional<Double> getDouble(String key){
         try {
