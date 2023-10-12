@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 
-import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -206,6 +204,7 @@ public class ImageCommandRegistry {
         pexels("whale", 3);
         pexels("wolf", 2);
         pexels("zebra", 2);
+        IMAGE_CMD_TYPES.register("apod", new ImageCommandType(new NasaCommand()));
     }
     
     private static ImageCommandType pexels(String name, int maxPages) {
