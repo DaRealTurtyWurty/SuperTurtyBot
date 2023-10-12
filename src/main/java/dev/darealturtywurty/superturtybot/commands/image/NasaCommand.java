@@ -18,14 +18,17 @@ public class NasaCommand implements BiConsumer<SlashCommandInteractionEvent, Ima
     @Override
     public void accept(SlashCommandInteractionEvent event, ImageCommandType imageCommandType) {
         try {
+
+            if(Environment.INSTANCE.nasaApiKey().isEmpty()) {
+                Constants.LOGGER.warn("Nasa API key is not set!");
+                event.reply("❌ This command has been disabled by the bot owner!").mentionRepliedUser(false).queue();
+                return;
+            }
+
             final String NasaUrl = "https://api.nasa.gov/planetary/apod?api_key=%s"
                     .formatted(Environment.INSTANCE.nasaApiKey().get());
 
-            if(Environment.INSTANCE.nasaApiKey().isEmpty()) {
-                event.reply("❌ This command has been disabled by the bot owner!").mentionRepliedUser(false).queue();
-                Constants.LOGGER.warn("Nasa API key is not set!");
-                return;
-            }
+
 
             event.deferReply().queue();
             final Request request = new Request.Builder().url(NasaUrl).get().build();
