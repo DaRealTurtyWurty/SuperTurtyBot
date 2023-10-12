@@ -22,7 +22,6 @@ bin
 *.log
 
 # Ignore temp
-*.txt
 *.xml
 wordle.json
 lastStartTime.txt

@@ -1,14 +1,11 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -98,30 +95,16 @@ public class PropertyCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
-            reply(event, "❌ You must provide a subcommand!", false, true);
+            event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
             return;
-        }
-
-        event.deferReply().queue();
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getId())).first();
-        if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
         }
 
         Economy account = EconomyManager.getAccount(guild, event.getUser());
 
-        switch(subcommand) {
+        switch (subcommand) {
             case "buy" -> buyProperty(event, guild, account, config);
             case "sell" -> sellProperty(event, guild, account, config);
             case "list" -> listProperties(event, guild, account, config);

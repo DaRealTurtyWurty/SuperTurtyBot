@@ -3,12 +3,17 @@ package dev.darealturtywurty.superturtybot.commands.music;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mongodb.client.model.Filters;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.Either3;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -108,6 +113,12 @@ public class PlayCommand extends CoreCommand {
 
             event.replyChoices(results.stream().map(YouTubeSearchResult::toChoice).toList()).queue();
         });
+
+        searchResults.exceptionally(throwable -> {
+            event.replyChoices().queue();
+            Constants.LOGGER.error("Failed to search youtube!", throwable);
+            return null;
+        });
     }
 
     @Override
@@ -149,14 +160,38 @@ public class PlayCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
+        List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
+
+        if(!queue.isEmpty()) {
+            GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
+            if (config == null) {
+                config = new GuildConfig(event.getGuild().getIdLong());
+                Database.getDatabase().guildConfig.insertOne(config);
+            }
+
+            if(queue.size() > config.getMaxSongsPerUser()) {
+                long forUser = queue.stream().filter(track -> {
+                    TrackData data = track.getUserData(TrackData.class);
+                    return data != null && data.getUserId() == event.getUser().getIdLong();
+                }).count();
+
+                if(forUser >= config.getMaxSongsPerUser()) {
+                    event.getHook().editOriginal("❌ You have reached the maximum amount of songs you can queue!").queue();
+                    return;
+                }
+            }
+        }
+
         final String search = event.getOption("search_term", "", OptionMapping::getAsString).trim();
         final CompletableFuture<Pair<Boolean, String>> future = AudioManager.play(channel,
                 event.getChannel().asTextChannel(), search, event.getUser());
-        future.thenAccept(pair -> event.deferReply(true).setContent(switch (pair.getValue()) {
+        future.thenAccept(pair -> event.getHook().editOriginal(switch (pair.getValue()) {
             case "load_failed" ->
-                    "This track has failed to load. Please refer to the above message for more information!";
-            case "playlist_loaded", "track_loaded" -> "Successfully added to the queue!";
-            default -> "An unknown error has occured. Please notify the bot owner as this should not be possible!";
+                    "❌ This track has failed to load. Please refer to the above message for more information!";
+            case "playlist_loaded", "track_loaded" -> "✅ Successfully added to the queue!";
+            default -> "❌ An unknown error has occurred. Please notify the bot owner as this should not be possible!";
         }).mentionRepliedUser(false).queue());
     }
 
@@ -177,7 +212,6 @@ public class PlayCommand extends CoreCommand {
                     future.completeExceptionally(new IllegalStateException("Failed to search youtube!"));
                     return;
                 }
-
 
                 final String body = responseBody.string();
                 JsonObject json = Constants.GSON.fromJson(body, JsonObject.class);

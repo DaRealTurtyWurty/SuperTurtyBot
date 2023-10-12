@@ -295,7 +295,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 String solution = "Your texture file (which should be located at `%s`) has invalid animation metadata!%n".formatted(location);
                 solution += "The exception thrown was: `%s`%n".formatted(exception);
                 solution += "Make sure that the animation metadata is a valid mcmeta and that the frames are all within range.\n";
-                solution += "You can view the animation mcmeta file format here: https://minecraft.fandom.com/wiki/Resource_pack#Animation";
+                solution += "You can view the animation mcmeta file format here: https://minecraft.wiki/w/Resource_pack#Animation";
                 possibleErrors.add(new PossibleError("Invalid animation metadata!", solution));
                 continue;
             }
@@ -310,7 +310,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 solution += "This is the frame number: `%s`%n".formatted(frameNo);
                 solution += "This is the frame duration: `%s`%n".formatted(frameTime);
                 solution += "Make sure that the frame duration is a valid number!\n";
-                solution += "You can view the animation mcmeta file format here: https://minecraft.fandom.com/wiki/Resource_pack#Animation";
+                solution += "You can view the animation mcmeta file format here: https://minecraft.wiki/w/Resource_pack#Animation";
                 possibleErrors.add(new PossibleError("Invalid frame duration!", solution));
                 continue;
             }
@@ -325,7 +325,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 solution += "This is the frame number: `%s`%n".formatted(frameNo);
                 solution += "This is the frame index: `%s`%n".formatted(frameIndex);
                 solution += "Make sure that the frame index is a valid number and is within the range that the texture uses!\n";
-                solution += "You can view the animation mcmeta file format here: https://minecraft.fandom.com/wiki/Resource_pack#Animation";
+                solution += "You can view the animation mcmeta file format here: https://minecraft.wiki/w/Resource_pack#Animation";
                 possibleErrors.add(new PossibleError("Invalid frame index!", solution));
             }
 
@@ -337,7 +337,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 String solution = "Your advancement file (which should be located at `%s`) has failed to load!%n".formatted(location);
                 solution += "This is the advancement that failed to load: `%s`%n".formatted(advancement);
                 solution += "Make sure that the advancement file is a valid json and that it is not corrupted!\n";
-                solution += "You can view the advancement file format here: https://minecraft.fandom.com/wiki/Advancement/JSON_format#File_format";
+                solution += "You can view the advancement file format here: https://minecraft.wiki/w/Advancement/JSON_format#File_format";
                 possibleErrors.add(new PossibleError("Failed to load advancement file!", solution));
                 continue;
             }
@@ -373,7 +373,7 @@ public class AnalyzeLogCommand extends CoreCommand {
 
                 String solution = "The sounds.json file in pack: `%s` has failed to load!%n".formatted(packname);
                 solution += "Make sure that the sounds.json file is a valid sounds.json!\n";
-                solution += "You can view the format for the sounds.json here: https://minecraft.fandom.com/wiki/Sounds.json";
+                solution += "You can view the format for the sounds.json here: https://minecraft.wiki/w/Sounds.json";
                 possibleErrors.add(new PossibleError("Failed to load sounds.json file!", solution));
                 continue;
             }
@@ -402,7 +402,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 }
 
                 solution.append("Make sure that the textures exist and are in the correct location!\n");
-                solution.append("You can view information about the model format here: \n\nItems: https://minecraft.fandom.com/wiki/Tutorials/Models#Item_models\nBlocks: https://minecraft.fandom.com/wiki/Tutorials/Models#Block_models\n\n");
+                solution.append("You can view information about the model format here: \n\nItems: https://minecraft.wiki/w/Tutorials/Models#Item_models\nBlocks: https://minecraft.wiki/w/Tutorials/Models#Block_models\n\n");
 
                 if(isGreaterThanOrEqual(information.mcVersion(), "1.19.3")) {
                     // note: in 1.19.3+ textures must be in 'item' and 'block' not 'items' and 'blocks'

@@ -5,6 +5,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
+import lombok.Getter;
 import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,9 +22,11 @@ import net.dv8tion.jda.internal.utils.Checks;
 
 public class GuildConfigOption implements Registerable {
     private String name;
+    @Getter
     private final DataType dataType;
     private final BiConsumer<GuildConfig, String> serializer;
     private final BiPredicate<SlashCommandInteractionEvent, String> validator;
+    @Getter
     private final Function<GuildConfig, Object> valueFromConfig;
     
     private GuildConfigOption(Builder builder) {
@@ -33,10 +36,6 @@ public class GuildConfigOption implements Registerable {
         this.valueFromConfig = builder.valueFromConfig;
     }
 
-    public DataType getDataType() {
-        return this.dataType;
-    }
-    
     @Override
     public String getName() {
         return this.name;
@@ -49,11 +48,7 @@ public class GuildConfigOption implements Registerable {
     public String getSaveName() {
         return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, this.name);
     }
-    
-    public Function<GuildConfig, Object> getValueFromConfig() {
-        return this.valueFromConfig;
-    }
-    
+
     public void serialize(GuildConfig config, String value) {
         this.serializer.accept(config, value);
     }

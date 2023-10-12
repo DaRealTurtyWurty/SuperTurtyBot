@@ -77,15 +77,7 @@ public class RobCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        event.deferReply().queue();
-
-        final Guild guild = event.getGuild();
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         final Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getNextRob() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can rob again %s!"
@@ -108,13 +100,6 @@ public class RobCommand extends EconomyCommand {
         if (robAccount.getWallet() <= 0) {
             event.getHook().editOriginal("❌ Better luck next time, this user's wallet is empty!").queue();
             return;
-        }
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(event.getGuild().getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
         }
 
         final Random random = ThreadLocalRandom.current();

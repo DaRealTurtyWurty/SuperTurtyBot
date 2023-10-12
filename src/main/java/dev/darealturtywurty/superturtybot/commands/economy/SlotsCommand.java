@@ -1,11 +1,10 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,8 +16,8 @@ import org.apache.commons.text.WordUtils;
 
 import java.awt.*;
 import java.text.NumberFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SlotsCommand extends EconomyCommand {
@@ -99,23 +98,14 @@ public class SlotsCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (!event.isFromGuild() || guild == null) {
-            reply(event, "❌ You must be in a server to use this command!");
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+        int betAmount = event.getOption("bet-amount", 1, OptionMapping::getAsInt);
+        if (betAmount < 1) {
+            event.getHook().editOriginal("❌ You cannot bet less than %s1!"
+                            .formatted(config.getEconomyCurrency()))
+                    .queue();
             return;
         }
-
-        int betAmount = event.getOption("bet-amount", 1, OptionMapping::getAsInt);
-
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                .first();
-        if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
-        }
-
-        event.deferReply().queue();
 
         final Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getWallet() < betAmount) {
@@ -136,10 +126,10 @@ public class SlotsCommand extends EconomyCommand {
                 false);
 
         embed.addField("Outcome", WordUtils.capitalize(
-                outcome.type()
-                        .name()
-                        .replace("_", " ")
-                        .toLowerCase(Locale.ROOT)),
+                        outcome.type()
+                                .name()
+                                .replace("_", " ")
+                                .toLowerCase(Locale.ROOT)),
                 false);
 
         embed.addField("Winnings", formatCurrency(config.getEconomyCurrency(), outcome.amount()), false);
@@ -152,7 +142,7 @@ public class SlotsCommand extends EconomyCommand {
             EconomyManager.betLoss(account, outcome.amount());
         }
 
-        if(outcomes.size() > 1) {
+        if (outcomes.size() > 1) {
             for (int i = 1; i < outcomes.size(); i++) {
                 Outcome freeSpinOutcome = outcomes.get(i);
                 var freeSpinEmbed = new EmbedBuilder();
@@ -166,10 +156,10 @@ public class SlotsCommand extends EconomyCommand {
                         false);
 
                 freeSpinEmbed.addField("Outcome", WordUtils.capitalize(
-                        freeSpinOutcome.type()
-                                .name()
-                                .replace("_", " ")
-                                .toLowerCase(Locale.ROOT)),
+                                freeSpinOutcome.type()
+                                        .name()
+                                        .replace("_", " ")
+                                        .toLowerCase(Locale.ROOT)),
                         false);
 
                 freeSpinEmbed.addField("Winnings", formatCurrency(config.getEconomyCurrency(), freeSpinOutcome.amount()), false);
@@ -204,9 +194,11 @@ public class SlotsCommand extends EconomyCommand {
         WeightedRandomBag<String>.Entry entry3 = EMOJIS.getRandomEntry();
         while (entry1 == null || (isFreeSpin && Objects.equals("🎲", entry1.getObject()))) {
             entry1 = EMOJIS.getRandomEntry();
-        } while (entry2 == null || (isFreeSpin && Objects.equals("🎲", entry2.getObject()))) {
+        }
+        while (entry2 == null || (isFreeSpin && Objects.equals("🎲", entry2.getObject()))) {
             entry2 = EMOJIS.getRandomEntry();
-        } while (entry3 == null || (isFreeSpin && Objects.equals("🎲", entry3.getObject()))) {
+        }
+        while (entry3 == null || (isFreeSpin && Objects.equals("🎲", entry3.getObject()))) {
             entry3 = EMOJIS.getRandomEntry();
         }
 
@@ -234,7 +226,7 @@ public class SlotsCommand extends EconomyCommand {
         if (!isFreeSpin && freeSpins > 0) {
             for (int spin = 0; spin < freeSpins; spin++) {
                 Outcome freeSpinOutcome = spin(betAmount, true).get(0);
-                if(freeSpinOutcome.amount() < 0)
+                if (freeSpinOutcome.amount() < 0)
                     freeSpinOutcome.amount = 0;
                 outcomes.add(freeSpinOutcome);
             }
@@ -295,6 +287,7 @@ public class SlotsCommand extends EconomyCommand {
             this.emojis[index] = emoji;
         }
 
+        @Getter
         public enum OutcomeType {
             WIN(Color.GREEN),
             LOSS(Color.RED),
@@ -305,10 +298,6 @@ public class SlotsCommand extends EconomyCommand {
 
             OutcomeType(Color color) {
                 this.color = color;
-            }
-
-            public Color getColor() {
-                return this.color;
             }
         }
     }

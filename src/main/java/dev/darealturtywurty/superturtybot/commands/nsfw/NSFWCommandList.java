@@ -1056,6 +1056,7 @@ public class NSFWCommandList {
             }
         });
 
+        // TODO: Fix not working when built
         map.put("orgasm", event -> {
             final String PATH = "src/main/resources/audio/orgasms/";
 

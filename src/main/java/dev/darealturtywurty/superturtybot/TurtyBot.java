@@ -119,12 +119,16 @@ public class TurtyBot {
         // Add the music manager so that we can leave voice channels when the bot is idle
         builder.addEventListeners(MusicListener.INSTANCE);
 
-        // Add the event waiter so that we can wait for events
-        builder.addEventListeners(EVENT_WAITER);
+        // Add the chat reviver so that we can revive chats
+        // TODO: Uncomment this once it has been rewritten and works.
+        // builder.addEventListeners(ChatRevivalManager.INSTANCE);
 
         // Add file conversion manager so that we can convert files
         // TODO: Figure out FFmpeg on Ubuntu
 //        builder.addEventListeners(FileConversionManager.INSTANCE);
+
+        // Add the event waiter so that we can wait for events
+        builder.addEventListeners(EVENT_WAITER);
     }
 
     private static void loadRegisterers() {

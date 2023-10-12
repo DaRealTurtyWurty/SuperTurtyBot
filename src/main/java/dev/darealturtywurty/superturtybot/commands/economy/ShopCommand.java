@@ -1,8 +1,10 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.PublicShop;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
@@ -57,20 +59,7 @@ public class ShopCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
-            reply(event, "❌ You must be in a server to use this command!", false, true);
-            return;
-        }
-
-        event.deferReply().queue();
-
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            event.getHook().editOriginal("❌ You must be in a server to use this command!").queue();
-            return;
-        }
-
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
@@ -125,8 +114,8 @@ public class ShopCommand extends EconomyCommand {
                     var upload = FileUpload.fromData(boas.toByteArray(), "shop.png");
                     event.getHook().sendFiles(upload).queue();
                 } catch (IOException exception) {
-                    exception.printStackTrace();
                     event.getHook().editOriginal("❌ An error occurred while generating the shop image!").queue();
+                    Constants.LOGGER.error("❌ An error occurred while generating the shop image!", exception);
                 }
             }
         }
