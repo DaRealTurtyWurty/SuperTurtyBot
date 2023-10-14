@@ -69,6 +69,11 @@ dependencies {
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.4"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "3.2.9"
+    implementation("com.sedmelluq:jda-nas:1.1.0") {
+        exclude module: "udp-queue"
+    }
+    implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.7")
+    implementation("club.minnced:udpqueue-native-win-x86-64:0.2.7")
 
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.17.0'
     implementation group: 'com.github.philippheuer.events4j', name: 'events4j-handler-reactor', version: '0.12.1'

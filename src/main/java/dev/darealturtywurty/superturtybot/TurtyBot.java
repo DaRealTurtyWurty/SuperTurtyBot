@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot;
 
+import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionManager;
@@ -66,9 +67,12 @@ public class TurtyBot {
         // Set the current activity to watching me!
         builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));
 
+        builder.setAutoReconnect(true);
+        builder.setAudioSendFactory(new NativeAudioSendFactory());
+
         // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
-            GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
+                GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
 
         // Cache all members. This makes it easier to do any kind of retrieval.
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
@@ -133,8 +137,8 @@ public class TurtyBot {
 
     private static void loadRegisterers() {
         final var reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(""))
-            .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
-            .filterInputsBy(new FilterBuilder().includePackage("io")));
+                .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
+                .filterInputsBy(new FilterBuilder().includePackage("io")));
         reflections.getTypesAnnotatedWith(Registerer.class).forEach(clazz -> {
             try {
                 clazz.getDeclaredConstructor().newInstance();

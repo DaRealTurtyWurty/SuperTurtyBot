@@ -51,7 +51,6 @@ public abstract class FilterConfig {
      *
      * @param format Format of the audio.
      * @param output Filter to write data to.
-     *
      * @return A new audio filter.
      */
     @Nullable
@@ -75,7 +74,6 @@ public abstract class FilterConfig {
      *
      * @param value        Value to check.
      * @param defaultValue Default value.
-     *
      * @return True if the difference is greater or equal to the minimum.
      */
     public static boolean isSet(float value, float defaultValue) {

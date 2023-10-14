@@ -30,8 +30,8 @@ public class EqualizerConfig extends FilterConfig {
 
     @Override
     public boolean enabled() {
-        for(var band : equalizerBands) {
-            if(FilterConfig.isSet(band, 0f)) {
+        for (var band : equalizerBands) {
+            if (FilterConfig.isSet(band, 0f)) {
                 return true;
             }
         }
@@ -48,7 +48,7 @@ public class EqualizerConfig extends FilterConfig {
     @Override
     public JsonObject encode() {
         var array = new JsonArray();
-        for(var i = 0; i < Equalizer.BAND_COUNT; i++) {
+        for (var i = 0; i < Equalizer.BAND_COUNT; i++) {
             JsonObject band = new JsonObject();
             band.addProperty("band", i);
             band.addProperty("gain", equalizerBands[i]);

@@ -17,6 +17,9 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.data.GuildAudio
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.LoopState;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.commands.music.manager.filter.FilterChainConfiguration;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.GuessSongLoadHandler;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.SearchLoadHandler;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.FirstTimeGuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.Either;
@@ -25,6 +28,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -287,30 +291,8 @@ public final class AudioManager {
     }
 
     public static CompletableFuture<Either<List<AudioTrack>, FriendlyException>> search(Guild guild, String term) {
-        final GuildAudioManager manager = getOrCreate(guild);
         final var future = new CompletableFuture<Either<List<AudioTrack>, FriendlyException>>();
-        AUDIO_MANAGER.loadItemOrdered(manager, term, new AudioLoadResultHandler() {
-            @Override
-            public void loadFailed(FriendlyException exception) {
-                future.complete(Either.right(exception));
-            }
-
-            @Override
-            public void noMatches() {
-                future.complete(Either.left(List.of()));
-            }
-
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                future.complete(Either.left(List.copyOf(playlist.getTracks())));
-            }
-
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                future.complete(Either.left(List.of(track)));
-            }
-        });
-
+        AUDIO_MANAGER.loadItemOrdered(getOrCreate(guild), term, new SearchLoadHandler(future));
         return future;
     }
 
@@ -362,60 +344,10 @@ public final class AudioManager {
 
         GuildAudioManager manager = getOrCreate(guild);
         if (GUESS_THE_SONG_TRACKS.isEmpty()) {
-            AUDIO_MANAGER.loadItemOrdered(manager, playlist, new AudioLoadResultHandler() {
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    future.complete(Either.right(exception));
-                }
-
-                @Override
-                public void noMatches() {
-                    future.complete(Either.left(null));
-                }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    GUESS_THE_SONG_TRACKS.addAll(playlist.getTracks().stream().map(track -> track.getInfo().uri).toList());
-
-                    List<AudioTrack> tracks = playlist.getTracks();
-                    AudioTrack track = tracks.get(ThreadLocalRandom.current().nextInt(tracks.size()));
-                    manager.getMusicScheduler().setAudioChannel(channel);
-                    addGuessTheSongTrack(guild, track);
-                    future.complete(Either.left(track));
-                }
-
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    manager.getMusicScheduler().setAudioChannel(channel);
-                    addGuessTheSongTrack(guild, track);
-                    future.complete(Either.left(track));
-                }
-            });
+            AUDIO_MANAGER.loadItemOrdered(manager, playlist, new FirstTimeGuessSongLoadHandler(future, manager, guild, channel));
         } else {
             String url = GUESS_THE_SONG_TRACKS.get(ThreadLocalRandom.current().nextInt(GUESS_THE_SONG_TRACKS.size()));
-            AUDIO_MANAGER.loadItemOrdered(manager, url, new AudioLoadResultHandler() {
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    future.complete(Either.right(exception));
-                }
-
-                @Override
-                public void noMatches() {
-                    future.complete(Either.left(null));
-                }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    future.complete(Either.left(null));
-                }
-
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    manager.getMusicScheduler().setAudioChannel(channel);
-                    addGuessTheSongTrack(guild, track);
-                    future.complete(Either.left(track));
-                }
-            });
+            AUDIO_MANAGER.loadItemOrdered(manager, url, new GuessSongLoadHandler(future, manager, guild, channel));
         }
 
         return future;
@@ -527,7 +459,18 @@ public final class AudioManager {
         if (shuffle)
             Collections.shuffle(songs);
 
-        AudioChannel audioChannel = member.getVoiceState().getChannel();
+        GuildVoiceState voiceState = member.getVoiceState();
+        if (voiceState == null) {
+            channel.sendMessage("❌ You must be in a voice channel to play saved songs!").queue();
+            return;
+        }
+
+        AudioChannel audioChannel = voiceState.getChannel();
+        if (audioChannel == null) {
+            channel.sendMessage("❌ You must be in a voice channel to play saved songs!").queue();
+            return;
+        }
+
         List<CompletableFuture<Pair<Boolean, String>>> results = new ArrayList<>();
         songs.forEach(song -> results.add(play(audioChannel, channel, song, member.getUser())));
 

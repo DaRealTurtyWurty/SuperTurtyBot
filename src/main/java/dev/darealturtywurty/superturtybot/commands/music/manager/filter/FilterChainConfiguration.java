@@ -40,7 +40,6 @@ public class FilterChainConfiguration {
      * Returns true if a configuration of the provided class is present.
      *
      * @param clazz Class of the configuration.
-     *
      * @return True if a configuration of the provided class is present.
      */
     public boolean hasConfig(Class<? extends FilterConfig> clazz) {
@@ -52,7 +51,6 @@ public class FilterChainConfiguration {
      *
      * @param clazz Class of the configuration.
      * @param <T>   Type of the configuration.
-     *
      * @return The existing instance, or null if there is none.
      */
     @SuppressWarnings("unchecked")
@@ -68,7 +66,6 @@ public class FilterChainConfiguration {
      * @param clazz    Class of the configuration.
      * @param supplier Supplier for creating a new instance of the configuration.
      * @param <T>      Type of the configuration.
-     *
      * @return An instance of the provided class stored. If none is stored, a new
      * one is created and stored.
      */
@@ -77,12 +74,12 @@ public class FilterChainConfiguration {
     public <T extends FilterConfig> T getOrPutConfig(@Nonnull Class<T> clazz, @Nonnull Supplier<T> supplier) {
         return (T) filters.computeIfAbsent(clazz, ignored -> {
             var config = Objects.requireNonNull(supplier.get(), "Provided configuration may not be null");
-            if(!clazz.isInstance(config)) {
+            if (!clazz.isInstance(config)) {
                 throw new IllegalArgumentException("Config not instance of provided class");
             }
 
-            for(FilterConfig filterConfig : filters.values()) {
-                if(filterConfig.name().equals(config.name())) {
+            for (FilterConfig filterConfig : filters.values()) {
+                if (filterConfig.name().equals(config.name())) {
                     throw new IllegalArgumentException("Duplicate configuration name " + filterConfig.name());
                 }
             }
@@ -92,7 +89,7 @@ public class FilterChainConfiguration {
     }
 
     public void putConfig(@Nonnull Class<? extends FilterConfig> clazz, @Nonnull FilterConfig config) {
-         filters.put(clazz, config);
+        filters.put(clazz, config);
     }
 
     /**
@@ -105,8 +102,8 @@ public class FilterChainConfiguration {
      */
     @CheckReturnValue
     public boolean isEnabled() {
-        for(var config : filters.values()) {
-            if(config.enabled()) return true;
+        for (var config : filters.values()) {
+            if (config.enabled()) return true;
         }
 
         return false;
@@ -135,7 +132,7 @@ public class FilterChainConfiguration {
     @CheckReturnValue
     public JsonObject encode() {
         var obj = new JsonObject();
-        for(FilterConfig config : filters.values()) {
+        for (FilterConfig config : filters.values()) {
             JsonObject encoded = config.encode();
             encoded.addProperty("enabled", config.enabled());
             obj.add(config.name(), encoded);
@@ -193,7 +190,7 @@ public class FilterChainConfiguration {
     }
 
     public void disableAll() {
-        for(FilterConfig config : filters.values()) {
+        for (FilterConfig config : filters.values()) {
             config.setEnabled(false);
         }
     }
@@ -204,16 +201,16 @@ public class FilterChainConfiguration {
 
     private record Factory(FilterChainConfiguration configuration) implements PcmFilterFactory {
         @Override
-            public List<AudioFilter> buildChain(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
-                var list = new ArrayList<AudioFilter>();
-                list.add(output);
-                for (var config : configuration.filters.values()) {
-                    AudioFilter filter = config.enabled() ? config.create(format, (FloatPcmAudioFilter) list.get(0)) : null;
-                    if (filter != null) {
-                        list.add(0, filter);
-                    }
+        public List<AudioFilter> buildChain(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
+            var list = new ArrayList<AudioFilter>();
+            list.add(output);
+            for (var config : configuration.filters.values()) {
+                AudioFilter filter = config.enabled() ? config.create(format, (FloatPcmAudioFilter) list.get(0)) : null;
+                if (filter != null) {
+                    list.add(0, filter);
                 }
-                return list.subList(0, list.size() - 1);
             }
+            return list.subList(0, list.size() - 1);
         }
+    }
 }

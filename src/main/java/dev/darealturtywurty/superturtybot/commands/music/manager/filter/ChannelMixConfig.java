@@ -63,7 +63,7 @@ public class ChannelMixConfig extends FilterConfig {
     @CheckReturnValue
     @Override
     public boolean enabled() {
-        return FilterConfig.isSet(leftToLeft,  1.0f) || FilterConfig.isSet(leftToRight,  0.0f) ||
+        return FilterConfig.isSet(leftToLeft, 1.0f) || FilterConfig.isSet(leftToRight, 0.0f) ||
                 FilterConfig.isSet(rightToLeft, 0.0f) || FilterConfig.isSet(rightToRight, 1.0f);
     }
 
