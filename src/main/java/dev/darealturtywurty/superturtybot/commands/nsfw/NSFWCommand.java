@@ -164,7 +164,7 @@ public class NSFWCommand extends CoreCommand {
         if (channel.getType() == ChannelType.TEXT && channel.asTextChannel().isNSFW()) return true;
 
         // if its a thread channel and the parent is nsfw
-        if ((channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
+        if ((channel.getType() == ChannelType.GUILD_PUBLIC_THREAD
                 || channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
                 || channel.getType() == ChannelType.GUILD_NEWS_THREAD
                 && channel.asThreadChannel().getParentMessageChannel().asTextChannel().isNSFW())) return true;

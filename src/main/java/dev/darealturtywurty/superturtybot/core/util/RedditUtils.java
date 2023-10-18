@@ -59,8 +59,13 @@ public final class RedditUtils {
         }
 
         var embed = new EmbedBuilder();
-        embed.setTitle(new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array()));
-        embed.setDescription(post.getSubject().getBody());
+        String title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
+        embed.setTitle(title.length() > 256 ? title.substring(0, 256) : title);
+
+        String description = post.getSubject().getBody();
+        if (description != null) {
+            embed.setDescription(description.length() > 4096 ? description.substring(0, 4096) : description);
+        }
 
         if (post.getSubject().getPreview() != null) {
             if(post.getSubject().getPreview().getImages().size() > 1) {
