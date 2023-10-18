@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.commands.levelling.XPInventory;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
@@ -38,6 +39,7 @@ public class Database {
     public final MongoCollection<SavedSongs> savedSongs;
     public final MongoCollection<WordleProfile> wordleProfiles;
     public final MongoCollection<Economy> economy;
+    public final MongoCollection<ChatReviver> chatRevivers;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -68,6 +70,7 @@ public class Database {
         this.savedSongs = database.getCollection("savedSongs", SavedSongs.class);
         this.wordleProfiles = database.getCollection("wordleProfiles", WordleProfile.class);
         this.economy = database.getCollection("economy", Economy.class);
+        this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -95,6 +98,7 @@ public class Database {
         this.savedSongs.createIndex(userIndex);
         this.wordleProfiles.createIndex(userIndex);
         this.economy.createIndex(guildUserIndex);
+        this.chatRevivers.createIndex(guildIndex);
     }
 
     public static Database getDatabase() {

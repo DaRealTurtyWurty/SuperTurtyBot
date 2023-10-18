@@ -12,6 +12,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -104,7 +107,7 @@ public class NSFWCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getChannel().asTextChannel().isNSFW()) {
+        if (!isValidChannel(event.getChannel())) {
             event.deferReply(true).setContent("This command can only be used in NSFW channels!").queue();
             return;
         }
@@ -114,25 +117,27 @@ public class NSFWCommand extends CoreCommand {
             GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
                     .first();
             if (config == null) {
-                event.deferReply(true).setContent("This server has not been configured yet!").queue();
+                event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
                 return;
             }
 
             List<Long> enabledChannels = GuildConfig.getChannels(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
-                event.deferReply(true).setContent("This server has no NSFW channels configured!").queue();
+                event.deferReply(true).setContent("❌ This server has no NSFW channels configured!").queue();
                 return;
             }
 
-            if (!enabledChannels.contains(event.getChannel().getIdLong())) {
-                event.deferReply(true).setContent("This channel is not configured as an NSFW channel!").queue();
+            MessageChannel channel = event.getChannelType() == ChannelType.TEXT ? event.getChannel()
+                    : event.getChannel().asThreadChannel().getParentMessageChannel();
+            if (!enabledChannels.contains(channel.getIdLong())) {
+                event.deferReply(true).setContent("❌ This channel is not configured as an NSFW channel!").queue();
                 return;
             }
         }
 
         String group = event.getSubcommandGroup();
         if (group == null) {
-            event.deferReply(true).setContent("You must specify a subcommand group!").queue();
+            event.deferReply(true).setContent("❌ You must specify a subcommand group!").queue();
             return;
         }
 
@@ -154,12 +159,26 @@ public class NSFWCommand extends CoreCommand {
         runNonReddit(NSFWCommandList.CommandData.from(event), subcommand);
     }
 
+    private static boolean isValidChannel(MessageChannelUnion channel) {
+        // if its a text channel and is nsfw
+        if (channel.getType() == ChannelType.TEXT && channel.asTextChannel().isNSFW()) return true;
+
+        // if its a thread channel and the parent is nsfw
+        if ((channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
+                || channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
+                || channel.getType() == ChannelType.GUILD_NEWS_THREAD
+                && channel.asThreadChannel().getParentMessageChannel().asTextChannel().isNSFW())) return true;
+
+        // if its a private channel
+        return channel.getType() == ChannelType.PRIVATE;
+    }
+
     private static void runNonReddit(NSFWCommandList.CommandData data, String subcommand) {
         final Consumer<NSFWCommandList.CommandData> command = NSFW_OTHER_COMMANDS.get(subcommand);
         if (command != null) {
             command.accept(data);
         } else {
-            data.hook().editOriginal("You must specify a valid subcommand!").setComponents().setFiles().setEmbeds()
+            data.hook().editOriginal("❌  You must specify a valid subcommand!").setComponents().setFiles().setEmbeds()
                     .queue();
         }
     }
@@ -171,7 +190,7 @@ public class NSFWCommand extends CoreCommand {
             final Either<EmbedBuilder, Collection<String>> eitherEmbedOrImages = RedditUtils.constructEmbed(true,
                     reddit.subreddits());
             if (eitherEmbedOrImages == null) {
-                hook.editOriginal("There has been an error processing the command you tried to run. Please try again!")
+                hook.editOriginal("❌  There has been an error processing the command you tried to run. Please try again!")
                         .setComponents().setEmbeds().setFiles().queue();
                 return;
             }
@@ -190,7 +209,7 @@ public class NSFWCommand extends CoreCommand {
                                 FileUpload.fromData(connection.getInputStream(), "image_%d.png".formatted(index++)));
                     } catch (IOException exception) {
                         hook.editOriginal(
-                                        "There has been an error processing the command you tried to run. Please try again!")
+                                        "❌  There has been an error processing the command you tried to run. Please try again!")
                                 .setComponents().setEmbeds().setFiles().queue();
                         exception.printStackTrace();
                         return;
@@ -248,7 +267,7 @@ public class NSFWCommand extends CoreCommand {
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            event.reply("This command can only be used in a guild!").setEphemeral(true).queue();
+            event.reply("❌ This command can only be used in a guild!").setEphemeral(true).queue();
             return;
         }
 
@@ -256,7 +275,7 @@ public class NSFWCommand extends CoreCommand {
 
         String[] split = event.getButton().getId().split("-");
         if (split.length != 5) {
-            event.reply("There has been an error processing the command you tried to run. Please try again!")
+            event.reply("❌ There has been an error processing the command you tried to run. Please try again!")
                     .setEphemeral(true).queue();
             return;
         }
@@ -271,7 +290,7 @@ public class NSFWCommand extends CoreCommand {
         }
 
         if (event.getUser().getIdLong() != userId) {
-            event.reply("You do not have permission to regenerate this command!").setEphemeral(true).queue();
+            event.reply("❌ You do not have permission to regenerate this command!").setEphemeral(true).queue();
             return;
         }
 

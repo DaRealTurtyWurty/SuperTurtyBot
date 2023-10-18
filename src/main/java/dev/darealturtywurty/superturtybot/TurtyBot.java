@@ -124,8 +124,7 @@ public class TurtyBot {
         builder.addEventListeners(MusicListener.INSTANCE);
 
         // Add the chat reviver so that we can revive chats
-        // TODO: Uncomment this once it has been rewritten and works.
-        // builder.addEventListeners(ChatRevivalManager.INSTANCE);
+        builder.addEventListeners(ChatRevivalManager.INSTANCE);
 
         // Add file conversion manager so that we can convert files
         // TODO: Figure out FFmpeg on Ubuntu
