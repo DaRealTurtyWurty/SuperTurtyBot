@@ -98,7 +98,7 @@ public class NSFWCommandList {
         cmds.add(new NSFWReddit("teen", "legalteens", "collegesluts", "adorableporn", "legalteensXXX", "gonewild18",
                 "18_19", "just18", "PornStarletHQ", "fauxbait", "barelylegalteens"));
         cmds.add(new NSFWReddit("thigh", "Thick", "Curvy", "DatGap", "TheRatio", "ThickThighs", "Legs"));
-        cmds.add(new NSFWReddit("trap", "traps", "Tgirls", "gonewildtrans", "tgifs", "shemales", "femboys",
+        cmds.add(new NSFWReddit("trap", "traps", "Tgirls", "gonewildtrans", "tgifs", "shemales",
                 "transporn"));
         cmds.add(new NSFWReddit("boobjob", "titfuck", "clothedtitfuck"));
         cmds.add(new NSFWReddit("petite", "Petite", "XSmallGirls", "BustyPetite", "dirtysmall", "petitegonewild",
@@ -120,6 +120,7 @@ public class NSFWCommandList {
                 "OverwatchRule34", "overwatch_hentai"));
         cmds.add(new NSFWReddit("apex", "ApexHorizonR34", "ApexValkyrieR34", "ApexLegends_Porn"));
         cmds.add(new NSFWReddit("valorant", "valorantrule34"));
+        cmds.add(new NSFWReddit("femboy", "FemBoys", "Sissies", "FemboyHentai"));
         cmds.add(new NSFWReddit("random", "gonewild", "nsfw", "RealGirls", "NSFW_GIF", "holdthemoan", "BustyPetite",
                 "cumsluts", "PetiteGoneWild", "adorableporn", "nsfw_gifs", "GirlsFinishingTheJob", "AsiansGoneWild",
                 "rule34", "collegesluts", "Amateur", "BiggerThanYouThought", "hentai", "TittyDrop",
@@ -620,7 +621,7 @@ public class NSFWCommandList {
                 "submissivemen", "SelfPiss", "BlueBones", "petgirls", "nudists", "rule34_abuse", "NikkiSapphire",
                 "CelebsUnveiling", "PrincessKelsxo", "HungTraps", "LexiVixi", "beautifulbutt", "LittleBritt",
                 "BatmanPorn", "CalvinSelfies", "tsporn", "tgirl_frot", "Susann", "kdramafap", "FlashingTheGoods",
-                "AspenReign", "lostlilkitty", "sexycellulite", "FemboyGalleries", "nsfw_messages", "GirlsWithBigHats",
+                "AspenReign", "lostlilkitty", "sexycellulite", "nsfw_messages", "GirlsWithBigHats",
                 "Pornstar_VS_Pornstar", "ChocolateStarfish", "YouTubeFakes", "PornGifsbyBot", "hairymilfs",
                 "Amateur_Bitches", "Amateurselfpic", "SexyStarWars", "Feetup", "Zelda_Romance", "Plumpers",
                 "hotlatinas", "NordicWomen", "javure", "SoftcoreJapan", "EdmontonGoneWild", "MasturbatorsAnonymous",

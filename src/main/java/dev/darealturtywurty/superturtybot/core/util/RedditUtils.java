@@ -119,7 +119,16 @@ public final class RedditUtils {
             if (mediaURL == null || mediaURL.isBlank()) return null;
         }
 
-        if (!mediaURL.isBlank() && verifyVideo(mediaURL)) {
+        // https://i.redgifs.com/i/respectfulrealisticdungenesscrab.jpg
+        // replace with
+        // https://www.redgifs.com/watch/respectfulrealisticdungenesscrab
+        if(mediaURL.matches("https://i\\.redgifs\\.com/i/.*\\.(jpg|png|gif)")) {
+            mediaURL = mediaURL.replace("https://i.redgifs.com/i/", "https://www.redgifs.com/watch/");
+            mediaURL = mediaURL.substring(0, mediaURL.lastIndexOf("."));
+            return Either.right(Collections.singletonList(mediaURL));
+        }
+
+        if (verifyVideo(mediaURL)) {
             mediaURL = StringUtils.replaceHTMLCodes(mediaURL);
             if (mediaURL.contains("redgifs") || mediaURL.contains("xvideos") || mediaURL.contains(
                     "xhamster") || mediaURL.contains("xxx") || mediaURL.contains("porn") || mediaURL.contains(

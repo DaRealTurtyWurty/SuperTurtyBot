@@ -57,7 +57,7 @@ public class NSFWCommand extends CoreCommand {
                         subcommand("pawg"), subcommand("public"), subcommand("teen"), subcommand("thigh"), subcommand("trap")),
                 new SubcommandGroupData("real2", "Real NSFW commands (part 2)").addSubcommands(subcommand("boobjob"),
                         subcommand("petite"), subcommand("passion"), subcommand("hardcore"), subcommand("milf"),
-                        subcommand("funny")),
+                        subcommand("funny"), subcommand("femboy")),
                 new SubcommandGroupData("fake", "Fake NSFW commands").addSubcommands(subcommand("furry"),
                         subcommand("hentaigif"), subcommand("yuri"), subcommand("oppai"), subcommand("r6s"),
                         subcommand("apex"), subcommand("overwatch"), subcommand("valorant"), subcommand("hentai"),
