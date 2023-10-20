@@ -159,7 +159,7 @@ public class NSFWCommand extends CoreCommand {
         runNonReddit(NSFWCommandList.CommandData.from(event), subcommand);
     }
 
-    private static boolean isValidChannel(MessageChannelUnion channel) {
+    public static boolean isValidChannel(MessageChannelUnion channel) {
         // if its a text channel and is nsfw
         if (channel.getType() == ChannelType.TEXT && channel.asTextChannel().isNSFW()) return true;
 

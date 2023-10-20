@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.core;
 
+import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -7,16 +8,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.ChannelType;
-import net.dv8tion.jda.api.entities.channel.attribute.IAgeRestrictedChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.privileges.IntegrationPrivilege;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -24,8 +22,6 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class CommandListCommand extends CoreCommand {
     public CommandListCommand() {
@@ -73,12 +69,10 @@ public class CommandListCommand extends CoreCommand {
                 .filter(category -> {
                     if (!event.isFromGuild() || !category.isNSFW()) return true;
 
-                    final IAgeRestrictedChannel channel = event.getChannelType() == ChannelType.GUILD_PUBLIC_THREAD ||
-                            event.getChannelType() == ChannelType.GUILD_PRIVATE_THREAD
-                            ? event.getChannel().asThreadChannel().getParentChannel().asTextChannel()
-                            : event.getChannel().asTextChannel();
+                    MessageChannelUnion channel = event.getChannel();
+                    if (channel == null) return true;
 
-                    return channel.isNSFW();
+                    return NSFWCommand.isValidChannel(channel);
                 }).limit(25).map(CommandCategory::getName).map(String::toLowerCase).toList();
         event.replyChoiceStrings(categories).queue();
     }
@@ -87,9 +81,9 @@ public class CommandListCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final OptionMapping categoryOption = event.getOption("category");
         if (categoryOption == null) {
-            final var embed = categoriesEmbed(event.isFromGuild() ? event.getGuild() : null,
+            final EmbedBuilder embed = categoriesEmbed(event.isFromGuild() ? event.getGuild() : null,
                     event.isFromGuild() ? event.getMember() : null,
-                    event.getChannel() instanceof final TextChannel tChannel && tChannel.isNSFW() || !event.isFromGuild());
+                    NSFWCommand.isValidChannel(event.getChannel()));
             setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
@@ -104,7 +98,7 @@ public class CommandListCommand extends CoreCommand {
         event.deferReply().queue();
 
         commandsEmbed(category,
-                event.getChannel() instanceof final TextChannel tChannel && tChannel.isNSFW() || !event.isFromGuild(), event.getGuild()).thenAccept(embed -> {
+                NSFWCommand.isValidChannel(event.getChannel()), event.getGuild()).thenAccept(embed -> {
             if (embed == null) {
                 event.getHook().sendMessage("❌ You must specify a valid category!").queue();
                 return;
@@ -132,13 +126,13 @@ public class CommandListCommand extends CoreCommand {
 
     private static CompletableFuture<EmbedBuilder> commandsEmbed(String categoryStr, boolean allowNSFW, @Nullable Guild guild) {
         final var category = CommandCategory.byName(categoryStr);
-        if (category == null) return null;
+        if (category == null) return CompletableFuture.completedFuture(null);
 
         final var embed = new EmbedBuilder();
         embed.setTitle("Commands for category: " + category.getName());
         CompletableFuture<StringBuilder> cmdsString = new CompletableFuture<>();
         if (category.isNSFW()) {
-            if (!allowNSFW) return null;
+            if (!allowNSFW) return CompletableFuture.completedFuture(null);
 
             CompletableFuture<List<CoreCommand>> cmds = new CompletableFuture<>();
             if (guild != null) {
@@ -177,7 +171,7 @@ public class CommandListCommand extends CoreCommand {
                             .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
                             .filter(cmd -> {
                                 String commandId;
-                                if(cmd.isServerOnly()) {
+                                if (cmd.isServerOnly()) {
                                     commandId = cmd.getCommandId(guild.getIdLong());
                                 } else {
                                     commandId = cmd.getCommandId();
@@ -213,7 +207,7 @@ public class CommandListCommand extends CoreCommand {
 
         CompletableFuture<EmbedBuilder> embedFuture = new CompletableFuture<>();
         cmdsString.thenAccept(cmds -> {
-            if (cmds.length() == 0) {
+            if (cmds.isEmpty()) {
                 embed.setDescription("There are no commands in this category!");
                 embedFuture.complete(embed);
                 return;
