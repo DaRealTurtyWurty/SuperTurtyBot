@@ -26,7 +26,10 @@ import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
-import dev.darealturtywurty.superturtybot.weblisteners.social.*;
+import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -39,8 +42,10 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,14 +54,7 @@ public class CommandHook extends ListenerAdapter {
 
     private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
     private static final Set<CommandCategory> CATEGORIES = new HashSet<>();
-
-    private static final CompletableFuture<Boolean> CHECKING_FOR_DEV_GUILD = new CompletableFuture<>();
-    private static boolean CHECKED_FOR_DEV_GUILD = false;
     private static boolean IS_DEV_MODE = false;
-
-    static {
-        CHECKING_FOR_DEV_GUILD.thenAccept(ignored -> CHECKED_FOR_DEV_GUILD = true);
-    }
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
@@ -69,14 +67,6 @@ public class CommandHook extends ListenerAdapter {
 
     public static boolean isDevMode() {
         return IS_DEV_MODE;
-    }
-
-    public static boolean isCheckingForDevGuild() {
-        return !CHECKED_FOR_DEV_GUILD;
-    }
-
-    public static CompletableFuture<Boolean> getCheckingForDevGuild() {
-        return CHECKING_FOR_DEV_GUILD;
     }
 
     public Set<CoreCommand> getCommands() {
@@ -167,8 +157,6 @@ public class CommandHook extends ListenerAdapter {
         if (devGuild != null) {
             IS_DEV_MODE = true;
         }
-
-        CHECKING_FOR_DEV_GUILD.complete(isDevMode());
 
         if (!isDevMode()) {
             AutoModerator.INSTANCE.initialize();

@@ -1,40 +1,26 @@
 package dev.darealturtywurty.superturtybot.core.logback;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandHook;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.command.CommandHook;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Optional;
 
 // Thanks maty
 public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static final org.slf4j.Logger LOG = LoggerFactory.getLogger("DiscordLogbackAppender");
     public static final String POST_URL = "https://discord.com/api/webhooks/%s/%s";
-
-    private final Queue<ILoggingEvent> eventQueue = new ConcurrentLinkedQueue<>();
     
     private Layout<ILoggingEvent> layout;
-    
-    private final HttpClient client = HttpClient.newBuilder().executor(Executors.newSingleThreadExecutor(r -> {
-        final Thread thread = new Thread(r);
-        thread.setName("DiscordLoggingAppender");
-        thread.setDaemon(true);
-        return thread;
-    })).build();
-    
     private URI uri;
     
     public void login(String webhookId, String webhookToken) {
@@ -52,22 +38,6 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     
     @Override
     protected void append(final ILoggingEvent eventObject) {
-        if(CommandHook.isCheckingForDevGuild()) {
-            this.eventQueue.add(eventObject);
-
-            CommandHook.getCheckingForDevGuild().thenAccept(isDevGuild -> {
-                if(!isDevGuild && !this.eventQueue.isEmpty()) {
-                    Queue<ILoggingEvent> eventQueue = new ConcurrentLinkedQueue<>(this.eventQueue);
-                    this.eventQueue.clear();
-                    eventQueue.forEach(this::append);
-                } else if(isDevGuild) {
-                    this.eventQueue.clear();
-                }
-            });
-
-            return;
-        }
-
         if (this.uri == null)
             return;
 
@@ -77,16 +47,32 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
 
             if (contentBuf.toString().endsWith("Successfully resumed Session!"))
                 return;
-            
+
             final String body = '{' + "\"content\":\"" + contentBuf + "\"," + "\"allowed_mentions\":{\"parse\": []}"
-                + '}';
-            
-            this.client
-                .send(HttpRequest.newBuilder(this.uri).header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body)).build(), HttpResponse.BodyHandlers.ofString())
-                .body();
-        } catch (IOException | InterruptedException exception) {
-            LOG.error("Error trying to send webhook message: ", exception);
+                    + '}';
+
+            Request request = new Request.Builder()
+                    .url(this.uri.toURL())
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(body, MediaType.parse("application/json")))
+                    .build();
+
+            // async request
+            Constants.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+                    LOG.error("Failed to send message to Discord!", exception);
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        LOG.error("Failed to send message to Discord! Response: {}", response.body().string());
+                    }
+                }
+            });
+        } catch (final IOException exception) {
+            LOG.error("Failed to send message to Discord!", exception);
         }
     }
     
@@ -97,6 +83,11 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static void setup(Optional<String> webhookId, Optional<String> webhookToken) throws ClassCastException {
         if (webhookId.isEmpty() || webhookToken.isEmpty()) {
             Constants.LOGGER.warn("Webhook ID or Token is empty! Not setting up Discord logging!");
+            return;
+        }
+
+        if(Environment.INSTANCE.isDevelopment()) {
+            Constants.LOGGER.warn("Development environment detected! Not setting up Discord logging!");
             return;
         }
 
