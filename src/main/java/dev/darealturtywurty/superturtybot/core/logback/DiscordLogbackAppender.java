@@ -5,28 +5,27 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
+import dev.darealturtywurty.superturtybot.core.util.EmptyCallback;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
 
-// Thanks maty
 public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
-    public static final org.slf4j.Logger LOG = LoggerFactory.getLogger("DiscordLogbackAppender");
     public static final String POST_URL = "https://discord.com/api/webhooks/%s/%s";
-    
+
     private Layout<ILoggingEvent> layout;
     private URI uri;
-    
+
     public void login(String webhookId, String webhookToken) {
         this.uri = URI.create(POST_URL.formatted(webhookId, webhookToken));
     }
-    
+
     /**
      * Sets the inner {@link Layout}, used for formatting the message to be sent.
      *
@@ -35,7 +34,7 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public void setLayout(final Layout<ILoggingEvent> layoutIn) {
         this.layout = layoutIn;
     }
-    
+
     @Override
     protected void append(final ILoggingEvent eventObject) {
         if (this.uri == null)
@@ -58,56 +57,45 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
                     .build();
 
             // async request
-            Constants.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NotNull Call call, @NotNull IOException exception) {
-                    LOG.error("Failed to send message to Discord!", exception);
-                }
-
-                @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        LOG.error("Failed to send message to Discord! Response: {}", response.body().string());
-                    }
-                }
-            });
-        } catch (final IOException exception) {
-            LOG.error("Failed to send message to Discord!", exception);
+            Constants.HTTP_CLIENT.newCall(request).enqueue(EmptyCallback.INSTANCE);
+        } catch (final IOException ignored) {
         }
     }
-    
+
     protected String getMessageContent(final ILoggingEvent event) {
         return this.layout != null ? this.layout.doLayout(event) : event.getFormattedMessage();
     }
-    
+
     public static void setup(Optional<String> webhookId, Optional<String> webhookToken) throws ClassCastException {
         if (webhookId.isEmpty() || webhookToken.isEmpty()) {
             Constants.LOGGER.warn("Webhook ID or Token is empty! Not setting up Discord logging!");
             return;
         }
 
-        if(Environment.INSTANCE.isDevelopment()) {
+        if (Environment.INSTANCE.isDevelopment()) {
             Constants.LOGGER.warn("Development environment detected! Not setting up Discord logging!");
             return;
         }
 
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        
+
         final var appender = new DiscordLogbackAppender();
         appender.setContext(context);
-        
+
         final var layout = new DiscordLogbackLayout();
         layout.setContext(context);
         layout.start();
         appender.setLayout(layout);
-        
+
         appender.login(webhookId.get(), webhookToken.get());
         appender.start();
-        
+
         final ch.qos.logback.classic.Logger rootLogger = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.addAppender(appender);
+
+        Constants.LOGGER.info("Setup logging!");
     }
-    
+
     private static void escape(String s, StringBuilder sb) {
         final int len = s.length();
         for (int i = 0; i < len; i++) {

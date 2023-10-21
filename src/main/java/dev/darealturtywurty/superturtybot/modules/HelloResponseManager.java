@@ -18,12 +18,16 @@ import java.util.concurrent.TimeUnit;
 
 public class HelloResponseManager extends ListenerAdapter {
     private static final List<String> RESPOND_TO =
-            List.of("hello*", "hi*", "hey*", "sup", "yo*", "wassup", "hai*", "heya*", "howdy", "hola",
-                    "bonjour", "greetings", "salutations", "good morning", "good afternoon", "good evening", "good night",
-                    "good day", "good day to you");
+            List.of("^hello+o*\\b.*", "^hi+i*\\b.*", "^hey+y*\\b.*", "^sup+p*\\b.*", "^yo+o*\\b.*", "^wassup+p*\\b.*",
+                    "^hai+i*\\b.*", "^heya+a*\\b.*", "^howdy+y*\\b.*", "^hola+a*\\b.*", "bonjour", "greetings", "salutations", "good morning",
+                    "good afternoon", "good evening", "good night", "good day", "good day to you");
 
     private static final List<String> RESPONSES =
             List.of("Hello!", "Hi!", "Hey!", "Sup", "Yo!", "Wassup", "Hai!", "Heya!");
+
+    private static final List<String> EMOJIS =
+            List.of("👋", "😉", "😜", "😳", "🙏", "😘", "😊", "😅", "😀", "😗", "🤗", "🫡", "😶‍🌫️", "😌",
+                    "😝", "🙃", "😭", "😵", "🥺", "🥹", "🫣", "🫢", "🤭", "🤫", "🫨", "😈", "😸", "😼", "🙀", "😹");
 
     private static final Map<Long, Long> LAST_RESPONDED = new HashMap<>();
 
@@ -45,11 +49,18 @@ public class HelloResponseManager extends ListenerAdapter {
 
         if (shouldRespond(message)) {
             String response = RESPONSES.get((int) (Math.random() * RESPONSES.size()));
-            message.reply(ThreadLocalRandom.current().nextBoolean() ?
-                            author.getAsMention() + " " + response :
-                            response)
-                    .mentionRepliedUser(false)
-                    .queue();
+
+            // spread emojis
+            if (ThreadLocalRandom.current().nextBoolean())
+                response += " " + EMOJIS.get((int) (Math.random() * EMOJIS.size()));
+
+            if (ThreadLocalRandom.current().nextBoolean())
+                response = EMOJIS.get((int) (Math.random() * EMOJIS.size())) + " " + response;
+
+            if (ThreadLocalRandom.current().nextBoolean())
+                response = author.getAsMention() + " " + response;
+
+            message.reply(response).mentionRepliedUser(false).queue();
             LAST_RESPONDED.put(author.getIdLong(), System.currentTimeMillis());
             return;
         }
@@ -60,8 +71,7 @@ public class HelloResponseManager extends ListenerAdapter {
         }
 
         for (String word : RESPOND_TO) {
-            if (content.matches(word.replace("*", ".*")) &&
-                    ThreadLocalRandom.current().nextBoolean()) {
+            if (content.matches(word) && ThreadLocalRandom.current().nextBoolean()) {
                 message.addReaction(Emoji.fromFormatted("👋")).queue();
                 return;
             }
@@ -115,11 +125,9 @@ public class HelloResponseManager extends ListenerAdapter {
             }
         }
 
-
-
         // check if it contains any of the words in RESPOND_TO with '*' being a wildcard
         for (String word : RESPOND_TO) {
-            if (content.matches(".*" + word.replace("*", ".*") + ".*"))
+            if (content.matches(".*" + word + ".*"))
                 return true;
         }
 

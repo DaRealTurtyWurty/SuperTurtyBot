@@ -48,7 +48,6 @@ public class TurtyBot {
         Constants.LOGGER.info("Loaded environment file!");
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
-        Constants.LOGGER.info("Setup logging!");
 
         Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
             final var jdaBuilder = JDABuilder.createDefault(token);
