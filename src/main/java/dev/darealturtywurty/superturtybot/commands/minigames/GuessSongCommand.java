@@ -10,6 +10,7 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.entities.Guild;
@@ -259,7 +260,8 @@ public class GuessSongCommand extends CoreCommand {
                     User user = event.getAuthor();
 
                     // get xp relative to the current position in the song
-                    int xp = (int) (1000 * (track.getPosition() / track.getDuration()));
+                    int xp = (int) ((track.getDuration() - track.getPosition()) / 1000);
+                    xp = MathUtils.clamp(xp, 1, 100);
                     LevellingManager.INSTANCE.addXP(guild, user, xp, new LevellingManager.LevelUpMessage(guild, Optional.of(event.getMessage())));
                     replyContent += ". You gained " + xp + " XP!";
                 }
