@@ -23,7 +23,7 @@ public class ChatReviver {
 
     public long nextDrawingTime() {
         return MathUtils.clamp(
-                this.lastDrawingTime - System.currentTimeMillis(),
+                Math.abs(this.lastDrawingTime - System.currentTimeMillis()),
                 0,
                 TimeUnit.DAYS.toMillis(1));
     }
