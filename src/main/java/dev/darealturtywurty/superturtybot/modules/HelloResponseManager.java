@@ -15,12 +15,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class HelloResponseManager extends ListenerAdapter {
     private static final List<String> RESPOND_TO =
-            List.of("^hello+o*\\b.*", "^hi+i*\\b.*", "^hey+y*\\b.*", "^sup+p*\\b.*", "^yo+o*\\b.*", "^wassup+p*\\b.*",
-                    "^hai+i*\\b.*", "^heya+a*\\b.*", "^howdy+y*\\b.*", "^hola+a*\\b.*", "bonjour", "greetings", "salutations", "good morning",
+            List.of("hello+", "hi+", "hey+", "(s)up+", "yo+", "wassup+",
+                    "hai+", "heya*", "howdy+", "hola+", "bonjour", "greetings", "(s)alutations", "good morning",
                     "good afternoon", "good evening", "good night", "good day", "good day to you");
+
+    private static final List<Pattern> COMPILED_RESPOND_TO =
+            RESPOND_TO.stream().map(s -> "\\b" + s + "\\b").map(Pattern::compile).toList();
 
     private static final List<String> RESPONSES =
             List.of("Hello!", "Hi!", "Hey!", "Sup", "Yo!", "Wassup", "Hai!", "Heya!");
@@ -70,8 +74,8 @@ public class HelloResponseManager extends ListenerAdapter {
             message.addReaction(Emoji.fromFormatted("👀")).queue();
         }
 
-        for (String word : RESPOND_TO) {
-            if (content.matches(word) && ThreadLocalRandom.current().nextBoolean()) {
+        for (Pattern pattern : COMPILED_RESPOND_TO) {
+            if (pattern.matcher(content).find() && ThreadLocalRandom.current().nextBoolean()) {
                 message.addReaction(Emoji.fromFormatted("👋")).queue();
                 return;
             }
@@ -82,11 +86,12 @@ public class HelloResponseManager extends ListenerAdapter {
         long selfId = message.getJDA().getSelfUser().getIdLong();
 
         // If its replying to me
-        if (message.getReferencedMessage() != null && message.getReferencedMessage().getAuthor().getIdLong() == selfId)
-            return true;
+        boolean isMentioned = message.getReferencedMessage() != null && message.getReferencedMessage().getAuthor().getIdLong() == selfId;
+
 
         // If it mentions me
-        boolean isMentioned = message.getMentions().isMentioned(message.getJDA().getSelfUser());
+        if(message.getMentions().isMentioned(message.getJDA().getSelfUser()))
+            isMentioned = true;
 
         String content = message.getContentRaw().trim().toLowerCase(Locale.ROOT);
         // strip away any user mentions
@@ -126,8 +131,8 @@ public class HelloResponseManager extends ListenerAdapter {
         }
 
         // check if it contains any of the words in RESPOND_TO with '*' being a wildcard
-        for (String word : RESPOND_TO) {
-            if (content.matches(".*" + word + ".*"))
+        for (Pattern pattern : COMPILED_RESPOND_TO) {
+            if (pattern.matcher(content).find())
                 return true;
         }
 
