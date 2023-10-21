@@ -126,6 +126,9 @@ public class TurtyBot {
         // Add the chat reviver so that we can revive chats
         builder.addEventListeners(ChatRevivalManager.INSTANCE);
 
+        // Add the hello responder so that we can respond to messages that say hello
+        builder.addEventListeners(HelloResponseManager.INSTANCE);
+
         // Add file conversion manager so that we can convert files
         // TODO: Figure out FFmpeg on Ubuntu
 //        builder.addEventListeners(FileConversionManager.INSTANCE);
