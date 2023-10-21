@@ -40,7 +40,7 @@ public class HelloResponseManager extends ListenerAdapter {
                 message.getType() == MessageType.GUILD_MEMBER_JOIN)
             return;
 
-        if(LAST_RESPONDED.getOrDefault(author.getIdLong(), 0L) >= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1))
+        if(LAST_RESPONDED.getOrDefault(author.getIdLong(), 0L) >= System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1))
             return;
 
         if (shouldRespond(message)) {
