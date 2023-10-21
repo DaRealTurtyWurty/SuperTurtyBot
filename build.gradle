@@ -80,7 +80,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.7.0'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.5.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '5.6.2'
+    implementation group: 'io.javalin', name: 'javalin', version: '5.6.3'
 
     annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.30"
     compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.30"
