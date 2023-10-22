@@ -774,6 +774,26 @@ public class ApiHandler {
         }
     }
 
+    public static Either<Pornstar, HttpStatus> getPornstar() {
+        try (Response response = makeRequest("nsfw/pornstar")) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            return Either.left(Constants.GSON.fromJson(json, Pornstar.class));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private static Response makeRequest(String path) {
         try {
             return Constants.HTTP_CLIENT.newCall(new Request.Builder().url(BASE_URL + path).build()).execute();

@@ -18,6 +18,7 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsC
 import dev.darealturtywurty.superturtybot.commands.music.*;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
+import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -351,6 +352,7 @@ public class CommandHook extends ListenerAdapter {
         // NSFW
         cmds.add(new NSFWCommand());
         cmds.add(new GuessSexPositionCommand());
+        cmds.add(new SmashOrPassCommand());
 
         // Music
         cmds.add(new JoinCommand());
