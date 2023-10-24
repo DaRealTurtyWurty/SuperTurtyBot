@@ -137,7 +137,7 @@ public class LatestCommand extends CoreCommand {
                 var embed = new EmbedBuilder()
                         .setTitle("Latest Parchment Version")
                         .addField("Version", version.version(), true)
-                        .addField("Minecraft Version", version.version(), true);
+                        .addField("Minecraft Version", version.version().split("-")[1], true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -179,7 +179,7 @@ public class LatestCommand extends CoreCommand {
 
                 if (parchmentResponse.isLeft()) {
                     ParchmentVersion version = parchmentResponse.getLeft();
-                    embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version(), false);
+                    embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
                 } else {
                     embed.addField("Parchment", "Failed to get latest Parchment version!", false);
                 }
