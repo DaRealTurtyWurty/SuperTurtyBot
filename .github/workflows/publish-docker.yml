@@ -2,8 +2,9 @@ name: Publish Dockerfile to GitHub Packages
 
 on:
   workflow_dispatch:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
