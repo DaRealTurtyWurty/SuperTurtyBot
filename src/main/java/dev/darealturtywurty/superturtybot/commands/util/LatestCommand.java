@@ -137,7 +137,7 @@ public class LatestCommand extends CoreCommand {
                 var embed = new EmbedBuilder()
                         .setTitle("Latest Parchment Version")
                         .addField("Version", version.version(), true)
-                        .addField("Minecraft Version", version.version(), true);
+                        .addField("Minecraft Version", version.version().split("-")[1], true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
