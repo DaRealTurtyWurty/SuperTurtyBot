@@ -86,7 +86,7 @@ public class SteamGamesCommand extends CoreCommand {
 
         List<Game> games = getOwnedGames(steamId);
         if(games.isEmpty()) {
-            reply(event, "❌ Failed to get user's steam games!", false, true);
+            event.getHook().editOriginal("❌ Failed to get user's steam games!").queue();
             return;
         }
 
@@ -103,7 +103,8 @@ public class SteamGamesCommand extends CoreCommand {
                 .authorOnly(event.getUser().getIdLong())
                 .build(event.getJDA());
 
-        embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list games!").queue());
+        embed.send(event.getHook(),
+                () -> event.getHook().editOriginal("❌ Failed to list games!").queue());
     }
 
     private static List<Game> getOwnedGames(String steamID) {
