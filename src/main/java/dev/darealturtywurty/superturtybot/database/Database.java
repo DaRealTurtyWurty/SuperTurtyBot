@@ -40,6 +40,7 @@ public class Database {
     public final MongoCollection<WordleProfile> wordleProfiles;
     public final MongoCollection<Economy> economy;
     public final MongoCollection<ChatReviver> chatRevivers;
+    public final MongoCollection<Birthday> birthdays;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -71,6 +72,7 @@ public class Database {
         this.wordleProfiles = database.getCollection("wordleProfiles", WordleProfile.class);
         this.economy = database.getCollection("economy", Economy.class);
         this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
+        this.birthdays = database.getCollection("birthdays", Birthday.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -99,6 +101,7 @@ public class Database {
         this.wordleProfiles.createIndex(userIndex);
         this.economy.createIndex(guildUserIndex);
         this.chatRevivers.createIndex(guildIndex);
+        this.birthdays.createIndex(userIndex);
     }
 
     public static Database getDatabase() {
