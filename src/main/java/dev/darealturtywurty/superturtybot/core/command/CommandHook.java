@@ -333,6 +333,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new FavouriteRobloxGamesCommand());
         cmds.add(new WikipediaCommand());
         cmds.add(new ConvertCommand());
+        cmds.add(new BirthdayCommand());
 
         // Moderation
         cmds.add(new BanCommand());

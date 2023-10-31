@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Report;
 import dev.darealturtywurty.superturtybot.modules.ReportManager;
 import net.dv8tion.jda.api.Permission;

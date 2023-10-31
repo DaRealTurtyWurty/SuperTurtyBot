@@ -5,12 +5,12 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import org.apache.commons.math3.util.Pair;
 
 import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -97,7 +97,7 @@ public class WarnCommand extends CoreCommand {
             final var embed = new EmbedBuilder();
             embed.setTitle(user.getName() + " has been warned!");
             embed.setFooter("Warned At: "
-                + StringUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)));
+                + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)));
             embed.setDescription(
                 "Reason: " + warn.getReason() + "\nWarned By: " + warner.getAsMention() + "\nUUID: " + warn.getUuid());
             embed.setColor(Color.RED);

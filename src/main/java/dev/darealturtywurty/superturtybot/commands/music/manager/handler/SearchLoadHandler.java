@@ -4,7 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

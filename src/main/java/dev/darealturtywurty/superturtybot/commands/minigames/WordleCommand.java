@@ -9,9 +9,9 @@ import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.CoupledPair;
-import dev.darealturtywurty.superturtybot.core.util.Either;
-import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
+import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;

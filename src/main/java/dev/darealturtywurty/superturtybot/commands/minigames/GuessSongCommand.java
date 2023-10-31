@@ -9,7 +9,7 @@ import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;

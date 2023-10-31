@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.GuildAudioManager;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 

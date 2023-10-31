@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.discord;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;

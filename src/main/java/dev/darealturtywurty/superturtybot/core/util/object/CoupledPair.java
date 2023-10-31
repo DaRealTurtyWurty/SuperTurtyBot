@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.object;
 
 import org.apache.commons.lang3.tuple.Pair;
 

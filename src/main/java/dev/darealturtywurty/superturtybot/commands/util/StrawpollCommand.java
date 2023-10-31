@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -22,7 +23,6 @@ import com.google.gson.JsonSyntaxException;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -120,7 +120,7 @@ public class StrawpollCommand extends CoreCommand {
             }
 
             try {
-                return DateFormat.getInstance().parseObject(StringUtils.parseDate(parts));
+                return DateFormat.getInstance().parseObject(TimeUtils.parseDate(parts));
             } catch (final ParseException exception) {
                 event.deferReply()
                     .setContent("There was an issue parsing this date. Please report the following to the bot owner:\n"

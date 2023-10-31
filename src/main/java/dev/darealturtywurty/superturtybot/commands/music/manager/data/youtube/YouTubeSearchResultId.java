@@ -1,7 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.music.manager.data.youtube;
 
 import com.google.gson.JsonObject;
-import dev.darealturtywurty.superturtybot.core.util.Either3;
+import dev.darealturtywurty.superturtybot.core.util.function.Either3;
 
 public record YouTubeSearchResultId(String kind, Either3<String, String, String> videoOrChannelOrPlaylistId) {
     public static YouTubeSearchResultId fromJson(JsonObject obj) {

@@ -22,7 +22,7 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.handler.SearchL
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.FirstTimeGuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;

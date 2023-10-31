@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.object;
 
 import java.util.ArrayList;
 import java.util.List;

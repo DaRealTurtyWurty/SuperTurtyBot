@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;

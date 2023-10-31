@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;

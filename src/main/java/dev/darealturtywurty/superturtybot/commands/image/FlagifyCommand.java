@@ -5,7 +5,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.ImageFlagifyRequestDa
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;

@@ -6,7 +6,7 @@ import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.EmptyCallback;
+import dev.darealturtywurty.superturtybot.core.util.object.EmptyCallback;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;

@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.object;
 
 import okhttp3.Call;
 import okhttp3.Callback;

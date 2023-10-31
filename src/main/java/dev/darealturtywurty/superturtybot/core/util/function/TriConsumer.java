@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.function;
 
 import java.util.Objects;
 import java.util.function.Consumer;

@@ -1,9 +1,10 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.discord;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import net.dv8tion.jda.api.entities.MessageReaction;
+import org.jetbrains.annotations.NotNull;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,64 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.imageio.ImageIO;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import net.dv8tion.jda.api.entities.Guild.ExplicitContentLevel;
-import net.dv8tion.jda.api.entities.Guild.NSFWLevel;
-import net.dv8tion.jda.api.entities.Guild.NotificationLevel;
-import net.dv8tion.jda.api.entities.Guild.VerificationLevel;
-import net.dv8tion.jda.api.entities.MessageReaction;
-
 public final class BotUtils {
     public static boolean compareEmote(MessageReaction reaction0, MessageReaction reaction1) {
         return reaction0.getEmoji().getName().equals(reaction1.getEmoji().getName());
     }
-    
-    public static String convertExplicitContentLevel(ExplicitContentLevel level) {
-        return switch (level) {
-            case OFF -> "None";
-            case NO_ROLE -> "Un-roled Members";
-            case ALL -> "All Messages";
-            case UNKNOWN -> "Unknown";
-            default -> "Undefined";
-        };
-    }
-    
-    public static String convertNotificationLevel(NotificationLevel level) {
-        return switch (level) {
-            case ALL_MESSAGES -> "All Messages";
-            case MENTIONS_ONLY -> "Mentions Only";
-            case UNKNOWN -> "Unknown";
-            default -> "Undefined";
-        };
-    }
 
-    public static String convertNSFWLevel(NSFWLevel level) {
-        return switch (level) {
-            case SAFE -> "Safe";
-            case AGE_RESTRICTED -> "Age Restricted";
-            case EXPLICIT -> "Explicit";
-            case DEFAULT -> "Default";
-            case UNKNOWN -> "Unknown";
-            default -> "Undefined";
-        };
-    }
-
-    public static String convertVerificationLevel(VerificationLevel level) {
-        return switch (level) {
-            case NONE -> "None";
-            case LOW -> "Low";
-            case MEDIUM -> "Medium";
-            case HIGH -> "High";
-            case VERY_HIGH -> "Very High";
-            case UNKNOWN -> "Unknown";
-            default -> "Undefined";
-        };
-    }
-    
     public static Color generateRandomColor() {
         final var red = ThreadLocalRandom.current().nextFloat();
         final var green = ThreadLocalRandom.current().nextFloat();
@@ -83,10 +31,6 @@ public final class BotUtils {
         final var saturation = (rand.nextInt(2000) + 1000) / 10000f;
         final var luminance = 0.9f;
         return Color.getHSBColor(hue, saturation, luminance);
-    }
-    
-    public static boolean isDevelopmentEnvironment() {
-        return System.getenv("development") != null;
     }
     
     /**
@@ -116,9 +60,8 @@ public final class BotUtils {
         g2d.dispose();
         return retImg;
     }
-    
-    @Nullable
-    public static InputStream toInputStream(@NotNull BufferedImage image) {
+
+    public static @NotNull InputStream toInputStream(@NotNull BufferedImage image) {
         try {
             final var output = new ByteArrayOutputStream();
             ImageIO.write(image, "png", output);

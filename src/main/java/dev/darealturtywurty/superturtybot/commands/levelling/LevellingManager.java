@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
+import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;

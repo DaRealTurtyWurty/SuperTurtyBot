@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.core.util;
+package dev.darealturtywurty.superturtybot.core.util.discord;
 
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import net.dv8tion.jda.api.events.GenericEvent;

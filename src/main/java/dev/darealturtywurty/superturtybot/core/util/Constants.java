@@ -26,6 +26,6 @@ public final class Constants {
     }
     
     private Constants() {
-        throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
+        throw new IllegalAccessError("Attempted to construct utility class!");
     }
 }

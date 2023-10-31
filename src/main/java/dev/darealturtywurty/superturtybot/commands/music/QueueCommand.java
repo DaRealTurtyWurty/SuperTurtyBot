@@ -10,8 +10,8 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class QueueCommand extends CoreCommand {
@@ -77,7 +77,7 @@ public class QueueCommand extends CoreCommand {
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (AudioTrack track : queue) {
             TrackData trackData = track.getUserData(TrackData.class);
-            contents.field("[" + StringUtils.millisecondsFormatted(track.getDuration()) + "] - " + track.getInfo().title.trim(),
+            contents.field("[" + TimeUtils.millisecondsFormatted(track.getDuration()) + "] - " + track.getInfo().title.trim(),
                     "[Link](%s)\nAdded by: %s".formatted(track.getInfo().uri, trackData == null ? "Unknown" : event.getGuild().getMemberById(trackData.getUserId()).getAsMention()));
         }
 

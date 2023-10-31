@@ -4,7 +4,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.Map.entry;

@@ -4,17 +4,23 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Birthday;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +36,7 @@ public class BirthdayCommand extends CoreCommand {
                 new SubcommandData("set", "Sets your birthday").addOptions(
                         new OptionData(OptionType.INTEGER, "day", "The day of your birthday", true, true).setRequiredRange(1, 31),
                         new OptionData(OptionType.INTEGER, "month", "The month of your birthday", true).setRequiredRange(1, 12),
-                        new OptionData(OptionType.INTEGER, "year", "The year of your birthday", true).setRequiredRange(calculateMinBirthYear(), calculateMaxBirthYear())
+                        new OptionData(OptionType.INTEGER, "year", "The year of your birthday", true).setRequiredRange(TimeUtils.calculateMinBirthYear(), TimeUtils.calculateMaxBirthYear())
                 ),
                 new SubcommandData("view", "Views a user's birthday").addOptions(
                         new OptionData(OptionType.USER, "user", "The user to view the birthday of", false)
@@ -38,14 +44,31 @@ public class BirthdayCommand extends CoreCommand {
         );
     }
 
-    private static int calculateMinBirthYear() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.YEAR) - 150;
-    }
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if(!event.getName().equals(getName()))
+            return;
 
-    private static int calculateMaxBirthYear() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.YEAR) - 12;
+        String subcommand = event.getSubcommandName();
+        if (subcommand == null) {
+            event.replyChoices().queue();
+        } else if (subcommand.equalsIgnoreCase("set")) {
+            AutoCompleteQuery selected = event.getFocusedOption();
+            if(!selected.getName().equals("day"))
+                return;
+
+            int month = event.getOption("month", 1, OptionMapping::getAsInt);
+            String day = selected.getValue();
+
+            List<Integer> validForMonth = new ArrayList<>();
+            for (int index = 0; index < TimeUtils.getDaysForMonth(month); index++) {
+                validForMonth.add(index + 1);
+            }
+
+            validForMonth.removeIf(s -> !Integer.toString(s).startsWith(day));
+            List<Command.Choice> choices = validForMonth.stream().limit(25).map(integer -> new Command.Choice(Integer.toString(integer), integer)).toList();
+            event.replyChoices(choices).queue();
+        }
     }
 
     @Override
@@ -91,14 +114,13 @@ public class BirthdayCommand extends CoreCommand {
             int day = event.getOption("day", 1, OptionMapping::getAsInt);
             int month = event.getOption("month", 1, OptionMapping::getAsInt);
             int year = event.getOption("year", Calendar.getInstance().get(Calendar.YEAR), OptionMapping::getAsInt);
-            day = switch (month) {
-                case 2 -> Math.min(day, 28);
-                case 4, 6, 9, 11 -> Math.min(day, 30);
-                default -> Math.min(day, 31);
-            };
+            if (day < 1 || day > TimeUtils.getDaysForMonth(month, year)) {
+                reply(event, "❌ You must provide a valid day for the month of " + TimeUtils.mapMonth(month) + "!", false, true);
+                return;
+            }
 
-            if (year < calculateMinBirthYear() || year > calculateMaxBirthYear()) {
-                reply(event, "❌ You must provide a valid year between " + calculateMinBirthYear() + " and " + calculateMaxBirthYear() + "!", false, true);
+            if (year < TimeUtils.calculateMinBirthYear() || year > TimeUtils.calculateMaxBirthYear()) {
+                reply(event, "❌ You must provide a valid year between " + TimeUtils.calculateMinBirthYear() + " and " + TimeUtils.calculateMaxBirthYear() + "!", false, true);
                 return;
             }
 
@@ -106,8 +128,8 @@ public class BirthdayCommand extends CoreCommand {
             Database.getDatabase().birthdays.insertOne(birthday);
 
             reply(event, "✅ Your birthday has been set to the " +
-                    mapDay(day) + " of " + getMonth(month) + " " + year +
-                    "! (" + TimeFormat.RELATIVE.format(calculateTimeOfNextBirthday(birthday)) + ")");
+                    TimeUtils.mapDay(day) + " of " + TimeUtils.mapMonth(month) + " " + year +
+                    "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ")");
         } else if (subcommand.equalsIgnoreCase("view")) {
             User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
             if(user == null) {
@@ -123,49 +145,10 @@ public class BirthdayCommand extends CoreCommand {
 
             reply(event,
                     "🎂 " + user.getAsMention() + "'s birthday is on the " +
-                            mapDay(birthday.getDay()) + " of " + getMonth(birthday.getMonth()) +
-                            "! (" + TimeFormat.RELATIVE.format(calculateTimeOfNextBirthday(birthday)) + ") This year they will be " +
+                            TimeUtils.mapDay(birthday.getDay()) + " of " + TimeUtils.mapMonth(birthday.getMonth()) +
+                            "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ") This year they will be " +
                             (Calendar.getInstance().get(Calendar.YEAR) - birthday.getYear()) + " years old!");
         }
     }
 
-    private static String getMonth(int month) {
-        return switch (month) {
-            case 1 -> "January";
-            case 2 -> "February";
-            case 3 -> "March";
-            case 4 -> "April";
-            case 5 -> "May";
-            case 6 -> "June";
-            case 7 -> "July";
-            case 8 -> "August";
-            case 9 -> "September";
-            case 10 -> "October";
-            case 11 -> "November";
-            case 12 -> "December";
-            default -> "Unknown";
-        };
-    }
-
-    private static String mapDay(int day) {
-        return switch (day) {
-            case 1, 21, 31 -> day + "st";
-            case 2, 22 -> day + "nd";
-            case 3, 23 -> day + "rd";
-            default -> day + "th";
-        };
-    }
-
-    public static long calculateTimeOfNextBirthday(Birthday birthday) {
-        Calendar calendar = Calendar.getInstance();
-        int day = birthday.getDay();
-        int month = birthday.getMonth();
-        int year = calendar.get(Calendar.YEAR);
-        if (month < calendar.get(Calendar.MONTH) + 1 || (month == calendar.get(Calendar.MONTH) + 1 && day < calendar.get(Calendar.DAY_OF_MONTH))) {
-            year++;
-        }
-
-        calendar.set(year, month - 1, day, 0, 0, 0);
-        return calendar.getTimeInMillis();
-    }
 }

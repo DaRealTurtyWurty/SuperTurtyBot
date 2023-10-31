@@ -1,9 +1,6 @@
 package dev.darealturtywurty.superturtybot.core.util;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.commons.text.WordUtils;
@@ -24,7 +21,7 @@ public final class StringUtils {
     private static final char[] CHARS = { 'k', 'm', 'b', 't' };
     
     private StringUtils() {
-        throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
+        throw new IllegalAccessError("Cannot access private constructor!");
     }
 
     public static String convertOnlineStatus(OnlineStatus status) {
@@ -38,26 +35,9 @@ public final class StringUtils {
             default -> "Undefined";
         };
     }
-    
-    public static String formatTime(OffsetDateTime time) {
-        return time.format(DateTimeFormatter.RFC_1123_DATE_TIME);
-    }
-    
-    public static String millisecondsFormatted(final long millis) {
-        final long hours = TimeUnit.MILLISECONDS.toHours(millis)
-            - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(millis));
-        final long minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
-            - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
-        final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis)
-            - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis));
-        final String ret = String.format("%s%s%s", hours > 0 ? String.format("%02d", hours) + ":" : "",
-            minutes > 0 ? String.format("%02d", minutes) + ":" : "00:",
-            seconds > 0 ? String.format("%02d", seconds) : "00").trim();
-        return ret.endsWith(":") ? ret.substring(0, ret.length() - 1) : ret;
-    }
-    
+
     /**
-     * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invokation.
+     * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invocation.
      *
      * @param  n         the number to format
      * @param  iteration in fact this is the class from the array c
@@ -73,47 +53,6 @@ public final class StringUtils {
             (d > 99.9D || isRound && d > 9.99D ? // this decides whether to trim the decimals
                 (int) d * 10 / 10 : d + "" // (int) d * 10 / 10 drops the decimal
             ) + "" + CHARS[iteration] : numberFormat(d, iteration + 1);
-    }
-
-    public static String parseDate(final String[] parts) {
-        final var deadlineStrBuilder = new StringBuilder();
-        deadlineStrBuilder.append(parts[0] + "-");
-        deadlineStrBuilder.append(parts[1] + "-");
-        deadlineStrBuilder.append(parts[2] + "T");
-        if (parts.length == 3) {
-            deadlineStrBuilder.append("00:00:00.000Z");
-            return deadlineStrBuilder.toString();
-        }
-
-        if (parts.length >= 4) {
-            deadlineStrBuilder.append(parts[3] + ":");
-            if (parts.length == 4) {
-                deadlineStrBuilder.append("00:00.000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 5) {
-            deadlineStrBuilder.append(parts[4] + ":");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("00.000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 6) {
-            deadlineStrBuilder.append(parts[5] + ".");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
-
-        if (parts.length >= 7) {
-            deadlineStrBuilder.append(parts[6] + "Z");
-        }
-
-        return deadlineStrBuilder.toString();
     }
 
     public static boolean readBoolean(String str) {
@@ -192,5 +131,47 @@ public final class StringUtils {
     
     public static String upperSnakeToSpacedPascal(String str) {
         return WordUtils.capitalize(str.toLowerCase().replace("_", " "));
+    }
+
+    public static String convertExplicitContentLevel(Guild.ExplicitContentLevel level) {
+        return switch (level) {
+            case OFF -> "None";
+            case NO_ROLE -> "Un-roled Members";
+            case ALL -> "All Messages";
+            case UNKNOWN -> "Unknown";
+            default -> "Undefined";
+        };
+    }
+
+    public static String convertNotificationLevel(Guild.NotificationLevel level) {
+        return switch (level) {
+            case ALL_MESSAGES -> "All Messages";
+            case MENTIONS_ONLY -> "Mentions Only";
+            case UNKNOWN -> "Unknown";
+            default -> "Undefined";
+        };
+    }
+
+    public static String convertNSFWLevel(Guild.NSFWLevel level) {
+        return switch (level) {
+            case SAFE -> "Safe";
+            case AGE_RESTRICTED -> "Age Restricted";
+            case EXPLICIT -> "Explicit";
+            case DEFAULT -> "Default";
+            case UNKNOWN -> "Unknown";
+            default -> "Undefined";
+        };
+    }
+
+    public static String convertVerificationLevel(Guild.VerificationLevel level) {
+        return switch (level) {
+            case NONE -> "None";
+            case LOW -> "Low";
+            case MEDIUM -> "Medium";
+            case HIGH -> "High";
+            case VERY_HIGH -> "Very High";
+            case UNKNOWN -> "Unknown";
+            default -> "Undefined";
+        };
     }
 }

@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestionMan
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.EventWaiter;
+import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
