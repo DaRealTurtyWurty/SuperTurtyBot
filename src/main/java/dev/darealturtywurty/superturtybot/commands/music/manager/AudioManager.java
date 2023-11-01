@@ -39,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Instant;
 import java.util.List;
@@ -251,9 +252,9 @@ public final class AudioManager {
         return future;
     }
 
-    public static void play(Guild guild, AudioChannel channel, File audioFile) {
+    public static void play(Guild guild, AudioChannel channel, URL path) {
         final GuildAudioManager manager = getOrCreate(guild);
-        AUDIO_MANAGER.loadItemOrdered(manager, audioFile.getAbsolutePath(), new AudioLoadResultHandler() {
+        AUDIO_MANAGER.loadItemOrdered(manager, path.getPath(), new AudioLoadResultHandler() {
             @Override
             public void loadFailed(FriendlyException exception) {
                 Constants.LOGGER.error("Track failed to load: {}", exception.getMessage());
@@ -261,7 +262,7 @@ public final class AudioManager {
 
             @Override
             public void noMatches() {
-                Constants.LOGGER.error("No matches were found for file: '{}'!", audioFile.getAbsolutePath());
+                Constants.LOGGER.error("No matches were found for file: '{}'", path.getPath());
             }
 
             @Override

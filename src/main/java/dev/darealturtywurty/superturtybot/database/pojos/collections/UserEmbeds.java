@@ -66,55 +66,7 @@ public class UserEmbeds {
             return Optional.empty();
         }
 
-        return Optional.of(fromData(DataObject.fromJson(embed)));
-    }
-
-    // TODO: Remove when https://github.com/discord-jda/JDA/pull/2471 is merged
-    @NotNull
-    private static EmbedBuilder fromData(@NotNull DataObject data) {
-        Checks.notNull(data, "DataObject");
-        var builder = new EmbedBuilder();
-
-        builder.setTitle(data.getString("title", null));
-        builder.setUrl(data.getString("url", null));
-        builder.setDescription(data.getString("description", ""));
-        builder.setTimestamp(data.isNull("timestamp") ? null : OffsetDateTime.parse(data.getString("timestamp")));
-        builder.setColor(data.getInt("color", Role.DEFAULT_COLOR_RAW));
-
-        data.optObject("thumbnail").ifPresent(thumbnail ->
-                builder.setThumbnail(thumbnail.getString("url"))
-        );
-
-        data.optObject("author").ifPresent(author ->
-                builder.setAuthor(
-                        author.getString("name", ""),
-                        author.getString("url", null),
-                        author.getString("icon_url", null)
-                )
-        );
-
-        data.optObject("footer").ifPresent(footer ->
-                builder.setFooter(
-                        footer.getString("text", ""),
-                        footer.getString("icon_url", null)
-                )
-        );
-
-        data.optObject("image").ifPresent(image ->
-                builder.setImage(image.getString("url"))
-        );
-
-        data.optArray("fields").ifPresent(arr ->
-                arr.stream(DataArray::getObject).forEach(field ->
-                        builder.addField(
-                                field.getString("name", ZERO_WIDTH_SPACE),
-                                field.getString("value", ZERO_WIDTH_SPACE),
-                                field.getBoolean("inline", false)
-                        )
-                )
-        );
-
-        return builder;
+        return Optional.of(EmbedBuilder.fromData(DataObject.fromJson(embed)));
     }
 
     public void setEmbed(String name, MessageEmbed embed) {

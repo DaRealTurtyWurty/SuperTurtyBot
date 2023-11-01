@@ -55,7 +55,7 @@ public class EconomyManager {
         }
 
         final var economy = new Economy(guild.getIdLong(), user.getIdLong());
-        economy.setBank(config.getDefaultBalance());
+        economy.setBank(config.getDefaultEconomyBalance());
         Database.getDatabase().economy.insertOne(economy);
         return economy;
     }
@@ -120,11 +120,21 @@ public class EconomyManager {
             PublicShop.run();
         }
 
+        // TODO: Move to DailyTask
         EXECUTOR.scheduleAtFixedRate(() -> {
             Database.getDatabase().economy.find().into(new ArrayList<>()).stream()
                     .filter(account -> getBalance(account) < 0).forEach(account -> {
-                        //TODO: Get from guild config
-                        removeMoney(account, 200, true);
+                        Guild guild = jda.getGuildById(account.getGuild());
+                        if (guild == null)
+                            return;
+
+                        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                        if (config == null) {
+                            config = new GuildConfig(guild.getIdLong());
+                            Database.getDatabase().guildConfig.insertOne(config);
+                        }
+
+                        removeMoney(account, config.getDefaultEconomyBalance(), true);
                         updateAccount(account);
 
                         User user = jda.getUserById(account.getUser());

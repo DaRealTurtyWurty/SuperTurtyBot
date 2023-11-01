@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
+import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.*;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarningsCommand;
@@ -411,6 +412,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new RankCommand());
         cmds.add(new LeaderboardCommand());
         //cmds.add(new XPInventoryCommand());
+        cmds.add(new SetXPCommand());
 
         // Minigames
         cmds.add(new TriviaCommand());

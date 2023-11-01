@@ -60,7 +60,7 @@ public class RankCommand extends CoreCommand {
 
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.MINUTES, 1L);
+        return Pair.of(TimeUnit.SECONDS, 30L);
     }
 
     @Override

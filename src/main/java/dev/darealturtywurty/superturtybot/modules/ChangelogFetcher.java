@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.modules;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import lombok.Getter;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -60,9 +61,13 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
+            Path gitpath = Paths.get("../git");
+            if(Files.exists(gitpath) && Files.isDirectory(gitpath))
+                return;
+
             CloneCommand cloneCommand = Git.cloneRepository();
             cloneCommand.setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git");
-            cloneCommand.setDirectory(new File("../git"));
+            cloneCommand.setDirectory(gitpath.toFile());
             try (Git git = cloneCommand.call()) {
                 Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(this.lastStartTime)).call();
                 for (RevCommit commit : logs) {
@@ -76,10 +81,10 @@ public class ChangelogFetcher {
             }
 
             // Delete the git folder
-            Path gitpath = Paths.get("../git");
-            Files.walk(gitpath)
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+            if (Files.notExists(gitpath) || !Files.isDirectory(gitpath))
+                return;
+
+            FileUtils.deleteDirectory(gitpath.toFile());
             Files.deleteIfExists(gitpath);
         } catch (IOException | GitAPIException exception) {
             Constants.LOGGER.error("Failed to fetch git changes", exception);

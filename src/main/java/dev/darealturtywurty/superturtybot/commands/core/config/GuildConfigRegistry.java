@@ -233,11 +233,6 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setEconomyCurrency)
                     .valueFromConfig(GuildConfig::getEconomyCurrency).build());
 
-    private static final GuildConfigOption DEFAULT_BALANCE = GUILD_CONFIG_OPTIONS.register("default_balance",
-            new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
-                            (config, value) -> config.setDefaultBalance(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getDefaultBalance).build());
-
     private static final GuildConfigOption ECONOMY_ENABLED = GUILD_CONFIG_OPTIONS.register("economy_enabled",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setEconomyEnabled(Boolean.parseBoolean(value)))
@@ -322,5 +317,25 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.INTEGER)
                     .serializer((config, value) -> config.setChatRevivalTime(Integer.parseInt(value)))
                     .valueFromConfig(GuildConfig::getChatRevivalTime)
+                    .validator((event, value) -> Integer.parseInt(value) > 0).build());
+
+    private static final GuildConfigOption WARNING_XP_PERCENTAGE = GUILD_CONFIG_OPTIONS.register("warning_xp_percentage",
+            new GuildConfigOption.Builder().dataType(DataType.FLOAT)
+                    .serializer((config, value) -> config.setWarningXpPercentage(Float.parseFloat(value)))
+                    .valueFromConfig(GuildConfig::getWarningXpPercentage)
+                    .validator((event, value) -> Float.parseFloat(value) > 0 && Float.parseFloat(value) < 100)
+                    .build());
+
+    private static final GuildConfigOption WARNING_ECONOMY_PERCENTAGE = GUILD_CONFIG_OPTIONS.register("warning_economy_percentage",
+            new GuildConfigOption.Builder().dataType(DataType.FLOAT)
+                    .serializer((config, value) -> config.setWarningEconomyPercentage(Float.parseFloat(value)))
+                    .valueFromConfig(GuildConfig::getWarningEconomyPercentage)
+                    .validator((event, value) -> Float.parseFloat(value) > 0 && Float.parseFloat(value) < 100)
+                    .build());
+
+    private static final GuildConfigOption DEFAULT_ECONOMY_BALANCE = GUILD_CONFIG_OPTIONS.register("default_economy_balance",
+            new GuildConfigOption.Builder().dataType(DataType.INTEGER)
+                    .serializer((config, value) -> config.setDefaultEconomyBalance(Integer.parseInt(value)))
+                    .valueFromConfig(GuildConfig::getDefaultEconomyBalance)
                     .validator((event, value) -> Integer.parseInt(value) > 0).build());
 }

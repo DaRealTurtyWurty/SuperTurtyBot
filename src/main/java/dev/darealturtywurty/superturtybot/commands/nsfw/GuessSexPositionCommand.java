@@ -189,7 +189,6 @@ public class GuessSexPositionCommand extends CoreCommand {
         if (event.getUser().getIdLong() != userId) return;
 
         if (type.equals("position_tile") && replyId == event.getMessageIdLong()) {
-            // TODO: Consider whether or not this might be database-worthy
             SexPositionGame game = GAMES.stream()
                     .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
                             .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
