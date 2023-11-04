@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Birthday;
+import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -126,6 +127,9 @@ public class BirthdayCommand extends CoreCommand {
 
             birthday = new Birthday(event.getUser().getIdLong(), day, month, year);
             Database.getDatabase().birthdays.insertOne(birthday);
+
+            short dayOfYear = TimeUtils.getDayOfYear(day, month, year);
+            BirthdayManager.addBirthday(birthday.getUser(), dayOfYear);
 
             reply(event, "✅ Your birthday has been set to the " +
                     TimeUtils.mapDay(day) + " of " + TimeUtils.mapMonth(month) + " " + year +

@@ -13,7 +13,7 @@ public class TimeUtils {
         return getDaysForMonth(month, Calendar.getInstance().get(Calendar.YEAR));
     }
 
-    public static int getDaysForMonth(int month, int year) {
+    public static byte getDaysForMonth(int month, int year) {
         // if leap year
         if(Year.isLeap(year) && month == 2)
             return 29;
@@ -134,5 +134,15 @@ public class TimeUtils {
         }
 
         return deadlineStrBuilder.toString();
+    }
+
+    public static short getDayOfYear(int day, int month, int year) {
+        short dayOfYear = 0;
+        for (short i = 1; i < month; i++) {
+            dayOfYear += getDaysForMonth(i, year);
+        }
+
+        dayOfYear += day;
+        return dayOfYear;
     }
 }
