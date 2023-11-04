@@ -674,6 +674,7 @@ public class WordleCommand extends CoreCommand {
             return false;
         }
 
+        // TODO: https://discord.com/channels/1017111640023506974/1170390239072755780/1170391337217044532
         public LetterState getLetterState(int letterIndex, char character) {
             if (this.word.charAt(letterIndex) == character) {
                 return LetterState.CORRECT;
@@ -702,7 +703,7 @@ public class WordleCommand extends CoreCommand {
             String lowercaseWord = word.toLowerCase();
             char lowercaseChar = Character.toLowerCase(character);
             boolean isInWord = lowercaseWord.contains(String.valueOf(lowercaseChar));
-            boolean isAtCorrectIndex = false;
+            boolean isAtCorrectIndex;
             Color color = LetterState.NOT_GUESSED.getColor(); // Default color is white
 
             for (String guess : guesses) {
@@ -730,13 +731,13 @@ public class WordleCommand extends CoreCommand {
             return guesses.stream().anyMatch(word -> word.equalsIgnoreCase(this.word));
         }
 
+        @Getter
         public enum LetterState {
             CORRECT(Color.GREEN),
             INCORRECT(Color.RED),
             WRONG_POSITION(Color.YELLOW),
             NOT_GUESSED(new Color(0x6D7C87));
 
-            @Getter
             private final Color color;
 
             LetterState(Color color) {
