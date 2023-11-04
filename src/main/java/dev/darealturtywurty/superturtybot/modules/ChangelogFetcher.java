@@ -30,7 +30,9 @@ public class ChangelogFetcher {
     @Getter
     private final List<String> changelog = new ArrayList<>();
     @Getter
-    private final long startTime, lastStartTime;
+    private final long startTime;
+    @Getter
+    private final long lastStartTime;
 
     private ChangelogFetcher() {
         this.startTime = System.currentTimeMillis();
@@ -71,8 +73,30 @@ public class ChangelogFetcher {
             try (Git git = cloneCommand.call()) {
                 Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(this.lastStartTime)).call();
                 for (RevCommit commit : logs) {
-                    String message = commit.getFullMessage();
-                    if (message.startsWith("Merge")) continue;
+                    String message = commit.getShortMessage();
+
+                    // Dependabot commits
+                    // format:
+                    // Bumps com.github.oshi:oshi-core from 6.4.6 to 6.4.7.- Release notes- Changelog- Commits
+                    // Bumps net.dv8tion:JDA from 5.0.0-beta.16 to 5.0.0-beta.17.- Release notes- Commits
+                    if (commit.getAuthorIdent().getName().equals("dependabot[bot]") || commit.getAuthorIdent().getName().equals("dependabot-preview[bot]")) {
+                        try {
+                            System.out.println(message);
+
+                            String dependency = message.split("from")[0]
+                                    .replace("Bumps ", "")
+                                    .replace("Merges ", "")
+                                    .replace("Updates ", "")
+                                    .trim();
+
+                            String fromVersion = message.split("from")[1].split("to")[0].trim();
+                            String toVersion = message.split("to")[1].split("- ")[0].trim();
+
+                            message = "Updated %s from %s to %s".formatted(dependency, fromVersion, toVersion);
+                        } catch (IndexOutOfBoundsException exception) {
+                            message = "Updated a dependency";
+                        }
+                    } else if (message.startsWith("Merge")) continue;
 
                     Date date = commit.getAuthorIdent().getWhen();
                     String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
