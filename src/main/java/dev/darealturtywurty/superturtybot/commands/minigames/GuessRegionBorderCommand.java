@@ -76,7 +76,7 @@ public class GuessRegionBorderCommand extends CoreCommand {
                 new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.", false),
                 new OptionData(OptionType.BOOLEAN, "exclude-mainland", "Whether or not to exclude mainland regions from the game.", false),
                 new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether or not to exclude countries from the game.", false),
-                new OptionData(OptionType.BOOLEAN, "exclude-territories", "Whether or not to exclude territories from the game.", false)
+                new OptionData(OptionType.BOOLEAN, "include-territories", "Whether or not to include territories from the game.", false)
         );
     }
 
@@ -101,9 +101,9 @@ public class GuessRegionBorderCommand extends CoreCommand {
         boolean excludeIslands = event.getOption("exclude-islands", false, OptionMapping::getAsBoolean);
         boolean excludeMainland = event.getOption("exclude-mainland", false, OptionMapping::getAsBoolean);
         boolean excludeCountries = event.getOption("exclude-countries", false, OptionMapping::getAsBoolean);
-        boolean excludeTerritories = event.getOption("exclude-territories", false, OptionMapping::getAsBoolean);
+        boolean includeTerritories = event.getOption("include-territories", false, OptionMapping::getAsBoolean);
 
-        if (excludeIslands && excludeMainland && excludeCountries && excludeTerritories) {
+        if (excludeIslands && excludeMainland && excludeCountries && !includeTerritories) {
             reply(event, "❌ You cannot exclude all types of regions!", false, true);
             return;
         }
@@ -113,8 +113,8 @@ public class GuessRegionBorderCommand extends CoreCommand {
             return;
         }
 
-        if (excludeCountries && excludeTerritories) {
-            reply(event, "❌ You cannot exclude both countries and territories!", false, true);
+        if (excludeCountries && !includeTerritories) {
+            reply(event, "❌ You cannot exclude countries and not include territories!", false, true);
             return;
         }
 
@@ -129,7 +129,9 @@ public class GuessRegionBorderCommand extends CoreCommand {
 
         if (excludeCountries) {
             builder.excludeCountries();
-        } else if (excludeTerritories) {
+        }
+
+        if (!includeTerritories) {
             builder.excludeTerritories();
         }
 
