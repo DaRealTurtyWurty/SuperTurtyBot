@@ -130,7 +130,7 @@ public class TurtyBot {
 
         // Add file conversion manager so that we can convert files
         // TODO: Figure out FFmpeg on Ubuntu
-        builder.addEventListeners(FileConversionManager.INSTANCE);
+        // builder.addEventListeners(FileConversionManager.INSTANCE);
 
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);
