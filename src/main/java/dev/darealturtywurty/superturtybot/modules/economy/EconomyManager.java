@@ -178,7 +178,7 @@ public class EconomyManager {
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
         addMoney(account, earned, true);
 
-        if(ThreadLocalRandom.current().nextInt(100) == (int) (account.getJob().getPromotionChance() * 100)) {
+        if(ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
             account.setJobLevel(account.getJobLevel() + 1);
         }
 
