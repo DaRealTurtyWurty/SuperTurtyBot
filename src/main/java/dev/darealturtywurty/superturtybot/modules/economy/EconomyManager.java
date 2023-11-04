@@ -169,10 +169,7 @@ public class EconomyManager {
     public static int work(Economy account) {
         if (!canWork(account)) return 0;
 
-        int salary = account.getJob().getSalary();
-        int jobLevel = account.getJobLevel();
-        float multiplier = account.getJob().getPromotionMultiplier() + 1;
-        int amount = Math.round(salary * (1 + (jobLevel * multiplier)));
+        int amount = getPayAmount(account);
         int earned = Math.max(10, amount);
 
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
@@ -184,6 +181,13 @@ public class EconomyManager {
 
         updateAccount(account);
         return amount;
+    }
+
+    public static int getPayAmount(Economy account) {
+        int salary = account.getJob().getSalary();
+        int jobLevel = account.getJobLevel();
+        float multiplier = account.getJob().getPromotionMultiplier() + 1;
+        return Math.round(salary * (1 + (jobLevel * multiplier)));
     }
 
     public static boolean registerJob(Economy account, String job) {
@@ -216,7 +220,7 @@ public class EconomyManager {
         builder.setTitle("Job Profile");
         builder.addField("Job", WordUtils.capitalize(account.getJob().name().toLowerCase()), false);
         builder.addField("Level", String.valueOf(account.getJobLevel()), false);
-        builder.addField("Salary", String.format("$%d", account.getJob().getSalary()), false);
+        builder.addField("Salary", String.format("$%d", Math.max(10, getPayAmount(account))), false);
         builder.addField("Promotion Multiplier", String.format("x%.2f", account.getJob().getPromotionMultiplier()),
                 false);
         builder.addField("Work Cooldown", String.format("%d seconds", account.getJob().getWorkCooldownSeconds()),
