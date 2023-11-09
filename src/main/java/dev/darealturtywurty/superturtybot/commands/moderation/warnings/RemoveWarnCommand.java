@@ -5,12 +5,12 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import org.apache.commons.math3.util.Pair;
 
 import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -99,7 +99,7 @@ public class RemoveWarnCommand extends CoreCommand {
             embed.setTitle(user.getName() + "'s warn has been removed!");
             embed.setDescription(
                 "Warn Reason: " + warn.getReason() + "\nOriginal Warner: " + warner.getAsMention() + "\nWarned At: "
-                    + StringUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))
+                    + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))
                     + "\nWarn UUID: " + warn.getUuid() + "\nRemoved By: " + event.getMember().getAsMention()
                     + "\nRemoval Reason: " + reason);
             event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();

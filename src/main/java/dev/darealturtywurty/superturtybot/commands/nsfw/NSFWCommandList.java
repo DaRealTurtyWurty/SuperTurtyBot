@@ -2,9 +2,9 @@ package dev.darealturtywurty.superturtybot.commands.nsfw;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.FileUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,11 +17,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +29,6 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand.addRegenerateButton;
 
@@ -98,7 +97,7 @@ public class NSFWCommandList {
         cmds.add(new NSFWReddit("teen", "legalteens", "collegesluts", "adorableporn", "legalteensXXX", "gonewild18",
                 "18_19", "just18", "PornStarletHQ", "fauxbait", "barelylegalteens"));
         cmds.add(new NSFWReddit("thigh", "Thick", "Curvy", "DatGap", "TheRatio", "ThickThighs", "Legs"));
-        cmds.add(new NSFWReddit("trap", "traps", "Tgirls", "gonewildtrans", "tgifs", "shemales", "femboys",
+        cmds.add(new NSFWReddit("trap", "traps", "Tgirls", "gonewildtrans", "tgifs", "shemales",
                 "transporn"));
         cmds.add(new NSFWReddit("boobjob", "titfuck", "clothedtitfuck"));
         cmds.add(new NSFWReddit("petite", "Petite", "XSmallGirls", "BustyPetite", "dirtysmall", "petitegonewild",
@@ -120,6 +119,7 @@ public class NSFWCommandList {
                 "OverwatchRule34", "overwatch_hentai"));
         cmds.add(new NSFWReddit("apex", "ApexHorizonR34", "ApexValkyrieR34", "ApexLegends_Porn"));
         cmds.add(new NSFWReddit("valorant", "valorantrule34"));
+        cmds.add(new NSFWReddit("femboy", "FemBoys", "Sissies", "FemboyHentai"));
         cmds.add(new NSFWReddit("random", "gonewild", "nsfw", "RealGirls", "NSFW_GIF", "holdthemoan", "BustyPetite",
                 "cumsluts", "PetiteGoneWild", "adorableporn", "nsfw_gifs", "GirlsFinishingTheJob", "AsiansGoneWild",
                 "rule34", "collegesluts", "Amateur", "BiggerThanYouThought", "hentai", "TittyDrop",
@@ -620,7 +620,7 @@ public class NSFWCommandList {
                 "submissivemen", "SelfPiss", "BlueBones", "petgirls", "nudists", "rule34_abuse", "NikkiSapphire",
                 "CelebsUnveiling", "PrincessKelsxo", "HungTraps", "LexiVixi", "beautifulbutt", "LittleBritt",
                 "BatmanPorn", "CalvinSelfies", "tsporn", "tgirl_frot", "Susann", "kdramafap", "FlashingTheGoods",
-                "AspenReign", "lostlilkitty", "sexycellulite", "FemboyGalleries", "nsfw_messages", "GirlsWithBigHats",
+                "AspenReign", "lostlilkitty", "sexycellulite", "nsfw_messages", "GirlsWithBigHats",
                 "Pornstar_VS_Pornstar", "ChocolateStarfish", "YouTubeFakes", "PornGifsbyBot", "hairymilfs",
                 "Amateur_Bitches", "Amateurselfpic", "SexyStarWars", "Feetup", "Zelda_Romance", "Plumpers",
                 "hotlatinas", "NordicWomen", "javure", "SoftcoreJapan", "EdmontonGoneWild", "MasturbatorsAnonymous",
@@ -1050,16 +1050,18 @@ public class NSFWCommandList {
             if (event.hook().getInteraction().isFromGuild() && Objects.requireNonNull(
                             Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
                     .inAudioChannel()) {
-                AudioManager.play(event.hook().getInteraction().getGuild(),
-                        event.hook().getInteraction().getMember().getVoiceState().getChannel(),
-                        Path.of(FBI_AUDIO).toFile());
+                try {
+                    AudioManager.play(event.hook().getInteraction().getGuild(),
+                            event.hook().getInteraction().getMember().getVoiceState().getChannel(),
+                            Path.of(FBI_AUDIO).toUri().toURL());
+                } catch (MalformedURLException exception) {
+                    Constants.LOGGER.info("Failed to load file: '{}'", FBI_AUDIO);
+                }
             }
         });
 
-        // TODO: Fix not working when built
+        // TODO: Test if it works when built
         map.put("orgasm", event -> {
-            final String PATH = "src/main/resources/audio/orgasms/";
-
             if (!event.hook().getInteraction().isFromGuild() || !Objects.requireNonNull(
                             Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
                     .inAudioChannel()) {
@@ -1068,20 +1070,10 @@ public class NSFWCommandList {
                 return;
             }
 
-            List<File> files;
-            try (Stream<Path> paths = Files.list(Path.of(PATH))) {
-                files = paths.map(Path::toFile).collect(Collectors.toList());
-            } catch (final IOException exception) {
-                event.hook().editOriginal(
-                        "There has been an issue with the `" + Environment.INSTANCE.defaultPrefix().orElse("") + "orgasm` command! Please report the following to the bot owner:\n" + exception.getMessage() + "\n" + ExceptionUtils.getMessage(
-                                exception)).setFiles().setComponents().setEmbeds().queue();
-                return;
-            }
-
-            Collections.shuffle(files);
+            List<URL> files = FileUtils.locateResourceFiles("audio/orgasms");
             AudioManager.play(event.hook().getInteraction().getGuild(),
                     event.hook().getInteraction().getMember().getVoiceState().getChannel(),
-                    files.get(0));
+                    files.get(ThreadLocalRandom.current().nextInt(files.size())));
         });
 
         map.put("rule34", event -> {

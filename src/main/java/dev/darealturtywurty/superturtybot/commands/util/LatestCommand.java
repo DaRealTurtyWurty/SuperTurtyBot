@@ -4,8 +4,8 @@ import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.CoupledPair;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -137,7 +137,7 @@ public class LatestCommand extends CoreCommand {
                 var embed = new EmbedBuilder()
                         .setTitle("Latest Parchment Version")
                         .addField("Version", version.version(), true)
-                        .addField("Minecraft Version", version.version(), true);
+                        .addField("Minecraft Version", version.version().split("-")[1], true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -179,7 +179,7 @@ public class LatestCommand extends CoreCommand {
 
                 if (parchmentResponse.isLeft()) {
                     ParchmentVersion version = parchmentResponse.getLeft();
-                    embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version(), false);
+                    embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
                 } else {
                     embed.addField("Parchment", "Failed to get latest Parchment version!", false);
                 }

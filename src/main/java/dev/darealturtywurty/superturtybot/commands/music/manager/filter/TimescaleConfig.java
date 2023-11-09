@@ -17,7 +17,7 @@ public class TimescaleConfig extends FilterConfig {
         try {
             load.run();
             return true;
-        } catch(Throwable error) {
+        } catch (Throwable error) {
             return false;
         }
     }
@@ -35,7 +35,7 @@ public class TimescaleConfig extends FilterConfig {
     }
 
     public void setSpeed(float speed) {
-        if(speed <= 0) {
+        if (speed <= 0) {
             throw new IllegalArgumentException("speed <= 0");
         }
         this.speed = speed;
@@ -46,7 +46,7 @@ public class TimescaleConfig extends FilterConfig {
     }
 
     public void setPitch(float pitch) {
-        if(pitch <= 0) {
+        if (pitch <= 0) {
             throw new IllegalArgumentException("pitch <= 0");
         }
         this.pitch = pitch;
@@ -57,7 +57,7 @@ public class TimescaleConfig extends FilterConfig {
     }
 
     public void setRate(float rate) {
-        if(rate <= 0) {
+        if (rate <= 0) {
             throw new IllegalArgumentException("rate <= 0");
         }
         this.rate = rate;

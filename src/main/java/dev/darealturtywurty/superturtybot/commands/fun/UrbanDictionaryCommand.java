@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;

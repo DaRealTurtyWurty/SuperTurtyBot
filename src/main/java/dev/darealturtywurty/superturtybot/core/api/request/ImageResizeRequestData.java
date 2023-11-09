@@ -1,7 +1,10 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
+
 import java.util.Optional;
 
+@Getter
 public class ImageResizeRequestData {
     private final Optional<Integer> width;
     private final Optional<Integer> height;
@@ -11,18 +14,6 @@ public class ImageResizeRequestData {
         this.url = url;
         this.width = Optional.ofNullable(width);
         this.height = Optional.ofNullable(height);
-    }
-
-    public Optional<Integer> getWidth() {
-        return width;
-    }
-
-    public Optional<Integer> getHeight() {
-        return height;
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public static class Builder {

@@ -1,5 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
+
+@Getter
 public class ImageFlagifyRequestData {
     private final int colors;
     private final String url;
@@ -7,14 +10,6 @@ public class ImageFlagifyRequestData {
     private ImageFlagifyRequestData(String url, int colors) {
         this.url = url;
         this.colors = colors;
-    }
-
-    public int getColors() {
-        return colors;
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public static class Builder {

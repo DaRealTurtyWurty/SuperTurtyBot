@@ -10,7 +10,7 @@ import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
-// TODO: Have this actually work as a subscription
+// TODO: Have this poll every 5 minutes or so
 public class RedditListener {
     private static final RssReader READER = new RssReader();
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);

@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bson.conversions.Bson;
 

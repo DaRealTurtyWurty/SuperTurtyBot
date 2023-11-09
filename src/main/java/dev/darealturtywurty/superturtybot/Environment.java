@@ -167,6 +167,10 @@ public final class Environment {
         }
     }
 
+    public boolean isDevelopment() {
+        return getString("ENVIRONMENT").map(env -> env.equalsIgnoreCase("development")).orElse(false);
+    }
+
     public void print() {
         this.env.entries(Dotenv.Filter.DECLARED_IN_ENV_FILE)
                 .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));

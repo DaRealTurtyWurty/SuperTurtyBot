@@ -28,7 +28,7 @@ import com.google.gson.JsonObject;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.BotUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;

@@ -1,29 +1,21 @@
 package dev.darealturtywurty.superturtybot.modules;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import lombok.Getter;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.filter.CommitTimeRevFilter;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -33,10 +25,16 @@ import java.util.List;
 
 public class ChangelogFetcher {
     public static final ChangelogFetcher INSTANCE = new ChangelogFetcher();
+
+    // TODO: Make this configurable, because otherwise it doesn't work with docker
     private final Path lastStartTimePath = Paths.get(System.getProperty("user.dir"), "lastStartTime.txt");
 
+    @Getter
     private final List<String> changelog = new ArrayList<>();
-    private final long startTime, lastStartTime;
+    @Getter
+    private final long startTime;
+    @Getter
+    private final long lastStartTime;
 
     private ChangelogFetcher() {
         this.startTime = System.currentTimeMillis();
@@ -67,18 +65,53 @@ public class ChangelogFetcher {
 
     private void fetchChangelog() {
         try {
-            FileRepositoryBuilder builder = new FileRepositoryBuilder();
-            Repository repo = builder.setGitDir(new File(".git")).setMustExist(true).build();
-            Git git = new Git(repo);
-            Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(this.lastStartTime)).call();
-            for (RevCommit commit : logs) {
-                String message = commit.getFullMessage();
-                if (message.startsWith("Merge")) continue;
+            Path gitpath = Paths.get("../git");
+            if(Files.exists(gitpath) && Files.isDirectory(gitpath))
+                return;
 
-                Date date = commit.getAuthorIdent().getWhen();
-                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
-                this.changelog.add(commitMessage);
+            CloneCommand cloneCommand = Git.cloneRepository();
+            cloneCommand.setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git");
+            cloneCommand.setDirectory(gitpath.toFile());
+            try (Git git = cloneCommand.call()) {
+                Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(this.lastStartTime)).call();
+                for (RevCommit commit : logs) {
+                    String message = commit.getShortMessage();
+
+                    // Dependabot commits
+                    // format:
+                    // Bumps com.github.oshi:oshi-core from 6.4.6 to 6.4.7.- Release notes- Changelog- Commits
+                    // Bumps net.dv8tion:JDA from 5.0.0-beta.16 to 5.0.0-beta.17.- Release notes- Commits
+                    if (commit.getAuthorIdent().getName().equals("dependabot[bot]") || commit.getAuthorIdent().getName().equals("dependabot-preview[bot]")) {
+                        try {
+                            System.out.println(message);
+
+                            String dependency = message.split("from")[0]
+                                    .replace("Bumps ", "")
+                                    .replace("Merges ", "")
+                                    .replace("Updates ", "")
+                                    .trim();
+
+                            String fromVersion = message.split("from")[1].split("to")[0].trim();
+                            String toVersion = message.split("to")[1].split("- ")[0].trim();
+
+                            message = "Updated %s from %s to %s".formatted(dependency, fromVersion, toVersion);
+                        } catch (IndexOutOfBoundsException exception) {
+                            message = "Updated a dependency";
+                        }
+                    } else if (message.startsWith("Merge")) continue;
+
+                    Date date = commit.getAuthorIdent().getWhen();
+                    String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
+                    this.changelog.add(commitMessage);
+                }
             }
+
+            // Delete the git folder
+            if (Files.notExists(gitpath) || !Files.isDirectory(gitpath))
+                return;
+
+            FileUtils.deleteDirectory(gitpath.toFile());
+            Files.deleteIfExists(gitpath);
         } catch (IOException | GitAPIException exception) {
             Constants.LOGGER.error("Failed to fetch git changes", exception);
         }
@@ -90,10 +123,6 @@ public class ChangelogFetcher {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to save 'lastStartTime.txt' file", exception);
         }
-    }
-
-    public List<String> getChangelog() {
-        return this.changelog;
     }
 
     public String getFormattedChangelog() {
@@ -109,14 +138,6 @@ public class ChangelogFetcher {
         }
 
         return sb.toString();
-    }
-
-    public long getStartTime() {
-        return this.startTime;
-    }
-
-    public long getLastStartTime() {
-        return this.lastStartTime;
     }
 
     public static String formatMillis(long millis) {

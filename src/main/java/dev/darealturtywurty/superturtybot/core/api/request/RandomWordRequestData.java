@@ -1,9 +1,11 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
+@Getter
 public class RandomWordRequestData {
     private final Optional<Integer> length, minLength, maxLength;
     private final Optional<String> startsWith;
@@ -15,26 +17,6 @@ public class RandomWordRequestData {
         this.maxLength = Optional.ofNullable(maxLength);
         this.startsWith = Optional.ofNullable(startsWith);
         this.amount = Optional.ofNullable(amount);
-    }
-
-    public Optional<Integer> getLength() {
-        return length;
-    }
-
-    public Optional<Integer> getMinLength() {
-        return minLength;
-    }
-
-    public Optional<Integer> getMaxLength() {
-        return maxLength;
-    }
-
-    public Optional<String> getStartsWith() {
-        return startsWith;
-    }
-
-    public Optional<Integer> getAmount() {
-        return amount;
     }
 
     public static class Builder {

@@ -100,6 +100,7 @@ public class MathUtils {
         return value.min(BigDecimal.ZERO);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends Number> T genericClamp(T value, T min, T max) {
         if (value instanceof Integer intV)
             return (T) Integer.valueOf(clamp(intV, min.intValue(), max.intValue()));

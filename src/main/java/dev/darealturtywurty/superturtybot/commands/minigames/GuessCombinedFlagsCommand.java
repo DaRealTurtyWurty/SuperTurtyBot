@@ -6,7 +6,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestD
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.Either;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -64,7 +64,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(
                 new OptionData(OptionType.INTEGER, "number", "The number of flags to combine", false).setRequiredRange(2, 16),
-                new OptionData(OptionType.BOOLEAN, "exclude-territories", "Whether to exclude territories", false),
+                new OptionData(OptionType.BOOLEAN, "include-territories", "Whether to include territories", false),
                 new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether to exclude countries", false)
         );
     }
@@ -94,10 +94,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        boolean excludeTerritories = event.getOption("exclude-territories", false, OptionMapping::getAsBoolean);
+        boolean includeTerritories = event.getOption("include-territories", false, OptionMapping::getAsBoolean);
         boolean excludeCountries = event.getOption("exclude-countries", false, OptionMapping::getAsBoolean);
-        if (excludeTerritories && excludeCountries) {
-            event.getHook().sendMessage("❌ You cannot exclude both territories and countries!").queue();
+        if (!includeTerritories && excludeCountries) {
+            event.getHook().sendMessage("❌ You cannot both include territories and exclude countries!").queue();
             return;
         }
 
@@ -105,10 +105,12 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         final Map<String, BufferedImage> regions = new HashMap<>(numberOfRegions);
 
         RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
-        if (excludeTerritories) {
-            builder.excludeTerritories();
-        } else if (excludeCountries) {
+        if (excludeCountries) {
             builder.excludeCountries();
+        }
+
+        if (!includeTerritories) {
+            builder.excludeTerritories();
         }
 
         RegionExcludeRequestData data = builder.build();

@@ -22,10 +22,10 @@ public class VibratoConfig extends FilterConfig {
     }
 
     public void setFrequency(float frequency) {
-        if(frequency <= 0) {
+        if (frequency <= 0) {
             throw new IllegalArgumentException("Frequency <= 0");
         }
-        if(frequency > VIBRATO_FREQUENCY_MAX_HZ) {
+        if (frequency > VIBRATO_FREQUENCY_MAX_HZ) {
             throw new IllegalArgumentException("Frequency > max (" + VIBRATO_FREQUENCY_MAX_HZ + ")");
         }
         this.frequency = frequency;
@@ -36,10 +36,10 @@ public class VibratoConfig extends FilterConfig {
     }
 
     public void setDepth(float depth) {
-        if(depth <= 0) {
+        if (depth <= 0) {
             throw new IllegalArgumentException("Depth <= 0");
         }
-        if(depth > 1) {
+        if (depth > 1) {
             throw new IllegalArgumentException("Depth > 1");
         }
         this.depth = depth;

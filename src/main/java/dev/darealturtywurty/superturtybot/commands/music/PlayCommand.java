@@ -1,36 +1,31 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.mongodb.client.model.Filters;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
+import dev.darealturtywurty.superturtybot.commands.music.manager.data.youtube.YouTubeSearchResult;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.YoutubeResultsCallback;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.Either3;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import okhttp3.*;
+import okhttp3.Request;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayCommand extends CoreCommand {
@@ -112,9 +107,7 @@ public class PlayCommand extends CoreCommand {
             }
 
             event.replyChoices(results.stream().map(YouTubeSearchResult::toChoice).toList()).queue();
-        });
-
-        searchResults.exceptionally(throwable -> {
+        }).exceptionally(throwable -> {
             event.replyChoices().queue();
             Constants.LOGGER.error("Failed to search youtube!", throwable);
             return null;
@@ -171,16 +164,25 @@ public class PlayCommand extends CoreCommand {
                 Database.getDatabase().guildConfig.insertOne(config);
             }
 
+            long songsForUser = 0;
+            AudioTrack currentTrack = AudioManager.getCurrentlyPlaying(event.getGuild());
+            if(currentTrack != null) {
+                TrackData data = currentTrack.getUserData(TrackData.class);
+                if(data != null && data.getUserId() == event.getUser().getIdLong()) {
+                    songsForUser++;
+                }
+            }
+
             if(queue.size() > config.getMaxSongsPerUser()) {
-                long forUser = queue.stream().filter(track -> {
+                songsForUser += queue.stream().filter(track -> {
                     TrackData data = track.getUserData(TrackData.class);
                     return data != null && data.getUserId() == event.getUser().getIdLong();
                 }).count();
+            }
 
-                if(forUser >= config.getMaxSongsPerUser()) {
-                    event.getHook().editOriginal("❌ You have reached the maximum amount of songs you can queue!").queue();
-                    return;
-                }
+            if(songsForUser >= config.getMaxSongsPerUser()) {
+                event.getHook().editOriginal("❌ You have reached the maximum amount of songs you can queue!").queue();
+                return;
             }
         }
 
@@ -197,117 +199,19 @@ public class PlayCommand extends CoreCommand {
 
     public static CompletableFuture<List<YouTubeSearchResult>> youtubeSearch(String term) {
         final CompletableFuture<List<YouTubeSearchResult>> future = new CompletableFuture<>();
-        Constants.HTTP_CLIENT.newCall(
-                new Request.Builder().url(YOUTUBE_SEARCH_API.formatted(Environment.INSTANCE.youtubeApiKey().get(), term))
-                        .build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException exception) {
-                future.completeExceptionally(new IllegalStateException("Failed to search youtube!", exception));
-            }
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                ResponseBody responseBody = response.body();
-                if (!response.isSuccessful() || responseBody == null) {
-                    future.completeExceptionally(new IllegalStateException("Failed to search youtube!"));
-                    return;
-                }
+        if(Environment.INSTANCE.youtubeApiKey().isEmpty()) {
+            future.completeExceptionally(new IllegalStateException("Youtube API key is not set!"));
+            Constants.LOGGER.error("❌ Youtube API key is not set!");
+            return future;
+        }
 
-                final String body = responseBody.string();
-                JsonObject json = Constants.GSON.fromJson(body, JsonObject.class);
-                JsonArray items = json.getAsJsonArray("items");
-                future.complete(
-                        items.asList().stream().map(JsonElement::getAsJsonObject).map(YouTubeSearchResult::fromJson)
-                                .toList());
-            }
-        });
-
+        String url = YOUTUBE_SEARCH_API.formatted(Environment.INSTANCE.youtubeApiKey().get(), term);
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        Constants.HTTP_CLIENT.newCall(request).enqueue(new YoutubeResultsCallback(future));
         return future;
-    }
-
-    public record YouTubeSearchResult(String kind, String etag, YouTubeSearchResultId id,
-                                      YouTubeSearchResultSnippet snippet) {
-        public static YouTubeSearchResult fromJson(JsonObject obj) {
-            String kind = obj.get("kind").getAsString();
-            String etag = obj.get("etag").getAsString();
-            var id = YouTubeSearchResultId.fromJson(obj.getAsJsonObject("id"));
-            var snippet = YouTubeSearchResultSnippet.fromJson(obj.getAsJsonObject("snippet"));
-            return new YouTubeSearchResult(kind, etag, id, snippet);
-        }
-
-        public Command.Choice toChoice() {
-            return new Command.Choice(snippet.title(),
-                    "https://www.youtube.com/watch?v=" + id.videoOrChannelOrPlaylistId().left().orElse("dQw4w9WgXcQ"));
-        }
-    }
-
-    public record YouTubeSearchResultId(String kind, Either3<String, String, String> videoOrChannelOrPlaylistId) {
-        public static YouTubeSearchResultId fromJson(JsonObject obj) {
-            String kind = obj.get("kind").getAsString();
-            return switch (kind) {
-                case "youtube#video" -> new YouTubeSearchResultId(kind, Either3.left(obj.get("videoId").getAsString()));
-                case "youtube#channel" ->
-                        new YouTubeSearchResultId(kind, Either3.middle(obj.get("channelId").getAsString()));
-                case "youtube#playlist" ->
-                        new YouTubeSearchResultId(kind, Either3.right(obj.get("playlistId").getAsString()));
-                default -> throw new IllegalStateException("Unknown kind: " + kind);
-            };
-        }
-    }
-
-    public record YouTubeSearchResultSnippet(String publishedAt, String channelId, String title, String description,
-                                             YouTubeSearchResultSnippetThumbnails thumbnails, String channelTitle,
-                                             String liveBroadcastContent, String publishTime) {
-        public static YouTubeSearchResultSnippet fromJson(JsonObject obj) {
-            String publishedAt = obj.get("publishedAt").getAsString();
-            String channelId = obj.get("channelId").getAsString();
-            String title = obj.get("title").getAsString();
-            String description = obj.get("description").getAsString();
-            var thumbnails = YouTubeSearchResultSnippetThumbnails.fromJson(obj.getAsJsonObject("thumbnails"));
-            String channelTitle = obj.get("channelTitle").getAsString();
-            String liveBroadcastContent = obj.get("liveBroadcastContent").getAsString();
-            String publishTime = obj.get("publishTime").getAsString();
-            return new YouTubeSearchResultSnippet(publishedAt, channelId, title, description, thumbnails, channelTitle,
-                    liveBroadcastContent, publishTime);
-        }
-    }
-
-    public record YouTubeSearchResultSnippetThumbnails(Optional<YouTubeSearchResultSnippetThumbnail> defaultThumbnail,
-                                                       Optional<YouTubeSearchResultSnippetThumbnail> medium,
-                                                       Optional<YouTubeSearchResultSnippetThumbnail> high) {
-        public static YouTubeSearchResultSnippetThumbnails fromJson(JsonObject obj) {
-            Optional<YouTubeSearchResultSnippetThumbnail> defaultThumbnail;
-            Optional<YouTubeSearchResultSnippetThumbnail> medium;
-            Optional<YouTubeSearchResultSnippetThumbnail> high;
-            try {
-                defaultThumbnail = Optional.of(
-                        YouTubeSearchResultSnippetThumbnail.fromJson(obj.getAsJsonObject("default")));
-            } catch (Exception exception) {
-                defaultThumbnail = Optional.empty();
-            }
-
-            try {
-                medium = Optional.of(YouTubeSearchResultSnippetThumbnail.fromJson(obj.getAsJsonObject("medium")));
-            } catch (Exception exception) {
-                medium = Optional.empty();
-            }
-
-            try {
-                high = Optional.of(YouTubeSearchResultSnippetThumbnail.fromJson(obj.getAsJsonObject("high")));
-            } catch (Exception exception) {
-                high = Optional.empty();
-            }
-
-            return new YouTubeSearchResultSnippetThumbnails(defaultThumbnail, medium, high);
-        }
-    }
-
-    public record YouTubeSearchResultSnippetThumbnail(String url, int width, int height) {
-        public static YouTubeSearchResultSnippetThumbnail fromJson(JsonObject obj) {
-            String url = obj.get("url").getAsString();
-            int width = obj.get("width").getAsInt();
-            int height = obj.get("height").getAsInt();
-            return new YouTubeSearchResultSnippetThumbnail(url, width, height);
-        }
     }
 }

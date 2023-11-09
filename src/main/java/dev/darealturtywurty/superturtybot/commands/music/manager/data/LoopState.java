@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.music.manager.data;
 
+import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,23 +10,17 @@ public enum LoopState {
     NONE, SINGLE, ALL;
 
     public static @Nullable LoopState fromString(@Nullable String state) {
-        if (state == null || state.isBlank()) {
+        if (state == null || state.isBlank())
+            return null;
+
+        try {
+            return LoopState.valueOf(state.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
             return null;
         }
-
-        return switch (state.toLowerCase(Locale.ROOT)) {
-            case "none" -> NONE;
-            case "single" -> SINGLE;
-            case "all" -> ALL;
-            default -> null;
-        };
     }
 
     public static String asString(@NotNull LoopState state) {
-        return switch (state) {
-            case NONE -> "None";
-            case SINGLE -> "Single";
-            case ALL -> "All";
-        };
+        return WordUtils.capitalize(state.name().toLowerCase(Locale.ROOT));
     }
 }

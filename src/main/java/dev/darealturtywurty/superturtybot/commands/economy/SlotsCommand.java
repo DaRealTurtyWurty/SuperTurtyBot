@@ -1,6 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import dev.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
+import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;

@@ -21,7 +21,7 @@ public class TremoloConfig extends FilterConfig {
     }
 
     public void setFrequency(float frequency) {
-        if(frequency <= 0) {
+        if (frequency <= 0) {
             throw new IllegalArgumentException("Frequency <= 0");
         }
         this.frequency = frequency;
@@ -32,10 +32,10 @@ public class TremoloConfig extends FilterConfig {
     }
 
     public void setDepth(float depth) {
-        if(depth <= 0) {
+        if (depth <= 0) {
             throw new IllegalArgumentException("Depth <= 0");
         }
-        if(depth > 1) {
+        if (depth > 1) {
             throw new IllegalArgumentException("Depth > 1");
         }
         this.depth = depth;

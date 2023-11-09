@@ -64,8 +64,8 @@ public class GuessSexPositionCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.getChannel().asTextChannel().isNSFW()) {
-            event.deferReply(true).setContent("This command can only be used in NSFW channels!").queue();
+        if (!NSFWCommand.isValidChannel(event.getChannel())) {
+            event.deferReply(true).setContent("❌ This command can only be used in NSFW channels!").queue();
             return;
         }
 
@@ -74,18 +74,18 @@ public class GuessSexPositionCommand extends CoreCommand {
             GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
                     .first();
             if (config == null) {
-                event.deferReply(true).setContent("This server has not been configured yet!").queue();
+                event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
                 return;
             }
 
             List<Long> enabledChannels = GuildConfig.getChannels(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
-                event.deferReply(true).setContent("This server has no NSFW channels configured!").queue();
+                event.deferReply(true).setContent("❌ This server has no NSFW channels configured!").queue();
                 return;
             }
 
             if (!enabledChannels.contains(event.getChannel().getIdLong())) {
-                event.deferReply(true).setContent("This channel is not configured as an NSFW channel!").queue();
+                event.deferReply(true).setContent("❌ This channel is not configured as an NSFW channel!").queue();
                 return;
             }
         }
@@ -93,7 +93,7 @@ public class GuessSexPositionCommand extends CoreCommand {
         SexPosition position = SexPosition.values()[ThreadLocalRandom.current().nextInt(SexPosition.values().length)];
         String url = getRandomImage(position.chooseRandomUrl());
         if (url == null) {
-            event.deferReply(true).setContent("Failed to get a random image!").queue();
+            event.deferReply(true).setContent("❌ Failed to get a random image!").queue();
             return;
         }
 
@@ -175,7 +175,7 @@ public class GuessSexPositionCommand extends CoreCommand {
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) return;
 
-        if (!event.getChannel().asTextChannel().isNSFW()) return;
+        if (NSFWCommand.isValidChannel(event.getChannel())) return;
 
         String id = event.getComponentId();
         String[] split = id.split("-");
@@ -189,7 +189,6 @@ public class GuessSexPositionCommand extends CoreCommand {
         if (event.getUser().getIdLong() != userId) return;
 
         if (type.equals("position_tile") && replyId == event.getMessageIdLong()) {
-            // TODO: Consider whether or not this might be database-worthy
             SexPositionGame game = GAMES.stream()
                     .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
                             .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
@@ -270,7 +269,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                 event.editSelectMenu(tileSelectMenu.build()).queue();
             }
 
-            event.getChannel().asTextChannel().editMessageAttachmentsById(messageId, upload).queue();
+            event.getChannel().asGuildMessageChannel().editMessageAttachmentsById(messageId, upload).queue();
         } else if (type.equals("position_select_menu") && messageId == event.getMessageIdLong()) {
             SexPositionGame game = GAMES.stream()
                     .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
@@ -330,7 +329,7 @@ public class GuessSexPositionCommand extends CoreCommand {
 
             var upload = FileUpload.fromData(boas.toByteArray(), "sex_position.jpg");
             event.getMessage().editMessageComponents().setFiles(upload).queue();
-            event.getChannel().asTextChannel().deleteMessageById(replyId).queue();
+            event.getChannel().asGuildMessageChannel().deleteMessageById(replyId).queue();
         }
     }
 

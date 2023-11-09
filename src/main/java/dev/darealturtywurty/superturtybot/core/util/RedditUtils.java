@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.squareup.moshi.JsonDataException;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import kotlin.text.Charsets;
 import net.dean.jraw.ApiException;
 import net.dean.jraw.RedditClient;
@@ -33,7 +34,7 @@ public final class RedditUtils {
     public static RedditClient REDDIT;
 
     static {
-        if(Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
+        if (Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
             final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
                     Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
             final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot", "1.0.0-alpha", "TurtyWurty");
@@ -43,7 +44,7 @@ public final class RedditUtils {
     }
 
     private RedditUtils() {
-        throw new IllegalAccessError("This is illegal, expect police at your door in 2-5 minutes!");
+        throw new IllegalAccessError("Cannot access private constructor!");
     }
 
     @Nullable
@@ -59,11 +60,16 @@ public final class RedditUtils {
         }
 
         var embed = new EmbedBuilder();
-        embed.setTitle(new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array()));
-        embed.setDescription(post.getSubject().getBody());
+        String title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
+        embed.setTitle(title.length() > 256 ? title.substring(0, 256) : title);
+
+        String description = post.getSubject().getBody();
+        if (description != null) {
+            embed.setDescription(description.length() > 4096 ? description.substring(0, 4096) : description);
+        }
 
         if (post.getSubject().getPreview() != null) {
-            if(post.getSubject().getPreview().getImages().size() > 1) {
+            if (post.getSubject().getPreview().getImages().size() > 1) {
                 List<String> images = post.getSubject().getPreview().getImages().stream()
                         .map(SubmissionPreview.ImageSet::getSource).map(SubmissionPreview.Variation::getUrl)
                         .map(url -> url.replace("external-preview", "i").replace("preview", "i")).toList();
@@ -75,7 +81,7 @@ public final class RedditUtils {
                 .getUrl();
         if (mediaURL == null || mediaURL.isBlank()) return null;
 
-        if(mediaURL.contains("reddit.com/gallery")) {
+        if (mediaURL.contains("reddit.com/gallery")) {
             String json = mediaURL.replace("gallery", "comments") + ".json";
             try {
                 URLConnection connection = new URL(json).openConnection();
@@ -98,7 +104,7 @@ public final class RedditUtils {
                 }
 
                 return Either.right(images);
-            } catch(IOException exception) {
+            } catch (IOException exception) {
                 exception.printStackTrace();
                 return null;
             }
@@ -114,7 +120,16 @@ public final class RedditUtils {
             if (mediaURL == null || mediaURL.isBlank()) return null;
         }
 
-        if (!mediaURL.isBlank() && verifyVideo(mediaURL)) {
+        // https://i.redgifs.com/i/respectfulrealisticdungenesscrab.jpg
+        // replace with
+        // https://www.redgifs.com/watch/respectfulrealisticdungenesscrab
+        if (mediaURL.matches("https://i\\.redgifs\\.com/i/.*\\.(jpg|png|gif)")) {
+            mediaURL = mediaURL.replace("https://i.redgifs.com/i/", "https://www.redgifs.com/watch/");
+            mediaURL = mediaURL.substring(0, mediaURL.lastIndexOf("."));
+            return Either.right(Collections.singletonList(mediaURL));
+        }
+
+        if (verifyVideo(mediaURL)) {
             mediaURL = StringUtils.replaceHTMLCodes(mediaURL);
             if (mediaURL.contains("redgifs") || mediaURL.contains("xvideos") || mediaURL.contains(
                     "xhamster") || mediaURL.contains("xxx") || mediaURL.contains("porn") || mediaURL.contains(

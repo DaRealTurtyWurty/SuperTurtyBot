@@ -208,6 +208,38 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         event.deferReply(defer).setContent(message).mentionRepliedUser(mention).queue();
     }
 
+    protected static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
+        event.reply(message).mentionRepliedUser(mention).queue();
+    }
+
+    protected static void reply(MessageContextInteractionEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    protected static void reply(MessageContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+    }
+
+    protected static void reply(MessageContextInteractionEvent event, EmbedBuilder embed) {
+        reply(event, embed, false);
+    }
+
+    protected static void reply(UserContextInteractionEvent event, String message, boolean mention) {
+        event.reply(message).mentionRepliedUser(mention).queue();
+    }
+
+    protected static void reply(UserContextInteractionEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    protected static void reply(UserContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+    }
+
+    protected static void reply(UserContextInteractionEvent event, EmbedBuilder embed) {
+        reply(event, embed, false);
+    }
+
     public record Types(boolean slash, boolean normal, boolean messageCtx, boolean userCtx) {
     }
 }

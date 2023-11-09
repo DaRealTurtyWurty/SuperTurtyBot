@@ -5,7 +5,6 @@ import java.time.Instant;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.BotUtils;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -72,12 +71,12 @@ public class ServerInfoCommand extends CoreCommand {
         
         embed.addField("Created", TimeFormat.RELATIVE.format(guild.getTimeCreated()), false);
         
-        embed.addField("Notification Level", BotUtils.convertNotificationLevel(guild.getDefaultNotificationLevel()),
+        embed.addField("Notification Level", StringUtils.convertNotificationLevel(guild.getDefaultNotificationLevel()),
             true);
-        embed.addField("Explicit Content Level", BotUtils.convertExplicitContentLevel(guild.getExplicitContentLevel()),
+        embed.addField("Explicit Content Level", StringUtils.convertExplicitContentLevel(guild.getExplicitContentLevel()),
             true);
-        embed.addField("NSFW Level", BotUtils.convertNSFWLevel(guild.getNSFWLevel()), true);
-        embed.addField("Verification Level", BotUtils.convertVerificationLevel(guild.getVerificationLevel()), true);
+        embed.addField("NSFW Level", StringUtils.convertNSFWLevel(guild.getNSFWLevel()), true);
+        embed.addField("Verification Level", StringUtils.convertVerificationLevel(guild.getVerificationLevel()), true);
         
         embed.addField("Owner", guild.getOwner().getAsMention(), true);
         embed.addField("Max File Size", String.format("%.2g", guild.getMaxFileSize() / 1000000f) + "MB", true);

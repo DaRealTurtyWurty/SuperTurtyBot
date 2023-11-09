@@ -6,7 +6,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.core.util.BotUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 
 public class RankCardItem implements Registerable {

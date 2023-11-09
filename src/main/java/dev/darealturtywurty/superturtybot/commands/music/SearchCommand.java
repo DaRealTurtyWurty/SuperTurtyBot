@@ -6,9 +6,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Either;
-import dev.darealturtywurty.superturtybot.core.util.PaginatedEmbed;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -95,7 +95,7 @@ public class SearchCommand extends CoreCommand {
                     }
 
                     String uri = track.getInfo().uri.trim();
-                    String duration = StringUtils.millisecondsFormatted(track.getDuration());
+                    String duration = TimeUtils.millisecondsFormatted(track.getDuration());
 
                     contents.field(title, "Artist: %s\nLink: %s\nDuration: [%s]".formatted(author, uri, duration));
                 }

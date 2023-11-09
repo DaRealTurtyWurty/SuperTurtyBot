@@ -9,7 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
@@ -77,8 +77,8 @@ public class NowPlayingCommand extends CoreCommand {
         embed.setTitle("Now Playing: " + nowPlaying.getInfo().title,
             nowPlaying.getInfo().uri.startsWith("http") ? nowPlaying.getInfo().uri : null);
         final int percentage = Math.round((float) nowPlaying.getPosition() / nowPlaying.getDuration() * 100);
-        embed.setDescription("[**" + StringUtils.millisecondsFormatted(nowPlaying.getPosition()) + "**/**"
-            + StringUtils.millisecondsFormatted(nowPlaying.getDuration()) + "**] "
+        embed.setDescription("[**" + TimeUtils.millisecondsFormatted(nowPlaying.getPosition()) + "**/**"
+            + TimeUtils.millisecondsFormatted(nowPlaying.getDuration()) + "**] "
             + makeProgresssBar(nowPlaying.getDuration(), nowPlaying.getPosition(), 12) + " (" + percentage + "%)");
         embed.setThumbnail("http://img.youtube.com/vi/" + nowPlaying.getIdentifier() + "/maxresdefault.jpg");
         embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());

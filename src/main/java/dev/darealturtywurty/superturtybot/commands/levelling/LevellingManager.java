@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.core.util.WeightedRandomBag;
+import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
@@ -126,6 +126,37 @@ public final class LevellingManager extends ListenerAdapter {
         return currentXP;
     }
 
+    public void removeXP(Guild guild, User toWarn, int xp) {
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", toWarn.getIdLong()));
+
+        Member member = guild.getMember(toWarn);
+        if (member == null)
+            return;
+
+        final Levelling userProfile = getProfile(guild, member);
+        final List<Bson> updates = new ArrayList<>();
+
+        final int level = userProfile.getLevel();
+        int currentXP = userProfile.getXp();
+        currentXP -= xp;
+
+        if (currentXP < 0) {
+            currentXP = 0;
+        }
+
+        userProfile.setXp(currentXP);
+        updates.add(Updates.set("xp", currentXP));
+
+        final int newLevel = getLevelForXP(currentXP);
+        if (newLevel < level) {
+            userProfile.setLevel(newLevel);
+            updates.add(Updates.set("level", newLevel));
+        }
+
+        Database.getDatabase().levelling.updateOne(filter, updates);
+        updateLevelRoles(guild, member, newLevel);
+    }
+
     private boolean cooldown(Guild guild, Member member, GuildConfig config) {
         this.cooldownMap.computeIfAbsent(guild.getIdLong(), id -> new ConcurrentHashMap<>());
         final Map<Long, Long> cooldowns = this.cooldownMap.get(guild.getIdLong());
@@ -210,6 +241,31 @@ public final class LevellingManager extends ListenerAdapter {
 
     public static int getXPForLevel(final int level) {
         return (int) (5 * Math.pow(level, 2) + 50 * level + 5);
+    }
+
+    public void setXP(Guild guild, User user1, int amount) {
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user1.getIdLong()));
+
+        Member member = guild.getMember(user1);
+        if (member == null)
+            return;
+
+        final Levelling userProfile = getProfile(guild, member);
+        final List<Bson> updates = new ArrayList<>();
+
+        final int level = userProfile.getLevel();
+
+        userProfile.setXp(amount);
+        updates.add(Updates.set("xp", amount));
+
+        final int newLevel = getLevelForXP(amount);
+        if (newLevel > level) {
+            userProfile.setLevel(newLevel);
+            updates.add(Updates.set("level", newLevel));
+        }
+
+        Database.getDatabase().levelling.updateOne(filter, updates);
+        updateLevelRoles(guild, member, newLevel);
     }
 
     private final class CooldownManager implements Runnable {

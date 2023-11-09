@@ -43,6 +43,7 @@ public class GuildConfig {
     private long suggestions;
     private String optInChannels;
     private String nsfwChannels;
+    private long birthdayChannel;
 
     // Showcases
     private long starboard;
@@ -68,8 +69,8 @@ public class GuildConfig {
 
     // Economy
     private String economyCurrency;
-    private int defaultBalance;
     private boolean economyEnabled;
+    private int defaultEconomyBalance;
 
     // Logging
     private long loggingChannel;
@@ -118,6 +119,9 @@ public class GuildConfig {
     private boolean warningsModeratorOnly;
     private long patronRole;
     private boolean shouldSendStartupMessage;
+    private float warningXpPercentage;
+    private float warningEconomyPercentage;
+    private boolean announceBirthdays;
 
     public GuildConfig() {
         this(0L);
@@ -131,6 +135,7 @@ public class GuildConfig {
         this.suggestions = 0L;
         this.optInChannels = "";
         this.nsfwChannels = "";
+        this.birthdayChannel = 0L;
 
         // Showcases
         this.starboard = 0L;
@@ -156,8 +161,8 @@ public class GuildConfig {
 
         // Economy
         this.economyCurrency = "$";
-        this.defaultBalance = 100;
         this.economyEnabled = true;
+        this.defaultEconomyBalance = 200;
 
         // Logging
         this.loggingChannel = 0L;
@@ -203,6 +208,9 @@ public class GuildConfig {
         this.chatRevivalEnabled = false;
         this.chatRevivalTime = 24;
         this.chatRevivalChannel = 0L;
+        this.warningXpPercentage = 0F;
+        this.warningEconomyPercentage = 0F;
+        this.announceBirthdays = true;
     }
 
     public boolean shouldLog(Event event) {

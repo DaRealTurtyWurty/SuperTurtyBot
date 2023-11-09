@@ -4,7 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.BotUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.RankCard;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
@@ -60,7 +60,7 @@ public class RankCommand extends CoreCommand {
 
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.MINUTES, 1L);
+        return Pair.of(TimeUnit.SECONDS, 30L);
     }
 
     @Override

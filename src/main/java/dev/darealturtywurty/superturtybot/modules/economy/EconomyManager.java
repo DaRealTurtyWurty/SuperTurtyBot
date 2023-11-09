@@ -55,7 +55,7 @@ public class EconomyManager {
         }
 
         final var economy = new Economy(guild.getIdLong(), user.getIdLong());
-        economy.setBank(config.getDefaultBalance());
+        economy.setBank(config.getDefaultEconomyBalance());
         Database.getDatabase().economy.insertOne(economy);
         return economy;
     }
@@ -120,11 +120,21 @@ public class EconomyManager {
             PublicShop.run();
         }
 
+        // TODO: Move to DailyTask
         EXECUTOR.scheduleAtFixedRate(() -> {
             Database.getDatabase().economy.find().into(new ArrayList<>()).stream()
                     .filter(account -> getBalance(account) < 0).forEach(account -> {
-                        //TODO: Get from guild config
-                        removeMoney(account, 200, true);
+                        Guild guild = jda.getGuildById(account.getGuild());
+                        if (guild == null)
+                            return;
+
+                        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                        if (config == null) {
+                            config = new GuildConfig(guild.getIdLong());
+                            Database.getDatabase().guildConfig.insertOne(config);
+                        }
+
+                        removeMoney(account, config.getDefaultEconomyBalance(), true);
                         updateAccount(account);
 
                         User user = jda.getUserById(account.getUser());
@@ -159,21 +169,25 @@ public class EconomyManager {
     public static int work(Economy account) {
         if (!canWork(account)) return 0;
 
-        int salary = account.getJob().getSalary();
-        int jobLevel = account.getJobLevel();
-        float multiplier = account.getJob().getPromotionMultiplier() + 1;
-        int amount = Math.round(salary * (1 + (jobLevel * multiplier)));
+        int amount = getPayAmount(account);
         int earned = Math.max(10, amount);
 
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
         addMoney(account, earned, true);
 
-        if(ThreadLocalRandom.current().nextInt(100) == (int) (account.getJob().getPromotionChance() * 100)) {
+        if(ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
             account.setJobLevel(account.getJobLevel() + 1);
         }
 
         updateAccount(account);
         return amount;
+    }
+
+    public static int getPayAmount(Economy account) {
+        int salary = account.getJob().getSalary();
+        int jobLevel = account.getJobLevel();
+        float multiplier = account.getJob().getPromotionMultiplier() + 1;
+        return Math.round(salary * (1 + (jobLevel * multiplier)));
     }
 
     public static boolean registerJob(Economy account, String job) {
@@ -206,7 +220,7 @@ public class EconomyManager {
         builder.setTitle("Job Profile");
         builder.addField("Job", WordUtils.capitalize(account.getJob().name().toLowerCase()), false);
         builder.addField("Level", String.valueOf(account.getJobLevel()), false);
-        builder.addField("Salary", String.format("$%d", account.getJob().getSalary()), false);
+        builder.addField("Salary", String.format("$%d", Math.max(10, getPayAmount(account))), false);
         builder.addField("Promotion Multiplier", String.format("x%.2f", account.getJob().getPromotionMultiplier()),
                 false);
         builder.addField("Work Cooldown", String.format("%d seconds", account.getJob().getWorkCooldownSeconds()),
