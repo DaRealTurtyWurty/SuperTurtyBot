@@ -25,6 +25,8 @@ import java.util.List;
 
 public class ChangelogFetcher {
     public static final ChangelogFetcher INSTANCE = new ChangelogFetcher();
+
+    // TODO: Make this configurable, because otherwise it doesn't work with docker
     private final Path lastStartTimePath = Paths.get(System.getProperty("user.dir"), "lastStartTime.txt");
 
     @Getter

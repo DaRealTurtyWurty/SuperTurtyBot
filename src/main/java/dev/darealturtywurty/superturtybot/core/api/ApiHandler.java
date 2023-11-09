@@ -794,8 +794,10 @@ public class ApiHandler {
         }
     }
 
-    public static Either<WouldYouRather, HttpStatus> getRandomWouldYouRather() {
-        try (Response response = makeRequest("fun/wyr/random")) {
+    public static Either<WouldYouRather, HttpStatus> getRandomWouldYouRather(WouldYouRatherRequest request) {
+        String urlPath = "fun/wyr/random?includeNSFW=%s&nsfw=%s"
+                .formatted(request.isIncludeNsfw(), request.isNsfw());
+        try (Response response = makeRequest(urlPath)) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 

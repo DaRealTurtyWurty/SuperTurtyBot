@@ -1,8 +1,11 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class RegionExcludeRequestData {
     private final boolean excludeCountries;
     private final boolean excludeTerritories;
@@ -14,22 +17,6 @@ public class RegionExcludeRequestData {
         this.excludeTerritories = excludeTerritories;
         this.excludeIslands = excludeIslands;
         this.excludeMainland = excludeMainland;
-    }
-
-    public boolean isExcludeCountries() {
-        return excludeCountries;
-    }
-
-    public boolean isExcludeTerritories() {
-        return excludeTerritories;
-    }
-
-    public boolean isExcludeIslands() {
-        return excludeIslands;
-    }
-
-    public boolean isExcludeMainland() {
-        return excludeMainland;
     }
 
     public boolean hasExclusions() {

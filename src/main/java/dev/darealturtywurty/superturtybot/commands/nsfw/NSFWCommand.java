@@ -160,6 +160,10 @@ public class NSFWCommand extends CoreCommand {
     }
 
     public static boolean isValidChannel(MessageChannelUnion channel) {
+        // if its a private channel
+        // TODO: Add a check for if the user is 18+ (and utilise the user config too)
+        if(channel.getType() == ChannelType.PRIVATE) return true;
+
         // if its a text channel and is nsfw
         if (channel.getType() == ChannelType.TEXT && channel.asTextChannel().isNSFW()) return true;
 
