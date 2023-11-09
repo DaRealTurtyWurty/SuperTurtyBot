@@ -1,7 +1,10 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
+
 import java.util.Optional;
 
+@Getter
 public class ImageRotateRequestData {
     private final Optional<Integer> angle;
     private final String url;
@@ -9,14 +12,6 @@ public class ImageRotateRequestData {
     private ImageRotateRequestData(String url, Integer angle) {
         this.url = url;
         this.angle = Optional.ofNullable(angle);
-    }
-
-    public Optional<Integer> getAngle() {
-        return angle;
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public static class Builder {

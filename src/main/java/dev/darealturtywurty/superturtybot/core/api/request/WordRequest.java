@@ -1,9 +1,11 @@
 package dev.darealturtywurty.superturtybot.core.api.request;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
+@Getter
 public class WordRequest {
     private final Optional<Integer> length;
     private final Optional<String> startsWith;
@@ -13,18 +15,6 @@ public class WordRequest {
         this.length = Optional.ofNullable(length);
         this.startsWith = Optional.ofNullable(startsWith);
         this.amount = Optional.ofNullable(amount);
-    }
-
-    public Optional<Integer> getLength() {
-        return length;
-    }
-
-    public Optional<String> getStartsWith() {
-        return startsWith;
-    }
-
-    public Optional<Integer> getAmount() {
-        return amount;
     }
 
     public static class Builder {
