@@ -49,6 +49,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// TODO: If there is no audit log entry, then the bot will throw an exception. Fix this.
 public class LoggingManager extends ListenerAdapter {
     public static final LoggingManager INSTANCE = new LoggingManager();
 
