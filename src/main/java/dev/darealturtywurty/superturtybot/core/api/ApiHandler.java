@@ -6,8 +6,8 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.api.request.*;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
 import io.javalin.http.HttpStatus;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -789,6 +789,30 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(json, Pornstar.class));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<WouldYouRather, HttpStatus> getRandomWouldYouRather() {
+        try (Response response = makeRequest("fun/wyr/random")) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            String optionA = object.get("optionA").getAsString();
+            String optionB = object.get("optionB").getAsString();
+
+            return Either.left(new WouldYouRather(optionA, optionB));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
