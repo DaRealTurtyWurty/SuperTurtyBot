@@ -18,6 +18,7 @@ import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -69,7 +70,7 @@ public class SteamGameDetailsCommand extends CoreCommand {
         String appID = event.getOption("app-id", null, OptionMapping::getAsString);
 
         if (appID == null) {
-            reply(event, "❌ You must provide a Steam appid!", false, true);
+            reply(event, "❌ You must provide a Steam app-id!", false, true);
             return;
         }
         event.deferReply().queue();
@@ -104,7 +105,7 @@ public class SteamGameDetailsCommand extends CoreCommand {
             }
 
             ResponseBody body = response.body();
-            ResponseBody steamPlayerCountBody = getSteamPlayerCount.body();
+
             if (body == null) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
@@ -113,7 +114,9 @@ public class SteamGameDetailsCommand extends CoreCommand {
                 return;
             }
 
-            if (steamPlayerCountBody == null) {
+            ResponseBody playerCountBody = getSteamPlayerCount.body();
+
+            if (playerCountBody == null) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
                         .mentionRepliedUser(false)
@@ -122,7 +125,6 @@ public class SteamGameDetailsCommand extends CoreCommand {
             }
 
             String bodyString = body.string();
-            String SteamPlayerCountBodyString = body.string();
 
             if (bodyString.isBlank()) {
                 event.getHook()
@@ -132,7 +134,9 @@ public class SteamGameDetailsCommand extends CoreCommand {
                 return;
             }
 
-            if (SteamPlayerCountBodyString.isBlank()) {
+            String playerCountBodyString = playerCountBody.string();
+
+            if (playerCountBodyString.isBlank()) {
                 event.getHook()
                         .sendMessage("❌ Failed to get response!")
                         .mentionRepliedUser(false)
@@ -140,24 +144,24 @@ public class SteamGameDetailsCommand extends CoreCommand {
                 return;
             }
 
-            StoreSteamApiResponse steamResponse = StoreSteamApiResponse.fromJsonString(bodyString, appID);
+            SteamStoreApiResponse steamResponse = SteamStoreApiResponse.fromJsonString(bodyString, appID);
 
-            GetPlayerCountApi getCurrentPlayerCountApi = GetPlayerCountApi.fromJsonString(SteamPlayerCountBodyString);
+            GetPlayerCountApi getCurrentPlayers = GetPlayerCountApi.fromJsonString(playerCountBodyString);
 
-            SteamData getSteamGameDetails = steamResponse.data;
-            int PlayerCount = getCurrentPlayerCountApi.player_count;
+            SteamData getSteamAppDetails = steamResponse.data;
+            int PlayerCount = getCurrentPlayers.player_count;
 
             if(!steamResponse.success) {
                 event.getHook()
-                        .sendMessage("❌ Failed to get steam appid!")
+                        .sendMessage("❌ Failed to get steam app-id!")
                         .mentionRepliedUser(false)
                         .queue();
                 return;
             }
 
-            if(getCurrentPlayerCountApi.result == 0) {
+            if(getCurrentPlayers.result == 0) {
                 event.getHook()
-                        .sendMessage("❌ Failed to get steam player count!")
+                        .sendMessage("❌ Failed to get player count!")
                         .mentionRepliedUser(false)
                         .queue();
                 return;
@@ -165,33 +169,41 @@ public class SteamGameDetailsCommand extends CoreCommand {
 
             StringBuilder categories = new StringBuilder();
 
-            for(Categories category : getSteamGameDetails.categories){
+            for(Categories category : getSteamAppDetails.categories){
                 categories.append(category.description + ", ");
             }
 
             StringBuilder genres = new StringBuilder();
 
-            for(Genres genre : getSteamGameDetails.genres){
+            for(Genres genre : getSteamAppDetails.genres){
                 genres.append(genre.description + ", ");
             }
 
-            String genre = String.valueOf(genres);
             String category = String.valueOf(categories);
-            String recommendationTotal = String.valueOf(getSteamGameDetails.recommendations.total);
+            String genre = String.valueOf(genres);
             String playerCount = String.valueOf(PlayerCount);
+            String isFree = String.valueOf(getSteamAppDetails.is_free);
+            String recommendationTotal = String.valueOf(getSteamAppDetails.recommendations.total);
 
             var embed = new EmbedBuilder()
-                    .setTitle("%s (%s)".formatted(getSteamGameDetails.name , appID))
-                    .addField("🟦 Description", getSteamGameDetails.short_description, false)
+                    .setTitle("%s".formatted(getSteamAppDetails.name), "https://store.steampowered.com/app/%s/".formatted(appID))
+
+                    .addField("🟦 Description", getSteamAppDetails.short_description, false)
                     .addField("🟦 Categories", category, true)
-
-                    .addField("🟦 Recommendations\n" + recommendationTotal + "\n" + "🟦 Release Date", getSteamGameDetails.release_date.date, true)
-                    .addField("🟦 Publishers\n"+ getSteamGameDetails.developers.toString() + "\n🟦 Developers", getSteamGameDetails.publishers.toString(),true)
-
-                    .addField("🟦Platforms\nWindows: %b\nMac: %b\nLinux: %b".formatted(getSteamGameDetails.platforms.windows, getSteamGameDetails.platforms.mac, getSteamGameDetails.platforms.linux), "",true)
+                    .addField("🟦 Platforms\nWindows: %b\nMac: %b\nLinux: %b".formatted(getSteamAppDetails.platforms.windows, getSteamAppDetails.platforms.mac, getSteamAppDetails.platforms.linux), "",true)
+                    .addField("🟦 Release Date", getSteamAppDetails.release_date.date,true)
+                    .addField("🟦 Recommendations", recommendationTotal, true)
                     .addField("🟦 Genre", genre, true)
-
                     .addField("🟦 Players playing", playerCount,true)
+                    .addField("🟦 Is free", isFree, false)
+                    .addField("🟦 Publishers\n"+ getSteamAppDetails.developers.toString() + "\n🟦 Developers" , getSteamAppDetails.publishers.toString(),false)
+
+                    .setImage(getSteamAppDetails.header_image)
+
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+                    .setTimestamp(Instant.now())
+                    .setColor(0x66c0f4)
+
                     .build();
 
             event.getHook()
@@ -205,19 +217,20 @@ public class SteamGameDetailsCommand extends CoreCommand {
         }
     }
     @Data
-    public static class StoreSteamApiResponse{
+    public static class SteamStoreApiResponse{
         private boolean success;
         private SteamData data;
 
-        private static StoreSteamApiResponse fromJsonString(String json, String appid) {
+        private static SteamStoreApiResponse fromJsonString(String json, String appid) {
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
-            return Constants.GSON.fromJson(object.get(appid), StoreSteamApiResponse.class);
+            return Constants.GSON.fromJson(object.get(appid), SteamStoreApiResponse.class);
         }
     }
     @Data
     public static class SteamData{
         private String type;
         private String name;
+        private String header_image;
         private int steam_appid;
         private boolean is_free;
         private String about_the_game;
