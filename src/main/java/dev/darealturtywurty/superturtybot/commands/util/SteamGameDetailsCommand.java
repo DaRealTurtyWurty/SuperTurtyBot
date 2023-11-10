@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import lombok.Data;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -203,7 +204,7 @@ public class SteamGameDetailsCommand extends CoreCommand {
             Constants.LOGGER.error("Failed to get response!", exception);
         }
     }
-    @lombok.Data
+    @Data
     public static class StoreSteamApiResponse{
         private boolean success;
         private SteamData data;
@@ -213,7 +214,7 @@ public class SteamGameDetailsCommand extends CoreCommand {
             return Constants.GSON.fromJson(object.get(appid), StoreSteamApiResponse.class);
         }
     }
-    @lombok.Data
+    @Data
     public static class SteamData{
         private String type;
         private String name;
@@ -231,34 +232,34 @@ public class SteamGameDetailsCommand extends CoreCommand {
 
     }
 
-    @lombok.Data
+    @Data
     public static class Platforms {
         private boolean windows;
         private boolean mac;
         private boolean linux;
     }
-    @lombok.Data
+    @Data
 
     public static class Categories {
         private int id;
         private String description;
     }
-    @lombok.Data
+    @Data
 
     public static class Genres {
         private int id;
         private String description;
     }
-    @lombok.Data
+    @Data
     public static class Recommendations {
         private int total;
     }
-
+    @Data
     public static class ReleaseDate {
         private boolean coming_soon;
         private String date;
     }
-
+    @Data
     public static class GetPlayerCountApi{
         private int player_count;
         private int result;
