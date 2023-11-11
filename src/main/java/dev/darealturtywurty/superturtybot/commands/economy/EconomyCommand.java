@@ -44,7 +44,7 @@ public abstract class EconomyCommand extends CoreCommand {
             return;
         }
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getId())).first();
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
         if(config == null) {
             config = new GuildConfig(guild.getIdLong());
             Database.getDatabase().guildConfig.insertOne(config);
@@ -67,7 +67,7 @@ public abstract class EconomyCommand extends CoreCommand {
         }
 
         Guild guild = event.getGuild();
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getId())).first();
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
         if(config == null) {
             config = new GuildConfig(guild.getIdLong());
             Database.getDatabase().guildConfig.insertOne(config);

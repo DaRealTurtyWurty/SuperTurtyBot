@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.core.config;
 
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -208,15 +207,13 @@ public class GuildConfigCommand extends CoreCommand {
             }
             
             option.serialize(config, value);
-            final Bson update = Updates.set(option.getSaveName(), option.getValueFromConfig().apply(config));
-            final UpdateResult result = Database.getDatabase().guildConfig.updateOne(filter, update);
-            if (result.getModifiedCount() > 0) {
-                reply(event, "✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!");
+            UpdateResult result = Database.getDatabase().guildConfig.replaceOne(filter, config);
+            if (result.getModifiedCount() == 0) {
+                reply(event, "❌ Failed to update the server config!", false, true);
                 return;
             }
-            
-            reply(event, "❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!", false,
-                true);
+
+            reply(event, "✅ Successfully updated `" + option.getRichName() + "` to `" + option.getValueFromConfig().apply(config) + "`!");
         }
     }
     
