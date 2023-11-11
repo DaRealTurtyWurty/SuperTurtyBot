@@ -132,7 +132,10 @@ public final class MathHandler {
         formatted = formatted.replace(".0", "");
 
         // to 1 decimal place
-        return formatted.trim().formatted("%.1f");
+        if(formatted.contains("."))
+            return formatted.trim().formatted("%.1f");
+
+        return formatted.trim();
     }
 
     private static float getRandom(List<Float> list) {
