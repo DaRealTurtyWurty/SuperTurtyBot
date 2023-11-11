@@ -151,17 +151,17 @@ public class ApiHandler {
     }
 
     public static Either<Region, HttpStatus> getTerritoryData(RegionExcludeRequestData requestData) {
-        String path = "geo/data/random";
+        StringBuilder path = new StringBuilder("geo/data/random");
         if (requestData.hasExclusions()) {
-            path += "?exclude=";
+            path.append("?exclude=");
             for (String exclusionType : requestData.getExclusions()) {
-                path += exclusionType + ",";
+                path.append(exclusionType).append(",");
             }
 
-            path = path.substring(0, path.length() - 1);
+            path = new StringBuilder(path.substring(0, path.length() - 1));
         }
 
-        try (Response response = makeRequest(path)) {
+        try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 

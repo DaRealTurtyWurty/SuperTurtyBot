@@ -1,11 +1,17 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
+import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
+import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import io.javalin.http.HttpStatus;
+import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -21,95 +27,18 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.StreamSupport;
 
 public class HigherLowerCommand extends CoreCommand {
-    private static final Map<String, Pair<Integer, Long>> COUNTRY_POPULATIONS = new HashMap<>();
-    private static final Map<String, Long> COUNTRY_AREAS = new HashMap<>();
-    private static final List<String> WORLD_LIST = new ArrayList<>();
+    private static final List<String> WORD_LIST = new ArrayList<>();
 
-    private static final String POPULATION_API_URL = "https://countriesnow.space/api/v0.1/countries/population";
-    private static final String WORD_LIST_API_URL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt";
     private static final String WORD_FREQUENCY_API_URL = "https://api.datamuse.com/words?sp=%s&md=f&max=1";
 
     private static final Map<Long, Game> GAMES = new HashMap<>();
-
-//    static {
-//        var populationRequest = new Request.Builder().url(POPULATION_API_URL).build();
-//
-//        try (Response response = Constants.HTTP_CLIENT.newCall(populationRequest).execute()) {
-//            if (response.isSuccessful()) {
-//                String result = response.body() != null ? response.body().string() : null;
-//                JsonObject json = Constants.GSON.fromJson(result, JsonObject.class);
-//                if (json != null && !json.get("error").getAsBoolean()) {
-//                    boolean foundAfghanistan = false;
-//
-//                    JsonArray data = json.getAsJsonArray("data");
-//                    for (JsonElement datum : data) {
-//                        JsonObject country = datum.getAsJsonObject();
-//                        if ("Afghanistan".equalsIgnoreCase(country.get("country").getAsString()))
-//                            foundAfghanistan = true;
-//
-//                        if (!foundAfghanistan) continue;
-//
-//                        String countryName = country.get("country").getAsString();
-//                        JsonArray populationCounts = country.getAsJsonArray("populationCounts");
-//                        JsonObject object = StreamSupport.stream(populationCounts.spliterator(), false)
-//                                .map(JsonElement::getAsJsonObject)
-//                                .max(Comparator.comparingLong(value -> value.getAsJsonObject().get("year").getAsLong()))
-//                                .orElseThrow();
-//
-//                        COUNTRY_POPULATIONS.put(countryName,
-//                                Pair.of(object.get("year").getAsInt(), object.get("value").getAsLong()));
-//                    }
-//
-//                    System.out.println("Loaded " + COUNTRY_POPULATIONS.size() + " country populations!");
-//                }
-//            }
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Failed to fetch country populations!", exception);
-//        }
-//
-//        try {
-//            var landAreaPath = Path.of("src/main/resources/country_land_area.json");
-//            JsonArray landAreaJson = Constants.GSON.fromJson(Files.readString(landAreaPath), JsonArray.class);
-//            if (landAreaJson != null) {
-//                for (JsonElement element : landAreaJson) {
-//                    JsonObject object = element.getAsJsonObject();
-//                    COUNTRY_AREAS.put(object.get("country").getAsString(), object.get("landAreaKm").getAsLong());
-//                }
-//
-//                System.out.println("Loaded " + COUNTRY_AREAS.size() + " country land areas!");
-//            }
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Failed to fetch country land areas!", exception);
-//        }
-//
-//        Request wordListRequest = new Request.Builder().url(WORD_LIST_API_URL).build();
-//
-//        try (Response response = Constants.HTTP_CLIENT.newCall(wordListRequest).execute()) {
-//            if (response.isSuccessful()) {
-//                String result = response.body() != null ? response.body().string() : null;
-//                String[] words = result != null ? result.split("\n") : new String[0];
-//
-//                for (String s : words) {
-//                    String word = s;
-//                    if (word.length() < 3) continue;
-//
-//                    word = word.toLowerCase(Locale.ROOT).trim();
-//                    WORLD_LIST.add(word);
-//                }
-//
-//                System.out.println("Loaded " + WORLD_LIST.size() + " words!");
-//            }
-//        } catch (IOException exception) {
-//            throw new IllegalStateException("Failed to fetch word list!", exception);
-//        }
-//    }
 
     public HigherLowerCommand() {
         super(new Types(true, false, false, false));
@@ -178,28 +107,51 @@ public class HigherLowerCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
         switch (subcommand) {
             case "population" -> {
+                RegionExcludeRequestData requestData = new RegionExcludeRequestData.Builder()
+                        .excludeTerritories().build();
+
                 // make a copy of the map
-                Map<String, Pair<Integer, Long>> countryPopulations = new HashMap<>(COUNTRY_POPULATIONS);
+                Either<Region, HttpStatus> country0 = ApiHandler.getTerritoryData(requestData);
+                int attempts = 0;
+                while (country0.isRight() && attempts < 5) {
+                    country0 = ApiHandler.getTerritoryData(requestData);
+                    attempts++;
+                }
 
-                Map.Entry<String, Pair<Integer, Long>> country0 = countryPopulations.entrySet().stream()
-                        .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
-                countryPopulations.remove(country0.getKey(), country0.getValue());
+                if (country0.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the country data!").queue();
+                    return;
+                }
 
-                Map.Entry<String, Pair<Integer, Long>> country1 = countryPopulations.entrySet().stream()
-                        .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
+                Either<Region, HttpStatus> country1 = ApiHandler.getTerritoryData(requestData);
+                attempts = 0;
+                while ((country1.isRight() ||
+                        country0.getLeft().getCca3().equals(country1.getLeft().getCca3())) &&
+                        attempts < 5) {
+                    country1 = ApiHandler.getTerritoryData(requestData);
+                    attempts++;
+                }
 
-                String toSend = String.format("Does %s have a higher or lower population than %s?", country0.getKey(),
-                        country1.getKey());
-                event.deferReply().setContent(toSend).flatMap(InteractionHook::retrieveOriginal).queue(message -> {
+                if (country1.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the country data!").queue();
+                    return;
+                }
+
+                Region region0 = country0.getLeft();
+                Region region1 = country1.getLeft();
+
+                String toSend = String.format("Does %s have a higher or lower population than %s?", region0.getName(),
+                        region1.getName());
+                event.getHook().editOriginal(toSend).queue(message -> {
                     message.createThreadChannel(event.getUser().getName() + "'s Game").queue(threadChannel -> {
                         GAMES.put(threadChannel.getIdLong(),
                                 new PopulationGame(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
                                         threadChannel.getIdLong(), event.getUser().getIdLong(), message.getIdLong(),
-                                        message.getIdLong(), country0.getKey(), country0.getValue().getKey(),
-                                        country0.getValue().getValue(), country1.getKey(), country1.getValue().getKey(),
-                                        country1.getValue().getValue()));
+                                        message.getIdLong(), region0, region1));
 
                         threadChannel.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
                     });
@@ -212,25 +164,43 @@ public class HigherLowerCommand extends CoreCommand {
                 });
             }
             case "area" -> {
-                // make a copy of the map
-                Map<String, Long> countryAreas = new HashMap<>(COUNTRY_AREAS);
+                Either<Region, HttpStatus> country0 = ApiHandler.getTerritoryData();
+                int attempts = 0;
+                while (country0.isRight() && attempts < 5) {
+                    country0 = ApiHandler.getTerritoryData();
+                    attempts++;
+                }
 
-                Map.Entry<String, Long> country0 = countryAreas.entrySet().stream()
-                        .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
-                countryAreas.remove(country0.getKey(), country0.getValue());
+                if (country0.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the country data!").queue();
+                    return;
+                }
 
-                Map.Entry<String, Long> country1 = countryAreas.entrySet().stream()
-                        .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
+                Either<Region, HttpStatus> country1 = ApiHandler.getTerritoryData();
+                attempts = 0;
+                while ((country1.isRight() ||
+                        country0.getLeft().getCca3().equals(country1.getLeft().getCca3())) &&
+                        attempts < 5) {
+                    country1 = ApiHandler.getTerritoryData();
+                    attempts++;
+                }
 
-                String toSend = String.format("Does %s have a higher or lower area than %s?", country0.getKey(),
-                        country1.getKey());
-                event.deferReply().setContent(toSend).flatMap(InteractionHook::retrieveOriginal).queue(message -> {
+                if (country1.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the country data!").queue();
+                    return;
+                }
+
+                Region region0 = country0.getLeft();
+                Region region1 = country1.getLeft();
+
+                String toSend = String.format("Does %s have a higher or lower area than %s?", region0.getName(),
+                        region1.getName());
+                event.getHook().editOriginal(toSend).queue(message -> {
                     message.createThreadChannel(event.getUser().getName() + "'s Game").queue(threadChannel -> {
                         GAMES.put(threadChannel.getIdLong(),
                                 new AreaGame(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
                                         threadChannel.getIdLong(), event.getUser().getIdLong(), message.getIdLong(),
-                                        message.getIdLong(), country0.getKey(), country0.getValue(), country1.getKey(),
-                                        country1.getValue()));
+                                        message.getIdLong(), region0, region1));
 
                         threadChannel.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
                     });
@@ -243,8 +213,8 @@ public class HigherLowerCommand extends CoreCommand {
             }
             case "word_frequency" -> {
                 // choose a random word from the word list
-                String word0 = WORLD_LIST.get((int) (Math.random() * WORLD_LIST.size()));
-                String word1 = WORLD_LIST.get((int) (Math.random() * WORLD_LIST.size()));
+                String word0 = WORD_LIST.get((int) (Math.random() * WORD_LIST.size()));
+                String word1 = WORD_LIST.get((int) (Math.random() * WORD_LIST.size()));
 
                 // get the frequency of the words
                 float frequency0 = getWordFrequency(word0);
@@ -392,16 +362,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (populationGame.getPopulation0() > populationGame.getPopulation1()) {
+                if (populationGame.getCountry0().getPopulation() > populationGame.getCountry1().getPopulation()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + populationGame.getCountry0() + " has a higher population than " + populationGame.getCountry1())
+                                    "✅ Correct! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
                             .queue();
 
                     // change the second country to the first country and get a new country
                     populations(threadChannel, populationGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + populationGame.getCountry0() + " has a lower population than " + populationGame.getCountry1())
+                                    "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -413,16 +383,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (populationGame.getPopulation0() < populationGame.getPopulation1()) {
+                if (populationGame.getCountry0().getPopulation() < populationGame.getCountry1().getPopulation()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + populationGame.getCountry0() + " has a lower population than " + populationGame.getCountry1())
+                                    "✅ Correct! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
                             .queue();
 
                     // change the second country to the first country and get a new country
                     populations(threadChannel, populationGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + populationGame.getCountry0() + " has a higher population than " + populationGame.getCountry1())
+                                    "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -438,16 +408,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (areaGame.getArea0() > areaGame.getArea1()) {
+                if (areaGame.getCountry0().getLandAreaKm() > areaGame.getCountry1().getLandAreaKm()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + areaGame.getCountry0() + " has a higher area than " + areaGame.getCountry1())
+                                    "✅ Correct! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
                             .queue();
 
                     // change the second country to the first country and get a new country
                     countryAreas(threadChannel, areaGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + areaGame.getCountry0() + " has a lower area than " + areaGame.getCountry1())
+                                    "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -459,16 +429,16 @@ public class HigherLowerCommand extends CoreCommand {
                     event.deferEdit().queue();
                 }
 
-                if (areaGame.getArea0() < areaGame.getArea1()) {
+                if (areaGame.getCountry0().getLandAreaKm() < areaGame.getCountry1().getLandAreaKm()) {
                     threadChannel.sendMessage(
-                                    "✅ Correct! " + areaGame.getCountry0() + " has a lower area than " + areaGame.getCountry1())
+                                    "✅ Correct! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
                             .queue();
 
                     // change the second country to the first country and get a new country
                     countryAreas(threadChannel, areaGame);
                 } else {
                     threadChannel.sendMessage(
-                                    "❌ Incorrect! " + areaGame.getCountry0() + " has a higher area than " + areaGame.getCountry1())
+                                    "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
                             .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
 
                     GAMES.remove(game.getMessageId());
@@ -526,17 +496,20 @@ public class HigherLowerCommand extends CoreCommand {
     }
 
     private static void countryAreas(ThreadChannel threadChannel, AreaGame areaGame) {
-        Map<String, Long> countryAreas = new HashMap<>(COUNTRY_AREAS);
-        countryAreas.remove(areaGame.getCountry0());
+        RegionExcludeRequestData requestData = new RegionExcludeRequestData.Builder()
+                .excludeTerritories().build();
+        Either<Region, HttpStatus> country1 = ApiHandler.getTerritoryData(requestData);
+        int attempts = 0;
+        while (country1.isRight() && attempts < 5) {
+            country1 = ApiHandler.getTerritoryData(requestData);
+            attempts++;
+        }
 
-        Map.Entry<String, Long> country1 = countryAreas.entrySet().stream()
-                .skip((int) (Math.random() * countryAreas.size())).findFirst().orElseThrow();
+        areaGame.setCountry0(areaGame.getCountry1());
+        areaGame.setCountry1(country1.getLeft());
 
-        areaGame.set0(areaGame.getCountry1(), areaGame.getArea1());
-        areaGame.set1(country1.getKey(), country1.getValue());
-
-        String toSend = String.format("Does %s have a higher or lower area than %s?", areaGame.getCountry0(),
-                areaGame.getCountry1());
+        String toSend = String.format("Does %s have a higher or lower area than %s?", areaGame.getCountry0().getName(),
+                areaGame.getCountry1().getName());
 
         threadChannel.sendMessage(toSend).queue(message -> {
             var actionRow = ActionRow.of(Button.primary("higherlower:area:higher-" + message.getId(), "Higher"),
@@ -549,17 +522,20 @@ public class HigherLowerCommand extends CoreCommand {
     }
 
     private static void populations(ThreadChannel threadChannel, PopulationGame populationGame) {
-        Map<String, Pair<Integer, Long>> countryPopulations = new HashMap<>(COUNTRY_POPULATIONS);
-        countryPopulations.remove(populationGame.getCountry0());
+        RegionExcludeRequestData requestData = new RegionExcludeRequestData.Builder()
+                .excludeTerritories().build();
+        Either<Region, HttpStatus> country1 = ApiHandler.getTerritoryData(requestData);
+        int attempts = 0;
+        while (country1.isRight() && attempts < 5) {
+            country1 = ApiHandler.getTerritoryData(requestData);
+            attempts++;
+        }
 
-        Map.Entry<String, Pair<Integer, Long>> country1 = countryPopulations.entrySet().stream()
-                .skip((int) (Math.random() * countryPopulations.size())).findFirst().orElseThrow();
-
-        populationGame.set0(populationGame.getCountry1(), populationGame.getYear1(), populationGame.getPopulation1());
-        populationGame.set1(country1.getKey(), country1.getValue().getKey(), country1.getValue().getValue());
+        populationGame.setCountry0(populationGame.getCountry1());
+        populationGame.setCountry1(country1.getLeft());
 
         String toSend = String.format("Does %s have a higher or lower population than %s?",
-                populationGame.getCountry0(), populationGame.getCountry1());
+                populationGame.getCountry0().getName(), populationGame.getCountry1().getName());
 
         threadChannel.sendMessage(toSend).queue(message -> {
             var actionRow = ActionRow.of(Button.primary("higherlower:population:higher-" + message.getId(), "Higher"),
@@ -572,7 +548,7 @@ public class HigherLowerCommand extends CoreCommand {
     }
 
     private void findAndSendWord(ThreadChannel threadChannel, WordFrequencyGame wordFrequencyGame) {
-        String word1 = WORLD_LIST.stream().skip((int) (Math.random() * WORLD_LIST.size())).findFirst().orElseThrow();
+        String word1 = WORD_LIST.stream().skip((int) (Math.random() * WORD_LIST.size())).findFirst().orElseThrow();
         float frequency1 = getWordFrequency(word1);
 
         wordFrequencyGame.set0(wordFrequencyGame.getWord1(), wordFrequencyGame.getFrequency1());
@@ -592,10 +568,13 @@ public class HigherLowerCommand extends CoreCommand {
         });
     }
 
+    @Getter
     public static abstract class Game {
         private final long guildId, ownerChannelId, channelId, userId, messageId;
-        private long latestMessageId;
         private final String subcommand;
+
+        @Setter
+        private long latestMessageId;
 
         public Game(long guildId, long ownerChannelId, long channelId, long userId, long messageId, long latestMessageId, String subcommand) {
             this.guildId = guildId;
@@ -606,128 +585,30 @@ public class HigherLowerCommand extends CoreCommand {
             this.latestMessageId = latestMessageId;
             this.subcommand = subcommand;
         }
-
-        public long getGuildId() {
-            return this.guildId;
-        }
-
-        public long getOwnerChannelId() {
-            return this.ownerChannelId;
-        }
-
-        public long getChannelId() {
-            return this.channelId;
-        }
-
-        public long getUserId() {
-            return this.userId;
-        }
-
-        public long getMessageId() {
-            return this.messageId;
-        }
-
-        public long getLatestMessageId() {
-            return this.latestMessageId;
-        }
-
-        public void setLatestMessageId(long latestMessageId) {
-            this.latestMessageId = latestMessageId;
-        }
-
-        public String getSubcommand() {
-            return this.subcommand;
-        }
     }
 
-    public static class PopulationGame extends Game {
-        private String country0, country1;
-        private int year0, year1;
-        private long population0, population1;
 
-        public PopulationGame(long guildId, long ownerChannelId, long channelId, long userId, long messageId, long latestMessageId, String country0, int year0, long population0, String country1, int year1, long population1) {
+    @Getter
+    @Setter
+    public static class PopulationGame extends Game {
+        private Region country0, country1;
+
+        public PopulationGame(long guildId, long ownerChannelId, long channelId, long userId, long messageId, long latestMessageId, Region country0, Region country1) {
             super(guildId, ownerChannelId, channelId, userId, messageId, latestMessageId, "population");
             this.country0 = country0;
-            this.year0 = year0;
-            this.population0 = population0;
             this.country1 = country1;
-            this.year1 = year1;
-            this.population1 = population1;
-        }
-
-        public String getCountry0() {
-            return this.country0;
-        }
-
-        public int getYear0() {
-            return this.year0;
-        }
-
-        public long getPopulation0() {
-            return this.population0;
-        }
-
-        public String getCountry1() {
-            return this.country1;
-        }
-
-        public int getYear1() {
-            return this.year1;
-        }
-
-        public long getPopulation1() {
-            return this.population1;
-        }
-
-        public void set0(String country, int year, long population) {
-            this.country0 = country;
-            this.year0 = year;
-            this.population0 = population;
-        }
-
-        public void set1(String country, int year, long population) {
-            this.country1 = country;
-            this.year1 = year;
-            this.population1 = population;
         }
     }
 
+    @Getter
+    @Setter
     public static class AreaGame extends Game {
-        private String country0, country1;
-        private long area0, area1;
+        private Region country0, country1;
 
-        public AreaGame(long guildId, long ownerChannelId, long channelId, long userId, long messageId, long latestMessageId, String country0, long area0, String country1, long area1) {
+        public AreaGame(long guildId, long ownerChannelId, long channelId, long userId, long messageId, long latestMessageId, Region country0, Region country1) {
             super(guildId, ownerChannelId, channelId, userId, messageId, latestMessageId, "area");
             this.country0 = country0;
-            this.area0 = area0;
             this.country1 = country1;
-            this.area1 = area1;
-        }
-
-        public String getCountry0() {
-            return this.country0;
-        }
-
-        public long getArea0() {
-            return this.area0;
-        }
-
-        public String getCountry1() {
-            return this.country1;
-        }
-
-        public long getArea1() {
-            return this.area1;
-        }
-
-        public void set0(String country, long area) {
-            this.country0 = country;
-            this.area0 = area;
-        }
-
-        public void set1(String country, long area) {
-            this.country1 = country;
-            this.area1 = area;
         }
     }
 
