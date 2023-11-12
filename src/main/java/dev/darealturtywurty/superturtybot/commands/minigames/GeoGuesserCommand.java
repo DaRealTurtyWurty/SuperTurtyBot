@@ -106,6 +106,7 @@ public class GeoGuesserCommand extends CoreCommand {
         FileUpload upload = FileUpload.fromData(bytes, "geoguesser.png");
         event.getHook().editOriginal("🌎 **Where is this?**").setFiles(upload).queue(message -> {
             message.createThreadChannel(event.getUser().getName() + "'s Geo Guesser Game").queue(thread -> {
+                thread.addThreadMember(event.getUser()).queue();
                 var game = new Game(
                         guild.getIdLong(),
                         event.getChannel().getIdLong(),
