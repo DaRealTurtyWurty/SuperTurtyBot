@@ -423,7 +423,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GuessRegionBorderCommand());
         cmds.add(new HigherLowerCommand());
         cmds.add(new WordleCommand());
-        //cmds.add(new GeoGuesserCommand());
+        cmds.add(new GeoGuesserCommand());
 
         // Economy
         cmds.add(new BalanceCommand());
