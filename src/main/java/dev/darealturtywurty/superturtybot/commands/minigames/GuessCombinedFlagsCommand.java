@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
+import lombok.Getter;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -341,6 +342,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         return true;
     }
 
+    @Getter
     private static class Game {
         private final Map<String, BufferedImage> regions;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
@@ -356,42 +358,6 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             this.messageId = messageId;
             this.userId = userId;
             this.possibleRegions = possibleRegions;
-        }
-
-        public Map<String, BufferedImage> getRegions() {
-            return this.regions;
-        }
-
-        public long getGuildId() {
-            return this.guildId;
-        }
-
-        public long getOwnerChannelId() {
-            return this.ownerChannelId;
-        }
-
-        public long getChannelId() {
-            return this.channelId;
-        }
-
-        public long getMessageId() {
-            return this.messageId;
-        }
-
-        public long getUserId() {
-            return this.userId;
-        }
-
-        public List<String> getGuesses() {
-            return this.guesses;
-        }
-
-        public int getIncorrectGuesses() {
-            return this.incorrectGuesses;
-        }
-
-        public List<Region> getPossibleRegions() {
-            return this.possibleRegions;
         }
 
         public boolean chooseRegion(String region) {
