@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.core.api;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.api.request.*;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -26,8 +27,18 @@ import java.util.List;
 public class ApiHandler {
     private static final String BASE_URL = "https://api.turtywurty.dev/";
 
+    static {
+        Environment.INSTANCE.turtyApiKey().ifPresentOrElse(key -> {
+            if (key.isBlank()) {
+                throw new IllegalStateException("Turty API Key is blank!");
+            }
+        }, () -> {
+            throw new IllegalStateException("Turty API Key is not present!");
+        });
+    }
+
     public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
-        try (Response response = makeRequest("geo/flag?cca3=" + cca3)) {
+        try (Response response = makeRequest("geo/flag?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -42,19 +53,17 @@ public class ApiHandler {
     }
 
     public static Either<Pair<BufferedImage, Region>, HttpStatus> getFlag(RegionExcludeRequestData requestData) {
-        String path = "geo/flag/random";
+        StringBuilder path = new StringBuilder("geo/flag/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         if (requestData.hasExclusions()) {
-            path += "?exclude=";
+            path.append("&exclude=");
             for (String exclusionType : requestData.getExclusions()) {
-                path += exclusionType + ",";
+                path.append(exclusionType).append(",");
             }
 
-            path = path.substring(0, path.length() - 1);
+            path = new StringBuilder(path.substring(0, path.length() - 1));
         }
 
-        System.out.println(path);
-
-        try (Response response = makeRequest(path)) {
+        try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -81,7 +90,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
-        try (Response response = makeRequest("geo/outline?cca3=" + cca3)) {
+        try (Response response = makeRequest("geo/outline?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -96,17 +105,17 @@ public class ApiHandler {
     }
 
     public static Either<Pair<BufferedImage, Region>, HttpStatus> getOutline(RegionExcludeRequestData requestData) {
-        String path = "geo/outline/random";
+        StringBuilder path = new StringBuilder("geo/outline/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         if (requestData.hasExclusions()) {
-            path += "?exclude=";
+            path.append("&exclude=");
             for (String exclusionType : requestData.getExclusions()) {
-                path += exclusionType + ",";
+                path.append(exclusionType).append(",");
             }
 
-            path = path.substring(0, path.length() - 1);
+            path = new StringBuilder(path.substring(0, path.length() - 1));
         }
 
-        try (Response response = makeRequest(path)) {
+        try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -133,7 +142,7 @@ public class ApiHandler {
     }
 
     public static Either<Region, HttpStatus> getTerritoryData(String cca3) {
-        try (Response response = makeRequest("geo/data?cca3=" + cca3)) {
+        try (Response response = makeRequest("geo/data?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -151,9 +160,9 @@ public class ApiHandler {
     }
 
     public static Either<Region, HttpStatus> getTerritoryData(RegionExcludeRequestData requestData) {
-        StringBuilder path = new StringBuilder("geo/data/random");
+        StringBuilder path = new StringBuilder("geo/data/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         if (requestData.hasExclusions()) {
-            path.append("?exclude=");
+            path.append("&exclude=");
             for (String exclusionType : requestData.getExclusions()) {
                 path.append(exclusionType).append(",");
             }
@@ -183,9 +192,9 @@ public class ApiHandler {
     }
 
     public static Either<List<Region>, HttpStatus> getAllRegions(RegionExcludeRequestData requestData) {
-        StringBuilder path = new StringBuilder("geo/data/all");
+        StringBuilder path = new StringBuilder("geo/data/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         if (requestData.hasExclusions()) {
-            path.append("?exclude=");
+            path.append("&exclude=");
             for (String exclusionType : requestData.getExclusions()) {
                 path.append(exclusionType).append(",");
             }
@@ -223,26 +232,17 @@ public class ApiHandler {
     }
 
     public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
-        StringBuilder path = new StringBuilder("words");
+        StringBuilder path = new StringBuilder("words?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         requestData.getLength().ifPresent(length -> {
-            if (path.length() > 5)
-                path.append("&length=").append(length);
-            else
-                path.append("?length=").append(length);
+            path.append("&length=").append(length);
         });
 
         requestData.getStartsWith().ifPresent(startsWith -> {
-            if (path.length() > 5)
-                path.append("&startsWith=").append(startsWith);
-            else
-                path.append("?startsWith=").append(startsWith);
+            path.append("&startsWith=").append(startsWith);
         });
 
         requestData.getAmount().ifPresent(amount -> {
-            if (path.length() > 5)
-                path.append("&amount=").append(amount);
-            else
-                path.append("?amount=").append(amount);
+            path.append("&amount=").append(amount);
         });
 
         try (Response response = makeRequest(path.toString())) {
@@ -265,40 +265,25 @@ public class ApiHandler {
     }
 
     public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
-        StringBuilder path = new StringBuilder("words/random");
+        StringBuilder path = new StringBuilder("words/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
         requestData.getLength().ifPresent(length -> {
-            if (path.length() > 12)
-                path.append("&length=").append(length);
-            else
-                path.append("?length=").append(length);
+            path.append("&length=").append(length);
         });
 
         requestData.getMinLength().ifPresent(minLength -> {
-            if (path.length() > 12)
-                path.append("&minLength=").append(minLength);
-            else
-                path.append("?minLength=").append(minLength);
+            path.append("&minLength=").append(minLength);
         });
 
         requestData.getMaxLength().ifPresent(maxLength -> {
-            if (path.length() > 12)
-                path.append("&maxLength=").append(maxLength);
-            else
-                path.append("?maxLength=").append(maxLength);
+            path.append("&maxLength=").append(maxLength);
         });
 
         requestData.getStartsWith().ifPresent(startsWith -> {
-            if (path.length() > 12)
-                path.append("&startsWith=").append(startsWith);
-            else
-                path.append("?startsWith=").append(startsWith);
+            path.append("&startsWith=").append(startsWith);
         });
 
         requestData.getAmount().ifPresent(amount -> {
-            if (path.length() > 12)
-                path.append("&amount=").append(amount);
-            else
-                path.append("?amount=").append(amount);
+            path.append("&amount=").append(amount);
         });
 
         try (Response response = makeRequest(path.toString())) {
@@ -322,7 +307,7 @@ public class ApiHandler {
     }
 
     public static Either<Boolean, HttpStatus> isWord(String word) {
-        try (Response response = makeRequest("words/validate?word=" + word)) {
+        try (Response response = makeRequest("words/validate?apiKey=%s&word=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), word))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -343,7 +328,7 @@ public class ApiHandler {
     }
 
     public static Either<CoupledPair<MinecraftVersion>, HttpStatus> getLatestMinecraft() {
-        try (Response response = makeRequest("minecraft/latest")) {
+        try (Response response = makeRequest("minecraft/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -366,7 +351,7 @@ public class ApiHandler {
     }
 
     public static Either<List<MinecraftVersion>, HttpStatus> getAllMinecraft() {
-        try (Response response = makeRequest("minecraft/all")) {
+        try (Response response = makeRequest("minecraft/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -390,7 +375,7 @@ public class ApiHandler {
     }
 
     public static Either<CoupledPair<ForgeVersion>, HttpStatus> getLatestForge() {
-        try (Response response = makeRequest("minecraft/forge/latest")) {
+        try (Response response = makeRequest("minecraft/forge/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -412,7 +397,7 @@ public class ApiHandler {
     }
 
     public static Either<List<ForgeVersion>, HttpStatus> getAllForge() {
-        try (Response response = makeRequest("minecraft/forge/all")) {
+        try (Response response = makeRequest("minecraft/forge/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -437,7 +422,7 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<CoupledPair<FabricVersion>, HttpStatus> getLatestFabric() {
-        try (Response response = makeRequest("minecraft/fabric/latest")) {
+        try (Response response = makeRequest("minecraft/fabric/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -460,7 +445,7 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<List<FabricVersion>, HttpStatus> getAllFabric() {
-        try (Response response = makeRequest("minecraft/fabric/all")) {
+        try (Response response = makeRequest("minecraft/fabric/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -485,7 +470,7 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<CoupledPair<QuiltVersion>, HttpStatus> getLatestQuilt() {
-        try (Response response = makeRequest("minecraft/quilt/latest")) {
+        try (Response response = makeRequest("minecraft/quilt/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -508,7 +493,7 @@ public class ApiHandler {
 
     @ApiStatus.Experimental
     public static Either<List<QuiltVersion>, HttpStatus> getAllQuilt() {
-        try (Response response = makeRequest("minecraft/quilt/all")) {
+        try (Response response = makeRequest("minecraft/quilt/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -532,7 +517,7 @@ public class ApiHandler {
     }
 
     public static Either<ParchmentVersion, HttpStatus> getLatestParchment() {
-        try (Response response = makeRequest("minecraft/parchment/latest")) {
+        try (Response response = makeRequest("minecraft/parchment/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -553,7 +538,7 @@ public class ApiHandler {
     }
 
     public static Either<List<ParchmentVersion>, HttpStatus> getAllParchment() {
-        try (Response response = makeRequest("minecraft/parchment/all")) {
+        try (Response response = makeRequest("minecraft/parchment/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -577,7 +562,7 @@ public class ApiHandler {
     }
 
     public static Either<ParchmentVersion, HttpStatus> getParchment(String version) {
-        try (Response response = makeRequest("minecraft/parchment/" + version)) {
+        try (Response response = makeRequest("minecraft/parchment/" + version + "?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -608,20 +593,14 @@ public class ApiHandler {
 
         String imgUrl = requestData.getUrl();
 
-        String pathStr = "image/resize?url=" + imgUrl;
+        String pathStr = "image/resize?apiKey=%s&url=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl);
         var path = new StringBuilder(pathStr);
         requestData.getWidth().ifPresent(width -> {
-            if (path.length() > pathStr.length())
-                path.append("&length=").append(width);
-            else
-                path.append("?length=").append(width);
+            path.append("&length=").append(width);
         });
 
         requestData.getHeight().ifPresent(height -> {
-            if (path.length() > pathStr.length())
-                path.append("&height=").append(height);
-            else
-                path.append("?height=").append(height);
+            path.append("&height=").append(height);
         });
 
         try (Response response = makeRequest(path.toString())) {
@@ -651,13 +630,10 @@ public class ApiHandler {
 
         String imgUrl = requestData.getUrl();
 
-        String pathStr = "image/rotate?url=" + imgUrl;
+        String pathStr = "image/rotate?apiKey=%s&url=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl);
         var path = new StringBuilder(pathStr);
         requestData.getAngle().ifPresent(angle -> {
-            if (path.length() > pathStr.length())
-                path.append("&angle=").append(angle);
-            else
-                path.append("?angle=").append(angle);
+            path.append("&angle=").append(angle);
         });
 
         try (Response response = makeRequest(path.toString())) {
@@ -682,7 +658,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> flip(String imgUrl, FlipType flipType) {
-        try (Response response = makeRequest("image/flip?url=%s&flipType=%s".formatted(imgUrl, flipType.name()))) {
+        try (Response response = makeRequest("image/flip?apiKey=%s&url=%s&flipType=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl, flipType.name()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -704,7 +680,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> flagify(ImageFlagifyRequestData requestData) {
-        try (Response response = makeRequest("image/flag?url=%s&colors=%d".formatted(requestData.getUrl(), requestData.getColors()))) {
+        try (Response response = makeRequest("image/flag?apiKey=%s&url=%s&colors=%d".formatted(Environment.INSTANCE.turtyApiKey().get(), requestData.getUrl(), requestData.getColors()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -726,7 +702,7 @@ public class ApiHandler {
     }
 
     public static Either<BufferedImage, HttpStatus> lgbtify(String imgUrl) {
-        try (Response response = makeRequest("image/lgbt?url=" + imgUrl)) {
+        try (Response response = makeRequest("image/lgbt?apiKey=%s&url=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -748,7 +724,7 @@ public class ApiHandler {
     }
 
     public static Either<Geoguesser, HttpStatus> geoguesser() {
-        try (Response response = makeRequest("geo/guesser")) {
+        try (Response response = makeRequest("geo/guesser?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -775,7 +751,7 @@ public class ApiHandler {
     }
 
     public static Either<Pornstar, HttpStatus> getPornstar() {
-        try (Response response = makeRequest("nsfw/pornstar")) {
+        try (Response response = makeRequest("nsfw/pornstar?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -795,8 +771,8 @@ public class ApiHandler {
     }
 
     public static Either<WouldYouRather, HttpStatus> getRandomWouldYouRather(WouldYouRatherRequest request) {
-        String urlPath = "fun/wyr/random?includeNSFW=%s&nsfw=%s"
-                .formatted(request.isIncludeNsfw(), request.isNsfw());
+        String urlPath = "fun/wyr/random?apiKey=%s&includeNSFW=%s&nsfw=%s"
+                .formatted(Environment.INSTANCE.turtyApiKey().get(), request.isIncludeNsfw(), request.isNsfw());
         try (Response response = makeRequest(urlPath)) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));

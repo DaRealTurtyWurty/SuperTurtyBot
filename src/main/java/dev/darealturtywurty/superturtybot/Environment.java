@@ -124,7 +124,11 @@ public final class Environment {
     }
 
     public Optional<String> nasaApiKey(){
-        return getString("NASA_KEY");
+        return getString("NASA_API_KEY");
+    }
+
+    public Optional<String> turtyApiKey() {
+        return getString("TURTY_API_KEY");
     }
 
     public Optional<Double> getDouble(String key){
