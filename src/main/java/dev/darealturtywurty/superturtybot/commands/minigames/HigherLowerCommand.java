@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
+import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -16,7 +17,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -27,17 +27,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class HigherLowerCommand extends CoreCommand {
-    private static final List<String> WORD_LIST = new ArrayList<>();
-
     private static final String WORD_FREQUENCY_API_URL = "https://api.datamuse.com/words?sp=%s&md=f&max=1";
-
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
     public HigherLowerCommand() {
@@ -78,7 +74,7 @@ public class HigherLowerCommand extends CoreCommand {
 
     @Override
     public String getHowToUse() {
-        return "/higherlower population|area|word_frequency|trending";
+        return "/higherlower population|area|word_frequency";
     }
 
     @Override
@@ -212,23 +208,50 @@ public class HigherLowerCommand extends CoreCommand {
                 });
             }
             case "word_frequency" -> {
-                // choose a random word from the word list
-                String word0 = WORD_LIST.get((int) (Math.random() * WORD_LIST.size()));
-                String word1 = WORD_LIST.get((int) (Math.random() * WORD_LIST.size()));
+                var requestData = new RandomWordRequestData.Builder()
+                        .amount(1)
+                        .build();
 
-                // get the frequency of the words
-                float frequency0 = getWordFrequency(word0);
-                float frequency1 = getWordFrequency(word1);
+                Either<List<String>, HttpStatus> word0 = ApiHandler.getWords(requestData);
+                int attempts = 0;
+                while (word0.isRight() && attempts < 5) {
+                    word0 = ApiHandler.getWords(requestData);
+                    attempts++;
+                }
+
+                if (word0.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the word list!").queue();
+                    return;
+                }
+
+                Either<List<String>, HttpStatus> word1 = ApiHandler.getWords(requestData);
+                attempts = 0;
+                while ((word1.isRight() ||
+                        word0.getLeft().get(0).equals(word1.getLeft().get(0))) &&
+                        attempts < 5) {
+                    word1 = ApiHandler.getWords(requestData);
+                    attempts++;
+                }
+
+                if (word1.isRight()) {
+                    event.getHook().editOriginal("❌ An error occurred while getting the word list!").queue();
+                    return;
+                }
+
+                String word0Str = word0.getLeft().get(0);
+                String word1Str = word1.getLeft().get(0);
+                float frequency0 = getWordFrequency(word0Str);
+                float frequency1 = getWordFrequency(word1Str);
 
                 String toSend = String.format("Does the word `%s` have a higher or lower frequency than the word `%s`?",
-                        word0, word1);
+                        word0Str, word1Str);
 
-                event.deferReply().setContent(toSend).flatMap(InteractionHook::retrieveOriginal).queue(message -> {
+                event.getHook().editOriginal(toSend).queue(message -> {
                     message.createThreadChannel(event.getUser().getName() + "'s Game").queue(threadChannel -> {
                         GAMES.put(threadChannel.getIdLong(),
                                 new WordFrequencyGame(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
                                         threadChannel.getIdLong(), event.getUser().getIdLong(), message.getIdLong(),
-                                        message.getIdLong(), word0, frequency0, word1, frequency1));
+                                        message.getIdLong(), word0Str, frequency0, word1Str, frequency1));
 
                         threadChannel.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
                     });
@@ -548,11 +571,30 @@ public class HigherLowerCommand extends CoreCommand {
     }
 
     private void findAndSendWord(ThreadChannel threadChannel, WordFrequencyGame wordFrequencyGame) {
-        String word1 = WORD_LIST.stream().skip((int) (Math.random() * WORD_LIST.size())).findFirst().orElseThrow();
-        float frequency1 = getWordFrequency(word1);
+        String word0 = wordFrequencyGame.getWord1();
+        float frequency0 = wordFrequencyGame.getFrequency1();
 
-        wordFrequencyGame.set0(wordFrequencyGame.getWord1(), wordFrequencyGame.getFrequency1());
-        wordFrequencyGame.set1(word1, frequency1);
+        var requestData = new RandomWordRequestData.Builder()
+                .amount(1)
+                .build();
+        Either<List<String>, HttpStatus> word1 = ApiHandler.getWords(requestData);
+        int attempts = 0;
+        while (word1.isRight() && attempts < 5) {
+            word1 = ApiHandler.getWords(requestData);
+            attempts++;
+        }
+
+        if (word1.isRight()) {
+            threadChannel.sendMessage("❌ An error occurred while getting the word list!").queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+            GAMES.remove(wordFrequencyGame.getMessageId());
+            return;
+        }
+
+        String word1Str = word1.getLeft().get(0);
+        float frequency1 = getWordFrequency(word1Str);
+
+        wordFrequencyGame.set0(word0, frequency0);
+        wordFrequencyGame.set1(word1Str, frequency1);
 
         String toSend = String.format("Does `%s` have a higher or lower word frequency than `%s`?",
                 wordFrequencyGame.getWord0(), wordFrequencyGame.getWord1());
@@ -612,6 +654,7 @@ public class HigherLowerCommand extends CoreCommand {
         }
     }
 
+    @Getter
     public static class WordFrequencyGame extends Game {
         private String word0, word1;
         private float frequency0, frequency1;
@@ -622,22 +665,6 @@ public class HigherLowerCommand extends CoreCommand {
             this.frequency0 = frequency0;
             this.word1 = word1;
             this.frequency1 = frequency1;
-        }
-
-        public String getWord0() {
-            return this.word0;
-        }
-
-        public float getFrequency0() {
-            return this.frequency0;
-        }
-
-        public String getWord1() {
-            return this.word1;
-        }
-
-        public float getFrequency1() {
-            return this.frequency1;
         }
 
         public void set0(String word, float frequency) {
