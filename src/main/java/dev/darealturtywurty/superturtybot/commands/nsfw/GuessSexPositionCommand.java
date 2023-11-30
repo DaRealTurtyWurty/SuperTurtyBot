@@ -175,7 +175,7 @@ public class GuessSexPositionCommand extends CoreCommand {
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) return;
 
-        if (NSFWCommand.isValidChannel(event.getChannel())) return;
+        if (!NSFWCommand.isValidChannel(event.getChannel())) return;
 
         String id = event.getComponentId();
         String[] split = id.split("-");
