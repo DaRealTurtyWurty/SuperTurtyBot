@@ -28,6 +28,8 @@ import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.submission.SubmissionCommand;
+import dev.darealturtywurty.superturtybot.modules.submission.SubmitCommand;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;

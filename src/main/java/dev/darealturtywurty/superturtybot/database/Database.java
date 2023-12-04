@@ -41,6 +41,7 @@ public class Database {
     public final MongoCollection<Economy> economy;
     public final MongoCollection<ChatReviver> chatRevivers;
     public final MongoCollection<Birthday> birthdays;
+    public final MongoCollection<SubmissionCategory> submissionCategories;
 
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
@@ -73,6 +74,7 @@ public class Database {
         this.economy = database.getCollection("economy", Economy.class);
         this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = database.getCollection("birthdays", Birthday.class);
+        this.submissionCategories = database.getCollection("submissionCategories", SubmissionCategory.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -102,6 +104,7 @@ public class Database {
         this.economy.createIndex(guildUserIndex);
         this.chatRevivers.createIndex(guildIndex);
         this.birthdays.createIndex(userIndex);
+        this.submissionCategories.createIndex(guildIndex);
     }
 
     public static Database getDatabase() {
