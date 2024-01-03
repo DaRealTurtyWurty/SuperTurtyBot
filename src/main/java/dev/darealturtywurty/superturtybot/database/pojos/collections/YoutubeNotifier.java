@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,4 +17,8 @@ public class YoutubeNotifier {
     
     private String mention;
     private List<String> storedVideos;
+
+    public YoutubeNotifier(long guild, long channel, String youtubeChannel, String mention) {
+        this(guild, channel, youtubeChannel, mention, new ArrayList<>());
+    }
 }

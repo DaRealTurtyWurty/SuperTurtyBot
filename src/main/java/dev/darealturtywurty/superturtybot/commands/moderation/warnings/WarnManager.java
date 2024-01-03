@@ -72,7 +72,7 @@ public class WarnManager {
         }
 
         final var warn = new Warning(guild.getIdLong(), toWarn.getIdLong(), reason, warner.getIdLong(), time,
-                UUID.randomUUID());
+                UUID.randomUUID().toString());
         Database.getDatabase().warnings.insertOne(warn);
 
         Member toWarnMember = guild.getMember(toWarn);

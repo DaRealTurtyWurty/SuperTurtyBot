@@ -12,4 +12,8 @@ import java.util.List;
 public class WordleProfile {
     private long user;
     private List<WordleStreakData> streaks;
+
+    public WordleProfile(final long user) {
+        this(user, new ArrayList<>());
+    }
 }

@@ -12,8 +12,14 @@ public class SteamNotifier {
     private long guild;
     private long channel;
     private int appId;
-    
     private String mention;
 
     private SteamAppNews previousData;
+
+    public SteamNotifier(long guild, long channel, int appId, String mention) {
+        this.guild = guild;
+        this.channel = channel;
+        this.appId = appId;
+        this.mention = mention;
+    }
 }

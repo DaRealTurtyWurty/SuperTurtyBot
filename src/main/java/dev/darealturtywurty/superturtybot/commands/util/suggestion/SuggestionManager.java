@@ -188,7 +188,7 @@ public final class SuggestionManager extends ListenerAdapter {
         suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
             message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().get(0)).addField(
                 type.richName + " by " + responder.getUser().getName(),  response, false).build()).queue();
-            suggestion.getResponses().add(new SuggestionResponse(type, response, responder.getIdLong(), time));
+            suggestion.getResponses().add(new SuggestionResponse(type.name(), response, responder.getIdLong(), time));
             Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
             future.complete(suggestion);
         }, err -> Database.getDatabase().suggestions.deleteOne(filter));
