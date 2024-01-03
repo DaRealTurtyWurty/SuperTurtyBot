@@ -55,7 +55,7 @@ public class TurtyBot {
             jdaBuilder.build();
             Constants.LOGGER.info("Setup JDA!");
         }, () -> {
-            throw new InvalidTokenException("Bot token is not present in .env!");
+            throw new InvalidTokenException();
         });
 
         loadRegisterers();

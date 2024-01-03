@@ -1,6 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
-import com.github.topisenpai.lavasrc.spotify.SpotifyAudioTrack;
+import com.github.topi314.lavasrc.spotify.SpotifyAudioTrack;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -200,7 +200,7 @@ public class GuessSongCommand extends CoreCommand {
                 }
 
                 if (hints == 1 && spotifyTrack.getPosition() >= spotifyTrack.getDuration() / 3) {
-                    reply(event, "🎵 The song's album cover is: " + spotifyTrack.getArtworkURL());
+                    reply(event, "🎵 The song's album cover is: " + spotifyTrack.getInfo().artworkUrl);
                     GUESS_THE_SONG_TRACKS.put(guild.getIdLong(), Tuples.of(tuple.getT1(), tuple.getT2(), hints + 1));
                 } else if (hints == 1 && spotifyTrack.getPosition() < spotifyTrack.getDuration() / 3) {
                     reply(event, "❌ You can only use the second hint after 1/3 of the song has played!");
