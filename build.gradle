@@ -59,7 +59,7 @@ dependencies {
 
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
-    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.17"
+    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.19"
     implementation group: "dev.arbjerg", name: "lavaplayer", version: "2.0.2"
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.4"
