@@ -41,14 +41,14 @@ dependencies {
     implementation group: "io.github.cdimascio", name: "dotenv-java", version: "3.0.0"
     implementation group: "org.spongepowered", name: "configurate-hocon", version: "4.1.2"
     
-    implementation group: "ch.qos.logback", name: "logback-classic", version: "1.4.11"
+    implementation group: "ch.qos.logback", name: "logback-classic", version: "1.4.14"
     
     implementation group: "com.vdurmont", name: "emoji-java", version: "5.1.1"
     implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
-    implementation group: "org.jsoup", name: "jsoup", version: "1.16.2"
+    implementation group: "org.jsoup", name: "jsoup", version: "1.17.2"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
-    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.7'
+    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.10'
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.7.8'
     implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.8.0'
     implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
@@ -59,11 +59,11 @@ dependencies {
 
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
-    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.17"
-    implementation group: "dev.arbjerg", name: "lavaplayer", version: "2.0.2"
+    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.19"
+    implementation group: "dev.arbjerg", name: "lavaplayer", version: "2.0.4"
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.8.4"
-    implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "3.2.9"
+    implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
     implementation("com.sedmelluq:jda-nas:1.1.0") {
         exclude module: "udp-queue"
     }
