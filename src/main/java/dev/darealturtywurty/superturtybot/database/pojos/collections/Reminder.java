@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.database.Database;
+import lombok.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -15,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Data
 public class Reminder {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -41,54 +43,6 @@ public class Reminder {
         this(0, 0, "", "", 0, 0);
     }
 
-    public long getGuild() {
-        return guild;
-    }
-
-    public void setGuild(long guild) {
-        this.guild = guild;
-    }
-
-    public long getUser() {
-        return user;
-    }
-
-    public void setUser(long user) {
-        this.user = user;
-    }
-
-    public String getReminder() {
-        return reminder;
-    }
-
-    public void setReminder(String reminder) {
-        this.reminder = reminder;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public long getChannel() {
-        return channel;
-    }
-
-    public void setChannel(long channel) {
-        this.channel = channel;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public void setTime(long time) {
-        this.time = time;
-    }
-
     public void schedule(JDA jda) {
         scheduler.schedule(() -> {
             Database.getDatabase().reminders.deleteOne(Filters.and(
@@ -101,9 +55,8 @@ public class Reminder {
             );
 
             User user = jda.getUserById(this.user);
-            if(user == null) {
+            if(user == null)
                 return;
-            }
 
             Guild guild = jda.getGuildById(this.guild);
             if (guild == null) {

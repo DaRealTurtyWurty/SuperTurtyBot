@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.Submission;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
 public class SubmissionCategory {
     private List<Submission> submissions = new ArrayList<>();

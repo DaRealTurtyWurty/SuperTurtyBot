@@ -26,17 +26,27 @@ public class ThreadManager extends ListenerAdapter {
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
         Constants.LOGGER.debug("Channel created: " + event.toString());
-        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
+        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD || !event.isFromGuild())
+            return;
 
         final Guild guild = event.getGuild();
-        final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
-                .first();
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (config == null) {
+            config = new GuildConfig(guild.getIdLong());
+            Database.getDatabase().guildConfig.insertOne(config);
+        }
 
-        if (config == null || !config.isShouldModeratorsJoinThreads()) return;
+        final ThreadChannel thread = event.getChannel().asThreadChannel();
+        thread.addThreadMember(guild.getSelfMember()).queue(ignored -> {}, ignored -> {});
+
+        if (!config.isShouldModeratorsJoinThreads())
+            return;
 
         final Set<Member> moderators = new HashSet<>();
-        guild.getRoles().stream().filter(role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(
-                        Permission.MESSAGE_MANAGE)).map(guild::findMembersWithRoles)
+        guild.getRoles().stream().filter(role ->
+                        role.hasPermission(Permission.MANAGE_THREADS) ||
+                                role.hasPermission(Permission.MESSAGE_MANAGE))
+                .map(guild::findMembersWithRoles)
                 .forEach(task -> task.onSuccess(moderators::addAll));
         if(moderators.isEmpty())
             return;
@@ -44,7 +54,6 @@ public class ThreadManager extends ListenerAdapter {
         final var strBuilder = new StringBuilder();
         moderators.stream().map(Member::getAsMention).forEach(strBuilder::append);
 
-        final ThreadChannel thread = event.getChannel().asThreadChannel();
         thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
                 .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, ignored -> {}, ignored -> {}), ignored -> {}));
     }
@@ -56,9 +65,13 @@ public class ThreadManager extends ListenerAdapter {
                 .isBlank() || event.getMessage().getType().isSystem()) return;
 
         final Guild guild = event.getGuild();
-        final GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
+        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
                 .first();
-        if (config == null) return;
+        if (config == null) {
+            config = new GuildConfig(guild.getIdLong());
+            Database.getDatabase().guildConfig.insertOne(config);
+            return;
+        }
 
         final List<Long> channels = GuildConfig.getChannels(config.getAutoThreadChannels());
         if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong())) return;

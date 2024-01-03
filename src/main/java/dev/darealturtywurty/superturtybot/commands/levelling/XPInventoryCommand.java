@@ -73,7 +73,7 @@ public class XPInventoryCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
                 .queue();
             return;

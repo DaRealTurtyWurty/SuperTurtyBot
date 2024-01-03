@@ -282,7 +282,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                 event.reply(
                         "❌ " + sexPosition.getName() + " was not the right position! The correct position was " + game.getPosition()
                                 .getName() + "!").queue();
-            } else {
+            } else if(LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
                 int xpEarned = ThreadLocalRandom.current()
                         .nextInt((9 - game.getRevealedCount()) * 5, (9 - game.getRevealedCount()) * 20);
                 event.reply("✅ You were correct! The correct position was " + game.getPosition()

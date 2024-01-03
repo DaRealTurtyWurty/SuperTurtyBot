@@ -102,13 +102,7 @@ public class SetXPCommand extends EconomyCommand {
             return;
         }
 
-        GuildConfig guildConfig = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
-        if(guildConfig == null) {
-            guildConfig = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(guildConfig);
-        }
-
-        if(!guildConfig.isLevellingEnabled()) {
+        if(!LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
             reply(event, "❌ Levelling is not enabled in this server!", false);
             return;
         }

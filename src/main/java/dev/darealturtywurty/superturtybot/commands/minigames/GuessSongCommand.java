@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.github.topisenpai.lavasrc.spotify.SpotifyAudioTrack;
-import com.mongodb.client.model.Filters;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -9,10 +8,8 @@ import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
-import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
@@ -249,14 +246,8 @@ public class GuessSongCommand extends CoreCommand {
             AudioTrackInfo info = track.getInfo();
             if (message.equalsIgnoreCase(info.title) || (message.length() >= 4 && info.title.toLowerCase()
                     .startsWith(message.toLowerCase()))) {
-                GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
-                if(config == null) {
-                    config = new GuildConfig(guild.getIdLong());
-                    Database.getDatabase().guildConfig.insertOne(config);
-                }
-
                 String replyContent = "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`";
-                if(config.isLevellingEnabled()) {
+                if(LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
                     User user = event.getAuthor();
 
                     // get xp relative to the current position in the song

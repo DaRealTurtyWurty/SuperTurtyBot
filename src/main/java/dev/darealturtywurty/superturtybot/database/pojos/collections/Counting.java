@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dev.darealturtywurty.superturtybot.modules.counting.CountingMode;
+import lombok.*;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Counting {
     private long guild;
     private long channel;
@@ -20,9 +24,6 @@ public class Counting {
     private long lastCountingMessageMillis;
 
     private String additionalData;
-    
-    public Counting() {
-    }
     
     public Counting(long guildId, long channelId, CountingMode mode) {
         this.guild = guildId;
@@ -40,141 +41,21 @@ public class Counting {
 
         this.additionalData = "";
     }
-    
-    public long getChannel() {
-        return this.channel;
-    }
-    
-    public String getCountingMode() {
-        return this.countingMode;
-    }
-    
-    public int getCurrentCount() {
-        return this.currentCount;
-    }
-    
-    public float getCurrentNumber() {
-        return this.currentNumber;
-    }
-    
-    public long getGuild() {
-        return this.guild;
-    }
-    
-    public int getHighestCount() {
-        return this.highestCount;
-    }
-    
-    public long getLatestCounter() {
-        return this.latestCounter;
-    }
-    
-    public float getNextNumber() {
-        return this.nextNumber;
-    }
-    
-    public float getSaves() {
-        return this.saves;
-    }
-    
-    public List<UserData> getUsers() {
-        return this.users;
-    }
-    
-    public void setChannel(long channel) {
-        this.channel = channel;
-    }
-    
-    public void setCountingMode(String countingMode) {
-        this.countingMode = countingMode;
-    }
-    
-    public void setCurrentCount(int currentCount) {
-        this.currentCount = currentCount;
-    }
-    
-    public void setCurrentNumber(float currentNumber) {
-        this.currentNumber = currentNumber;
-    }
-    
-    public void setGuild(long guild) {
-        this.guild = guild;
-    }
-    
-    public void setHighestCount(int highestCount) {
-        this.highestCount = highestCount;
-    }
-    
-    public void setLatestCounter(long latestCounter) {
-        this.latestCounter = latestCounter;
-    }
-    
-    public void setNextNumber(float nextNumber) {
-        this.nextNumber = nextNumber;
-    }
-    
-    public void setSaves(float saves) {
-        this.saves = saves;
-    }
-    
-    public void setUsers(List<UserData> users) {
-        this.users = users;
-    }
 
-    public long getLastCountingMessageMillis() {
-        return this.lastCountingMessageMillis;
-    }
-
-    public void setLastCountingMessageMillis(long lastCountingMessageMillis) {
-        this.lastCountingMessageMillis = lastCountingMessageMillis;
-    }
-
-    public String getAdditionalData() {
-        return this.additionalData;
-    }
-
-    public void setAdditionalData(String additionalData) {
-        this.additionalData = additionalData;
-    }
-    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class UserData {
         private long user;
         
         private int currentCountSuccession;
         private int totalCounts;
         
-        public UserData() {
-        }
-        
         public UserData(long userId) {
             this.user = userId;
             
             this.currentCountSuccession = 0;
             this.totalCounts = 0;
-        }
-        
-        public int getCurrentCountSuccession() {
-            return this.currentCountSuccession;
-        }
-        
-        public int getTotalCounts() {
-            return this.totalCounts;
-        }
-        
-        public long getUser() {
-            return this.user;
-        }
-        
-        public void setCurrentCountSuccession(int currentCountSuccession) {
-            this.currentCountSuccession = currentCountSuccession;
-        }
-        
-        public void setTotalCounts(int totalCounts) {
-            this.totalCounts = totalCounts;
-        }
-        
-        public void setUser(long user) {
-            this.user = user;
         }
     }
 }

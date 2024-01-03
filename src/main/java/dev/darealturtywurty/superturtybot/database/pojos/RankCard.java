@@ -1,5 +1,10 @@
 package dev.darealturtywurty.superturtybot.database.pojos;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class RankCard {
     private MongoColor backgroundColor;
     private MongoColor outlineColor;
@@ -43,149 +48,5 @@ public class RankCard {
         this.avatarOutlineImage = "";
         
         this.outlineOpacity = 1.0f;
-    }
-    
-    public MongoColor getAvatarOutlineColor() {
-        return this.avatarOutlineColor;
-    }
-    
-    public String getAvatarOutlineImage() {
-        return this.avatarOutlineImage;
-    }
-    
-    public MongoColor getBackgroundColor() {
-        return this.backgroundColor;
-    }
-    
-    public String getBackgroundImage() {
-        return this.backgroundImage;
-    }
-    
-    public MongoColor getLevelTextColor() {
-        return this.levelTextColor;
-    }
-    
-    public MongoColor getNameTextColor() {
-        return this.nameTextColor;
-    }
-    
-    public MongoColor getOutlineColor() {
-        return this.outlineColor;
-    }
-    
-    public String getOutlineImage() {
-        return this.outlineImage;
-    }
-    
-    public float getOutlineOpacity() {
-        return this.outlineOpacity;
-    }
-    
-    public MongoColor getPercentTextColor() {
-        return this.percentTextColor;
-    }
-    
-    public MongoColor getRankTextColor() {
-        return this.rankTextColor;
-    }
-    
-    public MongoColor getXpEmptyColor() {
-        return this.xpEmptyColor;
-    }
-    
-    public String getXpEmptyImage() {
-        return this.xpEmptyImage;
-    }
-    
-    public MongoColor getXpFillColor() {
-        return this.xpFillColor;
-    }
-    
-    public String getXpFillImage() {
-        return this.xpFillImage;
-    }
-    
-    public MongoColor getXpOutlineColor() {
-        return this.xpOutlineColor;
-    }
-    
-    public String getXpOutlineImage() {
-        return this.xpOutlineImage;
-    }
-    
-    public MongoColor getXpTextColor() {
-        return this.xpTextColor;
-    }
-    
-    public void setAvatarOutlineColor(MongoColor avatarOutlineColor) {
-        this.avatarOutlineColor = avatarOutlineColor;
-    }
-    
-    public void setAvatarOutlineImage(String avatarOutlineImage) {
-        this.avatarOutlineImage = avatarOutlineImage;
-    }
-    
-    public void setBackgroundColor(MongoColor backgroundColor) {
-        this.backgroundColor = backgroundColor;
-    }
-    
-    public void setBackgroundImage(String backgroundImage) {
-        this.backgroundImage = backgroundImage;
-    }
-    
-    public void setLevelTextColor(MongoColor levelTextColor) {
-        this.levelTextColor = levelTextColor;
-    }
-    
-    public void setNameTextColor(MongoColor nameTextColor) {
-        this.nameTextColor = nameTextColor;
-    }
-    
-    public void setOutlineColor(MongoColor outlineColor) {
-        this.outlineColor = outlineColor;
-    }
-    
-    public void setOutlineImage(String outlineImage) {
-        this.outlineImage = outlineImage;
-    }
-    
-    public void setOutlineOpacity(float outlineOpacity) {
-        this.outlineOpacity = outlineOpacity;
-    }
-    
-    public void setPercentTextColor(MongoColor percentTextColor) {
-        this.percentTextColor = percentTextColor;
-    }
-    
-    public void setRankTextColor(MongoColor rankTextColor) {
-        this.rankTextColor = rankTextColor;
-    }
-    
-    public void setXpEmptyColor(MongoColor xpEmptyColor) {
-        this.xpEmptyColor = xpEmptyColor;
-    }
-    
-    public void setXpEmptyImage(String xpEmptyImage) {
-        this.xpEmptyImage = xpEmptyImage;
-    }
-    
-    public void setXpFillColor(MongoColor xpFillColor) {
-        this.xpFillColor = xpFillColor;
-    }
-    
-    public void setXpFillImage(String xpFillImage) {
-        this.xpFillImage = xpFillImage;
-    }
-    
-    public void setXpOutlineColor(MongoColor xpOutlineColor) {
-        this.xpOutlineColor = xpOutlineColor;
-    }
-    
-    public void setXpOutlineImage(String xpOutlineImage) {
-        this.xpOutlineImage = xpOutlineImage;
-    }
-    
-    public void setXpTextColor(MongoColor xpTextColor) {
-        this.xpTextColor = xpTextColor;
     }
 }

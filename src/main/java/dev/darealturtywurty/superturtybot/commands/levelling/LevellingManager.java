@@ -40,7 +40,12 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     public boolean areLevelsEnabled(Guild guild) {
-        return !this.disabledGuilds.contains(guild.getIdLong());
+        if(this.disabledGuilds.contains(guild.getIdLong()))
+            return false;
+
+        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
+        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        return config.isLevellingEnabled();
     }
 
     @Override

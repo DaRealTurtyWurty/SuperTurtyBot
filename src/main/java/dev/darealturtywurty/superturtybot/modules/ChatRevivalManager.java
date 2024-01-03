@@ -40,6 +40,25 @@ public class ChatRevivalManager extends ListenerAdapter {
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         Guild guild = event.getGuild();
+
+        if (GUILD_EXECUTOR_MAP.containsKey(guild.getIdLong()))
+            return;
+
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        GUILD_EXECUTOR_MAP.put(guild.getIdLong(), executor);
+
+        ChatReviver chatReviver = getChatReviver(guild);
+        executor.scheduleAtFixedRate(
+                () -> drawingChatRevival(guild, chatReviver),
+                chatReviver.nextDrawingTime(),
+                TimeUnit.DAYS.toMillis(1),
+                TimeUnit.MILLISECONDS
+        );
+
+        ShutdownHooks.register(executor::shutdown);
+    }
+
+    private void drawingChatRevival(Guild guild, ChatReviver chatReviver) {
         GuildConfig config = getGuildConfig(guild);
         if (!config.isChatRevivalEnabled())
             return;
@@ -59,35 +78,17 @@ public class ChatRevivalManager extends ListenerAdapter {
         if (!textChannel.canTalk())
             return;
 
-        if (GUILD_EXECUTOR_MAP.containsKey(guild.getIdLong()))
-            return;
-
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        GUILD_EXECUTOR_MAP.put(guild.getIdLong(), executor);
-
-        ChatReviver chatReviver = getChatReviver(guild);
-        executor.scheduleAtFixedRate(
-                () -> drawingChatRevival(guild, textChannel, chatReviver),
-                chatReviver.nextDrawingTime(),
-                TimeUnit.DAYS.toMillis(1),
-                TimeUnit.MILLISECONDS
-        );
-
-        ShutdownHooks.register(executor::shutdown);
-    }
-
-    private void drawingChatRevival(Guild guild, TextChannel channel, ChatReviver chatReviver) {
         try {
             List<String> availableWords = getAvailableWords(chatReviver);
             if (availableWords.isEmpty()) {
-                channel.sendMessage("❌ Uh oh! There appears to be no words left to be able to draw!").queue();
+                textChannel.sendMessage("❌ Uh oh! There appears to be no words left to be able to draw!").queue();
                 Constants.LOGGER.error("❌ No words left to draw!");
                 return;
             }
 
             String word = availableWords.get(ThreadLocalRandom.current().nextInt(availableWords.size()));
             if (word == null || word.isBlank()) {
-                channel.sendMessage("❌ Uh oh! There appears to be no words left to be able to draw!").queue();
+                textChannel.sendMessage("❌ Uh oh! There appears to be no words left to be able to draw!").queue();
                 Constants.LOGGER.error("❌ No words left to draw!");
                 return;
             }
@@ -98,9 +99,9 @@ public class ChatRevivalManager extends ListenerAdapter {
             chatReviver.setLastDrawingTime(System.currentTimeMillis());
             Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
-            channel.sendMessage("🎨 The word for today's drawing is: **" + word + "**! Happy drawing! 🎨").queue();
+            textChannel.sendMessage("🎨 The word for today's drawing is: **" + word + "**! Happy drawing! 🎨").queue();
         } catch (IOException exception) {
-            channel.sendMessage("❌ Uh oh! Something went wrong! Unable to do the drawing today! Please report this to the bot owner!").queue();
+            textChannel.sendMessage("❌ Uh oh! Something went wrong! Unable to do the drawing today! Please report this to the bot owner!").queue();
             Constants.LOGGER.error("❌ Unable to get available words for drawing!", exception);
         }
     }
