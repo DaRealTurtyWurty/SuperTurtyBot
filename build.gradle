@@ -48,7 +48,7 @@ dependencies {
     implementation group: "org.jsoup", name: "jsoup", version: "1.17.2"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
-    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.7'
+    implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.4.10'
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.7.8'
     implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.8.0'
     implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
