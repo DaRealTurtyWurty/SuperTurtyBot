@@ -338,6 +338,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new SteamGameDetailsCommand());
         //cmds.add(new ConvertCommand());
         //cmds.add(new BirthdayCommand());
+        cmds.add(new LatexCommand());
 
         // Moderation
         cmds.add(new BanCommand());
