@@ -44,8 +44,8 @@ public class Rent {
         this.isPaused = false;
 
         if (!this.previousRents.isEmpty()) {
-            this.currentRent = this.previousRents.get(this.previousRents.size() - 1);
-            this.previousRents.remove(this.previousRents.size() - 1);
+            this.currentRent = this.previousRents.getLast();
+            this.previousRents.removeLast();
         } else {
             this.currentRent = this.baseRent;
         }

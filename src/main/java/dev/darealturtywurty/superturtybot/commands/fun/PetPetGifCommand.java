@@ -15,10 +15,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,8 +76,8 @@ public class PetPetGifCommand extends CoreCommand {
 
         BufferedImage image;
         try {
-            image = ImageIO.read(new URL(imageStr));
-        } catch (IOException exception) {
+            image = ImageIO.read(new URI(imageStr).toURL());
+        } catch (IOException | URISyntaxException exception) {
             event.getHook().editOriginal("❌ The image you provided is invalid!").queue();
             return;
         }
@@ -141,14 +141,19 @@ public class PetPetGifCommand extends CoreCommand {
 
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
+        if(event.getTargetMember() == null) {
+            reply(event, "❌ You must be in a server to use this command!", false);
+            return;
+        }
+
         String avatar = event.isFromGuild() ? event.getTargetMember().getEffectiveAvatarUrl() : event.getTarget().getEffectiveAvatarUrl();
 
         event.deferReply().setContent("⏸️ Creating pet pet gif...").queue();
 
         BufferedImage image;
         try {
-            image = ImageIO.read(new URL(avatar));
-        } catch (IOException exception) {
+            image = ImageIO.read(new URI(avatar).toURL());
+        } catch (IOException | URISyntaxException exception) {
             event.getHook().editOriginal("❌ The image you provided is invalid!").queue();
             return;
         }

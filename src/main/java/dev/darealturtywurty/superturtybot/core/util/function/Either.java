@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.core.util.function;
 
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -37,7 +38,6 @@ import java.util.function.Supplier;
  * factory methods, {@link Either#left} and {@link Either#right}.
  **/
 public final class Either<L, R> {
-
     /**
      * The left side of a disjoint union, as opposed to the right side.
      *
@@ -47,7 +47,7 @@ public final class Either<L, R> {
      * @return an instance of {@link Either} well-defined for the left side
      */
     public static <L, R> Either<L, R> left(L value) {
-        return new Either<>(Optional.of(value), Optional.empty());
+        return new Either<>(Optional.ofNullable(value), Optional.empty());
     }
 
     /**
@@ -139,7 +139,7 @@ public final class Either<L, R> {
      *
      * @return value of type L for the left, if the left side of this Either is defined
      */
-    public L getLeft() {
+    public L getLeft() throws NoSuchElementException {
         return this.left.get();
     }
 
@@ -149,7 +149,7 @@ public final class Either<L, R> {
      *
      * @return value of type R for the left, if the right side of this Either is defined
      */
-    public R getRight() {
+    public R getRight() throws NoSuchElementException {
         return this.right.get();
     }
 

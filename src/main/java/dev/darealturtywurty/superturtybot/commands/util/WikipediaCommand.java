@@ -103,13 +103,13 @@ public class WikipediaCommand extends CoreCommand {
 
             message.editMessageComponents(ActionRow.of(components)).queue(ignored -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                     .condition(interaction ->
-                            interaction.getComponentId().startsWith("wikipedia-") &&
-                                    interaction.isFromGuild() == event.isFromGuild() &&
-                                    interaction.getChannel().getIdLong() == event.getChannel().getIdLong() &&
-                                    interaction.getMessageIdLong() == message.getIdLong() &&
-                                    interaction.isFromGuild() ?
-                                    interaction.getGuild().getIdLong() == event.getGuild().getIdLong() :
-                                    true)
+                            !interaction.getComponentId().startsWith("wikipedia-") ||
+                                    interaction.isFromGuild() != event.isFromGuild() ||
+                                    interaction.getChannel().getIdLong() != event.getChannel().getIdLong() ||
+                                    interaction.getMessageIdLong() != message.getIdLong() ||
+                                    interaction.getGuild() == null ||
+                                    event.getGuild() == null ||
+                                    interaction.getGuild().getIdLong() == event.getGuild().getIdLong())
                     .timeout(5, TimeUnit.MINUTES)
                     .success(buttonInteractionEvent -> {
                         buttonInteractionEvent.deferEdit().queue();
@@ -181,11 +181,11 @@ public class WikipediaCommand extends CoreCommand {
 
         String url = null;
         while(url == null && !imageNames.isEmpty()) {
-            List<ImageInfo> imageInfos = WIKI.getImageInfo(imageNames.get(0));
-            url = imageInfos.isEmpty() ? null : imageInfos.get(0).url.toString();
+            List<ImageInfo> imageInfos = WIKI.getImageInfo(imageNames.getFirst());
+            url = imageInfos.isEmpty() ? null : imageInfos.getFirst().url.toString();
 
             if(url == null) {
-                imageNames.remove(0);
+                imageNames.removeFirst();
             }
         }
 

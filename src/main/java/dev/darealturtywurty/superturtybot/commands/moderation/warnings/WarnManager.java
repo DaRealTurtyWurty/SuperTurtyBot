@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import org.apache.commons.math3.util.Pair;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;

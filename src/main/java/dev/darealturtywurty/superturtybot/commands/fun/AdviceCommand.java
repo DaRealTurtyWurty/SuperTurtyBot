@@ -1,20 +1,18 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.util.concurrent.TimeUnit;
 
 public class AdviceCommand extends CoreCommand {
     public AdviceCommand() {
@@ -49,7 +47,7 @@ public class AdviceCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         try {
-            final URLConnection connection = new URL("https://api.adviceslip.com/advice").openConnection();
+            final URLConnection connection = new URI("https://api.adviceslip.com/advice").toURL().openConnection();
             final JsonObject json = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             if (!json.has("slip")) {
@@ -61,12 +59,11 @@ public class AdviceCommand extends CoreCommand {
             
             final String advice = json.getAsJsonObject("slip").get("advice").getAsString();
             event.deferReply().setContent(advice).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.deferReply(true)
                 .setContent("There appears to be an issue processing this command! Please try again later.")
                 .mentionRepliedUser(false).queue();
-            Constants.LOGGER.error("An issue has occured with the advice command:\nException: {}\n{}",
-                exception.getMessage(), ExceptionUtils.getMessage(exception));
+            Constants.LOGGER.error("An error occurred while running the advice command!", exception);
         }
     }
 }

@@ -100,7 +100,7 @@ public class GuessSongCommand extends CoreCommand {
             return;
         }
 
-        if(AudioManager.getCurrentlyPlaying(event.getGuild()) != null) {
+        if (AudioManager.getCurrentlyPlaying(event.getGuild()) != null) {
             reply(event, "❌ There is already a song playing!", false, true);
             return;
         }
@@ -112,16 +112,14 @@ public class GuessSongCommand extends CoreCommand {
         var threadRef = new AtomicReference<ThreadChannel>();
         CompletableFuture<Long> messageId = new CompletableFuture<>();
 
-        event.forEach(slashEvent -> {
-            slashEvent.deferReply().setContent("🎵 Guess the song has started!").flatMap(InteractionHook::retrieveOriginal).queue(msg -> {
-                msg.createThreadChannel("Guess The Song").queue(thread -> {
-                    thread.sendMessage("🎵 Loading...")
-                            .queue(message -> messageId.complete(message.getIdLong()));
+        event.forEach(slashEvent -> slashEvent.deferReply()
+                .setContent("🎵 Guess the song has started!")
+                .flatMap(InteractionHook::retrieveOriginal)
+                .queue(msg -> msg.createThreadChannel("Guess The Song").queue(thread -> {
+                    thread.sendMessage("🎵 Loading...").queue(message -> messageId.complete(message.getIdLong()));
                     threadRef.set(thread);
                     thread.addThreadMember(slashEvent.getUser()).queue();
-                });
-            });
-        }, messageEvent -> {
+                })), messageEvent -> {
             messageEvent.getChannel().sendMessage("🎵 Guess the song has started!").queue();
             messageEvent.getChannel().sendMessage("🎵 Loading...")
                     .queue(message -> messageId.complete(message.getIdLong()));
@@ -132,19 +130,13 @@ public class GuessSongCommand extends CoreCommand {
             CompletableFuture<Either<AudioTrack, FriendlyException>> future = AudioManager.playGuessTheSong(guild,
                     voiceChannel, PLAYLIST);
 
-            future.thenAcceptAsync(result -> {
-                result.forEach(track -> {
-                    GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
-                            Tuples.of(threadRef.get().getIdLong(), result.isLeft() ? result.getLeft() : null, 0));
-                    threadRef.get().deleteMessageById(id).queue();
-                }, exception -> {
-                    event.forEach(slashEvent -> {
-                        slashEvent.getHook().editOriginal("❌ Guess the song has failed to start!").queue();
-                    }, messageEvent -> {
-                        messageEvent.getChannel().editMessageById(id, "❌ Guess the song has failed to start!").queue();
-                    });
-                });
-            });
+            future.thenAcceptAsync(result -> result.forEach(track -> {
+                GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
+                        Tuples.of(threadRef.get().getIdLong(), result.isLeft() ? result.getLeft() : null, 0));
+                threadRef.get().deleteMessageById(id).queue();
+            }, exception -> event.forEach(slashEvent ->
+                    slashEvent.getHook().editOriginal("❌ Guess the song has failed to start!").queue(), messageEvent ->
+                    messageEvent.getChannel().editMessageById(id, "❌ Guess the song has failed to start!").queue())));
         });
     }
 
@@ -222,12 +214,12 @@ public class GuessSongCommand extends CoreCommand {
             if ("give up".equalsIgnoreCase(message)) {
                 reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
                         .getInfo().author + "`");
-              
+
                 ThreadChannel thread = event.getGuild().getThreadChannelById(tuple.getT1());
                 if (thread != null) {
                     thread.getManager().setArchived(true).queue();
                 }
-              
+
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
                 return;
@@ -238,7 +230,7 @@ public class GuessSongCommand extends CoreCommand {
                         .getInfo().author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
-              
+
                 run(Either.right(event), event.getGuild(), member.getVoiceState().getChannel());
                 return;
             }
@@ -247,7 +239,7 @@ public class GuessSongCommand extends CoreCommand {
             if (message.equalsIgnoreCase(info.title) || (message.length() >= 4 && info.title.toLowerCase()
                     .startsWith(message.toLowerCase()))) {
                 String replyContent = "🎵 Correct! The song was `" + info.title + "` by `" + info.author + "`";
-                if(LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
+                if (LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
                     User user = event.getAuthor();
 
                     // get xp relative to the current position in the song

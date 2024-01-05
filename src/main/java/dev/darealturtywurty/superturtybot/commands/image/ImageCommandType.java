@@ -1,12 +1,14 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
-import java.util.function.BiConsumer;
-
 import dev.darealturtywurty.superturtybot.registry.Registerable;
+import lombok.Getter;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.util.function.BiConsumer;
 
 public class ImageCommandType implements Registerable {
     private String name;
+    @Getter
     private final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> runner;
     
     public ImageCommandType(BiConsumer<SlashCommandInteractionEvent, ImageCommandType> runner) {
@@ -16,10 +18,6 @@ public class ImageCommandType implements Registerable {
     @Override
     public String getName() {
         return this.name;
-    }
-
-    public BiConsumer<SlashCommandInteractionEvent, ImageCommandType> getRunner() {
-        return this.runner;
     }
 
     @Override

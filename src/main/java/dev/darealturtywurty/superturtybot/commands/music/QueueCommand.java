@@ -1,18 +1,18 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
 
 public class QueueCommand extends CoreCommand {
     public QueueCommand() {
@@ -46,7 +46,7 @@ public class QueueCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
@@ -59,7 +59,7 @@ public class QueueCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
         }
@@ -76,9 +76,10 @@ public class QueueCommand extends CoreCommand {
 
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (AudioTrack track : queue) {
+            Member trackMember = event.getGuild().getMemberById(track.getUserData(TrackData.class).getUserId());
             TrackData trackData = track.getUserData(TrackData.class);
             contents.field("[" + TimeUtils.millisecondsFormatted(track.getDuration()) + "] - " + track.getInfo().title.trim(),
-                    "[Link](%s)\nAdded by: %s".formatted(track.getInfo().uri, trackData == null ? "Unknown" : event.getGuild().getMemberById(trackData.getUserId()).getAsMention()));
+                    "[Link](%s)\nAdded by: %s".formatted(track.getInfo().uri, trackData == null || trackMember == null ? "Unknown" : trackMember.getAsMention()));
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)

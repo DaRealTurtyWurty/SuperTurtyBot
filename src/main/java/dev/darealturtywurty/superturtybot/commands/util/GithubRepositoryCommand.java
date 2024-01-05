@@ -7,8 +7,8 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -30,7 +30,8 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -113,7 +114,7 @@ public class GithubRepositoryCommand extends CoreCommand {
             @NotNull Repository repo;
             try {
                 repo = findRepo(owner, name);
-            } catch (final IOException exception) {
+            } catch (final IOException | URISyntaxException exception) {
                 event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + rawOption + "`!")
                         .mentionRepliedUser(false).queue();
                 return;
@@ -129,9 +130,10 @@ public class GithubRepositoryCommand extends CoreCommand {
         List<Repository> repositories;
         try {
             repositories = searchGithubRepo(repositoryName);
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
                 .mentionRepliedUser(false).queue();
+            Constants.LOGGER.error("Failed to search for repositories!", exception);
             return;
         }
 
@@ -142,7 +144,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         }
 
         if (repositories.size() == 1) {
-            final EmbedBuilder embed = createEmbed(repositories.get(0));
+            final EmbedBuilder embed = createEmbed(repositories.getFirst());
             event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(false).queue();
             return;
         }
@@ -212,7 +214,7 @@ public class GithubRepositoryCommand extends CoreCommand {
             return;
         }
 
-        String value = event.getSelectedOptions().get(0).getValue();
+        String value = event.getSelectedOptions().getFirst().getValue();
         String[] repoInfo = value.split("::");
         String author = repoInfo[0];
         String repoName = repoInfo[1];
@@ -220,7 +222,7 @@ public class GithubRepositoryCommand extends CoreCommand {
         Repository repo;
         try {
             repo = findRepo(author, repoName);
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.deferEdit().queue();
             return;
         }
@@ -307,7 +309,7 @@ public class GithubRepositoryCommand extends CoreCommand {
 
     private static Color languageToColor(final String language) {
         try {
-            final URLConnection urlc = new URL("https://raw.githubusercontent.com/ozh/github-colors/master/colors.json")
+            final URLConnection urlc = new URI("https://raw.githubusercontent.com/ozh/github-colors/master/colors.json").toURL()
                 .openConnection();
             urlc.addRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
@@ -317,7 +319,7 @@ public class GithubRepositoryCommand extends CoreCommand {
             return master.has(language)
                 ? Color.decode(master.get(language).getAsJsonObject().get("color").getAsString())
                 : Color.WHITE;
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             return Color.WHITE;
         }
     }
@@ -334,8 +336,8 @@ public class GithubRepositoryCommand extends CoreCommand {
     }
 
     @NotNull
-    private static List<Repository> searchGithubRepo(final String repo) throws IOException {
-        final var url = new URL("https://api.github.com/search/repositories?q=%s".formatted(repo));
+    private static List<Repository> searchGithubRepo(final String repo) throws IOException, URISyntaxException {
+        final var url = new URI("https://api.github.com/search/repositories?q=%s".formatted(repo)).toURL();
         final URLConnection connection = url.openConnection();
         connection.addRequestProperty("User-Agent",
             "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
@@ -349,8 +351,8 @@ public class GithubRepositoryCommand extends CoreCommand {
         return repositories;
     }
 
-    private static Repository findRepo(String owner, String name) throws IOException {
-        final var url = new URL("https://api.github.com/repos/%s/%s".formatted(owner, name));
+    private static Repository findRepo(String owner, String name) throws IOException, URISyntaxException {
+        final var url = new URI("https://api.github.com/repos/%s/%s".formatted(owner, name)).toURL();
         final URLConnection connection = url.openConnection();
         connection.addRequestProperty("User-Agent",
             "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");

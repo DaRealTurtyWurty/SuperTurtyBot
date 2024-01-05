@@ -105,29 +105,19 @@ public class TimeUtils {
             return deadlineStrBuilder.toString();
         }
 
-        if (parts.length >= 4) {
-            deadlineStrBuilder.append(parts[3]).append(":");
-            if (parts.length == 4) {
-                deadlineStrBuilder.append("00:00.000Z");
-                return deadlineStrBuilder.toString();
-            }
+        deadlineStrBuilder.append(parts[3]).append(":");
+        if (parts.length == 4) {
+            deadlineStrBuilder.append("00:00.000Z");
+            return deadlineStrBuilder.toString();
         }
 
-        if (parts.length >= 5) {
-            deadlineStrBuilder.append(parts[4]).append(":");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("00.000Z");
-                return deadlineStrBuilder.toString();
-            }
+        deadlineStrBuilder.append(parts[4]).append(":");
+        if (parts.length == 5) {
+            deadlineStrBuilder.append("00.000Z");
+            return deadlineStrBuilder.toString();
         }
 
-        if (parts.length >= 6) {
-            deadlineStrBuilder.append(parts[5]).append(".");
-            if (parts.length == 5) {
-                deadlineStrBuilder.append("000Z");
-                return deadlineStrBuilder.toString();
-            }
-        }
+        deadlineStrBuilder.append(parts[5]).append(".");
 
         if (parts.length >= 7) {
             deadlineStrBuilder.append(parts[6]).append("Z");
@@ -142,7 +132,7 @@ public class TimeUtils {
             dayOfYear += getDaysForMonth(i, year);
         }
 
-        dayOfYear += day;
+        dayOfYear += (short) day;
         return dayOfYear;
     }
 }

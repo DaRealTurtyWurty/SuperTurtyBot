@@ -1,7 +1,9 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;

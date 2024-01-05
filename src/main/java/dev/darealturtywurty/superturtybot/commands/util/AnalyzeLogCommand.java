@@ -51,7 +51,7 @@ public class AnalyzeLogCommand extends CoreCommand {
             return;
         }
 
-        Message.Attachment attachment = attachments.get(0);
+        Message.Attachment attachment = attachments.getFirst();
         if (!attachment.getFileName().endsWith(".log")) {
             event.reply("This file is not a log file!").setEphemeral(true).queue();
             return;
@@ -394,7 +394,7 @@ public class AnalyzeLogCommand extends CoreCommand {
             if(line.contains("Missing textures in model")) {
                 String model = line.split("Missing textures in model ")[1].split("#")[0].trim();
                 List<String> textures = new ArrayList<>(List.of(line.split("Missing textures in model ")[1].split("#")[1].split("\n")));
-                textures.remove(0); // remove the first line which is just #inventory
+                textures.removeFirst(); // remove the first line which is just #inventory
 
                 var solution = new StringBuilder("The model `%s` is missing the following textures:\n".formatted(model));
                 for(String texture : textures) {

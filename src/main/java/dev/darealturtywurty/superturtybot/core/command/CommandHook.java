@@ -178,7 +178,7 @@ public class CommandHook extends ListenerAdapter {
         final List<TextChannel> channels = jda.getTextChannelsByName("command-list", true);
         if (channels.isEmpty()) return;
 
-        final TextChannel cmdList = channels.get(0);
+        final TextChannel cmdList = channels.getFirst();
         if (cmdList == null) return;
 
         final var builder = new StringBuilder();

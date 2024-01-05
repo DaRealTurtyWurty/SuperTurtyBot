@@ -1,18 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.BiConsumer;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
 import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
 import dev.darealturtywurty.superturtybot.registry.Registry;
@@ -21,6 +9,17 @@ import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
 
 public class ImageCommandRegistry {
     private static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
@@ -28,6 +27,9 @@ public class ImageCommandRegistry {
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BLEP = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Blep");
+        if(post == null)
+            return;
+
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
         event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
@@ -35,15 +37,15 @@ public class ImageCommandRegistry {
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BUNNY = (event, cmd) -> {
         try {
-            final URLConnection connection = new URL(
+            final URLConnection connection = new URI(
                 ThreadLocalRandom.current().nextBoolean() ? "https://api.bunnies.io/v2/loop/random/?media=mp4"
-                    : "https://api.bunnies.io/v2/loop/random/?media=gif").openConnection();
+                    : "https://api.bunnies.io/v2/loop/random/?media=gif").toURL().openConnection();
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = result.get("media").getAsJsonObject().get("poster").getAsString();
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get bunny!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this bunny image.")
                 .mentionRepliedUser(false).queue();
         }
@@ -62,8 +64,14 @@ public class ImageCommandRegistry {
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
             final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
+            if(post == null)
+                return;
+
             final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
                 : post.getSubject().getUrl();
+            if(mediaURL == null)
+                return;
+
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
         
@@ -73,13 +81,13 @@ public class ImageCommandRegistry {
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT = (event, cmd) -> {
         try {
             final String url = "https://cataas.com";
-            final URLConnection connection = new URL(url + "/cat?json=true").openConnection();
+            final URLConnection connection = new URI(url + "/cat?json=true").toURL().openConnection();
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String imageId = result.get("url").getAsString();
             event.deferReply().setContent(url + imageId).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get cat!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this cat image.")
                 .mentionRepliedUser(false).queue();
         }
@@ -108,8 +116,14 @@ public class ImageCommandRegistry {
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
             final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
+            if(post == null)
+                return;
+
             final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
                 : post.getSubject().getUrl();
+            if(mediaURL == null)
+                return;
+
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
         
@@ -118,13 +132,13 @@ public class ImageCommandRegistry {
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG = (event, cmd) -> {
         try {
-            final URLConnection connection = new URL("https://dog.ceo/api/breeds/image/random").openConnection();
+            final URLConnection connection = new URI("https://dog.ceo/api/breeds/image/random").toURL().openConnection();
             final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = body.get("message").getAsString();
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get dog!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this dog image.")
                 .mentionRepliedUser(false).queue();
         }
@@ -133,6 +147,9 @@ public class ImageCommandRegistry {
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOGE = (event, cmd) -> {
         final SubredditReference subreddit = RedditUtils.getSubreddit("Doge");
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Doge");
+        if(post == null)
+            return;
+
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
         event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
@@ -140,13 +157,13 @@ public class ImageCommandRegistry {
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DUCK = (event, cmd) -> {
         try {
-            final URLConnection connection = new URL("https://random-d.uk/api/v2/random").openConnection();
+            final URLConnection connection = new URI("https://random-d.uk/api/v2/random").toURL().openConnection();
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = result.get("url").getAsString();
             event.deferReply().setContent(url).mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get duck!", exception);
             event.deferReply(true).setContent("❌ There has been a problem gathering this duck image!")
                 .mentionRepliedUser(false).queue();
         }
@@ -157,7 +174,7 @@ public class ImageCommandRegistry {
             final Document page = Jsoup.connect("https://generatorfun.com/random-snake-image").get();
             event.deferReply().setContent(page.select("img").first().attr("abs:src")).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to get snake!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this snake image.")
                 .mentionRepliedUser(false).queue();
         }
@@ -207,8 +224,8 @@ public class ImageCommandRegistry {
         IMAGE_CMD_TYPES.register("nasa", new ImageCommandType(new NasaCommand()));
     }
     
-    private static ImageCommandType pexels(String name, int maxPages) {
-        return IMAGE_CMD_TYPES.register(name, new PexelsImageCommandType(maxPages));
+    private static void pexels(String name, int maxPages) {
+        IMAGE_CMD_TYPES.register(name, new PexelsImageCommandType(maxPages));
     }
 
     public static Registry<ImageCommandType> getImageCommandTypes() {

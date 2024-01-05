@@ -1,23 +1,11 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Highlighter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -28,7 +16,14 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.*;
 
 public class HighlightCommand extends CoreCommand {
     public HighlightCommand() {
@@ -79,7 +74,7 @@ public class HighlightCommand extends CoreCommand {
     
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-        if (!event.isFromGuild() || !event.getName().equals(getName()))
+        if (!event.isFromGuild() || !event.getName().equals(getName()) || event.getGuild() == null)
             return;
         
         final String subcommand = event.getSubcommandName();
@@ -117,7 +112,7 @@ public class HighlightCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "❌ This command can only be used inside a server!", false, true);
             return;
         }
@@ -129,7 +124,7 @@ public class HighlightCommand extends CoreCommand {
         
         switch (event.getSubcommandName()) {
             case "create": {
-                final String text = event.getOption("text").getAsString();
+                final String text = event.getOption("text", "", OptionMapping::getAsString);
                 if (text.length() < 4) {
                     reply(event, "❌ A highlighter must be at least 4 characters!", false, true);
                     return;
@@ -157,7 +152,11 @@ public class HighlightCommand extends CoreCommand {
             }
             
             case "delete": {
-                final String id = event.getOption("id").getAsString();
+                final String id = event.getOption("id", null, OptionMapping::getAsString);
+                if(id == null) {
+                    reply(event, "❌ You must supply a valid id to delete!", false, true);
+                    return;
+                }
                 
                 final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("user", event.getUser().getIdLong()), Filters.eq("uuid", id));
@@ -180,6 +179,9 @@ public class HighlightCommand extends CoreCommand {
     }
     
     private static void createHighlighter(SlashCommandInteractionEvent event, final String text, final boolean caseSensitive) {
+        if(event.getGuild() == null)
+            return;
+
         final Highlighter highlighter = new Highlighter(event.getGuild().getIdLong(), event.getUser().getIdLong(), text,
             caseSensitive);
         Database.getDatabase().highlighters.insertOne(highlighter);

@@ -1,24 +1,26 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.awt.Color;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.awt.*;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.io.IOUtils;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class MinecraftUserUUIDCommand extends CoreCommand {
     public MinecraftUserUUIDCommand() {
@@ -62,10 +64,15 @@ public class MinecraftUserUUIDCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String username = URLEncoder.encode(event.getOption("username").getAsString().trim(),
-            StandardCharsets.UTF_8);
+        String rawUsername = event.getOption("username", null, OptionMapping::getAsString);
+        if (rawUsername == null) {
+            event.deferReply(true).setContent("You must provide a username!").mentionRepliedUser(false).queue();
+            return;
+        }
+
+        final String username = URLEncoder.encode(rawUsername.trim(), StandardCharsets.UTF_8);
         try {
-            final URLConnection connection = new URL("https://minecraft-api.com/api/uuid/" + username).openConnection();
+            final URLConnection connection = new URI("https://minecraft-api.com/api/uuid/" + username).toURL().openConnection();
             final String response = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
             if (response.contains("not found"))
                 throw new IllegalArgumentException(response);
@@ -73,14 +80,15 @@ public class MinecraftUserUUIDCommand extends CoreCommand {
             event.deferReply()
                 .addEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.BLUE)
                     .setDescription(
-                        "The UUID for `" + event.getOption("username").getAsString() + "` is: `" + response + "`")
+                        "The UUID for `" + rawUsername + "` is: `" + response + "`")
                     .build())
                 .mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.deferReply(true)
                 .setContent("There has been an issue trying to gather this information from our database! "
                     + "This has been reported to the bot owner!")
                 .mentionRepliedUser(false).queue();
+            Constants.LOGGER.error("Error getting UUID for " + username, exception);
         } catch (final IllegalArgumentException exception) {
             event.deferReply(true).setContent("This player does not exist!").mentionRepliedUser(false).queue();
         }

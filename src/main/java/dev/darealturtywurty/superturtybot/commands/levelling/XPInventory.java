@@ -1,14 +1,16 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-import org.jetbrains.annotations.NotNull;
-
 // TODO: Preset rank card system, and store the rank cards in here for easy access
 public class XPInventory extends ArrayList<RankCardItem> {
+    @Serial
     private static final long serialVersionUID = -8380703374521460050L;
     private final List<Long> timeAdded = new ArrayList<>();
 
@@ -84,7 +86,7 @@ public class XPInventory extends ArrayList<RankCardItem> {
 
     @NotNull
     public List<RankCardItem> sortByRarity(boolean decending) {
-        return stream().sorted((item0, item1) -> Integer.compare(item0.rarity.ordinal(), item1.rarity.ordinal()))
+        return stream().sorted(Comparator.comparingInt(item0 -> item0.rarity.ordinal()))
             .toList();
     }
 

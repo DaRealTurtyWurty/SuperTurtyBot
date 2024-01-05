@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -23,7 +24,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -99,9 +101,9 @@ public class GuessSexPositionCommand extends CoreCommand {
 
         BufferedImage image;
         try {
-            image = ImageIO.read(new URL(url));
-        } catch (IOException exception) {
-            exception.printStackTrace();
+            image = ImageIO.read(new URI(url).toURL());
+        } catch (IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to load image!", exception);
             reply(event, "❌ An error occurred while trying to load the image!");
             return;
         }
@@ -126,7 +128,7 @@ public class GuessSexPositionCommand extends CoreCommand {
         try {
             ImageIO.write(newImage, "jpg", boas);
         } catch (IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to write image!", exception);
             reply(event, "❌ An error occurred while trying to load the image!");
             return;
         }
@@ -166,7 +168,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                     try {
                         upload.close();
                     } catch (IOException exception) {
-                        exception.printStackTrace();
+                        Constants.LOGGER.error("Failed to close upload!", exception);
                     }
                 });
     }
@@ -199,7 +201,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                 return;
             }
 
-            String value = event.getValues().get(0);
+            String value = event.getValues().getFirst();
             String[] splitValue = value.split("-");
             int x = Integer.parseInt(splitValue[0]);
             int y = Integer.parseInt(splitValue[1]);
@@ -212,9 +214,9 @@ public class GuessSexPositionCommand extends CoreCommand {
 
             BufferedImage image;
             try {
-                image = ImageIO.read(new URL(game.getUrl()));
-            } catch (IOException exception) {
-                exception.printStackTrace();
+                image = ImageIO.read(new URI(game.getUrl()).toURL());
+            } catch (IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Failed to load image!", exception);
                 event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
                 return;
             }
@@ -246,7 +248,7 @@ public class GuessSexPositionCommand extends CoreCommand {
             try {
                 ImageIO.write(newImage, "jpg", boas);
             } catch (IOException exception) {
-                exception.printStackTrace();
+                Constants.LOGGER.error("Failed to write image!", exception);
                 event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
                 return;
             }
@@ -276,7 +278,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                             .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
             if (game == null) return;
 
-            String value = event.getValues().get(0);
+            String value = event.getValues().getFirst();
             SexPosition sexPosition = SexPosition.valueOf(value.toUpperCase(Locale.ROOT));
             if (sexPosition != game.getPosition()) {
                 event.reply(
@@ -295,9 +297,9 @@ public class GuessSexPositionCommand extends CoreCommand {
             // fully reveal the image
             BufferedImage image;
             try {
-                image = ImageIO.read(new URL(game.getUrl()));
-            } catch (IOException exception) {
-                exception.printStackTrace();
+                image = ImageIO.read(new URI(game.getUrl()).toURL());
+            } catch (IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Failed to load image!", exception);
                 event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
                 return;
             }
@@ -322,7 +324,7 @@ public class GuessSexPositionCommand extends CoreCommand {
             try {
                 ImageIO.write(newImage, "jpg", boas);
             } catch (IOException exception) {
-                exception.printStackTrace();
+                Constants.LOGGER.error("Failed to write image!", exception);
                 event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
                 return;
             }
@@ -343,11 +345,12 @@ public class GuessSexPositionCommand extends CoreCommand {
             List<String> urls = img.eachAttr("src");
             return urls.get(ThreadLocalRandom.current().nextInt(urls.size()));
         } catch (IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to get random image!", exception);
             return null;
         }
     }
 
+    @Getter
     public enum SexPosition {
         SIXTYNINE("69", "http://mysexpics.com/69/"), MISSIONARY("Missionary",
                 "http://www.mysexpics.com/missionary/"), DOGGY_STYLE("Doggy Style",
@@ -372,19 +375,12 @@ public class GuessSexPositionCommand extends CoreCommand {
             this.urls = urls;
         }
 
-        public String getName() {
-            return this.name;
-        }
-
-        public String[] getUrls() {
-            return this.urls;
-        }
-
         public String chooseRandomUrl() {
             return this.urls[(int) (Math.random() * this.urls.length)];
         }
     }
 
+    @Getter
     public static final class SexPositionGame {
         private final SexPosition position;
         private final String url;
@@ -404,38 +400,6 @@ public class GuessSexPositionCommand extends CoreCommand {
             this.messageId = messageId;
             this.positionSelectionMessageId = positionSelectionMessageId;
             this.userId = userId;
-        }
-
-        public SexPosition getPosition() {
-            return this.position;
-        }
-
-        public String getUrl() {
-            return this.url;
-        }
-
-        public boolean[][] getRevealed() {
-            return this.revealed;
-        }
-
-        public long getGuildId() {
-            return this.guildId;
-        }
-
-        public long getChannelId() {
-            return this.channelId;
-        }
-
-        public long getMessageId() {
-            return this.messageId;
-        }
-
-        public long getPositionSelectionMessageId() {
-            return this.positionSelectionMessageId;
-        }
-
-        public long getUserId() {
-            return this.userId;
         }
 
         public boolean isRevealed(int x, int y) {

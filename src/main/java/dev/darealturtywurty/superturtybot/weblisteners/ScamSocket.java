@@ -3,7 +3,6 @@ package dev.darealturtywurty.superturtybot.weblisteners;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
@@ -11,6 +10,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
+import org.jetbrains.annotations.NotNull;
 
 public final class ScamSocket extends WebSocketListener {
     private static final WebSocket SOCKET = new OkHttpClient().newWebSocket(
@@ -22,7 +22,7 @@ public final class ScamSocket extends WebSocketListener {
     }
     
     @Override
-    public void onMessage(WebSocket webSocket, String text) {
+    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         final JsonObject response = Constants.GSON.fromJson(text, JsonObject.class);
         final String type = response.has("type") ? response.get("type").getAsString() : "none";
         if ("none".equals(type))

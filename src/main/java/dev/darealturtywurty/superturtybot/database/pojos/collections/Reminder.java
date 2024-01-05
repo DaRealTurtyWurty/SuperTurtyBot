@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.database.Database;
-import lombok.*;
+import lombok.Data;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;

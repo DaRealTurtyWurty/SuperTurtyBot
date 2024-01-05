@@ -5,9 +5,9 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 
@@ -27,7 +26,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -87,7 +87,7 @@ public class LeaderboardCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null) {
             event.deferReply(true).setContent("You can only use this command inside of a server!")
                  .mentionRepliedUser(false).queue();
             return;
@@ -108,23 +108,23 @@ public class LeaderboardCommand extends CoreCommand {
                                                                        .getMemberById(profile.getUser()) != null)
                                                .toList();
 
-        final List<Levelling> top10 = Lists.partition(sorted, 10).get(0);
+        final List<Levelling> top10 = Lists.partition(sorted, 10).getFirst();
         try {
             final BufferedImage lb = constructLeaderboard(event.getGuild(), top10);
             final var bao = new ByteArrayOutputStream();
             ImageIO.write(lb, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), "leaderboard.png"))
                  .mentionRepliedUser(false).queue();
-        } catch (final IOException | NullPointerException exception) {
+        } catch (final IOException | NullPointerException | URISyntaxException exception) {
             event.getHook().sendMessage(
                          "There has been an issue processing this leaderboard. The bot owner has been informed of " +
                                  "this issue.")
                  .mentionRepliedUser(false).queue();
-            Constants.LOGGER.error(ExceptionUtils.getStackTrace(exception));
+            Constants.LOGGER.error("Unable to process leaderboard!", exception);
         }
     }
 
-    private BufferedImage constructLeaderboard(Guild guild, List<Levelling> profiles) throws IOException, NullPointerException {
+    private BufferedImage constructLeaderboard(Guild guild, List<Levelling> profiles) throws IOException, NullPointerException, URISyntaxException {
         final BufferedImage template = getTemplate();
 
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -134,7 +134,8 @@ public class LeaderboardCommand extends CoreCommand {
 
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
 
-        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(new URL(guild.getIconUrl())), 420);
+        // TODO: Handle cases where there is no guild icon set
+        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(new URI(guild.getIconUrl()).toURL()), 420);
         graphics.drawImage(guildIcon, 125, 125, guildIcon.getWidth(), guildIcon.getHeight(), null);
 
         final String guildName = guild.getName();
@@ -167,7 +168,7 @@ public class LeaderboardCommand extends CoreCommand {
                 username = user.getName();
             }
 
-            final BufferedImage avatarImage = ImageIO.read(new URL(avatarURL));
+            final BufferedImage avatarImage = ImageIO.read(new URI(avatarURL).toURL());
             graphics.drawImage(avatarImage, startX, startY + (spacing + partHeight) * indexedRank, partHeight,
                     partHeight, null);
 

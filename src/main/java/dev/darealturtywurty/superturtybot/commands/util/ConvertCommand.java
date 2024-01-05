@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1109,6 +1108,11 @@ public class ConvertCommand extends CoreCommand {
                 measurement = UNITS.keySet().stream().filter(m -> m.baseUnit.equals(from)).findFirst().orElse(null);
             } else {
                 measurement = UNITS.keySet().stream().filter(m -> UNITS.get(m).contains(from)).findFirst().orElse(null);
+            }
+
+            if(measurement == null) {
+                reply(event, "❌ You must supply a valid measurement unit!", true);
+                return;
             }
 
             double base = from.toBase(measurement, value);

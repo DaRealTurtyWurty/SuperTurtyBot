@@ -24,9 +24,11 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class RoleSelectionCommand extends CoreCommand {
@@ -302,17 +304,7 @@ public class RoleSelectionCommand extends CoreCommand {
                 final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
                 final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
 
-                StringSelectMenu menu = null;
-                for (final LayoutComponent component : message.getComponents()) {
-                    if (component instanceof final ActionRow row) {
-                        for (final ItemComponent column : row.getComponents()) {
-                            if (column instanceof final StringSelectMenu selection) {
-                                menu = selection;
-                                break;
-                            }
-                        }
-                    }
-                }
+                StringSelectMenu menu = getStringSelectMenu(message);
 
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
@@ -339,7 +331,7 @@ public class RoleSelectionCommand extends CoreCommand {
                                 .withDescription(description));
                 menuBuilder.setMaxValues(menu.getMaxValues() + 1);
 
-                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().get(0));
+                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
                 embedBuilder.addField(emoji + " `@" + role.getName() + "`", description, false);
 
                 message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
@@ -409,17 +401,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                StringSelectMenu menu = null;
-                for (final Component component : message.getComponents()) {
-                    if (component instanceof final ActionRow row) {
-                        for (final Component column : row.getComponents()) {
-                            if (column instanceof final StringSelectMenu selection) {
-                                menu = selection;
-                                break;
-                            }
-                        }
-                    }
-                }
+                StringSelectMenu menu = getStringSelectMenu(message);
 
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
@@ -437,8 +419,8 @@ public class RoleSelectionCommand extends CoreCommand {
                 menuBuilder.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
                 menuBuilder.setMaxValues(menu.getMaxValues() - 1);
 
-                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().get(0));
-                embedBuilder.getFields().removeIf(field -> field.getName().equals(role.getName()));
+                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
+                embedBuilder.getFields().removeIf(field -> Objects.equals(field.getName(), role.getName()));
 
                 message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
                 reply(event, "✅ I have removed the role from the role selection menu!");
@@ -500,17 +482,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                SelectMenu menu = null;
-                for (final Component component : message.getComponents()) {
-                    if (component instanceof final ActionRow row) {
-                        for (final Component column : row.getComponents()) {
-                            if (column instanceof final SelectMenu selection) {
-                                menu = selection;
-                                break;
-                            }
-                        }
-                    }
-                }
+                SelectMenu menu = getSelectMenu(message);
 
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
@@ -522,5 +494,37 @@ public class RoleSelectionCommand extends CoreCommand {
                 reply(event, "✅ I have deleted the role selection menu!");
             }
         }
+    }
+
+    @Nullable
+    private static SelectMenu getSelectMenu(Message message) {
+        SelectMenu menu = null;
+        for (final Component component : message.getComponents()) {
+            if (component instanceof final ActionRow row) {
+                for (final Component column : row.getComponents()) {
+                    if (column instanceof final SelectMenu selection) {
+                        menu = selection;
+                        break;
+                    }
+                }
+            }
+        }
+        return menu;
+    }
+
+    @Nullable
+    private static StringSelectMenu getStringSelectMenu(Message message) {
+        StringSelectMenu menu = null;
+        for (final LayoutComponent component : message.getComponents()) {
+            if (component instanceof final ActionRow row) {
+                for (final ItemComponent column : row.getComponents()) {
+                    if (column instanceof final StringSelectMenu selection) {
+                        menu = selection;
+                        break;
+                    }
+                }
+            }
+        }
+        return menu;
     }
 }

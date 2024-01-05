@@ -114,7 +114,7 @@ public class SlotsCommand extends EconomyCommand {
         }
 
         List<Outcome> outcomes = spin(betAmount, false);
-        Outcome outcome = outcomes.get(0);
+        Outcome outcome = outcomes.getFirst();
 
         var embed = new EmbedBuilder();
         embed.setColor(outcome.type().getColor());
@@ -225,7 +225,7 @@ public class SlotsCommand extends EconomyCommand {
 
         if (!isFreeSpin && freeSpins > 0) {
             for (int spin = 0; spin < freeSpins; spin++) {
-                Outcome freeSpinOutcome = spin(betAmount, true).get(0);
+                Outcome freeSpinOutcome = spin(betAmount, true).getFirst();
                 if (freeSpinOutcome.amount() < 0)
                     freeSpinOutcome.amount = 0;
                 outcomes.add(freeSpinOutcome);

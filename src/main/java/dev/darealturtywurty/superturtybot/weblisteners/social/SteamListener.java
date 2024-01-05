@@ -1,23 +1,5 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-
 import com.google.gson.JsonObject;
 import com.lukaspradel.steamapi.core.exception.SteamApiException;
 import com.lukaspradel.steamapi.data.json.appnews.GetNewsForApp;
@@ -27,7 +9,6 @@ import com.lukaspradel.steamapi.webapi.request.GetNewsForAppRequest;
 import com.lukaspradel.steamapi.webapi.request.builders.SteamWebApiRequestFactory;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -38,6 +19,22 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+
+import java.awt.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.time.Instant;
+import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 public class SteamListener {
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
@@ -91,7 +88,7 @@ public class SteamListener {
                     MessageEmbed.DESCRIPTION_MAX_LENGTH);
                 try {
                     final GetNewsForApp newses = CLIENT.processRequest(request);
-                    final Newsitem news = newses.getAppnews().getNewsitems().get(0);
+                    final Newsitem news = newses.getAppnews().getNewsitems().getFirst();
                     final SteamAppNews current = constructPojo(news);
                     for (final SteamNotifier steamNotifier : notifiers) {
                         final SteamAppNews original = steamNotifier.getPreviousData();
@@ -106,7 +103,7 @@ public class SteamListener {
                         }
                     }
                 } catch (final SteamApiException exception) {
-                    exception.printStackTrace();
+                    Constants.LOGGER.error("Failed to get news for app!", exception);
                 }
             }
         }, 0, 30, TimeUnit.MINUTES);
@@ -167,26 +164,28 @@ public class SteamListener {
     
     private static Optional<String> getGameBanner(int appId) {
         try {
-            final URLConnection connection = new URL(APP_DETAILS_URL.formatted(appId)).openConnection();
+            final URLConnection connection = new URI(APP_DETAILS_URL.formatted(appId)).toURL().openConnection();
             final JsonObject response = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             return Optional
                 .ofNullable(response.has(Integer.toString(appId)) ? response.getAsJsonObject(Integer.toString(appId))
                     .getAsJsonObject("data").get("header_image").getAsString() : null);
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get game banner!", exception);
             return Optional.empty();
         }
     }
     
     private static Optional<String> getGameName(int appId) {
         try {
-            final URLConnection connection = new URL(APP_DETAILS_URL.formatted(appId)).openConnection();
+            final URLConnection connection = new URI(APP_DETAILS_URL.formatted(appId)).toURL().openConnection();
             final JsonObject response = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             return Optional.ofNullable(response.has(Integer.toString(appId))
                 ? response.getAsJsonObject(Integer.toString(appId)).getAsJsonObject("data").get("name").getAsString()
                 : null);
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get game name!", exception);
             return Optional.empty();
         }
     }

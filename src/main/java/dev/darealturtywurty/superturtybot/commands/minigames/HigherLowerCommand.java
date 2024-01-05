@@ -227,7 +227,7 @@ public class HigherLowerCommand extends CoreCommand {
                 Either<List<String>, HttpStatus> word1 = ApiHandler.getWords(requestData);
                 attempts = 0;
                 while ((word1.isRight() ||
-                        word0.getLeft().get(0).equals(word1.getLeft().get(0))) &&
+                        word0.getLeft().getFirst().equals(word1.getLeft().getFirst())) &&
                         attempts < 5) {
                     word1 = ApiHandler.getWords(requestData);
                     attempts++;
@@ -238,8 +238,8 @@ public class HigherLowerCommand extends CoreCommand {
                     return;
                 }
 
-                String word0Str = word0.getLeft().get(0);
-                String word1Str = word1.getLeft().get(0);
+                String word0Str = word0.getLeft().getFirst();
+                String word1Str = word1.getLeft().getFirst();
                 float frequency0 = getWordFrequency(word0Str);
                 float frequency1 = getWordFrequency(word1Str);
 
@@ -265,7 +265,6 @@ public class HigherLowerCommand extends CoreCommand {
             }
             default -> {
                 reply(event, "❌ Unknown subcommand!", false, true);
-                return;
             }
         }
     }
@@ -377,143 +376,149 @@ public class HigherLowerCommand extends CoreCommand {
                     .queue(message -> message.editMessageComponents().queue());
         }
 
-        if (game instanceof PopulationGame populationGame) {
-            if (option.equals("higher")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
+        switch (game) {
+            case PopulationGame populationGame -> {
+                if (option.equals("higher")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (populationGame.getCountry0().getPopulation() > populationGame.getCountry1().getPopulation()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        populations(threadChannel, populationGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
+                } else if (option.equals("lower")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (populationGame.getCountry0().getPopulation() < populationGame.getCountry1().getPopulation()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        populations(threadChannel, populationGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
                 } else {
-                    event.deferEdit().queue();
+                    event.reply("❌ Unknown option!").setEphemeral(true).queue();
                 }
-
-                if (populationGame.getCountry0().getPopulation() > populationGame.getCountry1().getPopulation()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    populations(threadChannel, populationGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else if (option.equals("lower")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
-                } else {
-                    event.deferEdit().queue();
-                }
-
-                if (populationGame.getCountry0().getPopulation() < populationGame.getCountry1().getPopulation()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    populations(threadChannel, populationGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else {
-                event.reply("❌ Unknown option!").setEphemeral(true).queue();
             }
-        } else if (game instanceof AreaGame areaGame) {
-            if (option.equals("higher")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
+            case AreaGame areaGame -> {
+                if (option.equals("higher")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (areaGame.getCountry0().getLandAreaKm() > areaGame.getCountry1().getLandAreaKm()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        countryAreas(threadChannel, areaGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
+                } else if (option.equals("lower")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (areaGame.getCountry0().getLandAreaKm() < areaGame.getCountry1().getLandAreaKm()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        countryAreas(threadChannel, areaGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
                 } else {
-                    event.deferEdit().queue();
+                    event.reply("❌ Unknown option!").setEphemeral(true).queue();
                 }
-
-                if (areaGame.getCountry0().getLandAreaKm() > areaGame.getCountry1().getLandAreaKm()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    countryAreas(threadChannel, areaGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else if (option.equals("lower")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
-                } else {
-                    event.deferEdit().queue();
-                }
-
-                if (areaGame.getCountry0().getLandAreaKm() < areaGame.getCountry1().getLandAreaKm()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    countryAreas(threadChannel, areaGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else {
-                event.reply("❌ Unknown option!").setEphemeral(true).queue();
             }
-        } else if (game instanceof WordFrequencyGame wordFrequencyGame) {
-            if (option.equals("higher")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
+            case WordFrequencyGame wordFrequencyGame -> {
+                if (option.equals("higher")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (wordFrequencyGame.getFrequency0() > wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        findAndSendWord(threadChannel, wordFrequencyGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
+                } else if (option.equals("lower")) {
+                    if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
+                        event.deferEdit().setComponents().queue();
+                    } else {
+                        event.deferEdit().queue();
+                    }
+
+                    if (wordFrequencyGame.getFrequency0() < wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
+                        threadChannel.sendMessage(
+                                        "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
+                                .queue();
+
+                        // change the second country to the first country and get a new country
+                        findAndSendWord(threadChannel, wordFrequencyGame);
+                    } else {
+                        threadChannel.sendMessage(
+                                        "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
+                                .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
+
+                        GAMES.remove(game.getMessageId());
+                    }
                 } else {
-                    event.deferEdit().queue();
+                    event.reply("❌ Unknown option!").setEphemeral(true).queue();
                 }
-
-                if (wordFrequencyGame.getFrequency0() > wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    findAndSendWord(threadChannel, wordFrequencyGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else if (option.equals("lower")) {
-                if (event.getChannel().getIdLong() == game.getOwnerChannelId()) {
-                    event.deferEdit().setComponents().queue();
-                } else {
-                    event.deferEdit().queue();
-                }
-
-                if (wordFrequencyGame.getFrequency0() < wordFrequencyGame.getFrequency1() || wordFrequencyGame.getFrequency0() == wordFrequencyGame.getFrequency1()) {
-                    threadChannel.sendMessage(
-                                    "✅ Correct! `" + wordFrequencyGame.getWord0() + "` has a lower word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
-                            .queue();
-
-                    // change the second country to the first country and get a new country
-                    findAndSendWord(threadChannel, wordFrequencyGame);
-                } else {
-                    threadChannel.sendMessage(
-                                    "❌ Incorrect! `" + wordFrequencyGame.getWord0() + "` has a higher word frequency " + "than `" + wordFrequencyGame.getWord1() + "`")
-                            .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
-
-                    GAMES.remove(game.getMessageId());
-                }
-            } else {
-                event.reply("❌ Unknown option!").setEphemeral(true).queue();
+            }
+            default -> {
             }
         }
     }
@@ -590,7 +595,7 @@ public class HigherLowerCommand extends CoreCommand {
             return;
         }
 
-        String word1Str = word1.getLeft().get(0);
+        String word1Str = word1.getLeft().getFirst();
         float frequency1 = getWordFrequency(word1Str);
 
         wordFrequencyGame.set0(word0, frequency0);

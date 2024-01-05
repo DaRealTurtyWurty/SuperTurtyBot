@@ -1,14 +1,13 @@
 package dev.darealturtywurty.superturtybot.registry.impl;
 
-import java.util.Map.Entry;
-
-import org.jetbrains.annotations.Nullable;
-
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Type;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import dev.darealturtywurty.superturtybot.registry.Registry;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Map.Entry;
 
 public class RankCardItemRegistry {
     public static final Registry<RankCardItem> RANK_CARD_ITEMS = new Registry<>();

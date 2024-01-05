@@ -15,6 +15,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -39,14 +40,7 @@ public class ApiHandler {
 
     public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
         try (Response response = makeRequest("geo/flag?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            return Either.left(ImageIO.read(body.byteStream()));
+            return respondWithImage(response);
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -91,14 +85,7 @@ public class ApiHandler {
 
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
         try (Response response = makeRequest("geo/outline?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            return Either.left(ImageIO.read(body.byteStream()));
+            return respondWithImage(response);
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -215,7 +202,6 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
 
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-
             List<Region> territories = new ArrayList<>();
             for (JsonElement element : array) {
                 territories.add(Constants.GSON.fromJson(element, Region.class));
@@ -233,17 +219,14 @@ public class ApiHandler {
 
     public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
         StringBuilder path = new StringBuilder("words?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
-        requestData.getLength().ifPresent(length -> {
-            path.append("&length=").append(length);
-        });
+        requestData.getLength().ifPresent(length ->
+                path.append("&length=").append(length));
 
-        requestData.getStartsWith().ifPresent(startsWith -> {
-            path.append("&startsWith=").append(startsWith);
-        });
+        requestData.getStartsWith().ifPresent(startsWith ->
+                path.append("&startsWith=").append(startsWith));
 
-        requestData.getAmount().ifPresent(amount -> {
-            path.append("&amount=").append(amount);
-        });
+        requestData.getAmount().ifPresent(amount ->
+                path.append("&amount=").append(amount));
 
         try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
@@ -266,25 +249,20 @@ public class ApiHandler {
 
     public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
-        requestData.getLength().ifPresent(length -> {
-            path.append("&length=").append(length);
-        });
+        requestData.getLength().ifPresent(length ->
+                path.append("&length=").append(length));
 
-        requestData.getMinLength().ifPresent(minLength -> {
-            path.append("&minLength=").append(minLength);
-        });
+        requestData.getMinLength().ifPresent(minLength ->
+                path.append("&minLength=").append(minLength));
 
-        requestData.getMaxLength().ifPresent(maxLength -> {
-            path.append("&maxLength=").append(maxLength);
-        });
+        requestData.getMaxLength().ifPresent(maxLength ->
+                path.append("&maxLength=").append(maxLength));
 
-        requestData.getStartsWith().ifPresent(startsWith -> {
-            path.append("&startsWith=").append(startsWith);
-        });
+        requestData.getStartsWith().ifPresent(startsWith ->
+                path.append("&startsWith=").append(startsWith));
 
-        requestData.getAmount().ifPresent(amount -> {
-            path.append("&amount=").append(amount);
-        });
+        requestData.getAmount().ifPresent(amount ->
+                path.append("&amount=").append(amount));
 
         try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
@@ -595,13 +573,11 @@ public class ApiHandler {
 
         String pathStr = "image/resize?apiKey=%s&url=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl);
         var path = new StringBuilder(pathStr);
-        requestData.getWidth().ifPresent(width -> {
-            path.append("&length=").append(width);
-        });
+        requestData.getWidth().ifPresent(width ->
+                path.append("&length=").append(width));
 
-        requestData.getHeight().ifPresent(height -> {
-            path.append("&height=").append(height);
-        });
+        requestData.getHeight().ifPresent(height ->
+                path.append("&height=").append(height));
 
         try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
@@ -632,9 +608,8 @@ public class ApiHandler {
 
         String pathStr = "image/rotate?apiKey=%s&url=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), imgUrl);
         var path = new StringBuilder(pathStr);
-        requestData.getAngle().ifPresent(angle -> {
-            path.append("&angle=").append(angle);
-        });
+        requestData.getAngle().ifPresent(angle ->
+                path.append("&angle=").append(angle));
 
         try (Response response = makeRequest(path.toString())) {
             if (response.code() != HttpStatus.OK.getCode())
@@ -802,5 +777,17 @@ public class ApiHandler {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to make request!", exception);
         }
+    }
+
+    @NotNull
+    private static Either<BufferedImage, HttpStatus> respondWithImage(Response response) throws IOException {
+        if (response.code() != HttpStatus.OK.getCode())
+            return Either.right(HttpStatus.forStatus(response.code()));
+
+        ResponseBody body = response.body();
+        if (body == null)
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        return Either.left(ImageIO.read(body.byteStream()));
     }
 }

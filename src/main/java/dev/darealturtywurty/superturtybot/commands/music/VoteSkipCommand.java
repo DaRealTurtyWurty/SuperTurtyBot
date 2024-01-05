@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -60,23 +61,24 @@ public class VoteSkipCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (!event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
 
-        final AudioChannel channel = event.getMember().getVoiceState().getChannel();
-        if (!event.getGuild().getAudioManager().isConnected()) {
+        GuildVoiceState voiceState = event.getMember().getVoiceState();
+        if (voiceState == null || !voiceState.inAudioChannel()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }
 
-        if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
+        final AudioChannel channel = event.getGuild().getAudioManager().getConnectedChannel();
+        if (channel == null || voiceState.getChannel() == null || voiceState.getChannel().getIdLong() != channel.getIdLong()) {
             reply(event, "❌ You must be in the same voice channel as me to modify the queue!", false, true);
             return;
         }
@@ -96,8 +98,13 @@ public class VoteSkipCommand extends CoreCommand {
         event.deferReply().queue();
 
         final AudioTrack track = AudioManager.getCurrentlyPlaying(event.getGuild());
+        if (track == null) {
+            reply(event, "❌ Nothing is playing right now!", false, true);
+            return;
+        }
+
         final long initiatorId = event.getUser().getIdLong();
-        AudioChannel audioChannel = event.getMember().getVoiceState().getChannel();
+        AudioChannel audioChannel = voiceState.getChannel();
         GuildMessageChannel messageChannel = event.getChannel().asGuildMessageChannel();
 
         int memberCount = (int) Math.ceil(audioChannel.getMembers().size() * 0.5);
@@ -145,6 +152,9 @@ public class VoteSkipCommand extends CoreCommand {
                 .condition(event -> event.getComponentId().equals(voteButton.getId()) && event.getUser().getIdLong() != initiatorId)
                 .success(event -> {
                     Guild guild = event.getGuild();
+                    if (guild == null)
+                        return;
+
                     VoteSkip voteSkip = VOTE_SKIPS.get(guild.getIdLong());
                     if(voteSkip == null)
                         return;

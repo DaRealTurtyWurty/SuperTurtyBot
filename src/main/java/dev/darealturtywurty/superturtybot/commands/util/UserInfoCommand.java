@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
@@ -69,12 +70,18 @@ public class UserInfoCommand extends CoreCommand {
         
         final OptionMapping userOption = event.getOption("user");
         if (userOption != null && userOption.getAsMember() == null) {
-            event.deferReply(true).setContent("You can only use this command on a member of this server!")
+            event.deferReply(true).setContent("❌ You can only use this command on a member of this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
         
         final Member member = userOption == null ? event.getMember() : userOption.getAsMember();
+        if (member == null) {
+            event.deferReply(true).setContent("❌ You can only use this command on a member of this server!")
+                .mentionRepliedUser(false).queue();
+            return;
+        }
+
         final EmbedBuilder embed = createEmbed(member);
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
@@ -98,7 +105,7 @@ public class UserInfoCommand extends CoreCommand {
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
     
-    private static EmbedBuilder createEmbed(Member member) {
+    private static EmbedBuilder createEmbed(@NotNull Member member) {
         final var embed = new EmbedBuilder();
         embed.setTitle("User Info for user: " + member.getUser().getName());
         embed.setTimestamp(Instant.now());
@@ -120,11 +127,11 @@ public class UserInfoCommand extends CoreCommand {
             embed.addField("Roles", roles.toString(), false);
         }
         
-        if (member.isBoosting()) {
+        if (member.getTimeBoosted() != null) {
             embed.addField("Time Boosted", TimeFormat.TIME_SHORT.format(member.getTimeBoosted()), false);
         }
         
-        if (member.isTimedOut()) {
+        if (member.getTimeOutEnd() != null) {
             embed.addField("Timeout End", TimeFormat.TIME_SHORT.format(member.getTimeOutEnd()), false);
         }
         

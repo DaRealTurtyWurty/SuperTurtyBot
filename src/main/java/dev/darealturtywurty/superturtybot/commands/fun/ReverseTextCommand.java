@@ -1,12 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.util.List;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.util.List;
 
 public class ReverseTextCommand extends CoreCommand {
     public ReverseTextCommand() {
@@ -45,7 +46,7 @@ public class ReverseTextCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String text = event.getOption("text").getAsString();
+        final String text = event.getOption("text", "", OptionMapping::getAsString);
         event.deferReply().setContent(new StringBuilder(text).reverse().toString()).mentionRepliedUser(false).queue();
     }
 }

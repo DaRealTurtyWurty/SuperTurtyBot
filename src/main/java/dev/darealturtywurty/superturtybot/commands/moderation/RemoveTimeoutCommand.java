@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -70,9 +71,9 @@ public class RemoveTimeoutCommand extends CoreCommand {
             return;
         }
 
-        final Member member = event.getOption("member").getAsMember();
+        final Member member = event.getOption("member", event.getMember(), OptionMapping::getAsMember);
         if (member == null) {
-            event.deferReply(true).setContent(" You can only remove a timeout from someone who is in this server!").mentionRepliedUser(false).queue();
+            event.deferReply(true).setContent("❌ You can only remove a timeout from someone who is in this server!").mentionRepliedUser(false).queue();
             return;
         }
 

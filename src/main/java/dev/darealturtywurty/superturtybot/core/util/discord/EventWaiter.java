@@ -86,7 +86,7 @@ public class EventWaiter extends ListenerAdapter {
             return this;
         }
 
-        public EventWaiter build() {
+        public void build() {
             Set<Waiter<?>> waiters = EventWaiter.this.waitingEvents.computeIfAbsent(this.eventClass, k -> new HashSet<>());
             var waiter = new Waiter<>(this.eventClass, this.success, this.condition, this.failure,
                     this.timeoutAction, this.timeout, this.timeUnit);
@@ -100,8 +100,6 @@ public class EventWaiter extends ListenerAdapter {
                     }
                 }, waiter.timeout, waiter.timeUnit);
             }
-
-            return EventWaiter.this;
         }
     }
 

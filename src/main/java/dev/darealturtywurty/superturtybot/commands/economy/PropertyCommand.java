@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import java.time.Instant;
 import java.util.List;
 
+// TODO: Finish this command
 public class PropertyCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommands() {
@@ -183,6 +185,7 @@ public class PropertyCommand extends EconomyCommand {
                     .authorOnly(event.getUser().getIdLong());
 
             for (Property property : properties) {
+                Member owner = guild.getMemberById(property.getOwner());
                 contents.field(property.getName(), "Value: " + property.calculateCurrentWorth() + "\n" +
                         "Rent Price: " + property.getRent().getCurrentRent() + "\n" +
                         "Renting: " + property.hasRent() + "\n" +
@@ -194,14 +197,12 @@ public class PropertyCommand extends EconomyCommand {
                         "Previous Owners: " + (property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0) + "\n" +
                         "Estate Tax: " + property.getEstateTax() + "\n" +
                         "Buy Date: " + TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()) + "\n" +
-                        "Owner: " + (property.hasOwner() ? guild.getMemberById(property.getOwner()).getEffectiveName() : "None") + "\n" +
+                        "Owner: " + (property.hasOwner() ? owner == null ? "Unknown" : owner.getEffectiveName() : "None") + "\n" +
                         "Mortgage: " + (property.isMortgaged() ? property.getMortgage().getAmount() : "None"), false);
             }
 
             embed.build(event.getJDA()).send(event.getHook());
-        }, ignored -> {
-            hookReply(event, "❌ That user is not in this server!");
-        });
+        }, ignored -> hookReply(event, "❌ That user is not in this server!"));
     }
 
     private void getPropertyInfo(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {

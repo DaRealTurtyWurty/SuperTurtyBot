@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -36,7 +37,7 @@ public class CountingManager extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (shouldIgnore(event)) return;
 
         final TextChannel channel = event.getChannel().asTextChannel();
@@ -162,7 +163,7 @@ public class CountingManager extends ListenerAdapter {
             Database.getDatabase().counting.updateOne(filter, updates);
 
             if (data.getCurrentCountSuccession() == maxSuccession) {
-                channel.upsertPermissionOverride(message.getMember())
+                channel.upsertPermissionOverride(event.getMember())
                         .setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();
             }
 
@@ -193,16 +194,18 @@ public class CountingManager extends ListenerAdapter {
                         mode, starting, next) + "**.", starting, next);
     }
 
-    public boolean removeCountingChannel(Guild guild, TextChannel channel) {
-        if (!isCountingChannel(guild, channel)) return false;
+    public void removeCountingChannel(Guild guild, TextChannel channel) {
+        if (!isCountingChannel(guild, channel))
+            return;
 
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
                 Filters.eq("channel", channel.getIdLong()));
-        return Database.getDatabase().counting.deleteOne(filter).getDeletedCount() > 0;
+        Database.getDatabase().counting.deleteOne(filter).getDeletedCount();
     }
 
-    public boolean setCountingChannel(Guild guild, TextChannel channel, CountingMode mode) {
-        if (isCountingChannel(guild, channel)) return false;
+    public void setCountingChannel(Guild guild, TextChannel channel, CountingMode mode) {
+        if (isCountingChannel(guild, channel))
+            return;
 
         var profile = new Counting(guild.getIdLong(), channel.getIdLong(), mode);
         profile.setCurrentNumber(CountingMode.getStartingNumber(mode));
@@ -220,7 +223,7 @@ public class CountingManager extends ListenerAdapter {
         channel.sendMessage("The next number is: " + parsed)
                 .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli()));
 
-        return Database.getDatabase().counting.insertOne(profile).getInsertedId() != null;
+        Database.getDatabase().counting.insertOne(profile).getInsertedId();
     }
 
     private void failChannel(final Counting profile, final CountingMode mode, final Message message, final Bson filter, final List<Bson> updates, String response, float startAt, float nextNumber) {
@@ -250,6 +253,6 @@ public class CountingManager extends ListenerAdapter {
 
     private boolean shouldIgnore(MessageReceivedEvent event) {
         return !event.isFromGuild() || event.isFromThread() || event.isWebhookMessage() || event.getAuthor()
-                .isBot() || event.getAuthor().isSystem() || event.getChannelType() != ChannelType.TEXT;
+                .isBot() || event.getAuthor().isSystem() || event.getChannelType() != ChannelType.TEXT || event.getMember() == null;
     }
 }

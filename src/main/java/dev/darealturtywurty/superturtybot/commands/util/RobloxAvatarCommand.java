@@ -15,6 +15,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -102,20 +103,7 @@ public class RobloxAvatarCommand extends CoreCommand {
 
             PlayerProfile robloxResponse = PlayerProfile.fromJsonString(bodyString);
 
-            var contents = new PaginatedEmbed.ContentsBuilder();
-            for (Asset asset : robloxResponse.getAssets()) {
-                contents.field(
-                        asset.getName(),
-                        "ID: " + asset.getId() + "\nAsset type: " + asset.getAssetType().getName(),
-                        false);
-            }
-
-            var embed = new PaginatedEmbed.Builder(5, contents);
-            embed.title("User ID: " + robloxUserId);
-            embed.description("Player Animation Type: " + robloxResponse.getPlayerAvatarType() +
-                    "\n Default Shirt Applied: " + robloxResponse.isDefaultShirtApplied() +
-                    "\n Default Pants Applied: " + robloxResponse.isDefaultPantsApplied());
-            embed.color(0xf4dcb4);
+            var embed = createAvatarEmbed(robloxResponse, robloxUserId);
             embed.timestamp(Instant.now());
             embed.footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
             embed.authorOnly(event.getUser().getIdLong());
@@ -129,6 +117,25 @@ public class RobloxAvatarCommand extends CoreCommand {
                     .queue();
             Constants.LOGGER.error("Failed to get response!", exception);
         }
+    }
+
+    @NotNull
+    private static PaginatedEmbed.Builder createAvatarEmbed(PlayerProfile robloxResponse, String robloxUserId) {
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        for (Asset asset : robloxResponse.getAssets()) {
+            contents.field(
+                    asset.getName(),
+                    "ID: " + asset.getId() + "\nAsset type: " + asset.getAssetType().getName(),
+                    false);
+        }
+
+        var embed = new PaginatedEmbed.Builder(5, contents);
+        embed.title("User ID: " + robloxUserId);
+        embed.description("Player Animation Type: " + robloxResponse.getPlayerAvatarType() +
+                "\n Default Shirt Applied: " + robloxResponse.isDefaultShirtApplied() +
+                "\n Default Pants Applied: " + robloxResponse.isDefaultPantsApplied());
+        embed.color(0xf4dcb4);
+        return embed;
     }
 
     @Data

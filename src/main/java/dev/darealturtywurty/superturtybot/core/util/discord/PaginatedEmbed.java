@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.util.discord;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -25,6 +27,7 @@ import java.util.function.Consumer;
 
 import static net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE;
 
+@Getter
 public class PaginatedEmbed extends ListenerAdapter {
     private final int pageSize;
     private final List<MessageEmbed.Field> contents;
@@ -44,7 +47,9 @@ public class PaginatedEmbed extends ListenerAdapter {
     private final TemporalAccessor timestamp;
     private final long authorId;
 
-    private Consumer<Message> onMessageUpdate = ignored -> {};
+    @Setter
+    private Consumer<Message> onMessageUpdate = ignored -> {
+    };
     private int page;
 
     private long guildId;
@@ -76,7 +81,7 @@ public class PaginatedEmbed extends ListenerAdapter {
     public void send(MessageChannel channel, Runnable fallback) {
         this.jda.addEventListener(this);
 
-        if(contents.isEmpty()) {
+        if (contents.isEmpty()) {
             fallback.run();
             return;
         }
@@ -94,7 +99,7 @@ public class PaginatedEmbed extends ListenerAdapter {
     public void send(WebhookClient<Message> hook, Runnable fallback) {
         this.jda.addEventListener(this);
 
-        if(contents.isEmpty()) {
+        if (contents.isEmpty()) {
             fallback.run();
             return;
         }
@@ -110,11 +115,13 @@ public class PaginatedEmbed extends ListenerAdapter {
     }
 
     public void send(MessageChannel channel) {
-        send(channel, () -> {});
+        send(channel, () -> {
+        });
     }
 
     public void send(WebhookClient<Message> hook) {
-        send(hook, () -> {});
+        send(hook, () -> {
+        });
     }
 
     public void finish() {
@@ -143,7 +150,7 @@ public class PaginatedEmbed extends ListenerAdapter {
                 .setImage(this.imageUrl)
                 .setTimestamp(this.timestamp);
 
-        for(MessageEmbed.Field content : pageContents) {
+        for (MessageEmbed.Field content : pageContents) {
             builder.addField(content);
         }
 
@@ -151,7 +158,7 @@ public class PaginatedEmbed extends ListenerAdapter {
     }
 
     private Optional<ActionRow> createActionRow(long guildId, long channelId, long messageId) {
-        if(this.guildId == 0 && this.channelId == 0 && this.messageId == 0) {
+        if (this.guildId == 0 && this.channelId == 0 && this.messageId == 0) {
             this.guildId = guildId;
             this.channelId = channelId;
             this.messageId = messageId;
@@ -166,12 +173,12 @@ public class PaginatedEmbed extends ListenerAdapter {
         if (disabled)
             return Optional.empty();
 
-        if(page == 0) {
+        if (page == 0) {
             first = first.asDisabled();
             previous = previous.asDisabled();
         }
 
-        if(page == (contents.size() - 1) / pageSize) {
+        if (page == (contents.size() - 1) / pageSize) {
             next = next.asDisabled();
             last = last.asDisabled();
         }
@@ -185,7 +192,7 @@ public class PaginatedEmbed extends ListenerAdapter {
         String[] split = id.split("-");
 
         String description = split[0];
-        if(!description.startsWith("pagination_")) return;
+        if (!description.startsWith("pagination_")) return;
 
         String action = description.replace("pagination_", "").trim().toLowerCase(Locale.ROOT);
         long guildId = Long.parseLong(split[1]);
@@ -196,8 +203,8 @@ public class PaginatedEmbed extends ListenerAdapter {
         Guild guild = event.getGuild();
         if (guildId == 0 && guild != null) return;
         if (guildId != 0 && guild != null && guild.getIdLong() != guildId || this.guildId != guildId) return;
-        if(event.getChannel().getIdLong() != channelId || this.channelId != channelId) return;
-        if(event.getMessageIdLong() != messageId || this.messageId != messageId) return;
+        if (event.getChannel().getIdLong() != channelId || this.channelId != channelId) return;
+        if (event.getMessageIdLong() != messageId || this.messageId != messageId) return;
         if (this.authorId > 0 && event.getUser().getIdLong() != authorId) {
             event.deferEdit().queue();
             return;
@@ -230,18 +237,6 @@ public class PaginatedEmbed extends ListenerAdapter {
         if (event.getMessageIdLong() != this.messageId) return;
 
         finish();
-    }
-
-    public void setOnMessageUpdate(Consumer<Message> onMessageUpdate) {
-        this.onMessageUpdate = onMessageUpdate;
-    }
-
-    public int getPage() {
-        return this.page;
-    }
-
-    public int getPageSize() {
-        return this.pageSize;
     }
 
     public static class Builder {

@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.core;
 import com.sun.management.OperatingSystemMXBean;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.JDAInfo;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -72,7 +73,7 @@ public class SystemStatsCommand extends CoreCommand {
 
         // get disk
 
-        /*HWDiskStore disk = sysInfo.getHardware().getDiskStores().get(0);
+        /*HWDiskStore disk = sysInfo.getHardware().getDiskStores().getFirst();
         disk.updateAttributes();
 
         long readBytes = disk.getReadBytes();
@@ -92,11 +93,11 @@ public class SystemStatsCommand extends CoreCommand {
         long writeBytesPerSecond = (newWriteBytes - writeBytes) / (newDiskTimestamp - diskTimestamp);*/
 
         // get network
-        NetworkIF net = sysInfo.getHardware().getNetworkIFs().get(0);
+        NetworkIF net = sysInfo.getHardware().getNetworkIFs().getFirst();
         net.updateAttributes();
 
-        /*long bytesSent = sysInfo.getHardware().getNetworkIFs().get(0).getBytesSent();
-        long bytesRecv = sysInfo.getHardware().getNetworkIFs().get(0).getBytesRecv();
+        /*long bytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
+        long bytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
         long timestamp = net.getTimeStamp();
         try {
             Thread.sleep(2000);
@@ -104,14 +105,14 @@ public class SystemStatsCommand extends CoreCommand {
             exception.printStackTrace();
         }
         net.updateAttributes();
-        long newBytesSent = sysInfo.getHardware().getNetworkIFs().get(0).getBytesSent();
-        long newBytesRecv = sysInfo.getHardware().getNetworkIFs().get(0).getBytesRecv();
+        long newBytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
+        long newBytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
         long newTimestamp = net.getTimeStamp();
         long sentSpeed = (newBytesSent - bytesSent) / ((newTimestamp - timestamp) / 1000);
         long recvSpeed = (newBytesRecv - bytesRecv) / ((newTimestamp - timestamp) / 1000);*/
 
-        long packetsSent = sysInfo.getHardware().getNetworkIFs().get(0).getPacketsSent();
-        long packetsRecv = sysInfo.getHardware().getNetworkIFs().get(0).getPacketsRecv();
+        long packetsSent = sysInfo.getHardware().getNetworkIFs().getFirst().getPacketsSent();
+        long packetsRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getPacketsRecv();
 
         // get operating system
         String osName = sysInfo.getOperatingSystem().getFamily();
@@ -136,7 +137,7 @@ public class SystemStatsCommand extends CoreCommand {
         try {
             ImageIO.write(image, "jpeg", baos);
         } catch (IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to create stats image!", exception);
             reply(event, "An error occurred while creating the stats image!", false, true);
             return;
         }

@@ -1,7 +1,5 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.reactor.ReactorEventHandler;
 import com.github.twitch4j.TwitchClient;
@@ -9,13 +7,14 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.events.ChannelGoLiveEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TwitchListener {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);

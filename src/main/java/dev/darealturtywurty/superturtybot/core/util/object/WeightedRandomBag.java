@@ -1,12 +1,14 @@
 package dev.darealturtywurty.superturtybot.core.util.object;
 
+import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-import org.jetbrains.annotations.Nullable;
-
+@Getter
 public class WeightedRandomBag<T> {
     private final List<Entry> entries = new ArrayList<>();
     
@@ -48,26 +50,11 @@ public class WeightedRandomBag<T> {
 
         return null;
     }
-
-    public double getAccumulatedWeight() {
-        return this.accumulatedWeight;
-    }
     
+    @Getter
     public class Entry {
         private double accumulatedWeight;
         private double weight;
         private T object;
-
-        public double getAccumulatedWeight() {
-            return accumulatedWeight;
-        }
-
-        public double getWeight() {
-            return weight;
-        }
-
-        public T getObject() {
-            return object;
-        }
     }
 }

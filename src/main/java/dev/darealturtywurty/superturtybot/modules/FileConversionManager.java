@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules;
 
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -174,7 +175,7 @@ public class FileConversionManager extends ListenerAdapter {
                                         Files.deleteIfExists(inputFile);
                                         Files.deleteIfExists(outputFile);
                                     } catch (IOException exception) {
-                                        exception.printStackTrace();
+                                        Constants.LOGGER.error("Failed to delete files!", exception);
                                     }
                                 });
 
@@ -188,7 +189,7 @@ public class FileConversionManager extends ListenerAdapter {
                             Files.deleteIfExists(inputFile);
                             Files.deleteIfExists(outputFile);
                         } catch (IOException exception2) {
-                            exception2.printStackTrace();
+                            Constants.LOGGER.error("Failed to delete files!", exception2);
                         }
                     }
                 }

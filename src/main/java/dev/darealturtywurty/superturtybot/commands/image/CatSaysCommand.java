@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
-import com.apollographql.apollo.api.Input;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -8,12 +7,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -63,10 +62,10 @@ public class CatSaysCommand extends CoreCommand {
 
         event.deferReply().queue();
         try {
-            InputStream stream = new URL(url).openStream();
+            InputStream stream = new URI(url).toURL().openStream();
             var upload = FileUpload.fromData(stream, "cat.png");
             event.getHook().sendFiles(upload).queue(ignored -> { try { stream.close(); } catch (IOException ignored2) {}});
-        } catch (IOException exception) {
+        } catch (IOException | URISyntaxException exception) {
             event.getHook().editOriginal("❌ Something went wrong!").queue();
         }
     }

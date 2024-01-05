@@ -89,7 +89,7 @@ public class ReminderCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if(!event.isFromGuild()) {
+        if(!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in servers!", false, true);
             return;
         }

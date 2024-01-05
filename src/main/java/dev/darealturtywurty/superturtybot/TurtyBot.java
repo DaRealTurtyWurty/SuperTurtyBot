@@ -144,7 +144,7 @@ public class TurtyBot {
             try {
                 clazz.getDeclaredConstructor().newInstance();
             } catch (final Exception exception) {
-                exception.printStackTrace();
+                Constants.LOGGER.error("Failed to load registerer!", exception);
             }
         });
     }

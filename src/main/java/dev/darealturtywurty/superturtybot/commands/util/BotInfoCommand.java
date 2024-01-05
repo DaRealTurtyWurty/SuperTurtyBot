@@ -1,19 +1,17 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
-import java.time.Instant;
-
-import net.dv8tion.jda.api.utils.TimeFormat;
-import org.jetbrains.annotations.Nullable;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
+import java.time.Instant;
 
 public class BotInfoCommand extends CoreCommand {
     public BotInfoCommand() {

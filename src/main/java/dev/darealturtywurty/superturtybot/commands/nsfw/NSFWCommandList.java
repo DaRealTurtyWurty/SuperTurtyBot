@@ -1122,7 +1122,7 @@ public class NSFWCommandList {
                 }
 
                 Collections.shuffle(images);
-                final Document imagePage = Jsoup.connect("https://rule34.xxx/" + images.get(0)).get();
+                final Document imagePage = Jsoup.connect("https://rule34.xxx/" + images.getFirst()).get();
                 final Element image = imagePage.selectFirst("img#image");
                 if (image == null) {
                     event.hook().editOriginal("No results found for `" + searchTerm + "`.").setFiles().setComponents()

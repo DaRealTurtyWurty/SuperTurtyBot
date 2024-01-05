@@ -25,10 +25,12 @@ public class MusicListener extends ListenerAdapter {
             }
 
             GuildVoiceState selfVoiceState = event.getGuild().getSelfMember().getVoiceState();
-            if (selfVoiceState == null || !selfVoiceState.inAudioChannel()) return;
+            if (selfVoiceState == null || !selfVoiceState.inAudioChannel())
+                return;
 
             AudioChannelUnion audioChannel = event.getChannelJoined();
-            if (selfVoiceState.getChannel().getIdLong() != audioChannel.getIdLong()) return;
+            if (selfVoiceState.getChannel() == null || audioChannel == null || selfVoiceState.getChannel().getIdLong() != audioChannel.getIdLong())
+                return;
 
             EXECUTOR_SERVICE.schedule(() -> {
                 AudioChannel channel = event.getGuild().getAudioManager().getConnectedChannel();
@@ -44,7 +46,8 @@ public class MusicListener extends ListenerAdapter {
         if (selfVoiceState == null || !selfVoiceState.inAudioChannel()) return;
 
         AudioChannelUnion audioChannel = event.getChannelLeft();
-        if (selfVoiceState.getChannel().getIdLong() != audioChannel.getIdLong()) return;
+        if (selfVoiceState.getChannel() == null || audioChannel == null || selfVoiceState.getChannel().getIdLong() != audioChannel.getIdLong())
+            return;
 
         if (audioChannel.getMembers().size() == 1) {
             EXECUTOR_SERVICE.schedule(() -> {

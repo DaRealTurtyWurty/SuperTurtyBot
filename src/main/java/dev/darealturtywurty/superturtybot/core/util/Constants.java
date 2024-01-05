@@ -10,7 +10,6 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 public final class Constants {

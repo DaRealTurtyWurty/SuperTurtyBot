@@ -1,16 +1,5 @@
 package dev.darealturtywurty.superturtybot.core.logback;
 
-import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Marker;
-import org.slf4j.helpers.MessageFormatter;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
@@ -21,6 +10,16 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Marker;
+import org.slf4j.helpers.MessageFormatter;
+
+import java.util.AbstractMap;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // Thanks maty
 public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
@@ -179,14 +178,12 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             if (!(obj instanceof IMentionable))
                 return null;
             String name = null;
-            if (obj instanceof final User user) {
-                name = user.getName();
-            } else if (obj instanceof final Role role) {
-                name = role.getName();
-            } else if (obj instanceof final GuildChannel channel) {
-                name = channel.getName();
-            } else if (obj instanceof final Emoji emoji) {
-                name = emoji.getName();
+            switch (obj) {
+                case final User user -> name = user.getName();
+                case final Role role -> name = role.getName();
+                case final GuildChannel channel -> name = channel.getName();
+                case final Emoji emoji -> name = emoji.getName();
+                default -> {}
             }
             
             if (name != null)

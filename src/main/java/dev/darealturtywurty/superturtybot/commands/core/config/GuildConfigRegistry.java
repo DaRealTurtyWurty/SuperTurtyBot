@@ -30,6 +30,9 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                             (config, value) -> config.setMinimumStars(Integer.parseInt(value)))
                     .valueFromConfig(GuildConfig::getMinimumStars).validator((event, str) -> {
+                        if (event.getGuild() == null)
+                            return false;
+
                         final int input = Integer.parseInt(str);
                         return input >= 1 && input <= event.getGuild().getMemberCount();
                     }).build());
@@ -48,7 +51,10 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption LEVEL_ROLES = GUILD_CONFIG_OPTIONS.register("level_roles",
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setLevelRoles)
                     .valueFromConfig(GuildConfig::getLevelRoles).validator((event, value) -> {
-                        final String[] split = value.split("[\s;]");
+                        if(event.getGuild() == null)
+                            return false;
+
+                        final String[] split = value.split("[ ;]");
                         for (final String val : split) {
                             final String[] roleToChannel = val.split("->");
                             if (roleToChannel.length != 2 || Ints.tryParse(roleToChannel[0].trim()) == null) return false;
@@ -93,7 +99,7 @@ public class GuildConfigRegistry {
             "disabled_levelling_channels", new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(
                     GuildConfig::setDisabledLevellingChannels).valueFromConfig(
                     GuildConfig::getDisabledLevellingChannels).validator((event, value) -> {
-                final String[] channels = value.split("[\s;]");
+                final String[] channels = value.split("[ ;]");
                 for (final String channelStr : channels) {
                     if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr)) return false;
                 }
@@ -105,7 +111,7 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setShowcaseChannels)
                     .valueFromConfig(GuildConfig::getShowcaseChannels)
                     .validator((event, value) -> {
-                        final String[] channels = value.split("[\s;]");
+                        final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
                             if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
                                 return false;
@@ -164,7 +170,7 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setAutoThreadChannels)
                     .valueFromConfig(GuildConfig::getAutoThreadChannels)
                     .validator((event, value) -> {
-                        final String[] channels = value.split("[\s;]");
+                        final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
                             if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
                                 return false;
@@ -188,7 +194,7 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setOptInChannels)
                     .valueFromConfig(GuildConfig::getOptInChannels)
                     .validator((event, value) -> {
-                        final String[] channels = value.split("[\s;]");
+                        final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
                             if (!Validators.GUILD_CHANNEL_VALIDATOR.test(event, channelStr))
                                 return false;
@@ -200,7 +206,7 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption NSFW_CHANNELS = GUILD_CONFIG_OPTIONS.register("nsfw_channels",
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setNsfwChannels)
                     .valueFromConfig(GuildConfig::getNsfwChannels).validator((event, value) -> {
-                        final String[] channels = value.split("[\s;]");
+                        final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
                             if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr)) return false;
                         }
@@ -278,6 +284,9 @@ public class GuildConfigRegistry {
                         guildConfig.setMusicPermissions(permissions);
                     })
                     .valueFromConfig(GuildConfig::getMusicPermissions).validator((event, value) -> {
+                        if(event.getGuild() == null)
+                            return false;
+
                         final String[] commands = value.split("-");
                         for (final String command : commands) {
                             final String[] commandAndPermissions = command.split(":");

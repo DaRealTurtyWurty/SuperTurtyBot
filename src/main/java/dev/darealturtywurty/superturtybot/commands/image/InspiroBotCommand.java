@@ -1,18 +1,17 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class InspiroBotCommand extends AbstractImageCommand {
     public InspiroBotCommand() {
@@ -54,13 +53,12 @@ public class InspiroBotCommand extends AbstractImageCommand {
     private static CompletableFuture<String> getInspiroQuote() {
         final var future = new CompletableFuture<String>();
         try {
-            final URLConnection connection = new URL("https://inspirobot.me/api/?generate=true").openConnection();
+            final URLConnection connection = new URI("https://inspirobot.me/api/?generate=true").toURL().openConnection();
             final String body = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
             future.complete(body);
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             future.complete("There has been an issue processing this command. Please try again later!");
-            Constants.LOGGER.error("Exception thrown whilst getting inspirobot quote!\n{}\n{}", exception.getMessage(),
-                ExceptionUtils.getStackTrace(exception));
+            Constants.LOGGER.error("Error getting InspiroBot quote!", exception);
         }
         
         return future;

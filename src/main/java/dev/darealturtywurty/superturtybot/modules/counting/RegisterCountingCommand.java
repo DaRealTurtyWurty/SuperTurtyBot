@@ -1,18 +1,19 @@
 package dev.darealturtywurty.superturtybot.modules.counting;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.text.WordUtils;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.unions.GuildChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.WordUtils;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RegisterCountingCommand extends CoreCommand {
     public RegisterCountingCommand() {
@@ -75,12 +76,18 @@ public class RegisterCountingCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
-        final TextChannel channel = event.getOption("channel").getAsChannel().asTextChannel();
+        GuildChannelUnion rawChannel = event.getOption("channel", null, OptionMapping::getAsChannel);
+        if(rawChannel == null || rawChannel.getType() != ChannelType.TEXT) {
+            reply(event, "❌ You must supply a valid text channel!", false, true);
+            return;
+        }
+
+        final TextChannel channel = rawChannel.asTextChannel();
 
         if (!event.getMember().isOwner()) {
             reply(event, "❌ You do not have permission to change the counting mode.", false, true);
@@ -101,11 +108,6 @@ public class RegisterCountingCommand extends CoreCommand {
         }
 
         final CountingMode mode = CountingMode.valueOf(strMode.toUpperCase().trim());
-        if (mode == null) {
-            reply(event, "❌ You must supply a valid counting mode!", false, true);
-            return;
-        }
-
         if (CountingManager.INSTANCE.isCountingChannel(event.getGuild(), channel)) {
             reply(event, "❌ This channel is already registered as a counting channel!", false, true);
             return;

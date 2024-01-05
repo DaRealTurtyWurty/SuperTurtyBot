@@ -88,7 +88,7 @@ public class WeatherCommand extends CoreCommand {
             if (results.isEmpty())
                 return Either.left("No results found for the specified location!");
 
-            return Either.right(results.get(0));
+            return Either.right(results.getFirst());
         } catch (IOException exception) {
             Constants.LOGGER.error("An error occurred while getting the weather!", exception);
             return Either.left("An error occurred while getting the weather!");

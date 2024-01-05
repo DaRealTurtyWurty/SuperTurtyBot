@@ -1,11 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.moderation.warnings;
 
-import java.awt.Color;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.math3.util.Pair;
-
 import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -18,6 +12,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.math3.util.Pair;
+
+import java.awt.*;
+import java.util.List;
+import java.util.Set;
 
 public class ClearWarningsCommand extends CoreCommand {
     public ClearWarningsCommand() {
@@ -67,7 +66,7 @@ public class ClearWarningsCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("This command can only be used inside of a server!")
                 .mentionRepliedUser(false).queue();
             return;
@@ -81,7 +80,12 @@ public class ClearWarningsCommand extends CoreCommand {
         
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
-        final User user = event.getOption("user").getAsUser();
+        final User user = event.getOption("user", null, OptionMapping::getAsUser);
+        if (user == null) {
+            reply(event, "❌ You must supply a valid user!", false, true);
+            return;
+        }
+
         user.openPrivateChannel().queue(channel -> channel.sendMessage(
             "Your warnings on `" + event.getGuild().getName() + "` have been cleared, with reason: `" + reason + "`!")
             .queue(success -> {

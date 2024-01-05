@@ -5,10 +5,12 @@ import com.google.gson.JsonObject;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import lombok.Setter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+@Setter
 public class KaraokeConfig extends FilterConfig {
     public static final float DEFAULT_LEVEL = 1f;
     public static final float DEFAULT_MONO_LEVEL = 1f;
@@ -24,32 +26,16 @@ public class KaraokeConfig extends FilterConfig {
         return level;
     }
 
-    public void setLevel(float level) {
-        this.level = level;
-    }
-
     public float monoLevel() {
         return monoLevel;
-    }
-
-    public void setMonoLevel(float monoLevel) {
-        this.monoLevel = monoLevel;
     }
 
     public float filterBand() {
         return filterBand;
     }
 
-    public void setFilterBand(float filterBand) {
-        this.filterBand = filterBand;
-    }
-
     public float filterWidth() {
         return filterWidth;
-    }
-
-    public void setFilterWidth(float filterWidth) {
-        this.filterWidth = filterWidth;
     }
 
     @Nonnull

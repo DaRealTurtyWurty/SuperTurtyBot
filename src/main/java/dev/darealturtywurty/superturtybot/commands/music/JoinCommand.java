@@ -37,13 +37,13 @@ public class JoinCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
 
-        if (event.getGuild().getAudioManager().isConnected()) {
+        if (event.getGuild().getAudioManager().isConnected() && event.getGuild().getAudioManager().getConnectedChannel() != null) {
             event.deferReply(true)
                 .setContent("❌ I am already connected to "
                     + event.getGuild().getAudioManager().getConnectedChannel().getAsMention() + "!")
@@ -51,13 +51,19 @@ public class JoinCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
 
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
+        if(channel == null) {
+            event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
+                .mentionRepliedUser(false).queue();
+            return;
+        }
+
         event.getGuild().getAudioManager().openAudioConnection(channel);
         event.deferReply().setContent("✅ I have joined " + channel.getAsMention() + "!").mentionRepliedUser(false)
             .queue();

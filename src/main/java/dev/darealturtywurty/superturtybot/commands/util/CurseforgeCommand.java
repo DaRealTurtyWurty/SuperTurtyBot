@@ -5,8 +5,8 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import io.github.matyrobbrt.curseforgeapi.CurseForgeAPI;
 import io.github.matyrobbrt.curseforgeapi.request.AsyncRequest;
 import io.github.matyrobbrt.curseforgeapi.request.Response;
@@ -40,8 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -70,7 +70,7 @@ public class CurseforgeCommand extends CoreCommand {
                 throw new IllegalStateException("Failed to get games from curseforge!", exception);
             }
 
-            GAMES.values().forEach(game -> {
+            for (Game game : GAMES.values()) {
                 CATEGORIES.computeIfAbsent(game, key -> {
                     try {
                         return new HashSet<>(helper.getCategories(game.id()).get());
@@ -78,7 +78,7 @@ public class CurseforgeCommand extends CoreCommand {
                         throw new IllegalStateException("Failed to get categories from curseforge!", exception);
                     }
                 });
-            });
+            }
         });
     }
 
@@ -166,11 +166,20 @@ public class CurseforgeCommand extends CoreCommand {
         Category categoryObj = null;
         if(category != null) {
             try {
-                categoryObj = CATEGORIES.get(gameObj).stream().filter(cat -> cat.name().equalsIgnoreCase(category)).findFirst().get();
+                categoryObj = CATEGORIES.get(gameObj)
+                        .stream()
+                        .filter(cat -> cat.name().equalsIgnoreCase(category))
+                        .findFirst()
+                        .orElse(null);
             } catch (NoSuchElementException exception) {
                 reply(event, "❌ That category does not exist!", false, true);
                 return;
             }
+        }
+
+        if (categoryObj == null && classId != -1) {
+            reply(event, "❌ That type does not exist!", false, true);
+            return;
         }
 
         event.deferReply().queue();
@@ -196,7 +205,7 @@ public class CurseforgeCommand extends CoreCommand {
                 }
 
                 if(mods.size() == 1) {
-                    EmbedBuilder embed = createEmbed(mods.get(0));
+                    EmbedBuilder embed = createEmbed(mods.getFirst());
                     event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(false).queue();
                     return;
                 }
@@ -258,7 +267,7 @@ public class CurseforgeCommand extends CoreCommand {
                                 return;
                             }
 
-                            int value = Integer.parseInt(event1.getSelectedOptions().get(0).getValue());
+                            int value = Integer.parseInt(event1.getSelectedOptions().getFirst().getValue());
                             Mod mod = mods.stream().filter(mod1 -> mod1.id() == value).findFirst().orElse(null);
                             if(mod == null) {
                                 event1.deferEdit().queue();
@@ -373,7 +382,7 @@ public class CurseforgeCommand extends CoreCommand {
         embed.addField("Released:", TimeFormat.DATE_SHORT.format(mod.getDateReleasedAsInstant()), true);
         embed.addField("Updated:", TimeFormat.DATE_SHORT.format(mod.getDateModifiedAsInstant()), true);
 
-        embed.setImage(!mod.screenshots().isEmpty() ? mod.screenshots().get(0).url() : null);
+        embed.setImage(!mod.screenshots().isEmpty() ? mod.screenshots().getFirst().url() : null);
 
         return embed;
     }

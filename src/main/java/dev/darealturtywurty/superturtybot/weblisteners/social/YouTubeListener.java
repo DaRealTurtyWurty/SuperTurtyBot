@@ -1,5 +1,25 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message.MentionType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import okhttp3.*;
+import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -11,31 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.bson.conversions.Bson;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message.MentionType;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class YouTubeListener {
     private static final String TOPIC_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s";
@@ -59,18 +54,23 @@ public class YouTubeListener {
             final String url = TOPIC_URL.formatted(notifier.getYoutubeChannel());
             Constants.HTTP_CLIENT.newCall(new Request.Builder().url(url).build()).enqueue(new Callback() {
                 @Override
-                public void onFailure(Call call, IOException exception) {
+                public void onFailure(@NotNull Call call, @NotNull IOException exception) {
                     throw new IllegalStateException(
                         "Failed response from channel '" + notifier.getYoutubeChannel() + "'", exception);
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) {
                     if (!response.isSuccessful())
                         throw new IllegalStateException(
                             "Failed response from channel '" + notifier.getYoutubeChannel() + "'");
 
-                    parseVideo(response.body().byteStream()).ifPresent(video -> {
+                    ResponseBody body = response.body();
+                    if (body == null)
+                        throw new IllegalStateException(
+                            "Failed response from channel '" + notifier.getYoutubeChannel() + "'");
+
+                    parseVideo(body.byteStream()).ifPresent(video -> {
                         final List<YoutubeNotifier> notifiers = new ArrayList<>();
                         Database.getDatabase().youtubeNotifier.find().forEach(found -> {
                             final Guild guild = jda.getGuildById(notifier.getGuild());
@@ -125,7 +125,7 @@ public class YouTubeListener {
 
             document = documentBuilder.parse(input);
         } catch (SAXException | IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to parse XML!", exception);
             return Optional.empty();
         }
         
@@ -150,9 +150,9 @@ public class YouTubeListener {
             publishDate, updateDate));
     }
     
-    private static record Video(String id, String videoId, String title, String url, Channel channel,
-        LocalDate publishedAt, LocalDate updatedAt) {
-        private static record Channel(String id, String name, String url) {
+    private record Video(String id, String videoId, String title, String url, Channel channel,
+                         LocalDate publishedAt, LocalDate updatedAt) {
+        private record Channel(String id, String name, String url) {
         }
     }
 }

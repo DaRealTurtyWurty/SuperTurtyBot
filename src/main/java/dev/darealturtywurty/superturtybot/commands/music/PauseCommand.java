@@ -43,23 +43,23 @@ public class PauseCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
         
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
         
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
-        if (!event.getGuild().getAudioManager().isConnected()) {
+        if (channel == null || !event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }
         
-        if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
+        if (event.getMember().getVoiceState().getChannel() == null || event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
             reply(event, "❌ You must be in the same voice channel as me to modify the queue!", false, true);
             return;
         }

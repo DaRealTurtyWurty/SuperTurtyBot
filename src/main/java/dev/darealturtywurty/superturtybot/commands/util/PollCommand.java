@@ -1,13 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -18,6 +10,11 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.*;
 
 public class PollCommand extends CoreCommand {
     private static final Map<Integer, String> NUMBER_EMOTE_MAP = new HashMap<>();
@@ -77,10 +74,22 @@ public class PollCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String question = event.getOption("question").getAsString();
+        final String question = event.getOption("question", null, OptionMapping::getAsString);
+        if (question == null) {
+            event.deferReply(true).setContent("❌ You must provide a question to ask!").mentionRepliedUser(false)
+                .queue();
+            return;
+        }
+
         final String[] options = new String[10];
-        options[0] = event.getOption("option1").getAsString();
-        options[1] = event.getOption("option2").getAsString();
+        options[0] = event.getOption("option1", null, OptionMapping::getAsString);
+        options[1] = event.getOption("option2", null, OptionMapping::getAsString);
+        if (options[0] == null || options[1] == null) {
+            event.deferReply(true).setContent("❌ You must provide at least 2 options!").mentionRepliedUser(false)
+                .queue();
+            return;
+        }
+
         final List<String> extraOptions = new ArrayList<>();
         final String option3 = event.getOption("option3", "", OptionMapping::getAsString);
         final String option4 = event.getOption("option4", "", OptionMapping::getAsString);

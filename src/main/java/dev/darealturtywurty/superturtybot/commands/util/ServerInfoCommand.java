@@ -1,8 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Color;
-import java.time.Instant;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
@@ -10,6 +7,9 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.TimeFormat;
+
+import java.awt.*;
+import java.time.Instant;
 
 public class ServerInfoCommand extends CoreCommand {
     public ServerInfoCommand() {
@@ -43,13 +43,13 @@ public class ServerInfoCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        final Guild guild = event.getGuild();
+        if (!event.isFromGuild() || guild == null) {
             event.deferReply().setContent("This command can only be used inside a server!").mentionRepliedUser(false)
                 .queue();
             return;
         }
-        
-        final Guild guild = event.getGuild();
+
         final EmbedBuilder embed = createEmbed(guild);
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
     }
@@ -78,7 +78,7 @@ public class ServerInfoCommand extends CoreCommand {
         embed.addField("NSFW Level", StringUtils.convertNSFWLevel(guild.getNSFWLevel()), true);
         embed.addField("Verification Level", StringUtils.convertVerificationLevel(guild.getVerificationLevel()), true);
         
-        embed.addField("Owner", guild.getOwner().getAsMention(), true);
+        embed.addField("Owner", guild.getOwner() == null ? "Unknown" : guild.getOwner().getAsMention(), true);
         embed.addField("Max File Size", String.format("%.2g", guild.getMaxFileSize() / 1000000f) + "MB", true);
         
         if (guild.getBoostCount() > 0) {

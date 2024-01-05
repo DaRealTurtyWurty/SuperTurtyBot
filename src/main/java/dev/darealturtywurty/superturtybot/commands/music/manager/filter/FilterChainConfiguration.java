@@ -205,9 +205,9 @@ public class FilterChainConfiguration {
             var list = new ArrayList<AudioFilter>();
             list.add(output);
             for (var config : configuration.filters.values()) {
-                AudioFilter filter = config.enabled() ? config.create(format, (FloatPcmAudioFilter) list.get(0)) : null;
+                AudioFilter filter = config.enabled() ? config.create(format, (FloatPcmAudioFilter) list.getFirst()) : null;
                 if (filter != null) {
-                    list.add(0, filter);
+                    list.addFirst(filter);
                 }
             }
             return list.subList(0, list.size() - 1);

@@ -78,7 +78,7 @@ public class QuoteCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        if (guild == null) {
+        if (guild == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
@@ -102,9 +102,8 @@ public class QuoteCommand extends CoreCommand {
                     return;
                 }
 
-                User user = event.getOption("user") == null ? event.getUser()
-                        : event.getOption("user").getAsUser();
-                String text = event.getOption("text").getAsString();
+                User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
+                String text = event.getOption("text", "", OptionMapping::getAsString);
 
                 Member member = guild.getMember(user);
                 if (member == null || member.getIdLong() == event.getUser().getIdLong()) {
@@ -307,12 +306,12 @@ public class QuoteCommand extends CoreCommand {
 
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        Guild guild = event.getGuild();
+        if (!event.isFromGuild() || event.getMember() == null || guild == null) {
             event.reply("❌ This command can only be used in a server!").setEphemeral(true).queue();
             return;
         }
 
-        Guild guild = event.getGuild();
         if (!event.getMember().hasPermission(Permission.VIEW_CHANNEL)) {
             event.reply("❌ You must be able to read messages to use this command!").setEphemeral(true).queue();
             return;
@@ -343,9 +342,10 @@ public class QuoteCommand extends CoreCommand {
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if (!event.isFromGuild()) return;
-
-        if (!event.getButton().getId().startsWith("quote_")) return;
+        if (!event.isFromGuild() ||
+                event.getGuild() == null ||
+                event.getButton().getId() == null ||
+                !event.getButton().getId().startsWith("quote_")) return;
 
         String[] args = event.getButton().getId().split("-");
         if (args.length != 5) return;

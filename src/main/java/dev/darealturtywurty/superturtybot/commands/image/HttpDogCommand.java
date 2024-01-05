@@ -1,19 +1,21 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class HttpDogCommand extends AbstractImageCommand {
     private static final Map<Integer, String> STATUS_CODES = new HashMap<>();
@@ -97,11 +99,6 @@ public class HttpDogCommand extends AbstractImageCommand {
     }
 
     @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.IMAGE;
-    }
-
-    @Override
     public String getDescription() {
         return "Gets a dog image for the corresponding http status code.";
     }
@@ -133,18 +130,18 @@ public class HttpDogCommand extends AbstractImageCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        int statusCode = event.getOption("status_code").getAsInt();
+        int statusCode = event.getOption("status_code", -1, OptionMapping::getAsInt);
         if (!STATUS_CODES.containsKey(statusCode)) {
             statusCode = 404;
         }
 
         try {
-            final URLConnection connection = new URL("https://http.dog/" + statusCode + ".jpg").openConnection();
+            final URLConnection connection = new URI("https://http.dog/" + statusCode + ".jpg").toURL().openConnection();
             event.deferReply().setFiles(FileUpload.fromData(connection.getInputStream(), statusCode + ".jpg"))
                 .mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            exception.printStackTrace();
-            event.deferReply(true).setContent("�?� There was an issue getting this HTTP Dog!").mentionRepliedUser(false)
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to get HTTP Dog!", exception);
+            event.deferReply(true).setContent("❌ There was an issue getting this HTTP Dog!").mentionRepliedUser(false)
                 .queue();
         }
     }

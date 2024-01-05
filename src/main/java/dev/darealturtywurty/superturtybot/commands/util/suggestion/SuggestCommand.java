@@ -1,12 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util.suggestion;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
@@ -21,6 +14,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class SuggestCommand extends CoreCommand {
     public SuggestCommand() {
@@ -95,7 +94,7 @@ public class SuggestCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getMember() == null) {
+        if (event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
@@ -129,9 +128,11 @@ public class SuggestCommand extends CoreCommand {
     }
 
     private void runAddSuggestion(SlashCommandInteractionEvent event, TextChannel suggestionChannel) {
-        final String suggestionStr = event.getOption("suggestion").getAsString();
-        if (suggestionStr.isBlank()) {
-            event.deferReply(true).setContent("You must provide something to suggest!").mentionRepliedUser(false)
+        final String suggestionStr = event.getOption("suggestion", null, OptionMapping::getAsString);
+        if (suggestionStr == null || suggestionStr.isBlank()) {
+            event.deferReply(true)
+                    .setContent("You must provide something to suggest!")
+                    .mentionRepliedUser(false)
                     .queue();
             return;
         }

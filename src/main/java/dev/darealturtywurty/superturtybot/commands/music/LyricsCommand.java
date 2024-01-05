@@ -86,9 +86,9 @@ public class LyricsCommand extends CoreCommand {
             }
             
             final String lyrics = ID_LYRIC_MAP.get(hitId);
-            final String prevPage = lyrics.substring(0 + newPage * 1024,
+            final String prevPage = lyrics.substring(newPage * 1024,
                 Math.min(lyrics.length(), 1024 + newPage * 1024));
-            final ActionRow row = event.getMessage().getActionRows().get(0);
+            final ActionRow row = event.getMessage().getActionRows().getFirst();
             Button previous = row.getButtons().get(0);
             previous = previous.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
             Button close = row.getButtons().get(1).withDisabled(false);
@@ -99,13 +99,13 @@ public class LyricsCommand extends CoreCommand {
             if (newPage != 0) {
                 event
                     .editMessageEmbeds(
-                        new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
+                        new EmbedBuilder(event.getMessage().getEmbeds().getFirst()).setDescription(prevPage).build())
                     .setComponents(ActionRow.of(previous, close, next)).queue();
                 
             } else {
                 event.getHook()
                     .editOriginalEmbeds(
-                        new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(prevPage).build())
+                        new EmbedBuilder(event.getMessage().getEmbeds().getFirst()).setDescription(prevPage).build())
                     .setComponents(ActionRow.of(previous, close, next)).queue();
             }
         } else if ("close".equals(action)) {
@@ -123,10 +123,10 @@ public class LyricsCommand extends CoreCommand {
                 return;
             
             if (newPage > 0) {
-                final String nextPage = lyrics.substring(0 + newPage * 1024,
+                final String nextPage = lyrics.substring(newPage * 1024,
                     Math.min(lyrics.length(), 1024 + newPage * 1024));
                 
-                final ActionRow row = event.getMessage().getActionRows().get(0);
+                final ActionRow row = event.getMessage().getActionRows().getFirst();
                 Button previous = row.getButtons().get(0).withDisabled(false);
                 previous = previous
                     .withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
@@ -138,13 +138,13 @@ public class LyricsCommand extends CoreCommand {
                 if (newPage != lyrics.length() / 1024) {
                     event
                         .editMessageEmbeds(
-                            new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
+                            new EmbedBuilder(event.getMessage().getEmbeds().getFirst()).setDescription(nextPage).build())
                         .setComponents(ActionRow.of(previous, close, next)).queue();
 
                 } else {
                     event.getHook()
                         .editOriginalEmbeds(
-                            new EmbedBuilder(event.getMessage().getEmbeds().get(0)).setDescription(nextPage).build())
+                            new EmbedBuilder(event.getMessage().getEmbeds().getFirst()).setDescription(nextPage).build())
                         .setComponents(ActionRow.of(previous, close, next)).queue();
                 }
             }
@@ -174,7 +174,7 @@ public class LyricsCommand extends CoreCommand {
                 return;
             }
             
-            final Hit hit = hits.get(0);
+            final Hit hit = hits.getFirst();
             final var embed = new EmbedBuilder();
             embed.setTitle("Lyrics for " + hit.getTitleWithFeatured(), hit.getUrl());
             embed.setThumbnail(hit.getThumbnailUrl());
@@ -197,7 +197,7 @@ public class LyricsCommand extends CoreCommand {
                         + hit.getId() + "-page0" + "-next", Emoji.fromUnicode("▶️"))))
                 .queue();
         } catch (final IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to get lyrics!", exception);
             event.getHook().editOriginal("❌ There has been an issue getting the lyrics for this track!").queue();
         }
     }

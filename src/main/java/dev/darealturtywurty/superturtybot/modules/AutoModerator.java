@@ -10,7 +10,8 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class AutoModerator extends ListenerAdapter {
-    private static final Pattern INVITE_REGEX = Pattern.compile("(https?:\\/\\/)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com\\/invite)\\/[^\s\\/]+?(?=\b)");
+    private static final Pattern INVITE_REGEX = Pattern.compile("(https?:\\/\\/)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com\\/invite)\\/[^ \\/]+?(?=\b)");
     public static final AutoModerator INSTANCE = new AutoModerator();
     public static final Set<String> SCAM_DOMAINS = new HashSet<>();
 
@@ -36,7 +37,8 @@ public class AutoModerator extends ListenerAdapter {
 
     @Override
     public void onMessageUpdate(MessageUpdateEvent event) {
-        if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage() || event.getAuthor().isSystem() || event.getMember().isOwner())
+        if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage() ||
+                event.getAuthor().isSystem() || event.getMember() == null || event.getMember().isOwner())
             return;
 
         discordInvites(event.getMessage());
@@ -45,7 +47,7 @@ public class AutoModerator extends ListenerAdapter {
 
     public void initialize() {
         try {
-            final URLConnection connection = new URL("https://phish.sinking.yachts/v2/all").openConnection();
+            final URLConnection connection = new URI("https://phish.sinking.yachts/v2/all").toURL().openConnection();
             connection.addRequestProperty("X-Identity", "TurtyBot#8108");
             final InputStream stream = connection.getInputStream();
             final JsonArray response = Constants.GSON.fromJson(new InputStreamReader(stream), JsonArray.class);
@@ -54,8 +56,8 @@ public class AutoModerator extends ListenerAdapter {
                 SCAM_DOMAINS.add(domain);
                 Constants.LOGGER.debug("Scam link added: {}", domain);
             });
-        } catch (final IOException exception) {
-            Constants.LOGGER.error("There has been an error accessing: {}\nError Message: {}", "https://phish.sinking.yachts/v2/all", exception.getMessage());
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Failed to initialize scam links!", exception);
         }
     }
 

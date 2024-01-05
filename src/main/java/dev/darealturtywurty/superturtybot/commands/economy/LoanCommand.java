@@ -167,25 +167,7 @@ public class LoanCommand extends EconomyCommand {
                     return;
                 }
 
-                PaginatedEmbed.ContentsBuilder contents = new PaginatedEmbed.ContentsBuilder();
-                for (Loan loan : loans) {
-                    contents.field("Loan ID: %s".formatted(loan.getId()), """
-                            Amount: %s%d
-                            Interest Rate: %s%%
-                            Time to Pay: %s
-                            Paid Off: %s
-                            """.formatted(
-                            config.getEconomyCurrency(),
-                            loan.getAmount(),
-                            loan.getInterestRate(),
-                            TimeFormat.RELATIVE.format(loan.getTimeToPay()),
-                            loan.isPaidOff() ? "Yes" : "No"
-                    ), false);
-                }
-
-                PaginatedEmbed.Builder builder = new PaginatedEmbed.Builder(5, contents);
-                builder.title("Your Loans");
-                builder.color(Color.ORANGE);
+                PaginatedEmbed.Builder builder = createLoanEmbed(config, loans);
                 builder.timestamp(Instant.now());
                 builder.authorOnly(event.getUser().getIdLong());
                 builder.footer("Requested by %s".formatted(event.getUser().getEffectiveName()), event.getUser().getEffectiveAvatarUrl());
@@ -222,5 +204,29 @@ public class LoanCommand extends EconomyCommand {
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
         }
+    }
+
+    @NotNull
+    private static PaginatedEmbed.Builder createLoanEmbed(GuildConfig config, List<Loan> loans) {
+        PaginatedEmbed.ContentsBuilder contents = new PaginatedEmbed.ContentsBuilder();
+        for (Loan loan : loans) {
+            contents.field("Loan ID: %s".formatted(loan.getId()), """
+                    Amount: %s%d
+                    Interest Rate: %s%%
+                    Time to Pay: %s
+                    Paid Off: %s
+                    """.formatted(
+                    config.getEconomyCurrency(),
+                    loan.getAmount(),
+                    loan.getInterestRate(),
+                    TimeFormat.RELATIVE.format(loan.getTimeToPay()),
+                    loan.isPaidOff() ? "Yes" : "No"
+            ), false);
+        }
+
+        PaginatedEmbed.Builder builder = new PaginatedEmbed.Builder(5, contents);
+        builder.title("Your Loans");
+        builder.color(Color.ORANGE);
+        return builder;
     }
 }

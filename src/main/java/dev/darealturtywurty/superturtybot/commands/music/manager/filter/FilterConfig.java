@@ -4,11 +4,13 @@ import com.google.gson.JsonObject;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import lombok.Setter;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+@Setter
 public abstract class FilterConfig {
     private boolean enabled = false;
 
@@ -40,10 +42,6 @@ public abstract class FilterConfig {
 
     public boolean isEnabled() {
         return enabled && enabled();
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     /**

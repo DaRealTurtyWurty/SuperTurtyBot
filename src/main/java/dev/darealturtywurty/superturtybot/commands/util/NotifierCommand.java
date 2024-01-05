@@ -1,11 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.util.List;
-
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -14,11 +9,16 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotif
 import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.IMentionable;
+import net.dv8tion.jda.api.entities.channel.unions.GuildChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.bson.conversions.Bson;
+
+import java.util.List;
 
 public class NotifierCommand extends CoreCommand {
     public NotifierCommand() {
@@ -90,7 +90,7 @@ public class NotifierCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
@@ -102,7 +102,11 @@ public class NotifierCommand extends CoreCommand {
 
         switch (event.getSubcommandName()) {
             case "youtube": {
-                final String youtubeChannelId = event.getOption("youtube_channel_id").getAsString();
+                final String youtubeChannelId = event.getOption("youtube_channel_id", null, OptionMapping::getAsString);
+                if (youtubeChannelId == null) {
+                    reply(event, "❌ You must provide a YouTube channel ID!", false, true);
+                    return;
+                }
 
                 final Bson findFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("youtubeChannel", youtubeChannelId));
@@ -124,8 +128,20 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
 
-                final long discordChannel = event.getOption("discord_channel").getAsChannel().getIdLong();
-                final String mention = event.getOption("who_to_ping").getAsMentionable().getAsMention();
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
 
                 Database.getDatabase().youtubeNotifier.insertOne(
                     new YoutubeNotifier(event.getGuild().getIdLong(), discordChannel, youtubeChannelId, mention));
@@ -135,7 +151,11 @@ public class NotifierCommand extends CoreCommand {
                 break;
             }
             case "twitch": {
-                final String twitchChannel = event.getOption("twitch_channel").getAsString();
+                final String twitchChannel = event.getOption("twitch_channel", null, OptionMapping::getAsString);
+                if (twitchChannel == null) {
+                    reply(event, "❌ You must provide a Twitch channel!", false, true);
+                    return;
+                }
 
                 final Bson findFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("channel", twitchChannel));
@@ -158,8 +178,20 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
                 
-                final long discordChannel = event.getOption("discord_channel").getAsChannel().getIdLong();
-                final String mention = event.getOption("who_to_ping").getAsMentionable().getAsMention();
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
 
                 Database.getDatabase().twitchNotifier.insertOne(
                     new TwitchNotifier(event.getGuild().getIdLong(), twitchChannel, discordChannel, mention));
@@ -174,7 +206,11 @@ public class NotifierCommand extends CoreCommand {
                 break;
             }
             case "steam": {
-                final int appId = event.getOption("steam_app_id").getAsInt();
+                final int appId = event.getOption("steam_app_id", -1, OptionMapping::getAsLong).intValue();
+                if (appId == -1) {
+                    reply(event, "❌ You must provide a Steam app ID!", false, true);
+                    return;
+                }
 
                 final Bson findFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                     Filters.eq("appId", appId));
@@ -196,8 +232,20 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
 
-                final long discordChannel = event.getOption("discord_channel").getAsChannel().getIdLong();
-                final String mention = event.getOption("who_to_ping").getAsMentionable().getAsMention();
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
 
                 Database.getDatabase().steamNotifier
                     .insertOne(new SteamNotifier(event.getGuild().getIdLong(), discordChannel, appId, mention));
@@ -205,6 +253,9 @@ public class NotifierCommand extends CoreCommand {
                 reply(event, "✅ I have successfully setup a notifier for this Steam app in <#" + discordChannel + ">!");
                 break;
             }
+            case null:
+                reply(event, "❌ You must provide a subcommand!", false, true);
+                break;
             default:
                 throw new IllegalStateException(
                     "Unexpected subcommand for notifier command: " + event.getSubcommandName());

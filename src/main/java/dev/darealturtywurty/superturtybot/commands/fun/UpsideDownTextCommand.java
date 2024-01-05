@@ -1,12 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.util.List;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.util.List;
 
 public class UpsideDownTextCommand extends CoreCommand {
     private static final String NORMAL_CHARS = "abcdefghijklmnopqrstuvwxyz_,;.?!/\\'ABCDEFGHIJKLMNOPQRSTUVWXYZ'˙/[]-=`1234567890~@#$%^&*()‾_+{}|:\"<>";
@@ -48,7 +49,7 @@ public class UpsideDownTextCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String text = event.getOption("text").getAsString();
+        final String text = event.getOption("text", "", OptionMapping::getAsString);
         final var newText = new StringBuilder();
         for (int charIndex = 0; charIndex < text.length(); charIndex++) {
             final char letter = text.charAt(charIndex);

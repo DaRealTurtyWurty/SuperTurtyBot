@@ -115,7 +115,7 @@ public class OptCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        if (!event.isFromGuild() || guild == null) {
+        if (!event.isFromGuild() || guild == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
@@ -140,8 +140,8 @@ public class OptCommand extends CoreCommand {
 
         switch (subcommand) {
             case "in" -> {
-                String channelStr = event.getOption("channel").getAsString();
-                if (channelStr.isBlank()) {
+                String channelStr = event.getOption("channel", null, OptionMapping::getAsString);
+                if (channelStr == null || channelStr.isBlank()) {
                     reply(event, "❌ You must specify a channel!", false, true);
                     return;
                 }
@@ -191,8 +191,7 @@ public class OptCommand extends CoreCommand {
             }
             case "out" -> {
                 OptionMapping channelOption = event.getOption("channel");
-                if (channelOption != null && (!channelOption.getChannelType().isGuild() || channelOption.getChannelType()
-                        .isThread())) {
+                if (channelOption == null || (!channelOption.getChannelType().isGuild() || channelOption.getChannelType().isThread())) {
                     reply(event, "❌ You must specify a text or voice channel!", false, true);
                     return;
                 }
@@ -256,7 +255,7 @@ public class OptCommand extends CoreCommand {
                         .color(Color.GREEN)
                         .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
                         .authorOnly(event.getUser().getIdLong())
-                        .thumbnail(event.getGuild().getIconUrl())
+                        .thumbnail(guild.getIconUrl())
                         .build(event.getJDA());
 
                 embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No channels available to opt-in/out of!").queue());

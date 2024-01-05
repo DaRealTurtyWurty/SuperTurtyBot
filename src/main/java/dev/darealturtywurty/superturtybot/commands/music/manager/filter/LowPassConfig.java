@@ -5,21 +5,19 @@ import com.google.gson.JsonObject;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import lombok.Setter;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+@Setter
 public class LowPassConfig extends FilterConfig {
     public static final float DEFAULT_SMOOTHING = 20f;
     private float smoothing = DEFAULT_SMOOTHING;
 
     public float smoothing() {
         return smoothing;
-    }
-
-    public void setSmoothing(float smoothing) {
-        this.smoothing = smoothing;
     }
 
     @CheckReturnValue

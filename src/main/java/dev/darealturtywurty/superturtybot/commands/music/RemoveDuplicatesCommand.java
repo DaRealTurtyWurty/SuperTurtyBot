@@ -1,15 +1,14 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class RemoveDuplicatesCommand extends CoreCommand {
     public RemoveDuplicatesCommand() {

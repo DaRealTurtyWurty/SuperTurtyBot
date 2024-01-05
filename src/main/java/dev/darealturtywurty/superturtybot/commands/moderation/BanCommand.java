@@ -1,16 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.moderation;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.math3.util.Pair;
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -18,6 +8,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -26,6 +17,14 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.math3.util.Pair;
+import org.bson.conversions.Bson;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class BanCommand extends CoreCommand {
     public BanCommand() {
@@ -77,15 +76,20 @@ public class BanCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
         
-        final User user = event.getOption("user").getAsUser();
-        if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
-            boolean canInteract = event.getOption("user").getAsMember() == null
-                    || event.getInteraction().getMember().canInteract(event.getOption("user").getAsMember());
+        final User user = event.getOption("user", null, OptionMapping::getAsUser);
+        if (user == null) {
+            reply(event, "❌ You must provide a user to ban!", false, true);
+            return;
+        }
+
+        if (event.getMember().hasPermission(event.getGuildChannel(), Permission.BAN_MEMBERS)) {
+            Member member = event.getGuild().getMember(user);
+            boolean canInteract = member == null || event.getMember().canInteract(member);
 
             if (canInteract) {
                 final int deleteDays = event.getOption("delete_days", 0, OptionMapping::getAsInt);

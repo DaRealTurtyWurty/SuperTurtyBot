@@ -5,21 +5,19 @@ import com.google.gson.JsonObject;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import lombok.Setter;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+@Setter
 public class RotationConfig extends FilterConfig {
     public static final float DEFAULT_ROTATION_HZ = 5f;
     private float rotationHz = DEFAULT_ROTATION_HZ;
 
     public float rotationHz() {
         return rotationHz;
-    }
-
-    public void setRotationHz(float rotationHz) {
-        this.rotationHz = rotationHz;
     }
 
     @CheckReturnValue

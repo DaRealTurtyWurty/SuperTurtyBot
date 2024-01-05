@@ -1,6 +1,8 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 

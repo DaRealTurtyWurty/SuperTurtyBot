@@ -4,13 +4,14 @@ import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -141,51 +142,53 @@ public class LatestCommand extends CoreCommand {
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
-            case "all" -> {
-                Either<CoupledPair<MinecraftVersion>, HttpStatus> minecraftResponse = ApiHandler.getLatestMinecraft();
-                Either<CoupledPair<ForgeVersion>, HttpStatus> forgeResponse = ApiHandler.getLatestForge();
-                Either<CoupledPair<FabricVersion>, HttpStatus> fabricResponse = ApiHandler.getLatestFabric();
-                Either<CoupledPair<QuiltVersion>, HttpStatus> quiltResponse = ApiHandler.getLatestQuilt();
-                Either<ParchmentVersion, HttpStatus> parchmentResponse = ApiHandler.getLatestParchment();
-
-                var embed = new EmbedBuilder();
-                if (minecraftResponse.isLeft()) {
-                    CoupledPair<MinecraftVersion> versions = minecraftResponse.getLeft();
-                    embed.addField("Minecraft", "Release: " + versions.getLeft().version() + "\nSnapshot: " + versions.getRight().version(), false);
-                } else {
-                    embed.addField("Minecraft", "Failed to get latest Minecraft versions!", false);
-                }
-
-                if (forgeResponse.isLeft()) {
-                    CoupledPair<ForgeVersion> versions = forgeResponse.getLeft();
-                    embed.addField("Forge", "Recommended: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
-                } else {
-                    embed.addField("Forge", "Failed to get latest Forge versions!", false);
-                }
-
-                if (fabricResponse.isLeft()) {
-                    CoupledPair<FabricVersion> versions = fabricResponse.getLeft();
-                    embed.addField("Fabric", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
-                } else {
-                    embed.addField("Fabric", "Failed to get latest Fabric versions!", false);
-                }
-
-                if (quiltResponse.isLeft()) {
-                    CoupledPair<QuiltVersion> versions = quiltResponse.getLeft();
-                    embed.addField("Quilt", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
-                } else {
-                    embed.addField("Quilt", "Failed to get latest Quilt versions!", false);
-                }
-
-                if (parchmentResponse.isLeft()) {
-                    ParchmentVersion version = parchmentResponse.getLeft();
-                    embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
-                } else {
-                    embed.addField("Parchment", "Failed to get latest Parchment version!", false);
-                }
-
-                event.getHook().editOriginalEmbeds(embed.build()).queue();
-            }
+            case "all" -> event.getHook().editOriginalEmbeds(createAllEmbed().build()).queue();
         }
+    }
+
+    @NotNull
+    private static EmbedBuilder createAllEmbed() {
+        Either<CoupledPair<MinecraftVersion>, HttpStatus> minecraftResponse = ApiHandler.getLatestMinecraft();
+        Either<CoupledPair<ForgeVersion>, HttpStatus> forgeResponse = ApiHandler.getLatestForge();
+        Either<CoupledPair<FabricVersion>, HttpStatus> fabricResponse = ApiHandler.getLatestFabric();
+        Either<CoupledPair<QuiltVersion>, HttpStatus> quiltResponse = ApiHandler.getLatestQuilt();
+        Either<ParchmentVersion, HttpStatus> parchmentResponse = ApiHandler.getLatestParchment();
+
+        var embed = new EmbedBuilder();
+        if (minecraftResponse.isLeft()) {
+            CoupledPair<MinecraftVersion> versions = minecraftResponse.getLeft();
+            embed.addField("Minecraft", "Release: " + versions.getLeft().version() + "\nSnapshot: " + versions.getRight().version(), false);
+        } else {
+            embed.addField("Minecraft", "Failed to get latest Minecraft versions!", false);
+        }
+
+        if (forgeResponse.isLeft()) {
+            CoupledPair<ForgeVersion> versions = forgeResponse.getLeft();
+            embed.addField("Forge", "Recommended: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+        } else {
+            embed.addField("Forge", "Failed to get latest Forge versions!", false);
+        }
+
+        if (fabricResponse.isLeft()) {
+            CoupledPair<FabricVersion> versions = fabricResponse.getLeft();
+            embed.addField("Fabric", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+        } else {
+            embed.addField("Fabric", "Failed to get latest Fabric versions!", false);
+        }
+
+        if (quiltResponse.isLeft()) {
+            CoupledPair<QuiltVersion> versions = quiltResponse.getLeft();
+            embed.addField("Quilt", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+        } else {
+            embed.addField("Quilt", "Failed to get latest Quilt versions!", false);
+        }
+
+        if (parchmentResponse.isLeft()) {
+            ParchmentVersion version = parchmentResponse.getLeft();
+            embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
+        } else {
+            embed.addField("Parchment", "Failed to get latest Parchment version!", false);
+        }
+        return embed;
     }
 }

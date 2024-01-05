@@ -26,7 +26,7 @@ public class GifSequenceWriter {
      * @param loopContinuously    whether the gif should loop repeatedly
      * @throws IIOException if no gif ImageWriters are found
      */
-    public GifSequenceWriter(ImageOutputStream outputStream, int imageType, int timeBetweenFramesMS, boolean loopContinuously) throws IIOException, IOException {
+    public GifSequenceWriter(ImageOutputStream outputStream, int imageType, int timeBetweenFramesMS, boolean loopContinuously) throws IOException {
         // my method to create a writer
         gifWriter = getWriter();
         imageWriteParam = gifWriter.getDefaultWriteParam();
@@ -55,7 +55,7 @@ public class GifSequenceWriter {
 
         int loop = loopContinuously ? 0 : 1;
 
-        child.setUserObject(new byte[]{0x1, (byte) (loop & 0xFF), (byte) ((loop >> 8) & 0xFF)});
+        child.setUserObject(new byte[]{0x1, (byte) (loop & 0xFF), 0b0});
         appEntensionsNode.appendChild(child);
 
         imageMetaData.setFromTree(metaFormatName, root);

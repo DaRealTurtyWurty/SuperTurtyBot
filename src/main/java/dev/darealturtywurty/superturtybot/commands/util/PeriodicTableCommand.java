@@ -1,17 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -22,6 +12,15 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PeriodicTableCommand extends CoreCommand {
     private static final String ENDPOINT = "https://api.popcat.xyz/periodic-table?element=%s";
@@ -71,7 +70,7 @@ public class PeriodicTableCommand extends CoreCommand {
         final String element = event.getOption("element", OptionMapping::getAsString);
         final String urlStr = ENDPOINT.formatted(element);
         try {
-            final URLConnection connection = new URL(urlStr).openConnection();
+            final URLConnection connection = new URI(urlStr).toURL().openConnection();
             final JsonElement jsonElem = Constants.GSON.fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.ISO_8859_1), JsonElement.class);
             if(jsonElem.isJsonPrimitive()) {
                 reply(event, "❌ Element not found!", false, true);
@@ -101,8 +100,9 @@ public class PeriodicTableCommand extends CoreCommand {
                     .addField("Atomic Mass", Float.toString(atomicMass), true)
                     .addField("Period", Integer.toString(period), true).addField("Phase/State", phase, false)
                     .addField("Discovered By", discoveredBy, false).setThumbnail(imageURL).setTimestamp(Instant.now()));
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             reply(event, "❌ Something went wrong!", false, true);
+            Constants.LOGGER.error("Unable to get element information!", exception);
         }
     }
 }

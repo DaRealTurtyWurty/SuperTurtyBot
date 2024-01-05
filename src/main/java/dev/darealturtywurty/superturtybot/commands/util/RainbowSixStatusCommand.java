@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.commands.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.annotations.SerializedName;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -15,7 +14,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.text.WordUtils;
 
 import java.awt.*;
 import java.io.IOException;
@@ -79,7 +77,7 @@ public class RainbowSixStatusCommand extends CoreCommand {
             embed.setTitle("Rainbow Six Siege Status");
             embed.setColor(new Color(0xff930b));
             embed.setTimestamp(Instant.now());
-            embed.setFooter("Requested by " + event.getUser().getAsTag(), event.getUser().getEffectiveAvatarUrl());
+            embed.setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
             embed.setThumbnail("https://pbs.twimg.com/media/FFjdfYeXIAMkL8e?format=jpg&name=large");
 
             var description = new StringBuilder("The status of Rainbow Six Siege servers.\n\n");

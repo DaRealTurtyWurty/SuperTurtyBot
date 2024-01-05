@@ -205,7 +205,7 @@ public class TriviaCommand extends CoreCommand {
             return;
         }
 
-        String response = event.getValues().get(0);
+        String response = event.getValues().getFirst();
         String correctAnswer = data.question().correctAnswer();
 
         if (correctAnswer.equals(response)) {

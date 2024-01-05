@@ -6,10 +6,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.function.Either;
-import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,12 +68,13 @@ public class SearchCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
-        final String search = event.getOption("search_term").getAsString().trim();
+        String rawSearch = event.getOption("search_term", "", OptionMapping::getAsString);
+        final String search = rawSearch.trim();
 
         event.deferReply().queue();
 

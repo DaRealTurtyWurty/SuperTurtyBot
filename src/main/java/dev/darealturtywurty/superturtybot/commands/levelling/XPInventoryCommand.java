@@ -1,33 +1,27 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.bson.conversions.Bson;
-
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.bson.conversions.Bson;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
 public class XPInventoryCommand extends CoreCommand {
     private final Font usedFont;
@@ -101,15 +95,15 @@ public class XPInventoryCommand extends CoreCommand {
             ImageIO.write(image, "png", output);
             event.deferReply().setFiles(FileUpload.fromData(output.toByteArray(), "inventory.png"))
                 .mentionRepliedUser(false).queue();
-        } catch (final IOException exception) {
-            Constants.LOGGER.error(ExceptionUtils.getStackTrace(exception));
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Error creating inventory!", exception);
             event.deferReply(true)
                 .setContent("There has been an error creating your inventory. This has been reported to the bot owner!")
                 .mentionRepliedUser(false).queue();
         }
     }
 
-    private BufferedImage createInventory(List<String> inventory, Member member) throws IOException {
+    private BufferedImage createInventory(List<String> inventory, Member member) throws IOException, URISyntaxException {
         final BufferedImage template = getTemplate();
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
         final Graphics2D graphics = buffer.createGraphics();
@@ -117,7 +111,7 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
 
         final BufferedImage profilePic = BotUtils
-            .resize(ImageIO.read(new URL(member.getUser().getEffectiveAvatarUrl())), 100);
+            .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
         graphics.drawImage(profilePic, 80, 68, profilePic.getWidth(), profilePic.getHeight(), null);
 
         graphics.setFont(this.usedFont);

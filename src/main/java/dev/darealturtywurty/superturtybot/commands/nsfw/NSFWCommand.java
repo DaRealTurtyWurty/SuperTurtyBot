@@ -3,8 +3,9 @@ package dev.darealturtywurty.superturtybot.commands.nsfw;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -28,7 +29,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -215,16 +217,16 @@ public class NSFWCommand extends CoreCommand {
                 int index = 0;
                 for (String image : images) {
                     try {
-                        URLConnection connection = new URL(image).openConnection();
+                        URLConnection connection = new URI(image).toURL().openConnection();
                         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                         connection.connect();
                         uploads.add(
                                 FileUpload.fromData(connection.getInputStream(), "image_%d.png".formatted(index++)));
-                    } catch (IOException exception) {
+                    } catch (IOException | URISyntaxException exception) {
                         hook.editOriginal(
                                         "❌  There has been an error processing the command you tried to run. Please try again!")
                                 .setComponents().setEmbeds().setFiles().queue();
-                        exception.printStackTrace();
+                        Constants.LOGGER.error("Error getting image from URL: " + image, exception);
                         return;
                     }
                 }
@@ -248,11 +250,7 @@ public class NSFWCommand extends CoreCommand {
                 return;
             }
 
-            if (mediaURL.contains("redgifs") || mediaURL.contains("xvideos") || mediaURL.contains(
-                    "xhamster") || mediaURL.contains("xxx") || mediaURL.contains("porn") || mediaURL.contains(
-                    "nsfw") || mediaURL.contains("gfycat") || mediaURL.contains("/watch.") || mediaURL.contains(
-                    "reddit.com") || mediaURL.contains("twitter") || mediaURL.contains("hub") || mediaURL.contains(
-                    "imgur") || mediaURL.contains("youtube")) {
+            if (RedditUtils.isEmbedVideo(mediaURL)) {
                 hook.editOriginal(mediaURL).setComponents().setEmbeds().setFiles()
                         .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
                 return;

@@ -1,34 +1,32 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.awt.Color;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.awt.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import dev.darealturtywurty.superturtybot.core.util.function.Either;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import okhttp3.ResponseBody;
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-
-import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class UrbanDictionaryCommand extends CoreCommand {
     private static final OkHttpClient CLIENT = new OkHttpClient();

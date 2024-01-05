@@ -217,13 +217,13 @@ public class EmbedCommand extends CoreCommand {
         if(url != null) embed.setUrl(url);
         if(description != null) embed.setDescription(description);
         if(color != null) embed.setColor(parseColor(color));
-        if(footer != null) embed.setFooter(footer, footerIconUrl == null ? oldEmbed.getFooter().getIconUrl() : footerIconUrl);
-        if(footerIconUrl != null) embed.setFooter(footer == null ? oldEmbed.getFooter().getText() : footer, footerIconUrl);
+        if(footer != null) embed.setFooter(footer, footerIconUrl == null && oldEmbed.getFooter() != null ? oldEmbed.getFooter().getIconUrl() : footerIconUrl);
+        if(footerIconUrl != null) embed.setFooter(footer == null && oldEmbed.getFooter() != null ? oldEmbed.getFooter().getText() : footer, footerIconUrl);
         if(imageUrl != null) embed.setImage(imageUrl);
         if(thumbnailUrl != null) embed.setThumbnail(thumbnailUrl);
-        if(author != null) embed.setAuthor(author, authorUrl == null ? oldEmbed.getAuthor().getUrl() : authorUrl, authorIconUrl == null ? oldEmbed.getAuthor().getIconUrl() : authorIconUrl);
-        if(authorIconUrl != null) embed.setAuthor(author == null ? oldEmbed.getAuthor().getName() : author, authorUrl == null ? oldEmbed.getAuthor().getUrl() : authorUrl, authorIconUrl);
-        if(authorUrl != null) embed.setAuthor(author == null ? oldEmbed.getAuthor().getName() : author, authorUrl, authorIconUrl == null ? oldEmbed.getAuthor().getIconUrl() : authorIconUrl);
+        if(author != null) embed.setAuthor(author, authorUrl == null && oldEmbed.getAuthor() != null ? oldEmbed.getAuthor().getUrl() : authorUrl, authorIconUrl == null && oldEmbed.getAuthor() != null ? oldEmbed.getAuthor().getIconUrl() : authorIconUrl);
+        if(authorIconUrl != null) embed.setAuthor(author == null && oldEmbed.getAuthor() != null ? oldEmbed.getAuthor().getName() : author, authorUrl == null ? oldEmbed.getAuthor().getUrl() : authorUrl, authorIconUrl);
+        if(authorUrl != null) embed.setAuthor(author == null && oldEmbed.getAuthor() != null ? oldEmbed.getAuthor().getName() : author, authorUrl, authorIconUrl == null && oldEmbed.getAuthor() != null ? oldEmbed.getAuthor().getIconUrl() : authorIconUrl);
         if(timestamp != null) embed.setTimestamp(parseTimestamp(timestamp));
 
         userEmbeds.setEmbed(name, embed.build());

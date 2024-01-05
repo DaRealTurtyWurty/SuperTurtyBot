@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.RankCard;
@@ -27,7 +28,8 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -165,11 +167,16 @@ public class RankCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
         try {
             final BufferedImage card = makeRankCard(member, profile.getRankCard(), level, xp, forLevel, percentage);
+            if(card == null) {
+                event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
+                return;
+            }
+
             final var bao = new ByteArrayOutputStream();
             ImageIO.write(card, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), member.getId() + ".png")).queue();
         } catch (final IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Error getting rank card for " + member.getUser().getName(), exception);
             event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
         }
     }
@@ -329,7 +336,7 @@ public class RankCommand extends CoreCommand {
             graphics.drawString(DECIMAL_FORMAT.format(xpPercent) + "%", 1500, 640);
 
             // User Avatar
-            BufferedImage userAvatar = ImageIO.read(new URL(member.getUser().getEffectiveAvatarUrl()));
+            BufferedImage userAvatar = ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL());
             userAvatar = BotUtils.resize(userAvatar, 512);
 
             if (!card.getAvatarOutlineImage().isBlank()) {
@@ -348,7 +355,7 @@ public class RankCommand extends CoreCommand {
             } else {
                 drawAvatar(userAvatar, graphics);
                 graphics.setColor(card.getAvatarOutlineColor().asColor());
-                final Shape shape = createRingShape(350, 300, userAvatar.getWidth() / 2, 10);
+                final Shape shape = createRingShape(350, 300, userAvatar.getWidth() / 2f, 10);
                 graphics.fill(shape);
                 graphics.draw(shape);
             }
@@ -356,8 +363,8 @@ public class RankCommand extends CoreCommand {
             graphics.dispose();
 
             return rankCardBuffer;
-        } catch (final IOException e) {
-            e.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Error getting rank card for " + member.getUser().getName(), exception);
         }
 
         return null;
@@ -389,24 +396,24 @@ public class RankCommand extends CoreCommand {
         return output;
     }
 
-    public static final float drawRightAlignedString(Graphics2D g, String string, Font font, float x, float y) {
+    public static float drawRightAlignedString(Graphics2D g, String string, Font font, float x, float y) {
         final float startX = x - getTextWidth(g, string, font);
         return drawString(g, string, font, startX, y);
     }
 
-    public static final float drawString(Graphics2D g, String string, Font font, float x, float y) {
+    public static float drawString(Graphics2D g, String string, Font font, float x, float y) {
         g.setFont(font);
         y += font.getLineMetrics(string, g.getFontRenderContext()).getAscent();
         g.drawString(string, x, y);
         return getTextHeight(g, string, font);
     }
 
-    public static final float getTextHeight(Graphics2D g, String string, Font font) {
+    public static float getTextHeight(Graphics2D g, String string, Font font) {
         final LineMetrics lm = font.getLineMetrics(string, g.getFontRenderContext());
         return lm.getHeight();
     }
 
-    public static final float getTextWidth(Graphics2D g, String string, Font font) {
+    public static float getTextWidth(Graphics2D g, String string, Font font) {
         return g.getFontMetrics(font).stringWidth(string);
     }
 

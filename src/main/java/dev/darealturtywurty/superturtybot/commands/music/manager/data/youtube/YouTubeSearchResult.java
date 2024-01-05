@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.interactions.commands.Command;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public record YouTubeSearchResult(String kind, String etag, YouTubeSearchResultId id,

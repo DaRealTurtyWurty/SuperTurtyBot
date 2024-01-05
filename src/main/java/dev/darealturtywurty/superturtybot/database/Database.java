@@ -8,7 +8,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.commands.levelling.XPInventory;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
@@ -43,6 +42,7 @@ public class Database {
     public final MongoCollection<Birthday> birthdays;
     public final MongoCollection<SubmissionCategory> submissionCategories;
 
+    @SuppressWarnings("resource")
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());

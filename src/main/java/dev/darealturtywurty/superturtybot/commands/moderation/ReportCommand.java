@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Report;
 import dev.darealturtywurty.superturtybot.modules.ReportManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -62,7 +63,7 @@ public class ReportCommand extends CoreCommand {
             return;
         }
 
-        User user = event.getOption("user").getAsUser();
+        User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
         User reporter = event.getUser();
 
         if (user.isBot()) {
@@ -80,7 +81,7 @@ public class ReportCommand extends CoreCommand {
             return;
         }
 
-        String reason = event.getOption("reason").getAsString();
+        String reason = event.getOption("reason", "No reason provided", OptionMapping::getAsString);
         Optional<Report> report = ReportManager.reportUser(event.getGuild(), user, reporter, reason);
         report.ifPresentOrElse(
                 ignored -> reply(event,

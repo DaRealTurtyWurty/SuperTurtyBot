@@ -14,6 +14,9 @@ import java.util.function.BiPredicate;
 public final class Validators {
     public static final BiPredicate<SlashCommandInteractionEvent, String> TEXT_CHANNEL_VALIDATOR = (event, str) -> {
         final Guild guild = event.getGuild();
+        if (guild == null)
+            return false;
+
         TextChannel channel = guild.getTextChannelById(str);
         if (channel != null)
             return true;
@@ -35,6 +38,9 @@ public final class Validators {
 
     public static final BiPredicate<SlashCommandInteractionEvent, String> GUILD_CHANNEL_VALIDATOR = (event, str) -> {
         final Guild guild = event.getGuild();
+        if (guild == null)
+            return false;
+
         GuildChannel channel = guild.getChannelById(StandardGuildChannel.class, str);
         if (channel != null)
             return !channel.getType().isThread() && channel.getType().isGuild() && channel.getGuild().getIdLong() == guild.getIdLong();
@@ -53,11 +59,14 @@ public final class Validators {
 
     public static final BiPredicate<SlashCommandInteractionEvent, String> ROLE_VALIDATOR = (event, str) -> {
         final Guild guild = event.getGuild();
+        if(guild == null)
+            return false;
+        
         if (MentionType.ROLE.getPattern().matcher(str).matches()) {
             final String id = str.replace("<@&", "").replace(">", "");
             return guild.getRoleById(id) != null;
         }
 
-        return guild.getRolesByName(str, false).size() > 0;
+        return guild.getRolesByName(str, false).isEmpty();
     };
 }

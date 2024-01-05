@@ -1,9 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.core;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -19,6 +15,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
 
 public class HelpCommand extends CoreCommand {
     public HelpCommand() {
@@ -85,18 +85,18 @@ public class HelpCommand extends CoreCommand {
         }
 
         final String command = cmdOption.getAsString();
-        final var embed = new EmbedBuilder();
-        embed.setTimestamp(Instant.now());
-        setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
+        final EmbedBuilder[] embed = {new EmbedBuilder()};
+        embed[0].setTimestamp(Instant.now());
+        setAuthor(embed[0], event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
 
-        embed.setColor(Color.GREEN);
+        embed[0].setColor(Color.GREEN);
         CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.getName().equals(command)).findFirst()
-            .ifPresentOrElse(cmd -> constructEmbed(embed, cmd), () -> {
-                embed.setDescription(String.format("No command found by name '%s'!", command));
-                embed.setColor(Color.RED);
+            .ifPresentOrElse(cmd -> embed[0] = constructEmbed(embed[0], cmd), () -> {
+                embed[0].setDescription(String.format("No command found by name '%s'!", command));
+                embed[0].setColor(Color.RED);
             });
 
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        event.deferReply().addEmbeds(embed[0].build()).mentionRepliedUser(false).queue();
     }
 
     private EmbedBuilder commandless() {

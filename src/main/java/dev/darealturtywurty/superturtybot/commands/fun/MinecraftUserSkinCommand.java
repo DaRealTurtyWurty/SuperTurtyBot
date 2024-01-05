@@ -1,21 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-
 import com.google.gson.JsonObject;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -26,12 +11,24 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.awt.*;
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MinecraftUserSkinCommand extends CoreCommand {
     public MinecraftUserSkinCommand() {
@@ -86,25 +83,27 @@ public class MinecraftUserSkinCommand extends CoreCommand {
                 rotation = 5;
             }
             
-            final MessageEmbed embed = message.getEmbeds().get(0);
+            final MessageEmbed embed = message.getEmbeds().getFirst();
             final EmbedBuilder newEmbed = new EmbedBuilder(embed);
+
+            // TODO: Handle case where image is not present
             final String filename = embed.getImage().getProxyUrl()
                 .substring(embed.getImage().getProxyUrl().lastIndexOf("/")).replace("/", "");
             final String username = filename.split(".png")[0];
             try {
-                final byte[] bytes = decodeURL(new URL(
-                    "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json"));
+                final byte[] bytes = decodeURL(new URI(
+                    "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json").toURL());
                 newEmbed.setImage("attachment://" + username + ".png");
                 final var atomicRotation = new AtomicInteger(rotation);
                 event.deferEdit().setAttachments(message.getAttachments()).setCheck(event::isAcknowledged)
                     .queue(hook -> hook.editOriginalEmbeds(newEmbed.build())
                         .setComponents(createButtons(message.getIdLong(), atomicRotation.get()))
                         .setAttachments(FileUpload.fromData(bytes, username + ".png")).queue());
-            } catch (final IOException exception) {
-                
+            } catch (final IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Error getting skin for " + username, exception);
             }
         } else if (event.getComponentId().startsWith(message.getIdLong() + "-dismiss")) {
-            if (message.getInteraction() == null) {
+            if (message.getInteraction() == null && message.getMessageReference() != null) {
                 message.getMessageReference().resolve().queue(msg -> {
                     if (event.getUser().getIdLong() != msg.getAuthor().getIdLong()) {
                         event.deferEdit().queue();
@@ -133,49 +132,53 @@ public class MinecraftUserSkinCommand extends CoreCommand {
                 rotation = 5;
             }
             
-            final MessageEmbed embed = message.getEmbeds().get(0);
+            final MessageEmbed embed = message.getEmbeds().getFirst();
             final EmbedBuilder newEmbed = new EmbedBuilder(embed);
+
+            // TODO: Handle case where image is not present
             final String filename = embed.getImage().getProxyUrl()
                 .substring(embed.getImage().getProxyUrl().lastIndexOf("/")).replace("/", "");
             final String username = filename.split(".png")[0];
             try {
-                final byte[] bytes = decodeURL(new URL(
-                    "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json"));
+                final byte[] bytes = decodeURL(new URI(
+                    "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json").toURL());
                 newEmbed.setImage("attachment://" + username + ".png");
                 final var atomicRotation = new AtomicInteger(rotation);
                 event.deferEdit().setAttachments(message.getAttachments()).setCheck(event::isAcknowledged)
                     .queue(hook -> hook.editOriginalEmbeds(newEmbed.build())
                         .setComponents(createButtons(message.getIdLong(), atomicRotation.get()))
                         .setFiles(FileUpload.fromData(bytes, username + ".png")).queue());
-            } catch (final IOException exception) {
-                
+            } catch (final IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Error getting skin for " + username, exception);
             }
         }
     }
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String username = URLEncoder.encode(event.getOption("username").getAsString().trim(),
-            StandardCharsets.UTF_8);
+        final String username = URLEncoder.encode(
+                event.getOption("username", "", OptionMapping::getAsString).trim(),
+                StandardCharsets.UTF_8);
         try {
             final int rotation = 10;
-            final var url = new URL(
-                "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json");
+            final var url = new URI(
+                "https://minecraft-api.com/api/skins/" + username + "/body/" + "10." + rotation + "/10/json").toURL();
             final byte[] bytes = decodeURL(url);
             
             final var embed = new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.BLUE)
-                .setDescription("The skin for `" + event.getOption("username").getAsString() + "` is:")
+                .setDescription("The skin for `" + username + "` is:")
                 .setImage("attachment://" + username + ".png").build();
             event.deferReply().setFiles(FileUpload.fromData(bytes, username + ".png")).addEmbeds(embed)
                 .mentionRepliedUser(false).flatMap(InteractionHook::retrieveOriginal).queue(msg -> msg
                     .editMessageEmbeds(embed).setComponents(createButtons(msg.getIdLong(), rotation)).queue());
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.deferReply(true)
                 .setContent("There has been an issue trying to gather this information from our database! "
                     + "This has been reported to the bot owner!")
                 .mentionRepliedUser(false).queue();
+            Constants.LOGGER.error("Error getting skin for " + username, exception);
         } catch (final IllegalArgumentException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Error getting skin for " + username, exception);
             event.deferReply(true).setContent("This player does not exist!").mentionRepliedUser(false).queue();
         }
     }

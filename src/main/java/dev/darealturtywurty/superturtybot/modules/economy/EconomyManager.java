@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
 import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
@@ -116,7 +115,7 @@ public class EconomyManager {
 
         IS_RUNNING.set(true);
 
-        if(!PublicShop.isRunning()) {
+        if (!PublicShop.isRunning()) {
             PublicShop.run();
         }
 
@@ -140,11 +139,9 @@ public class EconomyManager {
                         User user = jda.getUserById(account.getUser());
                         if (user == null) return;
 
-                        user.openPrivateChannel().queue(channel -> {
-                            channel.sendMessage(
-                                    ("You have a negative balance in your bank! As such, you have been fined <>%d! " + "Your outstanding balance is %d.").replace(
-                                            "<>", "$").formatted(200, -account.getBank())).queue();
-                        }, error -> {
+                        user.openPrivateChannel().queue(channel -> channel.sendMessage(
+                                ("You have a negative balance in your bank! As such, you have been fined <>%d! " + "Your outstanding balance is %d.").replace(
+                                        "<>", "$").formatted(200, -account.getBank())).queue(), error -> {
                         });
                     });
         }, 0, 24, TimeUnit.HOURS);
@@ -175,7 +172,7 @@ public class EconomyManager {
         account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
         addMoney(account, earned, true);
 
-        if(ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
+        if (ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
             account.setJobLevel(account.getJobLevel() + 1);
         }
 
@@ -231,7 +228,7 @@ public class EconomyManager {
     }
 
     public static int workNoJob(Economy account) {
-        if(account.getNextWork() > System.currentTimeMillis()) return 0;
+        if (account.getNextWork() > System.currentTimeMillis()) return 0;
 
         final int amount = ThreadLocalRandom.current().nextInt(1000);
         account.setWallet(EconomyManager.addMoney(account, amount));
@@ -259,7 +256,7 @@ public class EconomyManager {
     public static float getCreditScore(Economy account) {
         long totalBet = account.getTotalBetWin() - account.getTotalBetLoss();
         float score = totalBet / 1000F;
-        if(getBalance(account) < 0) {
+        if (getBalance(account) < 0) {
             score *= 0.5f;
         }
 

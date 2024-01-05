@@ -106,7 +106,7 @@ public class TagCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals(getName()) || !event.isFromGuild())
+        if (!event.getName().equals(getName()) || event.getGuild() == null)
             return;
 
         final String optionName = event.getFocusedOption().getName();
@@ -138,16 +138,22 @@ public class TagCommand extends CoreCommand {
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (event.getGuild() == null) {
             event.deferReply(true).setContent("❌ You must be in a server to use this modal!").mentionRepliedUser(false)
                 .queue();
             return;
         }
 
         final ModalMapping nameMapping = event.getValues().stream()
-            .filter(mapping -> mapping.getId().endsWith("-name_input")).findFirst().get();
+            .filter(mapping -> mapping.getId().endsWith("-name_input")).findFirst().orElse(null);
         final ModalMapping contentMapping = event.getValues().stream()
-            .filter(mapping -> mapping.getId().endsWith("-content_input")).findFirst().get();
+            .filter(mapping -> mapping.getId().endsWith("-content_input")).findFirst().orElse(null);
+        if (nameMapping == null || contentMapping == null) {
+            event.deferReply(true).setContent("❌ You must provide a name and content!").mentionRepliedUser(false)
+                .queue();
+            return;
+        }
+
         final String name = nameMapping.getAsString();
         final String content = contentMapping.getAsString();
         final long user = event.getUser().getIdLong();
@@ -177,13 +183,13 @@ public class TagCommand extends CoreCommand {
         final var contentInput = TextInput
             .create(builder.getId() + "-content_input", "Content:", TextInputStyle.PARAGRAPH).setRequired(true)
             .setPlaceholder("Content").setValue(content).setMinLength(2).setMaxLength(2000).build();
-        final Modal modal = builder.addActionRows(ActionRow.of(nameInput), ActionRow.of(contentInput)).build();
+        final Modal modal = builder.addComponents(ActionRow.of(nameInput), ActionRow.of(contentInput)).build();
         event.replyModal(modal).queue();
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (event.getGuild() == null) {
             event.deferReply().setContent("You can only use this command inside of a server!").mentionRepliedUser(false)
                 .queue();
             return;

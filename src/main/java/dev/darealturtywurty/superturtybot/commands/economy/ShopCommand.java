@@ -66,7 +66,7 @@ public class ShopCommand extends EconomyCommand {
             return;
         }
 
-        switch (subcommand) {
+        switch (subcommand) { // TODO: Finish this
             case "view" -> {
                 User user = event.getOption("user", null, OptionMapping::getAsUser);
                 if (user != null) {

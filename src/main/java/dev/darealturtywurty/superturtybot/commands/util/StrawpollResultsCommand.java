@@ -1,20 +1,16 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,18 +19,21 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.utils.FileUpload;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class StrawpollResultsCommand extends CoreCommand {
     private static final int WIDTH = 1080, HEIGHT = 720;
@@ -84,22 +83,30 @@ public class StrawpollResultsCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String id = event.getOption("id").getAsString();
+        final String id = event.getOption("id", null, OptionMapping::getAsString);
+        if (id == null) {
+            event.deferReply(true)
+                    .setContent("❌ You must provide a strawpoll ID!")
+                    .mentionRepliedUser(false)
+                    .queue();
+            return;
+        }
         final boolean is3D = event.getOption("is3d", false, OptionMapping::getAsBoolean);
 
         try {
             final InputStream stream = handle(id, is3D);
             event.deferReply().setFiles(FileUpload.fromData(stream, "chart.png")).mentionRepliedUser(false).queue();
-        } catch (final IOException | IllegalStateException exception) {
+        } catch (final IOException | URISyntaxException | IllegalStateException exception) {
             event.deferReply(true)
                 .setContent("There has been an error with this command. Please report the following to the bot owner:\n"
                     + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception))
                 .mentionRepliedUser(true).queue();
+            Constants.LOGGER.error("Error getting strawpoll results!", exception);
         }
     }
 
-    private InputStream handle(String id, boolean is3D) throws IOException, IllegalStateException {
-        final URLConnection connection = new URL(StrawpollCommand.STRAWPOLL_URL + "/" + id).openConnection();
+    private InputStream handle(String id, boolean is3D) throws IOException, URISyntaxException, IllegalStateException {
+        final URLConnection connection = new URI(StrawpollCommand.STRAWPOLL_URL + "/" + id).toURL().openConnection();
         connection.addRequestProperty("User-Agent",
             "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
         final InputStream input = connection.getInputStream();

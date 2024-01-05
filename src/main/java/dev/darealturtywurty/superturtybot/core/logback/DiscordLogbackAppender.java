@@ -7,6 +7,7 @@ import ch.qos.logback.core.Layout;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.object.EmptyCallback;
+import lombok.Setter;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -19,20 +20,19 @@ import java.util.Optional;
 public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static final String POST_URL = "https://discord.com/api/webhooks/%s/%s";
 
+    /**
+     * -- SETTER --
+     *  Sets the inner
+     * , used for formatting the message to be sent.
+     *
+     * @param layoutIn The layout
+     */
+    @Setter
     private Layout<ILoggingEvent> layout;
     private URI uri;
 
     public void login(String webhookId, String webhookToken) {
         this.uri = URI.create(POST_URL.formatted(webhookId, webhookToken));
-    }
-
-    /**
-     * Sets the inner {@link Layout}, used for formatting the message to be sent.
-     *
-     * @param layoutIn The layout
-     */
-    public void setLayout(final Layout<ILoggingEvent> layoutIn) {
-        this.layout = layoutIn;
     }
 
     @Override

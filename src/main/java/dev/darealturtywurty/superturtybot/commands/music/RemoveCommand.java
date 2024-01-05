@@ -1,16 +1,16 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.util.List;
-
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+
+import java.util.List;
 
 public class RemoveCommand extends CoreCommand {
     public RemoveCommand() {
@@ -60,18 +60,18 @@ public class RemoveCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
 
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
-        if (!event.getGuild().getAudioManager().isConnected()) {
+        if (channel == null || !event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }
@@ -87,8 +87,7 @@ public class RemoveCommand extends CoreCommand {
             return;
         }
 
-        final int index = event.getOption("index").getAsInt();
-
+        final int index = event.getOption("index", -1, OptionMapping::getAsInt);
         if (index < 1) {
             reply(event, "❌ The provided index must be at least **1**!", false, true);
             return;

@@ -49,7 +49,7 @@ public class SetXPCommand extends EconomyCommand {
         }
 
         Type type = Type.SET;
-        long user = 0;
+        long user;
         int amount = 0;
         try {
             user = Long.parseLong(args[1]);

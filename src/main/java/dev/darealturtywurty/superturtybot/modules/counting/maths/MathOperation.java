@@ -1,11 +1,14 @@
 package dev.darealturtywurty.superturtybot.modules.counting.maths;
 
-import static dev.darealturtywurty.superturtybot.modules.counting.maths.OperationType.FLOAT;
-import static dev.darealturtywurty.superturtybot.modules.counting.maths.OperationType.INT;
+import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static dev.darealturtywurty.superturtybot.modules.counting.maths.OperationType.FLOAT;
+import static dev.darealturtywurty.superturtybot.modules.counting.maths.OperationType.INT;
+
+@Getter
 public enum MathOperation {
     ADD("%.1f + %.1f", INT), SUBTRACT("%.1f - %.1f", INT), MULTIPLY("%.1f * %.1f", INT), DIVIDE("%.1f / %.1f", INT),
     MODULO("%.1f %% %.1f", INT), SQUARE("%.1f ^ 2", INT), SQRT("√%.1f", INT), FLOOR("floor(%.1f)", FLOAT), ROUND("round(%.1f)", FLOAT),
@@ -18,15 +21,7 @@ public enum MathOperation {
         this.format = format;
         this.operationType = opType;
     }
-    
-    public String getFormat() {
-        return this.format;
-    }
-    
-    public OperationType getOperationType() {
-        return this.operationType;
-    }
-    
+
     public static List<MathOperation> getFloats() {
         return getOfType(OperationType.FLOAT);
     }

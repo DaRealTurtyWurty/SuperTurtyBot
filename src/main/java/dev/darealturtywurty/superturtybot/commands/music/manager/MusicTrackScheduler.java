@@ -49,15 +49,14 @@ public class MusicTrackScheduler extends AudioEventAdapter {
         return this.onTrackEnd.size();
     }
 
-    public boolean addGuessTheSongTrack(AudioTrack track) {
+    public void addGuessTheSongTrack(AudioTrack track) {
         if (this.player.getPlayingTrack() != null || !this.queue.isEmpty() || isPaused() || this.guessTheSongTrack != null)
-            return false;
+            return;
 
         // set the track to play
         this.guessTheSongTrack = track;
         this.player.startTrack(track, false);
 
-        return true;
     }
 
     public void clear() {
@@ -83,11 +82,11 @@ public class MusicTrackScheduler extends AudioEventAdapter {
     public void nextTrack() {
         if (!this.queue.isEmpty()) {
             if (this.loopState == LoopState.SINGLE) {
-                this.player.startTrack(this.queue.get(0).makeClone(), false);
+                this.player.startTrack(this.queue.getFirst().makeClone(), false);
                 return;
             }
 
-            AudioTrack track = this.queue.remove(0);
+            AudioTrack track = this.queue.removeFirst();
             if (this.loopState == LoopState.ALL) {
                 this.queue.add(track.makeClone());
             }

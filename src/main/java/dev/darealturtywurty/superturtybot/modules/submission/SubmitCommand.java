@@ -18,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -56,7 +57,7 @@ public class SubmitCommand extends CoreCommand {
             return;
 
         List<SubmissionCategory> categories = Database.getDatabase().submissionCategories.find(
-                Filters.eq("guild", event.isFromGuild() ? event.getGuild().getIdLong() : -1L))
+                Filters.eq("guild", event.getGuild() != null ? event.getGuild().getIdLong() : -1L))
                 .into(new ArrayList<>())
                 .stream()
                 .filter(submissionCategory -> submissionCategory.getName()
@@ -112,7 +113,7 @@ public class SubmitCommand extends CoreCommand {
 
         SubmissionCategory submissionCategory = Database.getDatabase().submissionCategories.find(
                 Filters.and(
-                        Filters.eq("guild", event.isFromGuild() ? event.getGuild().getIdLong() : -1L),
+                        Filters.eq("guild", event.getGuild() != null ? event.getGuild().getIdLong() : -1L),
                         Filters.eq("name", category.toLowerCase(Locale.ROOT))))
                 .first();
         if (submissionCategory == null) {
@@ -145,7 +146,7 @@ public class SubmitCommand extends CoreCommand {
 
         // determine if the url is an image
         if (submissionCategory.isMedia() && submissionContent.endsWith(".png") || submissionContent.endsWith(".jpg") || submissionContent.endsWith(".jpeg")) {
-            try(InputStream stream = new URL(submissionContent).openStream()) {
+            try(InputStream stream = new URI(submissionContent).toURL().openStream()) {
                 byte[] bytes = stream.readAllBytes();
                 if (bytes.length > 8_000_000) {
                     reply(event, "❌ That submission is too large!", false, true);
@@ -158,7 +159,10 @@ public class SubmitCommand extends CoreCommand {
                 }
 
                 submissionContent = Base64.getEncoder().encodeToString(bytes);
-            } catch (IOException ignored) {}
+            } catch (IOException | URISyntaxException exception) {
+                reply(event, "❌ That submission is invalid!", false, true);
+                return;
+            }
         }
 
         var submission = new Submission(

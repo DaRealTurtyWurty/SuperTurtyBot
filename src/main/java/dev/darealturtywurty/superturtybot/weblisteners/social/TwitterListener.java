@@ -30,7 +30,8 @@ public class TwitterListener {
             "response_token": "sha256=%s"
         }""";
     private static final String REGISTER_CALLBACK_URL = "https://api.twitter.com/1.1/account_activity/all/prod/webhooks.json?url=%s";
-    
+
+    @SuppressWarnings("resource")
     public static void setup() {
         if(TWITTER == null
                 || Environment.INSTANCE.twitterAppId().isEmpty()
@@ -62,7 +63,11 @@ public class TwitterListener {
                     if (!response.isSuccessful())
                         throw new IllegalStateException("The response from registering the callback was unsuccessful!");
 
-                    final JsonObject json = Constants.GSON.fromJson(response.body().string(), JsonObject.class);
+                    ResponseBody body = response.body();
+                    if (body == null)
+                        throw new IllegalStateException("The response body from registering the callback was null!");
+
+                    final JsonObject json = Constants.GSON.fromJson(body.string(), JsonObject.class);
                     if (!json.has("id"))
                         throw new IllegalStateException("No 'id' was provided!");
 

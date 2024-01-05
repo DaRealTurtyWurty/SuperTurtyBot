@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.modules.ReportManager;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -66,7 +67,7 @@ public class ReportsCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "This command can only be used in a server!", false, true);
             return;
         }
@@ -81,7 +82,7 @@ public class ReportsCommand extends CoreCommand {
             return;
         }
 
-        User user = event.getOption("user").getAsUser();
+        User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
 
         List<Report> reports = ReportManager.getReports(event.getGuild(), user);
         if (reports.isEmpty()) {

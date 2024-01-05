@@ -17,9 +17,9 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.data.GuildAudio
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.LoopState;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
 import dev.darealturtywurty.superturtybot.commands.music.manager.filter.FilterChainConfiguration;
+import dev.darealturtywurty.superturtybot.commands.music.manager.handler.FirstTimeGuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.GuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.SearchLoadHandler;
-import dev.darealturtywurty.superturtybot.commands.music.manager.handler.FirstTimeGuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
@@ -37,9 +37,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
 import java.util.List;
@@ -124,8 +124,8 @@ public final class AudioManager {
         getOrCreate(guild).getMusicScheduler().pause();
     }
 
-    public static boolean addGuessTheSongTrack(Guild guild, AudioTrack track) {
-        return getOrCreate(guild).getMusicScheduler().addGuessTheSongTrack(track);
+    public static void addGuessTheSongTrack(Guild guild, AudioTrack track) {
+        getOrCreate(guild).getMusicScheduler().addGuessTheSongTrack(track);
     }
 
     public static CompletableFuture<Pair<Boolean, String>> play(AudioChannel audioChannel, TextChannel textChannel,
@@ -175,44 +175,38 @@ public final class AudioManager {
                 playlist.getTracks().forEach(track -> track.setUserData(new TrackData(user.getIdLong(), toPlay)));
 
                 if (toPlay.startsWith("ytsearch:")) {
-                    manager.getMusicScheduler().queue(playlist.getTracks().get(0));
+                    manager.getMusicScheduler().queue(playlist.getTracks().getFirst());
 
-                    final var embed = new EmbedBuilder();
-                    embed.setTimestamp(Instant.now());
-                    embed.setColor(Color.GREEN);
-                    embed.setTitle("Added: " + playlist.getTracks().get(0).getInfo().title + " to the queue!",
-                            playlist.getTracks().get(0).getInfo().uri.startsWith("http")
-                                    ? playlist.getTracks().get(0).getInfo().uri
-                                    : null);
-                    embed.setThumbnail("http://img.youtube.com/vi/" + playlist.getTracks().get(0).getIdentifier()
-                            + "/maxresdefault.jpg");
+                    if(textChannel != null) {
+                        final var embed = new EmbedBuilder();
+                        embed.setTimestamp(Instant.now());
+                        embed.setColor(Color.GREEN);
+                        embed.setTitle("Added: " + playlist.getTracks().getFirst().getInfo().title + " to the queue!",
+                                playlist.getTracks().getFirst().getInfo().uri.startsWith("http")
+                                        ? playlist.getTracks().getFirst().getInfo().uri
+                                        : null);
+                        embed.setThumbnail("http://img.youtube.com/vi/" + playlist.getTracks().getFirst().getIdentifier()
+                                + "/maxresdefault.jpg");
 
-                    textChannel.sendMessageEmbeds(embed.build()).queue();
+                        textChannel.sendMessageEmbeds(embed.build()).queue();
+                    }
                 } else {
                     playlist.getTracks().forEach(manager.getMusicScheduler()::queue);
 
-                    final var embed = new EmbedBuilder();
-                    embed.setTimestamp(Instant.now());
-                    embed.setColor(Color.GREEN);
-                    embed.setTitle("Added: " + playlist.getTracks().size() + " tracks to the queue!",
-                            toPlay.startsWith("http") ? toPlay : null);
+                    if(textChannel != null) {
+                        final var embed = new EmbedBuilder();
+                        embed.setTimestamp(Instant.now());
+                        embed.setColor(Color.GREEN);
+                        embed.setTitle("Added: " + playlist.getTracks().size() + " tracks to the queue!",
+                                toPlay.startsWith("http") ? toPlay : null);
 
-                    textChannel.sendMessageEmbeds(embed.build()).queue();
+                        textChannel.sendMessageEmbeds(embed.build()).queue();
+                    }
                 }
 
-                final AudioTrack track = playlist.getTracks().get(0);
+                final AudioTrack track = playlist.getTracks().getFirst();
                 if (Objects.equals(manager.getMusicScheduler().getCurrentlyPlaying(), track)) {
-                    manager.getMusicScheduler().setAudioChannel(audioChannel);
-
-                    final var playingEmbed = new EmbedBuilder();
-                    playingEmbed.setTimestamp(Instant.now());
-                    playingEmbed.setColor(Color.GREEN);
-                    playingEmbed.setTitle("Now Playing: " + track.getInfo().title,
-                            track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
-                    playingEmbed
-                            .setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
-
-                    textChannel.sendMessageEmbeds(playingEmbed.build()).queue();
+                    startPlayingTrack(track, manager, audioChannel, textChannel);
                 }
 
                 future.complete(Pair.of(true, "playlist_loaded"));
@@ -225,15 +219,7 @@ public final class AudioManager {
 
                 final AudioTrack nowPlaying = manager.getMusicScheduler().getCurrentlyPlaying();
                 if (Objects.equals(nowPlaying, track)) {
-                    manager.getMusicScheduler().setAudioChannel(audioChannel);
-                    final var embed = new EmbedBuilder();
-                    embed.setTimestamp(Instant.now());
-                    embed.setColor(Color.GREEN);
-                    embed.setTitle("Now Playing: " + track.getInfo().title,
-                            track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
-                    embed.setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
-
-                    textChannel.sendMessageEmbeds(embed.build()).queue();
+                    startPlayingTrack(track, manager, audioChannel, textChannel);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTimestamp(Instant.now());
@@ -250,6 +236,22 @@ public final class AudioManager {
         });
 
         return future;
+    }
+
+    private static void startPlayingTrack(AudioTrack track, GuildAudioManager manager, AudioChannel audioChannel, @Nullable TextChannel textChannel) {
+        manager.getMusicScheduler().setAudioChannel(audioChannel);
+
+        if(textChannel != null) {
+            final var playingEmbed = new EmbedBuilder();
+            playingEmbed.setTimestamp(Instant.now());
+            playingEmbed.setColor(Color.GREEN);
+            playingEmbed.setTitle("Now Playing: " + track.getInfo().title,
+                    track.getInfo().uri.startsWith("http") ? track.getInfo().uri : null);
+            playingEmbed
+                    .setThumbnail("http://img.youtube.com/vi/" + track.getIdentifier() + "/maxresdefault.jpg");
+
+            textChannel.sendMessageEmbeds(playingEmbed.build()).queue();
+        }
     }
 
     public static void play(Guild guild, AudioChannel channel, URL path) {
@@ -374,8 +376,8 @@ public final class AudioManager {
             return Pair.of(false, "URL is invalid");
 
         try {
-            new URL(url).openConnection();
-        } catch (IOException exception) {
+            new URI(url).toURL().openConnection();
+        } catch (URISyntaxException | IOException exception) {
             return Pair.of(false, "URL is invalid");
         }
 

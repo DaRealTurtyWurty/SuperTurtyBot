@@ -1,5 +1,16 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
+import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,32 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.apache.commons.lang3.tuple.Pair;
-
 public class InternetRulesCommand extends CoreCommand {
     private static final List<String> RULES = new ArrayList<>();
 
     static {
-        if (RULES.isEmpty()) {
-            try {
-                final InputStream stream = TurtyBot.class.getResourceAsStream("/rules_of_the_internet.txt");
-                final var reader = new BufferedReader(new InputStreamReader(stream));
-                if (reader.ready()) {
-                    reader.lines().forEach(RULES::add);
-                }
-            } catch (final IOException exception) {
-                Constants.LOGGER.error("There has been an issue parsing file:\nException: {}\n{}",
-                    exception.getMessage(), ExceptionUtils.getStackTrace(exception));
+        try {
+            final InputStream stream = TurtyBot.class.getResourceAsStream("/rules_of_the_internet.txt");
+            if (stream == null)
+                throw new IOException("Could not find file!");
+
+            final var reader = new BufferedReader(new InputStreamReader(stream));
+            if (reader.ready()) {
+                reader.lines().forEach(RULES::add);
             }
+        } catch (final IOException exception) {
+            Constants.LOGGER.error("There has been an issue parsing file:\nException: {}\n{}",
+                exception.getMessage(), ExceptionUtils.getStackTrace(exception));
         }
     }
 
@@ -79,7 +80,12 @@ public class InternetRulesCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final int number = event.getOption("rule_number").getAsInt();
+        final int number = event.getOption("rule_number", 0, OptionMapping::getAsInt);
+        if(number < 1 || number > RULES.size()) {
+            reply(event, "❌ You must supply a rule number between 1 and " + RULES.size() + "!", false, true);
+            return;
+        }
+
         event.deferReply().setContent(RULES.get(number - 1)).mentionRepliedUser(false).queue();
     }
 }

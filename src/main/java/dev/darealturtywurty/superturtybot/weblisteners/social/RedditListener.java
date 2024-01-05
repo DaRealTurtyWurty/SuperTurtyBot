@@ -1,14 +1,14 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
+import com.apptasticsoftware.rssreader.Item;
+import com.apptasticsoftware.rssreader.RssReader;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
-
-import com.apptasticsoftware.rssreader.Item;
-import com.apptasticsoftware.rssreader.RssReader;
-
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 // TODO: Have this poll every 5 minutes or so
 public class RedditListener {
@@ -29,7 +29,7 @@ public class RedditListener {
                 return;
             stream.forEach(item -> channel.sendMessage(item.getTitle().orElse("no bitches")).queue());
         } catch (final IOException exception) {
-            exception.printStackTrace();
+            Constants.LOGGER.error("Failed to read RSS feed!", exception);
         }
     }
     

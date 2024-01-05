@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
@@ -75,133 +76,121 @@ public class LoggingManager extends ListenerAdapter {
         final String message = event.getMessage().getContentRaw();
 
         MESSAGE_CACHE.computeIfAbsent(channelId, k -> new ArrayList<>()).add(new MessageData(messageId, authorId, message));
-        if(MESSAGE_CACHE.get(channelId).size() > 100) MESSAGE_CACHE.get(channelId).remove(0);
+        if(MESSAGE_CACHE.get(channelId).size() > 100) MESSAGE_CACHE.get(channelId).removeFirst();
     }
 
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            event.getGuild().retrieveAuditLogs().type(ActionType.CHANNEL_CREATE).queue(entries -> {
-                User user = entries.get(0).getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> event.getGuild().retrieveAuditLogs().type(ActionType.CHANNEL_CREATE).queue(entries -> {
+            User user = entries.getFirst().getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0x00FF00);
-                builder.setAuthor("Channel Created", null, guild.getIconUrl());
-                builder.addField("Channel", event.getChannel().getAsMention(), true);
-                builder.addField("Created By", userName, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Channel Created", null, guild.getIconUrl());
+            builder.addField("Channel", event.getChannel().getAsMention(), true);
+            builder.addField("Created By", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onChannelDelete(ChannelDeleteEvent event) {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.CHANNEL_DELETE).queue(entries -> {
-                User user = entries.get(0).getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String channelName = event.getChannel().getName();
-                String channelType = event.getChannel().getType().name();
-                String timeCreated = TimeFormat.DATE_TIME_LONG.format(event.getChannel().getTimeCreated());
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.CHANNEL_DELETE).queue(entries -> {
+            User user = entries.getFirst().getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String channelName = event.getChannel().getName();
+            String channelType = event.getChannel().getType().name();
+            String timeCreated = TimeFormat.DATE_TIME_LONG.format(event.getChannel().getTimeCreated());
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Channel Deleted", null, guild.getIconUrl());
-                builder.addField("Channel", channelName, true);
-                builder.addField("Channel Type", channelType, true);
-                builder.addField("Time Created", timeCreated, true);
-                builder.addField("Deleted By", userName, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Channel Deleted", null, guild.getIconUrl());
+            builder.addField("Channel", channelName, true);
+            builder.addField("Channel Type", channelType, true);
+            builder.addField("Time Created", timeCreated, true);
+            builder.addField("Deleted By", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onEmojiAdded(EmojiAddedEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.EMOJI_CREATE).queue(entries -> {
-                User user = entries.get(0).getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String emoji = event.getEmoji().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_CREATE).queue(entries -> {
+            User user = entries.getFirst().getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String emoji = event.getEmoji().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0x00FF00);
-                builder.setAuthor("Emoji Created", null, guild.getIconUrl());
-                builder.addField("Emoji", emoji, true);
-                builder.addField("Created By", userName, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Emoji Created", null, guild.getIconUrl());
+            builder.addField("Emoji", emoji, true);
+            builder.addField("Created By", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onEmojiRemoved(EmojiRemovedEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.EMOJI_DELETE).queue(entries -> {
-                User user = entries.get(0).getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String emojiName = event.getEmoji().getName();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_DELETE).queue(entries -> {
+            User user = entries.getFirst().getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String emojiName = event.getEmoji().getName();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Emoji Deleted", null, guild.getIconUrl());
-                builder.addField("Emoji", emojiName, true);
-                builder.addField("Deleted By", userName, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Emoji Deleted", null, guild.getIconUrl());
+            builder.addField("Emoji", emojiName, true);
+            builder.addField("Deleted By", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGenericChannelUpdate(GenericChannelUpdateEvent<?> event) {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.CHANNEL_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
-                String channelName = event.getChannel().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.CHANNEL_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+            String channelName = event.getChannel().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Channel Updated", null, guild.getIconUrl());
-                builder.addField("Channel", channelName, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Change", change, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Channel Updated", null, guild.getIconUrl());
+            builder.addField("Channel", channelName, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Change", change, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGenericEmojiUpdate(GenericEmojiUpdateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.EMOJI_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
-                String emoji = event.getEmoji().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+            String emoji = event.getEmoji().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Emoji Updated", null, guild.getIconUrl());
-                builder.addField("Emoji", emoji, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Change", change, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Emoji Updated", null, guild.getIconUrl());
+            builder.addField("Emoji", emoji, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Change", change, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
@@ -229,135 +218,123 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onGenericGuildStickerUpdate(GenericGuildStickerUpdateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.STICKER_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
-                String sticker = event.getSticker().getName();
-                String url = event.getSticker().getIconUrl();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.STICKER_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+            String sticker = event.getSticker().getName();
+            String url = event.getSticker().getIconUrl();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Sticker Updated", null, guild.getIconUrl());
-                builder.addField("Sticker", sticker, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Change", change, false);
-                builder.setThumbnail(url);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Sticker Updated", null, guild.getIconUrl());
+            builder.addField("Sticker", sticker, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Change", change, false);
+            builder.setThumbnail(url);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGenericGuildUpdate(GenericGuildUpdateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.GUILD_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
-                String guildName = guild.getName();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.GUILD_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+            String guildName = guild.getName();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Guild Updated", null, guild.getIconUrl());
-                builder.addField("Guild", guildName, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Change", change, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Guild Updated", null, guild.getIconUrl());
+            builder.addField("Guild", guildName, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Change", change, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGenericRoleUpdate(GenericRoleUpdateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.ROLE_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
-                String role = event.getRole().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String change = event.getPropertyIdentifier() + ": " + event.getOldValue() + " -> " + event.getNewValue();
+            String role = event.getRole().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Role Updated", null, guild.getIconUrl());
-                builder.addField("Role", role, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Change", change, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Role Updated", null, guild.getIconUrl());
+            builder.addField("Role", role, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Change", change, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.BAN).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
-                String banner = event.getUser().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.BAN).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
+            String banner = event.getUser().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Member Banned", null, guild.getIconUrl());
-                builder.addField("Banned Member", userName, true);
-                builder.addField("Banned By", banner, true);
-                builder.addField("Reason", reason, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Member Banned", null, guild.getIconUrl());
+            builder.addField("Banned Member", userName, true);
+            builder.addField("Banned By", banner, true);
+            builder.addField("Reason", reason, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGuildInviteCreate(GuildInviteCreateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.INVITE_CREATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String url = event.getUrl();
-                String channelName = event.getChannel().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.INVITE_CREATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String url = event.getUrl();
+            String channelName = event.getChannel().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0x00FF00);
-                builder.setAuthor("Invite Created", null, guild.getIconUrl());
-                builder.addField("Invite", url, true);
-                builder.addField("Created By", userName, true);
-                builder.addField("Channel", channelName, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Invite Created", null, guild.getIconUrl());
+            builder.addField("Invite", url, true);
+            builder.addField("Created By", userName, true);
+            builder.addField("Channel", channelName, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGuildInviteDelete(GuildInviteDeleteEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.INVITE_DELETE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String url = event.getUrl();
-                String channelName = event.getChannel().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.INVITE_DELETE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String url = event.getUrl();
+            String channelName = event.getChannel().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Invite Deleted", null, guild.getIconUrl());
-                builder.addField("Invite", url, true);
-                builder.addField("Deleted By", userName, true);
-                builder.addField("Channel", channelName, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Invite Deleted", null, guild.getIconUrl());
+            builder.addField("Invite", url, true);
+            builder.addField("Deleted By", userName, true);
+            builder.addField("Channel", channelName, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
@@ -419,90 +396,82 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onGuildStickerRemoved(GuildStickerRemovedEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.STICKER_DELETE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String name = event.getSticker().getName();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.STICKER_DELETE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String name = event.getSticker().getName();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Sticker Removed", null, guild.getIconUrl());
-                builder.addField("Sticker", name, true);
-                builder.addField("Removed By", userName, true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Sticker Removed", null, guild.getIconUrl());
+            builder.addField("Sticker", name, true);
+            builder.addField("Removed By", userName, true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGuildMemberUpdateTimeOut(GuildMemberUpdateTimeOutEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.MEMBER_UPDATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
-                TemporalAccessor timeOutEnd = event.getNewTimeOutEnd() == null ? Instant.now() : event.getNewTimeOutEnd();
-                String time = TimeFormat.RELATIVE.format(timeOutEnd);
-                String timeoutedUserName = event.getUser().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.MEMBER_UPDATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
+            TemporalAccessor timeOutEnd = event.getNewTimeOutEnd() == null ? Instant.now() : event.getNewTimeOutEnd();
+            String time = TimeFormat.RELATIVE.format(timeOutEnd);
+            String timeoutedUserName = event.getUser().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFFFF00);
-                builder.setAuthor("Member Timeout Updated", null, guild.getIconUrl());
-                builder.addField("Member", timeoutedUserName, true);
-                builder.addField("Updated By", userName, true);
-                builder.addField("Timeout End", time, true);
-                builder.addField("Reason", reason, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFFFF00);
+            builder.setAuthor("Member Timeout Updated", null, guild.getIconUrl());
+            builder.addField("Member", timeoutedUserName, true);
+            builder.addField("Updated By", userName, true);
+            builder.addField("Timeout End", time, true);
+            builder.addField("Reason", reason, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onGuildUnban(GuildUnbanEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.UNBAN).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
-                String unbannedUserName = event.getUser().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.UNBAN).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            String reason = entry.getReason() == null ? "No reason provided" : entry.getReason();
+            String unbannedUserName = event.getUser().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0x00FF00);
-                builder.setAuthor("Member Unbanned", null, guild.getIconUrl());
-                builder.addField("Member", unbannedUserName, true);
-                builder.addField("Unbanned By", userName, true);
-                builder.addField("Reason", reason, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Member Unbanned", null, guild.getIconUrl());
+            builder.addField("Member", unbannedUserName, true);
+            builder.addField("Unbanned By", userName, true);
+            builder.addField("Reason", reason, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.MESSAGE_BULK_DELETE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
-                int size = event.getMessageIds().size();
-                String channelName = event.getChannel().getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.MESSAGE_BULK_DELETE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
+            int size = event.getMessageIds().size();
+            String channelName = event.getChannel().getAsMention();
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Bulk Message Delete", null, guild.getIconUrl());
-                builder.addField("Channel", channelName, true);
-                builder.addField("Deleted By", userName, true);
-                builder.addField("Number of Messages", String.valueOf(size), true);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Bulk Message Delete", null, guild.getIconUrl());
+            builder.addField("Channel", channelName, true);
+            builder.addField("Deleted By", userName, true);
+            builder.addField("Number of Messages", String.valueOf(size), true);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
@@ -602,69 +571,65 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onRoleCreate(RoleCreateEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.ROLE_CREATE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_CREATE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
 
-                Role role = event.getRole();
-                String roleName = role.getAsMention();
-                int color = role.getColorRaw();
-                String hex = String.format("#%06x", color);
-                String hoisted = role.isHoisted() ? "Yes" : "No";
-                String mentionable = role.isMentionable() ? "Yes" : "No";
-                String position = "#" + role.getPosition() + 1;
-                String mention = role.getAsMention();
-                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
+            Role role = event.getRole();
+            String roleName = role.getAsMention();
+            int color = role.getColorRaw();
+            String hex = String.format("#%06x", color);
+            String hoisted = role.isHoisted() ? "Yes" : "No";
+            String mentionable = role.isMentionable() ? "Yes" : "No";
+            String position = "#" + role.getPosition() + 1;
+            String mention = role.getAsMention();
+            String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0x00FF00);
-                builder.setAuthor("Role Created", null, guild.getIconUrl());
-                builder.addField("Name", roleName, true);
-                builder.addField("Color", hex, true);
-                builder.addField("Hoisted", hoisted, true);
-                builder.addField("Mentionable", mentionable, true);
-                builder.addField("Position", position, true);
-                builder.addField("Created By", userName, true);
-                builder.addField("Mention", mention, true);
-                builder.addField("Permissions", permissions, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0x00FF00);
+            builder.setAuthor("Role Created", null, guild.getIconUrl());
+            builder.addField("Name", roleName, true);
+            builder.addField("Color", hex, true);
+            builder.addField("Hoisted", hoisted, true);
+            builder.addField("Mentionable", mentionable, true);
+            builder.addField("Position", position, true);
+            builder.addField("Created By", userName, true);
+            builder.addField("Mention", mention, true);
+            builder.addField("Permissions", permissions, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     @Override
     public void onRoleDelete(RoleDeleteEvent event) {
         Guild guild = event.getGuild();
-        getLogChannelAndValidate(guild, event).ifPresent(channel -> {
-            guild.retrieveAuditLogs().type(ActionType.ROLE_DELETE).queue(entries -> {
-                AuditLogEntry entry = entries.get(0);
-                User user = entry.getUser();
-                String userName = user == null ? "Unknown" : user.getAsMention();
+        getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_DELETE).queue(entries -> {
+            AuditLogEntry entry = entries.getFirst();
+            User user = entry.getUser();
+            String userName = user == null ? "Unknown" : user.getAsMention();
 
-                Role role = event.getRole();
-                String roleName = role.getName();
-                int color = role.getColorRaw();
-                String hex = String.format("#%06x", color);
-                String hoisted = role.isHoisted() ? "Yes" : "No";
-                String mentionable = role.isMentionable() ? "Yes" : "No";
-                String position = "#" + role.getPosition() + 1;
-                String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
+            Role role = event.getRole();
+            String roleName = role.getName();
+            int color = role.getColorRaw();
+            String hex = String.format("#%06x", color);
+            String hoisted = role.isHoisted() ? "Yes" : "No";
+            String mentionable = role.isMentionable() ? "Yes" : "No";
+            String position = "#" + role.getPosition() + 1;
+            String permissions = role.getPermissions().stream().map(Permission::getName).collect(Collectors.joining(", "));
 
-                EmbedBuilder builder = new EmbedBuilder();
-                builder.setColor(0xFF0000);
-                builder.setAuthor("Role Deleted", null, guild.getIconUrl());
-                builder.addField("Name", roleName, true);
-                builder.addField("Color", hex, true);
-                builder.addField("Hoisted", hoisted, true);
-                builder.addField("Mentionable", mentionable, true);
-                builder.addField("Position", position, true);
-                builder.addField("Deleted By", userName, true);
-                builder.addField("Permissions", permissions, false);
-                channel.sendMessageEmbeds(builder.build()).queue();
-            });
-        });
+            EmbedBuilder builder = new EmbedBuilder();
+            builder.setColor(0xFF0000);
+            builder.setAuthor("Role Deleted", null, guild.getIconUrl());
+            builder.addField("Name", roleName, true);
+            builder.addField("Color", hex, true);
+            builder.addField("Hoisted", hoisted, true);
+            builder.addField("Mentionable", mentionable, true);
+            builder.addField("Position", position, true);
+            builder.addField("Deleted By", userName, true);
+            builder.addField("Permissions", permissions, false);
+            channel.sendMessageEmbeds(builder.build()).queue();
+        }));
     }
 
     private static Optional<TextChannel> getLogChannelAndValidate(Guild guild, Event event) {
@@ -684,6 +649,7 @@ public class LoggingManager extends ListenerAdapter {
         private final long id;
         private final long author;
         private String content;
+        @Setter
         private long lastEdited;
 
         public MessageData(long id, long author, String content) {
@@ -696,10 +662,6 @@ public class LoggingManager extends ListenerAdapter {
         public void setContent(String content) {
             this.content = content;
             setLastEdited(System.currentTimeMillis());
-        }
-
-        public void setLastEdited(long lastEdited) {
-            this.lastEdited = lastEdited;
         }
     }
 }

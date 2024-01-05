@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -67,12 +66,10 @@ public class CommandListCommand extends CoreCommand {
         final List<String> categories = CommandCategory.getCategories().stream()
                 .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase()))
                 .filter(category -> {
-                    if (!event.isFromGuild() || !category.isNSFW()) return true;
+                    if (!event.isFromGuild() || !category.isNSFW())
+                        return true;
 
-                    MessageChannelUnion channel = event.getChannel();
-                    if (channel == null) return true;
-
-                    return NSFWCommand.isValidChannel(channel);
+                    return NSFWCommand.isValidChannel(event.getChannel());
                 }).limit(25).map(CommandCategory::getName).map(String::toLowerCase).toList();
         event.replyChoiceStrings(categories).queue();
     }
@@ -136,18 +133,17 @@ public class CommandListCommand extends CoreCommand {
 
             CompletableFuture<List<CoreCommand>> cmds = new CompletableFuture<>();
             if (guild != null) {
-                guild.retrieveCommandPrivileges().queue(privilegeConfig -> {
-                    cmds.complete(CommandHook.INSTANCE.getCommands()
-                            .stream()
-                            .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW)
-                            .filter(cmd -> {
-                                List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(cmd.getCommandId());
-                                return privileges == null || privileges.isEmpty() || privileges.stream()
-                                        .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
-                            })
-                            .sorted(Comparator.comparing(CoreCommand::getName))
-                            .toList());
-                });
+                guild.retrieveCommandPrivileges().queue(privilegeConfig ->
+                        cmds.complete(CommandHook.INSTANCE.getCommands()
+                                .stream()
+                                .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW)
+                                .filter(cmd -> {
+                                    List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(cmd.getCommandId());
+                                    return privileges == null || privileges.isEmpty() || privileges.stream()
+                                            .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
+                                })
+                                .sorted(Comparator.comparing(CoreCommand::getName))
+                                .toList()));
             } else {
                 cmds.complete(CommandHook.INSTANCE.getCommands()
                         .stream()

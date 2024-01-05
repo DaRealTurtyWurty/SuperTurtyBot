@@ -1,13 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.moderation;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.math3.util.Pair;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,6 +12,13 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.math3.util.Pair;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class TimeoutCommand extends CoreCommand {
     public TimeoutCommand() {
@@ -69,21 +68,21 @@ public class TimeoutCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
         
-        final Member member = event.getOption("member").getAsMember();
+        final Member member = event.getOption("member", event.getMember(), OptionMapping::getAsMember);
         if (member == null) {
             event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
         
-        if (event.getInteraction().getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
-            && event.getInteraction().getMember().canInteract(member)) {
+        if (event.getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
+                && event.getMember().canInteract(member)) {
             final long duration = event.getOption("duration", 15L, OptionMapping::getAsLong);
             member.getUser().openPrivateChannel()
                 .queue(channel -> channel.sendMessage(

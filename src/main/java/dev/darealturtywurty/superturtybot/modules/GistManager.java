@@ -1,21 +1,8 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import org.eclipse.egit.github.core.Gist;
-import org.eclipse.egit.github.core.GistFile;
-import org.eclipse.egit.github.core.client.GitHubClient;
-import org.eclipse.egit.github.core.service.GistService;
-
 import com.mongodb.client.model.Filters;
-
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.entities.Guild;
@@ -24,7 +11,18 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.eclipse.egit.github.core.Gist;
+import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.client.GitHubClient;
+import org.eclipse.egit.github.core.service.GistService;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GistManager extends ListenerAdapter {
     private static GitHubClient GITHUB;
@@ -90,7 +88,7 @@ public class GistManager extends ListenerAdapter {
                             futureMap.complete(gistFiles);
                         }
                     }).exceptionally(exception -> {
-                        exception.printStackTrace();
+                        Constants.LOGGER.error("Failed to download attachment!", exception);
                         if (counter.incrementAndGet() >= attachments.size()) {
                             futureMap.complete(gistFiles);
                         }
@@ -115,7 +113,7 @@ public class GistManager extends ListenerAdapter {
                 } catch (final IOException exception) {
                     message.reply("There has been an error creating a gist for this file!").mentionRepliedUser(false)
                         .queue();
-                    exception.printStackTrace();
+                    Constants.LOGGER.error("Failed to create gist!", exception);
                 }
             });
         });

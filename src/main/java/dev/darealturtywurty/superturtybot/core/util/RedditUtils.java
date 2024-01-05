@@ -23,7 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.time.Instant;
 import java.util.*;
@@ -79,12 +80,13 @@ public final class RedditUtils {
 
         String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
                 .getUrl();
-        if (mediaURL == null || mediaURL.isBlank()) return null;
+        if (mediaURL == null || mediaURL.isBlank())
+            return null;
 
         if (mediaURL.contains("reddit.com/gallery")) {
             String json = mediaURL.replace("gallery", "comments") + ".json";
             try {
-                URLConnection connection = new URL(json).openConnection();
+                URLConnection connection = new URI(json).toURL().openConnection();
                 connection.setRequestProperty("User-Agent", "TurtyWurty");
                 JsonObject listing = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                         JsonArray.class).get(0).getAsJsonObject();
@@ -104,20 +106,22 @@ public final class RedditUtils {
                 }
 
                 return Either.right(images);
-            } catch (IOException exception) {
-                exception.printStackTrace();
+            } catch (IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Failed to get gallery data!", exception);
                 return null;
             }
         }
 
-        if (requireMedia && mediaURL.isBlank()) {
+        if (requireMedia) {
             post = findValidPost(subreddit, subreddits);
-            if (post == null) return null;
+            if (post == null)
+                return null;
 
             mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
                     .getUrl();
 
-            if (mediaURL == null || mediaURL.isBlank()) return null;
+            if (mediaURL == null || mediaURL.isBlank())
+                return null;
         }
 
         // https://i.redgifs.com/i/respectfulrealisticdungenesscrab.jpg
@@ -131,11 +135,7 @@ public final class RedditUtils {
 
         if (verifyVideo(mediaURL)) {
             mediaURL = StringUtils.replaceHTMLCodes(mediaURL);
-            if (mediaURL.contains("redgifs") || mediaURL.contains("xvideos") || mediaURL.contains(
-                    "xhamster") || mediaURL.contains("xxx") || mediaURL.contains("porn") || mediaURL.contains(
-                    "nsfw") || mediaURL.contains("gfycat") || mediaURL.contains("/watch.") || mediaURL.contains(
-                    "reddit.com") || mediaURL.contains("twitter") || mediaURL.contains("hub") || mediaURL.contains(
-                    "imgur")) {
+            if (isEmbedVideo(mediaURL)) {
                 embed = new EmbedBuilder();
                 embed.setTitle(mediaURL);
                 return Either.left(embed);
@@ -199,5 +199,12 @@ public final class RedditUtils {
     public static boolean verifyVideo(String url) {
         return !url.endsWith("mp4") && !url.endsWith("mov") && !url.endsWith("wmv") && !url.endsWith(
                 "avi") && !url.endsWith("flv") && !url.endsWith("webm") && !url.endsWith("mkv");
+    }
+
+    public static boolean isEmbedVideo(String url) {
+        return url.contains("redgifs") || url.contains("xvideos") || url.contains("xhamster") ||
+                url.contains("xxx") || url.contains("porn") || url.contains("nsfw") || url.contains("gfycat") ||
+                url.contains("/watch.") || url.contains("reddit.com") || url.contains("twitter") ||
+                url.contains("hub") || url.contains("imgur") || url.contains("tiktok") || url.contains("youtube");
     }
 }

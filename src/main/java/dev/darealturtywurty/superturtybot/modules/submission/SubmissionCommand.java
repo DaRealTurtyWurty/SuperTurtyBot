@@ -9,13 +9,11 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.SubmissionC
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class SubmissionCommand extends CoreCommand {
     public SubmissionCommand() {

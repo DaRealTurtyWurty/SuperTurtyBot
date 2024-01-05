@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import com.google.common.primitives.Longs;
 import dev.darealturtywurty.superturtybot.commands.core.config.CommandPermission;
-import lombok.*;
+import lombok.Data;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent;

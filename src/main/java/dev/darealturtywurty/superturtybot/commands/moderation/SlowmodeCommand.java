@@ -1,18 +1,17 @@
 package dev.darealturtywurty.superturtybot.commands.moderation;
 
-import java.util.List;
-
-import net.dv8tion.jda.api.Permission;
-import org.apache.commons.math3.util.Pair;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.math3.util.Pair;
+
+import java.util.List;
 
 public class SlowmodeCommand extends CoreCommand {
     public SlowmodeCommand() {
@@ -66,7 +65,7 @@ public class SlowmodeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getChannelType() != ChannelType.TEXT || event.getMember() == null) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getChannelType() != ChannelType.TEXT || event.getMember() == null) {
             event.deferReply(true).setContent("This command can only be used in channels that allow for slowmode!")
                 .mentionRepliedUser(false).queue();
             return;

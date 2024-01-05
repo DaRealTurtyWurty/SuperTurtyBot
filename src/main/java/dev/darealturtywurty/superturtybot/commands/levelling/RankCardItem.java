@@ -1,13 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class RankCardItem implements Registerable {
     public final String data;
@@ -42,7 +41,7 @@ public class RankCardItem implements Registerable {
         return this;
     }
     
-    private static final BufferedImage thumbnail(String name) {
+    private static BufferedImage thumbnail(String name) {
         try {
             return BotUtils
                 .resize(ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/thumbnails/" + name + ".png")), 120);

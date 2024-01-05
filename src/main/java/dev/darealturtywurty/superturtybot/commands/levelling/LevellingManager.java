@@ -33,6 +33,7 @@ public final class LevellingManager extends ListenerAdapter {
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
     private final List<Long> disabledGuilds = List.of();
 
+    @SuppressWarnings("resource")
     private LevellingManager() {
         ScheduledExecutorService cooldownScheduler = Executors.newSingleThreadScheduledExecutor();
         cooldownScheduler.scheduleAtFixedRate(new CooldownManager(), 0, 1000, TimeUnit.MILLISECONDS);
@@ -235,7 +236,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         if (config.getLevelRoles().isEmpty()) return Map.of();
 
-        return Stream.of(config.getLevelRoles().split("[\s;]")).map(it -> it.split("->"))
+        return Stream.of(config.getLevelRoles().split("[ ;]")).map(it -> it.split("->"))
                      .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
                      .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }

@@ -20,18 +20,18 @@ public class AmazonUtility {
         Request request = new Request.Builder().url(RANDOM_UPC_URL).build();
 
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
+            if (!response.isSuccessful())
                 throw new IllegalStateException("Unable to get random UPC!");
-            }
 
             ResponseBody body = response.body();
-            if (body == null) {
+            if (body == null)
                 throw new IllegalStateException("Unable to get random UPC!");
-            }
 
             Document document = Jsoup.parse(body.string());
 
             Element dataTable = document.selectFirst("#content > .data > tbody");
+            if (dataTable == null)
+                throw new IllegalStateException("Unable to get random UPC!");
 
             int nextIndex = 0;
 
@@ -82,7 +82,7 @@ public class AmazonUtility {
         String keywords = upcInformation.productTitle().replace(" ", ",");
         var request = new Request.Builder().url(AMAZON_CATALOG_SEARCH_URL.formatted(keywords)).build();
 
-        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IllegalStateException("Unable to get Amazon item info!");
             }
@@ -107,16 +107,7 @@ public class AmazonUtility {
         return new AmazonItem(upcInformation);
     }
 
-    public static class AmazonItem {
-        private final UPCInformation upcInformation;
-
-        public AmazonItem(UPCInformation upcInformation) {
-            this.upcInformation = upcInformation;
-        }
-
-        public UPCInformation upcInformation() {
-            return this.upcInformation;
-        }
+    public record AmazonItem(UPCInformation upcInformation) {
     }
 
     public record UPCInformation(Optional<String> upcE, Optional<String> upcA, Optional<String> ucc13,

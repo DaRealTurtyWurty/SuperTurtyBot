@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -98,6 +99,9 @@ public class GuildConfigCommand extends CoreCommand {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         final Guild guild = event.getGuild();
+        if(guild.getDefaultChannel() == null || guild.getDefaultChannel().getType() != ChannelType.TEXT)
+            return;
+
         final TextChannel defaultChannel = guild.getDefaultChannel().asTextChannel();
         
         final Bson filter = Filters.eq("guild", guild.getIdLong());
@@ -126,7 +130,7 @@ public class GuildConfigCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong()) {
             reply(event, "❌ You do not have permission to use this command here!", false, true);
             return;
         }

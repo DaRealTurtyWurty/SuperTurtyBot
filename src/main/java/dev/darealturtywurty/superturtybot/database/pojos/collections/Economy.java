@@ -3,7 +3,10 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 import dev.darealturtywurty.superturtybot.modules.economy.Loan;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -6,18 +6,15 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
@@ -68,11 +65,11 @@ public class EightBallCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        final String question = event.getOption("question").getAsString();
+        final String question = event.getOption("question", "No question provided!", OptionMapping::getAsString);
         try {
-            final URLConnection connection = new URL(
+            final URLConnection connection = new URI(
                 "https://www.eightballapi.com/api?question=%s&biased=true".formatted(URLEncoder.encode(question, StandardCharsets.UTF_8)))
-                    .openConnection();
+                    .toURL().openConnection();
             final JsonObject result = Constants.GSON
                 .fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8), JsonObject.class);
 
@@ -84,10 +81,9 @@ public class EightBallCommand extends CoreCommand {
                 + URLDecoder.decode(result.get("reading").getAsString(), StandardCharsets.UTF_8).replace("€“", ""));
             embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
             event.getHook().sendMessageEmbeds(embed.build()).queue();
-        } catch (final IOException exception) {
+        } catch (final IOException | URISyntaxException exception) {
             event.getHook().sendMessage("❌ There has been an issue with the 8 Ball command!").queue();
-            Constants.LOGGER.error("There has been an issue with the 8 Ball command:\nException: {}\n{}",
-                exception.getMessage(), ExceptionUtils.getStackTrace(exception));
+            Constants.LOGGER.error("There has been an issue with the 8 Ball command!", exception);
         }
     }
 }

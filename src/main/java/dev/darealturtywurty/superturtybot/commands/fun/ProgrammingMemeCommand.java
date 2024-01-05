@@ -48,8 +48,17 @@ public class ProgrammingMemeCommand extends CoreCommand {
         
         final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
+        if(post == null) {
+            event.getHook().editOriginal("Failed to find a valid post!").queue();
+            return;
+        }
+
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
+        if (mediaURL == null) {
+            event.getHook().editOriginal("Failed to find a valid post!").queue();
+            return;
+        }
         event.getHook().editOriginal(mediaURL).queue();
     }
 }

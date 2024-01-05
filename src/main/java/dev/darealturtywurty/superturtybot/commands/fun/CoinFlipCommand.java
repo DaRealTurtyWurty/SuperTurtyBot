@@ -1,14 +1,15 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class CoinFlipCommand extends CoreCommand {
     public CoinFlipCommand() {
@@ -75,31 +76,37 @@ public class CoinFlipCommand extends CoreCommand {
                 choiceStr = "side";
             }
 
-            String botChoice = "";
+            String botChoice;
             if (ThreadLocalRandom.current().nextInt(1000) == 69) {
                 botChoice = "side";
             } else {
                 botChoice = ThreadLocalRandom.current().nextBoolean() ? "heads" : "tails";
             }
 
-            String reply = "";
-            if (botChoice.equalsIgnoreCase(choiceStr)) {
-                if (choiceStr.contains("head")) {
-                    reply = "You were correct! It was Heads 🗣.";
-                } else if (choiceStr.contains("tail")) {
-                    reply = "You were correct! It was Tails 🐍.";
-                } else {
-                    reply = "You were correct! It landed on it's side 😲.";
-                }
-            } else if (botChoice.contains("head")) {
-                reply = "You were incorrect! It was Heads 🗣.";
-            } else if (botChoice.contains("tail")) {
-                reply = "You were incorrect! It was Tails 🐍.";
-            } else {
-                reply = "You were incorrect! It landed on it's side 😲.";
-            }
+            String reply = constructChoiceReply(botChoice, choiceStr);
 
             event.deferReply().setContent("You chose `" + choiceStr + "`. " + reply).mentionRepliedUser(false).queue();
         }
+    }
+
+    @NotNull
+    private static String constructChoiceReply(String botChoice, String choiceStr) {
+        String reply;
+        if (botChoice.equalsIgnoreCase(choiceStr)) {
+            if (choiceStr.contains("head")) {
+                reply = "You were correct! It was Heads 🗣.";
+            } else if (choiceStr.contains("tail")) {
+                reply = "You were correct! It was Tails 🐍.";
+            } else {
+                reply = "You were correct! It landed on it's side 😲.";
+            }
+        } else if (botChoice.contains("head")) {
+            reply = "You were incorrect! It was Heads 🗣.";
+        } else if (botChoice.contains("tail")) {
+            reply = "You were incorrect! It was Tails 🐍.";
+        } else {
+            reply = "You were incorrect! It landed on it's side 😲.";
+        }
+        return reply;
     }
 }

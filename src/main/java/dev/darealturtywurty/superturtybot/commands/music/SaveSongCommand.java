@@ -76,8 +76,8 @@ public class SaveSongCommand extends CoreCommand {
 
         switch (subcommand) {
             case "add" -> {
-                String name = null;
-                String url = null;
+                String name;
+                String url;
 
                 Guild guild = event.getGuild();
                 Member member = event.getMember();

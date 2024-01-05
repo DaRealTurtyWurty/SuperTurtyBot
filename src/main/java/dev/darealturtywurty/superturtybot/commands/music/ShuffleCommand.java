@@ -1,14 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.util.List;
-
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.util.List;
 
 public class ShuffleCommand extends CoreCommand {
     public ShuffleCommand() {
@@ -47,18 +46,18 @@ public class ShuffleCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
         
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
         
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
-        if (!event.getGuild().getAudioManager().isConnected()) {
+        if (channel == null || !event.getGuild().getAudioManager().isConnected()) {
             reply(event, "❌ I must be connected to a voice channel to use this command!", false, true);
             return;
         }

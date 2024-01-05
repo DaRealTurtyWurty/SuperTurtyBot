@@ -1,8 +1,18 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.registry.Registerable;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.apache.commons.text.WordUtils;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -11,17 +21,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
-
-import org.apache.commons.text.WordUtils;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.registry.Registerable;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class PexelsImageCommandType extends ImageCommandType {
     private static final String BASE_URL = "https://api.pexels.com/v1/";
@@ -56,7 +55,7 @@ public class PexelsImageCommandType extends ImageCommandType {
             String url = BASE_URL + "search?query=" + search + "&per_page=80";
             int count = 0;
             while (url != null) {
-                final URLConnection connection = new URL(url).openConnection();
+                final URLConnection connection = new URI(url).toURL().openConnection();
                 connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey().get());
                 
                 JsonObject response;
@@ -88,8 +87,8 @@ public class PexelsImageCommandType extends ImageCommandType {
             
             future.complete(results);
             return future;
-        } catch (final IOException exception) {
-            exception.printStackTrace();
+        } catch (final IOException | URISyntaxException exception) {
+            Constants.LOGGER.error("Error getting photos for " + search, exception);
             future.complete(null);
             return future;
         }

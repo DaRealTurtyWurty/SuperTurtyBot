@@ -1,16 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.moderation.warnings;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.List;
-
-import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
-import org.apache.commons.math3.util.Pair;
-
 import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -20,6 +13,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.apache.commons.math3.util.Pair;
+
+import java.awt.*;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 
 public class RemoveWarnCommand extends CoreCommand {
     public RemoveWarnCommand() {
@@ -70,21 +69,25 @@ public class RemoveWarnCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("This command can only be used inside of a server!")
                 .mentionRepliedUser(false).queue();
             return;
         }
         
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            event.deferReply(true).setContent("You require the `Ban Members` permission to use this command!")
+            event.deferReply(true).setContent("❌ You require the `Ban Members` permission to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
         }
         
-        final User user = event.getOption("user").getAsUser();
-        final String uuid = event.getOption("uuid").getAsString();
+        final User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
+        final String uuid = event.getOption("uuid", "Unspecified", OptionMapping::getAsString);
         final Warning warn = WarnManager.removeWarn(user, event.getGuild(), uuid, event.getUser());
+        if(warn == null) {
+            event.deferReply(true).setContent("❌ That user does not have a warn with that UUID!").mentionRepliedUser(false).queue();
+            return;
+        }
 
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 

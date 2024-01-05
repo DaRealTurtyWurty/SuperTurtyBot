@@ -1,17 +1,16 @@
 package dev.darealturtywurty.superturtybot.commands.music;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.Arrays;
-
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.Arrays;
 
 public class NowPlayingCommand extends CoreCommand {
     public NowPlayingCommand() {
@@ -45,7 +44,7 @@ public class NowPlayingCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
                 .mentionRepliedUser(false).queue();
             return;
@@ -58,7 +57,7 @@ public class NowPlayingCommand extends CoreCommand {
             return;
         }
         
-        if (!event.getMember().getVoiceState().inAudioChannel()) {
+        if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
             event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
                 .mentionRepliedUser(false).queue();
             return;

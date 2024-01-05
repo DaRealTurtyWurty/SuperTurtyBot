@@ -96,11 +96,9 @@ public class DonateCommand extends EconomyCommand {
             event.getHook().editOriginal("✅ Donated %s%d to %s!"
                     .formatted(config.getEconomyCurrency(), amount, user.getAsMention())).queue(ignored -> {
                 MessageChannelUnion channel = event.getChannel();
-                if (channel != null) {
-                    channel.sendMessage("Hello %s! %s has donated %s%d to you!"
-                            .formatted(user.getAsMention(), event.getUser().getAsMention(),
-                                    config.getEconomyCurrency(), amount)).queue();
-                }
+                channel.sendMessage("Hello %s! %s has donated %s%d to you!"
+                        .formatted(user.getAsMention(), event.getUser().getAsMention(),
+                                config.getEconomyCurrency(), amount)).queue();
             });
         });
     }

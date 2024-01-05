@@ -236,7 +236,7 @@ public class SteamGameDetailsCommand extends CoreCommand {
 
             List<AppDetailsData.Screenshot> screenshots = appDetailsData.getScreenshots();
             if (!screenshots.isEmpty()) {
-                AppDetailsData.Screenshot screenshot0 = screenshots.get(0);
+                AppDetailsData.Screenshot screenshot0 = screenshots.getFirst();
                 var screenshot0Embed = new EmbedBuilder()
                         .setTitle("Screenshots")
                         .setUrl(appDetailsData.getWebsite() == null ?

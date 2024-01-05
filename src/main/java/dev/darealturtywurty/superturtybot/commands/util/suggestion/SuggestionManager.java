@@ -1,28 +1,14 @@
 package dev.darealturtywurty.superturtybot.commands.util.suggestion;
 
-import java.awt.Color;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import net.dv8tion.jda.api.Permission;
-import org.bson.conversions.Bson;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -31,6 +17,18 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public final class SuggestionManager extends ListenerAdapter {
     public static final SuggestionManager INSTANCE = new SuggestionManager();
@@ -40,7 +38,7 @@ public final class SuggestionManager extends ListenerAdapter {
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
-        if (!event.isFromGuild() || event.getUser().isBot() || event.getUser().isSystem())
+        if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
             return;
         
         final TextChannel suggestionChannel = getSuggestionChannel(event.getGuild());
@@ -132,7 +130,7 @@ public final class SuggestionManager extends ListenerAdapter {
             if (possibleChannels.isEmpty())
                 return null;
 
-            channel = possibleChannels.get(0);
+            channel = possibleChannels.getFirst();
         }
         
         if (!channel.canTalk())
@@ -173,8 +171,7 @@ public final class SuggestionManager extends ListenerAdapter {
         if (number >= suggestions.size())
             return null;
         
-        suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt))
-            .collect(Collectors.toList());
+        suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt)).toList();
         
         final long time = System.currentTimeMillis();
         final Suggestion suggestion = suggestions.get(number);
@@ -186,7 +183,7 @@ public final class SuggestionManager extends ListenerAdapter {
         
         final var future = new CompletableFuture<Suggestion>();
         suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
-            message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().get(0)).addField(
+            message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().getFirst()).addField(
                 type.richName + " by " + responder.getUser().getName(),  response, false).build()).queue();
             suggestion.getResponses().add(new SuggestionResponse(type.name(), response, responder.getIdLong(), time));
             Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
