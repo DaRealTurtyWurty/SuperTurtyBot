@@ -2,8 +2,7 @@ package dev.darealturtywurty.superturtybot.core.util;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Birthday;
 
-import java.time.OffsetDateTime;
-import java.time.Year;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +14,7 @@ public class TimeUtils {
 
     public static byte getDaysForMonth(int month, int year) {
         // if leap year
-        if(Year.isLeap(year) && month == 2)
+        if (Year.isLeap(year) && month == 2)
             return 29;
         else if (month < 1 || month > 12)
             return -1;
@@ -28,13 +27,11 @@ public class TimeUtils {
     }
 
     public static int calculateMinBirthYear() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.YEAR) - 150;
+        return LocalDate.now().getYear() - 100;
     }
 
     public static int calculateMaxBirthYear() {
-        Calendar calendar = Calendar.getInstance();
-        return calendar.get(Calendar.YEAR) - 12;
+        return LocalDate.now().getYear() - 12;
     }
 
     public static String mapMonth(int month) {
@@ -64,18 +61,22 @@ public class TimeUtils {
         };
     }
 
-    // TODO: Ensure it works for leap years
     public static long calculateTimeOfNextBirthday(Birthday birthday) {
-        Calendar calendar = Calendar.getInstance();
-        int day = birthday.getDay();
-        int month = birthday.getMonth();
-        int year = calendar.get(Calendar.YEAR);
-        if (month < calendar.get(Calendar.MONTH) + 1 || (month == calendar.get(Calendar.MONTH) + 1 && day < calendar.get(Calendar.DAY_OF_MONTH))) {
-            year++;
+        var currentDate = LocalDate.now();
+        var nextBirthday = LocalDate.of(currentDate.getYear(), birthday.getMonth(), birthday.getDay());
+
+        if (nextBirthday.isBefore(currentDate) || nextBirthday.isEqual(currentDate)) {
+            nextBirthday = nextBirthday.plusYears(1);
         }
 
-        calendar.set(year, month - 1, day, 0, 0, 0);
-        return calendar.getTimeInMillis();
+        if (Month.FEBRUARY.equals(nextBirthday.getMonth()) &&
+                nextBirthday.getDayOfMonth() == 29 &&
+                Year.of(nextBirthday.getYear()).isLeap()) {
+            // Leap year with February 29, adjust to February 28
+            nextBirthday = nextBirthday.withDayOfMonth(28);
+        }
+
+        return nextBirthday.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     public static String formatTime(OffsetDateTime time) {
@@ -84,14 +85,14 @@ public class TimeUtils {
 
     public static String millisecondsFormatted(final long millis) {
         final long hours = TimeUnit.MILLISECONDS.toHours(millis)
-            - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(millis));
+                - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(millis));
         final long minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
-            - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
+                - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
         final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis)
-            - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis));
+                - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis));
         final String ret = String.format("%s%s%s", hours > 0 ? String.format("%02d", hours) + ":" : "",
-            minutes > 0 ? String.format("%02d", minutes) + ":" : "00:",
-            seconds > 0 ? String.format("%02d", seconds) : "00").trim();
+                minutes > 0 ? String.format("%02d", minutes) + ":" : "00:",
+                seconds > 0 ? String.format("%02d", seconds) : "00").trim();
         return ret.endsWith(":") ? ret.substring(0, ret.length() - 1) : ret;
     }
 

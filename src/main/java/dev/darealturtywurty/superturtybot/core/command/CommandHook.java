@@ -144,9 +144,10 @@ public class CommandHook extends ListenerAdapter {
             SteamListener.runExecutor(jda);
         }
 
-        if (!RedditListener.isInitialized()) {
-            RedditListener.initialize(jda);
-        }
+        // TODO: When this is fully implemented, uncomment this
+//        if (!RedditListener.isInitialized()) {
+//            RedditListener.initialize(jda);
+//        }
 
         if(!EconomyManager.isRunning()) {
             EconomyManager.start(jda);

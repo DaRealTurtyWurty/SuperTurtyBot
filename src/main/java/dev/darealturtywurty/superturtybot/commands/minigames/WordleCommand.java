@@ -313,7 +313,7 @@ public class WordleCommand extends CoreCommand {
 
     private static boolean handleResponse(MessageReceivedEvent event, Game game) {
         Message message = event.getMessage();
-        String content = message.getContentRaw();
+        String content = message.getContentRaw().toLowerCase(Locale.ROOT);
         if(content.equalsIgnoreCase("give up")) {
             if(event.isFromGuild()) {
                 endGame(event.getGuild(), game);
@@ -674,7 +674,6 @@ public class WordleCommand extends CoreCommand {
             return false;
         }
 
-        // TODO: https://discord.com/channels/1017111640023506974/1170390239072755780/1170391337217044532
         public LetterState getLetterState(int letterIndex, char character) {
             if (this.word.charAt(letterIndex) == character) {
                 return LetterState.CORRECT;

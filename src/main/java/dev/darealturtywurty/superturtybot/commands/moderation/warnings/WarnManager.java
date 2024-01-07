@@ -116,7 +116,7 @@ public class WarnManager {
         return removed;
     }
 
-    // TODO: Don't hardcode
+    // TODO: Don't hardcode (will require the web dashboard to be created first)
     protected static void addSanctions(Guild guild, User user, User warner) {
         final Set<Warning> warnings = getWarns(guild, user);
         if (user.getIdLong() != guild.getSelfMember().getIdLong()) {

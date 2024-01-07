@@ -1060,22 +1060,6 @@ public class NSFWCommandList {
             }
         });
 
-        // TODO: Test if it works when built
-        map.put("orgasm", event -> {
-            if (!event.hook().getInteraction().isFromGuild() || !Objects.requireNonNull(
-                            Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
-                    .inAudioChannel()) {
-                event.hook().editOriginal("❌ You must be in a server voice channel to use this command!")
-                        .setFiles().setComponents().setEmbeds().queue();
-                return;
-            }
-
-            List<URL> files = FileUtils.locateResourceFiles("audio/orgasms");
-            AudioManager.play(event.hook().getInteraction().getGuild(),
-                    event.hook().getInteraction().getMember().getVoiceState().getChannel(),
-                    files.get(ThreadLocalRandom.current().nextInt(files.size())));
-        });
-
         map.put("rule34", event -> {
             String searchTerm = event.rule34SearchTerm().orElse("");
             try {

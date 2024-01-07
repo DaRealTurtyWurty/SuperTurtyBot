@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.RedditNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SteamNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
@@ -50,7 +51,14 @@ public class NotifierCommand extends CoreCommand {
                     new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                         "Who should be pinged when a notification happens", true),
                     new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
-                        false))));
+                        false))),
+            new SubcommandData("reddit", "Listens for new posts on a subreddit.").addOptions(
+                    List.of(new OptionData(OptionType.STRING, "subreddit", "The subreddit to listen to", true),
+                            new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
+                            new OptionData(OptionType.MENTIONABLE, "who_to_ping",
+                                    "Who should be pinged when a notification happens", true),
+                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
+                                    false))));
     }
 
     @Override
@@ -251,6 +259,54 @@ public class NotifierCommand extends CoreCommand {
                     .insertOne(new SteamNotifier(event.getGuild().getIdLong(), discordChannel, appId, mention));
 
                 reply(event, "✅ I have successfully setup a notifier for this Steam app in <#" + discordChannel + ">!");
+                break;
+            }
+            case "reddit": {
+                final String subreddit = event.getOption("subreddit", null, OptionMapping::getAsString);
+                if (subreddit == null) {
+                    reply(event, "❌ You must provide a subreddit!", false, true);
+                    return;
+                }
+
+                final Bson findFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
+                        Filters.eq("subreddit", subreddit));
+
+                final boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
+                if (unsubscribe) {
+                    if (Database.getDatabase().redditNotifier.deleteOne(findFilter).getDeletedCount() != 0) {
+                        reply(event, "✅ I have successfully unsubscribed the notifier for this subreddit!");
+                    } else {
+                        reply(event, "❌ You do not have any notifiers for this subreddit!", false, true);
+                    }
+
+                    return;
+                }
+
+                final boolean exists = Database.getDatabase().redditNotifier.find(findFilter).first() != null;
+                if (exists) {
+                    reply(event, "❌ You already have a notifier for this subreddit!", false, true);
+                    return;
+                }
+
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
+
+                Database.getDatabase().redditNotifier
+                        .insertOne(new RedditNotifier(event.getGuild().getIdLong(), subreddit, discordChannel, mention));
+
+                reply(event, "✅ I have successfully setup a notifier for this subreddit in <#" + discordChannel + ">!");
                 break;
             }
             case null:

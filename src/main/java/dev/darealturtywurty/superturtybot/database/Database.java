@@ -31,6 +31,7 @@ public class Database {
     public final MongoCollection<YoutubeNotifier> youtubeNotifier;
     public final MongoCollection<TwitchNotifier> twitchNotifier;
     public final MongoCollection<SteamNotifier> steamNotifier;
+    public final MongoCollection<RedditNotifier> redditNotifier;
     public final MongoCollection<Report> reports;
     public final MongoCollection<Quote> quotes;
     public final MongoCollection<UserEmbeds> userEmbeds;
@@ -65,6 +66,7 @@ public class Database {
         this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
         this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
+        this.redditNotifier = database.getCollection("redditNotifier", RedditNotifier.class);
         this.reports = database.getCollection("reports", Report.class);
         this.quotes = database.getCollection("quotes", Quote.class);
         this.userEmbeds = database.getCollection("userEmbeds", UserEmbeds.class);
@@ -95,6 +97,7 @@ public class Database {
             .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
         this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
         this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
+        this.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
         this.reports.createIndex(guildIndex);
         this.quotes.createIndex(guildUserIndex);
         this.userEmbeds.createIndex(userIndex);

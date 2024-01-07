@@ -137,7 +137,6 @@ public class StrawpollResultsCommand extends CoreCommand {
     public static JFreeChart createChart(final PieDataset<String> dataset, final String title, final boolean is3D) {
         JFreeChart chart;
         if (is3D) {
-            // TODO: Rewrite this to use the new library
             chart = ChartFactory.createPieChart3D(title, dataset, false, true, Locale.getDefault());
         } else {
             chart = ChartFactory.createPieChart(title, dataset, false, true, Locale.getDefault());

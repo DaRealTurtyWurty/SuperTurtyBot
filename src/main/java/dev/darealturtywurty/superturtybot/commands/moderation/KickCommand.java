@@ -86,7 +86,6 @@ public class KickCommand extends CoreCommand {
             String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
             if (reason.length() > 512) {
                 reason = reason.substring(0, 512);
-                // TODO: Confirmation of whether they still want to kick
             }
             
             final String finalReason = reason;

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class FileUtils {
+    // TODO: Make this work in production
     public static List<URL> locateResourceFiles(String folder) {
         if(CommandHook.isDevMode()) {
             Path path = Path.of("src/main/resources/" + folder);

@@ -134,8 +134,12 @@ public class LeaderboardCommand extends CoreCommand {
 
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
 
-        // TODO: Handle cases where there is no guild icon set
-        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(new URI(guild.getIconUrl()).toURL()), 420);
+        String guildIconURL = guild.getIconUrl();
+        if (guildIconURL == null) {
+            guildIconURL = "https://discord.com/assets/1f0bfc0865d324c2587920a7d80c609b.png";
+        }
+
+        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(new URI(guildIconURL).toURL()), 420);
         graphics.drawImage(guildIcon, 125, 125, guildIcon.getWidth(), guildIcon.getHeight(), null);
 
         final String guildName = guild.getName();
@@ -146,7 +150,7 @@ public class LeaderboardCommand extends CoreCommand {
         graphics.drawLine(600, 300 + metrics.getHeight() / 2 - 20, 600 + guildLength,
                 300 + metrics.getHeight() / 2 - 20);
 
-        final int startX = 80, startY = 568, partHeight = 140, spacing = 40;
+        final int startX = 80, startY = 568, partSize = 140, spacing = 40;
         for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
             if (indexedRank >= profiles.size()) {
                 break;
@@ -169,8 +173,7 @@ public class LeaderboardCommand extends CoreCommand {
             }
 
             final BufferedImage avatarImage = ImageIO.read(new URI(avatarURL).toURL());
-            graphics.drawImage(avatarImage, startX, startY + (spacing + partHeight) * indexedRank, partHeight,
-                    partHeight, null);
+            graphics.drawImage(avatarImage, startX, startY + (spacing + partSize) * indexedRank, partSize, partSize, null);
 
             switch (rank) {
                 case 1 -> graphics.setColor(GOLD_COLOR);
@@ -179,7 +182,7 @@ public class LeaderboardCommand extends CoreCommand {
                 default -> graphics.setColor(Color.LIGHT_GRAY);
             }
 
-            graphics.drawString("#" + rank, 240, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
+            graphics.drawString("#" + rank, 240, startY + metrics.getHeight() + (spacing + partSize) * indexedRank);
 
             {
                 Member member = guild.getMemberById(id);
@@ -211,7 +214,7 @@ public class LeaderboardCommand extends CoreCommand {
                     (username.length() > 15 ? username.substring(0, Math.min(20, username.length())) + "..." : username)
                             + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
                             + StringUtils.numberFormat(level, 0).replace(".0", ""),
-                    420, startY + metrics.getHeight() + (spacing + partHeight) * indexedRank);
+                    420, startY + metrics.getHeight() + (spacing + partSize) * indexedRank);
         }
 
         graphics.dispose();
