@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import net.dv8tion.jda.api.Permission;
@@ -15,9 +14,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class ThreadManager extends ListenerAdapter {
@@ -25,7 +22,6 @@ public class ThreadManager extends ListenerAdapter {
 
     @Override
     public void onChannelCreate(ChannelCreateEvent event) {
-        Constants.LOGGER.debug("Channel created: " + event.toString());
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD || !event.isFromGuild())
             return;
 
@@ -37,25 +33,33 @@ public class ThreadManager extends ListenerAdapter {
         }
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
-        thread.addThreadMember(guild.getSelfMember()).queue(ignored -> {}, ignored -> {});
+        thread.addThreadMember(guild.getSelfMember()).queue(
+                RestAction.getDefaultSuccess(),
+                RestAction.getDefaultSuccess());
 
         if (!config.isShouldModeratorsJoinThreads())
             return;
 
-        final Set<Member> moderators = new HashSet<>();
+        long ownerId = guild.getOwnerIdLong();
+        thread.sendMessage("Beans").queue(message -> message.editMessage("<@" + ownerId + ">")
+                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
+                                RestAction.getDefaultSuccess(),
+                                RestAction.getDefaultSuccess()),
+                        RestAction.getDefaultSuccess()));
+
         guild.getRoles().stream().filter(role ->
                         role.hasPermission(Permission.MANAGE_THREADS) ||
                                 role.hasPermission(Permission.MESSAGE_MANAGE))
                 .map(guild::findMembersWithRoles)
-                .forEach(task -> task.onSuccess(moderators::addAll));
-        if(moderators.isEmpty())
-            return;
-
-        final var strBuilder = new StringBuilder();
-        moderators.stream().map(Member::getAsMention).forEach(strBuilder::append);
-
-        thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
-                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, ignored -> {}, ignored -> {}), ignored -> {}));
+                .forEach(task -> task.onSuccess(members -> {
+                    final var strBuilder = new StringBuilder();
+                    members.stream().map(Member::getAsMention).forEach(strBuilder::append);
+                    thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
+                            .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
+                                            RestAction.getDefaultSuccess(),
+                                            RestAction.getDefaultSuccess()),
+                                    RestAction.getDefaultSuccess()));
+                }));
     }
 
     @Override
@@ -79,6 +83,6 @@ public class ThreadManager extends ListenerAdapter {
         final String content = event.getMessage().getContentRaw();
         event.getMessage().createThreadChannel(
                         content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0, Channel.MAX_NAME_LENGTH) : content)
-                .queue(RestAction.getDefaultSuccess(), ignored -> {});
+                .queue(RestAction.getDefaultSuccess(), RestAction.getDefaultSuccess());
     }
 }
