@@ -96,16 +96,12 @@ public class StrawpollCommand extends CoreCommand {
         final String option1 = event.getOption("option1", null, OptionMapping::getAsString);
         final String option2 = event.getOption("option2", null, OptionMapping::getAsString);
         if (question == null) {
-            event.deferReply(true).setContent("You must supply a question!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "You must supply a question!", false, true);
             return;
         }
 
         if (option1 == null || option2 == null) {
-            event.deferReply(true)
-                    .setContent("You must supply at least two options!")
-                    .mentionRepliedUser(false)
-                    .queue();
+            reply(event, "You must supply at least two options!", false, true);
             return;
         }
 
@@ -125,19 +121,15 @@ public class StrawpollCommand extends CoreCommand {
             final String dateStr = mapping.getAsString();
             final String[] parts = dateStr.split("-");
             if (parts.length < 3) {
-                event.deferReply(true).setContent(
-                                "You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional")
-                        .mentionRepliedUser(false).queue();
+                reply(event, "You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional", false, true);
                 return null;
             }
 
             try {
                 return DateFormat.getInstance().parseObject(TimeUtils.parseDate(parts));
             } catch (final ParseException exception) {
-                event.deferReply()
-                        .setContent("There was an issue parsing this date. Please report the following to the bot owner:\n"
-                                + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception))
-                        .mentionRepliedUser(false).queue();
+                reply(event, "There was an issue parsing this date. Please report the following to the bot owner:\n"
+                        + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception), false);
                 return null;
             }
         });

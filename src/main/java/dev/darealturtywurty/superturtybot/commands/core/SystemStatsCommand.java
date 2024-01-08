@@ -51,7 +51,7 @@ public class SystemStatsCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.deferReply().setContent("Loading...").queue();
+        reply(event, "Loading...");
         var sysInfo = new SystemInfo();
 
         // get cpu

@@ -206,7 +206,7 @@ public class MinecraftUserSkinCommand extends CoreCommand {
             Constants.LOGGER.error("Error getting skin for " + username, exception);
         } catch (final IllegalArgumentException exception) {
             Constants.LOGGER.error("Error getting skin for " + username, exception);
-            event.deferReply(true).setContent("This player does not exist!").mentionRepliedUser(false).queue();
+            reply(event, "This player does not exist!", false, true);
         }
     }
 

@@ -141,8 +141,7 @@ public class HttpDogCommand extends AbstractImageCommand {
                 .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get HTTP Dog!", exception);
-            event.deferReply(true).setContent("❌ There was an issue getting this HTTP Dog!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ There was an issue getting this HTTP Dog!", false, true);
         }
     }
 }

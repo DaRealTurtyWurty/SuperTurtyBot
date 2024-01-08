@@ -191,7 +191,7 @@ public class HighlightCommand extends CoreCommand {
         embed.setColor(Color.GREEN);
         embed.setDescription("✅ Highlighter for text `" + StringUtils.truncateString(text, 15) + "` has been added!");
         embed.setFooter("ID: " + highlighter.asUUID(), event.getUser().getEffectiveAvatarUrl());
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
     
     private static void deleteHighlighter(SlashCommandInteractionEvent event, Bson filter, Highlighter highlighter) {
@@ -203,7 +203,7 @@ public class HighlightCommand extends CoreCommand {
         embed.setDescription(
             "❌ Highlighter for text `" + StringUtils.truncateString(highlighter.getText(), 15) + "` has been removed!");
         embed.setFooter("ID: " + highlighter.asUUID(), event.getUser().getEffectiveAvatarUrl());
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
     
     private static void highlightFailed(MessageReceivedEvent event, final String content, Throwable error) {

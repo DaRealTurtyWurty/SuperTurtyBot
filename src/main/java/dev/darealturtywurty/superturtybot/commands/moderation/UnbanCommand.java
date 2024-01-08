@@ -67,8 +67,7 @@ public class UnbanCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ You must be in a server to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
@@ -80,8 +79,7 @@ public class UnbanCommand extends CoreCommand {
                     }, error -> {
                     }));
                 event.getGuild().unban(user).queue(success -> {
-                    event.deferReply().setContent("Successfully unbanned " + user.getAsMention() + "!")
-                        .mentionRepliedUser(false).queue();
+                    reply(event, "Successfully unbanned " + user.getAsMention() + "!", false);
                     final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                     if (Boolean.TRUE.equals(logging.getKey())) {
                         BanCommand.log(logging.getValue(),
@@ -89,20 +87,18 @@ public class UnbanCommand extends CoreCommand {
                     }
                 }, error -> {
                     if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                        event.deferReply(true).setContent("I do not have permission to unban " + user.getAsMention())
-                            .mentionRepliedUser(false).queue();
+                        reply(event, "I do not have permission to unban " + user.getAsMention(), false, true);
                     } else {
                         final var embed = new EmbedBuilder();
                         embed.setTitle("Please report this to TurtyWurty!", "https://discord.gg/BAYB3A38wn");
                         embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                         embed.setTimestamp(Instant.now());
                         embed.setColor(Color.red);
-                        event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                        reply(event, embed, true, true);
                     }
                 });
             } else {
-                event.deferReply(true).setContent("You do not have permission to unban " + user.getAsMention())
-                    .mentionRepliedUser(false).queue();
+                reply(event, "You do not have permission to unban " + user.getAsMention(), false, true);
             }
         }
     }

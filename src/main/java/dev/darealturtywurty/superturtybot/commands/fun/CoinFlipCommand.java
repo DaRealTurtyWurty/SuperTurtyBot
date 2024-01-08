@@ -52,19 +52,14 @@ public class CoinFlipCommand extends CoreCommand {
         final OptionMapping choice = event.getOption("choice");
         if (choice == null) {
             if (ThreadLocalRandom.current().nextInt(1000) == 69) {
-                event.deferReply().setContent("It landed on it's side. It was neither heads or tails! 😔")
-                    .mentionRepliedUser(false).queue();
+                reply(event, "It landed on it's side. It was neither heads or tails! 😔", false);
             } else {
-                event.deferReply()
-                    .setContent(
-                        "It was: " + (ThreadLocalRandom.current().nextBoolean() ? "Heads 🗣" : "Tails 🐍") + "!")
-                    .mentionRepliedUser(false).queue();
+                reply(event, "It was: " + (ThreadLocalRandom.current().nextBoolean() ? "Heads 🗣" : "Tails 🐍") + "!", false);
             }
         } else {
             String choiceStr = choice.getAsString();
             if (!choiceStr.contains("head") && !choiceStr.contains("tail") && !choiceStr.contains("side")) {
-                event.deferReply(true).setContent("You must supply either `heads` or `tails`!")
-                    .mentionRepliedUser(false).queue();
+                reply(event, "You must supply either `heads` or `tails`!", false, true);
                 return;
             }
 
@@ -85,7 +80,7 @@ public class CoinFlipCommand extends CoreCommand {
 
             String reply = constructChoiceReply(botChoice, choiceStr);
 
-            event.deferReply().setContent("You chose `" + choiceStr + "`. " + reply).mentionRepliedUser(false).queue();
+            reply(event, "You chose `" + choiceStr + "`. " + reply, false);
         }
     }
 

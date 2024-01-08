@@ -72,7 +72,7 @@ public class PetPetGifCommand extends CoreCommand {
             return;
         }
 
-        event.deferReply().setContent("⏸️ Creating pet pet gif...").queue();
+        reply(event, "⏸️ Creating pet pet gif...");
 
         BufferedImage image;
         try {
@@ -103,7 +103,7 @@ public class PetPetGifCommand extends CoreCommand {
             return;
         }
 
-        event.deferReply().setContent("⏸️ Creating pet pet gif...").queue();
+        reply(event, "⏸️ Creating pet pet gif...");
 
         List<Message.Attachment> attachments = message.getAttachments();
         for (Message.Attachment attachment : attachments) {
@@ -148,7 +148,7 @@ public class PetPetGifCommand extends CoreCommand {
 
         String avatar = event.isFromGuild() ? event.getTargetMember().getEffectiveAvatarUrl() : event.getTarget().getEffectiveAvatarUrl();
 
-        event.deferReply().setContent("⏸️ Creating pet pet gif...").queue();
+        reply(event, "⏸️ Creating pet pet gif...");
 
         BufferedImage image;
         try {

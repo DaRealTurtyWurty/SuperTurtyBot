@@ -117,22 +117,19 @@ public class PlayCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            event.deferReply(true).setContent("❌ You must be in a server to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
         if (Objects.requireNonNull(event.getMember()).getVoiceState() == null || !event.getMember().getVoiceState()
                 .inAudioChannel()) {
-            event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
 
         final AudioChannel channel = event.getMember().getVoiceState().getChannel();
         if (channel == null) {
-            event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
 
@@ -143,13 +140,12 @@ public class PlayCommand extends CoreCommand {
         }
 
         if (event.getMember().getVoiceState().getChannel().getIdLong() != channel.getIdLong()) {
-            event.deferReply(true).setContent("❌ You must be in the same voice channel as me to play a song!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in the same voice channel as me to play a song!", false, true);
             return;
         }
 
         if(AudioManager.isGuessSongRunning(event.getGuild())) {
-            event.deferReply(true).setContent("❌ A guess the song game is currently running!").mentionRepliedUser(false).queue();
+            reply(event, "❌ A guess the song game is currently running!", false, true);
             return;
         }
 

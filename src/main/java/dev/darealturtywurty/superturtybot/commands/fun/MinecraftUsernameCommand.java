@@ -66,7 +66,7 @@ public class MinecraftUsernameCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         String rawUUID = event.getOption("uuid", null, OptionMapping::getAsString);
         if (rawUUID == null) {
-            event.deferReply(true).setContent("You must provide a UUID!").mentionRepliedUser(false).queue();
+            reply(event, "You must provide a UUID!", false, true);
             return;
         }
 
@@ -85,13 +85,11 @@ public class MinecraftUsernameCommand extends CoreCommand {
                             .build())
                     .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
-            event.deferReply(true)
-                    .setContent("There has been an issue trying to gather this information from our database! "
-                            + "This has been reported to the bot owner!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "There has been an issue trying to gather this information from our database! "
+                    + "This has been reported to the bot owner!", false, true);
             Constants.LOGGER.error("Unable to get UUID!", exception);
         } catch (final IllegalArgumentException exception) {
-            event.deferReply(true).setContent("This player does not exist!").mentionRepliedUser(false).queue();
+            reply(event, "This player does not exist!", false, true);
         }
     }
 }

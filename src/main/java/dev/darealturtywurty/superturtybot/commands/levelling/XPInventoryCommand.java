@@ -68,14 +68,12 @@ public class XPInventoryCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "You must be in a server to use this command!", false, true);
             return;
         }
 
         if (!LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
-            event.deferReply(true).setContent("Levelling has been disabled for this server!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "Levelling has been disabled for this server!", false, true);
             return;
         }
 
@@ -97,9 +95,7 @@ public class XPInventoryCommand extends CoreCommand {
                 .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Error creating inventory!", exception);
-            event.deferReply(true)
-                .setContent("There has been an error creating your inventory. This has been reported to the bot owner!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "There has been an error creating your inventory. This has been reported to the bot owner!", false, true);
         }
     }
 

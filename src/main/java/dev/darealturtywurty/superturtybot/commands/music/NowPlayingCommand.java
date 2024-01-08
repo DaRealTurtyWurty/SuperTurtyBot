@@ -45,28 +45,23 @@ public class NowPlayingCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ You must be in a server to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
         
         if (!event.getGuild().getAudioManager().isConnected()) {
-            event.deferReply(true)
-                .setContent("❌ I am not in a voice channel right now! Use `/joinvc` to put me in a voice channel.")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ I am not in a voice channel right now! Use `/joinvc` to put me in a voice channel.", false, true);
             return;
         }
         
         if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
-            event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel to use this command!", false, true);
             return;
         }
         
         final AudioTrack nowPlaying = AudioManager.getCurrentlyPlaying(event.getGuild());
         if (nowPlaying == null) {
-            event.deferReply(true).setContent("❌ I am not playing anything right now!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ I am not playing anything right now!", false, true);
             return;
         }
         
@@ -81,8 +76,8 @@ public class NowPlayingCommand extends CoreCommand {
             + makeProgresssBar(nowPlaying.getDuration(), nowPlaying.getPosition(), 12) + " (" + percentage + "%)");
         embed.setThumbnail("http://img.youtube.com/vi/" + nowPlaying.getIdentifier() + "/maxresdefault.jpg");
         embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
-        
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+
+        reply(event, embed, false);
     }
     
     private static String makeProgresssBar(long total, long current, int size) {

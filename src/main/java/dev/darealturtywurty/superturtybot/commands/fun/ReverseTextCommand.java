@@ -47,6 +47,6 @@ public class ReverseTextCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String text = event.getOption("text", "", OptionMapping::getAsString);
-        event.deferReply().setContent(new StringBuilder(text).reverse().toString()).mentionRepliedUser(false).queue();
+        reply(event, new StringBuilder(text).reverse().toString(), false);
     }
 }

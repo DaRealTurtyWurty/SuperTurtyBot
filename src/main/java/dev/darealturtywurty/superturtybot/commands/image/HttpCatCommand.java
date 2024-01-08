@@ -141,8 +141,7 @@ public class HttpCatCommand extends AbstractImageCommand {
                 .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get HTTP Cat!", exception);
-            event.deferReply(true).setContent("❌ There was an issue getting this HTTP Cat!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ There was an issue getting this HTTP Cat!", false, true);
         }
     }
 }

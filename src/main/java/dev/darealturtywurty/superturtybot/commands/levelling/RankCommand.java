@@ -120,8 +120,7 @@ public class RankCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "You must be in a server to use this command!", false, true);
             return;
         }
 
@@ -129,10 +128,7 @@ public class RankCommand extends CoreCommand {
             option -> event.getGuild().getMember(option.getAsUser()));
 
         if (member == null) {
-            event.deferReply(true)
-                .setContent(
-                    "You must supply a valid member of this server if you are going to provide the `member` option!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "You must supply a valid member of this server if you are going to provide the `member` option!", false, true);
             return;
         }
         
@@ -142,8 +138,7 @@ public class RankCommand extends CoreCommand {
         }
 
         if (!LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
-            event.deferReply(true).setContent("Levels have been disabled for this server!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "Levels have been disabled for this server!", false, true);
             return;
         }
 
