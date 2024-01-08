@@ -46,7 +46,7 @@ public class InspiroBotCommand extends AbstractImageCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final CompletableFuture<String> quote = getInspiroQuote();
-        event.deferReply().setContent("Loading InspiroBot quote...").mentionRepliedUser(false).queue();
+        reply(event, "Loading InspiroBot quote...", false);
         quote.thenAccept(result -> event.getHook().editOriginal(result).queue());
     }
     

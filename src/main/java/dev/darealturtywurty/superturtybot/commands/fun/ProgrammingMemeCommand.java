@@ -43,7 +43,7 @@ public class ProgrammingMemeCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.deferReply().setContent("Loading meme...").queue();
+        reply(event, "Loading meme...");
         final String[] subreddits = { "ProgrammerHumor", "programmingmemes" };
         
         final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);

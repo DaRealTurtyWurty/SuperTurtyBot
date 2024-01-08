@@ -40,37 +40,31 @@ public class LeaveCleanupCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ I must be in a server for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ I must be in a server for you to be able to use this command!", false, true);
             return;
         }
 
         net.dv8tion.jda.api.managers.AudioManager audioManager = event.getGuild().getAudioManager();
         if (!audioManager.isConnected() || audioManager.getConnectedChannel() == null) {
-            event.deferReply(true).setContent("❌ I must be in a voice channel for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ I must be in a voice channel for you to be able to use this command!", false, true);
             return;
         }
 
         GuildVoiceState memberVoiceState = event.getMember().getVoiceState();
         if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
-            event.deferReply(true)
-                    .setContent("❌ You must be in a voice channel for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel for you to be able to use this command!", false, true);
             return;
         }
 
         AudioChannel channel = audioManager.getConnectedChannel();
         if (memberVoiceState.getChannel() == null || memberVoiceState.getChannel().getIdLong() != channel.getIdLong()) {
-            event.deferReply(true)
-                    .setContent("❌ You must be in the same voice channel as me for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in the same voice channel as me for you to be able to use this command!", false, true);
             return;
         }
 
         List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
         if (queue.isEmpty()) {
-            event.deferReply(true).setContent("❌ There are no songs in the queue!").mentionRepliedUser(false).queue();
+            reply(event, "❌ There are no songs in the queue!", false, true);
             return;
         }
 
@@ -91,12 +85,9 @@ public class LeaveCleanupCommand extends CoreCommand {
 
         int removed = queueSize - AudioManager.getQueue(event.getGuild()).size();
         if (removed > 0) {
-            event.deferReply(false).setContent("✅ Removed " + removed + " songs from the queue!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "✅ Removed " + removed + " songs from the queue!", false, false);
         } else {
-            event.deferReply(true).setContent(
-                            "❌ There were no songs in the queue that were added by users that are no longer in the voice channel!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ There were no songs in the queue that were added by users that are no longer in the voice channel!", false, true);
         }
     }
 }

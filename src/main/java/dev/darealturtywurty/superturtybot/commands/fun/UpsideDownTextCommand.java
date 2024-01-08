@@ -57,6 +57,6 @@ public class UpsideDownTextCommand extends CoreCommand {
             newText.append(normalIndex != -1 ? UPSIDEDOWN_CHARS.charAt(normalIndex) : letter);
         }
 
-        event.deferReply().setContent(newText.reverse().toString()).mentionRepliedUser(false).queue();
+        reply(event, newText.reverse().toString(), false);
     }
 }

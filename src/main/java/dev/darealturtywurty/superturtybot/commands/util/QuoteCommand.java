@@ -134,7 +134,7 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 // Search the last 100 messages to see if that text was said by that user
-                event.deferReply().setContent("Checking to see if that quote was said...").queue();
+                reply(event, "Checking to see if that quote was said...");
                 GuildMessageChannel channel = event.getChannel().asGuildMessageChannel();
                 channel.getHistory().retrievePast(100).queue(messages -> {
                     AtomicReference<Message> found = new AtomicReference<>();

@@ -43,13 +43,12 @@ public class RolesCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "You must be in a server to use this command!", false, true);
             return;
         }
 
         final EmbedBuilder embed = createEmbed(event.getGuild());
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
 
     private EmbedBuilder createEmbed(Guild guild) {

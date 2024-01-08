@@ -88,8 +88,7 @@ public class LeaderboardCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            event.deferReply(true).setContent("You can only use this command inside of a server!")
-                 .mentionRepliedUser(false).queue();
+            reply(event, "You can only use this command inside of a server!", false, true);
             return;
         }
 

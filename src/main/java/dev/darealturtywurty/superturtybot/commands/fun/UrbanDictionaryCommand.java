@@ -86,17 +86,14 @@ public class UrbanDictionaryCommand extends CoreCommand {
             StandardCharsets.UTF_8);
         final Pair<Boolean, Either<String, EmbedBuilder>> returned = makeRequest(searchTerm);
         if (Boolean.FALSE.equals(returned.getLeft())) {
-            event.deferReply(true).setContent(returned.getRight().getLeft()).mentionRepliedUser(false)
-                .queue();
+            reply(event, returned.getRight().getLeft(), false, true);
             return;
         }
 
         if (returned.getRight().isLeft()) {
-            event.deferReply().setContent(returned.getRight().getLeft()).mentionRepliedUser(false)
-                .queue();
+            reply(event, returned.getRight().getLeft(), false);
         } else {
-            event.deferReply().addEmbeds(returned.getRight().getRight().build())
-                .mentionRepliedUser(false).queue();
+            reply(event, returned.getRight().getRight(), false);
         }
     }
 

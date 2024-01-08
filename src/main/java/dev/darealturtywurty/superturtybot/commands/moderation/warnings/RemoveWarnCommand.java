@@ -70,14 +70,12 @@ public class RemoveWarnCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("This command can only be used inside of a server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "This command can only be used inside of a server!", false, true);
             return;
         }
         
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            event.deferReply(true).setContent("❌ You require the `Ban Members` permission to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You require the `Ban Members` permission to use this command!", false, true);
             return;
         }
         
@@ -85,7 +83,7 @@ public class RemoveWarnCommand extends CoreCommand {
         final String uuid = event.getOption("uuid", "Unspecified", OptionMapping::getAsString);
         final Warning warn = WarnManager.removeWarn(user, event.getGuild(), uuid, event.getUser());
         if(warn == null) {
-            event.deferReply(true).setContent("❌ That user does not have a warn with that UUID!").mentionRepliedUser(false).queue();
+            reply(event, "❌ That user does not have a warn with that UUID!", false,true);
             return;
         }
 
@@ -105,8 +103,8 @@ public class RemoveWarnCommand extends CoreCommand {
                     + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))
                     + "\nWarn UUID: " + warn.getUuid() + "\nRemoved By: " + event.getMember().getAsMention()
                     + "\nRemoval Reason: " + reason);
-            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
-            
+            reply(event, embed,false);
+
             final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has removed warn `"

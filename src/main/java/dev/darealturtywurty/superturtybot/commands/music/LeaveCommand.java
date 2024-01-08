@@ -46,43 +46,34 @@ public class LeaveCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ I must be in a server for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ I must be in a server for you to be able to use this command!", false, true);
             return;
         }
 
         AudioManager audioManager = event.getGuild().getAudioManager();
         if (!audioManager.isConnected() || audioManager.getConnectedChannel() == null) {
-            event.deferReply(true).setContent("❌ I must be in a voice channel for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ I must be in a voice channel for you to be able to use this command!", false, true);
             return;
         }
 
         GuildVoiceState memberVoiceState = event.getMember().getVoiceState();
         if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
-            event.deferReply(true)
-                    .setContent("❌ You must be in a voice channel for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel for you to be able to use this command!", false, true);
             return;
         }
 
         AudioChannel channel = audioManager.getConnectedChannel();
         if (memberVoiceState.getChannel() == null || memberVoiceState.getChannel().getIdLong() != channel.getIdLong()) {
-            event.deferReply(true)
-                    .setContent("❌ You must be in the same voice channel as me for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in the same voice channel as me for you to be able to use this command!", false, true);
             return;
         }
 
         if (!event.getMember().hasPermission(channel, Permission.MANAGE_CHANNEL) && channel.getMembers().size() > 2) {
-            event.deferReply(true).setContent(
-                            "❌ You must be a moderator or the only person in the vc for you to be able to use this command!")
-                    .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be a moderator or the only person in the vc for you to be able to use this command!", false, true);
             return;
         }
 
         audioManager.closeAudioConnection();
-        event.deferReply().setContent("✅ I have left " + channel.getAsMention() + "!").mentionRepliedUser(false)
-                .queue();
+        reply(event, "✅ I have left " + channel.getAsMention() + "!", false);
     }
 }

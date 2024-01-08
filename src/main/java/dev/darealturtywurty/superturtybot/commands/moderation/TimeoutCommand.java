@@ -69,15 +69,13 @@ public class TimeoutCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only timeout someone who is in this server!", false, true);
             return;
         }
         
         final Member member = event.getOption("member", event.getMember(), OptionMapping::getAsMember);
         if (member == null) {
-            event.deferReply(true).setContent("❌ You can only timeout someone who is in this server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only timeout someone who is in this server!", false, true);
             return;
         }
         
@@ -92,8 +90,7 @@ public class TimeoutCommand extends CoreCommand {
                     }));
 
             event.getGuild().timeoutFor(member, duration, TimeUnit.MINUTES).queue(success -> {
-                event.deferReply().setContent("✅ Successfully timed-out " + member.getAsMention() + "!")
-                    .mentionRepliedUser(false).queue();
+                reply(event, "✅ Successfully timed-out " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
                     BanCommand.log(logging.getValue(),
@@ -101,20 +98,18 @@ public class TimeoutCommand extends CoreCommand {
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                    event.deferReply(true).setContent("I do not have permission to timeout " + member.getAsMention())
-                        .mentionRepliedUser(false).queue();
+                    reply(event, "I do not have permission to timeout " + member.getAsMention(), false, true);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
                     embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.RED);
-                    event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                    reply(event, embed, true, true);
                 }
             });
         } else {
-            event.deferReply(true).setContent("❌ You do not have permission to timeout " + member.getAsMention())
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You do not have permission to timeout " + member.getAsMention(), false, true);
         }
     }
 }

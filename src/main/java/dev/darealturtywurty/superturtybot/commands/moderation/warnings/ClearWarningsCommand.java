@@ -67,14 +67,12 @@ public class ClearWarningsCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("This command can only be used inside of a server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "This command can only be used inside of a server!", false, true);
             return;
         }
 
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            event.deferReply(true).setContent("You require the `Ban Members` permission to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "You require the `Ban Members` permission to use this command!", false, true);
             return;
         }
         
@@ -99,7 +97,7 @@ public class ClearWarningsCommand extends CoreCommand {
         embed.setTitle(user.getName() + "'s warns has been cleared!");
         embed.setDescription("Warns Removed: " + warns.size() + "\nRemoved By: " + event.getMember().getAsMention()
             + "\nWith Reason: " + reason);
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
 
         final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
         if (Boolean.TRUE.equals(logging.getKey())) {

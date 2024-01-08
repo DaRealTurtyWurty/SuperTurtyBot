@@ -82,13 +82,13 @@ public class CommandListCommand extends CoreCommand {
                     event.isFromGuild() ? event.getMember() : null,
                     NSFWCommand.isValidChannel(event.getChannel()));
             setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
-            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            reply(event, embed, false);
             return;
         }
 
         final String category = categoryOption.getAsString();
         if (CommandCategory.byName(category) == null) {
-            event.deferReply(true).setContent("You must provide a valid category!").mentionRepliedUser(false).queue();
+            reply(event, "You must provide a valid category!", false, true);
             return;
         }
 

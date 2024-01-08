@@ -47,28 +47,22 @@ public class QueueCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ You must be in a server to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 
         if (!event.getGuild().getAudioManager().isConnected()) {
-            event.deferReply(true)
-                .setContent("❌ I am not in a voice channel right now! Use `/joinvc` to put me in a voice channel.")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ I am not in a voice channel right now! Use `/joinvc` to put me in a voice channel.", false, true);
             return;
         }
 
         if (event.getMember().getVoiceState() == null || !event.getMember().getVoiceState().inAudioChannel()) {
-            event.deferReply(true).setContent("❌ You must be in a voice channel to use this command!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You must be in a voice channel to use this command!", false, true);
         }
 
         final List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
         if (queue == null || queue.isEmpty()) {
-            event.deferReply(true)
-                .setContent("There are currently no items in the queue. Use `/play` to add something to the queue!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "There are currently no items in the queue. Use `/play` to add something to the queue!", false, true);
             return;
         }
 

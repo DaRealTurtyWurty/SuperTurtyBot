@@ -63,27 +63,24 @@ public class UserInfoCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
-            event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "You must be in a server to use this command!", false, true);
             return;
         }
         
         final OptionMapping userOption = event.getOption("user");
         if (userOption != null && userOption.getAsMember() == null) {
-            event.deferReply(true).setContent("❌ You can only use this command on a member of this server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only use this command on a member of this server!", false, true);
             return;
         }
         
         final Member member = userOption == null ? event.getMember() : userOption.getAsMember();
         if (member == null) {
-            event.deferReply(true).setContent("❌ You can only use this command on a member of this server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only use this command on a member of this server!", false, true);
             return;
         }
 
         final EmbedBuilder embed = createEmbed(member);
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
     
     @Override
@@ -102,7 +99,7 @@ public class UserInfoCommand extends CoreCommand {
         }
         
         final EmbedBuilder embed = createEmbed(member);
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
     
     private static EmbedBuilder createEmbed(@NotNull Member member) {

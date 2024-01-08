@@ -36,7 +36,7 @@ public class BotInfoCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final var embed = createEmbed(event.getJDA(), event.isFromGuild() ? event.getGuild() : null);
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
 
     private EmbedBuilder createEmbed(JDA jda, @Nullable Guild guild) {

@@ -67,13 +67,13 @@ public class RemoveTimeoutCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ You can only remove a timeout from someone who is in this server!").mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only remove a timeout from someone who is in this server!", false, true);
             return;
         }
 
         final Member member = event.getOption("member", event.getMember(), OptionMapping::getAsMember);
         if (member == null) {
-            event.deferReply(true).setContent("❌ You can only remove a timeout from someone who is in this server!").mentionRepliedUser(false).queue();
+            reply(event, "❌ You can only remove a timeout from someone who is in this server!", false, true);
             return;
         }
 
@@ -83,25 +83,25 @@ public class RemoveTimeoutCommand extends CoreCommand {
                             success -> {}, error -> {}));
 
             event.getGuild().removeTimeout(member).queue(success -> {
-                event.deferReply().setContent("✅ Successfully removed timeout from " + member.getAsMention() + "!").mentionRepliedUser(false).queue();
+                reply(event, "✅ Successfully removed timeout from " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
                     BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has removed the time-out from " + member.getAsMention() + "!", true);
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                    event.deferReply(true).setContent("❌ I do not have permission to remove a timeout from " + member.getAsMention()).mentionRepliedUser(false).queue();
+                    reply(event, "❌ I do not have permission to remove a timeout from " + member.getAsMention(), false, true);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
                     embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.red);
-                    event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                    reply(event, embed, true);
                 }
             });
         } else {
-            event.deferReply(true).setContent("❌ You do not have permission to remove the timeout from " + member.getAsMention()).mentionRepliedUser(false).queue();
+            reply(event, "❌ You do not have permission to remove the timeout from " + member.getAsMention(), false, true);
         }
     }
 }

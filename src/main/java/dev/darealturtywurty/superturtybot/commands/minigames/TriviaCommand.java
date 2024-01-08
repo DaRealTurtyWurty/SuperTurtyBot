@@ -153,7 +153,7 @@ public class TriviaCommand extends CoreCommand {
             url += "&difficulty=" + difficulty;
         }
 
-        event.deferReply().setContent("Loading...").queue();
+        reply(event, "Loading...");
 
         CompletableFuture<Optional<TriviaQuestion>> future = getTrivia(url);
         future.thenAcceptAsync(optional -> {

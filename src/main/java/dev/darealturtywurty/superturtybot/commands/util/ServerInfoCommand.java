@@ -45,13 +45,12 @@ public class ServerInfoCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final Guild guild = event.getGuild();
         if (!event.isFromGuild() || guild == null) {
-            event.deferReply().setContent("This command can only be used inside a server!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "This command can only be used inside a server!", false);
             return;
         }
 
         final EmbedBuilder embed = createEmbed(guild);
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+        reply(event, embed, false);
     }
     
     private static EmbedBuilder createEmbed(Guild guild) {

@@ -43,7 +43,7 @@ public class MemeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.deferReply().setContent("Loading meme...").queue();
+        reply(event, "Loading meme...");
         final String[] subreddits = { "memes", "dankmemes", "blackpeopletwitter", "memeeconomy", "me_irl",
             "adviceanimals", "deepfriedmemes", "surrealmemes", "nukedmemes", "bigbangedmemes", "wackytictacs",
             "bonehurtingjuice" };

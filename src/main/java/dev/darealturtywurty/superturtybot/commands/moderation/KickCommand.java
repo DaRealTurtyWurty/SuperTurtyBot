@@ -68,17 +68,13 @@ public class KickCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply(true).setContent("❌ This command can only be used in a server!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
         
         final Member member = event.getOption("member", null, OptionMapping::getAsMember);
         if(member == null) {
-            event.deferReply(true)
-                    .setContent("❌ You must specify a member to kick!")
-                    .mentionRepliedUser(false)
-                    .queue();
+            reply(event, "❌ You must specify a member to kick!", false, true);
             return;
         }
 
@@ -97,8 +93,7 @@ public class KickCommand extends CoreCommand {
                     }));
             
             event.getGuild().kick(member).reason(finalReason).queue(success -> {
-                event.deferReply().setContent("Successfully kicked " + member.getAsMention() + "!")
-                    .mentionRepliedUser(false).queue();
+                reply(event, "Successfully kicked " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
                     BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has kicked "
@@ -106,20 +101,18 @@ public class KickCommand extends CoreCommand {
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                    event.deferReply(true).setContent("I do not have permission to kick " + member.getAsMention())
-                        .mentionRepliedUser(false).queue();
+                    reply(event, "I do not have permission to kick " + member.getAsMention(), false, true);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
                     embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.red);
-                    event.deferReply(true).addEmbeds(embed.build()).mentionRepliedUser(true).queue();
+                    reply(event, embed, true);
                 }
             });
         } else {
-            event.deferReply(true).setContent("You do not have permission to kick " + member.getAsMention())
-                .mentionRepliedUser(false).queue();
+            reply(event, "You do not have permission to kick " + member.getAsMention(), false, true);
         }
     }
 }

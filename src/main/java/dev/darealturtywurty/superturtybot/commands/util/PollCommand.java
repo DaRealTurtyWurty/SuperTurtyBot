@@ -76,8 +76,7 @@ public class PollCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String question = event.getOption("question", null, OptionMapping::getAsString);
         if (question == null) {
-            event.deferReply(true).setContent("❌ You must provide a question to ask!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ You must provide a question to ask!", false, true);
             return;
         }
 
@@ -85,8 +84,7 @@ public class PollCommand extends CoreCommand {
         options[0] = event.getOption("option1", null, OptionMapping::getAsString);
         options[1] = event.getOption("option2", null, OptionMapping::getAsString);
         if (options[0] == null || options[1] == null) {
-            event.deferReply(true).setContent("❌ You must provide at least 2 options!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ You must provide at least 2 options!", false, true);
             return;
         }
 
@@ -112,7 +110,7 @@ public class PollCommand extends CoreCommand {
         event.getChannel().sendMessageEmbeds(embedAndOptions.getKey().build()).queue(msg -> {
             embedAndOptions.getValue().forEach(emote -> msg.addReaction(Emoji.fromUnicode(emote)).queue());
 
-            event.deferReply(true).setContent("Successfully created poll!").mentionRepliedUser(false).queue();
+            reply(event, "Successfully created poll!", false, true);
         });
     }
 

@@ -86,6 +86,6 @@ public class InternetRulesCommand extends CoreCommand {
             return;
         }
 
-        event.deferReply().setContent(RULES.get(number - 1)).mentionRepliedUser(false).queue();
+        reply(event, RULES.get(number - 1), false);
     }
 }

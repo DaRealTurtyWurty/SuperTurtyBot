@@ -75,14 +75,12 @@ public class PurgeCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            event.deferReply().setContent("❌ I can only perform this action inside of servers!").mentionRepliedUser(false)
-                .queue();
+            reply(event, "❌ I can only perform this action inside of servers!", false);
             return;
         }
 
         if (!event.getMember().hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
-            event.deferReply(true).setContent("❌ You require the `Manage Messages` permission to perform this action!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "❌ You require the `Manage Messages` permission to perform this action!", false, true);
             return;
         }
 
@@ -104,8 +102,7 @@ public class PurgeCommand extends CoreCommand {
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         messages.thenAccept(msgs -> {
-            event.deferReply(true).setContent("I have found " + msgs.size() + " messages, I will now start purging!")
-                .mentionRepliedUser(false).queue();
+            reply(event, "I have found " + msgs.size() + " messages, I will now start purging!", false, true);
 
             CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
                 .thenAccept(action -> event.getMessageChannel().sendMessage(

@@ -80,7 +80,7 @@ public class HelpCommand extends CoreCommand {
         if (cmdOption == null) {
             final var embed = commandless();
             setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
-            event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            reply(event, embed, false);
             return;
         }
 
@@ -96,7 +96,7 @@ public class HelpCommand extends CoreCommand {
                 embed[0].setColor(Color.RED);
             });
 
-        event.deferReply().addEmbeds(embed[0].build()).mentionRepliedUser(false).queue();
+        reply(event, embed[0], false);
     }
 
     private EmbedBuilder commandless() {
