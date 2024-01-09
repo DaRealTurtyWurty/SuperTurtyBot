@@ -4,13 +4,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.Arrays;
 
 public class NowPlayingCommand extends CoreCommand {
     public NowPlayingCommand() {
@@ -73,34 +73,10 @@ public class NowPlayingCommand extends CoreCommand {
         final int percentage = Math.round((float) nowPlaying.getPosition() / nowPlaying.getDuration() * 100);
         embed.setDescription("[**" + TimeUtils.millisecondsFormatted(nowPlaying.getPosition()) + "**/**"
             + TimeUtils.millisecondsFormatted(nowPlaying.getDuration()) + "**] "
-            + makeProgresssBar(nowPlaying.getDuration(), nowPlaying.getPosition(), 12) + " (" + percentage + "%)");
+            + StringUtils.makeProgressBar(nowPlaying.getDuration(), nowPlaying.getPosition(), 12, "▬", "🔘") + " (" + percentage + "%)");
         embed.setThumbnail("http://img.youtube.com/vi/" + nowPlaying.getIdentifier() + "/maxresdefault.jpg");
         embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
 
         reply(event, embed, false);
-    }
-    
-    private static String makeProgresssBar(long total, long current, int size) {
-        final String line = "▬";
-        final String slider = "🔘";
-        final var result = new String[size];
-        if (current >= total) {
-            Arrays.fill(result, line);
-            result[size - 1] = slider;
-            return String.join("", result);
-        }
-        
-        final double percentage = (float) current / total;
-        final int progress = (int) Math.max(0, Math.min(Math.round(size * percentage), size - 1));
-        for (int index = 0; index < progress; index++) {
-            result[index] = line;
-        }
-        
-        result[progress] = slider;
-        for (int index = progress + 1; index < size; index++) {
-            result[index] = line;
-        }
-        
-        return String.join("", result);
     }
 }
