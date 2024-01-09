@@ -2,6 +2,8 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -10,6 +12,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,17 +65,13 @@ public class LoveCommand extends CoreCommand {
             return;
         }
 
-        float love = calculateLove(event.getUser().getIdLong(), otherUser.getIdLong());
-        String loveBar = makeProgressBar(100, love, 10, "❤", "♡");
-        reply(event, "💖 **" + event.getUser().getAsMention() + "** and **" + otherUser.getAsMention() + "** are " + String.format("%.2f", love) + "% compatible!\n" + loveBar);
+        reply(event, createLoveEmbed(event.getUser(), otherUser));
     }
 
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
         User otherUser = event.getTarget();
-        float love = calculateLove(event.getUser().getIdLong(), otherUser.getIdLong());
-        String loveBar = makeProgressBar(100, love, 10, "❤", "♡");
-        reply(event, "💖 **" + event.getUser().getAsMention() + "** and **" + otherUser.getAsMention() + "** are " + String.format("%.2f", love) + "% compatible!\n" + loveBar);
+        reply(event, createLoveEmbed(event.getUser(), otherUser));
     }
 
     public static float calculateLove(long user1, long user2) {
@@ -101,5 +101,37 @@ public class LoveCommand extends CoreCommand {
 
         return filled.repeat(Math.max(0, filledLength)) +
                 empty.repeat(Math.max(0, emptyLength));
+    }
+
+    public static EmbedBuilder createLoveEmbed(User user1, User user2) {
+        float love = calculateLove(user1.getIdLong(), user2.getIdLong());
+        String loveBar = makeProgressBar(100, love, 10, "💝", "🖤");
+        return new EmbedBuilder()
+                .setTitle("Love Calculator")
+                .setDescription("**" + user1.getAsMention() + "** and **" + user2.getAsMention() + "** are " + String.format("%.2f", love) + "% compatible!\n" + loveBar)
+                .setTimestamp(Instant.now())
+                .setColor(calculateColorOfPercentage(love))
+                .setFooter("Requested by " + user1.getName(), user1.getEffectiveAvatarUrl());
+    }
+
+    public static Color calculateColorOfPercentage(double percentage) {
+        // Ensure the percentage is within the valid range [0, 100]
+        percentage = Math.max(0, Math.min(100, percentage));
+
+        // Calculate the RGB values based on the percentage
+        int red;
+        int green;
+        int blue = 0; // Set blue to 0 for simplicity
+
+        if (percentage < 50) {
+            red = 255;
+            green = (int) (255 * (percentage / 50));
+        } else {
+            red = (int) (255 * ((100 - percentage) / 50));
+            green = 255;
+        }
+
+        // Create and return the Color object
+        return new Color(red, green, blue);
     }
 }
