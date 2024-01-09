@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -177,5 +178,49 @@ public final class StringUtils {
             case UNKNOWN -> "Unknown";
             default -> "Undefined";
         };
+    }
+
+    public static String makeProgressBar(long total, long current, int size, String line, String slider) {
+        final var result = new String[size];
+        if (current >= total) {
+            Arrays.fill(result, line);
+            result[size - 1] = slider;
+            return String.join("", result);
+        }
+
+        final double percentage = (float) current / total;
+        final int progress = (int) Math.max(0, Math.min(Math.round(size * percentage), size - 1));
+        for (int index = 0; index < progress; index++) {
+            result[index] = line;
+        }
+
+        result[progress] = slider;
+        for (int index = progress + 1; index < size; index++) {
+            result[index] = line;
+        }
+
+        return String.join("", result);
+    }
+
+    public static String makeProgressBar(double total, double current, int size, String line, String slider) {
+        final var result = new String[size];
+        if (current >= total) {
+            Arrays.fill(result, line);
+            result[size - 1] = slider;
+            return String.join("", result);
+        }
+
+        final double percentage = current / total;
+        final int progress = (int) Math.max(0, Math.min(Math.round(size * percentage), size - 1));
+        for (int index = 0; index < progress; index++) {
+            result[index] = line;
+        }
+
+        result[progress] = slider;
+        for (int index = progress + 1; index < size; index++) {
+            result[index] = line;
+        }
+
+        return String.join("", result);
     }
 }
