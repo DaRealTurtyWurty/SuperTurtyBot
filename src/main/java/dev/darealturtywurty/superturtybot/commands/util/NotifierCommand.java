@@ -171,7 +171,7 @@ public class NotifierCommand extends CoreCommand {
                 final boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
                 if (unsubscribe) {
                     if (Database.getDatabase().twitchNotifier.deleteOne(findFilter).getDeletedCount() != 0) {
-                        TwitchListener.unsubscribe(event.getGuild(), twitchChannel);
+                        TwitchListener.unsubscribe(twitchChannel);
                         reply(event, "✅ I have successfully unsubscribed the notifier for this Twitch channel!");
                     } else {
                         reply(event, "❌ You do not have any notifiers for this Twitch channel!", false, true);
@@ -203,7 +203,7 @@ public class NotifierCommand extends CoreCommand {
 
                 Database.getDatabase().twitchNotifier.insertOne(
                     new TwitchNotifier(event.getGuild().getIdLong(), twitchChannel, discordChannel, mention));
-                if (TwitchListener.subscribeChannel(event.getGuild(), twitchChannel)) {
+                if (TwitchListener.subscribeChannel(twitchChannel)) {
                     reply(event,
                         "✅ I have successfully setup a notifier for this Twitch channel in <#" + discordChannel + ">!");
                 } else {
