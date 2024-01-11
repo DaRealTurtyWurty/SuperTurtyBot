@@ -46,7 +46,7 @@ public final class StringUtils {
     public static String numberFormat(final double n, final int iteration) {
         if (n < 1000)
             return String.valueOf(n);
-        final double d = n / 100D / 10D;
+        final double d = (long) n / 100 / 10D;
         final boolean isRound = d * 10 % 10 == 0;// true if the decimal part is equal to 0 (then it's trimmed
         // anyway)
         return d < 1000 ? // this determines the class, i.e. 'k', 'm' etc
