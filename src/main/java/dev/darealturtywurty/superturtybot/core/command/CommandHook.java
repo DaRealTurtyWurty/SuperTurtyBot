@@ -307,8 +307,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new UptimeCommand());
         //cmds.add(new SystemStatsCommand());
         //cmds.add(new TestCommand());
-        cmds.add(new SubmitCommand());
-        cmds.add(new SubmissionCommand());
+        //cmds.add(new SubmitCommand());
+        //cmds.add(new SubmissionCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());
