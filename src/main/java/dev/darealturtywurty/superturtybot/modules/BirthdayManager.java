@@ -104,7 +104,7 @@ public final class BirthdayManager {
                     }
                 }
             }
-        }, 20, 20));
+        }, 0, 0));
     }
 
     public static Birthday getBirthday(long userId) {
