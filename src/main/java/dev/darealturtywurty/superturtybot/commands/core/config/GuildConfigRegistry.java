@@ -347,4 +347,15 @@ public class GuildConfigRegistry {
                     .serializer((config, value) -> config.setDefaultEconomyBalance(Integer.parseInt(value)))
                     .valueFromConfig(GuildConfig::getDefaultEconomyBalance)
                     .validator((event, value) -> Integer.parseInt(value) > 0).build());
+
+    private static final GuildConfigOption ANNOUNCE_BIRTHDAYS = GUILD_CONFIG_OPTIONS.register("announce_birthdays",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setAnnounceBirthdays(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildConfig::isAnnounceBirthdays).build());
+
+    private static final GuildConfigOption BIRTHDAY_CHANNEL = GUILD_CONFIG_OPTIONS.register("birthday_channel",
+            new GuildConfigOption.Builder().dataType(DataType.LONG)
+                    .serializer((config, value) -> config.setBirthdayChannel(Long.parseLong(value)))
+                    .valueFromConfig(GuildConfig::getBirthdayChannel)
+                    .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 }

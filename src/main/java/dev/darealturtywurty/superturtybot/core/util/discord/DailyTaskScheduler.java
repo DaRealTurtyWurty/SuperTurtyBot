@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.util.discord;
 
+import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -9,6 +11,11 @@ import java.util.concurrent.TimeUnit;
 public class DailyTaskScheduler {
     private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor();
     private static final List<DailyTask> TASKS = new ArrayList<>();
+
+    static {
+        DailyTaskScheduler.start();
+        ShutdownHooks.register(SCHEDULER::shutdown);
+    }
 
     public static void addTask(DailyTask task) {
         TASKS.add(task);
@@ -22,8 +29,8 @@ public class DailyTaskScheduler {
         SCHEDULER.scheduleAtFixedRate(
                 DailyTaskScheduler::runTasks,
                 getTimeUntilNextMinute(),
-                1,
-                TimeUnit.MINUTES);
+                60000,
+                TimeUnit.MILLISECONDS);
     }
 
     private static void runTasks() {

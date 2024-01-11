@@ -136,4 +136,8 @@ public class TimeUtils {
         dayOfYear += (short) day;
         return dayOfYear;
     }
+
+    public static int calculateAge(int day, int month, int year) {
+        return Period.between(LocalDate.of(year, month, day), LocalDate.now()).getYears();
+    }
 }

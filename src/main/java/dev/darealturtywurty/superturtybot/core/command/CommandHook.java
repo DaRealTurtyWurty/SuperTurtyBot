@@ -25,6 +25,7 @@ import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestComman
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
+import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -157,6 +158,10 @@ public class CommandHook extends ListenerAdapter {
 //        if (!TwitterListener.isInitialized()) {
 //            TwitterListener.initialize(jda);
 //        }
+
+        if(!BirthdayManager.isRunning()) {
+            BirthdayManager.init(jda);
+        }
 
         Guild devGuild = jda.getGuildById(1096109606452867243L);
         if (devGuild != null) {
@@ -338,7 +343,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new WikipediaCommand());
         cmds.add(new SteamGameDetailsCommand());
         //cmds.add(new ConvertCommand());
-        //cmds.add(new BirthdayCommand());
+        cmds.add(new BirthdayCommand());
         cmds.add(new LatexCommand());
         cmds.add(new AddRoleToThreadCommand());
 

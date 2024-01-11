@@ -74,7 +74,7 @@ public class TurtyBot {
                 GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
 
         // Cache all members. This makes it easier to do any kind of retrieval.
-        builder.setMemberCachePolicy(MemberCachePolicy.ALL);
+        builder.setMemberCachePolicy(MemberCachePolicy.ALL.and(MemberCachePolicy.lru(1000)));
 
         // Filter all member chunking.
         builder.setChunkingFilter(ChunkingFilter.ALL);
