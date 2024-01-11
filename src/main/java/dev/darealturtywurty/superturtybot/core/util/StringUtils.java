@@ -223,4 +223,16 @@ public final class StringUtils {
 
         return String.join("", result);
     }
+
+    public static String getOrdinalSuffix(int age) {
+        if (age >= 10 && age <= 20)
+            return "th";
+
+        return switch (age % 10) {
+            case 1 -> "st";
+            case 2 ->  "nd";
+            case 3 -> "rd";
+            default -> "th";
+        };
+    }
 }

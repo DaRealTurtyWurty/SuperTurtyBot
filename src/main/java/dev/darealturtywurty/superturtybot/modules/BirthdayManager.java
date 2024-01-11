@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.TimeUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
@@ -29,7 +30,7 @@ public final class BirthdayManager {
         return RUNNING.get();
     }
 
-    public static void init(JDA jda) {
+    public static void start(JDA jda) {
         if (RUNNING.getAndSet(true))
             return;
 
@@ -65,25 +66,22 @@ public final class BirthdayManager {
                     continue;
 
                 guild.retrieveMembersByIds(guildBirthdayUsers).onSuccess((List<Member> members) -> {
-                    if (members.isEmpty())
-                        return;
-
                     for (Member member : members) {
-                        if (member == null)
-                            continue;
-
                         Birthday birthday = getBirthday(member.getIdLong());
                         if (birthday == null)
                             continue;
 
+                        int age = TimeUtils.calculateAge(
+                                birthday.getDay(),
+                                birthday.getMonth(),
+                                birthday.getYear()
+                        );
                         birthdayChannel.sendMessageFormat(
-                                "🎉 %s is celebrating their %d birthday today! Happy birthday!",
+                                "🎉 %s is celebrating their %d%s birthday today! Happy birthday!",
                                 "<@" + birthday.getUser() + ">",
-                                TimeUtils.calculateAge(
-                                        birthday.getDay(),
-                                        birthday.getMonth(),
-                                        birthday.getYear()
-                                )).queue();
+                                age,
+                                StringUtils.getOrdinalSuffix(age)
+                        ).queue();
                     }
                 });
             }

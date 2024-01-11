@@ -29,8 +29,6 @@ import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
-import dev.darealturtywurty.superturtybot.modules.submission.SubmissionCommand;
-import dev.darealturtywurty.superturtybot.modules.submission.SubmitCommand;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -159,7 +157,7 @@ public class CommandHook extends ListenerAdapter {
 //        }
 
         if(!BirthdayManager.isRunning()) {
-            BirthdayManager.init(jda);
+            BirthdayManager.start(jda);
         }
 
         Guild devGuild = jda.getGuildById(1096109606452867243L);
