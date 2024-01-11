@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.levelling;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.economy.EconomyCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -35,7 +35,7 @@ public class SetXPCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runNormalMessage(MessageReceivedEvent event, Guild guild, GuildConfig config) {
+    protected void runNormalMessage(MessageReceivedEvent event, Guild guild, GuildData config) {
         if (event.getAuthor().getIdLong() != guild.getOwnerIdLong()) {
             reply(event, "❌ You must be the owner of the server to use this command!", false);
             return;

@@ -6,7 +6,7 @@ import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.ChatReviver;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -59,7 +59,7 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private void drawingChatRevival(Guild guild, ChatReviver chatReviver) {
-        GuildConfig config = getGuildConfig(guild);
+        GuildData config = getGuildConfig(guild);
         if (!config.isChatRevivalEnabled())
             return;
 
@@ -106,11 +106,11 @@ public class ChatRevivalManager extends ListenerAdapter {
         }
     }
 
-    private static GuildConfig getGuildConfig(Guild guild) {
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+    private static GuildData getGuildConfig(Guild guild) {
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         return config;

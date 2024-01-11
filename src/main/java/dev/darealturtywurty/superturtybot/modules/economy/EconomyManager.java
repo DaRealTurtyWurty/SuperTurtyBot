@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -47,10 +47,10 @@ public class EconomyManager {
     }
 
     public static Economy createAccount(Guild guild, User user) {
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         final var economy = new Economy(guild.getIdLong(), user.getIdLong());
@@ -127,10 +127,10 @@ public class EconomyManager {
                         if (guild == null)
                             return;
 
-                        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
                         if (config == null) {
-                            config = new GuildConfig(guild.getIdLong());
-                            Database.getDatabase().guildConfig.insertOne(config);
+                            config = new GuildData(guild.getIdLong());
+                            Database.getDatabase().guildData.insertOne(config);
                         }
 
                         removeMoney(account, config.getDefaultEconomyBalance(), true);

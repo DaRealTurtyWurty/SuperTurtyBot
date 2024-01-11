@@ -7,17 +7,18 @@ import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Birthday;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BirthdayManager {
-    private static final Map<Short, List<Long>> DAY_TO_USERS_MAP = new HashMap<>();
     private static final AtomicBoolean RUNNING = new AtomicBoolean(false);
 
     private BirthdayManager() {
@@ -32,67 +33,49 @@ public final class BirthdayManager {
         if (RUNNING.getAndSet(true))
             return;
 
-        // populate the map
-        List<Birthday> startupBirthdays = Database.getDatabase().birthdays.find().into(new ArrayList<>());
-        for (Birthday birthday : startupBirthdays) {
-            short dayOfYear = (short) LocalDate.of(
-                    birthday.getYear(),
-                    birthday.getMonth(),
-                    birthday.getDay()).getDayOfYear();
-            DAY_TO_USERS_MAP.computeIfAbsent(dayOfYear, k -> new ArrayList<>()).add(birthday.getUser());
-        }
-
         // add the task
         DailyTaskScheduler.addTask(new DailyTask(() -> {
-            short dayOfYear = (short) LocalDate.now().getDayOfYear();
-            if (!DAY_TO_USERS_MAP.containsKey(dayOfYear))
+            var now = LocalDate.now();
+            int day = now.getDayOfMonth();
+            int month = now.getMonthValue();
+
+            List<Birthday> birthdays = Database.getDatabase().birthdays.find()
+                    .filter(Filters.and(Filters.eq("day", day), Filters.eq("month", month)))
+                    .into(new ArrayList<>());
+            if (birthdays.isEmpty())
                 return;
 
-            List<Long> users = DAY_TO_USERS_MAP.get(dayOfYear);
-            if (users.isEmpty())
-                return;
-
-            List<Birthday> birthdays = users.stream()
-                    .map(BirthdayManager::getBirthday)
-                    .filter(Objects::nonNull)
-                    .toList();
-            if (birthdays.isEmpty()) {
-                DAY_TO_USERS_MAP.remove(dayOfYear);
-                return;
-            }
-
-            List<GuildConfig> enabledGuilds = Database.getDatabase().guildConfig.find(
+            List<GuildData> enabledGuilds = Database.getDatabase().guildData.find(
                     Filters.and(
                             Filters.eq("announceBirthdays", true),
                             Filters.ne("birthdayChannel", 0L)
                     )).into(new ArrayList<>());
-            for (GuildConfig guildConfig : enabledGuilds) {
-                // check if the guild has the birthday channel set
-                long birthdayChannelId = guildConfig.getBirthdayChannel();
-                if (birthdayChannelId == 0L)
+            for (GuildData guildData : enabledGuilds) {
+                List<Long> guildBirthdayUsers = guildData.getEnabledBirthdayUsers();
+                long birthdayChannelId = guildData.getBirthdayChannel();
+                if (guildBirthdayUsers.isEmpty() || birthdayChannelId == 0L)
                     continue;
 
-                TextChannel birthdayChannel = jda.getTextChannelById(birthdayChannelId);
-                if (birthdayChannel == null) {
-                    guildConfig.setBirthdayChannel(0L);
-                    Database.getDatabase().guildConfig.updateOne(
-                            Filters.eq("guild", guildConfig.getGuild()),
-                            Updates.set("birthdayChannel", 0L));
+                Guild guild = jda.getGuildById(guildData.getGuild());
+                if (guild == null)
                     continue;
-                }
 
-                // for each user, see if they are in the guild
-                for (long userId : users) {
-                    if (birthdayChannel.getGuild().isMember(UserSnowflake.fromId(userId))) {
-                        Optional<Birthday> optBirthday = birthdays.stream()
-                                .filter(b -> b.getUser() == userId)
-                                .findFirst();
-                        if (optBirthday.isEmpty()) {
-                            removeBirthday(userId);
+                TextChannel birthdayChannel = guild.getTextChannelById(birthdayChannelId);
+                if (birthdayChannel == null)
+                    continue;
+
+                guild.retrieveMembersByIds(guildBirthdayUsers).onSuccess((List<Member> members) -> {
+                    if (members.isEmpty())
+                        return;
+
+                    for (Member member : members) {
+                        if (member == null)
                             continue;
-                        }
 
-                        Birthday birthday = optBirthday.get();
+                        Birthday birthday = getBirthday(member.getIdLong());
+                        if (birthday == null)
+                            continue;
+
                         birthdayChannel.sendMessageFormat(
                                 "🎉 %s is celebrating their %d birthday today! Happy birthday!",
                                 "<@" + birthday.getUser() + ">",
@@ -102,7 +85,7 @@ public final class BirthdayManager {
                                         birthday.getYear()
                                 )).queue();
                     }
-                }
+                });
             }
         }, 0, 0));
     }
@@ -111,20 +94,27 @@ public final class BirthdayManager {
         return Database.getDatabase().birthdays.find(Filters.eq("user", userId)).first();
     }
 
-    public static void addBirthday(long userId, short dayOfYear) {
-        DAY_TO_USERS_MAP.computeIfAbsent(dayOfYear, k -> new ArrayList<>()).add(userId);
+    public static Birthday addBirthday(long userId, int day, int month, int year) {
+        var birthday = new Birthday(userId, day, month, year);
+        Database.getDatabase().birthdays.insertOne(birthday);
+        return birthday;
     }
 
-    public static void removeBirthday(long userId) {
-        Map<Short, List<Long>> map = new HashMap<>(DAY_TO_USERS_MAP);
-        for (Map.Entry<Short, List<Long>> entry : map.entrySet()) {
-            List<Long> users = entry.getValue();
-            if (users.contains(userId)) {
-                users.remove(userId);
-                if (users.isEmpty()) {
-                    DAY_TO_USERS_MAP.remove(entry.getKey());
-                }
-            }
+    public static void setBirthdayAnnouncementsEnabled(long guildId, long userId, boolean enabled) {
+        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guildId)).first();
+        if (guildData == null)
+            return;
+
+        if (enabled) {
+            if (guildData.getEnabledBirthdayUsers().contains(userId))
+                return;
+
+            guildData.getEnabledBirthdayUsers().add(userId);
+        } else {
+            guildData.getEnabledBirthdayUsers().remove(userId);
         }
+
+        Database.getDatabase().guildData.updateOne(Filters.eq("guild", guildId),
+                Updates.set("enabledBirthdayUsers", guildData.getEnabledBirthdayUsers()));
     }
 }

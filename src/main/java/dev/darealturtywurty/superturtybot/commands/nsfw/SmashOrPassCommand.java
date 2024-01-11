@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -57,14 +57,14 @@ public class SmashOrPassCommand extends CoreCommand {
 
         Guild guild = event.getGuild();
         if (guild != null) {
-            GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
+            GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
                     .first();
             if (config == null) {
                 event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
                 return;
             }
 
-            List<Long> enabledChannels = GuildConfig.getChannels(config.getNsfwChannels());
+            List<Long> enabledChannels = GuildData.getChannels(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
                 event.deferReply(true).setContent("❌ This server has no NSFW channels configured!").queue();
                 return;

@@ -1,7 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -40,7 +40,7 @@ public class DonateCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         if (event.getOption("user") == null || event.getOption("amount") == null) {
             event.getHook().editOriginal("❌ You must provide a user and an amount!").queue();
             return;

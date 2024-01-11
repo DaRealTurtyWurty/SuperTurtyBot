@@ -5,7 +5,7 @@ import com.mongodb.client.result.UpdateResult;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -105,11 +105,11 @@ public class GuildConfigCommand extends CoreCommand {
         final TextChannel defaultChannel = guild.getDefaultChannel().asTextChannel();
         
         final Bson filter = Filters.eq("guild", guild.getIdLong());
-        final AtomicReference<GuildConfig> found = new AtomicReference<>(
-            Database.getDatabase().guildConfig.find(filter).first());
+        final AtomicReference<GuildData> found = new AtomicReference<>(
+            Database.getDatabase().guildData.find(filter).first());
         if (found.get() == null) {
-            found.set(new GuildConfig(guild.getIdLong()));
-            Database.getDatabase().guildConfig.insertOne(found.get());
+            found.set(new GuildData(guild.getIdLong()));
+            Database.getDatabase().guildData.insertOne(found.get());
         }
         
         final var embed = new EmbedBuilder();
@@ -140,7 +140,7 @@ public class GuildConfigCommand extends CoreCommand {
             final String key = event.getOption("key", null, OptionMapping::getAsString);
             
             final Bson filter = getFilter(event.getGuild());
-            final GuildConfig config = get(filter, event.getGuild());
+            final GuildData config = get(filter, event.getGuild());
             
             if (key == null) {
                 // Get all data
@@ -183,7 +183,7 @@ public class GuildConfigCommand extends CoreCommand {
             final String value = event.getOption("value", "", OptionMapping::getAsString);
             
             final Bson filter = getFilter(event.getGuild());
-            final GuildConfig config = get(filter, event.getGuild());
+            final GuildData config = get(filter, event.getGuild());
             
             final Optional<Entry<String, GuildConfigOption>> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                     .entrySet()
@@ -211,7 +211,7 @@ public class GuildConfigCommand extends CoreCommand {
             }
             
             option.serialize(config, value);
-            UpdateResult result = Database.getDatabase().guildConfig.replaceOne(filter, config);
+            UpdateResult result = Database.getDatabase().guildData.replaceOne(filter, config);
             if (result.getModifiedCount() == 0) {
                 reply(event, "❌ Failed to update the server config!", false, true);
                 return;
@@ -221,11 +221,11 @@ public class GuildConfigCommand extends CoreCommand {
         }
     }
     
-    public static GuildConfig get(Bson filter, Guild guild) {
-        GuildConfig found = Database.getDatabase().guildConfig.find(filter).first();
+    public static GuildData get(Bson filter, Guild guild) {
+        GuildData found = Database.getDatabase().guildData.find(filter).first();
         if (found == null) {
-            found = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(found);
+            found = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(found);
         }
         
         return found;

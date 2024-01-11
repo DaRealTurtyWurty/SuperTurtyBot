@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -56,7 +56,7 @@ public class CrimeCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         final Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getNextCrime() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You must wait %s before committing another crime!"
@@ -79,13 +79,13 @@ public class CrimeCommand extends EconomyCommand {
         }
     }
 
-    private static String getSuccess(GuildConfig config, User user, int amount) {
+    private static String getSuccess(GuildData config, User user, int amount) {
         return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", Integer.toString(amount));
     }
 
-    private static String getFail(GuildConfig config, User user, int amount) {
+    private static String getFail(GuildData config, User user, int amount) {
         return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", Integer.toString(amount));

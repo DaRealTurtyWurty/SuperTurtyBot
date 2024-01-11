@@ -4,7 +4,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.PublicShop;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
@@ -59,7 +59,7 @@ public class ShopCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You must provide a subcommand!").queue();

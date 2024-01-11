@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import lombok.Data;
 import net.dv8tion.jda.api.JDA;
@@ -51,7 +51,7 @@ public class CrashCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         int amount = event.getOption("amount", 1, OptionMapping::getAsInt);
         if (amount < 1) {
             event.getHook().editOriginal("❌ You must bet at least %s1!".formatted(config.getEconomyCurrency())).queue();
@@ -119,7 +119,7 @@ public class CrashCommand extends EconomyCommand {
             this.amount = amount;
         }
 
-        public void start(final JDA jda, final GuildConfig config, final Economy account) {
+        public void start(final JDA jda, final GuildData config, final Economy account) {
             if(this.future != null) {
                 this.future.cancel(true);
             }
@@ -132,7 +132,7 @@ public class CrashCommand extends EconomyCommand {
                     TimeUnit.SECONDS);
         }
 
-        private void tick(final JDA jda, final GuildConfig config, final Economy account, final int crashChance) {
+        private void tick(final JDA jda, final GuildData config, final Economy account, final int crashChance) {
             Guild guild = jda.getGuildById(this.guild);
             if (guild == null)
                 return;
@@ -160,7 +160,7 @@ public class CrashCommand extends EconomyCommand {
             }
         }
 
-        public void cashout(JDA jda, GuildConfig config, Economy account) {
+        public void cashout(JDA jda, GuildData config, Economy account) {
             Guild guild = jda.getGuildById(this.guild);
             if (guild == null)
                 return;

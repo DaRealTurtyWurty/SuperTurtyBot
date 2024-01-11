@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -122,7 +122,7 @@ public final class SuggestionManager extends ListenerAdapter {
     
     public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
 
         TextChannel channel = guild.getTextChannelById(config.getSuggestions());
         if (channel == null) {

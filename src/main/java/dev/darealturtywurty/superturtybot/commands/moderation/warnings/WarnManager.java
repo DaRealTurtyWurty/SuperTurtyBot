@@ -5,7 +5,7 @@ import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -36,10 +36,10 @@ public class WarnManager {
 
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
                                            @NotNull String reason, long time) {
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         float xpPercentage = config.getWarningXpPercentage();

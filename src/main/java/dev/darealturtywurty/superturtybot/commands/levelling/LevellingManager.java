@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -45,7 +45,7 @@ public final class LevellingManager extends ListenerAdapter {
             return false;
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
         return config.isLevellingEnabled();
     }
 
@@ -56,9 +56,9 @@ public final class LevellingManager extends ListenerAdapter {
         final Guild guild = event.getGuild();
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
 
-        final List<Long> disabledChannels = GuildConfig.getChannels(config.getDisabledLevellingChannels());
+        final List<Long> disabledChannels = GuildData.getChannels(config.getDisabledLevellingChannels());
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong())) return;
         if(event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong())) return;
 
@@ -121,7 +121,7 @@ public final class LevellingManager extends ListenerAdapter {
 
             if (levelUpMessage != null) {
                 final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-                final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+                final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
 
                 sendLevelUpMessage(config, guild.getMember(user), newLevel, levelUpMessage.sendTo().orElse(null));
             }
@@ -163,7 +163,7 @@ public final class LevellingManager extends ListenerAdapter {
         updateLevelRoles(guild, member, newLevel);
     }
 
-    private boolean cooldown(Guild guild, Member member, GuildConfig config) {
+    private boolean cooldown(Guild guild, Member member, GuildData config) {
         this.cooldownMap.computeIfAbsent(guild.getIdLong(), id -> new ConcurrentHashMap<>());
         final Map<Long, Long> cooldowns = this.cooldownMap.get(guild.getIdLong());
 
@@ -175,7 +175,7 @@ public final class LevellingManager extends ListenerAdapter {
 
     private void updateLevelRoles(Guild guild, Member member, int level) {
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
         final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
         final var levelRoles = getLevelRoles(config);
         final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
@@ -185,7 +185,7 @@ public final class LevellingManager extends ListenerAdapter {
         guild.modifyMemberRoles(member, toAddRoles, null).queue();
     }
 
-    private void sendLevelUpMessage(GuildConfig config, Member member, int level, @Nullable Message replyTo) {
+    private void sendLevelUpMessage(GuildData config, Member member, int level, @Nullable Message replyTo) {
         if (config.isDisableLevelUpMessages()) return;
 
         final var description = new StringBuilder(member.getAsMention() + ", you are now Level " + level + "! 🎉");
@@ -230,7 +230,7 @@ public final class LevellingManager extends ListenerAdapter {
         return bag;
     }
 
-    private Map<Integer, Long> getLevelRoles(GuildConfig config) {
+    private Map<Integer, Long> getLevelRoles(GuildData config) {
         record LevelWithRole(int level, long role) {
         }
 

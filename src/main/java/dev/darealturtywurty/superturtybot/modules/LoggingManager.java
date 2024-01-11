@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -66,7 +66,7 @@ public class LoggingManager extends ListenerAdapter {
 
         final Guild guild = event.getGuild();
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if(config == null) return;
         if(!config.isLogMessageDelete() || !config.isLogMessageUpdate()) return;
 
@@ -633,7 +633,7 @@ public class LoggingManager extends ListenerAdapter {
     }
 
     private static Optional<TextChannel> getLogChannelAndValidate(Guild guild, Event event) {
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) return Optional.empty();
 
         TextChannel channel = guild.getTextChannelById(config.getLoggingChannel());

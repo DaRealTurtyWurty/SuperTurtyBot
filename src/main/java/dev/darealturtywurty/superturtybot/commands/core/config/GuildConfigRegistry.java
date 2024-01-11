@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.core.config;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigOption.DataType;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
@@ -18,18 +18,18 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption STARBOARD = GUILD_CONFIG_OPTIONS.register("starboard",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setStarboard(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getStarboard)
+                    .valueFromConfig(GuildData::getStarboard)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption IS_STARBOARD_ENABLED = GUILD_CONFIG_OPTIONS.register("starboard_enabled",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setStarboardEnabled(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isStarboardEnabled).build());
+                    .valueFromConfig(GuildData::isStarboardEnabled).build());
 
     private static final GuildConfigOption MINIMUM_STARS = GUILD_CONFIG_OPTIONS.register("minimum_stars",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                             (config, value) -> config.setMinimumStars(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getMinimumStars).validator((event, str) -> {
+                    .valueFromConfig(GuildData::getMinimumStars).validator((event, str) -> {
                         if (event.getGuild() == null)
                             return false;
 
@@ -40,17 +40,17 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption DO_BOT_STARS_COUNT = GUILD_CONFIG_OPTIONS.register("bot_stars_count",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setBotStarsCount(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isBotStarsCount).build());
+                    .valueFromConfig(GuildData::isBotStarsCount).build());
 
     private static final GuildConfigOption MOD_LOGGING = GUILD_CONFIG_OPTIONS.register("mod_logging",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setModLogging(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getModLogging)
+                    .valueFromConfig(GuildData::getModLogging)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption LEVEL_ROLES = GUILD_CONFIG_OPTIONS.register("level_roles",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setLevelRoles)
-                    .valueFromConfig(GuildConfig::getLevelRoles).validator((event, value) -> {
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setLevelRoles)
+                    .valueFromConfig(GuildData::getLevelRoles).validator((event, value) -> {
                         if(event.getGuild() == null)
                             return false;
 
@@ -69,36 +69,36 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption LEVELLING_COOLDOWN = GUILD_CONFIG_OPTIONS.register("level_cooldown",
             new GuildConfigOption.Builder().dataType(DataType.LONG).serializer(
                             (config, value) -> config.setLevelCooldown(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getLevelCooldown)
+                    .valueFromConfig(GuildData::getLevelCooldown)
                     .validator((event, value) -> Long.parseLong(value) > 0).build());
 
     private static final GuildConfigOption MINIMUM_XP = GUILD_CONFIG_OPTIONS.register("min_xp",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER)
                     .serializer((config, value) -> config.setMinXP(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getMinXP).validator(
+                    .valueFromConfig(GuildData::getMinXP).validator(
                             (event, value) -> Integer.parseInt(value) > 0 && Integer.parseInt(value) < 100).build());
 
     private static final GuildConfigOption MAXIMUM_XP = GUILD_CONFIG_OPTIONS.register("max_xp",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER)
                     .serializer((config, value) -> config.setMaxXP(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getMaxXP).validator(
+                    .valueFromConfig(GuildData::getMaxXP).validator(
                             (event, value) -> Integer.parseInt(value) > 0 && Integer.parseInt(value) < 100).build());
 
     private static final GuildConfigOption LEVELLING_ITEM_CHANCE = GUILD_CONFIG_OPTIONS.register(
             "levelling_item_chance", new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                     (config, value) -> config.setLevellingItemChance(Integer.parseInt(value))).valueFromConfig(
-                    GuildConfig::getLevellingItemChance).validator(
+                    GuildData::getLevellingItemChance).validator(
                     (event, value) -> Integer.parseInt(value) >= 0 && Integer.parseInt(value) <= 100).build());
 
     private static final GuildConfigOption LEVELLING_ENABLED = GUILD_CONFIG_OPTIONS.register("levelling_enabled",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setLevellingEnabled(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isLevellingEnabled).build());
+                    .valueFromConfig(GuildData::isLevellingEnabled).build());
 
     private static final GuildConfigOption DISABLED_LEVELLING_CHANNELS = GUILD_CONFIG_OPTIONS.register(
             "disabled_levelling_channels", new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(
-                    GuildConfig::setDisabledLevellingChannels).valueFromConfig(
-                    GuildConfig::getDisabledLevellingChannels).validator((event, value) -> {
+                    GuildData::setDisabledLevellingChannels).valueFromConfig(
+                    GuildData::getDisabledLevellingChannels).validator((event, value) -> {
                 final String[] channels = value.split("[ ;]");
                 for (final String channelStr : channels) {
                     if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr)) return false;
@@ -108,8 +108,8 @@ public class GuildConfigRegistry {
             }).build());
 
     private static final GuildConfigOption SHOWCASE_CHANNELS = GUILD_CONFIG_OPTIONS.register("showcase_channels",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setShowcaseChannels)
-                    .valueFromConfig(GuildConfig::getShowcaseChannels)
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setShowcaseChannels)
+                    .valueFromConfig(GuildData::getShowcaseChannels)
                     .validator((event, value) -> {
                         final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
@@ -123,52 +123,52 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption IS_STARBOARD_MEDIA = GUILD_CONFIG_OPTIONS.register(
             "is_starboard_media_only", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setStarboardMediaOnly(Boolean.parseBoolean(value))).valueFromConfig(
-                    GuildConfig::isStarboardMediaOnly).build());
+                    GuildData::isStarboardMediaOnly).build());
 
     private static final GuildConfigOption STAR_EMOJI = GUILD_CONFIG_OPTIONS.register("star_emoji",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setStarEmoji)
-                    .valueFromConfig(GuildConfig::getStarEmoji).validator(
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setStarEmoji)
+                    .valueFromConfig(GuildData::getStarEmoji).validator(
                             (event, value) -> (MentionType.EMOJI.getPattern().matcher(value).matches() || Emoji.fromUnicode(
                                     value) != null || Emoji.fromFormatted(value) != null)).build());
 
     private static final GuildConfigOption SUGGESTIONS = GUILD_CONFIG_OPTIONS.register("suggestions",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setSuggestions(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getSuggestions)
+                    .valueFromConfig(GuildData::getSuggestions)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption DISABLE_LEVEL_UP_MESSAGES = GUILD_CONFIG_OPTIONS.register(
             "disable_level_up_messages", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setDisableLevelUpMessages(Boolean.parseBoolean(value))).valueFromConfig(
-                    GuildConfig::isDisableLevelUpMessages).build());
+                    GuildData::isDisableLevelUpMessages).build());
 
     private static final GuildConfigOption HAS_LEVEL_UP_CHANNEL = GUILD_CONFIG_OPTIONS.register("has_level_up_channel",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setHasLevelUpChannel(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isHasLevelUpChannel).build());
+                    .valueFromConfig(GuildData::isHasLevelUpChannel).build());
 
     private static final GuildConfigOption LEVEL_UP_MESSAGE_CHANNEL = GUILD_CONFIG_OPTIONS.register(
             "level_up_message_channel", new GuildConfigOption.Builder().dataType(DataType.LONG).serializer(
                     (config, value) -> config.setLevelUpMessageChannel(Long.parseLong(value))).valueFromConfig(
-                    GuildConfig::getLevelUpMessageChannel).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+                    GuildData::getLevelUpMessageChannel).validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption SHOULD_EMBED_LEVEL_UP_MESSAGES = GUILD_CONFIG_OPTIONS.register(
             "should_embed_level_up_message", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setShouldEmbedLevelUpMessage(Boolean.parseBoolean(value)))
                     .valueFromConfig(
-                            GuildConfig::isShouldEmbedLevelUpMessage)
+                            GuildData::isShouldEmbedLevelUpMessage)
                     .build());
 
     private static final GuildConfigOption SHOULD_MODERATORS_JOIN_THREADS = GUILD_CONFIG_OPTIONS.register(
             "should_moderators_join_threads", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setShouldModeratorsJoinThreads(Boolean.parseBoolean(value)))
                     .valueFromConfig(
-                            GuildConfig::isShouldModeratorsJoinThreads)
+                            GuildData::isShouldModeratorsJoinThreads)
                     .build());
 
     private static final GuildConfigOption AUTO_THREAD_CHANNELS = GUILD_CONFIG_OPTIONS.register("auto_thread_channels",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setAutoThreadChannels)
-                    .valueFromConfig(GuildConfig::getAutoThreadChannels)
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setAutoThreadChannels)
+                    .valueFromConfig(GuildData::getAutoThreadChannels)
                     .validator((event, value) -> {
                         final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
@@ -182,17 +182,17 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption SHOULD_CREATE_GISTS = GUILD_CONFIG_OPTIONS.register("should_create_gists",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setShouldCreateGists(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isShouldCreateGists).build());
+                    .valueFromConfig(GuildData::isShouldCreateGists).build());
 
     private static final GuildConfigOption LOGGING_CHANNEL = GUILD_CONFIG_OPTIONS.register("logging_channel",
             new GuildConfigOption.Builder().dataType(DataType.LONG).serializer(
                             (config, value) -> config.setLoggingChannel(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getLoggingChannel)
+                    .valueFromConfig(GuildData::getLoggingChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption OPT_IN_CHANNELS = GUILD_CONFIG_OPTIONS.register("opt_in_channels",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setOptInChannels)
-                    .valueFromConfig(GuildConfig::getOptInChannels)
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setOptInChannels)
+                    .valueFromConfig(GuildData::getOptInChannels)
                     .validator((event, value) -> {
                         final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
@@ -204,8 +204,8 @@ public class GuildConfigRegistry {
                     }).build());
 
     private static final GuildConfigOption NSFW_CHANNELS = GUILD_CONFIG_OPTIONS.register("nsfw_channels",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setNsfwChannels)
-                    .valueFromConfig(GuildConfig::getNsfwChannels).validator((event, value) -> {
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setNsfwChannels)
+                    .valueFromConfig(GuildData::getNsfwChannels).validator((event, value) -> {
                         final String[] channels = value.split("[ ;]");
                         for (final String channelStr : channels) {
                             if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr)) return false;
@@ -217,42 +217,42 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption ARE_WARNINGS_MODERATOR_ONLY = GUILD_CONFIG_OPTIONS.register(
             "warnings_moderator_only", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setWarningsModeratorOnly(Boolean.parseBoolean(value))).valueFromConfig(
-                    GuildConfig::isWarningsModeratorOnly).build());
+                    GuildData::isWarningsModeratorOnly).build());
 
     private static final GuildConfigOption MAX_COUNTING_SUCCESSION = GUILD_CONFIG_OPTIONS.register(
             "max_counting_succession", new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                     (config, value) -> config.setMaxCountingSuccession(Integer.parseInt(value))).valueFromConfig(
-                    GuildConfig::getMaxCountingSuccession).build());
+                    GuildData::getMaxCountingSuccession).build());
 
     private static final GuildConfigOption PATRON_ROLE = GUILD_CONFIG_OPTIONS.register("patron_role",
             new GuildConfigOption.Builder().dataType(DataType.LONG).serializer(
                             (config, value) -> config.setPatronRole(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getPatronRole)
+                    .valueFromConfig(GuildData::getPatronRole)
                     .validator(Validators.ROLE_VALIDATOR).build());
 
     private static final GuildConfigOption SHOULD_SEND_STARTUP_MESSAGE = GUILD_CONFIG_OPTIONS.register(
             "should_send_startup_message", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                     (config, value) -> config.setShouldSendStartupMessage(Boolean.parseBoolean(value))).valueFromConfig(
-                    GuildConfig::isShouldSendStartupMessage).build());
+                    GuildData::isShouldSendStartupMessage).build());
 
     private static final GuildConfigOption ECONOMY_CURRENCY = GUILD_CONFIG_OPTIONS.register("economy_currency",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildConfig::setEconomyCurrency)
-                    .valueFromConfig(GuildConfig::getEconomyCurrency).build());
+            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setEconomyCurrency)
+                    .valueFromConfig(GuildData::getEconomyCurrency).build());
 
     private static final GuildConfigOption ECONOMY_ENABLED = GUILD_CONFIG_OPTIONS.register("economy_enabled",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setEconomyEnabled(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isEconomyEnabled).build());
+                    .valueFromConfig(GuildData::isEconomyEnabled).build());
 
     private static final GuildConfigOption CAN_ADD_PLAYLISTS = GUILD_CONFIG_OPTIONS.register("can_add_playlists",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                             (config, value) -> config.setCanAddPlaylists(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isCanAddPlaylists).build());
+                    .valueFromConfig(GuildData::isCanAddPlaylists).build());
 
     private static final GuildConfigOption MAX_SONGS_PER_USER = GUILD_CONFIG_OPTIONS.register("max_songs_per_user",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER).serializer(
                             (config, value) -> config.setMaxSongsPerUser(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getMaxSongsPerUser).build());
+                    .valueFromConfig(GuildData::getMaxSongsPerUser).build());
 
     private static final GuildConfigOption MUSIC_PERMISSIONS = GUILD_CONFIG_OPTIONS.register("music_permissions",
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer((guildConfig, s) -> {
@@ -283,7 +283,7 @@ public class GuildConfigRegistry {
 
                         guildConfig.setMusicPermissions(permissions);
                     })
-                    .valueFromConfig(GuildConfig::getMusicPermissions).validator((event, value) -> {
+                    .valueFromConfig(GuildData::getMusicPermissions).validator((event, value) -> {
                         if(event.getGuild() == null)
                             return false;
 
@@ -314,48 +314,48 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder()
                     .dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setChatRevivalEnabled(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isChatRevivalEnabled).build());
+                    .valueFromConfig(GuildData::isChatRevivalEnabled).build());
 
     private static final GuildConfigOption CHAT_REVIVAL_CHANNEL = GUILD_CONFIG_OPTIONS.register("chat_revival_channel",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setChatRevivalChannel(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getChatRevivalChannel)
+                    .valueFromConfig(GuildData::getChatRevivalChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
     private static final GuildConfigOption CHAT_REVIVAL_TIME = GUILD_CONFIG_OPTIONS.register("chat_revival_time",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER)
                     .serializer((config, value) -> config.setChatRevivalTime(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getChatRevivalTime)
+                    .valueFromConfig(GuildData::getChatRevivalTime)
                     .validator((event, value) -> Integer.parseInt(value) > 0).build());
 
     private static final GuildConfigOption WARNING_XP_PERCENTAGE = GUILD_CONFIG_OPTIONS.register("warning_xp_percentage",
             new GuildConfigOption.Builder().dataType(DataType.FLOAT)
                     .serializer((config, value) -> config.setWarningXpPercentage(Float.parseFloat(value)))
-                    .valueFromConfig(GuildConfig::getWarningXpPercentage)
+                    .valueFromConfig(GuildData::getWarningXpPercentage)
                     .validator((event, value) -> Float.parseFloat(value) > 0 && Float.parseFloat(value) < 100)
                     .build());
 
     private static final GuildConfigOption WARNING_ECONOMY_PERCENTAGE = GUILD_CONFIG_OPTIONS.register("warning_economy_percentage",
             new GuildConfigOption.Builder().dataType(DataType.FLOAT)
                     .serializer((config, value) -> config.setWarningEconomyPercentage(Float.parseFloat(value)))
-                    .valueFromConfig(GuildConfig::getWarningEconomyPercentage)
+                    .valueFromConfig(GuildData::getWarningEconomyPercentage)
                     .validator((event, value) -> Float.parseFloat(value) > 0 && Float.parseFloat(value) < 100)
                     .build());
 
     private static final GuildConfigOption DEFAULT_ECONOMY_BALANCE = GUILD_CONFIG_OPTIONS.register("default_economy_balance",
             new GuildConfigOption.Builder().dataType(DataType.INTEGER)
                     .serializer((config, value) -> config.setDefaultEconomyBalance(Integer.parseInt(value)))
-                    .valueFromConfig(GuildConfig::getDefaultEconomyBalance)
+                    .valueFromConfig(GuildData::getDefaultEconomyBalance)
                     .validator((event, value) -> Integer.parseInt(value) > 0).build());
 
     private static final GuildConfigOption ANNOUNCE_BIRTHDAYS = GUILD_CONFIG_OPTIONS.register("announce_birthdays",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setAnnounceBirthdays(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildConfig::isAnnounceBirthdays).build());
+                    .valueFromConfig(GuildData::isAnnounceBirthdays).build());
 
     private static final GuildConfigOption BIRTHDAY_CHANNEL = GUILD_CONFIG_OPTIONS.register("birthday_channel",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setBirthdayChannel(Long.parseLong(value)))
-                    .valueFromConfig(GuildConfig::getBirthdayChannel)
+                    .valueFromConfig(GuildData::getBirthdayChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 }

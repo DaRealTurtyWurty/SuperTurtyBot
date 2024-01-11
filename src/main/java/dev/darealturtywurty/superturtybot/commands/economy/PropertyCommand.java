@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import net.dv8tion.jda.api.entities.Guild;
@@ -97,7 +97,7 @@ public class PropertyCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
@@ -121,15 +121,15 @@ public class PropertyCommand extends EconomyCommand {
         }
     }
 
-    private void buyProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void buyProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void sellProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void sellProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void listProperties(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void listProperties(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
         User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
         boolean includeSold = event.getOption("include-sold", false, OptionMapping::getAsBoolean);
         boolean includeRented = event.getOption("include-rented", false, OptionMapping::getAsBoolean);
@@ -205,35 +205,35 @@ public class PropertyCommand extends EconomyCommand {
         }, ignored -> hookReply(event, "❌ That user is not in this server!"));
     }
 
-    private void getPropertyInfo(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void getPropertyInfo(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void upgradeProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void upgradeProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void tradeProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void tradeProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void rentProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void rentProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void stopRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void stopRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void pauseRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void pauseRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void resumeRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void resumeRentingProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 
-    private void setRentPrice(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildConfig config) {
+    private void setRentPrice(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
 
     }
 

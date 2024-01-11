@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 @Data
-public class GuildConfig {
+public class GuildData {
     private long guild;
 
     // Channels
@@ -123,11 +123,13 @@ public class GuildConfig {
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
 
-    public GuildConfig() {
+    private List<Long> enabledBirthdayUsers;
+
+    public GuildData() {
         this(0L);
     }
 
-    public GuildConfig(long guildId) {
+    public GuildData(long guildId) {
         this.guild = guildId;
 
         // Channels
@@ -211,6 +213,7 @@ public class GuildConfig {
         this.warningXpPercentage = 0F;
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;
+        this.enabledBirthdayUsers = new ArrayList<>();
     }
 
     public boolean shouldLog(Event event) {

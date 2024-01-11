@@ -11,7 +11,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -154,10 +154,10 @@ public class PlayCommand extends CoreCommand {
         List<AudioTrack> queue = AudioManager.getQueue(event.getGuild());
 
         if(!queue.isEmpty()) {
-            GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
+            GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
             if (config == null) {
-                config = new GuildConfig(event.getGuild().getIdLong());
-                Database.getDatabase().guildConfig.insertOne(config);
+                config = new GuildData(event.getGuild().getIdLong());
+                Database.getDatabase().guildData.insertOne(config);
             }
 
             long songsForUser = 0;

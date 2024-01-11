@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Loan;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -70,7 +70,7 @@ public class LoanCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
@@ -207,7 +207,7 @@ public class LoanCommand extends EconomyCommand {
     }
 
     @NotNull
-    private static PaginatedEmbed.Builder createLoanEmbed(GuildConfig config, List<Loan> loans) {
+    private static PaginatedEmbed.Builder createLoanEmbed(GuildData config, List<Loan> loans) {
         PaginatedEmbed.ContentsBuilder contents = new PaginatedEmbed.ContentsBuilder();
         for (Loan loan : loans) {
             contents.field("Loan ID: %s".formatted(loan.getId()), """

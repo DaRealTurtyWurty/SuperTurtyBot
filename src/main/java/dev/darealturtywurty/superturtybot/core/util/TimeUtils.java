@@ -127,13 +127,13 @@ public class TimeUtils {
         return deadlineStrBuilder.toString();
     }
 
-    public static short getDayOfYear(int day, int month, int year) {
-        short dayOfYear = 0;
-        for (short i = 1; i < month; i++) {
+    public static int getDayOfYear(int day, int month, int year) {
+        int dayOfYear = 0;
+        for (int i = 1; i < month; i++) {
             dayOfYear += getDaysForMonth(i, year);
         }
 
-        dayOfYear += (short) day;
+        dayOfYear += day;
         return dayOfYear;
     }
 

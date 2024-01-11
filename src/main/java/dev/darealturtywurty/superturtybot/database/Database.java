@@ -26,7 +26,7 @@ public class Database {
     public final MongoCollection<Warning> warnings;
     public final MongoCollection<Tag> tags;
     public final MongoCollection<Showcase> starboard;
-    public final MongoCollection<GuildConfig> guildConfig;
+    public final MongoCollection<GuildData> guildData;
     public final MongoCollection<UserConfig> userConfig;
     public final MongoCollection<YoutubeNotifier> youtubeNotifier;
     public final MongoCollection<TwitchNotifier> twitchNotifier;
@@ -61,7 +61,7 @@ public class Database {
         this.warnings = database.getCollection("warnings", Warning.class);
         this.tags = database.getCollection("tags", Tag.class);
         this.starboard = database.getCollection("starboard", Showcase.class);
-        this.guildConfig = database.getCollection("guildConfig", GuildConfig.class);
+        this.guildData = database.getCollection("guildData", GuildData.class);
         this.userConfig = database.getCollection("userConfig", UserConfig.class);
         this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
         this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
@@ -91,10 +91,9 @@ public class Database {
         this.warnings.createIndex(guildUserIndex);
         this.tags.createIndex(guildUserIndex);
         this.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
-        this.guildConfig.createIndex(guildIndex);
+        this.guildData.createIndex(guildIndex);
         this.userConfig.createIndex(guildUserIndex);
-        this.youtubeNotifier
-            .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
+        this.youtubeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
         this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
         this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
         this.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));

@@ -4,7 +4,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -133,10 +133,10 @@ public class BanCommand extends CoreCommand {
     
     public static Pair<Boolean, TextChannel> canLog(Guild guild) {
         final Bson filter = Filters.eq("guild", guild.getIdLong());
-        GuildConfig config = Database.getDatabase().guildConfig.find(filter).first();
+        GuildData config = Database.getDatabase().guildData.find(filter).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         final long modLogging = config.getModLogging();

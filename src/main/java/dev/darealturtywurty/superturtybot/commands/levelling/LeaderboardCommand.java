@@ -9,7 +9,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.entities.Guild;
@@ -185,9 +185,9 @@ public class LeaderboardCommand extends CoreCommand {
 
             {
                 Member member = guild.getMemberById(id);
-                GuildConfig guildConfig = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
 
-                long patronRoleId = guildConfig != null ? guildConfig.getPatronRole() : 0L;
+                long patronRoleId = guildData != null ? guildData.getPatronRole() : 0L;
                 Role patronRole = guild.getRoleById(patronRoleId);
 
                 boolean isPatron = patronRole != null && member != null && member.getRoles().contains(patronRole);

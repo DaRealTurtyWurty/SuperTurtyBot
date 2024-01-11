@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -89,7 +89,7 @@ public class OptCommand extends CoreCommand {
         Guild guild = event.getGuild();
         if (guild == null) return;
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
             event.replyChoices().queue();
             return;
@@ -105,7 +105,7 @@ public class OptCommand extends CoreCommand {
 
         List<Long> userChannels = userConfig.getOptInChannels();
 
-        event.replyChoices(GuildConfig.getChannels(config.getOptInChannels()).stream()
+        event.replyChoices(GuildData.getChannels(config.getOptInChannels()).stream()
                 .filter(channel -> !userChannels.contains(channel))
                 .map(channel -> guild.getChannels().stream().filter(guildChannel -> guildChannel.getIdLong() == channel)
                         .findFirst().orElse(null)).filter(Objects::nonNull).map(GuildChannel::getName)
@@ -126,13 +126,13 @@ public class OptCommand extends CoreCommand {
             return;
         }
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
             reply(event, "❌ This server is not configured!", false, true);
             return;
         }
 
-        List<Long> channels = GuildConfig.getChannels(config.getOptInChannels());
+        List<Long> channels = GuildData.getChannels(config.getOptInChannels());
         if (channels.isEmpty()) {
             reply(event, "❌ This server has no opt-in channels!", false, true);
             return;

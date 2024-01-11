@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -98,7 +98,7 @@ public class SlotsCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         int betAmount = event.getOption("bet-amount", 1, OptionMapping::getAsInt);
         if (betAmount < 1) {
             event.getHook().editOriginal("❌ You cannot bet less than %s1!"

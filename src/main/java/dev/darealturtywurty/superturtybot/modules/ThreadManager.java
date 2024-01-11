@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -26,10 +26,10 @@ public class ThreadManager extends ListenerAdapter {
             return;
 
         final Guild guild = event.getGuild();
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
@@ -69,15 +69,15 @@ public class ThreadManager extends ListenerAdapter {
                 .isBlank() || event.getMessage().getType().isSystem()) return;
 
         final Guild guild = event.getGuild();
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
                 .first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
             return;
         }
 
-        final List<Long> channels = GuildConfig.getChannels(config.getAutoThreadChannels());
+        final List<Long> channels = GuildData.getChannels(config.getAutoThreadChannels());
         if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong())) return;
 
         final String content = event.getMessage().getContentRaw();

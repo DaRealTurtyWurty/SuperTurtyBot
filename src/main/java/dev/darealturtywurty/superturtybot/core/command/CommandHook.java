@@ -23,7 +23,7 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
@@ -31,7 +31,6 @@ import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingComma
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.submission.SubmissionCommand;
 import dev.darealturtywurty.superturtybot.modules.submission.SubmitCommand;
-import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -115,10 +114,10 @@ public class CommandHook extends ListenerAdapter {
                 .findFirst()
                 .orElseGet(guild::getSystemChannel);
 
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
-            config = new GuildConfig(guild.getIdLong());
-            Database.getDatabase().guildConfig.insertOne(config);
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
         }
 
         if(config.isShouldSendStartupMessage()) {
@@ -308,6 +307,8 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new UptimeCommand());
         //cmds.add(new SystemStatsCommand());
         //cmds.add(new TestCommand());
+        cmds.add(new SubmitCommand());
+        cmds.add(new SubmissionCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());

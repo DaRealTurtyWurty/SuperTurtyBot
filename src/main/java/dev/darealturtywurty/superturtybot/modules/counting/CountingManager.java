@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Counting;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Counting.UserData;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
 import dev.darealturtywurty.superturtybot.modules.counting.maths.MathOperation;
 import net.dv8tion.jda.api.Permission;
@@ -43,11 +43,11 @@ public class CountingManager extends ListenerAdapter {
         final TextChannel channel = event.getChannel().asTextChannel();
 
         Guild guild = event.getGuild();
-        GuildConfig guildConfig = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong()))
+        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
                 .first();
-        if (guildConfig == null) return;
+        if (guildData == null) return;
 
-        int maxSuccession = guildConfig.getMaxCountingSuccession();
+        int maxSuccession = guildData.getMaxCountingSuccession();
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
                 Filters.eq("channel", channel.getIdLong()));

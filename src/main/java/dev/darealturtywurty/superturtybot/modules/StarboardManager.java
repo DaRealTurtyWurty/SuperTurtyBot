@@ -5,7 +5,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -44,14 +44,14 @@ public final class StarboardManager extends ListenerAdapter {
             return;
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
 
         if (!config.getStarEmoji().equals(event.getReaction().getEmoji().getFormatted()))
             return;
 
         final TextChannel channel = event.getChannel().asTextChannel();
 
-        final List<Long> channels = GuildConfig.getChannels(config.getShowcaseChannels());
+        final List<Long> channels = GuildData.getChannels(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
 
@@ -125,8 +125,8 @@ public final class StarboardManager extends ListenerAdapter {
         final TextChannel channel = event.getChannel().asTextChannel();
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
-        final List<Long> channels = GuildConfig.getChannels(config.getShowcaseChannels());
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
+        final List<Long> channels = GuildData.getChannels(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
 
@@ -144,7 +144,7 @@ public final class StarboardManager extends ListenerAdapter {
 
     private static CompletableFuture<TextChannel> getStarboard(Guild guild) {
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildConfig config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
         if (!config.isStarboardEnabled())
             return CompletableFuture.completedFuture(null);
 

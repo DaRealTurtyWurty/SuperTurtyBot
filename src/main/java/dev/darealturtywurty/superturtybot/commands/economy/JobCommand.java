@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -79,7 +79,7 @@ public class JobCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You must specify a subcommand!").queue();
@@ -167,7 +167,7 @@ public class JobCommand extends EconomyCommand {
         }
     }
 
-    private static String getResponse(GuildConfig config, User user, int amount) {
+    private static String getResponse(GuildData config, User user, int amount) {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", String.valueOf(amount));

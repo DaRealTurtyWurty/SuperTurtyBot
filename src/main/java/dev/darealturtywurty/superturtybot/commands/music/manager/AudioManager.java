@@ -24,7 +24,7 @@ import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -159,10 +159,10 @@ public final class AudioManager {
             public void playlistLoaded(AudioPlaylist playlist) {
                 if (textChannel != null) {
                     Guild guild = textChannel.getGuild();
-                    GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+                    GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
                     if (config == null) {
-                        config = new GuildConfig(guild.getIdLong());
-                        Database.getDatabase().guildConfig.insertOne(config);
+                        config = new GuildData(guild.getIdLong());
+                        Database.getDatabase().guildData.insertOne(config);
                     }
 
                     if (!config.isCanAddPlaylists()) {

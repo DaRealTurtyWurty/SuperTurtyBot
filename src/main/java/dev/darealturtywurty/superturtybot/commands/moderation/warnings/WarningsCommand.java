@@ -5,7 +5,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -80,7 +80,7 @@ public class WarningsCommand extends CoreCommand {
         final User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
 
         Guild guild = event.getGuild();
-        GuildConfig config = Database.getDatabase().guildConfig.find(Filters.eq("guild", guild.getIdLong())).first();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if(config != null && config.isWarningsModeratorOnly() && !event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
             reply(event, "❌ You must be a moderator to use this command!", false, true);
             return;

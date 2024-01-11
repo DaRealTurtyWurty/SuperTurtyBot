@@ -8,7 +8,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -77,7 +77,7 @@ public class RobCommand extends EconomyCommand {
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildConfig config) {
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         final Economy account = EconomyManager.getAccount(guild, event.getUser());
         if (account.getNextRob() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can rob again %s!"
@@ -129,13 +129,13 @@ public class RobCommand extends EconomyCommand {
     }
 
     public record Responses(List<String> success, List<String> fail) {
-        public String getSuccess(GuildConfig config, User robber, User robbed, int amount) {
+        public String getSuccess(GuildData config, User robber, User robbed, int amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", Integer.toString(amount)).replace("<>", config.getEconomyCurrency());
         }
 
-        public String getFail(GuildConfig config, User robber, User robbed, int amount) {
+        public String getFail(GuildData config, User robber, User robbed, int amount) {
             return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", Integer.toString(amount)).replace("<>", config.getEconomyCurrency());

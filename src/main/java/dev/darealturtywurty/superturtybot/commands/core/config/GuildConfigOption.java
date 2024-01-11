@@ -5,7 +5,7 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildConfig;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 import lombok.Getter;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -22,10 +22,10 @@ public class GuildConfigOption implements Registerable {
     private String name;
     @Getter
     private final DataType dataType;
-    private final BiConsumer<GuildConfig, String> serializer;
+    private final BiConsumer<GuildData, String> serializer;
     private final BiPredicate<SlashCommandInteractionEvent, String> validator;
     @Getter
-    private final Function<GuildConfig, Object> valueFromConfig;
+    private final Function<GuildData, Object> valueFromConfig;
     
     private GuildConfigOption(Builder builder) {
         this.dataType = builder.dataType;
@@ -47,7 +47,7 @@ public class GuildConfigOption implements Registerable {
         return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, this.name);
     }
 
-    public void serialize(GuildConfig config, String value) {
+    public void serialize(GuildData config, String value) {
         this.serializer.accept(config, value);
     }
     
@@ -63,10 +63,10 @@ public class GuildConfigOption implements Registerable {
 
     public static class Builder {
         private DataType dataType = DataType.STRING;
-        private BiConsumer<GuildConfig, String> serializer = (config, str) -> {
+        private BiConsumer<GuildData, String> serializer = (config, str) -> {
         };
         private BiPredicate<SlashCommandInteractionEvent, String> validator = (dataType, str) -> true;
-        private Function<GuildConfig, Object> valueFromConfig = config -> null;
+        private Function<GuildData, Object> valueFromConfig = config -> null;
 
         public GuildConfigOption build() {
             return new GuildConfigOption(this);
@@ -78,7 +78,7 @@ public class GuildConfigOption implements Registerable {
             return this;
         }
 
-        public Builder serializer(@NotNull BiConsumer<GuildConfig, String> serializer) {
+        public Builder serializer(@NotNull BiConsumer<GuildData, String> serializer) {
             Checks.notNull(serializer, "serializer");
             this.serializer = serializer;
             return this;
@@ -90,7 +90,7 @@ public class GuildConfigOption implements Registerable {
             return this;
         }
 
-        public Builder valueFromConfig(@NotNull Function<GuildConfig, Object> valueFromConfig) {
+        public Builder valueFromConfig(@NotNull Function<GuildData, Object> valueFromConfig) {
             Checks.notNull(valueFromConfig, "valueFromConfig");
             this.valueFromConfig = valueFromConfig;
             return this;
