@@ -22,6 +22,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -76,7 +77,7 @@ public class ShopCommand extends EconomyCommand {
                         return;
                     }
 
-                    Economy account = EconomyManager.getAccount(guild, user);
+                    Economy account = EconomyManager.getOrCreateAccount(guild, user);
                     List<ShopItem> shop = account.getShopItems();
                     if (shop.isEmpty()) {
                         event.getHook().editOriginal("❌ That user does not have any items in their shop!").queue();
@@ -124,8 +125,12 @@ public class ShopCommand extends EconomyCommand {
     private static BufferedImage generateShopImage() throws IOException {
         PublicShop shop = EconomyManager.getPublicShop();
 
-        var image = ImageIO.read(Objects.requireNonNull(TurtyBot.class.getResourceAsStream("/economy/shop.png")));
-        var g2d = image.createGraphics();
+        final InputStream stream = TurtyBot.loadResource("economy/shop.png");
+        if (stream == null)
+            throw new IOException("Could not find shop image!");
+
+        BufferedImage image = ImageIO.read(stream);
+        Graphics2D g2d = image.createGraphics();
 
         g2d.setColor(Color.RED);
         g2d.fillRect(0, image.getHeight() / 2 - 5, image.getWidth(), 10);

@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.TurtyBot;
@@ -21,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -34,11 +34,12 @@ public class RobCommand extends EconomyCommand {
 
     static {
         JsonObject json;
-        try {
-            json = Constants.GSON.fromJson(
-                    IOUtils.toString(Objects.requireNonNull(TurtyBot.class.getResourceAsStream("/rob_responses.json")),
-                            StandardCharsets.UTF_8), JsonObject.class);
-        } catch (JsonSyntaxException | IOException exception) {
+        try (final InputStream stream = TurtyBot.loadResource("rob_responses.json")) {
+            if (stream == null)
+                throw new IllegalStateException("Unable to read rob_responses.json!");
+
+            json = Constants.GSON.fromJson(IOUtils.toString(stream, StandardCharsets.UTF_8), JsonObject.class);
+        } catch (IOException exception) {
             throw new IllegalStateException("Unable to parse economy rob responses!", exception);
         }
 
@@ -78,7 +79,7 @@ public class RobCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        final Economy account = EconomyManager.getAccount(guild, event.getUser());
+        final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextRob() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can rob again %s!"
                     .formatted(TimeFormat.RELATIVE.format(account.getNextRob()))).queue();
@@ -96,7 +97,7 @@ public class RobCommand extends EconomyCommand {
                 Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
                 Updates.set("nextRobTime", account.getNextRob()));
 
-        final Economy robAccount = EconomyManager.getAccount(guild, user);
+        final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
         if (robAccount.getWallet() <= 0) {
             event.getHook().editOriginal("❌ Better luck next time, this user's wallet is empty!").queue();
             return;

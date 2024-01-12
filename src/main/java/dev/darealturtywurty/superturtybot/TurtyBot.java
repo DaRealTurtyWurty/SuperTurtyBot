@@ -22,12 +22,14 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.ext.java7.PathArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+import java.io.InputStream;
 import java.nio.file.Path;
 
 public class TurtyBot {
@@ -147,5 +149,9 @@ public class TurtyBot {
                 Constants.LOGGER.error("Failed to load registerer!", exception);
             }
         });
+    }
+
+    public static @Nullable InputStream loadResource(String name) {
+        return TurtyBot.class.getResourceAsStream("/" + name);
     }
 }

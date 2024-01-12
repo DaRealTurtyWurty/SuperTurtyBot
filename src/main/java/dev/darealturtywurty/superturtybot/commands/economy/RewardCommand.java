@@ -39,7 +39,7 @@ public class RewardCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         final var subcommand = event.getSubcommandName();
         switch (Objects.requireNonNull(subcommand)) {
             case "daily" -> {

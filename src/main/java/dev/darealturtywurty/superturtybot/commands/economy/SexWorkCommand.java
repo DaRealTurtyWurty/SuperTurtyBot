@@ -13,10 +13,10 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -25,12 +25,13 @@ public class SexWorkCommand extends EconomyCommand {
 
     static {
         JsonObject json;
-        try {
-            json = Constants.GSON.fromJson(IOUtils.toString(
-                    Objects.requireNonNull(TurtyBot.class.getResourceAsStream("/sex_work_responses.json")),
-                    StandardCharsets.UTF_8), JsonObject.class);
+        try(final InputStream stream = TurtyBot.loadResource("sex_work_responses.json")) {
+            if (stream == null)
+                throw new IllegalStateException("Unable to read sex_work_responses.json!");
+
+            json = Constants.GSON.fromJson(IOUtils.toString(stream, StandardCharsets.UTF_8), JsonObject.class);
         } catch (final IOException exception) {
-            throw new IllegalStateException("Unable to read sex work responses!", exception);
+            throw new IllegalStateException("Unable to load sex work responses!", exception);
         }
 
         final List<String> success = new ArrayList<>();
@@ -58,7 +59,7 @@ public class SexWorkCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        final Economy account = EconomyManager.getAccount(guild, event.getUser());
+        final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextSexWork() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can do sex work again %s!"
                     .formatted(TimeFormat.RELATIVE.format(account.getNextSexWork()))).queue();

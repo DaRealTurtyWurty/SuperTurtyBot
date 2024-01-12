@@ -104,7 +104,7 @@ public class PropertyCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
 
         switch (subcommand) {
             case "buy" -> buyProperty(event, guild, account, config);
@@ -158,7 +158,7 @@ public class PropertyCommand extends EconomyCommand {
 
             Economy userAccount = account;
             if (!isSelf) {
-                userAccount = EconomyManager.getAccount(guild, member.getUser());
+                userAccount = EconomyManager.getOrCreateAccount(guild, member.getUser());
             }
 
             List<Property> properties = userAccount.getProperties();

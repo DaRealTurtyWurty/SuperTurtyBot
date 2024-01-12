@@ -1,12 +1,14 @@
 package dev.darealturtywurty.superturtybot.commands.levelling;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class RankCardItem implements Registerable {
     public final String data;
@@ -42,9 +44,13 @@ public class RankCardItem implements Registerable {
     }
     
     private static BufferedImage thumbnail(String name) {
-        try {
-            return BotUtils
-                .resize(ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/thumbnails/" + name + ".png")), 120);
+        try(final InputStream stream = TurtyBot.loadResource("levels/thumbnails/" + name + ".png")) {
+            if (stream == null) {
+                Constants.LOGGER.warn("Could not find thumbnail for: " + name);
+                return null;
+            }
+
+            return BotUtils.resize(ImageIO.read(stream), 120);
         } catch (final IOException | IllegalArgumentException exception) {
             return null;
         }

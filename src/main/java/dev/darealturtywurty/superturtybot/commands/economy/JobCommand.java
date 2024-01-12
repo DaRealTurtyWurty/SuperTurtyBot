@@ -19,6 +19,7 @@ import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,10 +32,11 @@ public class JobCommand extends EconomyCommand {
 
     static {
         JsonObject json;
-        try {
-            json = Constants.GSON.fromJson(
-                    IOUtils.toString(Objects.requireNonNull(TurtyBot.class.getResourceAsStream("/work_responses.json")),
-                            StandardCharsets.UTF_8), JsonObject.class);
+        try (final InputStream stream = TurtyBot.loadResource("work_responses.json")) {
+            if (stream == null)
+                throw new IllegalStateException("Could not load work_responses.json!");
+
+            json = Constants.GSON.fromJson(IOUtils.toString(stream, StandardCharsets.UTF_8), JsonObject.class);
         } catch (final IOException exception) {
             throw new IllegalStateException("Could not load work responses!", exception);
         }
@@ -86,7 +88,7 @@ public class JobCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
 
         switch (subcommand) {
             case "work" -> {

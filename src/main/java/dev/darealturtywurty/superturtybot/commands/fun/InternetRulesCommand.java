@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
@@ -23,18 +22,16 @@ public class InternetRulesCommand extends CoreCommand {
     private static final List<String> RULES = new ArrayList<>();
 
     static {
-        try {
-            final InputStream stream = TurtyBot.class.getResourceAsStream("/rules_of_the_internet.txt");
+        try(final InputStream stream = TurtyBot.loadResource("rules_of_the_internet.txt")) {
             if (stream == null)
-                throw new IOException("Could not find file!");
+                throw new IllegalStateException("Could not find rules_of_the_internet.txt!");
 
             final var reader = new BufferedReader(new InputStreamReader(stream));
             if (reader.ready()) {
                 reader.lines().forEach(RULES::add);
             }
         } catch (final IOException exception) {
-            Constants.LOGGER.error("There has been an issue parsing file:\nException: {}\n{}",
-                exception.getMessage(), ExceptionUtils.getStackTrace(exception));
+            Constants.LOGGER.error("There has been an issue parsing file: rules_of_the_internet.txt", exception);
         }
     }
 

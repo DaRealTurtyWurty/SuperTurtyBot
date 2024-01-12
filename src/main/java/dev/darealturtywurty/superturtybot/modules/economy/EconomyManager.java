@@ -59,7 +59,7 @@ public class EconomyManager {
         return economy;
     }
 
-    public static Economy getAccount(Guild guild, User user) {
+    public static Economy getOrCreateAccount(Guild guild, User user) {
         Economy account = Database.getDatabase().economy.find(
                 Filters.and(
                         Filters.eq("guild", guild.getIdLong()),
@@ -68,7 +68,6 @@ public class EconomyManager {
 
         if (account == null) {
             account = createAccount(guild, user);
-            Database.getDatabase().economy.insertOne(account);
         }
 
         return account;

@@ -72,7 +72,7 @@ public class DonateCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if(account.getBank() < amount) {
             event.getHook().editOriginal("❌ You are missing %s%d!"
                     .formatted(config.getEconomyCurrency(), amount - account.getBank())).queue();
@@ -85,7 +85,7 @@ public class DonateCommand extends EconomyCommand {
                 return;
             }
 
-            Economy otherAccount = EconomyManager.getAccount(guild, user);
+            Economy otherAccount = EconomyManager.getOrCreateAccount(guild, user);
 
             EconomyManager.removeMoney(account, amount, true);
             EconomyManager.addMoney(otherAccount, amount);

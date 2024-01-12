@@ -42,7 +42,7 @@ public class WithdrawCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (amount > account.getBank()) {
             event.getHook().editOriginal("❌ You do not have enough money in your bank to withdraw that much!")
                     .queue();

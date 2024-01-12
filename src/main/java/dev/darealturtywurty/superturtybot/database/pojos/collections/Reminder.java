@@ -46,12 +46,12 @@ public class Reminder {
     public void schedule(JDA jda) {
         scheduler.schedule(() -> {
             Database.getDatabase().reminders.deleteOne(Filters.and(
-                    Filters.eq("guild", guild),
+                    Filters.eq("guild", this.guild),
                     Filters.eq("user", this.user),
-                    Filters.eq("reminder", reminder),
-                    Filters.eq("message", message),
-                    Filters.eq("channel", channel),
-                    Filters.eq("time", time))
+                    Filters.eq("reminder", this.reminder),
+                    Filters.eq("message", this.message),
+                    Filters.eq("channel", this.channel),
+                    Filters.eq("time", this.time))
             );
 
             User user = jda.getUserById(this.user);
@@ -91,12 +91,12 @@ public class Reminder {
 
     public boolean cancel() {
         Database.getDatabase().reminders.deleteOne(Filters.and(
-                Filters.eq("guild", guild),
+                Filters.eq("guild", this.guild),
                 Filters.eq("user", this.user),
-                Filters.eq("reminder", reminder),
-                Filters.eq("message", message),
-                Filters.eq("channel", channel),
-                Filters.eq("time", time))
+                Filters.eq("reminder", this.reminder),
+                Filters.eq("message", this.message),
+                Filters.eq("channel", this.channel),
+                Filters.eq("time", this.time))
         );
 
         List<Runnable> failed = scheduler.shutdownNow();

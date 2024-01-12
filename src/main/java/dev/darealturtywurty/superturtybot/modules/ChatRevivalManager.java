@@ -126,14 +126,15 @@ public class ChatRevivalManager extends ListenerAdapter {
         return chatReviver;
     }
 
-    private static List<String> getDrawingWords() throws IOException {
-        InputStream stream = TurtyBot.class.getResourceAsStream("/objects.txt");
-        if (stream == null)
-            throw new IOException("Could not find objects.txt file!");
+    private static List<String> getDrawingWords() {
+        try(final InputStream stream = TurtyBot.loadResource("objects.txt")) {
+            if (stream == null)
+                throw new IllegalStateException("Could not find objects.txt file!");
 
-        List<String> lines = IOUtils.readLines(stream, StandardCharsets.UTF_8);
-        IOUtils.closeQuietly(stream);
-        return lines;
+            return IOUtils.readLines(stream, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not read objects.txt file!", exception);
+        }
     }
 
     private static List<String> getAvailableWords(ChatReviver chatReviver) throws IOException {

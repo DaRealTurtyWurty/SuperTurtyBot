@@ -59,7 +59,7 @@ public class WarnManager {
         }
 
         if (economyPercentage > 0 && config.isEconomyEnabled()) {
-            Economy account = EconomyManager.getAccount(guild, toWarn);
+            Economy account = EconomyManager.getOrCreateAccount(guild, toWarn);
 
             int balance = EconomyManager.getBalance(account);
 

@@ -28,7 +28,7 @@ public class BalanceCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        final Economy account = EconomyManager.getAccount(guild, event.getUser());
+        final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());

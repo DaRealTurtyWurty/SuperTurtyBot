@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
-import dev.darealturtywurty.superturtybot.commands.levelling.LeaderboardCommand;
+import dev.darealturtywurty.superturtybot.commands.core.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;

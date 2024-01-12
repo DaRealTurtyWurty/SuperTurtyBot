@@ -58,7 +58,7 @@ public class CrashCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (amount > account.getWallet()) {
             event.getHook().editOriginal("❌ You cannot bet more than you have in your wallet!").queue();
             return;

@@ -100,7 +100,7 @@ public class SetMoneyCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, user1);
+        Economy account = EconomyManager.getOrCreateAccount(guild, user1);
         switch (type) {
             case ADD -> {
                 EconomyManager.addMoney(account, amount);

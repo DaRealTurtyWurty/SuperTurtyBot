@@ -35,7 +35,7 @@ public class DepositCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getWallet() <= 0) {
             event.getHook().editOriginal("❌ Your wallet is empty, you cannot deposit!").queue();
             return;

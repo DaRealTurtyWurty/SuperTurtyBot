@@ -63,7 +63,7 @@ public class LoanCommand extends EconomyCommand {
 
         switch (event.getSubcommandName()) {
             case "pay", "info" -> {
-                Economy account = EconomyManager.getAccount(event.getGuild(), event.getUser());
+                Economy account = EconomyManager.getOrCreateAccount(event.getGuild(), event.getUser());
                 event.replyChoiceStrings(account.getLoans().stream().map(Loan::getId).toList()).queue();
             }
         }
@@ -77,7 +77,7 @@ public class LoanCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getAccount(guild, event.getUser());
+        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
 
         switch (subcommand) {
             case "request" -> {

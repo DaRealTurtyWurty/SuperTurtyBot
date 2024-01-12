@@ -19,6 +19,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -29,10 +30,13 @@ public class XPInventoryCommand extends CoreCommand {
     public XPInventoryCommand() {
         super(new Types(true, false, false, false));
         final var graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        try {
+        try (final InputStream stream = TurtyBot.loadResource("fonts/Code New Roman.otf")) {
+            if (stream == null)
+                throw new IllegalStateException("Unable to load font: fonts/Code New Roman.otf");
+
             this.usedFont = Font
-                .createFont(Font.TRUETYPE_FONT, TurtyBot.class.getResourceAsStream("/fonts/Code New Roman.otf"))
-                .deriveFont(60f);
+                    .createFont(Font.TRUETYPE_FONT, stream)
+                    .deriveFont(60f);
         } catch (FontFormatException | IOException exception) {
             throw new IllegalStateException("Unable to load font", exception);
         }
@@ -78,7 +82,7 @@ public class XPInventoryCommand extends CoreCommand {
         }
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-            Filters.eq("user", event.getUser().getIdLong()));
+                Filters.eq("user", event.getUser().getIdLong()));
         Levelling profile = Database.getDatabase().levelling.find(filter).first();
         if (profile == null) {
             profile = new Levelling(event.getGuild().getIdLong(), event.getUser().getIdLong());
@@ -92,7 +96,7 @@ public class XPInventoryCommand extends CoreCommand {
             final var output = new ByteArrayOutputStream();
             ImageIO.write(image, "png", output);
             event.deferReply().setFiles(FileUpload.fromData(output.toByteArray(), "inventory.png"))
-                .mentionRepliedUser(false).queue();
+                    .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Error creating inventory!", exception);
             reply(event, "There has been an error creating your inventory. This has been reported to the bot owner!", false, true);
@@ -107,17 +111,17 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
 
         final BufferedImage profilePic = BotUtils
-            .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
+                .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
         graphics.drawImage(profilePic, 80, 68, profilePic.getWidth(), profilePic.getHeight(), null);
 
         graphics.setFont(this.usedFont);
         final String name = member.getUser().getName();
         graphics.drawString((name.length() > 22 ? name.substring(0, 22) + "..." : name) + "'s Levelling Inventory",
-            80 + profilePic.getWidth() + 30,
-            68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
+                80 + profilePic.getWidth() + 30,
+                68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
 
         final List<RankCardItem> items = inventory.stream()
-            .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
+                .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
 
         // TODO: sort items and render items
 
@@ -126,6 +130,10 @@ public class XPInventoryCommand extends CoreCommand {
     }
 
     private static BufferedImage getTemplate() throws IOException {
-        return ImageIO.read(TurtyBot.class.getResourceAsStream("/levels/xp_inventory.png"));
+        final InputStream stream = TurtyBot.loadResource("levels/xp_inventory.png");
+        if (stream == null)
+            throw new IllegalStateException("Unable to load template: levels/xp_inventory.png");
+
+        return ImageIO.read(stream);
     }
 }

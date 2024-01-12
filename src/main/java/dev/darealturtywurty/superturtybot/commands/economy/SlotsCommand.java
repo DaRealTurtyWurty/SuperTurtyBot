@@ -107,7 +107,7 @@ public class SlotsCommand extends EconomyCommand {
             return;
         }
 
-        final Economy account = EconomyManager.getAccount(guild, event.getUser());
+        final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getWallet() < betAmount) {
             event.getHook().editOriginal("❌ You do not have enough money in your wallet to bet that much!").queue();
             return;

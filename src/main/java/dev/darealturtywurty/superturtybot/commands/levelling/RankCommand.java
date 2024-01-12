@@ -28,6 +28,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -44,9 +45,12 @@ public class RankCommand extends CoreCommand {
     public RankCommand() {
         super(new Types(true, false, false, false));
         final var graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        try {
+        try(final InputStream stream = TurtyBot.loadResource("fonts/Code New Roman.otf")) {
+            if (stream == null)
+                throw new IllegalStateException("Unable to load font");
+
             this.usedFont = Font
-                .createFont(Font.TRUETYPE_FONT, TurtyBot.class.getResourceAsStream("/fonts/Code New Roman.otf"))
+                .createFont(Font.TRUETYPE_FONT, stream)
                 .deriveFont(12f);
         } catch (FontFormatException | IOException exception) {
             throw new IllegalStateException("Unable to load font", exception);

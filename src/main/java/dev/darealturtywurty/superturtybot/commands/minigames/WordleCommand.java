@@ -34,6 +34,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+// TODO: Make this use the daily task system
 @SuppressWarnings("SuspiciousNameCombination")
 public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
@@ -99,9 +101,11 @@ public class WordleCommand extends CoreCommand {
             RATELIMITS.clear();
         }, getInitialDelay(), 24, TimeUnit.HOURS);
 
-        try {
-            //noinspection DataFlowIssue
-            DEFAULT_IMAGE = ImageIO.read(TurtyBot.class.getResourceAsStream("/wordle.png"));
+        try (InputStream stream = TurtyBot.loadResource("wordle.png")) {
+            if (stream == null)
+                throw new IllegalStateException("Failed to load 'wordle.png'!");
+
+            DEFAULT_IMAGE = ImageIO.read(stream);
         } catch (IOException | NullPointerException exception) {
             throw new IllegalStateException("Failed to load default image!", exception);
         }
@@ -137,7 +141,9 @@ public class WordleCommand extends CoreCommand {
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.deferReply().queue(hook -> {}, error -> {});
+        event.deferReply().queue(hook -> {
+        }, error -> {
+        });
 
         if (!event.isFromGuild()) {
             runGlobal(event);
@@ -168,7 +174,7 @@ public class WordleCommand extends CoreCommand {
                 .stream()
                 .filter(streak -> streak.getGuild() == 0L)
                 .findFirst();
-        if(streakData.isPresent() && streakData.get().isHasPlayedToday()) {
+        if (streakData.isPresent() && streakData.get().isHasPlayedToday()) {
             event.getHook().sendMessage("❌ You have already played today!").queue();
             return;
         }
@@ -215,7 +221,7 @@ public class WordleCommand extends CoreCommand {
 
         // check if game is already running
         List<Game> games = GUILD_GAMES.computeIfAbsent(guild.getIdLong(), id -> new ArrayList<>());
-        if(games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong())) {
+        if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong())) {
             event.getHook().sendMessage("❌ You already have a game running!").queue();
             return;
         }
@@ -225,7 +231,7 @@ public class WordleCommand extends CoreCommand {
                 .stream()
                 .filter(streak -> streak.getGuild() == guild.getIdLong())
                 .findFirst();
-        if(streakData.isPresent() && streakData.get().isHasPlayedToday()) {
+        if (streakData.isPresent() && streakData.get().isHasPlayedToday()) {
             event.getHook().sendMessage("❌ You have already played today!").queue();
             return;
         }
@@ -282,7 +288,7 @@ public class WordleCommand extends CoreCommand {
             long userId = event.getUser().getIdLong();
 
             var game = new Game(word, guildId, channelId, messageId, userId);
-            if(guildId != null) {
+            if (guildId != null) {
                 GUILD_GAMES.computeIfAbsent(channelId, id -> new ArrayList<>()).add(game);
             } else {
                 DM_GAMES.put(userId, game);
@@ -298,14 +304,14 @@ public class WordleCommand extends CoreCommand {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
                 .condition(event -> {
                     String content = event.getMessage().getContentRaw();
-                            return ((event.isFromGuild() && event.getGuild().getIdLong() == guild.getIdLong())
-                                        || !event.isFromGuild())
-                                    && event.getChannel().getIdLong() == game.getChannelId()
-                                    && event.getAuthor().getIdLong() == game.getUserId()
-                                    && (!isInvalidWord(content) || content.equalsIgnoreCase("give up"));
-                        })
+                    return ((event.isFromGuild() && event.getGuild().getIdLong() == guild.getIdLong())
+                            || !event.isFromGuild())
+                            && event.getChannel().getIdLong() == game.getChannelId()
+                            && event.getAuthor().getIdLong() == game.getUserId()
+                            && (!isInvalidWord(content) || content.equalsIgnoreCase("give up"));
+                })
                 .success(event -> {
-                    if(handleResponse(event, game)) {
+                    if (handleResponse(event, game)) {
                         createEventWaiter(guild, game).build();
                     }
                 });
@@ -314,8 +320,8 @@ public class WordleCommand extends CoreCommand {
     private static boolean handleResponse(MessageReceivedEvent event, Game game) {
         Message message = event.getMessage();
         String content = message.getContentRaw().toLowerCase(Locale.ROOT);
-        if(content.equalsIgnoreCase("give up")) {
-            if(event.isFromGuild()) {
+        if (content.equalsIgnoreCase("give up")) {
+            if (event.isFromGuild()) {
                 endGame(event.getGuild(), game);
             } else {
                 endGame(event.getAuthor(), game);
@@ -324,10 +330,10 @@ public class WordleCommand extends CoreCommand {
             return false;
         }
 
-        if(game.guess(content)) {
+        if (game.guess(content)) {
             sendUpdatedImage(event.getChannel(), game);
 
-            if(event.isFromGuild()) {
+            if (event.isFromGuild()) {
                 endGame(event.getGuild(), game);
             } else {
                 endGame(event.getAuthor(), game);
@@ -366,9 +372,9 @@ public class WordleCommand extends CoreCommand {
         }
 
         streakData.setHasPlayedToday(true);
-        if(won) {
+        if (won) {
             streakData.setStreak(streakData.getStreak() + 1);
-            if(streakData.getStreak() > streakData.getBestStreak()) {
+            if (streakData.getStreak() > streakData.getBestStreak()) {
                 streakData.setBestStreak(streakData.getStreak());
             }
         } else {
@@ -430,7 +436,8 @@ public class WordleCommand extends CoreCommand {
             }
 
             channel.sendMessage("The game has ended! The word was: " + game.getWord()).queue();
-        }, ignored -> {});
+        }, ignored -> {
+        });
     }
 
     private static BufferedImage createImage(List<String> guesses, BiFunction<Integer, Character, Game.LetterState> letterStateGetter, Function<Character, Color> characterColorGetter) {
@@ -536,7 +543,7 @@ public class WordleCommand extends CoreCommand {
         fetchWord().ifPresent(GLOBAL_WORD::set);
     }
 
-    private static void fetchWordForGuild(long guildId, boolean update){
+    private static void fetchWordForGuild(long guildId, boolean update) {
         fetchWord().ifPresent(word -> GUILD_WORDS.put(guildId, word));
 
         if (update) {
@@ -579,7 +586,7 @@ public class WordleCommand extends CoreCommand {
 
     private static void loadTodaysWords() {
         try {
-            if(Files.notExists(WORDLE_FILE)) {
+            if (Files.notExists(WORDLE_FILE)) {
                 Files.createDirectories(WORDLE_FILE.getParent());
                 Files.createFile(WORDLE_FILE);
 
@@ -591,14 +598,14 @@ public class WordleCommand extends CoreCommand {
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             String globalWord;
-            if(object.has("global")) {
+            if (object.has("global")) {
                 globalWord = object.get("global").getAsString();
                 GLOBAL_WORD.set(globalWord);
             } else {
                 fetchWordForGlobal();
             }
 
-            if(object.has("guild_words")) {
+            if (object.has("guild_words")) {
                 JsonObject guildWords = object.getAsJsonObject("guild_words");
                 for (Map.Entry<String, JsonElement> entry : guildWords.entrySet()) {
                     String word = entry.getValue().getAsString();
@@ -659,12 +666,12 @@ public class WordleCommand extends CoreCommand {
         }
 
         public boolean guess(String guess) {
-            if(guesses.contains(guess))
+            if (guesses.contains(guess))
                 return false;
 
             guesses.add(guess);
 
-            if(guess.equalsIgnoreCase(this.word))
+            if (guess.equalsIgnoreCase(this.word))
                 return true;
 
             if (isWon() || isLost())
