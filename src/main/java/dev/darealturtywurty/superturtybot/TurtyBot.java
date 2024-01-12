@@ -22,6 +22,7 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.ext.java7.PathArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
+import okhttp3.OkHttpClient;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
@@ -31,12 +32,15 @@ import org.reflections.util.FilterBuilder;
 
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
 
     public static void main(String[] args) throws InvalidTokenException {
+        Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
         Constants.LOGGER.info("Starting TurtyBot...");
 
         ArgumentParser parser = ArgumentParsers.newFor("TurtyBot").build().defaultHelp(true).description("A multipurpose bot for discord.");

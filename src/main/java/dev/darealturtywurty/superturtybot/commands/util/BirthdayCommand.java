@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class BirthdayCommand extends CoreCommand {
@@ -142,11 +143,13 @@ public class BirthdayCommand extends CoreCommand {
                     return;
                 }
 
-                reply(event,
-                        "🎂 " + user.getAsMention() + "'s birthday is on the " +
+                event.reply("🎂 " + user.getAsMention() + "'s birthday is on the " +
                                 TimeUtils.mapDay(birthday.getDay()) + " of " + TimeUtils.mapMonth(birthday.getMonth()) +
                                 "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ") This year they will be " +
-                                (Calendar.getInstance().get(Calendar.YEAR) - birthday.getYear()) + " years old!");
+                                (Calendar.getInstance().get(Calendar.YEAR) - birthday.getYear()) + " years old!")
+                        .mentionRepliedUser(false)
+                        .setAllowedMentions(Set.of())
+                        .queue();
             }
             case "enabled" -> {
                 Guild guild = event.getGuild();

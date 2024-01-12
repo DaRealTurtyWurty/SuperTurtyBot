@@ -1,30 +1,44 @@
 package dev.darealturtywurty.superturtybot.core.util;
 
-import com.google.common.collect.Streams;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 public class FileUtils {
-    // TODO: Make this work in production
     public static List<URL> locateResourceFiles(String folder) {
         if(CommandHook.isDevMode()) {
             Path path = Path.of("src/main/resources/" + folder);
             return FileUtils.locateResourceFiles(path);
         } else {
-            try {
-                return Streams.stream(TurtyBot.class.getClassLoader().getResources(folder).asIterator())
-                        .toList();
-            } catch (IOException exception) {
-                Constants.LOGGER.error("Failed to locate resource files!", exception);
+            URL url = TurtyBot.class.getResource("/" + folder);
+            if (url == null) {
                 return List.of();
             }
+
+            File fileFolder = new File(url.getFile());
+            if(!fileFolder.isDirectory())
+                return List.of();
+
+            File[] files = fileFolder.listFiles();
+            if(files == null)
+                return List.of();
+
+            return Arrays.stream(files).map(file -> {
+                try {
+                    return file.toURI().toURL();
+                } catch (final IOException exception) {
+                    Constants.LOGGER.error("Failed to locate resource files!", exception);
+                    return null;
+                }
+            }).toList();
         }
     }
 
