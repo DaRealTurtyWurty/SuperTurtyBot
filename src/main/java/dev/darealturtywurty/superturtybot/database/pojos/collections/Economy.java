@@ -33,6 +33,7 @@ public class Economy {
 
     private Job job;
     private int jobLevel;
+    private boolean readyForPromotion;
 
     private long totalBetLoss;
     private long totalBetWin;

@@ -29,9 +29,7 @@ import net.dv8tion.jda.api.events.sticker.GuildStickerAddedEvent;
 import net.dv8tion.jda.api.events.sticker.GuildStickerRemovedEvent;
 import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Data
@@ -71,6 +69,8 @@ public class GuildData {
     private String economyCurrency;
     private boolean economyEnabled;
     private int defaultEconomyBalance;
+    private float incomeTax;
+    private Map<String, Integer> endOfDayIncomeTax;
 
     // Logging
     private long loggingChannel;
@@ -122,7 +122,6 @@ public class GuildData {
     private float warningXpPercentage;
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
-
     private List<Long> enabledBirthdayUsers;
 
     public GuildData() {
@@ -165,6 +164,8 @@ public class GuildData {
         this.economyCurrency = "$";
         this.economyEnabled = true;
         this.defaultEconomyBalance = 200;
+        this.incomeTax = 0.1F;
+        this.endOfDayIncomeTax = new HashMap<String, Integer>();
 
         // Logging
         this.loggingChannel = 0L;

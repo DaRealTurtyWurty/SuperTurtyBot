@@ -1,6 +1,9 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -8,16 +11,20 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.text.WordUtils;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class EconomyManager {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -110,40 +117,56 @@ public class EconomyManager {
     }
 
     public static void start(JDA jda) {
-        if (isRunning()) return;
-
-        IS_RUNNING.set(true);
+        if (IS_RUNNING.getAndSet(true))
+            return;
 
         if (!PublicShop.isRunning()) {
             PublicShop.run();
         }
 
-        // TODO: Move to DailyTask
-        EXECUTOR.scheduleAtFixedRate(() -> {
-            Database.getDatabase().economy.find().into(new ArrayList<>()).stream()
-                    .filter(account -> getBalance(account) < 0).forEach(account -> {
-                        Guild guild = jda.getGuildById(account.getGuild());
-                        if (guild == null)
-                            return;
+        DailyTaskScheduler.addTask(new DailyTask(() -> {
+            List<Economy> accounts = Database.getDatabase().economy.find().into(new ArrayList<>());
 
-                        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-                        if (config == null) {
-                            config = new GuildData(guild.getIdLong());
-                            Database.getDatabase().guildData.insertOne(config);
-                        }
+            Map<Long, List<Economy>> guildsAccounts = accounts.stream()
+                    .collect(Collectors.groupingBy(Economy::getGuild));
+            for (Map.Entry<Long, List<Economy>> guildAccounts : guildsAccounts.entrySet()) {
+                long guildId = guildAccounts.getKey();
+                Guild guild = jda.getGuildById(guildId);
+                if (guild == null)
+                    continue;
 
-                        removeMoney(account, config.getDefaultEconomyBalance(), true);
-                        updateAccount(account);
+                GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guildId)).first();
+                if (guildData == null || !guildData.isEconomyEnabled() || guildData.getEndOfDayIncomeTax().isEmpty())
+                    continue;
 
-                        User user = jda.getUserById(account.getUser());
-                        if (user == null) return;
+                Map<String, Integer> endOfDayIncomeTaxes = guildData.getEndOfDayIncomeTax();
+                guildAccounts.getValue()
+                        .stream()
+                        .filter(account -> endOfDayIncomeTaxes.containsKey(String.valueOf(account.getUser())))
+                        .forEach(account -> {
+                            int amount = endOfDayIncomeTaxes.get(String.valueOf(account.getUser()));
+                            if (amount > 0) {
+                                User user = jda.getUserById(account.getUser());
+                                if (user == null)
+                                    return;
 
-                        user.openPrivateChannel().queue(channel -> channel.sendMessage(
-                                ("You have a negative balance in your bank! As such, you have been fined <>%d! " + "Your outstanding balance is %d.").replace(
-                                        "<>", "$").formatted(200, -account.getBank())).queue(), error -> {
+                                removeMoney(account, amount, true);
+                                updateAccount(account);
+                                endOfDayIncomeTaxes.remove(String.valueOf(account.getUser()));
+
+                                user.openPrivateChannel().queue(channel -> channel.sendMessage(
+                                        "You have been taxed <>%d! Your new balance is <>%d."
+                                                .replace("<>", guildData.getEconomyCurrency())
+                                                .formatted(amount, account.getBank())
+                                ).queue(), RestAction.getDefaultSuccess());
+                            }
                         });
-                    });
-        }, 0, 24, TimeUnit.HOURS);
+
+                guildData.setEndOfDayIncomeTax(endOfDayIncomeTaxes);
+                Database.getDatabase().guildData.updateOne(Filters.eq("guild", guildId),
+                        Updates.set("endOfDayIncomeTax", endOfDayIncomeTaxes));
+            }
+        }, 12, 0));
     }
 
     public static void updateAccount(Economy account) {
@@ -172,18 +195,32 @@ public class EconomyManager {
         addMoney(account, earned, true);
 
         if (ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
-            account.setJobLevel(account.getJobLevel() + 1);
+            account.setReadyForPromotion(true);
+        }
+
+        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", account.getGuild())).first();
+        if (data == null) {
+            data = new GuildData(account.getGuild());
+            Database.getDatabase().guildData.insertOne(data);
         }
 
         updateAccount(account);
+
+        Map<String, Integer> endOfDayIncome = data.getEndOfDayIncomeTax();
+        int newAmount = (int) (endOfDayIncome.getOrDefault(String.valueOf(account.getUser()), 0) + earned * data.getIncomeTax());
+        endOfDayIncome.put(String.valueOf(account.getUser()), newAmount);
+        data.setEndOfDayIncomeTax(endOfDayIncome);
+        Database.getDatabase().guildData.updateOne(Filters.eq("guild", account.getGuild()),
+                Updates.set("endOfDayIncomeTax", endOfDayIncome));
+
         return amount;
     }
 
     public static int getPayAmount(Economy account) {
         int salary = account.getJob().getSalary();
         int jobLevel = account.getJobLevel();
-        float multiplier = account.getJob().getPromotionMultiplier() + 1;
-        return Math.round(salary * (1 + (jobLevel * multiplier)));
+        float promotionMultiplier = account.getJob().getPromotionMultiplier();
+        return Math.round(salary * (jobLevel + 1) * promotionMultiplier);
     }
 
     public static boolean registerJob(Economy account, String job) {

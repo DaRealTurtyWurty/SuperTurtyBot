@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.commands.economy.JobCommand;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.api.request.*;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -21,6 +22,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -731,7 +734,6 @@ public class ApiHandler {
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -753,7 +755,6 @@ public class ApiHandler {
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-
             if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -766,6 +767,31 @@ public class ApiHandler {
             String optionB = object.get("optionB").getAsString();
 
             return Either.left(new WouldYouRather(optionA, optionB));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<JobCommand.Code, HttpStatus> findCode() {
+        try(Response response = makeRequest("code/guesser?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
+            if(response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if(body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if(json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            String code = URLDecoder.decode(object.get("code").getAsString(), StandardCharsets.UTF_8);
+            JsonObject languageObj = object.get("language").getAsJsonObject();
+            String language = languageObj.get("name").getAsString();
+            String extension = languageObj.get("extension").getAsString();
+
+            return Either.left(new JobCommand.Code(code, new JobCommand.Code.Language(language, extension)));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }

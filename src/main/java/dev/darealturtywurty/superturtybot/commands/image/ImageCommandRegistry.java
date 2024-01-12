@@ -32,7 +32,7 @@ public class ImageCommandRegistry {
 
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
-        event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
+        event.reply(mediaURL).mentionRepliedUser(false).queue();
     };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BUNNY = (event, cmd) -> {
@@ -43,7 +43,7 @@ public class ImageCommandRegistry {
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = result.get("media").getAsJsonObject().get("poster").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
+            event.reply(url).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get bunny!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this bunny image.")
@@ -52,7 +52,8 @@ public class ImageCommandRegistry {
     };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> CAT_BOMB = (event, cmd) -> {
-        event.deferReply().setContent("Loading cats...").queue();
+        event.reply("Loading cats...").queue();
+        
         final String[] subreddits = { "Cats", "Kitten", "CatSpotting", "IllegallySmolCats", "IllegallyBigCats",
             "IllegallyLongCats", "Kitty", "GrumpyCats", "TruckerCats", "FromKittenToCat", "WetCats", "SeniorCats",
             "SleepingCats", "Displeased_Kitties", "FluffyCats", "SuspiciousCats", "CatsCalledFood", "catshuggingcats",
@@ -65,12 +66,12 @@ public class ImageCommandRegistry {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
             final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
             if(post == null)
-                return;
+                continue;
 
             final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
                 : post.getSubject().getUrl();
             if(mediaURL == null)
-                return;
+                continue;
 
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
@@ -85,7 +86,7 @@ public class ImageCommandRegistry {
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String imageId = result.get("url").getAsString();
-            event.deferReply().setContent(url + imageId).mentionRepliedUser(false).queue();
+            event.reply(url + imageId).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get cat!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this cat image.")
@@ -94,7 +95,7 @@ public class ImageCommandRegistry {
     };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOG_BOMB = (event, cmd) -> {
-        event.deferReply().setContent("Loading dogs...").queue();
+        event.reply("Loading dogs...").queue();
         final String[] subreddits = { "Dogs", "lookatmydog", "dogpictures", "dogswearinghats", "dogswitheyebrows",
             "DogsWithUnderbites", "woofbarkwoof", "beachdogs", "dogswatchingyoueat", "airedale", "akita",
             "alaskanmalamute", "Americanbulldog", "americaneskimo/", "AmericanBully", "AmStaffPitts",
@@ -117,12 +118,12 @@ public class ImageCommandRegistry {
             final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
             final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
             if(post == null)
-                return;
+                continue;
 
             final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
                 : post.getSubject().getUrl();
             if(mediaURL == null)
-                return;
+                continue;
 
             actions.add(event.getChannel().sendMessage(mediaURL));
         }
@@ -136,7 +137,7 @@ public class ImageCommandRegistry {
             final JsonObject body = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = body.get("message").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
+            event.reply(url).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get dog!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this dog image.")
@@ -152,7 +153,7 @@ public class ImageCommandRegistry {
 
         final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
-        event.deferReply().setContent(mediaURL).mentionRepliedUser(false).queue();
+        event.reply(mediaURL).mentionRepliedUser(false).queue();
     };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DUCK = (event, cmd) -> {
@@ -161,7 +162,7 @@ public class ImageCommandRegistry {
             final JsonObject result = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             final String url = result.get("url").getAsString();
-            event.deferReply().setContent(url).mentionRepliedUser(false).queue();
+            event.reply(url).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to get duck!", exception);
             event.deferReply(true).setContent("❌ There has been a problem gathering this duck image!")
@@ -172,7 +173,7 @@ public class ImageCommandRegistry {
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> SNAKE = (event, cmd) -> {
         try {
             final Document page = Jsoup.connect("https://generatorfun.com/random-snake-image").get();
-            event.deferReply().setContent(page.select("img").first().attr("abs:src")).mentionRepliedUser(false).queue();
+            event.reply(page.select("img").first().attr("abs:src")).mentionRepliedUser(false).queue();
         } catch (final IOException exception) {
             Constants.LOGGER.error("Failed to get snake!", exception);
             event.deferReply(true).setContent("❌ There has been an issue gathering this snake image.")

@@ -235,4 +235,13 @@ public final class StringUtils {
             default -> "th";
         };
     }
+
+    public static boolean isNumber(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (final NumberFormatException exception) {
+            return false;
+        }
+    }
 }
