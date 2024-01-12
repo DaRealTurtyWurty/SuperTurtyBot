@@ -45,7 +45,7 @@ public class MemeCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         reply(event, "Loading meme...");
         final String[] subreddits = { "memes", "dankmemes", "blackpeopletwitter", "memeeconomy", "me_irl",
-            "adviceanimals", "deepfriedmemes", "surrealmemes", "nukedmemes", "bigbangedmemes", "wackytictacs",
+            "adviceanimals", "surrealmemes", "nukedmemes", "bigbangedmemes", "wackytictacs",
             "bonehurtingjuice" };
         
         final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);

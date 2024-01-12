@@ -105,7 +105,7 @@ public class TurtyBot {
         builder.addEventListeners(SuggestionManager.INSTANCE);
 
         // Add the auto moderator so that the bot can handle auto moderations
-        builder.addEventListeners(AutoModerator.INSTANCE);
+//        builder.addEventListeners(AutoModerator.INSTANCE);
 
         // Add the levelling manager so that the bot can handle levels
         builder.addEventListeners(LevellingManager.INSTANCE);

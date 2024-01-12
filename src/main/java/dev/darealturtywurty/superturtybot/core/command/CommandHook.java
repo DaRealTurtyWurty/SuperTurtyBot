@@ -165,9 +165,9 @@ public class CommandHook extends ListenerAdapter {
             IS_DEV_MODE = true;
         }
 
-        if (!isDevMode()) {
-            AutoModerator.INSTANCE.initialize();
-        }
+//        if (!isDevMode()) {
+//            AutoModerator.INSTANCE.initialize();
+//        }
     }
 
     private static void sendStartupMessage(@Nullable TextChannel channel) {
