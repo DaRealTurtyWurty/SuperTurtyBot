@@ -194,14 +194,15 @@ public class JobCommand extends EconomyCommand {
     }
 
     private static void startMinigame(SlashCommandInteractionEvent event, Economy account) {
-        switch (account.getJob()) {
-            case MATHEMATICIAN -> startMathChallenge(event, account);
-//            case PROGRAMMER -> startCodeGuesser(event, account);
-//            case DOCTOR -> startBodyPartNamer(event, account);
-//            case MUSICIAN -> startLyricGuesser(event, account);
-//            case ARTIST -> startDrawingGame(event, account);
-            case null, default -> event.getHook().editOriginal("⚠️ This job does not have a minigame yet!").queue();
-        }
+        startMathChallenge(event, account);
+//        switch (account.getJob()) {
+//            case MATHEMATICIAN -> startMathChallenge(event, account);
+////            case PROGRAMMER -> startCodeGuesser(event, account);
+////            case DOCTOR -> startBodyPartNamer(event, account);
+////            case MUSICIAN -> startLyricGuesser(event, account);
+////            case ARTIST -> startDrawingGame(event, account);
+//            case null, default -> event.getHook().editOriginal("⚠️ This job does not have a minigame yet!").queue();
+//        }
     }
 
     private static void startCodeGuesser(SlashCommandInteractionEvent event, Economy account) {

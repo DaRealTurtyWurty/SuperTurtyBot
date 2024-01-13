@@ -40,7 +40,7 @@ public final class RedditUtils {
                     Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
             final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot", "1.0.0-alpha", "TurtyWurty");
             REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
-            REDDIT.setLogHttp(false);
+            REDDIT.setLogHttp(true);
         }
     }
 
