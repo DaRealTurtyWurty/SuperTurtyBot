@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.squareup.moshi.JsonDataException;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import kotlin.text.Charsets;
 import net.dean.jraw.ApiException;
@@ -38,7 +39,7 @@ public final class RedditUtils {
         if (Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
             final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
                     Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
-            final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot", "1.0.0-alpha", "TurtyWurty");
+            final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
             REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
             REDDIT.setLogHttp(true);
         }
@@ -171,6 +172,7 @@ public final class RedditUtils {
         try {
             return subreddit.randomSubmission();
         } catch (NetworkException | JsonDataException | ApiException exception) {
+            Constants.LOGGER.error("Failed to get random post!", exception);
             return null;
         }
     }
