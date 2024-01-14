@@ -182,7 +182,7 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                startMinigame(event, account);
+                startMathChallenge(event, account);
             }
             case null, default -> event.getHook().editOriginal("❌ You must specify a valid subcommand!").queue();
         }
@@ -192,25 +192,6 @@ public class JobCommand extends EconomyCommand {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", String.valueOf(amount));
-    }
-
-    private static void startMinigame(SlashCommandInteractionEvent event, Economy account) {
-        switch (account.getJob()) {
-            case MATHEMATICIAN -> startMathChallenge(event, account);
-            case PROGRAMMER -> startCodeGuesser(event, account);
-//            case DOCTOR -> startBodyPartNamer(event, account);
-//            case MUSICIAN -> startLyricGuesser(event, account);
-//            case ARTIST -> startDrawingGame(event, account);
-            case null, default -> {
-                // TODO: Remove this when all jobs have minigames
-                if(ThreadLocalRandom.current().nextBoolean())
-                    startMathChallenge(event, account);
-                else
-                    startCodeGuesser(event, account);
-
-                // event.getHook().editOriginal("⚠️ This job does not have a minigame yet!").queue();
-            }
-        }
     }
 
     private static void startCodeGuesser(SlashCommandInteractionEvent event, Economy account) {
