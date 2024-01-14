@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
@@ -194,28 +195,34 @@ public class JobCommand extends EconomyCommand {
     }
 
     private static void startMinigame(SlashCommandInteractionEvent event, Economy account) {
-        startMathChallenge(event, account);
-//        switch (account.getJob()) {
-//            case MATHEMATICIAN -> startMathChallenge(event, account);
-////            case PROGRAMMER -> startCodeGuesser(event, account);
-////            case DOCTOR -> startBodyPartNamer(event, account);
-////            case MUSICIAN -> startLyricGuesser(event, account);
-////            case ARTIST -> startDrawingGame(event, account);
-//            case null, default -> event.getHook().editOriginal("⚠️ This job does not have a minigame yet!").queue();
-//        }
+        switch (account.getJob()) {
+            case MATHEMATICIAN -> startMathChallenge(event, account);
+            case PROGRAMMER -> startCodeGuesser(event, account);
+//            case DOCTOR -> startBodyPartNamer(event, account);
+//            case MUSICIAN -> startLyricGuesser(event, account);
+//            case ARTIST -> startDrawingGame(event, account);
+            case null, default -> {
+                // TODO: Remove this when all jobs have minigames
+                if(ThreadLocalRandom.current().nextBoolean())
+                    startMathChallenge(event, account);
+                else
+                    startCodeGuesser(event, account);
+
+                // event.getHook().editOriginal("⚠️ This job does not have a minigame yet!").queue();
+            }
+        }
     }
 
     private static void startCodeGuesser(SlashCommandInteractionEvent event, Economy account) {
         var code = Code.findCode();
         event.getHook()
-                .editOriginalFormat("✅ You have started the promotion minigame! You have 10 seconds to guess the programming language.",
-                        code.code())
+                .editOriginal("✅ You have started the promotion minigame! You have 10 seconds to guess the programming language.")
                 .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
                 .queue(channel -> {
                     channel.addThreadMember(event.getUser()).queue();
                     channel.sendMessageFormat(
                                     "Guess the programming language of the following code to get promoted to the next job level!\n\n```\n%s```",
-                                    code.code())
+                                    code.code().substring(0, MathUtils.clamp(code.code().length(), 0, 1900)))
                             .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
                                     .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
                                             && e.getAuthor().getIdLong() == event.getUser().getIdLong()
