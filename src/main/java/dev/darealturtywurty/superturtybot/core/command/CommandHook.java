@@ -304,9 +304,9 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new OptCommand());
         cmds.add(new UptimeCommand());
         //cmds.add(new SystemStatsCommand());
-        //cmds.add(new TestCommand());
         //cmds.add(new SubmitCommand());
         //cmds.add(new SubmissionCommand());
+        cmds.add(new EvalCommand());
 
         // Utility
         cmds.add(new BotInfoCommand());
@@ -434,6 +434,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new HigherLowerCommand());
         cmds.add(new WordleCommand());
         cmds.add(new GeoGuesserCommand());
+        cmds.add(new HangmanCommand());
 
         // Economy
         cmds.add(new BalanceCommand());

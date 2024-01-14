@@ -20,6 +20,7 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class CommandListCommand extends CoreCommand {
@@ -29,8 +30,13 @@ public class CommandListCommand extends CoreCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.STRING, "category", "The category to get the list of commands from.",
-                false).setAutoComplete(true));
+        return List.of(new OptionData(
+                OptionType.STRING,
+                "category",
+                "The category to get the list of commands from.",
+                false,
+                true
+        ));
     }
 
     @Override
@@ -64,29 +70,33 @@ public class CommandListCommand extends CoreCommand {
 
         final String term = event.getFocusedOption().getValue();
         final List<String> categories = CommandCategory.getCategories().stream()
-                .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase()))
+                .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase(Locale.ROOT)))
                 .filter(category -> {
                     if (!event.isFromGuild() || !category.isNSFW())
                         return true;
 
                     return NSFWCommand.isValidChannel(event.getChannel());
-                }).limit(25).map(CommandCategory::getName).map(String::toLowerCase).toList();
+                })
+                .limit(25)
+                .map(CommandCategory::getName)
+                .map(String::toLowerCase)
+                .toList();
         event.replyChoiceStrings(categories).queue();
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final OptionMapping categoryOption = event.getOption("category");
-        if (categoryOption == null) {
-            final EmbedBuilder embed = categoriesEmbed(event.isFromGuild() ? event.getGuild() : null,
+        final String category = event.getOption("category", null, OptionMapping::getAsString);
+        if (category == null) {
+            final EmbedBuilder embed = categoriesEmbed(
+                    event.isFromGuild() ? event.getGuild() : null,
                     event.isFromGuild() ? event.getMember() : null,
                     NSFWCommand.isValidChannel(event.getChannel()));
-            setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
+            setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());
             reply(event, embed, false);
             return;
         }
 
-        final String category = categoryOption.getAsString();
         if (CommandCategory.byName(category) == null) {
             reply(event, "You must provide a valid category!", false, true);
             return;
@@ -94,14 +104,13 @@ public class CommandListCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        commandsEmbed(category,
-                NSFWCommand.isValidChannel(event.getChannel()), event.getGuild()).thenAccept(embed -> {
+        commandsEmbed(category, NSFWCommand.isValidChannel(event.getChannel()), event.getGuild()).thenAccept(embed -> {
             if (embed == null) {
                 event.getHook().sendMessage("❌ You must specify a valid category!").queue();
                 return;
             }
 
-            setAuthor(embed, event.isFromGuild(), event.getInteraction().getUser(), event.getMember());
+            setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         });
     }
@@ -123,13 +132,15 @@ public class CommandListCommand extends CoreCommand {
 
     private static CompletableFuture<EmbedBuilder> commandsEmbed(String categoryStr, boolean allowNSFW, @Nullable Guild guild) {
         final var category = CommandCategory.byName(categoryStr);
-        if (category == null) return CompletableFuture.completedFuture(null);
+        if (category == null)
+            return CompletableFuture.completedFuture(null);
 
         final var embed = new EmbedBuilder();
         embed.setTitle("Commands for category: " + category.getName());
         CompletableFuture<StringBuilder> cmdsString = new CompletableFuture<>();
         if (category.isNSFW()) {
-            if (!allowNSFW) return CompletableFuture.completedFuture(null);
+            if (!allowNSFW)
+                return CompletableFuture.completedFuture(null);
 
             CompletableFuture<List<CoreCommand>> cmds = new CompletableFuture<>();
             if (guild != null) {
@@ -220,7 +231,7 @@ public class CommandListCommand extends CoreCommand {
 
     private static void setAuthor(EmbedBuilder embed, boolean fromGuild, User author, Member member) {
         if (fromGuild) {
-            embed.setFooter(member.getUser().getName(), member.getEffectiveAvatarUrl());
+            embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
         } else {
             embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
         }

@@ -43,7 +43,11 @@ public class TurtyBot {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
         Constants.LOGGER.info("Starting TurtyBot...");
 
-        ArgumentParser parser = ArgumentParsers.newFor("TurtyBot").build().defaultHelp(true).description("A multipurpose bot for discord.");
+        ArgumentParser parser = ArgumentParsers.newFor("TurtyBot")
+                .build()
+                .defaultHelp(true)
+                .description("A multipurpose bot for discord.");
+
         parser.addArgument("-env", "--environment")
                 .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
                 .setDefault(Path.of("./.env"))

@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
@@ -75,6 +76,11 @@ public class JobCommand extends EconomyCommand {
     @Override
     public String getRichName() {
         return "Job";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.SECONDS, 1L);
     }
 
     @Override

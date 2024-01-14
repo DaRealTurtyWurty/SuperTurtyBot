@@ -131,8 +131,11 @@ public class TagCommand extends CoreCommand {
         final List<Tag> tags = new ArrayList<>();
         Database.getDatabase().tags.find(filter).forEach(tags::add);
 
-        final List<String> results = tags.stream().filter(tag -> tag.getName().contains(given)).limit(25)
-            .map(Tag::getName).toList();
+        final List<String> results = tags.stream()
+                .filter(tag -> tag.getName().contains(given))
+                .limit(25)
+                .map(Tag::getName)
+                .toList();
         event.replyChoiceStrings(results).queue();
     }
 

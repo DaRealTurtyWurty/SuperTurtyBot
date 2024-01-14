@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.core;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -39,7 +40,12 @@ public class PingCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.getJDA().getRestPing().queue(ping -> event.replyFormat("Rest Ping: %sms\nWebsocket Ping: %sms", ping,
-                event.getJDA().getGatewayPing()).mentionRepliedUser(false).queue());
+        event.deferReply().queue();
+
+        JDA jda = event.getJDA();
+        jda.getRestPing().queue(ping ->
+                event.getHook().editOriginalFormat("Rest Ping: %sms\nWebsocket Ping: %sms", ping, jda.getGatewayPing())
+                        .mentionRepliedUser(false)
+                        .queue());
     }
 }

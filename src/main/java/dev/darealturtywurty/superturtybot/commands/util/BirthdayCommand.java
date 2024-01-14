@@ -139,7 +139,10 @@ public class BirthdayCommand extends CoreCommand {
 
                 Birthday birthday = BirthdayManager.getBirthday(user.getIdLong());
                 if (birthday == null) {
-                    reply(event, "❌ That user has not set their birthday yet!", false, true);
+                    event.reply("❌ " + user.getAsMention() + " has not set their birthday!")
+                            .mentionRepliedUser(false)
+                            .setAllowedMentions(Set.of())
+                            .queue();
                     return;
                 }
 
