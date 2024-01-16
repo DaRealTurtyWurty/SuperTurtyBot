@@ -191,9 +191,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         reply(event, embed, mention, false);
     }
 
-    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention,
-        boolean defer) {
-        event.deferReply(defer).addEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
+        event.deferReply(ephemeral).addEmbeds(embed.build()).mentionRepliedUser(mention).queue();
     }
 
     protected static void reply(SlashCommandInteractionEvent event, String message) {
@@ -204,8 +203,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         reply(event, message, mention, false);
     }
 
-    protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean defer) {
-        event.deferReply(defer).setContent(message).mentionRepliedUser(mention).queue();
+    protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
+        event.deferReply(ephemeral).setContent(message).mentionRepliedUser(mention).queue();
     }
 
     protected static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
