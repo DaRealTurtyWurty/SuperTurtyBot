@@ -340,8 +340,8 @@ public class HangmanCommand extends CoreCommand {
         graphics.setFont(TITLE_FONT);
         graphics.drawString("Hangman", 250 - (graphics.getFontMetrics().stringWidth("Hangman") / 2), 50);
 
-        // map stage to from 0-6 to 0-9
-        int stage = MathUtils.map(Game.MAX_LIVES - game.getLives(), 0, 6, 0, 9);
+        // map stage to from 0-GAME.MAX_LIVES to 0-STAGES.size() - 1
+        int stage = MathUtils.map(Game.MAX_LIVES - game.getLives(), 0, Game.MAX_LIVES, 0, STAGES.size() - 1);
         for (int index = 0; index <= stage; index++) {
             STAGES.get(index).accept(graphics);
         }
@@ -382,7 +382,7 @@ public class HangmanCommand extends CoreCommand {
                         .minLength(4)
                         .maxLength(10)
                         .build();
-        private static final int MAX_LIVES = 6;
+        private static final int MAX_LIVES = 10;
 
         private final List<Character> guessedLetters = new ArrayList<>();
         private final long guildId, channelId, userId;
