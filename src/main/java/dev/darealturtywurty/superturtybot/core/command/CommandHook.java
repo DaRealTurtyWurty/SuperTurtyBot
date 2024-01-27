@@ -432,6 +432,7 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new GeoGuesserCommand());
         cmds.add(new HangmanCommand());
         cmds.add(new TicTacToeCommand());
+        cmds.add(new WordSearchCommand());
 
         // Economy
         cmds.add(new BalanceCommand());
