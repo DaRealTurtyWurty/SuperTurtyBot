@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
-import dev.darealturtywurty.superturtybot.commands.core.LeaderboardCommand;
+import dev.darealturtywurty.superturtybot.commands.util.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;
@@ -21,10 +21,9 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
-import dev.darealturtywurty.superturtybot.commands.util.suggestion.SuggestCommand;
+import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
-import dev.darealturtywurty.superturtybot.modules.AutoModerator;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -390,9 +389,6 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new MoveCommand());
         cmds.add(new VoteSkipCommand());
         cmds.add(new SaveSongCommand());
-        //cmds.add(new FilterCommand());
-        //cmds.add(new FilterConfigCommand());
-        // TODO: Come back to filters at some point
 
         // Image
         cmds.add(new HttpCatCommand());

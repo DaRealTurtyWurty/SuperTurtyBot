@@ -16,7 +16,6 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.GuildAudioManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.LoopState;
 import dev.darealturtywurty.superturtybot.commands.music.manager.data.TrackData;
-import dev.darealturtywurty.superturtybot.commands.music.manager.filter.FilterChainConfiguration;
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.FirstTimeGuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.GuessSongLoadHandler;
 import dev.darealturtywurty.superturtybot.commands.music.manager.handler.SearchLoadHandler;
@@ -362,10 +361,6 @@ public final class AudioManager {
 
     public static boolean isGuessSongRunning(Guild guild) {
         return getOrCreate(guild).getMusicScheduler().isGuessSongRunning();
-    }
-
-    public static FilterChainConfiguration getFilterConfiguration(Guild guild) {
-        return getOrCreate(guild).getFilterChainConfiguration();
     }
 
     public static Pair<Boolean, String> saveSong(User user, String name, String url) {
