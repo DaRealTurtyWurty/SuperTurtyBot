@@ -1,8 +1,9 @@
-package dev.darealturtywurty.superturtybot.commands.util;
+package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -32,7 +33,7 @@ public class AddRoleToThreadCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.UTILITY;
+        return CommandCategory.MODERATION;
     }
 
     @Override
@@ -51,6 +52,11 @@ public class AddRoleToThreadCommand extends CoreCommand {
     }
 
     @Override
+    public String getAccess() {
+        return "Manage Server";
+    }
+
+    @Override
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 5L);
     }
@@ -63,10 +69,16 @@ public class AddRoleToThreadCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        if(guild == null) {
+        if(guild == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
+
+        if(!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+            reply(event, "❌ You do not have permission to use this command!", false, true);
+            return;
+        }
+
 
         GuildChannel guildChannel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
         if(guildChannel == null) {

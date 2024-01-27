@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.util.suggestion;
+package dev.darealturtywurty.superturtybot.commands.core.suggestion;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;

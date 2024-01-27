@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.core;
+package dev.darealturtywurty.superturtybot.commands.util;
 
 import com.google.common.collect.Lists;
 import com.mongodb.client.model.Filters;
@@ -64,7 +64,7 @@ public class LeaderboardCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.CORE;
+        return CommandCategory.UTILITY;
     }
 
     @Override

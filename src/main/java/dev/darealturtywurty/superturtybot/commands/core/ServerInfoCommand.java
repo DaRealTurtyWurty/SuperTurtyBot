@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.util;
+package dev.darealturtywurty.superturtybot.commands.core;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -18,7 +18,7 @@ public class ServerInfoCommand extends CoreCommand {
     
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.UTILITY;
+        return CommandCategory.CORE;
     }
     
     @Override

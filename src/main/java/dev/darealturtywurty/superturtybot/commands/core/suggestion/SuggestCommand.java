@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.util.suggestion;
+package dev.darealturtywurty.superturtybot.commands.core.suggestion;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -54,7 +54,7 @@ public class SuggestCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.UTILITY;
+        return CommandCategory.CORE;
     }
     
     @Override

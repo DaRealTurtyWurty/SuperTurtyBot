@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.util;
+package dev.darealturtywurty.superturtybot.commands.core;
 
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -77,7 +77,7 @@ public class BirthdayCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.UTILITY;
+        return CommandCategory.CORE;
     }
 
     @Override
