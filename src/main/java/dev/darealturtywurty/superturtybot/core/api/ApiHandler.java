@@ -369,9 +369,9 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
-            String recommended = object.get("recommended").getAsString();
+            String stable = object.get("stable").getAsString();
             String latest = object.get("latest").getAsString();
-            return Either.left(new CoupledPair<>(new ForgeVersion(recommended, true), new ForgeVersion(latest, false)));
+            return Either.left(new CoupledPair<>(new ForgeVersion(stable, true), new ForgeVersion(latest, false)));
         } catch (IOException ignored) {
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -393,7 +393,53 @@ public class ApiHandler {
             List<ForgeVersion> versions = array.asList()
                     .stream()
                     .map(JsonElement::getAsJsonObject)
-                    .map(obj -> new ForgeVersion(obj.get("version").getAsString(), obj.get("isRecommended").getAsBoolean()))
+                    .map(obj -> new ForgeVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
+                    .toList();
+            return Either.left(versions);
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<CoupledPair<NeoforgeVersion>, HttpStatus> getLatestNeoforge() {
+        try (Response response = makeRequest("minecraft/neoforge/latest?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+
+            String stable = object.get("stable").getAsString();
+            String latest = object.get("latest").getAsString();
+            return Either.left(new CoupledPair<>(new NeoforgeVersion(stable, true), new NeoforgeVersion(latest, false)));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<NeoforgeVersion>, HttpStatus> getAllNeoforge() {
+        try (Response response = makeRequest("minecraft/neoforge/all?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<NeoforgeVersion> versions = array.asList()
+                    .stream()
+                    .map(JsonElement::getAsJsonObject)
+                    .map(obj -> new NeoforgeVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
                     .toList();
             return Either.left(versions);
         } catch (IOException ignored) {
@@ -773,16 +819,16 @@ public class ApiHandler {
     }
 
     public static Either<JobCommand.Code, HttpStatus> findCode() {
-        try(Response response = makeRequest("code/guesser?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
-            if(response.code() != HttpStatus.OK.getCode())
+        try (Response response = makeRequest("code/guesser?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
+            if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
             ResponseBody body = response.body();
-            if(body == null)
+            if (body == null)
                 return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
 
             String json = body.string();
-            if(json.isBlank())
+            if (json.isBlank())
                 return Either.right(HttpStatus.NOT_FOUND);
 
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);

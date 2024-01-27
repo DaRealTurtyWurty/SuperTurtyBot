@@ -28,6 +28,7 @@ public class LatestCommand extends CoreCommand {
                 new SubcommandData("fabric", "Get the latest Fabric version"),
                 new SubcommandData("quilt", "Get the latest Quilt version"),
                 new SubcommandData("parchment", "Get the latest Parchment version"),
+                new SubcommandData("neoforge", "Get the latest NeoForge version"),
                 new SubcommandData("all", "Get the latest versions of all"));
     }
 
@@ -127,6 +128,21 @@ public class LatestCommand extends CoreCommand {
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
+            case "neoforge" -> {
+                Either<CoupledPair<NeoforgeVersion>, HttpStatus> response = ApiHandler.getLatestNeoforge();
+                if (response.isRight()) {
+                    event.getHook().sendMessage("❌ Failed to get latest Neoforge versions!").queue();
+                    return;
+                }
+
+                CoupledPair<NeoforgeVersion> versions = response.getLeft();
+                var embed = new EmbedBuilder()
+                        .setTitle("Latest Neoforge Versions")
+                        .addField("Recommended", versions.getLeft().version(), true)
+                        .addField("Latest", versions.getRight().version(), true);
+
+                event.getHook().editOriginalEmbeds(embed.build()).queue();
+            }
             case "parchment" -> {
                 Either<ParchmentVersion, HttpStatus> response = ApiHandler.getLatestParchment();
                 if (response.isRight()) {
@@ -152,6 +168,7 @@ public class LatestCommand extends CoreCommand {
         Either<CoupledPair<ForgeVersion>, HttpStatus> forgeResponse = ApiHandler.getLatestForge();
         Either<CoupledPair<FabricVersion>, HttpStatus> fabricResponse = ApiHandler.getLatestFabric();
         Either<CoupledPair<QuiltVersion>, HttpStatus> quiltResponse = ApiHandler.getLatestQuilt();
+        Either<CoupledPair<NeoforgeVersion>, HttpStatus> neoforgeResponse = ApiHandler.getLatestNeoforge();
         Either<ParchmentVersion, HttpStatus> parchmentResponse = ApiHandler.getLatestParchment();
 
         var embed = new EmbedBuilder();
@@ -164,7 +181,7 @@ public class LatestCommand extends CoreCommand {
 
         if (forgeResponse.isLeft()) {
             CoupledPair<ForgeVersion> versions = forgeResponse.getLeft();
-            embed.addField("Forge", "Recommended: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+            embed.addField("Forge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("Forge", "Failed to get latest Forge versions!", false);
         }
@@ -181,6 +198,13 @@ public class LatestCommand extends CoreCommand {
             embed.addField("Quilt", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("Quilt", "Failed to get latest Quilt versions!", false);
+        }
+
+        if (neoforgeResponse.isLeft()) {
+            CoupledPair<NeoforgeVersion> versions = neoforgeResponse.getLeft();
+            embed.addField("NeoForge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+        } else {
+            embed.addField("NeoForge", "Failed to get latest NeoForge versions!", false);
         }
 
         if (parchmentResponse.isLeft()) {
