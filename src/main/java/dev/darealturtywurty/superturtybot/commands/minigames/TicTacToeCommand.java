@@ -163,10 +163,10 @@ public class TicTacToeCommand extends CoreCommand {
     private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(Game game, ThreadChannel channel) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .condition(event -> {
-                    if (event.getGuild() == null || event.getGuild().getIdLong() != game.getGuildId())
-                        return false;
-
-                    if (event.getChannel().getIdLong() != game.getThreadId() || event.getMessageIdLong() != game.getMessageId())
+                    if (event.getGuild() == null ||
+                            event.getGuild().getIdLong() != game.getGuildId() ||
+                            event.getChannel().getIdLong() != game.getThreadId() ||
+                            event.getMessageIdLong() != game.getMessageId())
                         return false;
 
                     if (!game.isTurn(event.getUser().getIdLong())) {
@@ -201,17 +201,8 @@ public class TicTacToeCommand extends CoreCommand {
                         GAMES.remove(game);
 
                         return;
-                    } else if (game.isDraw()) {
-                        respondToButton(game, channel, event, false);
-
-                        channel.sendMessageFormat("✅ The game has ended in a draw!")
-                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                        GAMES.remove(game);
-
+                    } else if (handleDraw(game, channel, event))
                         return;
-                    } else {
-                        channel.sendMessageFormat("✅ It is <@%d>'s turn!", game.getCurrentTurn()).queue();
-                    }
 
                     if (!game.isBot()) {
                         respondToButton(game, channel, event);
@@ -226,21 +217,30 @@ public class TicTacToeCommand extends CoreCommand {
                             GAMES.remove(game);
 
                             return;
-                        } else if (game.isDraw()) {
-                            respondToButton(game, channel, event, false);
-
-                            channel.sendMessageFormat("✅ The game has ended in a draw!")
-                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                            GAMES.remove(game);
-
-                            return;
                         } else {
-                            channel.sendMessageFormat("✅ It is <@%d>'s turn!", game.getCurrentTurn()).queue();
+                            if (handleDraw(game, channel, event))
+                                return;
                         }
 
                         respondToButton(game, channel, event);
                     }
                 });
+    }
+
+    private static boolean handleDraw(Game game, ThreadChannel channel, ButtonInteractionEvent event) {
+        if (game.isDraw()) {
+            respondToButton(game, channel, event, false);
+
+            channel.sendMessageFormat("✅ The game has ended in a draw!")
+                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+            GAMES.remove(game);
+
+            return true;
+        } else {
+            channel.sendMessageFormat("✅ It is <@%d>'s turn!", game.getCurrentTurn()).queue();
+        }
+
+        return false;
     }
 
     private static void respondToButton(Game game, ThreadChannel channel, ButtonInteractionEvent event) {
@@ -292,8 +292,8 @@ public class TicTacToeCommand extends CoreCommand {
         FontMetrics metrics = graphics.getFontMetrics();
         for (int x = 0; x < 3; x++) {
             for (int y = 0; y < 3; y++) {
-                char c = game.getBoard()[x][y];
-                if (c != '\u0000') {
+                char c = game.get(x, y);
+                if (!game.isEmpty(x, y)) {
                     String character = String.valueOf(c);
                     graphics.drawString(
                             character,
@@ -319,7 +319,7 @@ public class TicTacToeCommand extends CoreCommand {
                         "%d".formatted(1 + index++));
 
                 // disable the button if it has already been used or it is the bot's turn
-                if (game.getBoard()[column][row] != '\u0000' || (game.isBot() && game.isTurn(game.getOpponentId())))
+                if (!game.isEmpty(column, row) || (game.isBot() && game.isTurn(game.getOpponentId())))
                     button = button.asDisabled();
 
                 buttons.add(button);
@@ -363,11 +363,15 @@ public class TicTacToeCommand extends CoreCommand {
         }
 
         public void makeMove(int x, int y) {
-            if (board[x][y] != '\u0000')
+            if (!isEmpty(x, y))
                 return;
 
             board[x][y] = currentTurn == userId ? 'X' : 'O';
             switchTurn();
+        }
+
+        public boolean isEmpty(int x, int y) {
+            return get(x, y) == '\u0000';
         }
 
         private void switchTurn() {
@@ -379,16 +383,20 @@ public class TicTacToeCommand extends CoreCommand {
         }
 
         public boolean hasWon(long userId) {
+            // Top left to bottom right
             if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[2][2] == (userId == this.userId ? 'X' : 'O'))
                 return true;
 
+            // Top right to bottom left
             if (board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[2][0] == (userId == this.userId ? 'X' : 'O'))
                 return true;
 
             for (int x = 0; x < 3; x++) {
+                // Horizontal
                 if (board[x][0] == board[x][1] && board[x][1] == board[x][2] && board[x][2] == (userId == this.userId ? 'X' : 'O'))
                     return true;
 
+                // Vertical
                 if (board[0][x] == board[1][x] && board[1][x] == board[2][x] && board[2][x] == (userId == this.userId ? 'X' : 'O'))
                     return true;
             }
@@ -406,7 +414,7 @@ public class TicTacToeCommand extends CoreCommand {
             List<Map.Entry<Integer, Integer>> moves = new ArrayList<>();
             for (int column = 0; column < 3; column++) {
                 for (int row = 0; row < 3; row++) {
-                    if (board[column][row] == '\u0000') {
+                    if (isEmpty(column, row)) {
                         moves.add(Map.entry(column, row));
                     }
                 }
@@ -414,6 +422,10 @@ public class TicTacToeCommand extends CoreCommand {
 
             Map.Entry<Integer, Integer> move = moves.get(ThreadLocalRandom.current().nextInt(moves.size()));
             makeMove(move.getKey(), move.getValue());
+        }
+
+        public char get(int x, int y) {
+            return board[x][y];
         }
     }
 }

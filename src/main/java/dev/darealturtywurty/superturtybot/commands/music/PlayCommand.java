@@ -109,7 +109,6 @@ public class PlayCommand extends CoreCommand {
             event.replyChoices(results.stream().map(YouTubeSearchResult::toChoice).toList()).queue();
         }).exceptionally(throwable -> {
             event.replyChoices().queue();
-            Constants.LOGGER.error("Failed to search youtube!", throwable);
             return null;
         });
     }

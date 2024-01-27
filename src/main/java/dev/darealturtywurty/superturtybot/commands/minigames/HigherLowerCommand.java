@@ -634,7 +634,6 @@ public class HigherLowerCommand extends CoreCommand {
         }
     }
 
-
     @Getter
     @Setter
     public static class PopulationGame extends Game {

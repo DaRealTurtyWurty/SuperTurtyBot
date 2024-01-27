@@ -16,10 +16,33 @@ public class CoinFlipCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
+    @NotNull
+    private static String constructChoiceReply(String botChoice, String choiceStr) {
+        String reply;
+        if (botChoice.equalsIgnoreCase(choiceStr)) {
+            if (choiceStr.contains("head")) {
+                reply = "You were correct! It was Heads 🗣.";
+            } else if (choiceStr.contains("tail")) {
+                reply = "You were correct! It was Tails 🐍.";
+            } else {
+                reply = "You were correct! It landed on it's side 😲.";
+            }
+        } else if (botChoice.contains("head")) {
+            reply = "You were incorrect! It was Heads 🗣.";
+        } else if (botChoice.contains("tail")) {
+            reply = "You were incorrect! It was Tails 🐍.";
+        } else {
+            reply = "You were incorrect! It landed on it's side 😲.";
+        }
+        return reply;
+    }
+
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.STRING, "choice", "Whether you are choosing heads or tails", false)
-            .addChoice("heads", "heads").addChoice("tails", "tails"));
+        return List.of(
+                new OptionData(OptionType.STRING, "choice", "Whether you are choosing heads or tails", false)
+                        .addChoice("heads", "heads")
+                        .addChoice("tails", "tails"));
     }
 
     @Override
@@ -82,26 +105,5 @@ public class CoinFlipCommand extends CoreCommand {
 
             reply(event, "You chose `" + choiceStr + "`. " + reply, false);
         }
-    }
-
-    @NotNull
-    private static String constructChoiceReply(String botChoice, String choiceStr) {
-        String reply;
-        if (botChoice.equalsIgnoreCase(choiceStr)) {
-            if (choiceStr.contains("head")) {
-                reply = "You were correct! It was Heads 🗣.";
-            } else if (choiceStr.contains("tail")) {
-                reply = "You were correct! It was Tails 🐍.";
-            } else {
-                reply = "You were correct! It landed on it's side 😲.";
-            }
-        } else if (botChoice.contains("head")) {
-            reply = "You were incorrect! It was Heads 🗣.";
-        } else if (botChoice.contains("tail")) {
-            reply = "You were incorrect! It was Tails 🐍.";
-        } else {
-            reply = "You were incorrect! It landed on it's side 😲.";
-        }
-        return reply;
     }
 }

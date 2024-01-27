@@ -18,12 +18,11 @@ public class FileUtils {
             Path path = Path.of("src/main/resources/" + folder);
             return FileUtils.locateResourceFiles(path);
         } else {
-            URL url = TurtyBot.class.getResource("/" + folder);
-            if (url == null) {
+            URL url = TurtyBot.getResource(folder);
+            if (url == null)
                 return List.of();
-            }
 
-            File fileFolder = new File(url.getFile());
+            var fileFolder = new File(url.getFile());
             if(!fileFolder.isDirectory())
                 return List.of();
 
