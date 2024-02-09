@@ -374,6 +374,21 @@ public class CommandHook extends ListenerAdapter {
         cmds.add(new HangmanCommand());
         cmds.add(new TicTacToeCommand());
         cmds.add(new WordSearchCommand());
+        cmds.add(new Connect4Command());
+//        cmds.add(new ChessCommand());
+//        cmds.add(new MinesweeperCommand());
+//        cmds.add(new CrosswordCommand());
+//        cmds.add(new SudokuCommand());
+//        cmds.add(new RussianRouletteCommand());
+//        cmds.add(new WordScrambleCommand());
+//        cmds.add(new CheckersCommand());
+//        cmds.add(new BattleshipCommand());
+//        cmds.add(new BlackjackCommand());
+//        cmds.add(new PokerCommand());
+//        cmds.add(new UnoCommand());
+//        cmds.add(new LudoCommand());
+//        cmds.add(new MonopolyCommand());
+//        cmds.add(new 2048Command());
 
         // Economy
         cmds.add(new BalanceCommand());
