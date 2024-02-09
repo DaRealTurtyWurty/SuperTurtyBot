@@ -81,7 +81,7 @@ public class CrashCommand extends EconomyCommand {
 
                         It will increase by a random amount every 2 seconds, however, it will crash at a random point between 1.0x and 10.0x!
                                                 
-                        Good luck!""").formatted(config.getEconomyCurrency(), amount)).queue(ignored -> {
+                        You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), amount)).queue(ignored -> {
                     var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
                     games.add(game);
 

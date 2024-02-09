@@ -31,7 +31,6 @@ public class TwitterListener {
         }""";
     private static final String REGISTER_CALLBACK_URL = "https://api.twitter.com/1.1/account_activity/all/prod/webhooks.json?url=%s";
 
-    @SuppressWarnings("resource")
     public static void setup() {
         if(TWITTER == null
                 || Environment.INSTANCE.twitterAppId().isEmpty()
@@ -75,6 +74,6 @@ public class TwitterListener {
                 }
             });
         
-        ShutdownHooks.register(javalin::close);
+        ShutdownHooks.register(javalin::stop);
     }
 }

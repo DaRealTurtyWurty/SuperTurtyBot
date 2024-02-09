@@ -42,8 +42,8 @@ public class BirthdayCommand extends CoreCommand {
                 new SubcommandData("view", "Views a user's birthday").addOptions(
                         new OptionData(OptionType.USER, "user", "The user to view the birthday of", false)
                 ),
-                new SubcommandData("enabled", "Enables or disables birthday announcements for the current server").addOptions(
-                        new OptionData(OptionType.BOOLEAN, "enable", "Whether or not to enable birthday announcements")
+                new SubcommandData("announced", "Enables or disables birthday announcements for the current server").addOptions(
+                        new OptionData(OptionType.BOOLEAN, "announce", "Whether or not to announce your birthday in the current server")
                 )
         );
     }
@@ -127,8 +127,10 @@ public class BirthdayCommand extends CoreCommand {
                 birthday = BirthdayManager.addBirthday(event.getUser().getIdLong(), day, month, year);
 
                 reply(event, "✅ Your birthday has been set to the " +
-                        TimeUtils.mapDay(day) + " of " + TimeUtils.mapMonth(month) + " " + year +
-                        "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ")");
+                                TimeUtils.mapDay(day) + " of " + TimeUtils.mapMonth(month) + " " + year +
+                                "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ") " +
+                                "Remember to announce your birthday in the server with `/birthday announced announce: true`!",
+                        false, true);
             }
             case "view" -> {
                 User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
@@ -154,14 +156,14 @@ public class BirthdayCommand extends CoreCommand {
                         .setAllowedMentions(Set.of())
                         .queue();
             }
-            case "enabled" -> {
+            case "announced" -> {
                 Guild guild = event.getGuild();
                 if (guild == null) {
                     reply(event, "❌ You must be in a guild to use this command!", false, true);
                     return;
                 }
 
-                boolean enabled = event.getOption("enable", true, OptionMapping::getAsBoolean);
+                boolean enabled = event.getOption("announce", true, OptionMapping::getAsBoolean);
                 BirthdayManager.setBirthdayAnnouncementsEnabled(guild.getIdLong(), event.getUser().getIdLong(), enabled);
                 reply(event, "✅ Your birthday will " + (enabled ? "now" : "no longer") + " be announced in this server!");
             }

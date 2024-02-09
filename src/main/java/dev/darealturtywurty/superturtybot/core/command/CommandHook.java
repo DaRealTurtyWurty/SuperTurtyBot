@@ -4,10 +4,10 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
-import dev.darealturtywurty.superturtybot.commands.util.LeaderboardCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;
@@ -21,7 +21,6 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
-import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
@@ -70,64 +69,6 @@ public class CommandHook extends ListenerAdapter {
         return IS_DEV_MODE;
     }
 
-    public Set<CoreCommand> getCommands() {
-        return Set.of(this.commands.toArray(new CoreCommand[0]));
-    }
-
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-        JDA jda = event.getJDA();
-
-        if(this.commands.isEmpty()) {
-            // Add all commands
-            this.commands.addAll(createCommands());
-            this.commands.forEach(jda::addEventListener);
-
-            // Register all global commands
-            List<CoreCommand> globalCommands = this.commands.stream().filter(CoreCommand::isNotServerOnly).toList();
-            registerCommands(jda, globalCommands);
-
-            // Register all guild commands
-            List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
-            for (Guild guild : event.getJDA().getGuilds()) {
-                registerCommands(guild, guildCommands);
-            }
-
-            // Print command list
-            printCommandList(jda, this.commands);
-        }
-
-        // Initialize all listeners
-        init(jda);
-    }
-
-    @Override
-    public void onGuildReady(@NotNull GuildReadyEvent event) {
-        Guild guild = event.getGuild();
-
-        TextChannel generalChannel = guild.getTextChannels()
-                .stream()
-                .filter(channel -> channel.getName().equals("general"))
-                .findFirst()
-                .orElseGet(guild::getSystemChannel);
-
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
-
-        if(config.isShouldSendStartupMessage()) {
-            sendStartupMessage(generalChannel);
-        }
-
-        if(this.commands.isEmpty())
-            return;
-
-        List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
-        registerCommands(guild, guildCommands);
-    }
-
     private static void init(JDA jda) {
         if (!YouTubeListener.isRunning()) {
             YouTubeListener.runExecutor(jda);
@@ -146,7 +87,7 @@ public class CommandHook extends ListenerAdapter {
 //            RedditListener.initialize(jda);
 //        }
 
-        if(!EconomyManager.isRunning()) {
+        if (!EconomyManager.isRunning()) {
             EconomyManager.start(jda);
         }
 
@@ -155,7 +96,7 @@ public class CommandHook extends ListenerAdapter {
 //            TwitterListener.initialize(jda);
 //        }
 
-        if(!BirthdayManager.isRunning()) {
+        if (!BirthdayManager.isRunning()) {
             BirthdayManager.start(jda);
         }
 
@@ -207,15 +148,15 @@ public class CommandHook extends ListenerAdapter {
                 slashes.incrementAndGet();
             }
 
-            if(cmd.types.normal()) {
+            if (cmd.types.normal()) {
                 prefixes.incrementAndGet();
             }
 
-            if(cmd.types.messageCtx()) {
+            if (cmd.types.messageCtx()) {
                 messageCtx.incrementAndGet();
             }
 
-            if(cmd.types.userCtx()) {
+            if (cmd.types.userCtx()) {
                 userCtx.incrementAndGet();
             }
 
@@ -229,7 +170,7 @@ public class CommandHook extends ListenerAdapter {
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
             success.sendMessage("\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** message context commands.\nThere are **%d** user context commands.\nThere are **%d** guild commands.\nThere are **%d** global commands.".formatted(
-                    slashes.get(), prefixes.get(), messageCtx.get(), userCtx.get(), guild.get(), global.get()))
+                            slashes.get(), prefixes.get(), messageCtx.get(), userCtx.get(), guild.get(), global.get()))
                     .queue();
             cmdList.delete().queue();
         });
@@ -452,5 +393,63 @@ public class CommandHook extends ListenerAdapter {
         // cmds.add(new PropertyCommand());
 
         return cmds;
+    }
+
+    public Set<CoreCommand> getCommands() {
+        return Set.of(this.commands.toArray(new CoreCommand[0]));
+    }
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        JDA jda = event.getJDA();
+
+        if (this.commands.isEmpty()) {
+            // Add all commands
+            this.commands.addAll(createCommands());
+            this.commands.forEach(jda::addEventListener);
+
+            // Register all global commands
+            List<CoreCommand> globalCommands = this.commands.stream().filter(CoreCommand::isNotServerOnly).toList();
+            registerCommands(jda, globalCommands);
+
+            // Register all guild commands
+            List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
+            for (Guild guild : event.getJDA().getGuilds()) {
+                registerCommands(guild, guildCommands);
+            }
+
+            // Print command list
+            printCommandList(jda, this.commands);
+        }
+
+        // Initialize all listeners
+        init(jda);
+    }
+
+    @Override
+    public void onGuildReady(@NotNull GuildReadyEvent event) {
+        Guild guild = event.getGuild();
+
+        TextChannel generalChannel = guild.getTextChannels()
+                .stream()
+                .filter(channel -> channel.getName().equals("general"))
+                .findFirst()
+                .orElseGet(guild::getSystemChannel);
+
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (config == null) {
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
+        }
+
+        if (config.isShouldSendStartupMessage()) {
+            sendStartupMessage(generalChannel);
+        }
+
+        if (this.commands.isEmpty())
+            return;
+
+        List<CoreCommand> guildCommands = this.commands.stream().filter(CoreCommand::isServerOnly).toList();
+        registerCommands(guild, guildCommands);
     }
 }

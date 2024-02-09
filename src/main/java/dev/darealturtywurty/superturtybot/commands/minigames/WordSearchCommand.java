@@ -70,18 +70,18 @@ public class WordSearchCommand extends CoreCommand {
                     }
 
                     if (game.guess(word)) {
-                        List<String> foundWords = game.getFoundWords();
-                        foundWords.add(word);
-                        if (foundWords.size() == game.getWordCount()) {
-                            thread.sendMessage("✅ You found all the words! Game over!")
+                        Optional<FileUpload> upload = createUpload(game);
+                        if (upload.isEmpty()) {
+                            thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
                                     .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
                             GAMES.remove(game);
                             return;
                         }
 
-                        Optional<FileUpload> upload = createUpload(game);
-                        if (upload.isEmpty()) {
-                            thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
+                        List<String> foundWords = game.getFoundWords();
+                        if (foundWords.size() == game.getWordCount()) {
+                            thread.sendMessage("✅ You found all the words! Game over!")
+                                    .setFiles(upload.get())
                                     .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
                             GAMES.remove(game);
                             return;
