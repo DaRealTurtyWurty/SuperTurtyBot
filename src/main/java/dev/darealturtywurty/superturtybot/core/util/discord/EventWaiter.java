@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.util.discord;
 
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.internal.utils.Checks;
@@ -129,8 +130,9 @@ public class EventWaiter extends ListenerAdapter {
                         this.success.accept(castedEvent);
                         return true;
                     }
-                } catch(Exception ignored) {
+                } catch(Exception exception) {
                     this.failure.run();
+                    Constants.LOGGER.error("An error occurred while running a waiter!", exception);
                     return false;
                 }
             }

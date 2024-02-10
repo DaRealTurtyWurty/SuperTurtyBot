@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,6 +79,7 @@ public class Connect4Command extends CoreCommand {
                         respondToButton(game, channel, event, false);
 
                         channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
+                                .setFiles(createFileUpload(game, channel))
                                 .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
 
@@ -96,6 +96,7 @@ public class Connect4Command extends CoreCommand {
                             respondToButton(game, channel, event, false);
 
                             channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
+                                    .setFiles(createFileUpload(game, channel))
                                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
                             GAMES.remove(game);
 
