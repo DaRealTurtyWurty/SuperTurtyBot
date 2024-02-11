@@ -46,19 +46,19 @@ public class WordSearchCommand extends CoreCommand {
                         || event.getMessage().getContentRaw().equalsIgnoreCase("give up")))
                 .timeout(5, TimeUnit.MINUTES)
                 .timeoutAction(() -> {
-                    thread.sendMessage("❌ You took too long to find a word! Game over!")
+                    thread.sendMessage("❌ You took too long to find a word! Game over! The words were: " + String.join(", ", game.getWords()))
                             .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
                     GAMES.remove(game);
                 })
                 .failure(() -> {
-                    thread.sendMessage("❌ Something went wrong! Game over!")
+                    thread.sendMessage("❌ Something went wrong! Game over! The words were: " + String.join(", ", game.getWords()))
                             .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
                     GAMES.remove(game);
                 })
                 .success(event -> {
                     String word = event.getMessage().getContentRaw().trim().toLowerCase(Locale.ROOT);
                     if (word.equalsIgnoreCase("give up")) {
-                        thread.sendMessage("✅ Game over!")
+                        thread.sendMessage("✅ Game over! The words were: " + String.join(", ", game.getWords()))
                                 .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
                         return;
@@ -172,29 +172,29 @@ public class WordSearchCommand extends CoreCommand {
                 break;
             }
             case LEFT, UP: {
-                int x = 50 + (last.getRight()* 70) - metrics.charWidth(word.charAt(word.length() - 1)) / 2;
-                int y = 150 + (last.getLeft()* 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 50 + (first.getRight()* 70) + metrics.charWidth(word.charAt(0)) - x;
-                int height = 150 + (first.getLeft()* 70) + (int) (metrics.getHeight() * 0.75f) - y;
+                int x = 50 + (last.getRight() * 70) - metrics.charWidth(word.charAt(word.length() - 1)) / 2;
+                int y = 150 + (last.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
+                int width = 75 + (first.getRight() * 70) + metrics.charWidth(word.charAt(0)) - x;
+                int height = 150 + (first.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
                 graphics.drawRoundRect(x, y, width, height, 10, 10);
                 break;
             }
             // TODO: Figure out how to draw a diagonal rectangle
             case UP_RIGHT, DOWN_LEFT: {
                 graphics.rotate(Math.toRadians(45), 0, 0);
-                int x = 50 + (first.getRight()* 70) - metrics.charWidth(word.charAt(0)) / 2;
-                int y = 150 + (first.getLeft()* 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 50 + (last.getRight()* 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
-                int height = 150 + (last.getLeft()* 70) + (int) (metrics.getHeight() * 0.75f) - y;
+                int x = 50 + (first.getRight() * 70) - metrics.charWidth(word.charAt(0)) / 2;
+                int y = 150 + (first.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
+                int width = 50 + (last.getRight() * 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
+                int height = 150 + (last.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
                 graphics.drawRoundRect(x, y, width, height, 10, 10);
                 graphics.rotate(Math.toRadians(-45), 0, 0);
             }
             case UP_LEFT, DOWN_RIGHT: {
                 graphics.rotate(Math.toRadians(-45), 0, 0);
-                int x = 50 + (first.getRight()* 70) - metrics.charWidth(word.charAt(0)) / 2;
-                int y = 150 + (first.getLeft()* 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 50 + (last.getRight()* 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
-                int height = 150 + (last.getLeft()* 70) + (int) (metrics.getHeight() * 0.75f) - y;
+                int x = 50 + (first.getRight() * 70) - metrics.charWidth(word.charAt(0)) / 2;
+                int y = 150 + (first.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
+                int width = 50 + (last.getRight() * 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
+                int height = 150 + (last.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
                 graphics.drawRoundRect(x, y, width, height, 10, 10);
                 graphics.rotate(Math.toRadians(45), 0, 0);
             }
