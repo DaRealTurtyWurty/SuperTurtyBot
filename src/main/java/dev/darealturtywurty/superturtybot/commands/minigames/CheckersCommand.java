@@ -196,9 +196,7 @@ public class CheckersCommand extends CoreCommand {
                 .queue();
 
         if (!game.isBot()) {
-            channel.sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", event.getAuthor().getIdLong(), from, to, game.getCurrentTurn())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+            createEventWaiter(game, channel).build();
         } else {
             Pair<Pair<Integer, Integer>,Pair<Integer, Integer>> botMove = game.playBot();
             String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'), botMove.getLeft().getLeft() + 1);
