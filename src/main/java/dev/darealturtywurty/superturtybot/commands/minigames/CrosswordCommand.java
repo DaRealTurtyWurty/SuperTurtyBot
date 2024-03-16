@@ -26,9 +26,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class CrosswordCommand extends CoreCommand {
+    private static final Font FONT = new Font("Arial", Font.PLAIN, 50);
+    private static final Stroke STROKE = new BasicStroke(5);
+
     private static final List<Game> GAMES = new ArrayList<>();
 
     public CrosswordCommand() {
@@ -68,8 +72,11 @@ public class CrosswordCommand extends CoreCommand {
     }
 
     private static BufferedImage generateImage(Game game) {
-        var image = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
+        var image = new BufferedImage(game.board.length * 100, game.board.length * 100, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
+        graphics.setFont(FONT);
+
+        FontMetrics metrics = graphics.getFontMetrics();
 
         graphics.setColor(Color.WHITE);
         graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
@@ -77,9 +84,21 @@ public class CrosswordCommand extends CoreCommand {
         graphics.setColor(Color.BLACK);
         for (int x = 0; x < game.board.length; x++) {
             for (int y = 0; y < game.board[x].length; y++) {
-                if (game.get(x, y) != '\u0000') {
-                    graphics.drawString(String.valueOf(game.get(x, y)), x * 1000, y * 1000);
+                char letter = game.get(x, y);
+                if (letter != '\u0000') {
+                    graphics.drawString(String.valueOf(letter), 10 + x * 100 + metrics.charWidth(letter) / 2, 10 + y * 100 + metrics.getAscent() / 2);
                 }
+            }
+        }
+
+        // draw rectangles around each letter
+        graphics.setColor(Color.BLACK);
+        graphics.setStroke(STROKE);
+        for (int x = 0; x < game.board.length; x++) {
+            for (int y = 0; y < game.board[x].length; y++) {
+                var letter = game.get(x, y);
+                if (letter != '\u0000')
+                    graphics.drawRect(x * 100, y * 100, 100, 100);
             }
         }
 
@@ -161,7 +180,7 @@ public class CrosswordCommand extends CoreCommand {
         event.getHook().editOriginal("✅ Game created!").queue(message -> {
             try {
                 var game = new Game(10, guild.getIdLong(), event.getUser().getIdLong(), event.getChannel().getIdLong());
-                GAMES.add(game);
+                //GAMES.add(game);
                 message.createThreadChannel(event.getUser().getEffectiveName() + "'s Crossword Game").queue(thread -> {
                     thread.addThreadMember(event.getUser()).queue();
                     game.setThreadId(thread.getIdLong());
@@ -190,14 +209,11 @@ public class CrosswordCommand extends CoreCommand {
     @Getter
     public static class Game {
         private static final Random RANDOM = new Random();
-
-        private final char[][] board;
         private final List<String> words;
         private final Map<String, List<Pair<Integer, Integer>>> wordLocations = new HashMap<>();
-
         private final int wordCount;
         private final long guildId, userId, channelId;
-
+        private char[][] board;
         @Setter
         private long threadId;
 
@@ -240,108 +256,100 @@ public class CrosswordCommand extends CoreCommand {
             return hasCharacter(row, column, '\u0000');
         }
 
+        public boolean isOutsideBounds(int x, int y) {
+            return y < 0 || y >= this.board.length || x < 0 || x >= this.board[y].length;
+        }
+
         private void fillBoard() {
-            for (String word : this.words.stream().sorted(Comparator.comparingInt(String::length)).toList()) {
-                for (int i = 0; i < 100; i++) {
-                    int row = RANDOM.nextInt(10);
-                    int column = RANDOM.nextInt(10);
-                    int direction = RANDOM.nextInt(4);
+            List<String> sorted = this.words.stream().sorted(Comparator.comparingInt(String::length).reversed()).toList();
+            String first = sorted.getFirst();
+            while (first.length() >= this.board.length)
+                expandBoard();
 
-                    if (direction == 0) {
-                        if (column + word.length() > 10)
-                            continue;
+            int x = RANDOM.nextInt(this.board.length - first.length());
+            int y = RANDOM.nextInt(this.board.length - first.length());
+            boolean horizontal = RANDOM.nextBoolean();
+            forcePlaceWord(first, x, y, horizontal);
 
-                        boolean canPlace = true;
-                        for (int j = 0; j < word.length(); j++) {
-                            if (!isEmpty(row, column + j) && !hasCharacter(row, column + j, word.charAt(j))) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
+            List<String> failed = new CopyOnWriteArrayList<>();
+            for (int i = 1; i < sorted.size(); i++) {
+                String word = sorted.get(i);
+                Pair<Integer, Integer> location = findValidLocation(word);
+                if (location == null) {
+                    failed.add(word);
+                    continue;
+                }
 
-                        if (canPlace) {
-                            for (int j = 0; j < word.length(); j++) {
-                                if (isEmpty(row, column + j))
-                                    board[row][column + j] = word.charAt(j);
-                            }
+                forcePlaceWord(word, location.getLeft(), location.getRight(), RANDOM.nextBoolean());
+            }
 
-                            this.wordLocations.put(word, List.of(Pair.of(row, column)));
-                            break;
-                        }
-                    } else if (direction == 1) {
-                        if (row + word.length() > 10)
-                            continue;
-
-                        boolean canPlace = true;
-                        for (int j = 0; j < word.length(); j++) {
-                            if (!isEmpty(row + j, column) && !hasCharacter(row + j, column, word.charAt(j))) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
-
-                        if (canPlace) {
-                            for (int j = 0; j < word.length(); j++) {
-                                if (isEmpty(row + j, column))
-                                    board[row + j][column] = word.charAt(j);
-                            }
-
-                            this.wordLocations.put(word, List.of(Pair.of(row, column)));
-                            break;
-                        }
-                    } else if (direction == 2) {
-                        if (column - word.length() < 0)
-                            continue;
-
-                        boolean canPlace = true;
-                        for (int x = 0; x < word.length(); x++) {
-                            if (!isEmpty(row, column - x) && !hasCharacter(row, column - x, word.charAt(x))) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
-
-                        if (canPlace) {
-                            for (int x = 0; x < word.length(); x++) {
-                                if (isEmpty(row, column - x))
-                                    board[row][column - x] = word.charAt(x);
-                            }
-
-                            this.wordLocations.put(word, List.of(Pair.of(row, column)));
-                            break;
-                        }
-                    } else if (direction == 3) {
-                        if (row - word.length() < 0)
-                            continue;
-
-                        boolean canPlace = true;
-                        for (int y = 0; y < word.length(); y++) {
-                            if (!isEmpty(row - y, column) && !hasCharacter(row - y, column, word.charAt(y))) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
-
-                        if (canPlace) {
-                            for (int y = 0; y < word.length(); y++) {
-                                if (isEmpty(row - y, column))
-                                    board[row - y][column] = word.charAt(y);
-                            }
-
-                            this.wordLocations.put(word, List.of(Pair.of(row, column)));
-                            break;
-                        }
-                    } else {
-                        throw new IllegalStateException("Invalid direction: " + direction);
+            while (!failed.isEmpty()) {
+                for (String word : failed) {
+                    Pair<Integer, Integer> location = findValidLocation(word);
+                    if (location == null) {
+                        continue;
                     }
+
+                    failed.remove(word);
+                    forcePlaceWord(word, location.getLeft(), location.getRight(), RANDOM.nextBoolean());
+                }
+            }
+        }
+
+        private Pair<Integer, Integer> findValidLocation(String word) {
+            for (Map.Entry<String, List<Pair<Integer, Integer>>> entry : wordLocations.entrySet()) {
+
+            }
+
+            return null;  // No valid intersection found
+        }
+
+        private void forcePlaceWord(String word, int x, int y, boolean horizontal) {
+            List<Pair<Integer, Integer>> locations = new ArrayList<>();
+            if (horizontal) {
+                for (int i = 0; i < word.length(); i++) {
+                    if (isOutsideBounds(x + i, y)) {
+                        expandBoard();
+                    }
+                }
+
+                for (int i = 0; i < word.length(); i++) {
+                    board[x + i][y] = word.charAt(i);
+                    locations.add(Pair.of(x + i, y));
+                }
+            } else {
+                for (int i = 0; i < word.length(); i++) {
+                    if (isOutsideBounds(x, y + i)) {
+                        expandBoard();
+                    }
+                }
+
+                for (int i = 0; i < word.length(); i++) {
+                    board[x][y + i] = word.charAt(i);
+                    locations.add(Pair.of(x, y + i));
                 }
             }
 
-            for (int x = 0; x < 10; x++) {
-                for (int y = 0; y < 10; y++) {
-                    if (isEmpty(x, y))
-                        board[x][y] = '\u0000';
-                }
+            this.wordLocations.put(word, locations);
+        }
+
+        private boolean isValidIntersection(String word, int x, int y, boolean horizontal) {
+            return false;
+        }
+
+        private void expandBoard() {
+            char[][] oldBoard = this.board;
+            this.board = new char[this.board.length + 1][this.board[0].length + 1];
+            for (int j = 0; j < oldBoard.length; j++) {
+                System.arraycopy(oldBoard[j], 0, this.board[j], 0, oldBoard[j].length);
+            }
+        }
+
+        private void expandBoardNegatively() {
+            char[][] oldBoard = this.board;
+            this.board = new char[this.board.length + 1][this.board[0].length + 1];
+            for (int j = 0; j < oldBoard.length; j++) {
+                System.arraycopy(oldBoard[j], 0, this.board[j + 1], 0, oldBoard[j].length);
             }
         }
 
