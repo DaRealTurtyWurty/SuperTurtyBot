@@ -258,8 +258,10 @@ public class GuessRegionBorderCommand extends CoreCommand {
             GAMES.remove(game.getMessageId(), game);
 
             // remove components on original message
-            event.getChannel().retrieveMessageById(game.getMessageId())
-                    .queue(message -> message.editMessageComponents().queue(ignored -> {}, ignored -> {}), ignored -> {});
+            TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
+            if (channel == null) return;
+
+            channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
         }
     }
 
@@ -267,7 +269,7 @@ public class GuessRegionBorderCommand extends CoreCommand {
     public static class Game {
         private final Region region;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
-        private final List<String> guesses = new ArrayList<>();
+        private final List<Region> guesses = new ArrayList<>();
         private final List<Region> possibleRegions;
 
         public Game(Region region, long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> possibleRegions) {
@@ -281,12 +283,27 @@ public class GuessRegionBorderCommand extends CoreCommand {
         }
 
         public boolean guess(String guess) {
-            if (this.guesses.contains(guess)) return false;
+            if (this.guesses.stream().anyMatch(region -> region.getName().equalsIgnoreCase(guess)))
+                return false;
 
-            this.guesses.add(guess);
+            for (Region region : possibleRegions) {
+                if (region.getName().equalsIgnoreCase(guess)) {
+                    this.guesses.add(region);
 
-            guess = guess.trim();
-            return guess.equalsIgnoreCase(this.region.getName()) || guess.equalsIgnoreCase(this.region.getName().replace(" ", ""));
+                    if(region.equals(this.region))
+                        return true;
+                }
+
+                List<String> aliases = region.getAliases();
+                if (aliases.stream().anyMatch(alias -> alias.equalsIgnoreCase(guess))) {
+                    this.guesses.add(region);
+
+                    if(region.equals(this.region))
+                        return true;
+                }
+            }
+
+            return false;
         }
     }
 }

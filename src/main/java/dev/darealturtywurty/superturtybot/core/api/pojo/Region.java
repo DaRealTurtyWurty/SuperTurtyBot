@@ -1,14 +1,11 @@
 package dev.darealturtywurty.superturtybot.core.api.pojo;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
-@Getter
-@Setter
-@EqualsAndHashCode
-@ToString
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
 public class Region {
     private double population;
     private String name;
@@ -21,7 +18,9 @@ public class Region {
     private String flag;
     private String outline;
 
-    public Region(double population, String name, String cca3, String cca2, String region, double landAreaKm, double densityMi, String flag, String outline) {
+    private List<String> aliases;
+
+    public Region(double population, String name, String cca3, String cca2, String region, double landAreaKm, double densityMi, String flag, String outline, List<String> aliases) {
         this.population = population;
         this.name = name;
         this.cca3 = cca3;
@@ -31,9 +30,10 @@ public class Region {
         this.densityMi = densityMi;
         this.flag = flag;
         this.outline = outline;
+        this.aliases = aliases;
     }
 
     public Region() {
-        this(0, "", "", "", "", 0, 0, "", "");
+        this(0, "", "", "", "", 0, 0, "", "", new ArrayList<>());
     }
 }

@@ -41,6 +41,42 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
+    private static ByteArrayOutputStream createImage(List<BufferedImage> images, int width, int height) {
+        int numberOfRegions = images.size();
+
+        // create a new image with the largest width and height
+        var combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        // draw the images onto the combined image with transparency
+        Graphics2D graphics = combined.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // draw the background
+        graphics.setColor(Color.BLACK);
+        graphics.fillRect(0, 0, combined.getWidth(), combined.getHeight());
+
+        Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f / numberOfRegions);
+        graphics.setComposite(composite);
+
+        for (var image : images) {
+            graphics.drawImage(image, 0, 0, null);
+        }
+
+        graphics.dispose();
+
+        var boas = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(combined, "png", boas);
+            boas.flush();
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "An error occurred while trying to write the combined image to a " + "ByteArrayOutputStream!",
+                    exception);
+        }
+
+        return boas;
+    }
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MINIGAMES;
@@ -222,13 +258,17 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
         String region = event.getMessage().getContentRaw().trim();
 
         // check if the region is valid
-        if (game.getPossibleRegions().stream().map(Region::getName).noneMatch(r -> r.equalsIgnoreCase(region))) return;
+        if (game.getPossibleRegions().stream().noneMatch(r -> r.getAliases().stream().anyMatch(alias -> alias.equalsIgnoreCase(region)) || r.getName().equalsIgnoreCase(region)))
+            return;
 
         // check if the region has already been guessed
-        if (game.getGuesses().stream().anyMatch(r -> r.equalsIgnoreCase(region))) return;
+        if (game.getGuesses().stream().anyMatch(r -> r.getAliases().stream().anyMatch(alias -> alias.equalsIgnoreCase(region)) || r.getName().equalsIgnoreCase(region))) {
+            event.getMessage().reply("❌ You have already guessed that region!").queue();
+            return;
+        }
 
         // add the region to the game
-        if (game.chooseRegion(region)) {
+        if (game.guess(region)) {
             event.getMessage().reply("✅ Correct guess!").queue();
 
             // check if the game has ended
@@ -249,7 +289,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             } else {
                 List<BufferedImage> images = new ArrayList<>();
                 for (String region1 : game.getRegions().keySet()) {
-                    if (game.getGuesses().stream().noneMatch(region2 -> region2.equalsIgnoreCase(region1))) {
+                    if (game.getGuesses().stream().noneMatch(region2 -> region2.getName().equalsIgnoreCase(region1))) {
                         images.add(game.getRegions().get(region1));
                     }
                 }
@@ -296,45 +336,10 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
             if (game.getIncorrectGuesses() % 3 == 0) {
                 event.getChannel().sendMessage(
-                        "The regions that have been guessed are: " + String.join(", ", game.getGuesses())).queue();
+                        "The regions that have been guessed are: " + String.join(", ",
+                                game.getGuesses().stream().map(Region::getName).toList())).queue();
             }
         }
-    }
-
-    private static ByteArrayOutputStream createImage(List<BufferedImage> images, int width, int height) {
-        int numberOfRegions = images.size();
-
-        // create a new image with the largest width and height
-        var combined = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-        // draw the images onto the combined image with transparency
-        Graphics2D graphics = combined.createGraphics();
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // draw the background
-        graphics.setColor(Color.BLACK);
-        graphics.fillRect(0, 0, combined.getWidth(), combined.getHeight());
-
-        Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f / numberOfRegions);
-        graphics.setComposite(composite);
-
-        for (var image : images) {
-            graphics.drawImage(image, 0, 0, null);
-        }
-
-        graphics.dispose();
-
-        var boas = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(combined, "png", boas);
-            boas.flush();
-        } catch (IOException exception) {
-            throw new IllegalStateException(
-                    "An error occurred while trying to write the combined image to a " + "ByteArrayOutputStream!",
-                    exception);
-        }
-
-        return boas;
     }
 
     @Override
@@ -346,7 +351,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     private static class Game {
         private final Map<String, BufferedImage> regions;
         private final long guildId, ownerChannelId, channelId, messageId, userId;
-        private final List<String> guesses = new ArrayList<>();
+        private final List<Region> guesses = new ArrayList<>();
         private final List<Region> possibleRegions;
         private int incorrectGuesses = 0;
 
@@ -360,16 +365,27 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
             this.possibleRegions = possibleRegions;
         }
 
-        public boolean chooseRegion(String region) {
-            if (this.guesses.contains(region)) {
+        public boolean guess(String guess) {
+            if (this.guesses.stream().anyMatch(region -> region.getName().equalsIgnoreCase(guess))) {
                 return false;
             }
 
-            this.guesses.add(region);
+            for (Region region : this.possibleRegions) {
+                if (region.getName().equalsIgnoreCase(guess)) {
+                    this.guesses.add(region);
 
-            for (var c : this.regions.keySet()) {
-                if (c.equalsIgnoreCase(region)) {
-                    return true;
+                    if (this.regions.containsKey(region.getName())) {
+                        return true;
+                    }
+                }
+
+                List<String> aliases = region.getAliases();
+                if (aliases.stream().anyMatch(alias -> alias.equalsIgnoreCase(guess))) {
+                    this.guesses.add(region);
+
+                    if (this.regions.containsKey(region.getName())) {
+                        return true;
+                    }
                 }
             }
 
@@ -379,7 +395,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
 
         public boolean hasWon() {
             List<String> regions = this.regions.keySet().stream().map(String::toLowerCase).map(String::trim).toList();
-            List<String> guesses = this.guesses.stream().map(String::toLowerCase).map(String::trim).toList();
+            List<String> guesses = this.guesses.stream().map(Region::getName).map(String::toLowerCase).map(String::trim).toList();
 
             return new HashSet<>(guesses).containsAll(regions);
         }
