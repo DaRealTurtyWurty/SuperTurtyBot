@@ -125,4 +125,60 @@ public class MathUtils {
     public static int map(int stage, int min1, int max1, int min2, int max2) {
         return (stage - min1) * (max2 - min2) / (max1 - min1) + min2;
     }
+
+    /**
+     * Generates a random integer between the min and max bounds with a weighted distribution.
+     *
+     * @param min    The minimum bound
+     * @param max    The maximum bound
+     * @param weight The weight of the distribution
+     *               (0.0 is uniform distribution,
+     *               -100.0 is a ceiling distribution,
+     *               100.0 is a floor distribution)
+     * @return       A random integer between the min and max bounds with a weighted distribution
+     */
+    public static int weightedRandomInt(int min, int max, double weight) {
+        if (min == max) {
+            return min;
+        }
+
+        int upperBound = Math.max(max, min);
+        int lowerBound = min + max - upperBound;
+
+        int scale = 0x10000000;
+        double random = Math.random() * scale;
+
+        // If it's uniformly distributed, just return a random number between the bounds
+        if (weight == 0.0) {
+            return lowerBound + (int) Math.floor(random % (upperBound - lowerBound + 1));
+        }
+
+        double normalizedWeightedResult = getNormalizedWeightedResult(weight, random, scale);
+        double scaledNormalizedWeightedResult = normalizedWeightedResult * (upperBound - lowerBound); // Scale the normalized result to the bounds
+        double scaledResult = scaledNormalizedWeightedResult + lowerBound; // Shift the scaled result to the lower bound
+
+        if ((weight < 0) ^ (min > max)) { // If the weight is negative and the bounds are flipped, return the ceiling
+            return (int) Math.ceil(upperBound - scaledResult); // Return the ceiling
+        }
+
+        return (int) Math.floor(lowerBound + scaledResult); // Return the floor
+    }
+
+    private static double getNormalizedWeightedResult(double weight, double random, int scale) {
+        double distributionBase = 2;
+        double middleBias = 0.5;
+
+        double absoluteWeight = Math.abs(weight); // Get the absolute weight
+        double middleBiasFactor = Math.pow(middleBias, -absoluteWeight); // Calculate the middle bias
+        double distributionBaseFactor = Math.pow(distributionBase, -absoluteWeight); // Calculate the base of the distribution
+
+        double biasRange = middleBiasFactor - distributionBaseFactor; // Calculate the range of the bias
+        double scaledRandomValue = random * biasRange / scale; // Scale to bias range
+        double shiftedScaledRandomValue = scaledRandomValue + distributionBaseFactor; // Shift to distribution base
+
+        double weightedResult = Math.pow(shiftedScaledRandomValue, -1 / absoluteWeight); // Invert the weight so that the distribution is correct
+
+        double normalizedWeightedResult = (weightedResult - middleBias) / (distributionBase - middleBias); // Normalize the result to the bounds
+        return normalizedWeightedResult;
+    }
 }

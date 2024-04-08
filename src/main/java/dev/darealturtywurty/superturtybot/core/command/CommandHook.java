@@ -27,6 +27,9 @@ import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.rpg.command.RPGExploreCommand;
+import dev.darealturtywurty.superturtybot.modules.rpg.command.RPGProfileCommand;
+import dev.darealturtywurty.superturtybot.modules.rpg.command.RPGStartCommand;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -406,6 +409,11 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new LoanCommand());
         commands.add(new DonateCommand());
         // commands.add(new PropertyCommand());
+
+        // RPG
+        commands.add(new RPGStartCommand());
+        commands.add(new RPGExploreCommand());
+        commands.add(new RPGProfileCommand());
 
         return commands;
     }

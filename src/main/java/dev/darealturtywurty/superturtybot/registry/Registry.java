@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class Registry<Type extends Registerable> {
     private final Map<String, Type> registerables = new HashMap<>();
@@ -11,6 +12,14 @@ public class Registry<Type extends Registerable> {
     @NotNull
     public Map<String, Type> getRegistry() {
         return Map.copyOf(this.registerables);
+    }
+
+    public Map.Entry<String, Type> random() throws NoSuchElementException {
+        return this.registerables.entrySet()
+                .stream()
+                .skip((int) (this.registerables.size() * Math.random()))
+                .findFirst()
+                .orElseThrow();
     }
 
     public Type register(String name, Type object) {
@@ -29,5 +38,9 @@ public class Registry<Type extends Registerable> {
         object.setName(name);
         this.registerables.put(name, object);
         return object;
+    }
+
+    public Type getValue(String key) {
+        return this.registerables.get(key);
     }
 }

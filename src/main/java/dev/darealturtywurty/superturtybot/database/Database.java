@@ -11,13 +11,14 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
+import dev.darealturtywurty.superturtybot.database.provider.InventoryProvider;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 
 public class Database {
-    private static final Database DATABASE = new Database();
+    private static final Database INSTANCE = new Database();
 
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
@@ -42,13 +43,15 @@ public class Database {
     public final MongoCollection<ChatReviver> chatRevivers;
     public final MongoCollection<Birthday> birthdays;
     public final MongoCollection<SubmissionCategory> submissionCategories;
+    public final MongoCollection<RPGPlayer> rpgPlayers;
 
     @SuppressWarnings("resource")
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
+        final CodecRegistry customRegistry = CodecRegistries.fromProviders(new InventoryProvider());
         final CodecRegistry codecRegistry = CodecRegistries
-            .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
+            .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), customRegistry, pojoRegistry);
 
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
@@ -77,6 +80,7 @@ public class Database {
         this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = database.getCollection("birthdays", Birthday.class);
         this.submissionCategories = database.getCollection("submissionCategories", SubmissionCategory.class);
+        this.rpgPlayers = database.getCollection("rpgPlayers", RPGPlayer.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -107,10 +111,11 @@ public class Database {
         this.chatRevivers.createIndex(guildIndex);
         this.birthdays.createIndex(userIndex);
         this.submissionCategories.createIndex(guildIndex);
+        this.rpgPlayers.createIndex(userIndex);
     }
 
     public static Database getDatabase() {
-        return DATABASE;
+        return INSTANCE;
     }
 
     private static MongoClient connect(CodecRegistry codec) {
