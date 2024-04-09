@@ -21,6 +21,7 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
+import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -280,6 +281,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new WeatherCommand());
         commands.add(new SteamCommand());
         commands.add(new RobloxCommand());
+        commands.add(new MinecraftCommand());
         commands.add(new WikipediaCommand());
         //commands.add(new ConvertCommand());
         commands.add(new BirthdayCommand());
@@ -351,9 +353,6 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new ReverseTextCommand());
         commands.add(new UpsideDownTextCommand());
         commands.add(new UrbanDictionaryCommand());
-        commands.add(new MinecraftUsernameCommand());
-        commands.add(new MinecraftUserUUIDCommand());
-        commands.add(new MinecraftUserSkinCommand());
         commands.add(new PetPetGifCommand());
         commands.add(new LoveCommand());
 
