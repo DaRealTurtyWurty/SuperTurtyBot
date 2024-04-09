@@ -373,12 +373,9 @@ public class CommandHook extends ListenerAdapter {
 
         // Minigames
         commands.add(new TriviaCommand());
-        commands.add(new GuessCombinedFlagsCommand());
-        commands.add(new GuessSongCommand());
-        commands.add(new GuessRegionBorderCommand());
+        commands.add(new GuessCommand());
         commands.add(new HigherLowerCommand());
         commands.add(new WordleCommand());
-        commands.add(new GeoGuesserCommand());
         commands.add(new HangmanCommand());
         commands.add(new TicTacToeCommand());
         commands.add(new WordSearchCommand());
