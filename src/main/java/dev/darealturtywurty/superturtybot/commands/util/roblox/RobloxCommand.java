@@ -304,21 +304,11 @@ public class RobloxCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
 
         switch (subcommand) {
-            case "username":
-                handleUsername(event);
-                break;
-            case "avatar":
-                handleAvatar(event);
-                break;
-            case "friends":
-                handleFriends(event);
-                break;
-            case "favourite-games":
-                handleFavouriteGames(event);
-                break;
-            default:
-                event.getHook().sendMessage("❌ You need to specify a valid subcommand!").queue();
-                break;
+            case "username" -> handleUsername(event);
+            case "avatar" -> handleAvatar(event);
+            case "friends" -> handleFriends(event);
+            case "favourite-games" -> handleFavouriteGames(event);
+            default -> event.getHook().sendMessage("❌ You need to specify a valid subcommand!").queue();
         }
     }
 }

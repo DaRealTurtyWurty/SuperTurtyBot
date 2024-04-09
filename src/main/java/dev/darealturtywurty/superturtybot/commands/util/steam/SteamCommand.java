@@ -145,9 +145,7 @@ public class SteamCommand extends CoreCommand {
             }
 
             if (!playerCountResponse.isSuccessful()) {
-                event.getHook()
-                        .sendMessage("❌ Response was not successful!")
-                        .queue();
+                event.getHook().sendMessage("❌ Response was not successful!").queue();
                 return;
             }
 
@@ -374,17 +372,10 @@ public class SteamCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
 
         switch (subcommand) {
-            case "userid":
-                handleUserID(event, steamKey);
-                break;
-            case "usergames":
-                handleUserGames(event);
-                break;
-            case "game-details":
-                handleGameDetails(event, steamKey);
-                break;
-            default:
-                event.getHook().sendMessage("❌ You need to specify a valid subcommand!").queue();
+            case "userid" -> handleUserID(event, steamKey);
+            case "usergames" -> handleUserGames(event);
+            case "game-details" -> handleGameDetails(event, steamKey);
+            default -> event.getHook().sendMessage("❌ You need to specify a valid subcommand!").queue();
         }
     }
 }
