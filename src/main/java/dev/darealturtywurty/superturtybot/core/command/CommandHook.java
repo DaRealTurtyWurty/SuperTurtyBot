@@ -247,6 +247,9 @@ public class CommandHook extends ListenerAdapter {
         //commands.add(new SubmitCommand());
         //commands.add(new SubmissionCommand());
         commands.add(new EvalCommand());
+        commands.add(new SpeakCommand());
+        commands.add(new SpeakVoiceCommand());
+        commands.add(new AnnounceCommand());
 
         // Utility
         commands.add(new BotInfoCommand());

@@ -77,6 +77,11 @@ dependencies {
     implementation group: 'io.javalin', name: 'javalin', version: '6.1.3'
     implementation group: 'org.graalvm.js', name: 'js', version: '23.0.3'
 
+    implementation group: 'de.dfki.mary', name: 'voice-cmu-slt-hsmm', version: '5.2.1', {
+        exclude group: 'com.twmacinta', module: 'fast-md5'
+        exclude group: 'gov.nist.math', module: 'Jampack'
+    }
+
     annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.32"
     compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.32"
 }
