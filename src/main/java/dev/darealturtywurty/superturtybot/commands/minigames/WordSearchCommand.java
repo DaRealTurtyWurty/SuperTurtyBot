@@ -296,7 +296,7 @@ public class WordSearchCommand extends CoreCommand {
             } catch (IllegalStateException exception) {
                 message.editMessage("❌ Failed to create word search! This usually happens when it cannot fit a word in the grid. Please try running the command again!")
                         .queue(ignored -> message.delete().queueAfter(10, TimeUnit.SECONDS));
-                RATELIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
+                RATE_LIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
             }
         });
     }

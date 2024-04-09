@@ -93,7 +93,7 @@ public class LeaderboardCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("levels", "Gets the levelling leaderboard for this server."),
                 new SubcommandData("economy", "Gets the economy leaderboard for this server.")

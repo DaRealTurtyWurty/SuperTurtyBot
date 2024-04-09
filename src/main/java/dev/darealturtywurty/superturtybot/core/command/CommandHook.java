@@ -211,13 +211,22 @@ public class CommandHook extends ListenerAdapter {
                 data.addOptions(options);
             }
 
-            List<SubcommandGroupData> subcommandGroupData = cmd.createSubcommandGroups();
+            List<SubcommandGroupData> subcommandGroupData = cmd.createSubcommandGroupData();
             if (!subcommandGroupData.isEmpty()) {
                 data.addSubcommandGroups(subcommandGroupData);
             } else {
-                final List<SubcommandData> subcommands = cmd.createSubcommands();
+                final List<SubcommandData> subcommandData = cmd.createSubcommandData();
+                if (!subcommandData.isEmpty()) {
+                    data.addSubcommands(subcommandData);
+                }
+
+                final List<SubcommandCommand> subcommands = cmd.getSubcommands();
                 if (!subcommands.isEmpty()) {
-                    data.addSubcommands(subcommands);
+                    subcommands.forEach(subcommand -> {
+                        var subcommandDatum = new SubcommandData(subcommand.getName(), subcommand.getDescription());
+                        subcommandDatum.addOptions(subcommand.getOptions());
+                        data.addSubcommands(subcommandDatum);
+                    });
                 }
             }
 
@@ -420,7 +429,10 @@ public class CommandHook extends ListenerAdapter {
         if (this.commands.isEmpty()) {
             // Add all commands
             this.commands.addAll(createCommands());
-            this.commands.forEach(jda::addEventListener);
+            this.commands.forEach(command -> {
+                jda.addEventListener(command);
+                command.getSubcommands().forEach(jda::addEventListener);
+            });
 
             // Register all global commands
             List<CoreCommand> globalCommands = this.commands.stream().filter(CoreCommand::isNotServerOnly).toList();

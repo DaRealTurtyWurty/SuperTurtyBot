@@ -11,21 +11,88 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+// TODO: Rate-limits per subcommand
 public abstract class CoreCommand extends ListenerAdapter implements BotCommand {
-    protected static final Map<Long, Pair<String, Long>> RATELIMITS = new ConcurrentHashMap<>();
+    protected static final Map<Long, Pair<String, Long>> RATE_LIMITS = new ConcurrentHashMap<>();
 
     public final Types types;
+
+    protected final List<SubcommandCommand> subcommands = new ArrayList<>();
 
     // -1 = Global
     private final Map<Long, String> commandIds = new ConcurrentHashMap<>();
 
     protected CoreCommand(Types types) {
         this.types = types;
+    }
+
+    public static void reply(MessageReceivedEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    public static void reply(MessageReceivedEvent event, String message, boolean mention) {
+        event.getMessage().reply(message).mentionRepliedUser(mention).queue();
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed) {
+        reply(event, embed, false);
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention) {
+        reply(event, embed, mention, false);
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
+        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, String message, boolean mention) {
+        reply(event, message, mention, false);
+    }
+
+    public static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
+        event.deferReply().setContent(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+    }
+
+    public static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
+        event.reply(message).mentionRepliedUser(mention).queue();
+    }
+
+    public static void reply(MessageContextInteractionEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+    }
+
+    public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed) {
+        reply(event, embed, false);
+    }
+
+    public static void reply(UserContextInteractionEvent event, String message, boolean mention) {
+        event.reply(message).mentionRepliedUser(mention).queue();
+    }
+
+    public static void reply(UserContextInteractionEvent event, String message) {
+        reply(event, message, false);
+    }
+
+    public static void reply(UserContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+    }
+
+    public static void reply(UserContextInteractionEvent event, EmbedBuilder embed) {
+        reply(event, embed, false);
     }
 
     public String getAccess() {
@@ -35,7 +102,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     public String getHowToUse() {
         return (this.types.slash() ? "/" : ".") + getName();
     }
-    
+
     public boolean isServerOnly() {
         return false;
     }
@@ -51,16 +118,25 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         this.commandIds.put(guildId, id);
     }
 
-    public void setCommandId(String id) {
-        setCommandId(-1L, id);
-    }
-
     public String getCommandId(long guildId) {
         return this.commandIds.get(guildId);
     }
 
     public String getCommandId() {
         return getCommandId(-1L);
+    }
+
+    public void setCommandId(String id) {
+        setCommandId(-1L, id);
+    }
+
+    @Override
+    public final List<SubcommandCommand> getSubcommands() {
+        return this.subcommands;
+    }
+
+    public void addSubcommands(SubcommandCommand... subcommands) {
+        Collections.addAll(this.subcommands, subcommands);
     }
 
     @Override
@@ -71,7 +147,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
             runMessageCtx(event);
         }
@@ -83,15 +159,15 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
         final String content = event.getMessage().getContentRaw().toLowerCase();
         if (event.isWebhookMessage() || event.getAuthor().isBot()
-            || !content.startsWith((Environment.INSTANCE.defaultPrefix().orElse("") + getName() + " ").toLowerCase())
+                || !content.startsWith((Environment.INSTANCE.defaultPrefix().orElse("") + getName() + " ").toLowerCase())
                 && !(Environment.INSTANCE.defaultPrefix().orElse("") + getName()).equals(content))
             return;
 
         if (!this.types.normal())
             return;
 
-        if(validateRatelimit(event.getAuthor().getIdLong(),
-                end -> reply(event, "❌ You are being ratelimited! You can use the command again " + end + "!"))) {
+        if (validateRatelimit(event.getAuthor().getIdLong(),
+                end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
             runNormalMessage(event);
 
             if (event.isFromGuild()) {
@@ -115,9 +191,21 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
-            runSlash(event);
+            String subcommand = event.getSubcommandName();
+            if (subcommand == null) {
+                runSlash(event);
+                return;
+            }
+
+            this.subcommands.stream()
+                    .filter(sub -> sub.getName().equalsIgnoreCase(subcommand))
+                    .findFirst()
+                    .ifPresentOrElse(
+                            sub -> sub.execute(event),
+                            () -> runSlash(event)
+                    );
         }
     }
 
@@ -128,38 +216,45 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being ratelimited! You can use the command again " + end + "!")
+                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
             runUserCtx(event);
         }
     }
 
-    protected void runGuildMessage(MessageReceivedEvent event) {}
+    protected void runGuildMessage(MessageReceivedEvent event) {
+    }
 
-    protected void runMessageCtx(MessageContextInteractionEvent event) {}
+    protected void runMessageCtx(MessageContextInteractionEvent event) {
+    }
 
-    protected void runNormalMessage(MessageReceivedEvent event) {}
+    protected void runNormalMessage(MessageReceivedEvent event) {
+    }
 
-    protected void runPrivateMessage(MessageReceivedEvent event) {}
+    protected void runPrivateMessage(MessageReceivedEvent event) {
+    }
 
-    protected void runSlash(SlashCommandInteractionEvent event) {}
+    protected void runSlash(SlashCommandInteractionEvent event) {
+    }
 
-    protected void runThreadMessage(MessageReceivedEvent event) {}
+    protected void runThreadMessage(MessageReceivedEvent event) {
+    }
 
-    protected void runUserCtx(UserContextInteractionEvent event) {}
+    protected void runUserCtx(UserContextInteractionEvent event) {
+    }
 
     private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {
         Pair<TimeUnit, Long> ratelimit = getRatelimit();
-        if(ratelimit.getRight() > 0) {
+        if (ratelimit.getRight() > 0) {
             long length = TimeUnit.MILLISECONDS.convert(ratelimit.getRight(), ratelimit.getLeft());
-            if(RATELIMITS.containsKey(user)) {
-                Pair<String, Long> pair = RATELIMITS.get(user);
-                if(pair.getLeft().equalsIgnoreCase(getName())) {
+            if (RATE_LIMITS.containsKey(user)) {
+                Pair<String, Long> pair = RATE_LIMITS.get(user);
+                if (pair.getLeft().equalsIgnoreCase(getName())) {
                     long endTime = pair.getRight();
                     long currentTime = System.currentTimeMillis();
 
-                    if(currentTime >= endTime) {
-                        RATELIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
+                    if (currentTime >= endTime) {
+                        RATE_LIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
                         return true;
                     } else {
                         ratelimitResponse.accept(TimeFormat.RELATIVE.format(endTime));
@@ -167,76 +262,12 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                     }
                 }
             } else {
-                RATELIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
+                RATE_LIMITS.put(user, Pair.of(getName(), System.currentTimeMillis() + length));
                 return true;
             }
         }
 
         return true;
-    }
-
-    protected static void reply(MessageReceivedEvent event, String message) {
-        reply(event, message, false);
-    }
-
-    protected static void reply(MessageReceivedEvent event, String message, boolean mention) {
-        event.getMessage().reply(message).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed) {
-        reply(event, embed, false);
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        reply(event, embed, mention, false);
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
-        event.deferReply(ephemeral).addEmbeds(embed.build()).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, String message) {
-        reply(event, message, false);
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention) {
-        reply(event, message, mention, false);
-    }
-
-    protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
-        event.deferReply(ephemeral).setContent(message).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
-        event.reply(message).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(MessageContextInteractionEvent event, String message) {
-        reply(event, message, false);
-    }
-
-    protected static void reply(MessageContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(MessageContextInteractionEvent event, EmbedBuilder embed) {
-        reply(event, embed, false);
-    }
-
-    protected static void reply(UserContextInteractionEvent event, String message, boolean mention) {
-        event.reply(message).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(UserContextInteractionEvent event, String message) {
-        reply(event, message, false);
-    }
-
-    protected static void reply(UserContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
-    }
-
-    protected static void reply(UserContextInteractionEvent event, EmbedBuilder embed) {
-        reply(event, embed, false);
     }
 
     public record Types(boolean slash, boolean normal, boolean messageCtx, boolean userCtx) {

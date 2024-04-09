@@ -27,7 +27,7 @@ public class NotifierCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
             new SubcommandData("youtube", "Listens for YouTube uploads on the given YouTube channel.")
                 .addOptions(List.of(

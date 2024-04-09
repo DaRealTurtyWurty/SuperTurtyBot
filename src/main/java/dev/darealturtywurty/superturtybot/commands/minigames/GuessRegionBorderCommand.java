@@ -3,8 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
-import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
@@ -32,57 +31,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-public class GuessRegionBorderCommand extends CoreCommand {
+public class GuessRegionBorderCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
     public GuessRegionBorderCommand() {
-        super(new Types(true, false, false, false));
-    }
+        super("border", "Guess the region that has the border shown.");
 
-    @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.MINIGAMES;
-    }
-
-    @Override
-    public String getDescription() {
-        return "Guess the region that has the border shown.";
-    }
-
-    @Override
-    public String getName() {
-        return "guessborder";
-    }
-
-    @Override
-    public String getRichName() {
-        return "Guess The Region's Border";
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
-    }
-
-    @Override
-    public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 5L);
-    }
-
-    @Override
-    public List<OptionData> createOptions() {
-        return List.of(
+        addOptions(List.of(
                 new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.", false),
                 new OptionData(OptionType.BOOLEAN, "exclude-mainland", "Whether or not to exclude mainland regions from the game.", false),
                 new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether or not to exclude countries from the game.", false),
                 new OptionData(OptionType.BOOLEAN, "include-territories", "Whether or not to include territories from the game.", false)
-        );
+        ));
     }
 
     @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
+    public void execute(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;

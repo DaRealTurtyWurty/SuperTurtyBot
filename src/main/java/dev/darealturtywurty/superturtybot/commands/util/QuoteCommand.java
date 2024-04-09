@@ -58,7 +58,7 @@ public class QuoteCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("add", "Adds a quote.")
                         .addOption(OptionType.STRING, "text", "The text of the quote.", true)
                         .addOption(OptionType.USER, "user", "The user who said the quote.", true),

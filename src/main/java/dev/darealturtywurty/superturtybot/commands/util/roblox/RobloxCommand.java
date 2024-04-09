@@ -255,7 +255,7 @@ public class RobloxCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("username", "Returns the username information of a roblox user.")
                         .addOption(OptionType.STRING, "username", "The roblox username", true),

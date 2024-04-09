@@ -33,7 +33,7 @@ public class UserConfigCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("get", "Gets the current user config")
                         .addOption(OptionType.STRING, "key", "The data key to get", false, true),

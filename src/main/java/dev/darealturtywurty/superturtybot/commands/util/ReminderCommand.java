@@ -31,7 +31,7 @@ public class ReminderCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("create", "Creates a reminder").addOptions(
                         new OptionData(OptionType.STRING, "reminder", "The reminder to set", true),

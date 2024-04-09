@@ -28,7 +28,7 @@ public class SaveSongCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("add", "Adds the currently playing song to your saved songs list."),
                 new SubcommandData("remove", "Removes a song from the saved songs list.").addOptions(

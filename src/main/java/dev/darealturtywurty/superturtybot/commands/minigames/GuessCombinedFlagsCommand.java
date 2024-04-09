@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
@@ -34,11 +35,17 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class GuessCombinedFlagsCommand extends CoreCommand {
+public class GuessCombinedFlagsCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
     public GuessCombinedFlagsCommand() {
-        super(new Types(true, false, false, false));
+        super("combinedflags", "Guess the regions that make up the combined flag!");
+
+        addOptions(List.of(
+                new OptionData(OptionType.INTEGER, "number", "The number of flags to combine", false).setRequiredRange(2, 16),
+                new OptionData(OptionType.BOOLEAN, "include-territories", "Whether to include territories", false),
+                new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether to exclude countries", false)
+        ));
     }
 
     private static ByteArrayOutputStream createImage(List<BufferedImage> images, int width, int height) {
@@ -78,41 +85,7 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
     }
 
     @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.MINIGAMES;
-    }
-
-    @Override
-    public String getDescription() {
-        return "Guess the regions that make up the combined flag!";
-    }
-
-    @Override
-    public String getName() {
-        return "guesscombinedflags";
-    }
-
-    @Override
-    public String getRichName() {
-        return "Guess The Combined Flags";
-    }
-
-    @Override
-    public List<OptionData> createOptions() {
-        return List.of(
-                new OptionData(OptionType.INTEGER, "number", "The number of flags to combine", false).setRequiredRange(2, 16),
-                new OptionData(OptionType.BOOLEAN, "include-territories", "Whether to include territories", false),
-                new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether to exclude countries", false)
-        );
-    }
-
-    @Override
-    public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 5L);
-    }
-
-    @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
+    public void execute(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
             reply(event, "❌ This command can only be used in a guild!", false, true);
             return;
@@ -340,11 +313,6 @@ public class GuessCombinedFlagsCommand extends CoreCommand {
                                 game.getGuesses().stream().map(Region::getName).toList())).queue();
             }
         }
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
     }
 
     @Getter

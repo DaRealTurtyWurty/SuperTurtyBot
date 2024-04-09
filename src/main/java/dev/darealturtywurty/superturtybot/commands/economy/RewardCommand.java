@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RewardCommand extends EconomyCommand {
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("daily", "Claim your daily reward!"),
                 new SubcommandData("weekly", "Claim your weekly reward!"),

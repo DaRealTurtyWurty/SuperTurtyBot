@@ -41,7 +41,7 @@ public class HigherLowerCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("population", "Population of countries"),
                 new SubcommandData("area", "Area of countries"),
                 new SubcommandData("word_frequency", "Word frequency in the English language"));

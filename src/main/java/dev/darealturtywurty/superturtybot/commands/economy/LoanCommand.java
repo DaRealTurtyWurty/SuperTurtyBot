@@ -22,7 +22,7 @@ import java.util.List;
 
 public class LoanCommand extends EconomyCommand {
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("request", "Request a loan from the bank that you must pay back with interest at a later date.")
                         .addOptions(new OptionData(OptionType.INTEGER, "amount", "The amount of money to request as a loan", true).setMinValue(1000)),

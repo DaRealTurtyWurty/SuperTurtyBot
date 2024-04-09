@@ -53,7 +53,7 @@ public class JobCommand extends EconomyCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("work", "Work for your job"),
                 new SubcommandData("register", "Register for a job").addOptions(
                         new OptionData(OptionType.STRING, "job", "The job you want to register for",

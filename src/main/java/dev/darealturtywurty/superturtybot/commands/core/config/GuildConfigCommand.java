@@ -34,7 +34,7 @@ public class GuildConfigCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
             new SubcommandData("get", "Gets the current server config")
                 .addOption(OptionType.STRING, "key","The data key to get", false, true),

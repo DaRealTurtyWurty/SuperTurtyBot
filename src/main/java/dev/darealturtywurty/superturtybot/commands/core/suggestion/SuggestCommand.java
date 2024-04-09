@@ -27,7 +27,7 @@ public class SuggestCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("add", "Adds a suggestion to the suggestion channel").addOptions(
                         new OptionData(OptionType.STRING, "suggestion", "The thing that you want to suggest", true),

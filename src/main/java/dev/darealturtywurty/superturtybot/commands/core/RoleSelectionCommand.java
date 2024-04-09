@@ -37,7 +37,7 @@ public class RoleSelectionCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("create", "Creates a role selection menu").addOption(OptionType.CHANNEL, "channel",
                                 "The channel to create this role selection menu in", true).addOptions(

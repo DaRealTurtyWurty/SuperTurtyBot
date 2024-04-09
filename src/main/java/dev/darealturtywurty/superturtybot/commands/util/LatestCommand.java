@@ -80,7 +80,7 @@ public class LatestCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("minecraft", "Get the latest Minecraft version"),
                 new SubcommandData("forge", "Get the latest Forge version"),
                 new SubcommandData("fabric", "Get the latest Fabric version"),
@@ -245,7 +245,7 @@ public class LatestCommand extends CoreCommand {
         if (!event.getName().equals(getName()) || event.getSubcommandName() == null || !event.getSubcommandName().equalsIgnoreCase("parchment"))
             return;
 
-        if(RATELIMITS.containsKey(event.getUser().getIdLong()) && RATELIMITS.get(event.getUser().getIdLong()).getRight() > System.currentTimeMillis()){
+        if(RATE_LIMITS.containsKey(event.getUser().getIdLong()) && RATE_LIMITS.get(event.getUser().getIdLong()).getRight() > System.currentTimeMillis()){
             event.replyChoices().queue();
             return;
         }

@@ -6,8 +6,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
-import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import net.dv8tion.jda.api.entities.Guild;
@@ -20,7 +20,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
@@ -29,44 +28,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GuessSongCommand extends CoreCommand {
+public class GuessSongCommand extends SubcommandCommand {
     private static final String PLAYLIST = "https://open.spotify.com/playlist/0Dsp6i8lvmcTg5aiusjnFH";
     private static final Map<Long, Tuple3<Long, AudioTrack, Integer>> GUESS_THE_SONG_TRACKS = new HashMap<>();
 
     public GuessSongCommand() {
-        super(new Types(true, false, false, false));
+        super("song", "Guess the title of the song that is currently playing!");
     }
 
     @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.MINIGAMES;
-    }
-
-    @Override
-    public String getDescription() {
-        return "Guess the title of the song that is currently playing!";
-    }
-
-    @Override
-    public String getName() {
-        return "guesssong";
-    }
-
-    @Override
-    public String getRichName() {
-        return "Guess The Song";
-    }
-
-    @Override
-    public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.SECONDS, 30L);
-    }
-
-    @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
+    public void execute(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
@@ -169,7 +142,7 @@ public class GuessSongCommand extends CoreCommand {
 
             final AudioTrack track = tuple.getT2();
             if (track == null) {
-                reply(event, "❌ The song has ended!");
+                CoreCommand.reply(event, "❌ The song has ended!");
                 AudioManager.endGuessTheSong(guild);
                 return;
             }
@@ -178,41 +151,41 @@ public class GuessSongCommand extends CoreCommand {
             if ("hint".equalsIgnoreCase(message)) {
                 int hints = tuple.getT3();
                 if (hints >= 3) {
-                    reply(event, "❌ You have already used all your hints!");
+                    CoreCommand.reply(event, "❌ You have already used all your hints!");
                     return;
                 }
 
                 SpotifyAudioTrack spotifyTrack = (SpotifyAudioTrack) track;
 
                 if (hints == 0 && spotifyTrack.getPosition() >= 5000) {
-                    reply(event, "🎵 The song is by `" + tuple.getT2().getInfo().author + "`");
+                    CoreCommand.reply(event, "🎵 The song is by `" + tuple.getT2().getInfo().author + "`");
                     GUESS_THE_SONG_TRACKS.put(guild.getIdLong(), Tuples.of(tuple.getT1(), tuple.getT2(), hints + 1));
                 } else if (hints == 0 && spotifyTrack.getPosition() < 5000) {
-                    reply(event, "❌ You can only use the first hint after 5 seconds!");
+                    CoreCommand.reply(event, "❌ You can only use the first hint after 5 seconds!");
                 }
 
                 if (hints == 1 && spotifyTrack.getPosition() >= spotifyTrack.getDuration() / 3) {
-                    reply(event, "🎵 The song's album cover is: " + spotifyTrack.getInfo().artworkUrl);
+                    CoreCommand.reply(event, "🎵 The song's album cover is: " + spotifyTrack.getInfo().artworkUrl);
                     GUESS_THE_SONG_TRACKS.put(guild.getIdLong(), Tuples.of(tuple.getT1(), tuple.getT2(), hints + 1));
                 } else if (hints == 1 && spotifyTrack.getPosition() < spotifyTrack.getDuration() / 3) {
-                    reply(event, "❌ You can only use the second hint after 1/3 of the song has played!");
+                    CoreCommand.reply(event, "❌ You can only use the second hint after 1/3 of the song has played!");
                 }
 
                 if (hints == 2 && spotifyTrack.getPosition() >= spotifyTrack.getDuration() / 2) {
                     String initials = spotifyTrack.getInfo().title.replaceAll("[^A-Z]", "");
                     // put a . between each letter
                     initials = initials.replaceAll("(.)(?!$)", "$1.");
-                    reply(event, "🎵 The song name's initials are: `" + initials + "`");
+                    CoreCommand.reply(event, "🎵 The song name's initials are: `" + initials + "`");
                     GUESS_THE_SONG_TRACKS.put(guild.getIdLong(), Tuples.of(tuple.getT1(), tuple.getT2(), hints + 1));
                 } else if (hints == 2 && spotifyTrack.getPosition() < spotifyTrack.getDuration() / 2) {
-                    reply(event, "❌ You can only use the third hint after 1/2 of the song has played!");
+                    CoreCommand.reply(event, "❌ You can only use the third hint after 1/2 of the song has played!");
                 }
 
                 return;
             }
 
             if ("give up".equalsIgnoreCase(message)) {
-                reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
+                CoreCommand.reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
                         .getInfo().author + "`");
 
                 ThreadChannel thread = event.getGuild().getThreadChannelById(tuple.getT1());
@@ -226,7 +199,7 @@ public class GuessSongCommand extends CoreCommand {
             }
 
             if ("skip".equalsIgnoreCase(message)) {
-                reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
+                CoreCommand.reply(event, "🎵 The song was `" + tuple.getT2().getInfo().title + "` by `" + tuple.getT2()
                         .getInfo().author + "`");
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
@@ -249,21 +222,11 @@ public class GuessSongCommand extends CoreCommand {
                     replyContent += ". You gained " + xp + " XP!";
                 }
 
-                reply(event, replyContent);
+                CoreCommand.reply(event, replyContent);
                 GUESS_THE_SONG_TRACKS.remove(guild.getIdLong());
                 AudioManager.endGuessTheSong(guild);
                 run(Either.right(event), event.getGuild(), member.getVoiceState().getChannel());
             }
         }
-    }
-
-    @Override
-    public String getHowToUse() {
-        return "/guesssong\n\n- Type `skip` to skip the current song.\n- Type `hint` to get a hint.\n- Type `give up` to give up on the current song.";
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
     }
 }

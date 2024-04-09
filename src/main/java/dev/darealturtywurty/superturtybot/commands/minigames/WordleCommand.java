@@ -98,7 +98,7 @@ public class WordleCommand extends CoreCommand {
         loadTodaysWords();
         EXECUTOR.scheduleAtFixedRate(() -> {
             fetchAndStoreWords();
-            RATELIMITS.clear();
+            RATE_LIMITS.clear();
         }, getInitialDelay(), 24, TimeUnit.HOURS);
 
         try (InputStream stream = TurtyBot.loadResource("wordle.png")) {

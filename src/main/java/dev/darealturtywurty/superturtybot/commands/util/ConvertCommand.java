@@ -890,7 +890,7 @@ public class ConvertCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         List<SubcommandData> subcommands = new ArrayList<>();
         for (Measurement measurement : UNITS.keySet()) {
             SubcommandData subcommand = new SubcommandData(measurement.name, measurement.richName);

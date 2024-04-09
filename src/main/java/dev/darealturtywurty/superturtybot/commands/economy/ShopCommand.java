@@ -29,7 +29,7 @@ import java.util.Objects;
 
 public class ShopCommand extends EconomyCommand {
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("view", "View the shop").addOption(OptionType.USER, "user",
                         "The user to view the shop of", false),
                 new SubcommandData("buy", "Buy an item from the shop").addOption(OptionType.INTEGER, "item_id",

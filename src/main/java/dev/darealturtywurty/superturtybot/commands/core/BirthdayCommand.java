@@ -32,7 +32,7 @@ public class BirthdayCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("set", "Sets your birthday").addOptions(
                         new OptionData(OptionType.INTEGER, "day", "The day of your birthday", true, true).setRequiredRange(1, 31),

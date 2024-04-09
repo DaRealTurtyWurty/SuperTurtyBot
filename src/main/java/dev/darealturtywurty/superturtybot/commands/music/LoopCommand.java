@@ -23,7 +23,7 @@ public class LoopCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("get", "Get the current loop state"),
                 new SubcommandData("set", "Set the loop state"), new SubcommandData("toggle", "Toggle the loop state"));
     }

@@ -50,7 +50,7 @@ public class NSFWCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandGroupData> createSubcommandGroups() {
+    public List<SubcommandGroupData> createSubcommandGroupData() {
         return List.of(new SubcommandGroupData("real1", "Real NSFW commands (part 1)").addSubcommands(subcommand("ass"),
                         subcommand("porn"), subcommand("nsfw"), subcommand("gay"), subcommand("cock"), subcommand("pussy"),
                         subcommand("4k"), subcommand("anal"), subcommand("asian"), subcommand("bbc"), subcommand("bdsm"),

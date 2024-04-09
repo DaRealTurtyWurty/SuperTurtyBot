@@ -201,7 +201,7 @@ public class CrosswordCommand extends CoreCommand {
                 message.editMessage("❌ Failed to create crossword! This usually happens when it fails to find a possible location for a word! " +
                                 "Please try running the command again!")
                         .queue(ignored -> message.delete().queueAfter(10, TimeUnit.SECONDS));
-                RATELIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
+                RATE_LIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
             }
         });
     }

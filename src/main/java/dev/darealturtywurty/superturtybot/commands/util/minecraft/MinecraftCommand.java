@@ -234,7 +234,7 @@ public class MinecraftCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("username", "Gets the Minecraft Username from a UUID.")
                         .addOption(OptionType.STRING, "uuid", "The UUID used to get this user's name from", true),

@@ -317,7 +317,7 @@ public class SteamCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("userid", "Gets the user's steam id from their vanity url.")
                         .addOption(OptionType.STRING, "vanityurl", "The steam username of the user.", true),

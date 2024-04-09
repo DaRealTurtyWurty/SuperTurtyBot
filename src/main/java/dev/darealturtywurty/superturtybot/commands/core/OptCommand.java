@@ -37,7 +37,7 @@ public class OptCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("in", "Opt-in to a channel.").addOption(OptionType.STRING, "channel",
                         "The channel to opt-in to.", true, true),
                 new SubcommandData("out", "Opt-out of a channel.").addOption(OptionType.CHANNEL, "channel",

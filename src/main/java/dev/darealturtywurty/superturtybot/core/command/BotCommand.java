@@ -13,11 +13,15 @@ public interface BotCommand {
         return List.of();
     }
     
-    default List<SubcommandData> createSubcommands() {
+    default List<SubcommandData> createSubcommandData() {
         return List.of();
     }
 
-    default List<SubcommandGroupData> createSubcommandGroups() {
+    default List<SubcommandGroupData> createSubcommandGroupData() {
+        return List.of();
+    }
+
+    default List<SubcommandCommand> getSubcommands() {
         return List.of();
     }
     

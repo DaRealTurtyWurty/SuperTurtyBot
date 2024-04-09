@@ -31,7 +31,7 @@ public class HighlightCommand extends CoreCommand {
     }
     
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
             new SubcommandData("create", "Creates a new highlighter")
                 .addOption(OptionType.STRING, "text", "The string of text that should notify you", true)

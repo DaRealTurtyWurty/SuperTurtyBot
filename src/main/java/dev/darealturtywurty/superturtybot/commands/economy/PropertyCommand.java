@@ -21,7 +21,7 @@ import java.util.List;
 // TODO: Finish this command
 public class PropertyCommand extends EconomyCommand {
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("buy", "Buy a property").addOptions(
                         new OptionData(OptionType.STRING, "property", "The property to buy", true, true)),

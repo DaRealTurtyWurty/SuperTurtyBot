@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
@@ -27,45 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class GeoGuesserCommand extends CoreCommand {
+public class GeoGuesserCommand extends SubcommandCommand {
     private static final List<Game> GAMES = new ArrayList<>();
 
     public GeoGuesserCommand() {
-        super(new Types(true, false, false, false));
+        super("geoguesser", "Play a game of GeoGuesser!");
     }
 
     @Override
-    public CommandCategory getCategory() {
-        return CommandCategory.MINIGAMES;
-    }
-
-    @Override
-    public String getDescription() {
-        return "Play a game of GeoGuesser!";
-    }
-
-    @Override
-    public String getName() {
-        return "geoguesser";
-    }
-
-    @Override
-    public String getRichName() {
-        return "GeoGuesser";
-    }
-
-    @Override
-    public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.MINUTES, 1L);
-    }
-
-    @Override
-    public boolean isServerOnly() {
-        return true;
-    }
-
-    @Override
-    protected void runSlash(SlashCommandInteractionEvent event) {
+    public void execute(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);

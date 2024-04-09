@@ -60,7 +60,7 @@ public class EmbedCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("create", "Creates an embed").addOptions(
                         new OptionData(OptionType.STRING, "name", "A name given for this embed (used when doing /embed run)", true),

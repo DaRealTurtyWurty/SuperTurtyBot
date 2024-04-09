@@ -44,7 +44,7 @@ public class TagCommand extends CoreCommand {
     }
 
     @Override
-    public List<SubcommandData> createSubcommands() {
+    public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("get", "Retrives an existing tag").addOptions(
                 new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true, true)
             ),
