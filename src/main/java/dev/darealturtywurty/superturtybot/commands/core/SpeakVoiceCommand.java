@@ -23,7 +23,10 @@ public class SpeakVoiceCommand extends CoreCommand {
 
     static {
         try {
+            String javaVersion = System.getProperty("java.version");
+            System.setProperty("java.version", "1.5"); // Hacky fix for MaryTTS requiring Java x.x as a version
             MARY = new LocalMaryInterface();
+            System.setProperty("java.version", javaVersion);
         } catch (MaryConfigurationException exception) {
             throw new IllegalStateException("Could not initialize MaryTTS interface", exception);
         }
