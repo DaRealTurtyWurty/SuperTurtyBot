@@ -238,6 +238,6 @@ public class PropertyCommand extends EconomyCommand {
     }
 
     private static void hookReply(SlashCommandInteractionEvent event, String message) {
-        event.getHook().sendMessage(message).mentionRepliedUser(false).queue();
+        event.getHook().sendMessage(message).queue();
     }
 }

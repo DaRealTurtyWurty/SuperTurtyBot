@@ -55,7 +55,7 @@ public abstract class EconomyCommand extends CoreCommand {
             return;
         }
 
-        event.deferReply().queue();
+        event.deferReply().mentionRepliedUser(false).queue();
         runSlash(event, guild, config);
     }
 

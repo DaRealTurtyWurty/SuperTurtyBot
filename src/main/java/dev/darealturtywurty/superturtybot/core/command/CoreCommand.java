@@ -112,9 +112,6 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public void setCommandId(long guildId, String id) {
-        if (this.commandIds.containsKey(guildId))
-            throw new IllegalStateException("Command ID already set!");
-
         this.commandIds.put(guildId, id);
     }
 
