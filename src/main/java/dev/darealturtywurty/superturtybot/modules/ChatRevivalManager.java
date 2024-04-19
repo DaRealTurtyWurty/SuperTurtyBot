@@ -2,7 +2,10 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.commands.fun.WouldYouRatherCommand;
+import dev.darealturtywurty.superturtybot.commands.util.TopicCommand;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+import dev.darealturtywurty.superturtybot.core.api.pojo.WouldYouRather;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.ChatReviver;
@@ -29,7 +32,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-// TODO: Topic and WYR
 public class ChatRevivalManager extends ListenerAdapter {
     public static final ChatRevivalManager INSTANCE = new ChatRevivalManager();
     private static final Map<Long, ScheduledExecutorService> GUILD_EXECUTOR_MAP = new HashMap<>();
@@ -49,9 +51,20 @@ public class ChatRevivalManager extends ListenerAdapter {
 
         ChatReviver chatReviver = getChatReviver(guild);
         executor.scheduleAtFixedRate(
-                () -> drawingChatRevival(guild, chatReviver),
-                chatReviver.nextDrawingTime(),
-                TimeUnit.DAYS.toMillis(1),
+                () -> {
+                    // TODO: Have it configurable for which revivers to run but for now, we will pick a random one
+
+                    int random = ThreadLocalRandom.current().nextInt(0, 3);
+                    if (random == 0) {
+                        drawingChatRevival(guild, chatReviver);
+                    } else if (random == 1) {
+                        topicChatRevival(guild, chatReviver);
+                    } else {
+                        wyrChatRevival(guild, chatReviver);
+                    }
+                },
+                0,
+                TimeUnit.SECONDS.toMillis(5),
                 TimeUnit.MILLISECONDS
         );
 
@@ -96,7 +109,7 @@ public class ChatRevivalManager extends ListenerAdapter {
             word = WordUtils.capitalize(word.trim().toLowerCase(Locale.ROOT));
 
             chatReviver.getUsedDrawings().add(word);
-            chatReviver.setLastDrawingTime(System.currentTimeMillis());
+            chatReviver.setLastRunTime(System.currentTimeMillis());
             Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
             textChannel.sendMessage("🎨 The word for today's drawing is: **" + word + "**! Happy drawing! 🎨").queue();
@@ -104,6 +117,60 @@ public class ChatRevivalManager extends ListenerAdapter {
             textChannel.sendMessage("❌ Uh oh! Something went wrong! Unable to do the drawing today! Please report this to the bot owner!").queue();
             Constants.LOGGER.error("❌ Unable to get available words for drawing!", exception);
         }
+    }
+
+    private void topicChatRevival(Guild guild, ChatReviver chatReviver) {
+        GuildData config = getGuildConfig(guild);
+        if (!config.isChatRevivalEnabled())
+            return;
+
+        long chatRevivalChannel = config.getChatRevivalChannel();
+        if (chatRevivalChannel == 0)
+            return;
+
+        GuildChannel channel = guild.getGuildChannelById(chatRevivalChannel);
+        if (channel == null)
+            return;
+
+        if (channel.getType() != ChannelType.TEXT)
+            return;
+
+        TextChannel textChannel = (TextChannel) channel;
+        if (!textChannel.canTalk())
+            return;
+
+        String topic = TopicCommand.getRandomTopic();
+        chatReviver.setLastRunTime(System.currentTimeMillis());
+        Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
+
+        textChannel.sendMessage("📚 The topic for today's discussion is:\n **" + topic + "**\n Happy chatting! 📚").queue();
+    }
+
+    private void wyrChatRevival(Guild guild, ChatReviver chatReviver) {
+        GuildData config = getGuildConfig(guild);
+        if (!config.isChatRevivalEnabled())
+            return;
+
+        long chatRevivalChannel = config.getChatRevivalChannel();
+        if (chatRevivalChannel == 0)
+            return;
+
+        GuildChannel channel = guild.getGuildChannelById(chatRevivalChannel);
+        if (channel == null)
+            return;
+
+        if (channel.getType() != ChannelType.TEXT)
+            return;
+
+        TextChannel textChannel = (TextChannel) channel;
+        if (!textChannel.canTalk())
+            return;
+
+        String wyr = WouldYouRatherCommand.getRandomQuestion(textChannel.isNSFW(), true); // TODO: configurable nsfw
+        chatReviver.setLastRunTime(System.currentTimeMillis());
+        Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
+
+        textChannel.sendMessage("🤔 Would you rather:\n **" + wyr + "**\n Happy chatting! 🤔").queue();
     }
 
     private static GuildData getGuildConfig(Guild guild) {

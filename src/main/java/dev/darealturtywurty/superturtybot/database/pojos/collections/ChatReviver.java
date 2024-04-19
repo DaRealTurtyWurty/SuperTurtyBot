@@ -14,16 +14,16 @@ import java.util.concurrent.TimeUnit;
 @NoArgsConstructor
 public class ChatReviver {
     private long guild;
-    private long lastDrawingTime;
+    private long lastRunTime;
     private List<String> usedDrawings;
 
     public ChatReviver(long guild) {
         this(guild, 0L, new ArrayList<>());
     }
 
-    public long nextDrawingTime() {
+    public long nextRunTime() {
         return MathUtils.clamp(
-                Math.abs(this.lastDrawingTime - System.currentTimeMillis()),
+                Math.abs(this.lastRunTime - System.currentTimeMillis()),
                 0,
                 TimeUnit.DAYS.toMillis(1));
     }
