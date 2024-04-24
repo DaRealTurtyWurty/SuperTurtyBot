@@ -29,12 +29,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class UrbanDictionaryCommand extends CoreCommand {
-    private static final OkHttpClient CLIENT = new OkHttpClient();
-
-    static {
-        ShutdownHooks.register(() -> ShutdownHooks.shutdownOkHttpClient(CLIENT));
-    }
-
     public UrbanDictionaryCommand() {
         super(new Types(true, false, false, false));
     }
@@ -103,7 +97,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
                 .url("https://mashape-community-urban-dictionary.p.rapidapi.com/define?term=" + searchTerm).get()
                 .addHeader("X-RapidAPI-Host", "mashape-community-urban-dictionary.p.rapidapi.com")
                 .addHeader("X-RapidAPI-Key", Environment.INSTANCE.urbanDictionaryKey().get()).build();
-            final Response response = CLIENT.newCall(request).execute();
+            final Response response = Constants.HTTP_CLIENT.newCall(request).execute();
 
             ResponseBody body = response.body();
             if (body == null) {

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class WikipediaCommand extends CoreCommand {
-    private static final Wiki WIKI = new Wiki.Builder().build();
+    public static final Wiki WIKI = new Wiki.Builder().build();
 
     public WikipediaCommand() {
         super(new Types(true, false, false, false));
@@ -139,7 +139,7 @@ public class WikipediaCommand extends CoreCommand {
         });
     }
 
-    private static String decode(String page) {
+    public static String decode(String page) {
         return page.replace("_", " ")
                 .replace("%27", "'")
                 .replace("%26", "&")
@@ -155,7 +155,7 @@ public class WikipediaCommand extends CoreCommand {
                 .replace("%29", ")");
     }
 
-    private static String encode(String page) {
+    public static String encode(String page) {
         return page.replace(" ", "_")
                 .replace("'", "%27")
                 .replace("&", "%26")
@@ -171,7 +171,7 @@ public class WikipediaCommand extends CoreCommand {
                 .replace(")", "%29");
     }
 
-    private static String getImageUrl(String pageName) {
+    public static String getImageUrl(String pageName) {
         List<String> imageNames = new ArrayList<>(
                 WIKI.getImagesOnPage(pageName)
                         .stream()

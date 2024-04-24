@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public class SmashOrPassCommand extends CoreCommand {
-    public SmashOrPassCommand() {
+public class NSFWSmashOrPassCommand extends CoreCommand {
+    public NSFWSmashOrPassCommand() {
         super(new Types(true, false, false, false));
     }
 
@@ -35,12 +35,12 @@ public class SmashOrPassCommand extends CoreCommand {
 
     @Override
     public String getName() {
-        return "smashorpass";
+        return "nsfwsmashorpass";
     }
 
     @Override
     public String getRichName() {
-        return "Smash or Pass";
+        return "NSFW Smash or Pass";
     }
 
     @Override

@@ -843,6 +843,30 @@ public class ApiHandler {
         }
     }
 
+    public static Either<Pair<String, byte[]>, HttpStatus> getRandomCelebrity() {
+        try (Response response = makeRequest("fun/celebrity/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            String name = object.get("name").getAsString();
+            String base64 = object.get("image").getAsString();
+            byte[] bytes = Base64.getDecoder().decode(base64);
+
+            return Either.left(Pair.of(name, bytes));
+        } catch (IOException ignored) {
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private static Response makeRequest(String path) {
         try {
             return Constants.HTTP_CLIENT.newCall(new Request.Builder().url(BASE_URL + path).build()).execute();

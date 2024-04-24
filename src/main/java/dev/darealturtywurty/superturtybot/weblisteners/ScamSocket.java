@@ -13,7 +13,7 @@ import okhttp3.WebSocketListener;
 import org.jetbrains.annotations.NotNull;
 
 public final class ScamSocket extends WebSocketListener {
-    private static final WebSocket SOCKET = new OkHttpClient().newWebSocket(
+    private static final WebSocket SOCKET = Constants.HTTP_CLIENT.newWebSocket(
         new Request.Builder().url("wss://phish.sinking.yachts/feed").addHeader("X-Identity", "TurtyBot#8108").build(),
         new ScamSocket());
     

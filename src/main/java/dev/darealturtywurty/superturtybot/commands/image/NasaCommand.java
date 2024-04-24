@@ -30,7 +30,7 @@ public class NasaCommand implements BiConsumer<SlashCommandInteractionEvent, Ima
             final String nasaUrl = "https://api.nasa.gov/planetary/apod?api_key=%s"
                     .formatted(Environment.INSTANCE.nasaApiKey().get());
             final Request request = new Request.Builder().url(nasaUrl).get().build();
-            try (Response response = new OkHttpClient().newCall(request).execute()) {
+            try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     event.getHook()
                             .sendMessage("❌ Failed to get response!")

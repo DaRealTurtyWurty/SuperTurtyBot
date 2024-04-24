@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class CrashCommand extends EconomyCommand {
-    private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(10);
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final Map<Long, List<Game>> GAMES = new HashMap<>();
 
     @Override
@@ -80,7 +81,7 @@ public class CrashCommand extends EconomyCommand {
                         You have bet %s%d! The multiplier has started at 1.0x!
 
                         It will increase by a random amount every 2 seconds, however, it will crash at a random point between 1.0x and 10.0x!
-                                                
+                        
                         You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), amount)).queue(ignored -> {
                     var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
                     games.add(game);
@@ -162,12 +163,16 @@ public class CrashCommand extends EconomyCommand {
 
         public void cashout(JDA jda, GuildData config, Economy account) {
             Guild guild = jda.getGuildById(this.guild);
-            if (guild == null)
+            if (guild == null) {
+                close(null);
                 return;
+            }
 
             ThreadChannel thread = guild.getThreadChannelById(this.channel);
-            if (thread == null)
+            if (thread == null) {
+                close(null);
                 return;
+            }
 
             int amount = (int) (this.amount * MathUtils.clamp(multiplier, 1.0, 10.0));
             if(multiplier >= 10) {
@@ -185,9 +190,12 @@ public class CrashCommand extends EconomyCommand {
             EconomyManager.updateAccount(account);
         }
 
-        private void close(ThreadChannel thread) {
+        private void close(@Nullable ThreadChannel thread) {
             this.future.cancel(true);
-            thread.getManager().setArchived(true).setLocked(true).queue();
+            if(thread != null) {
+                thread.getManager().setArchived(true).setLocked(true).queue();
+            }
+
             List<Game> games = GAMES.computeIfAbsent(this.guild, ignored -> new ArrayList<>());
             games.remove(this);
         }

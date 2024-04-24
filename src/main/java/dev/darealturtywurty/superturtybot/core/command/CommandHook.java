@@ -19,7 +19,8 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsC
 import dev.darealturtywurty.superturtybot.commands.music.*;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.SmashOrPassCommand;
+import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
+import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
@@ -262,6 +263,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new SpeakCommand());
         commands.add(new SpeakVoiceCommand());
         commands.add(new AnnounceCommand());
+        commands.add(new TestCommand());
 
         // Utility
         commands.add(new BotInfoCommand());
@@ -316,7 +318,7 @@ public class CommandHook extends ListenerAdapter {
         // NSFW
         commands.add(new NSFWCommand());
         commands.add(new GuessSexPositionCommand());
-        commands.add(new SmashOrPassCommand());
+        commands.add(new NSFWSmashOrPassCommand());
 
         // Music
         commands.add(new JoinCommand());
