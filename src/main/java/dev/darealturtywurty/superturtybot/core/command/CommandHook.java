@@ -366,6 +366,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new UrbanDictionaryCommand());
         commands.add(new PetPetGifCommand());
         commands.add(new LoveCommand());
+        commands.add(new SmashOrPassCommand());
 
         // Levelling
         commands.add(new RankCommand());

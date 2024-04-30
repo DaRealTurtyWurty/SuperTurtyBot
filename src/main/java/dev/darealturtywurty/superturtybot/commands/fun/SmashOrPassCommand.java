@@ -1,11 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
@@ -16,12 +14,11 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,10 +30,29 @@ public class SmashOrPassCommand extends CoreCommand {
     private static final List<Button> BUTTONS = List.of(
             Button.primary("smash", "Smash"),
             Button.danger("pass", "Pass")
-    );;
+    );
 
     public SmashOrPassCommand() {
         super(new Types(true, false, false, false));
+    }
+
+    private static void finish(Message message) {
+        Instance instance = INSTANCES.stream().filter(inst -> inst.messageId == message.getIdLong()).findFirst().orElse(null);
+        if (instance != null) {
+            INSTANCES.remove(instance);
+        } else {
+            Constants.LOGGER.error("Instance was null while trying to finish the Smash or Pass command!");
+            message.delete().queue();
+            return;
+        }
+
+        message.editMessage("> " + message.getContentRaw() + "\nThe results are in! Smash: " + instance.smashIds.size() + " | Pass: " + instance.passIds.size())
+                .setComponents()
+                .queue(edited -> {
+                    if (instance.smashIds.isEmpty() && instance.passIds.isEmpty()) {
+                        edited.delete().queue();
+                    }
+                });
     }
 
     @Override
@@ -69,7 +85,7 @@ public class SmashOrPassCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
 
         Either<Pair<String, byte[]>, HttpStatus> result = ApiHandler.getRandomCelebrity();
-        if(result.isRight()) {
+        if (result.isRight()) {
             event.getHook().sendMessage("❌ An error occurred while trying to get a random celebrity!").queue();
             Constants.LOGGER.error("An error occurred while trying to get a random celebrity! Code: {}", result.getRight());
             return;
@@ -79,15 +95,13 @@ public class SmashOrPassCommand extends CoreCommand {
         String name = pair.getLeft();
         byte[] image = pair.getRight();
 
-        try(FileUpload upload = FileUpload.fromData(image, name + ".png")) {
+        try (FileUpload upload = FileUpload.fromData(image, name + ".jpg")) {
             event.getHook().sendMessage("Would you smash or pass on **" + name + "**?")
                     .setFiles(upload)
                     .setComponents(ActionRow.of(BUTTONS))
                     .queue(message -> {
-                        createEventWaiter(event, message).build();
-
                         INSTANCES.add(new Instance(event.getJDA(), event.isFromGuild() ? event.getGuild().getIdLong() : -1L, event.getChannel().getIdLong(), message.getIdLong()));
-                        EXECUTOR.schedule(() -> finish(message), 30, TimeUnit.MINUTES);
+                        EXECUTOR.schedule(() -> finish(message), 1, TimeUnit.MINUTES);
                     });
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while trying to send the image!").queue();
@@ -95,56 +109,28 @@ public class SmashOrPassCommand extends CoreCommand {
         }
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(SlashCommandInteractionEvent slashEvent, Message message) {
-        return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(event -> event.getMessageIdLong() == message.getIdLong()
-                        && event.getChannel().getIdLong() == slashEvent.getChannel().getIdLong()
-                        && ((event.isFromGuild() && event.getGuild().getIdLong() == slashEvent.getGuild().getIdLong()) || !event.isFromGuild())
-                        && event.getComponentId().equalsIgnoreCase("smash") || event.getComponentId().equalsIgnoreCase("pass"))
-                .timeout(30, TimeUnit.MINUTES)
-                .timeoutAction(() -> finish(message))
-                .failure(() -> {
-                    message.delete().queue();
-                    Constants.LOGGER.error("An error occurred while trying to wait for a button interaction!");
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        if (!event.getComponentId().equalsIgnoreCase("smash") && !event.getComponentId().equalsIgnoreCase("pass"))
+            return;
 
-                    INSTANCES.removeIf(inst -> inst.messageId == message.getIdLong());
-                })
-                .success(event -> {
-                    Instance instance = INSTANCES.stream().filter(inst -> inst.messageId == message.getIdLong()).findFirst().orElse(null);
-                    if(instance == null) {
-                        message.delete().queue();
-                        Constants.LOGGER.error("Instance was null while trying to interact with a button!");
+        event.deferEdit().queue();
 
-                        INSTANCES.removeIf(inst -> inst.messageId == message.getIdLong());
-                        return;
-                    }
-
-                    event.deferEdit().queue();
-
-                    if(instance.shouldIgnore(event.getUser().getIdLong()))
-                        return;
-
-                    instance.interact(event);
-                });
-    }
-
-    private static void finish(Message message) {
-        Instance instance = INSTANCES.stream().filter(inst -> inst.messageId == message.getIdLong()).findFirst().orElse(null);
-        if(instance != null) {
-            INSTANCES.remove(instance);
-        } else {
-            Constants.LOGGER.error("Instance was null while trying to finish the Smash or Pass command!");
-            message.delete().queue();
+        Instance instance = INSTANCES.stream().filter(inst -> inst.messageId == event.getMessageIdLong() &&
+                        inst.channelId == event.getChannel().getIdLong() &&
+                        inst.guildId == event.getGuild().getIdLong())
+                .findFirst()
+                .orElse(null);
+        if (instance == null) {
+            event.getHook().deleteOriginal().queue();
+            Constants.LOGGER.error("Instance was null while trying to interact with a button!");
             return;
         }
 
-        message.editMessage("The results are in! Smash: " + instance.smashIds.size() + " | Pass: " + instance.passIds.size())
-                .setComponents()
-                .queue(edited -> {
-                    if(instance.smashIds.isEmpty() && instance.passIds.isEmpty()) {
-                        edited.delete().queue();
-                    }
-                });
+        if (instance.shouldIgnore(event.getUser().getIdLong()))
+            return;
+
+        instance.interact(event);
     }
 
     public static class Instance {
@@ -161,7 +147,7 @@ public class SmashOrPassCommand extends CoreCommand {
         }
 
         public void interact(ButtonInteractionEvent event) {
-            if(event.getComponentId().equalsIgnoreCase("smash")) {
+            if (event.getComponentId().equalsIgnoreCase("smash")) {
                 this.smashIds.add(event.getUser().getIdLong());
             } else if (event.getComponentId().equalsIgnoreCase("pass")) {
                 this.passIds.add(event.getUser().getIdLong());
