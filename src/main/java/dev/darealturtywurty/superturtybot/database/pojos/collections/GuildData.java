@@ -123,6 +123,7 @@ public class GuildData {
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
     private List<Long> enabledBirthdayUsers;
+    private boolean addSmashOrPassButtons;
 
     public GuildData() {
         this(0L);
@@ -215,6 +216,7 @@ public class GuildData {
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;
         this.enabledBirthdayUsers = new ArrayList<>();
+        this.addSmashOrPassButtons = true;
     }
 
     public boolean shouldLog(Event event) {

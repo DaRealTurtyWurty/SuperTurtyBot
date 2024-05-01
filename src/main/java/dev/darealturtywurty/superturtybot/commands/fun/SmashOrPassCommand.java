@@ -1,10 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
@@ -12,6 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -96,13 +100,28 @@ public class SmashOrPassCommand extends CoreCommand {
         byte[] image = pair.getRight();
 
         try (FileUpload upload = FileUpload.fromData(image, name + ".jpg")) {
-            event.getHook().sendMessage("Would you smash or pass on **" + name + "**?")
-                    .setFiles(upload)
-                    .setComponents(ActionRow.of(BUTTONS))
-                    .queue(message -> {
-                        INSTANCES.add(new Instance(event.getJDA(), event.isFromGuild() ? event.getGuild().getIdLong() : -1L, event.getChannel().getIdLong(), message.getIdLong()));
+            WebhookMessageCreateAction<Message> request = event.getHook()
+                    .sendMessage("Would you smash or pass on **" + name + "**?")
+                    .setFiles(upload);
+
+            if (event.isFromGuild()) {
+                GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
+                if (data == null) {
+                    data = new GuildData(event.getGuild().getIdLong());
+                    Database.getDatabase().guildData.insertOne(data);
+                }
+
+                if (data.isAddSmashOrPassButtons()) {
+                    request.setComponents(ActionRow.of(BUTTONS)).queue(message -> {
+                        INSTANCES.add(new Instance(event.isFromGuild() ? event.getGuild().getIdLong() : -1L, event.getChannel().getIdLong(), message.getIdLong()));
                         EXECUTOR.schedule(() -> finish(message), 1, TimeUnit.MINUTES);
                     });
+
+                    return;
+                }
+            }
+
+            request.queue();
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while trying to send the image!").queue();
             Constants.LOGGER.error("An error occurred while trying to send the image!", exception);
@@ -134,13 +153,10 @@ public class SmashOrPassCommand extends CoreCommand {
     }
 
     public static class Instance {
-        private final JDA jda;
         private final long guildId, channelId, messageId;
         private final List<Long> smashIds = new ArrayList<>(), passIds = new ArrayList<>();
-        private final long startTime = System.currentTimeMillis();
 
-        public Instance(JDA jda, long guildId, long channelId, long messageId) {
-            this.jda = jda;
+        public Instance(long guildId, long channelId, long messageId) {
             this.guildId = guildId;
             this.channelId = channelId;
             this.messageId = messageId;

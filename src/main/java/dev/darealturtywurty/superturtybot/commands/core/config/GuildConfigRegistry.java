@@ -51,7 +51,7 @@ public class GuildConfigRegistry {
     private static final GuildConfigOption LEVEL_ROLES = GUILD_CONFIG_OPTIONS.register("level_roles",
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setLevelRoles)
                     .valueFromConfig(GuildData::getLevelRoles).validator((event, value) -> {
-                        if(event.getGuild() == null)
+                        if (event.getGuild() == null)
                             return false;
 
                         final String[] split = value.split("[ ;]");
@@ -284,7 +284,7 @@ public class GuildConfigRegistry {
                         guildConfig.setMusicPermissions(permissions);
                     })
                     .valueFromConfig(GuildData::getMusicPermissions).validator((event, value) -> {
-                        if(event.getGuild() == null)
+                        if (event.getGuild() == null)
                             return false;
 
                         final String[] commands = value.split("-");
@@ -358,4 +358,9 @@ public class GuildConfigRegistry {
                     .serializer((config, value) -> config.setBirthdayChannel(Long.parseLong(value)))
                     .valueFromConfig(GuildData::getBirthdayChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+
+    private static final GuildConfigOption ADD_SMASH_OR_PASS_BUTTONS = GUILD_CONFIG_OPTIONS.register("add_smash_or_pass_buttons",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setAddSmashOrPassButtons(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isAddSmashOrPassButtons).build());
 }
