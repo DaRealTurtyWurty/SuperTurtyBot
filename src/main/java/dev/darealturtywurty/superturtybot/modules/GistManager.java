@@ -73,15 +73,13 @@ public class GistManager extends ListenerAdapter {
                     final var proxy = attachment.getProxy();
                     final CompletableFuture<Path> future = proxy.downloadToPath(path);
                     future.thenAccept(file -> {
-                        if (Files.exists(file) && Files.isRegularFile(path) && Files.isReadable(path)) {
-                            try {
-                                final String content = Files.readString(path);
-                                if (!content.isBlank()) {
-                                    gistFiles.put(attachment.getFileName(),
-                                        new GistFile().setContent(content).setFilename(attachment.getFileName()));
-                                }
-                            } catch (final IOException ignored) {
+                        try {
+                            final String content = Files.readString(path);
+                            if (!content.isBlank()) {
+                                gistFiles.put(attachment.getFileName(),
+                                    new GistFile().setContent(content).setFilename(attachment.getFileName()));
                             }
+                        } catch (final IOException ignored) {
                         }
                         
                         if (counter.incrementAndGet() >= attachments.size()) {
