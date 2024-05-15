@@ -65,17 +65,24 @@ public final class BirthdayManager {
                 if (birthdayChannel == null)
                     continue;
 
-                guild.retrieveMembersByIds(guildBirthdayUsers).onSuccess((List<Member> members) -> {
+                List<Long> toAnnounce = new ArrayList<>();
+                for (Birthday birthday : birthdays) {
+                    if (guildBirthdayUsers.contains(birthday.getUser()))
+                        toAnnounce.add(birthday.getUser());
+                }
+
+                guild.retrieveMembersByIds(toAnnounce).onSuccess((List<Member> members) -> {
                     for (Member member : members) {
-                        Birthday birthday = getBirthday(member.getIdLong());
-                        if (birthday == null)
-                            continue;
+                        Birthday birthday = birthdays.stream()
+                                .filter(b -> b.getUser() == member.getIdLong())
+                                .findFirst().orElse(null);
 
                         int age = TimeUtils.calculateAge(
                                 birthday.getDay(),
                                 birthday.getMonth(),
                                 birthday.getYear()
                         );
+
                         birthdayChannel.sendMessageFormat(
                                 "🎉 %s is celebrating their %d%s birthday today! Happy birthday!",
                                 "<@" + birthday.getUser() + ">",
