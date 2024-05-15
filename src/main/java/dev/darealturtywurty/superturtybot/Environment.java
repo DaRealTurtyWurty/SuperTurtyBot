@@ -2,9 +2,11 @@ package dev.darealturtywurty.superturtybot;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvBuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Activity.ActivityType;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
@@ -189,6 +191,11 @@ public final class Environment {
         if(this.env != null)
             throw new IllegalStateException("Environment already loaded!");
 
-        this.env = Dotenv.configure().directory(environment.toString()).load();
+        DotenvBuilder builder = Dotenv.configure().directory(Files.isDirectory(environment) ? environment.toString() : environment.getParent().toString());
+        if(Files.exists(environment)) {
+            builder.filename(environment.getFileName().toString());
+        }
+
+        this.env = builder.load();
     }
 }
