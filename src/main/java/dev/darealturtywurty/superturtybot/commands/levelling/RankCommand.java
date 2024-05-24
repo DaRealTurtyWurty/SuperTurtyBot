@@ -175,7 +175,7 @@ public class RankCommand extends CoreCommand {
             ImageIO.write(card, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), member.getId() + ".png")).queue();
         } catch (final IOException exception) {
-            Constants.LOGGER.error("Error getting rank card for " + member.getUser().getName(), exception);
+            Constants.LOGGER.error("Error getting rank card for " + member.getEffectiveName(), exception);
             event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
         }
     }
@@ -245,7 +245,7 @@ public class RankCommand extends CoreCommand {
             graphics.setStroke(new BasicStroke(3));
             graphics.setColor(card.getNameTextColor().asColor());
 
-            final String name = member.getUser().getName();
+            final String name = member.getEffectiveName();
             final var nameFontSize = name.length() <= 12 ? 200f : 112f;
             graphics.setFont(this.usedFont.deriveFont(nameFontSize));
 
@@ -363,7 +363,7 @@ public class RankCommand extends CoreCommand {
 
             return rankCardBuffer;
         } catch (final IOException | URISyntaxException exception) {
-            Constants.LOGGER.error("Error getting rank card for " + member.getUser().getName(), exception);
+            Constants.LOGGER.error("Error getting rank card for " + member.getEffectiveName(), exception);
         }
 
         return null;
