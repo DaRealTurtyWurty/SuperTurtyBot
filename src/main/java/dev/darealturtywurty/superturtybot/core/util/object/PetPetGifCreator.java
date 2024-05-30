@@ -3,12 +3,12 @@ package dev.darealturtywurty.superturtybot.core.util.object;
 import dev.darealturtywurty.superturtybot.core.util.FileUtils;
 import lombok.Getter;
 
-import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,13 +18,12 @@ public class PetPetGifCreator {
     private static final List<BufferedImage> PET_PET_FRAMES;
 
     static {
-        PET_PET_FRAMES = FileUtils.locateResourceFiles("/petpet").stream().map(file -> { // a slash needs to go in front of the path for some reason
-            try {
-                return ImageIO.read(file);
-            } catch (IOException exception) {
-                throw new IllegalStateException("Could not read image!", exception);
-            }
-        }).toList();
+        PET_PET_FRAMES = new ArrayList<>();
+        PET_PET_FRAMES.add(FileUtils.loadImage("/petpet/frame_0.png"));
+        PET_PET_FRAMES.add(FileUtils.loadImage("/petpet/frame_1.png"));
+        PET_PET_FRAMES.add(FileUtils.loadImage("/petpet/frame_2.png"));
+        PET_PET_FRAMES.add(FileUtils.loadImage("/petpet/frame_3.png"));
+        PET_PET_FRAMES.add(FileUtils.loadImage("/petpet/frame_4.png"));
     }
 
     private final Path outputPath;
