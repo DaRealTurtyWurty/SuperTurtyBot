@@ -14,11 +14,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Getter
 public class PetPetGifCreator {
-    private static final int DELAY = 20;
+    private static final int DELAY = 50; // changed the delay to 50
     private static final List<BufferedImage> PET_PET_FRAMES;
 
     static {
-        PET_PET_FRAMES = FileUtils.locateResourceFiles("petpet").stream().map(file -> {
+        PET_PET_FRAMES = FileUtils.locateResourceFiles("/petpet").stream().map(file -> { // a slash needs to go in front of the path for some reason
             try {
                 return ImageIO.read(file);
             } catch (IOException exception) {
@@ -37,7 +37,7 @@ public class PetPetGifCreator {
         this.inputImage = inputImage;
 
         try {
-            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, 50, true);
+            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so i set it to be used here
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create GifSequenceWriter!", exception);
         }
