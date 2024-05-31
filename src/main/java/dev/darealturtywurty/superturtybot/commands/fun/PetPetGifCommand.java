@@ -4,12 +4,14 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.object.PetPetGifCreator;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -30,14 +32,14 @@ public class PetPetGifCommand extends CoreCommand {
         super(new Types(true, false, true, true));
     }
 
-    @Override
+    /*@Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(
                 OptionType.STRING,
                 "image",
                 "The image to pet pet gif",
                 true));
-    }
+    }*/
 
     @Override
     public CommandCategory getCategory() {
@@ -60,19 +62,50 @@ public class PetPetGifCommand extends CoreCommand {
     }
 
     @Override
+    public List<SubcommandData> createSubcommandData() {
+        return List.of(
+                new SubcommandData("user", "Creates a pet pet gif with the given user avatar.")
+                        .addOption(OptionType.USER, "user", "The user to pet pet gif", true),
+                new SubcommandData("image", "Creates a pet pet gif with the given image.")
+                        .addOption(OptionType.STRING, "image", "The image to pet pet gif", true)
+        );
+    }
+
+    @Override
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 15L);
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        String imageStr = event.getOption("image", null, OptionMapping::getAsString);
-        if (imageStr == null) {
-            reply(event, "❌ You must provide an image to pet pet gif!", false, true);
+        String subcommand = event.getSubcommandName();
+        if (subcommand == null) {
+            event.getHook().editOriginal("❌ You must provide a subcommand!").queue();
             return;
         }
 
         reply(event, "⏸️ Creating pet pet gif...");
+        String imageStr;
+        switch (subcommand) {
+            case "user":
+                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                if (user == null) {
+                    reply(event, "❌ You must provide a user to pet pet gif!", false, true);
+                    return;
+                }
+                imageStr = user.getEffectiveAvatarUrl();
+                break;
+            case "image":
+                imageStr = event.getOption("image", null, OptionMapping::getAsString);
+                if (imageStr == null) {
+                    reply(event, "❌ You must provide an image to pet pet gif!", false, true);
+                    return;
+                }
+                break;
+            default:
+                imageStr = "";
+                break;
+        }
 
         BufferedImage image;
         try {
@@ -81,7 +114,6 @@ public class PetPetGifCommand extends CoreCommand {
             event.getHook().editOriginal("❌ The image you provided is invalid!").queue();
             return;
         }
-
         CompletableFuture<Path> future = createPetPetGif(image);
         future.thenAccept(path -> {
             try {

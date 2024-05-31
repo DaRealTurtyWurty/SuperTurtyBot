@@ -167,8 +167,4 @@ public class TurtyBot {
     public static URL getResource(String name) {
         return TurtyBot.class.getResource(name);
     }
-
-    public static InputStream getResourceAsStream(String name) {
-        return TurtyBot.class.getResourceAsStream(name);
-    }
 }

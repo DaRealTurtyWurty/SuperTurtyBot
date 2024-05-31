@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 public class FileUtils {
     public static BufferedImage loadImage(String filename) {
-        InputStream stream = TurtyBot.getResourceAsStream(filename);
+        InputStream stream = TurtyBot.loadResource(filename);
         if(stream == null)
             return null;
 
