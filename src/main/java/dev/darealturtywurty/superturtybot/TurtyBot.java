@@ -1,9 +1,9 @@
 package dev.darealturtywurty.superturtybot;
 
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
+import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
-import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -30,7 +30,6 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
