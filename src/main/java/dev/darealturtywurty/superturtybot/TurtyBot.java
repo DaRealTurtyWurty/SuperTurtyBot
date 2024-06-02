@@ -143,6 +143,9 @@ public class TurtyBot {
         // TODO: Figure out FFmpeg on Ubuntu
         // builder.addEventListeners(FileConversionManager.INSTANCE);
 
+        // Add welcome manager so that we can welcome new members and say goodbye to leaving members
+        builder.addEventListeners(WelcomeManager.INSTANCE);
+
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);
     }

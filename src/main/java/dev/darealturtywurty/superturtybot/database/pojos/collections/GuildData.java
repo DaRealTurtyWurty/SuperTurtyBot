@@ -42,6 +42,7 @@ public class GuildData {
     private String optInChannels;
     private String nsfwChannels;
     private long birthdayChannel;
+    private long welcomeChannel;
 
     // Showcases
     private long starboard;
