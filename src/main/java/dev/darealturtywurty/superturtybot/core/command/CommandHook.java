@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
+import dev.darealturtywurty.superturtybot.commands.fun.relationship.RelationshipCommand;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
@@ -367,6 +368,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new PetPetGifCommand());
         commands.add(new LoveCommand());
         commands.add(new SmashOrPassCommand());
+        commands.add(new RelationshipCommand());
 
         // Levelling
         commands.add(new RankCommand());
