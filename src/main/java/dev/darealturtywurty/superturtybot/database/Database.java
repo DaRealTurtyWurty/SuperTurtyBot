@@ -114,14 +114,12 @@ public class Database {
     }
 
     private static MongoClient connect(CodecRegistry codec) {
-        if (Environment.INSTANCE.mongoUsername().isEmpty() || Environment.INSTANCE.mongoPassword().isEmpty()) {
-            Constants.LOGGER.error("MongoDB username or password have not been set!");
+        if (Environment.INSTANCE.mongoConnectionString().isEmpty()) {
+            Constants.LOGGER.error("MongoDB connection string has not been set!");
             return MongoClients.create();
         }
 
-        final ConnectionString connectionString = new ConnectionString(
-            "mongodb+srv://" + Environment.INSTANCE.mongoUsername().get() + ":" + Environment.INSTANCE.mongoPassword().get()
-                + "@turtybot.omb6j.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+        final ConnectionString connectionString = new ConnectionString(Environment.INSTANCE.mongoConnectionString().get());
         final MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connectionString)
             .applicationName("TurtyBot").codecRegistry(codec).build();
         return MongoClients.create(settings);
