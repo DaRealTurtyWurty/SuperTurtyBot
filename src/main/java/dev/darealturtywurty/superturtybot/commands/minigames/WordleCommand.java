@@ -141,10 +141,12 @@ public class WordleCommand extends CoreCommand {
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if(Environment.INSTANCE.turtyApiKey().isEmpty()) {
-            event.getHook().sendMessage("❌ TurtyAPI key is not present!").setEphemeral(true).queue();
+        if (Environment.INSTANCE.turtyApiKey().isEmpty()) {
+            reply(event, "❌ This command has been disabled by the bot owner!", false, true);
+            Constants.LOGGER.warn("Turty API key is not set!");
             return;
         }
+
         event.deferReply().queue(hook -> {
         }, error -> {
         });
