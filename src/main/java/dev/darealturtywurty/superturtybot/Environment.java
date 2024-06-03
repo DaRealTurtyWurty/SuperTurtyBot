@@ -45,12 +45,8 @@ public final class Environment {
         return getString("LOGGING_WEBHOOK_TOKEN");
     }
 
-    public Optional<String> mongoPassword() {
-        return getString("MONGO_PASSWORD");
-    }
-
-    public Optional<String> mongoUsername() {
-        return getString("MONGO_USERNAME");
+    public Optional<String> mongoConnectionString() {
+        return getString("MONGO_CONNECTION_STRING");
     }
 
     public Optional<Long> ownerId() {
