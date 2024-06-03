@@ -52,6 +52,7 @@ public class HelloResponseManager extends ListenerAdapter {
             return;
 
         if (shouldRespond(message)) {
+            message.getChannel().sendTyping().queue();
             String response = RESPONSES.get((int) (Math.random() * RESPONSES.size()));
 
             // spread emojis
@@ -64,7 +65,7 @@ public class HelloResponseManager extends ListenerAdapter {
             if (ThreadLocalRandom.current().nextBoolean())
                 response = author.getAsMention() + " " + response;
 
-            message.reply(response).mentionRepliedUser(false).queue();
+            message.reply(response).mentionRepliedUser(false).queueAfter(3, TimeUnit.SECONDS);
             LAST_RESPONDED.put(author.getIdLong(), System.currentTimeMillis());
             return;
         }
