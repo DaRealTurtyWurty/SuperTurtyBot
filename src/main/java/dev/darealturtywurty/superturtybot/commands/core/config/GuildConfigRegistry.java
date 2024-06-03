@@ -363,4 +363,10 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setAddSmashOrPassButtons(Boolean.parseBoolean(value)))
                     .valueFromConfig(GuildData::isAddSmashOrPassButtons).build());
+
+    private static final GuildConfigOption WELCOME_CHANNEL = GUILD_CONFIG_OPTIONS.register("welcome_channel",
+            new GuildConfigOption.Builder().dataType(DataType.LONG)
+                    .serializer((config, value) -> config.setWelcomeChannel(Long.parseLong(value)))
+                    .valueFromConfig(GuildData::getWelcomeChannel)
+                    .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 }
