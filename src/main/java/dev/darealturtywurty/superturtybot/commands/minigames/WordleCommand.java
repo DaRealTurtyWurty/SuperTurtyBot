@@ -3,12 +3,14 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.FileUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
@@ -34,7 +36,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,49 +66,48 @@ public class WordleCommand extends CoreCommand {
     private static final Map<Character, CoupledPair<Integer>> LETTER_POSITIONS = new HashMap<>();
 
     static {
-        List<Character> topRow = List.of('Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P');
-        List<Character> middleRow = List.of('A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L');
-        List<Character> bottomRow = List.of('Z', 'X', 'C', 'V', 'B', 'N', 'M');
+        if(Environment.INSTANCE.turtyApiKey().isPresent()) {
+            List<Character> topRow = List.of('Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P');
+            List<Character> middleRow = List.of('A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L');
+            List<Character> bottomRow = List.of('Z', 'X', 'C', 'V', 'B', 'N', 'M');
 
-        final int width = 85, spacing = 10;
+            final int width = 85, spacing = 10;
 
-        final int topRowStartX = 131;
-        final int topRowStartY = 958;
-        for (int column = 0; column < topRow.size(); column++) {
-            char character = topRow.get(column);
-            int x = topRowStartX + (column * (width + spacing));
-            LETTER_POSITIONS.put(character, new CoupledPair<>(x, topRowStartY));
+            final int topRowStartX = 131;
+            final int topRowStartY = 958;
+            for (int column = 0; column < topRow.size(); column++) {
+                char character = topRow.get(column);
+                int x = topRowStartX + (column * (width + spacing));
+                LETTER_POSITIONS.put(character, new CoupledPair<>(x, topRowStartY));
+            }
+
+            final int middleRowStartX = 178;
+            final int middleRowStartY = 1068;
+            for (int column = 0; column < middleRow.size(); column++) {
+                char character = middleRow.get(column);
+                int x = middleRowStartX + (column * (width + spacing));
+                LETTER_POSITIONS.put(character, new CoupledPair<>(x, middleRowStartY));
+            }
+
+            final int bottomRowStartX = 273;
+            final int bottomRowStartY = 1178;
+            for (int column = 0; column < bottomRow.size(); column++) {
+                char character = bottomRow.get(column);
+                int x = bottomRowStartX + (column * (width + spacing));
+                LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
+            }
+
+            loadTodaysWords();
+            EXECUTOR.scheduleAtFixedRate(() -> {
+                fetchAndStoreWords();
+                RATE_LIMITS.clear();
+            }, getInitialDelay(), 24, TimeUnit.HOURS);
         }
-
-        final int middleRowStartX = 178;
-        final int middleRowStartY = 1068;
-        for (int column = 0; column < middleRow.size(); column++) {
-            char character = middleRow.get(column);
-            int x = middleRowStartX + (column * (width + spacing));
-            LETTER_POSITIONS.put(character, new CoupledPair<>(x, middleRowStartY));
-        }
-
-        final int bottomRowStartX = 273;
-        final int bottomRowStartY = 1178;
-        for (int column = 0; column < bottomRow.size(); column++) {
-            char character = bottomRow.get(column);
-            int x = bottomRowStartX + (column * (width + spacing));
-            LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
-        }
-
-        loadTodaysWords();
-        EXECUTOR.scheduleAtFixedRate(() -> {
-            fetchAndStoreWords();
-            RATE_LIMITS.clear();
-        }, getInitialDelay(), 24, TimeUnit.HOURS);
-
-        try (InputStream stream = TurtyBot.loadResource("wordle.png")) {
-            if (stream == null)
+        {
+            DEFAULT_IMAGE = FileUtils.loadImage("wordle.png");
+            if(DEFAULT_IMAGE == null) {
                 throw new IllegalStateException("Failed to load 'wordle.png'!");
-
-            DEFAULT_IMAGE = ImageIO.read(stream);
-        } catch (IOException | NullPointerException exception) {
-            throw new IllegalStateException("Failed to load default image!", exception);
+            }
         }
     }
 
@@ -141,6 +141,12 @@ public class WordleCommand extends CoreCommand {
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
+        if (Environment.INSTANCE.turtyApiKey().isEmpty()) {
+            reply(event, "❌ This command has been disabled by the bot owner!", false, true);
+            Constants.LOGGER.warn("Turty API key is not set!");
+            return;
+        }
+
         event.deferReply().queue(hook -> {
         }, error -> {
         });
