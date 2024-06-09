@@ -3,7 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.core.util.RedditUtilsOld;
+import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -47,8 +47,8 @@ public class MemeCommand extends CoreCommand {
         final String[] subreddits = { "memes", "dankmemes", "blackpeopletwitter", "memeeconomy", "me_irl",
             "adviceanimals", "surrealmemes" };
         
-        final SubredditReference subreddit = RedditUtilsOld.getRandomSubreddit(subreddits);
-        final RootCommentNode post = RedditUtilsOld.findValidPost(subreddit, subreddits);
+        final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
+        final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
         if(post == null) {
             event.getHook().editOriginal("❌ Unable to find a valid post!").queue();
             return;

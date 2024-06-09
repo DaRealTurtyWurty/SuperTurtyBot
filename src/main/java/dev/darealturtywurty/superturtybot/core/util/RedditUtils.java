@@ -1,48 +1,47 @@
 package dev.darealturtywurty.superturtybot.core.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.squareup.moshi.JsonDataException;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
-import masecla.reddit4j.client.Reddit4J;
-import masecla.reddit4j.client.UserAgentBuilder;
-import masecla.reddit4j.exceptions.AuthenticationException;
-import masecla.reddit4j.objects.RedditPost;
-import masecla.reddit4j.objects.Sorting;
-import masecla.reddit4j.objects.subreddit.RedditSubreddit;
+import kotlin.text.Charsets;
+import net.dean.jraw.ApiException;
+import net.dean.jraw.RedditClient;
+import net.dean.jraw.http.NetworkException;
+import net.dean.jraw.http.OkHttpNetworkAdapter;
+import net.dean.jraw.http.UserAgent;
+import net.dean.jraw.models.SubmissionPreview;
+import net.dean.jraw.oauth.Credentials;
+import net.dean.jraw.oauth.OAuthHelper;
+import net.dean.jraw.references.SubredditReference;
+import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 public final class RedditUtils {
-    private static Reddit4J REDDIT;
+    public static RedditClient REDDIT;
 
     static {
         if (Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
-            REDDIT = Reddit4J.rateLimited()
-                    .setClientId(Environment.INSTANCE.redditClientId().get())
-                    .setClientSecret(Environment.INSTANCE.redditClientSecret().get())
-                    .setUserAgent(new UserAgentBuilder()
-                            .appname("TurtyBot")
-                            .author("TurtyWurty")
-                            .version("1.0")
-                            .build());
-
-            try {
-                REDDIT.userlessConnect();
-            } catch (IOException | InterruptedException | AuthenticationException exception) {
-                Constants.LOGGER.error("Failed to connect to Reddit!", exception);
-                REDDIT = null;
-            }
-        } else {
-            REDDIT = null;
+            final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
+                    Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
+            final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
+            REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
+            REDDIT.setLogHttp(true);
         }
     }
 
@@ -50,69 +49,117 @@ public final class RedditUtils {
         throw new IllegalAccessError("Cannot access private constructor!");
     }
 
-    public static Optional<Reddit4J> getReddit() {
-        return Optional.ofNullable(REDDIT);
-    }
-
-    // TODO: Probably don't use this library cuz it has no support for media
-    public static @Nullable Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, String... subreddits) {
+    @Nullable
+    public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, String... subreddits) {
         if (subreddits.length < 1) return null;
 
-        final RedditSubreddit subreddit = getRandomSubreddit(subreddits);
-        Optional<RedditPost> optPost = getRandomPost(subreddit.getFullName());
-
+        final SubredditReference subreddit = getRandomSubreddit(subreddits);
+        RootCommentNode post = findValidPost(subreddit, subreddits);
         int attempts = 0;
-        while (optPost.isEmpty()) {
-            optPost = findValidPost(subreddit, subreddits);
-            if (attempts++ > 10) {
-                return Either.right(List.of("Failed to find a valid post!"));
+        while (post == null) {
+            post = findValidPost(subreddit, subreddits);
+            if (attempts++ > 10) return null;
+        }
+
+        var embed = new EmbedBuilder();
+        String title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
+        embed.setTitle(title.length() > 256 ? title.substring(0, 256) : title);
+
+        String description = post.getSubject().getBody();
+        if (description != null) {
+            embed.setDescription(description.length() > 4096 ? description.substring(0, 4096) : description);
+        }
+
+        if (post.getSubject().getPreview() != null) {
+            if (post.getSubject().getPreview().getImages().size() > 1) {
+                List<String> images = post.getSubject().getPreview().getImages().stream()
+                        .map(SubmissionPreview.ImageSet::getSource).map(SubmissionPreview.Variation::getUrl)
+                        .map(url -> url.replace("external-preview", "i").replace("preview", "i")).toList();
+                return Either.right(images);
             }
         }
 
-        RedditPost post = optPost.get();
+        String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
+                .getUrl();
+        if (mediaURL == null || mediaURL.isBlank())
+            return null;
 
-        final var builder = new EmbedBuilder()
-                .setTitle(post.getTitle())
-                .setFooter("Posted by u/" + post.getAuthor() + " in r/" + post.getSubreddit() + " • " + post.getScore() + " upvotes")
-                .setTimestamp(Instant.ofEpochSecond(post.getCreated()))
-                .setColor(0xFF4500);
+        if (mediaURL.contains("reddit.com/gallery")) {
+            String json = mediaURL.replace("gallery", "comments") + ".json";
+            try {
+                URLConnection connection = new URI(json).toURL().openConnection();
+                connection.setRequestProperty("User-Agent", "TurtyWurty");
+                JsonObject listing = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
+                        JsonArray.class).get(0).getAsJsonObject();
+                JsonObject data = listing.getAsJsonObject("data");
+                JsonArray children = data.getAsJsonArray("children");
+                JsonObject childData = children.get(0).getAsJsonObject().getAsJsonObject("data");
+                JsonArray galleryData = childData.getAsJsonObject("gallery_data").getAsJsonArray("items");
 
-        if (post.getSelftext() != null && !post.getSelftext().isEmpty()) {
-            builder.setDescription(post.getSelftext());
+                List<String> images = new ArrayList<>();
+                for (JsonElement galleryDatum : galleryData) {
+                    JsonObject galleryDataObject = galleryDatum.getAsJsonObject();
+                    String media = galleryDataObject.get("media_id").getAsString();
+                    JsonObject mediaMetadata = childData.getAsJsonObject("media_metadata");
+                    JsonObject mediaObject = mediaMetadata.getAsJsonObject(media);
+                    String type = mediaObject.get("m").getAsString().replace("image/", "");
+                    images.add("https://i.redd.it/%s.%s".formatted(media, type));
+                }
+
+                return Either.right(images);
+            } catch (IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Failed to get gallery data!", exception);
+                return null;
+            }
         }
 
-        System.out.println(post.getMedia());
-        return Either.left(builder);
-//        if (post.getMedia() != null && !post.getMedia().isEmpty()) {
-//            if (verifyVideo(post.getMedia())) {
-//                builder.setImage(post.getMedia());
-//            } else if (isEmbedVideo(post.getMedia())) {
-//                builder.setDescription(post.getMedia());
-//            } else {
-//                builder.setImage(post.getMedia());
-//            }
-//        } else if (post.getPreview() != null) {
-//            final var preview = post.getPreview();
-//            if (preview.getImages() != null && !preview.getImages().isEmpty()) {
-//                final var image = preview.getImages().get(0);
-//                if (image.getSource() != null) {
-//                    builder.setImage(image.getSource().getUrl());
-//                }
-//            }
-//        }
-//
-//        return Either.left(builder);
+        if (requireMedia) {
+            post = findValidPost(subreddit, subreddits);
+            if (post == null)
+                return null;
+
+            mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
+                    .getUrl();
+
+            if (mediaURL == null || mediaURL.isBlank())
+                return null;
+        }
+
+        // https://i.redgifs.com/i/respectfulrealisticdungenesscrab.jpg
+        // replace with
+        // https://www.redgifs.com/watch/respectfulrealisticdungenesscrab
+        if (mediaURL.matches("https://i\\.redgifs\\.com/i/.*\\.(jpg|png|gif)")) {
+            mediaURL = mediaURL.replace("https://i.redgifs.com/i/", "https://www.redgifs.com/watch/");
+            mediaURL = mediaURL.substring(0, mediaURL.lastIndexOf("."));
+            return Either.right(Collections.singletonList(mediaURL));
+        }
+
+        if (verifyVideo(mediaURL)) {
+            mediaURL = StringUtils.replaceHTMLCodes(mediaURL);
+            if (isEmbedVideo(mediaURL)) {
+                embed = new EmbedBuilder();
+                embed.setTitle(mediaURL);
+                return Either.left(embed);
+            }
+
+            embed.setImage(mediaURL);
+            embed.appendDescription("\nMedia not loading? [Click Me](" + mediaURL + ")");
+        }
+
+        embed.setTimestamp(Instant.now());
+        return Either.left(embed);
     }
 
-    public static Optional<RedditPost> findValidPost(RedditSubreddit subreddit, String... subreddits) {
-        Optional<RedditPost> post = Optional.empty();
+    @Nullable
+    public static RootCommentNode findValidPost(SubredditReference subreddit, String... subreddits) {
+        RootCommentNode post = null;
         int attempts = 0;
-        while (post.isEmpty()) {
-            post = getRandomPost(subreddit.getFullName());
+        while (post == null) {
+            post = getRandomPost(subreddit);
 
-            if (attempts % 5 == 0 && attempts != 0 && post.isEmpty()) {
+            if (attempts % 5 == 0 && attempts != 0 && post == null) {
                 subreddit = getRandomSubreddit(subreddits);
-            } else if (attempts >= 15 && post.isEmpty()) return Optional.empty();
+            } else if (attempts >= 15 && post == null) return null;
 
             attempts++;
         }
@@ -120,40 +167,35 @@ public final class RedditUtils {
         return post;
     }
 
-    public static @NotNull Optional<RedditPost> getRandomPost(@NotNull String subreddit) {
+    @Nullable
+    public static RootCommentNode getRandomPost(SubredditReference subreddit) {
         try {
-            List<RedditPost> posts = REDDIT.getSubredditPosts(subreddit, Sorting.HOT)
-                    .limit(100)
-                    .submit();
-
-            return Optional.ofNullable(posts.get(ThreadLocalRandom.current().nextInt(posts.size())));
-        } catch (AuthenticationException | InterruptedException | IOException exception) {
-            Constants.LOGGER.error("Failed to get random post from subreddit: {}", subreddit, exception);
-            return Optional.empty();
+            return subreddit.randomSubmission();
+        } catch (NetworkException | JsonDataException | ApiException exception) {
+            Constants.LOGGER.error("Failed to get random post!", exception);
+            return null;
         }
     }
 
-    public static @NotNull RedditSubreddit getRandomSubreddit(String... subreddits) throws IllegalArgumentException {
-        return Stream.of(subreddits)
-                .filter(Objects::nonNull)
-                .skip(ThreadLocalRandom.current().nextInt(subreddits.length))
-                .map(subreddit -> {
-                    try {
-                        return getSubreddit(subreddit);
-                    } catch (final NullPointerException | IOException | InterruptedException exception) {
-                        Constants.LOGGER.error("Subreddit: {} cannot be accessed!", subreddit);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElseThrow(
-                        () -> new IllegalArgumentException("List of subreddits does not contain any that are valid!\n" +
-                                "Subreddits: '" + String.join(", ", subreddits) + "'"));
+    @NotNull
+    public static SubredditReference getRandomSubreddit(String... subreddits) {
+        return Stream.of(subreddits).skip(ThreadLocalRandom.current().nextInt(subreddits.length)).map(subreddit -> {
+            final SubredditReference reference = getSubreddit(subreddit);
+            try {
+                reference.about();
+                return reference;
+            } catch (final ApiException | NullPointerException exception) {
+                Constants.LOGGER.error("Subreddit: {} cannot be accessed!", subreddit);
+                return null;
+            }
+        }).filter(Objects::nonNull).findFirst().orElseThrow(() -> new IllegalArgumentException(
+                "Given list of subreddits does not contain any that are valid!\nSubreddits: '" + String.join(", ",
+                        subreddits) + "'"));
     }
 
-    public static @NotNull RedditSubreddit getSubreddit(String name) throws IOException, InterruptedException {
-        return REDDIT.getSubreddit(name);
+    @NotNull
+    public static SubredditReference getSubreddit(String name) {
+        return REDDIT.subreddit(name);
     }
 
     public static boolean verifyVideo(String url) {

@@ -5,7 +5,6 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
-import dev.darealturtywurty.superturtybot.core.util.RedditUtilsOld;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -251,7 +250,7 @@ public class NSFWCommand extends CoreCommand {
                 return;
             }
 
-            if (RedditUtilsOld.isEmbedVideo(mediaURL)) {
+            if (RedditUtils.isEmbedVideo(mediaURL)) {
                 hook.editOriginal(mediaURL).setComponents().setEmbeds().setFiles()
                         .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
                 return;
