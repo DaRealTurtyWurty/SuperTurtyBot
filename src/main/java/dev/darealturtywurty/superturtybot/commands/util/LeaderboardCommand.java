@@ -298,7 +298,7 @@ public class LeaderboardCommand extends CoreCommand {
                                 Filters.eq("guild", guild.getIdLong())
                         )).first();
 
-                if (userConfig != null) {
+                if (userConfig != null && userConfig.getLeaderboardColor() != null) {
                     graphics.setColor(Color.decode(userConfig.getLeaderboardColor()));
                 } else {
                     graphics.setColor(Color.WHITE);
