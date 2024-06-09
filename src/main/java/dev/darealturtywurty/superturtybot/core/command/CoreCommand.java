@@ -241,6 +241,9 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {
+        if(user == Environment.INSTANCE.ownerId().orElse(-1L))
+            return true;
+
         Pair<TimeUnit, Long> ratelimit = getRatelimit();
         if (ratelimit.getRight() > 0) {
             long length = TimeUnit.MILLISECONDS.convert(ratelimit.getRight(), ratelimit.getLeft());

@@ -206,11 +206,18 @@ public class LeaderboardCommand extends CoreCommand {
             final int xp = profile.getXp();
             String username = drawUser(guild, graphics, metrics, indexedRank, userId);
 
-            graphics.drawString(
-                    (username.length() > 15 ? username.substring(0, Math.min(20, username.length())) + "..." : username)
-                            + " | XP: " + StringUtils.numberFormat(xp, 0).replace(".0", "") + " | Level: "
-                            + StringUtils.numberFormat(level, 0).replace(".0", ""),
-                    420, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
+            Font font = FONT;
+            FontMetrics metrics1 = graphics.getFontMetrics(font);
+            String str = "%s | XP: %s | Level: %s".formatted(StringUtils.truncateString(username, 20),
+                    StringUtils.numberFormat(xp, 0).replace(".0", ""), StringUtils.numberFormat(level).replace(".0", ""));
+            while (metrics1.stringWidth(str) > 1850) {
+                font = font.deriveFont(font.getSize() - 1f);
+                metrics1 = graphics.getFontMetrics(font);
+            }
+
+            graphics.setFont(font);
+            graphics.drawString(str, 420, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
+            graphics.setFont(FONT);
         }
 
         graphics.dispose();
@@ -241,10 +248,18 @@ public class LeaderboardCommand extends CoreCommand {
                 Database.getDatabase().guildData.insertOne(guildData);
             }
 
-            graphics.drawString(
-                    (username.length() > 15 ? username.substring(0, Math.min(20, username.length())) + "..." : username)
-                            + " | Balance: " + guildData.getEconomyCurrency() + StringUtils.numberFormat(balance, 0).replace(".0", ""),
-                    420, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
+            Font font = FONT;
+            FontMetrics metrics1 = graphics.getFontMetrics(font);
+            String str = "%s | Balance: %s%s".formatted(StringUtils.truncateString(username, 20),
+                    guildData.getEconomyCurrency(), StringUtils.numberFormat(balance));
+            while (metrics1.stringWidth(str) > 1850) {
+                font = font.deriveFont(font.getSize() - 1f);
+                metrics1 = graphics.getFontMetrics(font);
+            }
+
+            graphics.setFont(font);
+            graphics.drawString(str, 420, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
+            graphics.setFont(FONT);
         }
 
         graphics.dispose();
@@ -254,14 +269,14 @@ public class LeaderboardCommand extends CoreCommand {
     private static String drawUser(Guild guild, Graphics2D graphics, FontMetrics metrics, int indexedRank, long userId) throws IOException, URISyntaxException {
         final int rank = indexedRank + 1;
 
-        final User user = guild.getJDA().getUserById(userId);
+        final Member member = guild.getMemberById(userId);
         String avatarURL, username;
-        if (user == null) {
+        if (member == null) {
             avatarURL = DISCORD_ICON_URL;
             username = "Unknown";
         } else {
-            avatarURL = user.getEffectiveAvatarUrl();
-            username = user.getName();
+            avatarURL = member.getEffectiveAvatarUrl();
+            username = member.getEffectiveName();
         }
 
         final BufferedImage avatarImage = ImageIO.read(new URI(avatarURL).toURL());
@@ -277,7 +292,6 @@ public class LeaderboardCommand extends CoreCommand {
         graphics.drawString("#" + rank, 240, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
 
         {
-            Member member = guild.getMemberById(userId);
             GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
             if (guildData == null) {
                 guildData = new GuildData(guild.getIdLong());

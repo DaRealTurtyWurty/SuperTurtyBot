@@ -175,7 +175,7 @@ public class RankCommand extends CoreCommand {
             ImageIO.write(card, "png", bao);
             event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), member.getId() + ".png")).queue();
         } catch (final IOException exception) {
-            Constants.LOGGER.error("Error getting rank card for " + member.getEffectiveName(), exception);
+            Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
             event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
         }
     }
@@ -246,9 +246,8 @@ public class RankCommand extends CoreCommand {
             graphics.setColor(card.getNameTextColor().asColor());
 
             final String name = member.getEffectiveName();
-            final var nameFontSize = name.length() <= 12 ? 200f : 112f;
+            final float nameFontSize = name.length() <= 12 ? 200f : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
             graphics.setFont(this.usedFont.deriveFont(nameFontSize));
-
             graphics.drawString(name.length() > 26 ? name.substring(0, 26) + "..." : name, 700, 270);
 
             // Rank

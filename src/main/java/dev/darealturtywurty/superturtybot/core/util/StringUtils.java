@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public final class StringUtils {
-    private static final char[] CHARS = {'k', 'm', 'b', 't'};
+    private static final char[] CHARS = {'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd', 'U', 'D', 'T'};
 
     private StringUtils() {
         throw new IllegalAccessError("Cannot access private constructor!");
@@ -39,20 +39,60 @@ public final class StringUtils {
     /**
      * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invocation.
      *
+     * @param n                   the number to format
+     * @param iteration           the class of the number
+     *                            (0 for units, 1 for thousands, 2 for millions, etc.)
+     * @param removeTrailingZeros whether to remove trailing zeros
+     * @return a formatted string
+     */
+    public static String numberFormat(final double n, final int iteration, boolean removeTrailingZeros) {
+        if (n < 1000) {
+            return removeTrailingZeros ? String.valueOf((int) n) : String.valueOf(n);
+        }
+
+        final double d = n / 1000;
+        final boolean isRound = d * 10 % 10 == 0; // true if the decimal part is equal to 0 (then it's trimmed anyway)
+
+        // Determine the class of the number
+        if (d >= 1000)
+            return numberFormat(d, iteration + 1, removeTrailingZeros);
+
+        // No decimal part or the decimal part is equal to 0
+        String formatted;
+        if(isRound)
+            formatted = String.format("%.0f", d);
+        else
+            formatted = String.format("%.1f", d);
+
+        // Add the corresponding letter for the class
+        formatted += CHARS[iteration];
+
+        if(removeTrailingZeros)
+            formatted = formatted.replace(".0", "");
+
+        return formatted;
+    }
+
+    /**
+     * Formats a number to a readable format.
+     *
      * @param n         the number to format
-     * @param iteration in fact this is the class from the array c
-     * @return a String representing the number n formatted in a cool looking way.
+     * @param iteration the class of the number
+     *                  (0 for units, 1 for thousands, 2 for millions, etc.)
+     * @return a formatted string
      */
     public static String numberFormat(final double n, final int iteration) {
-        if (n < 1000)
-            return String.valueOf(n);
-        final double d = (long) n / 100 / 10D;
-        final boolean isRound = d * 10 % 10 == 0;// true if the decimal part is equal to 0 (then it's trimmed
-        // anyway)
-        return d < 1000 ? // this determines the class, i.e. 'k', 'm' etc
-                (d > 99.9D || isRound && d > 9.99D ? // this decides whether to trim the decimals
-                        (int) d * 10 / 10 : d + "" // (int) d * 10 / 10 drops the decimal
-                ) + "" + CHARS[iteration] : numberFormat(d, iteration + 1);
+        return numberFormat(n, iteration, true);
+    }
+
+    /**
+     * Formats a number to a readable format.
+     *
+     * @param n the number to format
+     * @return a formatted string
+     */
+    public static String numberFormat(final double n) {
+        return numberFormat(n, 0);
     }
 
     public static boolean readBoolean(String str) {
@@ -231,7 +271,7 @@ public final class StringUtils {
 
         return switch (age % 10) {
             case 1 -> "st";
-            case 2 ->  "nd";
+            case 2 -> "nd";
             case 3 -> "rd";
             default -> "th";
         };
