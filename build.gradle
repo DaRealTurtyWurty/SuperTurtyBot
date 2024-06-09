@@ -20,23 +20,24 @@ repositories {
     maven { 
         url "https://m2.duncte123.dev/releases"
     }
+    mavenCentral()
 }
 
 dependencies {
-    implementation group: "com.google.guava", name: "guava", version: "33.1.0-jre"
-    implementation group: "com.google.code.gson", name: "gson", version: "2.10.1"
+    implementation group: "com.google.guava", name: "guava", version: '33.2.1-jre'
+    implementation group: "com.google.code.gson", name: "gson", version: '2.10'
     implementation group: "org.reflections", name: "reflections", version: "0.10.2"
     
     implementation group: "commons-io", name: "commons-io", version: "2.16.1"
     implementation group: "org.apache.commons", name: "commons-lang3", version: "3.14.0"
     implementation group: "org.apache.commons", name: "commons-text", version: "1.12.0"
-    implementation group: "org.apache.commons", name: "commons-math3", version: "3.6.1"
+    implementation group: "org.apache.commons", name: "commons-math3", version: '3.6'
     implementation group: "commons-validator", name: "commons-validator", version: "1.8.0"
     
-    implementation group: "org.eclipse.mylyn.github", name: "org.eclipse.egit.github.core", version: '3.4.0.201406110918-r'
+    implementation group: "org.eclipse.mylyn.github", name: "org.eclipse.egit.github.core", version: '2.1.5'
     implementation group: "org.eclipse.jgit", name: "org.eclipse.jgit", version: '6.9.0.202403050737-r'
     
-    implementation group: "org.mongodb", name: "mongodb-driver-sync", version: "5.0.1"
+    implementation group: "org.mongodb", name: "mongodb-driver-sync", version: '5.1.0'
     implementation group: "org.mongodb.morphia", name: "morphia", version: "1.3.2"
     implementation group: "io.github.cdimascio", name: "dotenv-java", version: "3.0.0"
     implementation group: "org.spongepowered", name: "configurate-hocon", version: "4.1.2"
@@ -44,7 +45,6 @@ dependencies {
     implementation group: "ch.qos.logback", name: "logback-classic", version: "1.5.6"
     
     implementation group: "com.vdurmont", name: "emoji-java", version: "5.1.1"
-    implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
     implementation group: "org.jsoup", name: "jsoup", version: "1.17.2"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
@@ -52,14 +52,17 @@ dependencies {
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.8.0'
     implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.8.0'
     implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
+
+    implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
+    implementation group: 'com.github.masecla22', name: 'Reddit4J', version: '74c789155d'
     
     implementation group: "org.jfree", name: "jfreechart", version: "1.5.4"
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
 
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
-    implementation group: "net.dv8tion", name: "JDA", version: "5.0.0-beta.22"
-    implementation group: "dev.arbjerg", name: "lavaplayer", version: "2.1.1"
+    implementation group: "net.dv8tion", name: "JDA", version: '5.0.0-beta.24'
+    implementation group: "dev.arbjerg", name: "lavaplayer", version: '2.1.2'
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.9.0"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
@@ -74,7 +77,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.8.0'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.6.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '6.1.3'
+    implementation group: 'io.javalin', name: 'javalin', version: '6.1.4'
     implementation group: 'org.graalvm.js', name: 'js', version: '23.0.4'
 
     implementation group: 'de.dfki.mary', name: 'voice-cmu-slt-hsmm', version: '5.2.1', {

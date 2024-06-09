@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.image;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.RedditUtils;
+import dev.darealturtywurty.superturtybot.core.util.RedditUtilsOld;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
@@ -25,8 +25,8 @@ public class ImageCommandRegistry {
     private static final Registry<ImageCommandType> IMAGE_CMD_TYPES = new Registry<>();
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> BLEP = (event, cmd) -> {
-        final SubredditReference subreddit = RedditUtils.getSubreddit("Blep");
-        final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Blep");
+        final SubredditReference subreddit = RedditUtilsOld.getSubreddit("Blep");
+        final RootCommentNode post = RedditUtilsOld.findValidPost(subreddit, "Blep");
         if(post == null)
             return;
 
@@ -63,8 +63,8 @@ public class ImageCommandRegistry {
         
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
-            final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
-            final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
+            final SubredditReference subreddit = RedditUtilsOld.getRandomSubreddit(subreddits);
+            final RootCommentNode post = RedditUtilsOld.findValidPost(subreddit, subreddits);
             if(post == null)
                 continue;
 
@@ -115,8 +115,8 @@ public class ImageCommandRegistry {
         
         final var actions = new ArrayList<RestAction<Message>>();
         for (int index = 0; index < ThreadLocalRandom.current().nextInt(3, 7); index++) {
-            final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
-            final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
+            final SubredditReference subreddit = RedditUtilsOld.getRandomSubreddit(subreddits);
+            final RootCommentNode post = RedditUtilsOld.findValidPost(subreddit, subreddits);
             if(post == null)
                 continue;
 
@@ -146,8 +146,8 @@ public class ImageCommandRegistry {
     };
     
     private static final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> DOGE = (event, cmd) -> {
-        final SubredditReference subreddit = RedditUtils.getSubreddit("Doge");
-        final RootCommentNode post = RedditUtils.findValidPost(subreddit, "Doge");
+        final SubredditReference subreddit = RedditUtilsOld.getSubreddit("Doge");
+        final RootCommentNode post = RedditUtilsOld.findValidPost(subreddit, "Doge");
         if(post == null)
             return;
 
