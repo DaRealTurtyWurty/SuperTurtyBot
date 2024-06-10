@@ -49,18 +49,7 @@ public final class RedditUtils {
         throw new IllegalAccessError("Cannot access private constructor!");
     }
 
-    @Nullable
-    public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, String... subreddits) {
-        if (subreddits.length < 1) return null;
-
-        final SubredditReference subreddit = getRandomSubreddit(subreddits);
-        RootCommentNode post = findValidPost(subreddit, subreddits);
-        int attempts = 0;
-        while (post == null) {
-            post = findValidPost(subreddit, subreddits);
-            if (attempts++ > 10) return null;
-        }
-
+    public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, RootCommentNode post) {
         var embed = new EmbedBuilder();
         String title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
         embed.setTitle(title.length() > 256 ? title.substring(0, 256) : title);
@@ -114,12 +103,7 @@ public final class RedditUtils {
         }
 
         if (requireMedia) {
-            post = findValidPost(subreddit, subreddits);
-            if (post == null)
-                return null;
-
-            mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
-                    .getUrl();
+            mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject().getUrl();
 
             if (mediaURL == null || mediaURL.isBlank())
                 return null;
@@ -148,6 +132,21 @@ public final class RedditUtils {
 
         embed.setTimestamp(Instant.now());
         return Either.left(embed);
+    }
+
+    @Nullable
+    public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, String... subreddits) {
+        if (subreddits.length < 1) return null;
+
+        final SubredditReference subreddit = getRandomSubreddit(subreddits);
+        RootCommentNode post = findValidPost(subreddit, subreddits);
+        int attempts = 0;
+        while (post == null) {
+            post = findValidPost(subreddit, subreddits);
+            if (attempts++ > 10) return null;
+        }
+
+        return constructEmbed(requireMedia, post);
     }
 
     @Nullable

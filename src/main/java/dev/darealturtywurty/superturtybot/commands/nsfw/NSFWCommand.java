@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class NSFWCommand extends CoreCommand {
-    private static final Set<NSFWCommandList.NSFWReddit> NSFW_REDDIT_COMMANDS = new HashSet<>();
+    public static final Set<NSFWCommandList.NSFWReddit> NSFW_REDDIT_COMMANDS = new HashSet<>();
     private static final Map<String, Consumer<NSFWCommandList.CommandData>> NSFW_OTHER_COMMANDS = new HashMap<>();
 
     static {
@@ -184,7 +184,7 @@ public class NSFWCommand extends CoreCommand {
                 && channel.asThreadChannel().getParentMessageChannel().asTextChannel().isNSFW()))
             return true;
 
-        // if its a private channel
+        // if it's a private channel
         return channel.getType() == ChannelType.PRIVATE;
     }
 

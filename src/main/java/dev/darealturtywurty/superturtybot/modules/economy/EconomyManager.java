@@ -317,7 +317,6 @@ public class EconomyManager {
     public static boolean payLoan(Economy account, Loan loan, int amount) {
         int returned = loan.pay(amount);
         removeMoney(account, amount - returned, true);
-        System.out.println("Amount: " + amount + ", Returned: " + returned);
         updateAccount(account);
 
         return loan.isPaidOff();

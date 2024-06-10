@@ -15,9 +15,11 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class UserInfoCommand extends CoreCommand {
@@ -109,7 +111,9 @@ public class UserInfoCommand extends CoreCommand {
         embed.setColor(member.getColorRaw());
         embed.addField("Nickname", member.getNickname() == null ? "N/A" : member.getNickname(), false);
         embed.addField("Mention", member.getAsMention(), false);
-        embed.addField("Online Status", StringUtils.convertOnlineStatus(member.getOnlineStatus()), false);
+        if(member.getJDA().getCacheFlags().contains(CacheFlag.ONLINE_STATUS)) {
+            embed.addField("Online Status", StringUtils.convertOnlineStatus(member.getOnlineStatus()), false);
+        }
         
         final var perms = new StringBuilder();
         member.getPermissions().forEach(perm -> perms.append("`").append(perm.getName()).append("`, "));
@@ -128,7 +132,7 @@ public class UserInfoCommand extends CoreCommand {
             embed.addField("Time Boosted", TimeFormat.TIME_SHORT.format(member.getTimeBoosted()), false);
         }
         
-        if (member.getTimeOutEnd() != null) {
+        if (member.getTimeOutEnd() != null && member.getTimeOutEnd().isAfter(OffsetDateTime.from(Instant.now()))) {
             embed.addField("Timeout End", TimeFormat.TIME_SHORT.format(member.getTimeOutEnd()), false);
         }
         
