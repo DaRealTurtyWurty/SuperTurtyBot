@@ -129,6 +129,14 @@ public final class Environment {
         return getString("TURTY_API_KEY");
     }
 
+    public Optional<String> redditProxyHost() {
+        return getString("REDDIT_PROXY_HOST");
+    }
+
+    public Optional<Integer> redditProxyPort() {
+        return getInteger("REDDIT_PROXY_PORT");
+    }
+
     public Optional<Double> getDouble(String key){
         try {
             return getString(key).map(Double::parseDouble);

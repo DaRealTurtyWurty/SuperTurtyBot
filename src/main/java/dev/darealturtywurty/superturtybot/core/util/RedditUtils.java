@@ -19,14 +19,13 @@ import net.dean.jraw.oauth.OAuthHelper;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
 import net.dv8tion.jda.api.EmbedBuilder;
+import okhttp3.OkHttpClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
+import java.net.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,7 +39,15 @@ public final class RedditUtils {
             final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
                     Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
             final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
-            REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent), oAuthCreds);
+
+            var builder = new OkHttpClient.Builder();
+            if(Environment.INSTANCE.redditProxyHost().isPresent() && Environment.INSTANCE.redditProxyPort().isPresent()){
+                var proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Environment.INSTANCE.redditProxyHost().get(), Environment.INSTANCE.redditProxyPort().get()));
+                builder.proxy(proxy);
+            }
+
+            OkHttpClient client = builder.build();
+            REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent, client), oAuthCreds);
             REDDIT.setLogHttp(true);
         }
     }
