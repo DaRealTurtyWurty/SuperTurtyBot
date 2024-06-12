@@ -1,5 +1,8 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -7,15 +10,21 @@ import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
 import java.awt.*;
-import java.text.NumberFormat;
+import java.time.Instant;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -100,26 +109,15 @@ public class SlotsCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         int betAmount = event.getOption("bet-amount", 1, OptionMapping::getAsInt);
-        if (betAmount < 1) {
-            event.getHook().editOriginal("❌ You cannot bet less than %s1!"
-                            .formatted(config.getEconomyCurrency()))
-                    .queue();
-            return;
-        }
+        play(event.getHook(), event.getMember(), guild, config, betAmount);
+    }
 
-        final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if (account.getWallet() < betAmount) {
-            event.getHook().editOriginal("❌ You do not have enough money in your wallet to bet that much!").queue();
-            return;
-        }
-
-        List<Outcome> outcomes = spin(betAmount, false);
-        Outcome outcome = outcomes.getFirst();
-
+    private static EmbedBuilder createEmbed(Outcome outcome, Member member, GuildData config, String title) {
         var embed = new EmbedBuilder();
+        embed.setTitle(title);
         embed.setColor(outcome.type().getColor());
-        embed.setTimestamp(event.getTimeCreated());
-        embed.setFooter(event.getUser().getName() + "'s Slots", event.getUser().getEffectiveAvatarUrl());
+        embed.setTimestamp(Instant.now());
+        embed.setFooter(member.getEffectiveName() + "'s Slots", member.getEffectiveAvatarUrl());
 
         embed.addField("Slots",
                 outcome.emojis()[0] + " | " + outcome.emojis()[1] + " | " + outcome.emojis()[2],
@@ -132,8 +130,51 @@ public class SlotsCommand extends EconomyCommand {
                                 .toLowerCase(Locale.ROOT)),
                 false);
 
-        embed.addField("Winnings", formatCurrency(config.getEconomyCurrency(), outcome.amount()), false);
-        event.getHook().editOriginalEmbeds(embed.build()).queue();
+        embed.addField("Winnings", StringUtils.formatCurrency(config.getEconomyCurrency(), outcome.amount()), false);
+
+        return embed;
+    }
+
+    // Use the refactored method in place of the old ones
+    private static EmbedBuilder createFreeSpinEmbed(Outcome outcome, Member member, GuildData config) {
+        return createEmbed(outcome, member, config, "Free Spin!");
+    }
+
+    private static EmbedBuilder createNormalEmbed(Outcome outcome, Member member, GuildData config) {
+        return createEmbed(outcome, member, config, "Slots");
+    }
+
+    private static void play(InteractionHook hook, Member member, Guild guild, GuildData config, int betAmount) {
+        if (betAmount < 1) {
+            hook.editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
+            return;
+        }
+
+        final Economy account = EconomyManager.getOrCreateAccount(guild, member.getUser());
+        if (account.getWallet() < betAmount) {
+            betAmount = account.getWallet();
+
+            if (betAmount < 1) {
+                hook.editOriginal("❌ You do not have enough money in your wallet to bet that much!").queue();
+                return;
+            }
+        }
+
+        List<Outcome> outcomes = spin(betAmount, false);
+        Outcome outcome = outcomes.getFirst();
+        var embed = createNormalEmbed(outcome, member, config);
+
+        final int finalBetAmount = betAmount;
+        hook.editOriginalEmbeds(embed.build()).queue(message -> {
+            if (outcomes.size() == 1) {
+                // create button to play again
+                if (account.getWallet() >= finalBetAmount) {
+                    message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
+                    createButtonWaiter(message, member, guild, message.getChannel().getIdLong(),
+                            message.getIdLong(), config, finalBetAmount).build();
+                }
+            }
+        });
 
         EconomyManager.addMoney(account, outcome.amount());
         if (outcome.amount() > 0) {
@@ -145,25 +186,15 @@ public class SlotsCommand extends EconomyCommand {
         if (outcomes.size() > 1) {
             for (int i = 1; i < outcomes.size(); i++) {
                 Outcome freeSpinOutcome = outcomes.get(i);
-                var freeSpinEmbed = new EmbedBuilder();
-                freeSpinEmbed.setTitle("Free Spin!");
-                freeSpinEmbed.setColor(freeSpinOutcome.type().getColor());
-                freeSpinEmbed.setTimestamp(event.getTimeCreated());
-                freeSpinEmbed.setFooter(event.getUser().getName() + "'s Slots", event.getUser().getEffectiveAvatarUrl());
-
-                freeSpinEmbed.addField("Slots",
-                        freeSpinOutcome.emojis()[0] + " | " + freeSpinOutcome.emojis()[1] + " | " + freeSpinOutcome.emojis()[2],
-                        false);
-
-                freeSpinEmbed.addField("Outcome", WordUtils.capitalize(
-                                freeSpinOutcome.type()
-                                        .name()
-                                        .replace("_", " ")
-                                        .toLowerCase(Locale.ROOT)),
-                        false);
-
-                freeSpinEmbed.addField("Winnings", formatCurrency(config.getEconomyCurrency(), freeSpinOutcome.amount()), false);
-                event.getHook().sendMessageEmbeds(freeSpinEmbed.build()).queue();
+                var freeSpinEmbed = createFreeSpinEmbed(freeSpinOutcome, member, config);
+                int finalI = i;
+                hook.editOriginalEmbeds(freeSpinEmbed.build()).queue(message -> {
+                    if (finalI == outcomes.size() - 1 && account.getWallet() >= finalBetAmount) {
+                        message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
+                        createButtonWaiter(message, member, guild, message.getChannel().getIdLong(),
+                                message.getIdLong(), config, finalBetAmount).build();
+                    }
+                });
 
                 EconomyManager.addMoney(account, freeSpinOutcome.amount());
                 if (freeSpinOutcome.amount() > 0) {
@@ -175,17 +206,94 @@ public class SlotsCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
-    private static String formatCurrency(String currencySymbol, int amount) {
-        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
-        String formattedAmount = currencyFormatter.format(amount);
+    private static void play(Message message, Member member, Guild guild, GuildData config, int betAmount) {
+        if (betAmount < 1) {
+            message.editMessage("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
+            return;
+        }
 
-        // Remove the default currency symbol and replace it with the custom symbol
-        formattedAmount = formattedAmount.replace(NumberFormat.getCurrencyInstance(Locale.US).getCurrency().getSymbol(), currencySymbol);
+        final Economy account = EconomyManager.getOrCreateAccount(guild, member.getUser());
+        if (account.getWallet() < betAmount) {
+            betAmount = account.getWallet();
 
-        // Remove the decimal point and the cents
-        formattedAmount = formattedAmount.replace(".00", "");
+            if (betAmount < 1) {
+                message.editMessage("❌ You do not have enough money in your wallet to bet that much!").queue();
+                return;
+            }
+        }
 
-        return formattedAmount;
+        List<Outcome> outcomes = spin(betAmount, false);
+        Outcome outcome = outcomes.getFirst();
+        var embed = createNormalEmbed(outcome, member, config);
+
+        final int finalBetAmount = betAmount;
+        message.editMessageEmbeds(embed.build()).queue(msg -> {
+            if (outcomes.size() == 1) {
+                // create button to play again
+                if (account.getWallet() >= finalBetAmount) {
+                    msg.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
+                    createButtonWaiter(msg, member, guild, msg.getChannel().getIdLong(),
+                            msg.getIdLong(), config, finalBetAmount).build();
+                }
+            }
+        });
+
+        EconomyManager.addMoney(account, outcome.amount());
+        if (outcome.amount() > 0) {
+            EconomyManager.betWin(account, outcome.amount());
+        } else {
+            EconomyManager.betLoss(account, outcome.amount());
+        }
+
+        if (outcomes.size() > 1) {
+            for (int i = 1; i < outcomes.size(); i++) {
+                Outcome freeSpinOutcome = outcomes.get(i);
+                var freeSpinEmbed = createFreeSpinEmbed(freeSpinOutcome, member, config);
+                int finalI = i;
+                message.editMessageEmbeds(freeSpinEmbed.build()).queue(msg -> {
+                    if (finalI == outcomes.size() - 1 && account.getWallet() >= finalBetAmount) {
+                        msg.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
+                        createButtonWaiter(msg, member, guild, msg.getChannel().getIdLong(),
+                                msg.getIdLong(), config, finalBetAmount).build();
+                    }
+                });
+
+                EconomyManager.addMoney(account, freeSpinOutcome.amount());
+                if (freeSpinOutcome.amount() > 0) {
+                    EconomyManager.betWin(account, freeSpinOutcome.amount());
+                }
+            }
+        }
+
+        EconomyManager.updateAccount(account);
+    }
+
+    private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, int betAmount) {
+        return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
+                .timeout(1, TimeUnit.MINUTES)
+                .timeoutAction(() -> message.editMessageComponents().queue())
+                .condition(event -> event.getUser().getIdLong() == member.getIdLong() &&
+                        event.getMessageIdLong() == messageId &&
+                        event.getComponentId().equals("slots-play-again") &&
+                        event.isFromGuild() &&
+                        event.getGuild().getIdLong() == guild.getIdLong() &&
+                        event.getChannel().getIdLong() == channelId)
+                .failure(() -> message.editMessageComponents().queue())
+                .success(event ->
+                        message.editMessageComponents()
+                                .flatMap(msg -> msg.reply("Playing again..."))
+                                .queue(msg -> play(msg, member, guild, config, betAmount)));
+    }
+
+    private static List<Outcome> handleFreeSpins(int betAmount, int freeSpins) {
+        List<Outcome> outcomes = new ArrayList<>();
+        for (int spin = 0; spin < freeSpins; spin++) {
+            Outcome freeSpinOutcome = spin(betAmount, true).getFirst();
+            if (freeSpinOutcome.amount() < 0)
+                freeSpinOutcome.amount = 0;
+            outcomes.add(freeSpinOutcome);
+        }
+        return outcomes;
     }
 
     private static List<Outcome> spin(int betAmount, boolean isFreeSpin) {
@@ -224,12 +332,7 @@ public class SlotsCommand extends EconomyCommand {
         outcomes.add(outcome);
 
         if (!isFreeSpin && freeSpins > 0) {
-            for (int spin = 0; spin < freeSpins; spin++) {
-                Outcome freeSpinOutcome = spin(betAmount, true).getFirst();
-                if (freeSpinOutcome.amount() < 0)
-                    freeSpinOutcome.amount = 0;
-                outcomes.add(freeSpinOutcome);
-            }
+            outcomes.addAll(handleFreeSpins(betAmount, freeSpins));
         }
 
         return outcomes;

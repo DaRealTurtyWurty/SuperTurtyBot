@@ -13,8 +13,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 public final class StringUtils {
@@ -284,5 +286,18 @@ public final class StringUtils {
         } catch (final NumberFormatException exception) {
             return false;
         }
+    }
+
+    public static String formatCurrency(String currencySymbol, int amount) {
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
+        String formattedAmount = currencyFormatter.format(amount);
+
+        // Remove the default currency symbol and replace it with the custom symbol
+        formattedAmount = formattedAmount.replace(NumberFormat.getCurrencyInstance(Locale.US).getCurrency().getSymbol(), currencySymbol);
+
+        // Remove the decimal point and the cents
+        formattedAmount = formattedAmount.replace(".00", "");
+
+        return formattedAmount;
     }
 }
