@@ -76,6 +76,8 @@ public final class BirthdayManager {
                         Birthday birthday = birthdays.stream()
                                 .filter(b -> b.getUser() == member.getIdLong())
                                 .findFirst().orElse(null);
+                        if (birthday == null)
+                            continue;
 
                         int age = TimeUtils.calculateAge(
                                 birthday.getDay(),
@@ -92,7 +94,7 @@ public final class BirthdayManager {
                     }
                 });
             }
-        }, 0, 0));
+        }, 7, 0));
     }
 
     public static Birthday getBirthday(long userId) {
