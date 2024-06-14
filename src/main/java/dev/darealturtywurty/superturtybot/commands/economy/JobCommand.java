@@ -100,13 +100,13 @@ public class JobCommand extends EconomyCommand {
 
         switch (subcommand) {
             case "work" -> {
-                if (!EconomyManager.hasJob(account)) {
-                    if (!EconomyManager.canWork(account)) {
-                        event.getHook().editOriginal("❌ You can start working %s!"
-                                .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
-                        return;
-                    }
+                if (!EconomyManager.canWork(account)) {
+                    event.getHook().editOriginal("❌ You can start working %s!"
+                            .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
+                    return;
+                }
 
+                if (!EconomyManager.hasJob(account)) {
                     int amount = EconomyManager.workNoJob(account);
                     if (amount == 0) {
                         event.getHook().editOriginal("❌ You are not able to work right now!").queue();
@@ -116,12 +116,6 @@ public class JobCommand extends EconomyCommand {
                     }
 
                     event.getHook().editOriginal(getResponse(config, event.getUser(), amount)).queue();
-                    return;
-                }
-
-                if (!EconomyManager.canWork(account)) {
-                    event.getHook().editOriginal("❌ You can start working %s!"
-                            .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
                     return;
                 }
 
@@ -138,8 +132,8 @@ public class JobCommand extends EconomyCommand {
                     levelUpMessage = "You are ready for a promotion! Type `/job promote` to start the promotion minigame!";
                 }
 
-                event.getHook().editOriginal("✅ You worked and earned %s%d! %s"
-                        .formatted(config.getEconomyCurrency(), money, levelUpMessage)).queue();
+                event.getHook().editOriginal("✅ You worked and earned %s%s! %s"
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(money), levelUpMessage)).queue();
             }
             case "register" -> {
                 String job = Objects.requireNonNull(event.getOption("job")).getAsString();
@@ -188,7 +182,7 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                startMathChallenge(event, account);
+                startMathChallenge(event, account); // TODO: Minigame depending on job
             }
             case null, default -> event.getHook().editOriginal("❌ You must specify a valid subcommand!").queue();
         }

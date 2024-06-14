@@ -1,10 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
@@ -35,10 +37,9 @@ public class WithdrawCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        int amount = Objects.requireNonNull(event.getOption("amount")).getAsInt();
+        int amount = event.getOption("amount", 0, OptionMapping::getAsInt);
         if (amount <= 0) {
-            event.getHook().editOriginal("❌ You must withdraw at least %s1!"
-                    .formatted(config.getEconomyCurrency())).queue();
+            event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
             return;
         }
 
@@ -51,7 +52,7 @@ public class WithdrawCommand extends EconomyCommand {
 
         EconomyManager.withdraw(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginal("✅ You have withdrawn %s%d from your bank!"
-                .formatted(config.getEconomyCurrency(), amount)).queue();
+        event.getHook().editOriginalFormat("✅ You have withdrawn %s%d from your bank!",
+                config.getEconomyCurrency(), StringUtils.numberFormat(amount)).queue();
     }
 }

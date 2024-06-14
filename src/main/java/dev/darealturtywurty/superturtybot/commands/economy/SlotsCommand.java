@@ -130,7 +130,7 @@ public class SlotsCommand extends EconomyCommand {
                                 .toLowerCase(Locale.ROOT)),
                 false);
 
-        embed.addField("Winnings", StringUtils.formatCurrency(config.getEconomyCurrency(), outcome.amount()), false);
+        embed.addField("Winnings", config.getEconomyCurrency() + StringUtils.numberFormat(outcome.amount()), false);
 
         return embed;
     }

@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -54,8 +55,7 @@ public class DepositCommand extends EconomyCommand {
 
         EconomyManager.deposit(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginal("✅ You have deposited %s%d into your bank!"
-                        .formatted(config.getEconomyCurrency(), amount))
-                .queue();
+        event.getHook().editOriginal("✅ You have deposited %s%s into your bank!"
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue();
     }
 }

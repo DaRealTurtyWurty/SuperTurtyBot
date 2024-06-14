@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -47,7 +48,7 @@ public class DonateCommand extends EconomyCommand {
         }
 
         User user = event.getOption("user", null, OptionMapping::getAsUser);
-        if(user == null) {
+        if (user == null) {
             event.getHook().editOriginal("❌ You must provide a valid user!").queue();
             return;
         }
@@ -55,12 +56,12 @@ public class DonateCommand extends EconomyCommand {
         CompletableFuture<Member> future = new CompletableFuture<>();
         guild.retrieveMember(user).queue(future::complete);
 
-        if(user.isBot()) {
+        if (user.isBot()) {
             event.getHook().editOriginal("❌ You cannot donate money to a bot!").queue();
             return;
         }
 
-        if(user.getIdLong() == event.getUser().getIdLong()) {
+        if (user.getIdLong() == event.getUser().getIdLong()) {
             event.getHook().editOriginal("❌ You cannot donate money to yourself!").queue();
             return;
         }
@@ -73,7 +74,7 @@ public class DonateCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.getBank() < amount) {
+        if (account.getBank() < amount) {
             event.getHook().editOriginal("❌ You are missing %s%d!"
                     .formatted(config.getEconomyCurrency(), amount - account.getBank())).queue();
             return;
@@ -93,13 +94,16 @@ public class DonateCommand extends EconomyCommand {
             EconomyManager.updateAccount(account);
             EconomyManager.updateAccount(otherAccount);
 
-            event.getHook().editOriginal("✅ Donated %s%d to %s!"
-                    .formatted(config.getEconomyCurrency(), amount, user.getAsMention())).queue(ignored -> {
-                MessageChannelUnion channel = event.getChannel();
-                channel.sendMessage("Hello %s! %s has donated %s%d to you!"
-                        .formatted(user.getAsMention(), event.getUser().getAsMention(),
-                                config.getEconomyCurrency(), amount)).queue();
-            });
+            event.getHook().editOriginal("✅ Donated %s%s to %s!"
+                            .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount), user.getAsMention()))
+                    .setAllowedMentions(List.of())
+                    .queue(ignored -> {
+                        MessageChannelUnion channel = event.getChannel();
+                        channel.sendMessage("Hello %s! %s has donated %s%s to you!"
+                                        .formatted(user.getAsMention(), event.getUser().getAsMention(),
+                                                config.getEconomyCurrency(), StringUtils.numberFormat(amount)))
+                                .queue();
+                    });
         });
     }
 }

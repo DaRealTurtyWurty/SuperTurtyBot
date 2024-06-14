@@ -288,7 +288,7 @@ public final class StringUtils {
         }
     }
 
-    public static String formatCurrency(String currencySymbol, int amount) {
+    public static String formatCurrency(String currencySymbol, long amount) {
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
         String formattedAmount = currencyFormatter.format(amount);
 

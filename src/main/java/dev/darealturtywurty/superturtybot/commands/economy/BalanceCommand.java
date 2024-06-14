@@ -1,10 +1,12 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.awt.*;
@@ -28,19 +30,38 @@ public class BalanceCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
+        Member member = event.getMember();
+        if (member == null) {
+            event.getHook().sendMessage("❌ You must be in a server to use this command!").queue();
+            return;
+        }
+
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        String currency = config.getEconomyCurrency();
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(EconomyManager.getBalance(account) > 0 ? Color.GREEN : Color.RED);
-        embed.setTitle("Economy Balance for: " + event.getUser().getName());
-        embed.setDescription(
-                "**Wallet:** <>%d%n**Bank:** <>%d%n**Total Balance:** <>%d%n".replace("<>", config.getEconomyCurrency())
-                        .formatted(account.getWallet(), account.getBank(), EconomyManager.getBalance(account)));
-        embed.addField("Bet Losses", "%s%d".formatted(config.getEconomyCurrency(), account.getTotalBetLoss()), true);
-        embed.addField("Bet Wins", "%s%d".formatted(config.getEconomyCurrency(), account.getTotalBetWin()), true);
-        embed.addField("Bet Total", "%s%d".formatted(config.getEconomyCurrency(), account.getTotalBetWin() + account.getTotalBetLoss()), true);
-        embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+        embed.setTitle("Economy Balance for: " + member.getEffectiveName());
+        embed.setDescription("**Wallet:** <>%s%n**Bank:** <>%s%n**Total Balance:** <>%s%n"
+                .replace("<>", config.getEconomyCurrency())
+                .formatted(StringUtils.numberFormat(account.getWallet()),
+                        StringUtils.numberFormat(account.getBank()),
+                        StringUtils.numberFormat(EconomyManager.getBalance(account))));
+
+        embed.addField("Bet Losses",
+                currency + StringUtils.numberFormat(Math.abs(account.getTotalBetLoss())),
+                true);
+        embed.addField("Bet Wins",
+                currency + StringUtils.numberFormat(account.getTotalBetWin()),
+                true);
+
+        long betTotal = account.getTotalBetWin() - account.getTotalBetLoss();
+        embed.addField("Bet Total",
+                betTotal < 0 ? "-" + currency + StringUtils.numberFormat(Math.abs(betTotal)) : currency + StringUtils.numberFormat(betTotal),
+                true);
+
+        embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
         event.getHook().sendMessageEmbeds(embed.build()).queue();
     }

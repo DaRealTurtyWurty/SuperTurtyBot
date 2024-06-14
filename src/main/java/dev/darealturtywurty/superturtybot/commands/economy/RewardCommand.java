@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -49,14 +50,17 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int dailyReward = 100;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) dailyReward += 50;
+                int dailyReward = 1000;
+                if(account.getJob() != null)
+                    dailyReward = account.getJob().getSalary() * 2;
+                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
+                    dailyReward = (int) (dailyReward * 2.5f);
 
                 EconomyManager.addMoney(account, dailyReward, true);
                 account.setNextDaily(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
                 EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your daily reward of %s%d!"
-                        .formatted(config.getEconomyCurrency(), dailyReward)).queue();
+                event.getHook().editOriginalFormat("✅ You claimed your daily reward of %s%s!",
+                        config.getEconomyCurrency(), StringUtils.numberFormat(dailyReward)).queue();
             }
 
             case "weekly" -> {
@@ -68,14 +72,17 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int weeklyReward = 250;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) weeklyReward += 50;
+                int weeklyReward = 10000;
+                if(account.getJob() != null)
+                    weeklyReward = account.getJob().getSalary() * 5;
+                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
+                    weeklyReward = (int) (weeklyReward * 2.5f);
 
                 EconomyManager.addMoney(account, weeklyReward, true);
                 account.setNextWeekly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7));
                 EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your weekly reward of %s%d!"
-                        .formatted(config.getEconomyCurrency(), weeklyReward)).queue();
+                event.getHook().editOriginalFormat("✅ You claimed your weekly reward of %s%s!",
+                        config.getEconomyCurrency(), StringUtils.numberFormat(weeklyReward)).queue();
             }
 
             case "monthly" -> {
@@ -85,14 +92,17 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int monthlyReward = 500;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) monthlyReward += 50;
+                int monthlyReward = 50000;
+                if(account.getJob() != null)
+                    monthlyReward = account.getJob().getSalary() * 10;
+                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
+                    monthlyReward = (int) (monthlyReward * 2.5f);
 
                 EconomyManager.addMoney(account, monthlyReward, true);
                 account.setNextMonthly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(31));
                 EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your monthly reward of %s%d!"
-                        .formatted(config.getEconomyCurrency(), monthlyReward)).queue();
+                event.getHook().editOriginal("✅ You claimed your monthly reward of %s%s!"
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(monthlyReward))).queue();
             }
 
             case "yearly" -> {
@@ -102,14 +112,17 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int yearlyReward = 750;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null) yearlyReward += 50;
+                int yearlyReward = 100000;
+                if(account.getJob() != null)
+                    yearlyReward = account.getJob().getSalary() * 20;
+                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
+                    yearlyReward = (int) (yearlyReward * 2.5f);
 
                 EconomyManager.addMoney(account, yearlyReward, true);
                 account.setNextYearly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365));
                 EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your yearly reward of %s%d!"
-                        .formatted(config.getEconomyCurrency(), yearlyReward)).queue();
+                event.getHook().editOriginal("✅ You claimed your yearly reward of %s%s!"
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(yearlyReward))).queue();
             }
         }
     }

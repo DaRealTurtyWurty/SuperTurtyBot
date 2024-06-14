@@ -1,11 +1,9 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -28,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class RobCommand extends EconomyCommand {
     private static final Responses RESPONSES;
@@ -92,28 +91,30 @@ public class RobCommand extends EconomyCommand {
             return;
         }
 
-        account.setNextRob(System.currentTimeMillis() + 60 * 120 * 1000);
-        Database.getDatabase().economy.updateOne(
-                Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
-                Updates.set("nextRobTime", account.getNextRob()));
+        if(CrashCommand.isPlaying(guild.getIdLong(), user.getIdLong())) {
+            event.getHook().editOriginal("❌ You can't rob a user who is playing the crash game!").queue();
+            return;
+        }
+
+        account.setNextRob(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
 
         final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
         if (robAccount.getWallet() <= 0) {
             event.getHook().editOriginal("❌ Better luck next time, this user's wallet is empty!").queue();
+            EconomyManager.updateAccount(account);
             return;
         }
 
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
-            final int robbedAmount = random.nextInt(1, robAccount.getWallet());
+            final int robbedAmount = random.nextInt(1, Math.max(robAccount.getWallet() / 4, 100_000));
             account.addWallet(robbedAmount);
             robAccount.removeWallet(robbedAmount);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.GREEN)
                     .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount)).build()).queue();
         } else {
-            int balance = EconomyManager.getBalance(account);
-            final int fineAmount = random.nextInt(1, balance > 0 ? balance : 1);
+            final int fineAmount = random.nextInt(1, 100_000);
             account.removeWallet(fineAmount);
             robAccount.addWallet(fineAmount);
 
@@ -121,25 +122,21 @@ public class RobCommand extends EconomyCommand {
                     .setDescription(RESPONSES.getFail(config, event.getUser(), user, fineAmount)).build()).queue();
         }
 
-        Database.getDatabase().economy.updateOne(
-                Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", event.getUser().getIdLong())),
-                Updates.set("wallet", account.getWallet()));
-        Database.getDatabase().economy.updateOne(
-                Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong())),
-                Updates.set("wallet", robAccount.getWallet()));
+        EconomyManager.updateAccount(account);
+        EconomyManager.updateAccount(robAccount);
     }
 
     public record Responses(List<String> success, List<String> fail) {
         public String getSuccess(GuildData config, User robber, User robbed, int amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", Integer.toString(amount)).replace("<>", config.getEconomyCurrency());
+                    .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());
         }
 
         public String getFail(GuildData config, User robber, User robbed, int amount) {
             return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", Integer.toString(amount)).replace("<>", config.getEconomyCurrency());
+                    .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());
         }
     }
 }

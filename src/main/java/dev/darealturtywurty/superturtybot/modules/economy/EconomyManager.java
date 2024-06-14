@@ -182,7 +182,7 @@ public class EconomyManager {
     }
 
     public static boolean canWork(Economy account) {
-        return hasJob(account) && account.getNextWork() < System.currentTimeMillis();
+        return account.getNextWork() < System.currentTimeMillis();
     }
 
     public static int work(Economy account) {

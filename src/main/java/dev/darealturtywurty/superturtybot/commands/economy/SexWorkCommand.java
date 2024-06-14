@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class SexWorkCommand extends EconomyCommand {
     private static final Responses RESPONSES;
@@ -61,8 +63,8 @@ public class SexWorkCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextSexWork() > System.currentTimeMillis()) {
-            event.getHook().editOriginal("❌ You can do sex work again %s!"
-                    .formatted(TimeFormat.RELATIVE.format(account.getNextSexWork()))).queue();
+            event.getHook().editOriginalFormat("❌ You can do sex work again %s!",
+                    TimeFormat.RELATIVE.format(account.getNextSexWork())).queue();
             return;
         }
 
@@ -70,28 +72,28 @@ public class SexWorkCommand extends EconomyCommand {
         if (random.nextBoolean()) {
             final int amount = random.nextInt(100, 1000);
             EconomyManager.addMoney(account, amount);
-            account.setNextSexWork(System.currentTimeMillis() + 1800000L);
-            EconomyManager.updateAccount(account);
+            account.setNextSexWork(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
             event.getHook().editOriginal(getSuccess(config, event.getUser(), amount)).queue();
         } else {
             final int amount = random.nextInt(500, 1000);
             EconomyManager.removeMoney(account, amount, true);
-            account.setNextSexWork(System.currentTimeMillis() + 1800000L);
-            EconomyManager.updateAccount(account);
+            account.setNextSexWork(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
             event.getHook().editOriginal(getFail(config, event.getUser(), amount)).queue();
         }
+
+        EconomyManager.updateAccount(account);
     }
 
     private static String getSuccess(GuildData config, User user, int amount) {
         return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", StringUtils.numberFormat(amount));
     }
 
     private static String getFail(GuildData config, User user, int amount) {
         return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", StringUtils.numberFormat(amount));
     }
 
     private record Responses(List<String> success, List<String> fail) {

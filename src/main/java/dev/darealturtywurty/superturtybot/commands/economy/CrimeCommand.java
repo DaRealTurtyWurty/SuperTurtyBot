@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -18,7 +19,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
+// TODO: Crime levels (also possibly heists and other "boss-like" crimes)
 public class CrimeCommand extends EconomyCommand {
     private static final Responses RESPONSES;
 
@@ -65,31 +68,31 @@ public class CrimeCommand extends EconomyCommand {
             return;
         }
 
+        account.setNextCrime(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5));
+
         if (ThreadLocalRandom.current().nextBoolean()) {
             final int amount = ThreadLocalRandom.current().nextInt(100, 1000);
             EconomyManager.addMoney(account, amount);
-            account.setNextCrime(System.currentTimeMillis() + 320000L);
-            EconomyManager.updateAccount(account);
             event.getHook().editOriginal(getSuccess(config, event.getUser(), amount)).queue();
         } else {
             final int amount = ThreadLocalRandom.current().nextInt(100, 1000);
             EconomyManager.removeMoney(account, amount, true);
-            account.setNextCrime(System.currentTimeMillis() + 320000L);
-            EconomyManager.updateAccount(account);
             event.getHook().editOriginal(getFail(config, event.getUser(), amount)).queue();
         }
+
+        EconomyManager.updateAccount(account);
     }
 
     private static String getSuccess(GuildData config, User user, int amount) {
         return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", StringUtils.numberFormat(amount));
     }
 
     private static String getFail(GuildData config, User user, int amount) {
         return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", Integer.toString(amount));
+                .replace("{amount}", StringUtils.numberFormat(amount));
     }
 
     private record Responses(List<String> success, List<String> fail) {
