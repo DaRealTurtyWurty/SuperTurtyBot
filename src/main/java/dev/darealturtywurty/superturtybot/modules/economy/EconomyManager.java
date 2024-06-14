@@ -335,7 +335,7 @@ public class EconomyManager {
 
     public static int caughtCrime(Economy account, CrimeCommand.CrimeLevel level) {
         int amount = level.getAmountForLevel(account.getCrimeLevel());
-        removeMoney(account, amount);
+        removeMoney(account, amount, true);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalCaughtCrimes(account.getTotalCaughtCrimes() + 1);
