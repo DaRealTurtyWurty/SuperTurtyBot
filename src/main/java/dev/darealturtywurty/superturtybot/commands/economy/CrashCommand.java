@@ -147,7 +147,7 @@ public class CrashCommand extends EconomyCommand {
             if (thread == null)
                 return;
 
-            boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0;
+            boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0 && multiplier > 1.15;
             if (crashed) {
                 thread.sendMessage("The multiplier has crashed at %s! You have lost %s%s!"
                         .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount))).queue(
@@ -182,11 +182,11 @@ public class CrashCommand extends EconomyCommand {
             int amount = (int) (this.amount * MathUtils.clamp(multiplier, 1.0, 10.0));
             if(multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(this.amount - amount)))
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
                         .queue(ignored -> close(thread));
             } else {
                 thread.sendMessage("You have cashed out at %s! You have won %s%s!"
-                        .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount - amount)))
+                        .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
                         .queue(ignored -> close(thread));
             }
 

@@ -52,7 +52,7 @@ public class WithdrawCommand extends EconomyCommand {
 
         EconomyManager.withdraw(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginalFormat("✅ You have withdrawn %s%d from your bank!",
+        event.getHook().editOriginalFormat("✅ You have withdrawn %s%s from your bank!",
                 config.getEconomyCurrency(), StringUtils.numberFormat(amount)).queue();
     }
 }
