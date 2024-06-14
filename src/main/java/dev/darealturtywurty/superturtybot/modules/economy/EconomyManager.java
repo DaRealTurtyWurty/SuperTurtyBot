@@ -20,16 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class EconomyManager {
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
 
     public static boolean isRunning() {
@@ -334,7 +330,7 @@ public class EconomyManager {
     }
 
     public static int caughtCrime(Economy account, CrimeCommand.CrimeLevel level) {
-        int amount = level.getAmountForLevel(account.getCrimeLevel());
+        int amount = level.getAmountForLevel(account.getCrimeLevel()) / 2;
         removeMoney(account, amount, true);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);

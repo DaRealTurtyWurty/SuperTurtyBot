@@ -150,11 +150,11 @@ public class CrimeCommand extends EconomyCommand {
     @AllArgsConstructor
     @ToString
     public enum CrimeLevel {
-        BEGINNER(0.25F, 1000, 5000),
-        INTERMEDIATE(0.125F, 5000, 10000),
-        ADVANCED(0.075F, 10000, 20000),
-        EXPERT(0.02F, 20000, 50000),
-        MASTER(0.005F, 50000, 100000);
+        BEGINNER(0.5F, 500, 5000),
+        INTERMEDIATE(0.25F, 5000, 10000),
+        ADVANCED(0.125F, 10000, 20000),
+        EXPERT(0.05F, 20000, 50000),
+        MASTER(0.01F, 50000, 100000);
 
         private final float successChance;
         private final int minBaseAmount;
