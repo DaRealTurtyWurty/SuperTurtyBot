@@ -38,6 +38,11 @@ public class Economy {
     private long totalBetLoss;
     private long totalBetWin;
 
+    private int crimeLevel;
+    private long totalCrimes;
+    private long totalSuccessfulCrimes;
+    private long totalCaughtCrimes;
+
     private List<ShopItem> shopItems = new ArrayList<>();
     private List<Loan> loans = new ArrayList<>();
     private List<Property> properties = new ArrayList<>();

@@ -2,7 +2,13 @@
   "success": [
     "You broke into {robbed}'s house and stole <>{amount} worth of jewelry.",
     "Whilst walking down the street, you stole {robbed}'s wallet and got <>{amount}.",
-    "You intercepted {robbed}'s bank transfer, and managed to obtain <>{amount}."
+    "You intercepted {robbed}'s bank transfer, and managed to obtain <>{amount}.",
+    "You broke into {robbed}'s house and stole <>{amount} worth of electronics.",
+    "You pickpocketed {robbed} and got <>{amount}.",
+    "You broke into {robbed}'s house and stole <>{amount} worth of cash.",
+    "You broke into {robbed}'s house and stole <>{amount} worth of art.",
+    "You broke into {robbed}'s house and stole <>{amount} worth of antiques.",
+    "You broke into {robbed}'s house and stole <>{amount} worth of collectibles."
   ],
   "fail": [
     "You tried to break into {robbed}'s house but got caught by the home security system and got fined <>{amount} for breaking and entering!",

@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.commands.economy.CrimeCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -330,5 +331,34 @@ public class EconomyManager {
         if (amount < 5000) return 0.5f;
 
         return 0.5f + (0.5f * (amount / 5000f));
+    }
+
+    public static int caughtCrime(Economy account, CrimeCommand.CrimeLevel level) {
+        int amount = level.getAmountForLevel(account.getCrimeLevel());
+        removeMoney(account, amount);
+
+        account.setTotalCrimes(account.getTotalCrimes() + 1);
+        account.setTotalCaughtCrimes(account.getTotalCaughtCrimes() + 1);
+
+        if(account.getJob() != null && ThreadLocalRandom.current().nextInt(3) == 0) {
+            account.setJobLevel(Math.max(1, account.getJobLevel() - ThreadLocalRandom.current().nextInt(1, 4)));
+        }
+
+        return amount;
+    }
+
+    public static int successfulCrime(Economy account, CrimeCommand.CrimeLevel level) {
+        int crimeLevel = account.getCrimeLevel();
+        int amount = level.getAmountForLevel(crimeLevel);
+        addMoney(account, amount, true);
+
+        account.setTotalCrimes(account.getTotalCrimes() + 1);
+        account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
+
+        if(ThreadLocalRandom.current().nextInt(3) == 0) {
+            account.setCrimeLevel(account.getCrimeLevel() + 1);
+        }
+
+        return amount;
     }
 }

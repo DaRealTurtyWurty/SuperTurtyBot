@@ -48,11 +48,14 @@ public final class StringUtils {
      * @return a formatted string
      */
     public static String numberFormat(final double n, final int iteration, boolean removeTrailingZeros) {
-        if (n < 1000) {
+        boolean isNegative = n < 0;
+        if (n < 1000 && n > -1000) {
             return removeTrailingZeros ? String.valueOf((int) n) : String.valueOf(n);
         }
 
-        final double d = n / 1000;
+        double newNumber = Math.abs(n);
+
+        final double d = newNumber / 1000;
         final boolean isRound = d * 10 % 10 == 0; // true if the decimal part is equal to 0 (then it's trimmed anyway)
 
         // Determine the class of the number
@@ -71,6 +74,9 @@ public final class StringUtils {
 
         if(removeTrailingZeros)
             formatted = formatted.replace(".0", "");
+
+        if (isNegative)
+            formatted = "-" + formatted;
 
         return formatted;
     }

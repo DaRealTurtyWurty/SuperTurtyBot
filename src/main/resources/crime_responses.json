@@ -21,10 +21,10 @@
   ],
   "fail": [
     "You tried to pickpocket someone, but they caught you red-handed and you lost <>{amount}!",
-    "You attempted to hack into a secure server, but triggered an alarm and had to flee empty-handed!",
+    "You attempted to hack into a secure server, but triggered an alarm and got fined <>{amount}!",
     "You planned a heist, but tripped the alarm system and left with nothing but <>{amount} in damages!",
     "You tried to scam someone, but they saw through your scheme and you ended up losing <>{amount}!",
-    "You attempted to pull off a grand con, but your target outsmarted you and you walked away with empty pockets!",
+    "You attempted to pull off a grand con, but your target outsmarted you and you got sued for <>{amount}!",
     "You tried to steal a rubber chicken, but ended up slipping on a banana peel and lost <>{amount}!",
     "You attempted to pull off a prank involving whoopee cushions, but accidentally sat on one yourself and lost <>{amount} in embarrassment!",
     "You attempted to spray-paint a silly face on a wall, but the paint can exploded and you lost <>{amount} worth of colorful chaos!",
