@@ -41,8 +41,13 @@ public class RewardCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        final var subcommand = event.getSubcommandName();
-        switch (Objects.requireNonNull(subcommand)) {
+        final String subcommand = event.getSubcommandName();
+        if(subcommand == null) {
+            event.getHook().editOriginal("❌ You need to specify a reward to claim!").queue();
+            return;
+        }
+
+        switch (subcommand) {
             case "daily" -> {
                 if (account.getNextDaily() > System.currentTimeMillis()) {
                     event.getHook().editOriginal("❌ You can next claim your daily reward %s!"
@@ -52,7 +57,7 @@ public class RewardCommand extends EconomyCommand {
 
                 int dailyReward = 1000;
                 if(account.getJob() != null)
-                    dailyReward = account.getJob().getSalary() * 2;
+                    dailyReward = EconomyManager.getPayAmount(account) * 2;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
                     dailyReward = (int) (dailyReward * 2.5f);
 
@@ -74,7 +79,7 @@ public class RewardCommand extends EconomyCommand {
 
                 int weeklyReward = 10000;
                 if(account.getJob() != null)
-                    weeklyReward = account.getJob().getSalary() * 5;
+                    weeklyReward = EconomyManager.getPayAmount(account) * 5;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
                     weeklyReward = (int) (weeklyReward * 2.5f);
 
@@ -94,7 +99,7 @@ public class RewardCommand extends EconomyCommand {
 
                 int monthlyReward = 50000;
                 if(account.getJob() != null)
-                    monthlyReward = account.getJob().getSalary() * 10;
+                    monthlyReward = EconomyManager.getPayAmount(account) * 10;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
                     monthlyReward = (int) (monthlyReward * 2.5f);
 
@@ -114,7 +119,7 @@ public class RewardCommand extends EconomyCommand {
 
                 int yearlyReward = 100000;
                 if(account.getJob() != null)
-                    yearlyReward = account.getJob().getSalary() * 20;
+                    yearlyReward = EconomyManager.getPayAmount(account) * 20;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
                     yearlyReward = (int) (yearlyReward * 2.5f);
 
