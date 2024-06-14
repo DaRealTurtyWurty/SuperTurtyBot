@@ -340,7 +340,7 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalCaughtCrimes(account.getTotalCaughtCrimes() + 1);
 
-        if(account.getJob() != null && ThreadLocalRandom.current().nextInt(3) == 0) {
+        if(account.getJob() != null && ThreadLocalRandom.current().nextInt(15) == 0) {
             account.setJobLevel(Math.max(1, account.getJobLevel() - ThreadLocalRandom.current().nextInt(1, 4)));
         }
 

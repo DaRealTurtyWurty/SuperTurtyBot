@@ -99,7 +99,6 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        account.setNextCrime(0);
         if (account.getNextCrime() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You must wait %s before committing another crime!"
                     .formatted(TimeFormat.RELATIVE.format(account.getNextCrime()))).queue();
