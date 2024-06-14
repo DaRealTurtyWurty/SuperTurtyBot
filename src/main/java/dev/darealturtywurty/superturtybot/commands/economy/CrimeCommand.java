@@ -37,11 +37,11 @@ public class CrimeCommand extends EconomyCommand {
         JsonObject json;
         try(final InputStream stream = TurtyBot.loadResource("crime_responses.json")) {
             if (stream == null)
-                throw new IllegalStateException("Unable to find sex work responses!");
+                throw new IllegalStateException("Unable to find crime responses!");
 
             json = Constants.GSON.fromJson(IOUtils.toString(stream, StandardCharsets.UTF_8), JsonObject.class);
         } catch (final IOException exception) {
-            throw new IllegalStateException("Unable to read sex work responses!", exception);
+            throw new IllegalStateException("Unable to read crime responses!", exception);
         }
 
         final List<String> success = new ArrayList<>();
@@ -123,7 +123,7 @@ public class CrimeCommand extends EconomyCommand {
             int amount = EconomyManager.caughtCrime(account, level);
             int newJobLevel = account.getJobLevel();
             embed.setDescription(getFail(config, event.getUser(), amount) +
-                    (jobLevel != newJobLevel ? "\n\n❌ You have been demoted to level %d for your job!".formatted(newJobLevel) : ""));
+                    (jobLevel != newJobLevel ? "\n\n❌ You have been demoted to level %d(%d levels) for your job!".formatted(newJobLevel, newJobLevel - jobLevel) : ""));
             embed.setColor(0xAA0000);
         }
 
