@@ -110,6 +110,7 @@ public class CrimeCommand extends EconomyCommand {
             for(var level : CrimeLevel.values()) {
                 embed.addField(level.name(), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
             }
+            
             embed.setColor(Color.GREEN);
             event.getHook().editOriginalEmbeds(embed.build()).queue();
             return;
