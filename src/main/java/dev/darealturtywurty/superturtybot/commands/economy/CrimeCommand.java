@@ -101,7 +101,7 @@ public class CrimeCommand extends EconomyCommand {
         int crimeLevel = event.getOption("level", account.getCrimeLevel(), OptionMapping::getAsInt);
 
         if(subcommand.equalsIgnoreCase("profile")) {
-            EmbedBuilder embed = new EmbedBuilder();
+            var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
