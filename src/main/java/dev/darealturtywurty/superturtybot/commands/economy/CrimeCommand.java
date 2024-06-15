@@ -104,18 +104,16 @@ public class CrimeCommand extends EconomyCommand {
             embed.setTimestamp(Instant.now());
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
-            embed.addField("Crime Level", String.valueOf(crimeLevel), false);
-            embed.addField("Chances of success", "for level " + crimeLevel, false);
-            for(var level : CrimeLevel.values()) {
+            embed.setDescription("Crime Level: %d%nHere are the chances for each crime level:".formatted(crimeLevel));
+            for(var level : CrimeType.values()) {
                 embed.addField(level.name(), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
             }
-            
-            embed.setColor(Color.GREEN);
+
             event.getHook().editOriginalEmbeds(embed.build()).queue();
             return;
         }
 
-        var level = CrimeLevel.byName(subcommand);
+        var level = CrimeType.byName(subcommand);
         if(level == null) {
             event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
             return;
@@ -170,7 +168,7 @@ public class CrimeCommand extends EconomyCommand {
     @Getter
     @AllArgsConstructor
     @ToString
-    public enum CrimeLevel {
+    public enum CrimeType {
         BEGINNER(0.5F, 500, 10_000),
         INTERMEDIATE(0.25F, 10_000, 25_000),
         ADVANCED(0.125F, 25_000, 50_000),
@@ -192,15 +190,16 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public float getChanceForLevel(int level) {
-            return Math.min(1.0F, this.successChance + Math.min(0.45F, level / (1000.0F / MAX_LEVEL - ordinal())));
+            float chanceAddition = level / (1000.0F / MAX_LEVEL - ordinal());
+            return Math.min(1.0F, this.successChance + Math.min((0.95F - this.successChance), chanceAddition));
         }
 
         public boolean hasSuccess(int level) {
             return ThreadLocalRandom.current().nextFloat() <= getChanceForLevel(level);
         }
 
-        public static @Nullable CrimeLevel byName(String name) {
-            for (CrimeLevel level : values()) {
+        public static @Nullable CrimeCommand.CrimeType byName(String name) {
+            for (CrimeType level : values()) {
                 if (level.name().equalsIgnoreCase(name)) {
                     return level;
                 }

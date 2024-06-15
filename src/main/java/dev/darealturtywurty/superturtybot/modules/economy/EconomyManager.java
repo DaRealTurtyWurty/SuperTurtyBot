@@ -329,7 +329,7 @@ public class EconomyManager {
         return 0.5f + (0.5f * (amount / 5000f));
     }
 
-    public static int caughtCrime(Economy account, CrimeCommand.CrimeLevel level) {
+    public static int caughtCrime(Economy account, CrimeCommand.CrimeType level) {
         int amount = level.getAmountForLevel(account.getCrimeLevel()) / 2;
         removeMoney(account, amount, true);
 
@@ -343,7 +343,7 @@ public class EconomyManager {
         return amount;
     }
 
-    public static int successfulCrime(Economy account, CrimeCommand.CrimeLevel level) {
+    public static int successfulCrime(Economy account, CrimeCommand.CrimeType level) {
         int crimeLevel = account.getCrimeLevel();
         int amount = level.getAmountForLevel(crimeLevel);
         addMoney(account, amount, true);
