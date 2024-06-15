@@ -93,7 +93,7 @@ public class CrimeCommand extends EconomyCommand {
 
         Member member = event.getMember();
         if (member == null) {
-            event.getHook().editOriginal("❌ You must be in a guild to use `/crime`!").queue();
+            event.getHook().editOriginal("❌ You must be in a guild to commit a crime!").queue();
             return;
         }
 
