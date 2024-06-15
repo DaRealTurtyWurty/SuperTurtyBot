@@ -154,6 +154,9 @@ public class CrashCommand extends EconomyCommand {
                                 ignored -> close(thread));
                 EconomyManager.betLoss(account, this.amount);
                 EconomyManager.updateAccount(account);
+
+                close(thread);
+                return;
             }
 
             thread.sendMessage("The multiplier is now at %s!".formatted(stringifyMultiplier(multiplier))).queue();
