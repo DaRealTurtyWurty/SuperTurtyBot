@@ -29,13 +29,12 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-// TODO: Possibly heists and other "boss-like" crimes
 public class CrimeCommand extends EconomyCommand {
     private static final Responses RESPONSES;
 
     static {
         JsonObject json;
-        try(final InputStream stream = TurtyBot.loadResource("crime_responses.json")) {
+        try (final InputStream stream = TurtyBot.loadResource("crime_responses.json")) {
             if (stream == null)
                 throw new IllegalStateException("Unable to find crime responses!");
 
@@ -87,7 +86,7 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         CrimeLevel level = CrimeLevel.byName(subcommand);
-        if(level == null) {
+        if (level == null) {
             event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
             return;
         }
@@ -100,8 +99,8 @@ public class CrimeCommand extends EconomyCommand {
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextCrime() > System.currentTimeMillis()) {
-            event.getHook().editOriginal("❌ You must wait %s before committing another crime!"
-                    .formatted(TimeFormat.RELATIVE.format(account.getNextCrime()))).queue();
+            event.getHook().editOriginalFormat("❌ You must wait %s before committing another crime!",
+                    TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
             return;
         }
 
@@ -150,11 +149,11 @@ public class CrimeCommand extends EconomyCommand {
     @AllArgsConstructor
     @ToString
     public enum CrimeLevel {
-        BEGINNER(0.5F, 500, 5000),
-        INTERMEDIATE(0.25F, 5000, 10000),
-        ADVANCED(0.125F, 10000, 20000),
-        EXPERT(0.05F, 20000, 50000),
-        MASTER(0.01F, 50000, 100000);
+        BEGINNER(0.5F, 500, 10_000),
+        INTERMEDIATE(0.25F, 10_000, 25_000),
+        ADVANCED(0.125F, 25_000, 50_000),
+        EXPERT(0.05F, 50_000, 250_000),
+        MASTER(0.01F, 250_000, 1_000_000);
 
         private final float successChance;
         private final int minBaseAmount;
@@ -169,7 +168,7 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public float getChanceForLevel(int level) {
-            return Math.min(1.0F, this.successChance + (level * 0.05F));
+            return Math.min(1.0F, this.successChance + Math.min(0.45F, level / 1000.0F));
         }
 
         public boolean hasSuccess(int level) {
