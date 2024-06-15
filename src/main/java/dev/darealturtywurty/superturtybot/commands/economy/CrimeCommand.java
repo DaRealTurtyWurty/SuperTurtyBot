@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -108,7 +109,7 @@ public class CrimeCommand extends EconomyCommand {
             embed.addField("Crime Level", String.valueOf(crimeLevel), false);
             embed.addField("Chances of success", "for level " + crimeLevel, false);
             for(CrimeLevel level : CrimeLevel.values()) {
-                embed.addField(level.name(), level.getChanceForLevel(crimeLevel) * 100f + "%", false);
+                embed.addField(level.name(), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
             }
             embed.setColor(Color.GREEN);
             event.getHook().editOriginalEmbeds(embed.build()).queue();
