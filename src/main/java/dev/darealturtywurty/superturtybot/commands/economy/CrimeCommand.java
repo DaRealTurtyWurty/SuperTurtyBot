@@ -115,7 +115,7 @@ public class CrimeCommand extends EconomyCommand {
             return;
         }
 
-        CrimeLevel level = CrimeLevel.byName(subcommand);
+        var level = CrimeLevel.byName(subcommand);
         if(level == null) {
             event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
             return;
