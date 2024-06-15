@@ -15,11 +15,14 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -73,7 +76,9 @@ public class CrimeCommand extends EconomyCommand {
                 new SubcommandData("intermediate", "Commit an intermediate crime"),
                 new SubcommandData("advanced", "Commit an advanced crime"),
                 new SubcommandData("expert", "Commit an expert crime"),
-                new SubcommandData("master", "Commit a master crime")
+                new SubcommandData("master", "Commit a master crime"),
+                new SubcommandData("profile", "Info about your crime level")
+                        .addOption(OptionType.INTEGER, "level", "Optionally define a crime level", false)
         );
     }
 
@@ -85,12 +90,6 @@ public class CrimeCommand extends EconomyCommand {
             return;
         }
 
-        CrimeLevel level = CrimeLevel.byName(subcommand);
-        if (level == null) {
-            event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
-            return;
-        }
-
         Member member = event.getMember();
         if (member == null) {
             event.getHook().editOriginal("❌ You must be in a guild to commit a crime!").queue();
@@ -98,6 +97,30 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        int crimeLevel = event.getOption("level", account.getCrimeLevel(), OptionMapping::getAsInt);
+
+        if(subcommand.equalsIgnoreCase("profile")) {
+            var embed = new EmbedBuilder();
+            embed.setTimestamp(Instant.now());
+            embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
+
+            embed.addField("Crime Level", String.valueOf(crimeLevel), false);
+            embed.addField("Chances of success", "for level " + crimeLevel, false);
+            for(var level : CrimeLevel.values()) {
+                embed.addField(level.name(), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
+            }
+            
+            embed.setColor(Color.GREEN);
+            event.getHook().editOriginalEmbeds(embed.build()).queue();
+            return;
+        }
+
+        var level = CrimeLevel.byName(subcommand);
+        if(level == null) {
+            event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
+            return;
+        }
+
         if (account.getNextCrime() > System.currentTimeMillis()) {
             event.getHook().editOriginalFormat("❌ You must wait %s before committing another crime!",
                     TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
@@ -111,7 +134,6 @@ public class CrimeCommand extends EconomyCommand {
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
         if (level.hasSuccess(account.getCrimeLevel())) {
-            int crimeLevel = account.getCrimeLevel();
             int amount = EconomyManager.successfulCrime(account, level);
             int newCrimeLevel = account.getCrimeLevel();
             embed.setDescription(getSuccess(config, event.getUser(), amount) +
