@@ -155,6 +155,8 @@ public class CrimeCommand extends EconomyCommand {
         EXPERT(0.05F, 50_000, 250_000),
         MASTER(0.01F, 250_000, 1_000_000);
 
+        public static final int MAX_LEVEL = values().length;
+
         private final float successChance;
         private final int minBaseAmount;
         private final int maxBaseAmount;
@@ -168,7 +170,7 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public float getChanceForLevel(int level) {
-            return Math.min(1.0F, this.successChance + Math.min(0.45F, level / 1000.0F));
+            return Math.min(1.0F, this.successChance + Math.min(0.45F, level / (1000.0F / MAX_LEVEL - ordinal())));
         }
 
         public boolean hasSuccess(int level) {
