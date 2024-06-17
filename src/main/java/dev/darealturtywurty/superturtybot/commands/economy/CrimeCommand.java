@@ -22,7 +22,6 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -99,14 +98,14 @@ public class CrimeCommand extends EconomyCommand {
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         int crimeLevel = event.getOption("level", account.getCrimeLevel(), OptionMapping::getAsInt);
 
-        if(subcommand.equalsIgnoreCase("profile")) {
+        if (subcommand.equalsIgnoreCase("profile")) {
             var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
             embed.setDescription("Crime Level: %d%nHere are the chances for each crime level:".formatted(crimeLevel));
-            for(var level : CrimeType.values()) {
-                embed.addField(level.name(), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
+            for (var level : CrimeType.values()) {
+                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
             }
 
             event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -114,7 +113,7 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         var level = CrimeType.byName(subcommand);
-        if(level == null) {
+        if (level == null) {
             event.getHook().editOriginal("❌ That is not a valid crime level!").queue();
             return;
         }
