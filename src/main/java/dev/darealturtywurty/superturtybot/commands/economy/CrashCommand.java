@@ -194,7 +194,7 @@ public class CrashCommand extends EconomyCommand {
             }
 
             EconomyManager.addMoney(account, amount);
-            EconomyManager.betWin(account, amount);
+            EconomyManager.betWin(account, amount - this.amount);
             EconomyManager.updateAccount(account);
         }
 
