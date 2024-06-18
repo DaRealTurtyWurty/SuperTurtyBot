@@ -23,6 +23,7 @@ public class Economy {
     private long nextWork;
     private long nextCrime;
     private long nextSexWork;
+    private long nextHeist;
 
     private long nextDaily;
     private long nextWeekly;
@@ -39,6 +40,8 @@ public class Economy {
     private long totalBetWin;
 
     private int crimeLevel;
+    private int heistLevel = 1;
+    private int totalHeists;
     private long totalCrimes;
     private long totalSuccessfulCrimes;
     private long totalCaughtCrimes;

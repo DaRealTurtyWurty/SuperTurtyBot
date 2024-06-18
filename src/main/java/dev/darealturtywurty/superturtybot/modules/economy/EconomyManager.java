@@ -16,10 +16,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.text.WordUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -336,7 +333,7 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalCaughtCrimes(account.getTotalCaughtCrimes() + 1);
 
-        if(account.getJob() != null && ThreadLocalRandom.current().nextInt(15) == 0) {
+        if (account.getJob() != null && ThreadLocalRandom.current().nextInt(15) == 0) {
             account.setJobLevel(Math.max(1, account.getJobLevel() - ThreadLocalRandom.current().nextInt(1, 4)));
         }
 
@@ -351,10 +348,41 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
 
-        if(ThreadLocalRandom.current().nextInt(3) == 0) {
+        if (ThreadLocalRandom.current().nextInt(3) == 0) {
             account.setCrimeLevel(account.getCrimeLevel() + 1);
         }
 
         return amount;
+    }
+
+    // Should exponentially increase the cost and payout of a heist based on the user's account
+    public static int determineHeistSetupCost(Economy account) {
+        int heistLevel = account.getHeistLevel();
+        return (int) Math.pow(heistLevel, 2) * 100_000;
+    }
+
+    public static int determineHeistPayout(Economy account) {
+        int heistLevel = account.getHeistLevel();
+        return (int) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextInt(500_000, 1_000_000);
+    }
+
+    /**
+     * Handles the payout and level increase of a heist
+     *
+     * @param account The user's economy account
+     * @return Whether the user leveled up from the heist
+     */
+    public static boolean heistCompleted(Economy account, long timeTaken) {
+        int payout = determineHeistPayout(account);
+        addMoney(account, payout / (int) (timeTaken / 1000), true);
+
+        account.setTotalHeists(account.getTotalHeists() + 1);
+
+        if (ThreadLocalRandom.current().nextInt(3) == 0) {
+            account.setHeistLevel(account.getHeistLevel() + 1);
+            return true;
+        }
+
+        return false;
     }
 }
