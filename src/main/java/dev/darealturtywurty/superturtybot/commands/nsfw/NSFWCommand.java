@@ -103,14 +103,16 @@ public class NSFWCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
-            event.deferReply(true).setContent("You must specify a subcommand!").queue();
+            event.getHook().editOriginal("You must specify a subcommand!").queue();
             return;
         }
 
         if (!isValidChannel(event.getChannel())) {
-            event.deferReply(true).setContent("This command can only be used in NSFW channels!").queue();
+            event.getHook().editOriginal("This command can only be used in NSFW channels!").queue();
             return;
         }
 
@@ -119,40 +121,40 @@ public class NSFWCommand extends CoreCommand {
             GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
                     .first();
             if (config == null) {
-                event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
-                return;
+                config = new GuildData(guild.getIdLong());
+                Database.getDatabase().guildData.insertOne(config);
             }
 
             List<Long> enabledChannels = GuildData.getChannels(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
-                event.deferReply(true).setContent("❌ This server has no NSFW channels configured!").queue();
+                event.getHook().editOriginal("❌ This server has no NSFW channels configured!").queue();
                 return;
             }
 
             MessageChannel channel = event.getChannelType() == ChannelType.TEXT ? event.getChannel()
                     : event.getChannel().asThreadChannel().getParentMessageChannel();
             if (!enabledChannels.contains(channel.getIdLong())) {
-                event.deferReply(true).setContent("❌ This channel is not configured as an NSFW channel!").queue();
+                event.getHook().editOriginal("❌ This channel is not configured as an NSFW channel!").queue();
                 return;
             }
         }
 
         String group = event.getSubcommandGroup();
         if (group == null) {
-            event.deferReply(true).setContent("❌ You must specify a subcommand group!").queue();
+            event.getHook().editOriginal("❌ You must specify a subcommand group!").queue();
             return;
         }
 
         if (NSFW_REDDIT_COMMANDS.stream().anyMatch(reddit -> reddit.name().equals(subcommand))) {
             if (group.equals("fake")) {
                 if (NSFW_OTHER_COMMANDS.containsKey(subcommand)) {
-                    event.deferReply().setContent("Loading...").queue();
+                    event.getHook().editOriginal("Loading...").queue();
                     runNonReddit(NSFWCommandList.CommandData.from(event), subcommand);
                     return;
                 }
             }
 
-            event.deferReply().setContent("Loading...").queue();
+            event.getHook().editOriginal("Loading...").queue();
             runReddit(event.getHook(), event.getUser(), group, subcommand);
             return;
         }
