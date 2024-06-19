@@ -76,7 +76,9 @@ public class AIMessageResponder extends ListenerAdapter {
         tokensUsed.put(userId, tokensUsed.getOrDefault(userId, 0) + tokens);
 
         List<UserChatMessage> chat = chatMessages.asMap().computeIfAbsent(channelId, k -> new ArrayList<>());
-        chat.add(new UserChatMessage(userId, ChatMessage.UserMessage.of(content, event.getAuthor().getName())));
+        var message = new UserChatMessage(userId, ChatMessage.UserMessage.of(content, event.getAuthor().getName()));
+        chat.add(message);
+
         OPEN_AI_CLIENT.chatCompletions()
                 .createStream(ChatRequest.builder()
                         .model("gpt-3.5-turbo-0125")
@@ -100,7 +102,13 @@ public class AIMessageResponder extends ListenerAdapter {
                     chat.add(new UserChatMessage(event.getJDA().getSelfUser().getIdLong(), ChatMessage.AssistantMessage.of(responseContent)));
 
                     CoreCommand.reply(event, responseContent);
+                }).exceptionally(throwable -> {
+                    chat.remove(message);
+                    CoreCommand.reply(event, "I'm sorry, I don't know how to respond to that.");
+                    return null;
                 });
+
+        chatMessages.put(channelId, chat);
     }
 
     private Chat.Choice getResponse(Stream<Chat> chatStream) {
