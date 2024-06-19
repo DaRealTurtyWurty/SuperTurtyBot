@@ -210,8 +210,9 @@ public class HeistCommand extends EconomyCommand {
 
                     if (event.getComponentId().equals("heist:confirm")) {
                         if (heist.isHeistComplete()) {
-                            int amount = EconomyManager.determineHeistPayout(account);
+                            int money = EconomyManager.getBalance(account);
                             boolean levelledUp = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
+                            int amount = EconomyManager.getBalance(account) - money;
                             EconomyManager.updateAccount(account);
                             thread.sendMessage("✅ **Heist successful!** You have earned %s%s!%n%n%s".formatted(
                                             config.getEconomyCurrency(),

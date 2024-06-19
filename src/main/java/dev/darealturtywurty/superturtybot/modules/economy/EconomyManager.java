@@ -361,7 +361,7 @@ public class EconomyManager {
         return (int) Math.pow(heistLevel, 2) * 100_000;
     }
 
-    public static int determineHeistPayout(Economy account) {
+    private static int determineHeistPayout(Economy account) {
         int heistLevel = account.getHeistLevel();
         return (int) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextInt(500_000, 1_000_000);
     }
