@@ -146,6 +146,9 @@ public class TurtyBot {
         // Add welcome manager so that we can welcome new members and say goodbye to leaving members
         builder.addEventListeners(WelcomeManager.INSTANCE);
 
+        // Add AI message responder so that we can respond to messages using AI
+        builder.addEventListeners(AIMessageResponder.INSTANCE);
+
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);
     }

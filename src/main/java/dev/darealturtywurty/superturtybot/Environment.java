@@ -137,6 +137,18 @@ public final class Environment {
         return getInteger("REDDIT_PROXY_PORT");
     }
 
+    public Optional<String> openAIKey() {
+        return getString("OPENAI_KEY");
+    }
+
+    public Optional<String> openAIProjectId() {
+        return getString("OPENAI_PROJECT_ID");
+    }
+
+    public Optional<String> openAIOrganizationId() {
+        return getString("OPENAI_ORGANIZATION_ID");
+    }
+
     public Optional<Double> getDouble(String key){
         try {
             return getString(key).map(Double::parseDouble);
@@ -192,11 +204,11 @@ public final class Environment {
     }
 
     public void load(Path environment) {
-        if(this.env != null)
+        if (this.env != null)
             throw new IllegalStateException("Environment already loaded!");
 
         DotenvBuilder builder = Dotenv.configure().directory(Files.isDirectory(environment) ? environment.toString() : environment.getParent().toString());
-        if(Files.exists(environment)) {
+        if (Files.exists(environment)) {
             builder.filename(environment.getFileName().toString());
         }
 
