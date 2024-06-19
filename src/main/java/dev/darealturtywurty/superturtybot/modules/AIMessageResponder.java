@@ -76,7 +76,7 @@ public class AIMessageResponder extends ListenerAdapter {
         tokensUsed.put(userId, tokensUsed.getOrDefault(userId, 0) + tokens);
 
         List<UserChatMessage> chat = chatMessages.asMap().computeIfAbsent(channelId, k -> new ArrayList<>());
-        var message = new UserChatMessage(userId, ChatMessage.UserMessage.of(content, event.getMember().getEffectiveName() + "(ID is: " + event.getAuthor().getIdLong() + ")"));
+        var message = new UserChatMessage(userId, ChatMessage.UserMessage.of(content, event.getAuthor().getEffectiveName().replaceAll("[^a-zA-Z0-9]", "")));
         chat.add(message);
 
         OPEN_AI_CLIENT.chatCompletions()
