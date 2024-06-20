@@ -369,4 +369,9 @@ public class GuildConfigRegistry {
                     .serializer((config, value) -> config.setWelcomeChannel(Long.parseLong(value)))
                     .valueFromConfig(GuildData::getWelcomeChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+
+    private static final GuildConfigOption SHOULD_SEND_CHANGELOG = GUILD_CONFIG_OPTIONS.register("should_send_changelog",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setShouldSendChangelog(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isShouldSendChangelog).build());
 }
