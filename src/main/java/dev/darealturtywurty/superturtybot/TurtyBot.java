@@ -30,6 +30,9 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
@@ -172,5 +175,18 @@ public class TurtyBot {
 
     public static URL getResource(String name) {
         return TurtyBot.class.getResource(name);
+    }
+
+    public static @Nullable BufferedImage loadImage(String filename) {
+        InputStream stream = loadResource(filename);
+        if(stream == null)
+            return null;
+
+        try {
+            return ImageIO.read(stream);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Failed to load image", exception);
+            return null;
+        }
     }
 }
