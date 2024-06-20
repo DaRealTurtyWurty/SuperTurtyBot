@@ -114,11 +114,15 @@ public class CommandHook extends ListenerAdapter {
 //        }
     }
 
-    private static void sendStartupMessage(@Nullable TextChannel channel) {
+    private static void sendStartupMessage(@Nullable TextChannel channel, boolean shouldSendChangelog) {
         if (channel == null) return;
 
-        String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
-        channel.sendMessage(changelog).queue();
+        if(shouldSendChangelog) {
+            String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
+            channel.sendMessage(changelog).queue();
+        } else {
+            channel.sendMessage(STARTUP_MESSAGE).queue();
+        }
     }
 
     private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
@@ -470,7 +474,7 @@ public class CommandHook extends ListenerAdapter {
         }
 
         if (config.isShouldSendStartupMessage()) {
-            sendStartupMessage(generalChannel);
+            sendStartupMessage(generalChannel, config.isShouldSendChangelog());
         }
 
         if (this.commands.isEmpty())
