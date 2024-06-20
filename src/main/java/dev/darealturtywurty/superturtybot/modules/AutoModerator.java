@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import com.google.gson.JsonArray;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -13,15 +12,19 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class AutoModerator extends ListenerAdapter {
-    private static final Pattern INVITE_REGEX = Pattern.compile("(https?:\\/\\/)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com\\/invite)\\/[^ \\/]+?(?=\b)");
+    private static final Pattern INVITE_REGEX = Pattern.compile("(https?://)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com/invite)/[^ /]+?(?=\b)");
     public static final AutoModerator INSTANCE = new AutoModerator();
-    public static final Set<String> SCAM_DOMAINS = new HashSet<>();
+    public static final Set<String> SCAM_DOMAINS = ConcurrentHashMap.newKeySet();
+
+    static {
+        loadScamDomains();
+    }
 
     private AutoModerator() {
     }
@@ -45,44 +48,41 @@ public class AutoModerator extends ListenerAdapter {
         scamDetection(event.getMessage());
     }
 
-    public void initialize() {
-        try {
-            final URLConnection connection = new URI("https://phish.sinking.yachts/v2/all").toURL().openConnection();
-            connection.addRequestProperty("X-Identity", "TurtyBot#8108");
-            final InputStream stream = connection.getInputStream();
-            final JsonArray response = Constants.GSON.fromJson(new InputStreamReader(stream), JsonArray.class);
-            response.forEach(link -> {
-                final String domain = link.getAsString();
-                SCAM_DOMAINS.add(domain);
-                Constants.LOGGER.debug("Scam link added: {}", domain);
-            });
-        } catch (final IOException | URISyntaxException exception) {
-            Constants.LOGGER.error("Failed to initialize scam links!", exception);
-        }
+    private static void loadScamDomains() {
+        new Thread(() -> {
+            try {
+                final URLConnection connection = new URI("https://phish.sinking.yachts/v2/all").toURL().openConnection();
+                connection.addRequestProperty("X-Identity", "TurtyBot#8108");
+                final InputStream stream = connection.getInputStream();
+                final String[] response = Constants.GSON.fromJson(new InputStreamReader(stream), String[].class);
+                for (String domain : response) {
+                    SCAM_DOMAINS.add(domain);
+                    Constants.LOGGER.debug("Scam link added: {}", domain);
+                }
+            } catch (final IOException | URISyntaxException exception) {
+                Constants.LOGGER.error("Failed to initialize scam links!", exception);
+            }
+        }).start();
     }
 
     private void discordInvites(Message message) {
         if (INVITE_REGEX.matcher(message.getContentRaw()).find()) {
-            message.delete().queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!").queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
+            message.delete()
+                    .queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!")
+                            .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
         }
     }
 
     private void scamDetection(Message message) {
-        final String content = message.getContentRaw().toLowerCase().trim().replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "");
-        final String[] parts = content.split(" ");
-        if (parts.length <= 1) {
-            for (final String domain : SCAM_DOMAINS) {
-                if (content.equals(domain.trim().toLowerCase())) {
-                    message.delete().queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! If this was not you, then your account has been comprimised. " + "Please make sure to reset your login details to get your token changed. " + "For future reference, do NOT click free nitro links, doesn't matter who it is from!").queue());
-                    return;
-                }
-            }
-        }
-
-        for (final String part : parts) {
-            if (SCAM_DOMAINS.contains(part)) {
-                message.delete().queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", please do not send scam links! If this was not you, then your account has been comprimised. Please make sure to reset your login details to get your token changed, and do not click free nitro links!").queue());
-                return;
+        final String content = message.getContentRaw();
+        for (final String domain : SCAM_DOMAINS) {
+            if (content.contains(domain)) {
+                message.delete().flatMap(success ->
+                        message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
+                                "If this was not you, then your account has been compromised. " +
+                                "Please make sure to reset your login details to get your token changed. " +
+                                "In the future, be more careful what URLs you are opening, always check that its the real one.")).queue();
+                break;
             }
         }
     }
