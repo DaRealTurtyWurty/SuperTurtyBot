@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 public class ApiHandler {
     private static final String BASE_URL = "https://api.turtywurty.dev/";
 

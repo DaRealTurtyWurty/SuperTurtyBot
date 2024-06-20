@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
+@SuppressWarnings("UnnecessaryDefault")
 public final class StringUtils {
     private static final char[] CHARS = {'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd', 'U', 'D', 'T'};
 
@@ -103,6 +104,7 @@ public final class StringUtils {
         return numberFormat(n, 0);
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static boolean readBoolean(String str) {
         final String mod = str.trim().toLowerCase();
         return switch (mod) {

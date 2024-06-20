@@ -176,6 +176,7 @@ public class GithubRepositoryCommand extends CoreCommand {
             // get a list of the current page's fields
             List<Repository> currentRepos = repositories.subList(embed.getPage() * 10, Math.min(repositories.size(), (embed.getPage() + 1) * 10));
 
+            //noinspection DataFlowIssue
             StringSelectMenu menu = StringSelectMenu.create("github-%d-%d-%d-%d".formatted(
                             event.isFromGuild() ? event.getGuild().getIdLong() : 0,
                             event.getChannel().getIdLong(),

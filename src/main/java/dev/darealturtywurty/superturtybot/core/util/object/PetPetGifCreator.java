@@ -36,7 +36,7 @@ public class PetPetGifCreator {
         this.inputImage = inputImage;
 
         try {
-            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so i set it to be used here
+            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so I set it to be used here
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create GifSequenceWriter!", exception);
         }

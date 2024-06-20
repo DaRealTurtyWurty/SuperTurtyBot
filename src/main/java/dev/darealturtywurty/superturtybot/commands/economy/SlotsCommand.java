@@ -269,6 +269,7 @@ public class SlotsCommand extends EconomyCommand {
     }
 
     private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, int betAmount) {
+        //noinspection DataFlowIssue - This is a false positive
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .timeout(1, TimeUnit.MINUTES)
                 .timeoutAction(() -> message.editMessageComponents().queue())

@@ -25,7 +25,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GuessTheFlagCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
@@ -93,33 +96,31 @@ public class GuessTheFlagCommand extends SubcommandCommand {
         try (var upload = FileUpload.fromData(outputStream.toByteArray(), "flag.png")) {
             event.getHook().editOriginal("🚩 Guess the flag of this region!")
                     .setFiles(upload)
-                    .queue(message -> {
-                        message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                            Either<List<Region>, HttpStatus> allRegions = ApiHandler.getAllRegions(data);
-                            if (allRegions.isRight()) {
-                                Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
-                                        allRegions.getRight().getCode());
-                                event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
-                                return;
-                            }
+                    .queue(message -> message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
+                        Either<List<Region>, HttpStatus> allRegions = ApiHandler.getAllRegions(data);
+                        if (allRegions.isRight()) {
+                            Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
+                                    allRegions.getRight().getCode());
+                            event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
+                            return;
+                        }
 
-                            var game = new Game(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
-                                    thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), allRegions.getLeft(), pair);
-                            GAMES.put(message.getIdLong(), game);
+                        var game = new Game(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
+                                thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), allRegions.getLeft(), pair);
+                        GAMES.put(message.getIdLong(), game);
 
-                            message.editMessageComponents(
-                                            ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
-                                    .queue();
+                        message.editMessageComponents(
+                                        ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
+                                .queue();
 
-                            thread.sendMessage("✅ The game has started " + event.getUser().getAsMention() + "!").queue();
+                        thread.sendMessage("✅ The game has started " + event.getUser().getAsMention() + "!").queue();
 
-                            try {
-                                outputStream.close();
-                            } catch (IOException exception) {
-                                Constants.LOGGER.error("An error occurred while closing the output stream!", exception);
-                            }
-                        });
-                    });
+                        try {
+                            outputStream.close();
+                        } catch (IOException exception) {
+                            Constants.LOGGER.error("An error occurred while closing the output stream!", exception);
+                        }
+                    }));
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while uploading the flag!").queue();
             Constants.LOGGER.error("An error occurred while uploading the flag!", exception);
@@ -175,7 +176,7 @@ public class GuessTheFlagCommand extends SubcommandCommand {
             return;
 
         // add the region to the game
-        if(game.guess(region)) {
+        if (game.guess(region)) {
             FileUpload flag = null;
             try (var outputStream = new ByteArrayOutputStream()) {
                 ImageIO.write(game.getFlag().getLeft(), "png", outputStream);
@@ -188,6 +189,22 @@ public class GuessTheFlagCommand extends SubcommandCommand {
                 event.getChannel().sendMessage("❌ An error occurred while writing the flag!").queue();
                 return;
             }
+
+            FileUpload finalFlag = flag;
+            event.getChannel().sendMessageFormat("✅ Correct guess! The region was %s!", game.getFlag().getRight().getName())
+                    .setFiles(flag)
+                    .queue($ -> {
+                        if (game.isOver()) {
+                            event.getChannel().sendMessage("❌ You have run out of guesses!").queue();
+                            return;
+                        }
+
+                        event.getChannel().sendMessage("🚩 Guess the flag of this region!")
+                                .setFiles(finalFlag)
+                                .queue(message -> message.editMessageComponents(
+                                                ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
+                                        .queue());
+                    });
         } else {
             event.getChannel().sendMessage("❌ Incorrect guess!").queue();
         }

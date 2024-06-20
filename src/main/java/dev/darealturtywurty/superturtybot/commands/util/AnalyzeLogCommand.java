@@ -411,6 +411,7 @@ public class AnalyzeLogCommand extends CoreCommand {
                 }
 
                 possibleErrors.add(new PossibleError("Missing textures in model!", solution.toString()));
+                //noinspection UnnecessaryContinue
                 continue;
             }
         }

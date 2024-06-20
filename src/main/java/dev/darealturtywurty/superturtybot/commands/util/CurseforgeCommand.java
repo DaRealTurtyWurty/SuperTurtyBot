@@ -232,6 +232,7 @@ public class CurseforgeCommand extends CoreCommand {
                     // get a list of the current page's fields
                     List<Mod> currentMods = mods.subList(embed.getPage() * 10, Math.min(mods.size(), (embed.getPage() + 1) * 10));
 
+                    //noinspection DataFlowIssue
                     StringSelectMenu menu = StringSelectMenu.create("curseforge-%d-%d-%d-%d".formatted(
                                     event.isFromGuild() ? event.getGuild().getIdLong() : 0,
                                     event.getChannel().getIdLong(),

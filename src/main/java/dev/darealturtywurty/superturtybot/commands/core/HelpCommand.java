@@ -138,9 +138,9 @@ public class HelpCommand extends CoreCommand {
     }
 
     private static void setAuthor(@NotNull EmbedBuilder embed, boolean fromGuild, @Nullable User author, @Nullable Member member) {
-        if (fromGuild) {
+        if (fromGuild && member != null) {
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
-        } else {
+        } else if (author != null) {
             embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
         }
     }

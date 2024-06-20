@@ -20,13 +20,6 @@ import java.util.Optional;
 public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
     public static final String POST_URL = "https://discord.com/api/webhooks/%s/%s";
 
-    /**
-     * -- SETTER --
-     *  Sets the inner
-     * , used for formatting the message to be sent.
-     *
-     * @param layoutIn The layout
-     */
     @Setter
     private Layout<ILoggingEvent> layout;
     private URI uri;

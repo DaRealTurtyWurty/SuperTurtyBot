@@ -58,7 +58,7 @@ public class FileConversionManager extends ListenerAdapter {
 
         boolean hasSupportedFormat = false;
         for (Message.Attachment attachment : attachments) {
-            // if its not a supported format, skip it
+            // if it's not a supported format, skip it
             String fileExtension = attachment.getFileExtension();
             if (fileExtension == null)
                 continue;

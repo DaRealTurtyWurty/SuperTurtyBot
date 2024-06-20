@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.util.Optional;
 
+@SuppressWarnings("DataFlowIssue") // TODO: Fix instead of suppressing
 public class AmazonUtility {
     private static final String RANDOM_UPC_URL = "https://www.upcdatabase.com/random_item.asp";
     private static final String AMAZON_CATALOG_SEARCH_URL = "https://sellingpartnerapi-na.amazon.com/catalog/2022-04-01/items?keywords=%s&marketplaceIds=EN&pageSize=1";

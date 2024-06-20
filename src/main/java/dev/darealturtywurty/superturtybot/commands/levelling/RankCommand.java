@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("DataFlowIssue") // TODO: Possibly hold the images in memory to avoid reading them every time and that way this is irrelevant
 public class RankCommand extends CoreCommand {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.#");
     private final Font usedFont;
@@ -362,7 +363,7 @@ public class RankCommand extends CoreCommand {
 
             return rankCardBuffer;
         } catch (final IOException | URISyntaxException exception) {
-            Constants.LOGGER.error("Error getting rank card for " + member.getEffectiveName(), exception);
+            Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
         }
 
         return null;

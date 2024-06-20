@@ -263,9 +263,7 @@ public class HigherLowerCommand extends CoreCommand {
                     message.editMessageComponents(actionRow).queue();
                 });
             }
-            default -> {
-                reply(event, "❌ Unknown subcommand!", false, true);
-            }
+            default -> reply(event, "❌ Unknown subcommand!", false, true);
         }
     }
 

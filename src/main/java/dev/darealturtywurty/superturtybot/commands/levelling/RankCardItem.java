@@ -46,7 +46,7 @@ public class RankCardItem implements Registerable {
     private static BufferedImage thumbnail(String name) {
         try(final InputStream stream = TurtyBot.loadResource("levels/thumbnails/" + name + ".png")) {
             if (stream == null) {
-                Constants.LOGGER.warn("Could not find thumbnail for: " + name);
+                Constants.LOGGER.warn("Could not find thumbnail for: {}", name);
                 return null;
             }
 

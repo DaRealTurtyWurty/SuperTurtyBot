@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("DataFlowIssue") // False positive
 public class ReminderCommand extends CoreCommand {
     public ReminderCommand() {
         super(new Types(true, false, false, false));
@@ -155,7 +156,7 @@ public class ReminderCommand extends CoreCommand {
             return;
         }
 
-        Constants.LOGGER.info("Reminder date time: " + dateTime);
+        Constants.LOGGER.info("Reminder date time: {}", dateTime);
         if(dateTime < System.currentTimeMillis()) {
             reply(event, "❌ You cannot set a reminder in the past!", false, true);
             return;
@@ -248,6 +249,7 @@ public class ReminderCommand extends CoreCommand {
         reply(event, "✅ Deleted " + result.getDeletedCount() + " reminders!");
     }
 
+    @SuppressWarnings("MagicConstant")
     public static long parseDateTime(String dateString, String timeString) {
         String[] dateParts = dateString.split("/");
         String[] timeParts = timeString.split(":");

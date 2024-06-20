@@ -423,7 +423,7 @@ public class Connect4Command extends CoreCommand {
                 }
             }
 
-            // Check for 4 in a upward-right diagonal
+            // Check for 4 in an upward-right diagonal
             for (int x = 0; x < 4; x++) {
                 for (int y = 0; y < 4; y++) {
                     if (board[x][y] == symbol && board[x + 1][y + 1] == symbol && board[x + 2][y + 2] == symbol && board[x + 3][y + 3] == symbol) {
@@ -432,7 +432,7 @@ public class Connect4Command extends CoreCommand {
                 }
             }
 
-            // Check for 4 in a downward-right diagonal
+            // Check for 4 in an downward-right diagonal
             for (int x = 0; x < 4; x++) {
                 for (int y = 3; y < 7; y++) {
                     if (board[x][y] == symbol && board[x + 1][y - 1] == symbol && board[x + 2][y - 2] == symbol && board[x + 3][y - 3] == symbol) {
@@ -441,7 +441,7 @@ public class Connect4Command extends CoreCommand {
                 }
             }
 
-            // Check for 4 in a upward-left diagonal
+            // Check for 4 in an upward-left diagonal
             for (int x = 3; x < 7; x++) {
                 for (int y = 0; y < 4; y++) {
                     if (board[x][y] == symbol && board[x - 1][y + 1] == symbol && board[x - 2][y + 2] == symbol && board[x - 3][y + 3] == symbol) {

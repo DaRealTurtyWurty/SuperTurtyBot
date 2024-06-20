@@ -40,6 +40,7 @@ public class TwitterListener {
 
         final var javalin = Javalin.create();
         javalin.get("/webhooks/twitter", ctx -> {
+            //noinspection OptionalGetWithoutIsPresent
             final byte[] hash = new HmacUtils(HmacAlgorithms.HMAC_SHA_256, Environment.INSTANCE.twitterAPIKeySecret().get())
                 .hmac(ctx.queryParam("crc_token"));
             final String response = JSON_RESPONSE.formatted(Base64.getEncoder().encodeToString(hash));

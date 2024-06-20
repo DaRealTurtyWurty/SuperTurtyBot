@@ -118,37 +118,36 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         }
 
         var upload = FileUpload.fromData(baos.toByteArray(), "border.png");
-        event.getHook().editOriginal("Guess the region that has the border shown!").setFiles(upload).queue(message -> {
-            message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
-                if (matchingRegions.isRight()) {
-                    Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
-                            matchingRegions.getRight().getCode());
-                    event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
-                    return;
-                }
+        event.getHook().editOriginal("Guess the region that has the border shown!").setFiles(upload).queue(message ->
+                message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
+                    Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
+                    if (matchingRegions.isRight()) {
+                        Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
+                                matchingRegions.getRight().getCode());
+                        event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
+                        return;
+                    }
 
-                final var game = new Game(region.getValue(), event.getGuild().getIdLong(),
-                        event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
-                        event.getUser().getIdLong(), matchingRegions.getLeft());
-                GAMES.put(message.getIdLong(), game);
+                    final var game = new Game(region.getValue(), event.getGuild().getIdLong(),
+                            event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
+                            event.getUser().getIdLong(), matchingRegions.getLeft());
+                    GAMES.put(message.getIdLong(), game);
 
-                message.editMessageComponents(
-                                ActionRow.of(Button.danger("region-border-" + message.getId(), Emoji.fromFormatted("❌"))))
-                        .queue();
+                    message.editMessageComponents(
+                                    ActionRow.of(Button.danger("region-border-" + message.getId(), Emoji.fromFormatted("❌"))))
+                            .queue();
 
-                thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
+                    thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
 
-                try {
-                    baos.close();
-                    upload.close();
-                } catch (IOException exception) {
-                    Constants.LOGGER.error(
-                            "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
-                            exception);
-                }
-            });
-        });
+                    try {
+                        baos.close();
+                        upload.close();
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error(
+                                "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
+                                exception);
+                    }
+                }));
     }
 
     @Override
@@ -255,7 +254,7 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
                 if (region.getName().equalsIgnoreCase(guess)) {
                     this.guesses.add(region);
 
-                    if(region.equals(this.region))
+                    if (region.equals(this.region))
                         return true;
                 }
 
@@ -263,7 +262,7 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
                 if (aliases.stream().anyMatch(alias -> alias.equalsIgnoreCase(guess))) {
                     this.guesses.add(region);
 
-                    if(region.equals(this.region))
+                    if (region.equals(this.region))
                         return true;
                 }
             }

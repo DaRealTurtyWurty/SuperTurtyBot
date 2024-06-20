@@ -206,6 +206,7 @@ public class CrosswordCommand extends CoreCommand {
         });
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     @Getter
     public static class Game {
         private static final Random RANDOM = new Random();
@@ -243,7 +244,7 @@ public class CrosswordCommand extends CoreCommand {
             if (response.isLeft())
                 return List.copyOf(response.getLeft());
             else
-                Constants.LOGGER.error("Failed to get words for crossword! Status: " + response.getRight());
+                Constants.LOGGER.error("Failed to get words for crossword! Status: {}", response.getRight());
 
             return List.of();
         }
@@ -298,7 +299,7 @@ public class CrosswordCommand extends CoreCommand {
 
         private Pair<Integer, Integer> findValidLocation(String word) {
             for (Map.Entry<String, List<Pair<Integer, Integer>>> entry : wordLocations.entrySet()) {
-
+                // TODO: Implement this
             }
 
             return null;  // No valid intersection found

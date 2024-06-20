@@ -125,6 +125,7 @@ public class GuildConfigRegistry {
                     (config, value) -> config.setStarboardMediaOnly(Boolean.parseBoolean(value))).valueFromConfig(
                     GuildData::isStarboardMediaOnly).build());
 
+    @SuppressWarnings("ConstantValue")
     private static final GuildConfigOption STAR_EMOJI = GUILD_CONFIG_OPTIONS.register("star_emoji",
             new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setStarEmoji)
                     .valueFromConfig(GuildData::getStarEmoji).validator(

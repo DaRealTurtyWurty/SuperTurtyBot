@@ -31,15 +31,6 @@ public class PetPetGifCommand extends CoreCommand {
         super(new Types(true, false, true, true));
     }
 
-    /*@Override
-    public List<OptionData> createOptions() {
-        return List.of(new OptionData(
-                OptionType.STRING,
-                "image",
-                "The image to pet pet gif",
-                true));
-    }*/
-
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;

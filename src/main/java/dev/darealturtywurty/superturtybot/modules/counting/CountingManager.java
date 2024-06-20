@@ -10,6 +10,7 @@ import dev.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
 import dev.darealturtywurty.superturtybot.modules.counting.maths.MathOperation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -43,9 +44,17 @@ public class CountingManager extends ListenerAdapter {
         final TextChannel channel = event.getChannel().asTextChannel();
 
         Guild guild = event.getGuild();
+        Member member = event.getMember();
+        if(member == null)
+            return;
+
         GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
                 .first();
-        if (guildData == null) return;
+        if (guildData == null) {
+            guildData = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(guildData).getInsertedId();
+            return;
+        }
 
         int maxSuccession = guildData.getMaxCountingSuccession();
 
@@ -163,8 +172,7 @@ public class CountingManager extends ListenerAdapter {
             Database.getDatabase().counting.updateOne(filter, updates);
 
             if (data.getCurrentCountSuccession() == maxSuccession) {
-                channel.upsertPermissionOverride(event.getMember())
-                        .setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();
+                channel.upsertPermissionOverride(member).setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();
             }
 
             return;

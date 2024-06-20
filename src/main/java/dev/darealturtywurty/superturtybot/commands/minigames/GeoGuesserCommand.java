@@ -72,21 +72,20 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
         byte[] bytes = baos.toByteArray();
         FileUpload upload = FileUpload.fromData(bytes, "geoguesser.png");
-        event.getHook().editOriginal("🌎 **Where is this?**").setFiles(upload).queue(message -> {
-            message.createThreadChannel(event.getUser().getName() + "'s Geo Guesser Game").queue(thread -> {
-                thread.addThreadMember(event.getUser()).queue();
-                var game = new Game(
-                        guild.getIdLong(),
-                        event.getChannel().getIdLong(),
-                        thread.getIdLong(),
-                        message.getIdLong(),
-                        event.getUser().getIdLong(),
-                        geoguesser);
+        event.getHook().editOriginal("🌎 **Where is this?**").setFiles(upload).queue(message ->
+                message.createThreadChannel(event.getUser().getName() + "'s Geo Guesser Game").queue(thread -> {
+                    thread.addThreadMember(event.getUser()).queue();
+                    var game = new Game(
+                            guild.getIdLong(),
+                            event.getChannel().getIdLong(),
+                            thread.getIdLong(),
+                            message.getIdLong(),
+                            event.getUser().getIdLong(),
+                            geoguesser);
 
-                GAMES.add(game);
-                createEventWaiter(game, thread).build();
-            });
-        });
+                    GAMES.add(game);
+                    createEventWaiter(game, thread).build();
+                }));
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Game game, ThreadChannel thread) {
@@ -125,7 +124,7 @@ public class GeoGuesserCommand extends SubcommandCommand {
                         } else {
                             thread.sendMessage("❌ **You have " + (10 - game.getGuesses().size()) + " guesses left!**").queue();
 
-                            // we need to listen for another message so we need to create a new event waiter
+                            // we need to listen for another message, so we need to create a new event waiter
                             createEventWaiter(game, thread).build();
                         }
                     }
@@ -152,7 +151,7 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
             Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(EXCLUDE_REQUEST_DATA);
             if (matchingRegions.isRight()) {
-                Constants.LOGGER.error("Error while getting all regions! Response Code: " + matchingRegions.getRight());
+                Constants.LOGGER.error("Error while getting all regions! Response Code: {}", matchingRegions.getRight());
                 return;
             }
 

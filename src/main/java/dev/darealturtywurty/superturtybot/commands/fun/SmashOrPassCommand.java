@@ -104,6 +104,7 @@ public class SmashOrPassCommand extends CoreCommand {
                     .setFiles(upload);
 
             if (event.isFromGuild()) {
+                //noinspection DataFlowIssue
                 GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
                 if (data == null) {
                     data = new GuildData(event.getGuild().getIdLong());
@@ -134,6 +135,7 @@ public class SmashOrPassCommand extends CoreCommand {
 
         event.deferEdit().queue();
 
+        //noinspection DataFlowIssue
         Instance instance = INSTANCES.stream().filter(inst -> inst.messageId == event.getMessageIdLong() &&
                         inst.channelId == event.getChannel().getIdLong() &&
                         inst.guildId == event.getGuild().getIdLong())

@@ -104,6 +104,7 @@ public class GuessSongCommand extends SubcommandCommand {
                     voiceChannel, PLAYLIST);
 
             future.thenAcceptAsync(result -> result.forEach(track -> {
+                // TODO: Fix null pointer exception
                 GUESS_THE_SONG_TRACKS.put(guild.getIdLong(),
                         Tuples.of(threadRef.get().getIdLong(), result.isLeft() ? result.getLeft() : null, 0));
                 threadRef.get().deleteMessageById(id).queue();
@@ -113,6 +114,7 @@ public class GuessSongCommand extends SubcommandCommand {
         });
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || !event.isFromGuild()) return;

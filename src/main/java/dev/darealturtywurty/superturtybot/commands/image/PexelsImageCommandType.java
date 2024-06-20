@@ -49,6 +49,11 @@ public class PexelsImageCommandType extends ImageCommandType {
     }
     
     public static CompletableFuture<List<JsonObject>> getPhotos(String search, int maxPages) {
+        if(Environment.INSTANCE.pexelsKey().isEmpty()) {
+            Constants.LOGGER.warn("Pexels API key has not been set!");
+            return CompletableFuture.completedFuture(null);
+        }
+
         final var future = new CompletableFuture<List<JsonObject>>();
         try {
             final List<JsonObject> results = new ArrayList<>();
@@ -88,7 +93,7 @@ public class PexelsImageCommandType extends ImageCommandType {
             future.complete(results);
             return future;
         } catch (final IOException | URISyntaxException exception) {
-            Constants.LOGGER.error("Error getting photos for " + search, exception);
+            Constants.LOGGER.error("Error getting photos for {}", search, exception);
             future.complete(null);
             return future;
         }

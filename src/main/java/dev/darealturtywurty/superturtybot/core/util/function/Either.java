@@ -140,7 +140,7 @@ public final class Either<L, R> {
      * @return value of type L for the left, if the left side of this Either is defined
      */
     public L getLeft() throws NoSuchElementException {
-        return this.left.get();
+        return this.left.orElseThrow();
     }
 
     /**
@@ -150,7 +150,7 @@ public final class Either<L, R> {
      * @return value of type R for the left, if the right side of this Either is defined
      */
     public R getRight() throws NoSuchElementException {
-        return this.right.get();
+        return this.right.orElseThrow();
     }
 
     /**

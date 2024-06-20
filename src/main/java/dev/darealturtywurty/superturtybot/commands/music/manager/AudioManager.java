@@ -8,7 +8,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -25,6 +24,10 @@ import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.AndroidWithThumbnail;
+import dev.lavalink.youtube.clients.MusicWithThumbnail;
+import dev.lavalink.youtube.clients.WebWithThumbnail;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -70,10 +73,11 @@ public final class AudioManager {
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
 
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
-        final var ytSource = new YoutubeAudioSourceManager(true, null, null);
+        final var ytSource = new YoutubeAudioSourceManager(true, new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail());
         ytSource.setPlaylistPageCount(100);
         AUDIO_MANAGER.registerSourceManager(ytSource);
-        AudioSourceManagers.registerRemoteSources(AUDIO_MANAGER);
+        //noinspection deprecation
+        AudioSourceManagers.registerRemoteSources(AUDIO_MANAGER, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
 
         ShutdownHooks.register(() -> {
             AUDIO_MANAGER.shutdown();

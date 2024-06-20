@@ -919,7 +919,7 @@ public class ConvertCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if(!event.getName().equals(getName()) || event.getSubcommandName() == null)
+        if (!event.getName().equals(getName()) || event.getSubcommandName() == null)
             return;
 
         String subcommand = event.getSubcommandName();
@@ -956,9 +956,9 @@ public class ConvertCommand extends CoreCommand {
                     .filter(u -> u.contains(typed))
                     .filter(u -> !u.equals(to))
                     .sorted((a, b) -> {
-                        if(a.startsWith(typed) && !b.startsWith(typed))
+                        if (a.startsWith(typed) && !b.startsWith(typed))
                             return -1;
-                        if(!a.startsWith(typed) && b.startsWith(typed))
+                        if (!a.startsWith(typed) && b.startsWith(typed))
                             return 1;
                         return a.compareTo(b);
                     })
@@ -979,9 +979,9 @@ public class ConvertCommand extends CoreCommand {
                     .filter(u -> u.contains(typed))
                     .filter(u -> !u.equals(from))
                     .sorted((a, b) -> {
-                        if(a.startsWith(typed) && !b.startsWith(typed))
+                        if (a.startsWith(typed) && !b.startsWith(typed))
                             return -1;
-                        if(!a.startsWith(typed) && b.startsWith(typed))
+                        if (!a.startsWith(typed) && b.startsWith(typed))
                             return 1;
                         return a.compareTo(b);
                     })
@@ -1000,9 +1000,9 @@ public class ConvertCommand extends CoreCommand {
                 .map(u -> u.name)
                 .filter(u -> u.contains(typed))
                 .sorted((a, b) -> {
-                    if(a.startsWith(typed) && !b.startsWith(typed))
+                    if (a.startsWith(typed) && !b.startsWith(typed))
                         return -1;
-                    if(!a.startsWith(typed) && b.startsWith(typed))
+                    if (!a.startsWith(typed) && b.startsWith(typed))
                         return 1;
                     return a.compareTo(b);
                 })
@@ -1048,97 +1048,97 @@ public class ConvertCommand extends CoreCommand {
     }
 
     private static void handleSubcommandNoGroup(SlashCommandInteractionEvent event, String subcommand) {
-        if (subcommand.equals("list")) {
-            var embed = new EmbedBuilder()
-                    .setTitle("Units")
-                    .setColor(Color.GREEN)
-                    .setTimestamp(Instant.now())
-                    .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+        switch (subcommand) {
+            case "list" -> {
+                var embed = new EmbedBuilder()
+                        .setTitle("Units")
+                        .setColor(Color.GREEN)
+                        .setTimestamp(Instant.now())
+                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
-            for (Measurement measurement : UNITS.keySet()) {
-                StringBuilder builder = new StringBuilder();
-                for (Unit unit : UNITS.get(measurement)) {
-                    builder.append(unit.richName).append(" (").append(unit.symbol).append(")\n");
+                for (Measurement measurement : UNITS.keySet()) {
+                    StringBuilder builder = new StringBuilder();
+                    for (Unit unit : UNITS.get(measurement)) {
+                        builder.append(unit.richName).append(" (").append(unit.symbol).append(")\n");
+                    }
+
+                    embed.addField(measurement.richName(), builder.toString(), true);
                 }
 
-                embed.addField(measurement.richName(), builder.toString(), true);
-            }
-
-            reply(event, embed, false);
-            return;
-        }
-
-        if (subcommand.equals("info")) {
-            String unitStr = event.getOption("unit", null, OptionMapping::getAsString);
-            if (unitStr == null) {
-                reply(event, "❌ Please specify a unit!", true);
+                reply(event, embed, false);
                 return;
             }
+            case "info" -> {
+                String unitStr = event.getOption("unit", null, OptionMapping::getAsString);
+                if (unitStr == null) {
+                    reply(event, "❌ Please specify a unit!", true);
+                    return;
+                }
 
-            Unit unit = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(unitStr)).findFirst().orElse(null);
-            if (unit == null) {
-                reply(event, "❌ Please specify a valid unit!", true);
+                Unit unit = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(unitStr)).findFirst().orElse(null);
+                if (unit == null) {
+                    reply(event, "❌ Please specify a valid unit!", true);
+                    return;
+                }
+
+                reply(event, "**" + unit.richName + "** (" + unit.symbol + ")\n\n" +
+                        "Name: " + unit.name + "\n" +
+                        "Symbol: " + unit.symbol, false);
                 return;
             }
+            case "all" -> {
+                String fromStr = event.getOption("from", null, OptionMapping::getAsString);
+                double value = event.getOption("value", null, OptionMapping::getAsDouble);
 
-            reply(event, "**" + unit.richName + "** (" + unit.symbol + ")\n\n" +
-                    "Name: " + unit.name + "\n" +
-                    "Symbol: " + unit.symbol, false);
-            return;
-        }
+                if (fromStr == null) {
+                    reply(event, "❌ Please specify the unit!", true);
+                    return;
+                }
 
-        if (subcommand.equals("all")) {
-            String fromStr = event.getOption("from", null, OptionMapping::getAsString);
-            double value = event.getOption("value", null, OptionMapping::getAsDouble);
+                Unit from = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(fromStr)).findFirst().orElse(null);
 
-            if (fromStr == null) {
-                reply(event, "❌ Please specify the unit!", true);
-                return;
-            }
+                if (from == null) {
+                    reply(event, "❌ Please specify a valid unit!", true);
+                    return;
+                }
 
-            Unit from = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(fromStr)).findFirst().orElse(null);
-
-            if (from == null) {
-                reply(event, "❌ Please specify a valid unit!", true);
-                return;
-            }
-
-            Measurement measurement;
-            if (from instanceof BaseUnit) {
-                measurement = UNITS.keySet().stream().filter(m -> m.baseUnit.equals(from)).findFirst().orElse(null);
-            } else {
-                measurement = UNITS.keySet().stream().filter(m -> UNITS.get(m).contains(from)).findFirst().orElse(null);
-            }
-
-            if(measurement == null) {
-                reply(event, "❌ You must supply a valid measurement unit!", true);
-                return;
-            }
-
-            double base = from.toBase(measurement, value);
-
-            var embed = new EmbedBuilder()
-                    .setTitle(value + " " + from.richName + " (" + from.symbol + ") converted to all other " + measurement.richName())
-                    .setColor(Color.GREEN)
-                    .setTimestamp(Instant.now())
-                    .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
-
-            for (Unit unit : UNITS.get(measurement).stream().filter(u -> !u.equals(from)).toList()) {
-                double converted = unit.fromBase(base);
-
-                double rounded = roundToNDecimalPlaces(converted, 3);
-                String formatted;
-                if (rounded == (long) rounded) {
-                    formatted = String.format("%d", (long) rounded) + unit.symbol;
+                Measurement measurement;
+                if (from instanceof BaseUnit) {
+                    measurement = UNITS.keySet().stream().filter(m -> m.baseUnit.equals(from)).findFirst().orElse(null);
                 } else {
-                    formatted = rounded + unit.symbol;
+                    measurement = UNITS.keySet().stream().filter(m -> UNITS.get(m).contains(from)).findFirst().orElse(null);
                 }
 
-                embed.addField(unit.richName, formatted, true);
-            }
+                if (measurement == null) {
+                    reply(event, "❌ You must supply a valid measurement unit!", true);
+                    return;
+                }
 
-            reply(event, embed, false);
-            return;
+                double base = from.toBase(measurement, value);
+
+                var embed = new EmbedBuilder()
+                        .setTitle(value + " " + from.richName + " (" + from.symbol + ") converted to all other " + measurement.richName())
+                        .setColor(Color.GREEN)
+                        .setTimestamp(Instant.now())
+                        .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+
+                for (Unit unit : UNITS.get(measurement).stream().filter(u -> !u.equals(from)).toList()) {
+                    double converted = unit.fromBase(base);
+
+                    double rounded = roundToNDecimalPlaces(converted, 3);
+                    String formatted;
+                    if (rounded == (long) rounded) {
+                        formatted = String.format("%d", (long) rounded) + unit.symbol;
+                    } else {
+                        formatted = rounded + unit.symbol;
+                    }
+
+                    embed.addField(unit.richName, formatted, true);
+                }
+
+                reply(event, embed, false);
+                return;
+            }
         }
 
         Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst().orElse(null);

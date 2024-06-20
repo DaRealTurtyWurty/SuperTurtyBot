@@ -318,7 +318,7 @@ public class TicTacToeCommand extends CoreCommand {
                         "tictactoe-%d-%d".formatted(column, row),
                         "%d".formatted(1 + index++));
 
-                // disable the button if it has already been used or it is the bot's turn
+                // disable the button if it has already been used, or it is the bot's turn
                 if (!game.isEmpty(column, row) || (game.isBot() && game.isTurn(game.getOpponentId())))
                     button = button.asDisabled();
 

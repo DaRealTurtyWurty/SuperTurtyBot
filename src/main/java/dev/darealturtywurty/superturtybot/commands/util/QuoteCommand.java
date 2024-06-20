@@ -157,8 +157,6 @@ public class QuoteCommand extends CoreCommand {
                     Database.getDatabase().quotes.insertOne(quote);
                     event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
                 });
-
-                return;
             }
 
             case "remove" -> {
@@ -191,7 +189,6 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 reply(event, "✅ Quote #" + number + " removed!");
-                return;
             }
 
             case "list" -> {

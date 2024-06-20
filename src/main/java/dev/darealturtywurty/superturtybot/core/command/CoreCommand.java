@@ -220,24 +220,31 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     protected void runGuildMessage(MessageReceivedEvent event) {
+        // NO-OP
     }
 
     protected void runMessageCtx(MessageContextInteractionEvent event) {
+        // NO-OP
     }
 
     protected void runNormalMessage(MessageReceivedEvent event) {
+        // NO-OP
     }
 
     protected void runPrivateMessage(MessageReceivedEvent event) {
+        // NO-OP
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
+        // NO-OP
     }
 
     protected void runThreadMessage(MessageReceivedEvent event) {
+        // NO-OP
     }
 
     protected void runUserCtx(UserContextInteractionEvent event) {
+        // NO-OP
     }
 
     private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {

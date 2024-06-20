@@ -219,6 +219,13 @@ public class CheckersCommand extends CoreCommand {
 
     private static FileUpload createFileUpload(CheckersCommand.Game game, ThreadChannel channel) {
         BufferedImage image = createImage(channel.getJDA(), game);
+        if (image == null) {
+            channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
+                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+            GAMES.remove(game);
+            return null;
+        }
+
         var baos = new ByteArrayOutputStream();
         try {
             ImageIO.write(image, "png", baos);
@@ -428,6 +435,7 @@ public class CheckersCommand extends CoreCommand {
                 event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     @Getter
     public static class Game {
         private final long guildId, channelId, userId, opponentId;

@@ -67,7 +67,7 @@ public class CrashCommand extends EconomyCommand {
         }
 
         final List<Game> games = GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
-        if(!games.isEmpty() && games.stream().anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
+        if (!games.isEmpty() && games.stream().anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
             event.getHook().editOriginal("❌ You are already in a game of Crash!").queue();
             return;
         }
@@ -75,31 +75,30 @@ public class CrashCommand extends EconomyCommand {
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
-        event.getHook().editOriginal("✅ You have bet %s%s!".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(message -> {
-            message.createThreadChannel(event.getUser().getName() + "'s Crash Game").queue(thread -> {
-                thread.addThreadMember(event.getUser()).queue();
-                thread.sendMessage(("""
-                        You have bet %s%s! The multiplier has started at 1.0x!
+        event.getHook().editOriginal("✅ You have bet %s%s!".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).flatMap(message ->
+                message.createThreadChannel(event.getUser().getName() + "'s Crash Game")).queue(thread -> {
+            thread.addThreadMember(event.getUser()).queue();
+            thread.sendMessage(("""
+                    You have bet %s%s! The multiplier has started at 1.0x!
 
-                        It will increase by a random amount every 5 seconds, however, it will crash at a random point between 1.0x and 10.0x!
-                        
-                        You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
-                    var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
-                    games.add(game);
+                    It will increase by a random amount every 5 seconds, however, it will crash at a random point between 1.0x and 10.0x!
 
-                    TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                            .condition(msgEvent -> msgEvent.isFromGuild()
-                                    && msgEvent.getGuild().getIdLong() == guild.getIdLong()
-                                    && msgEvent.getChannel().getIdLong() == thread.getIdLong()
-                                    && msgEvent.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                    && msgEvent.getMessage().getContentRaw().equalsIgnoreCase("cashout"))
-                            .success(msgEvent -> game.cashout(event.getJDA(), config, account))
-                            .failure(() -> game.close(thread))
-                            .timeout(10, TimeUnit.MINUTES)
-                            .build();
+                    You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
+                var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
+                games.add(game);
 
-                    game.start(event.getJDA(), config, account);
-                });
+                TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                        .condition(msgEvent -> msgEvent.isFromGuild()
+                                && msgEvent.getGuild().getIdLong() == guild.getIdLong()
+                                && msgEvent.getChannel().getIdLong() == thread.getIdLong()
+                                && msgEvent.getAuthor().getIdLong() == event.getUser().getIdLong()
+                                && msgEvent.getMessage().getContentRaw().equalsIgnoreCase("cashout"))
+                        .success(msgEvent -> game.cashout(event.getJDA(), config, account))
+                        .failure(() -> game.close(thread))
+                        .timeout(10, TimeUnit.MINUTES)
+                        .build();
+
+                game.start(event.getJDA(), config, account);
             });
         });
     }
@@ -126,7 +125,7 @@ public class CrashCommand extends EconomyCommand {
         }
 
         public void start(final JDA jda, final GuildData config, final Economy account) {
-            if(this.future != null) {
+            if (this.future != null) {
                 this.future.cancel(true);
             }
 
@@ -151,7 +150,7 @@ public class CrashCommand extends EconomyCommand {
             if (crashed) {
                 thread.sendMessage("The multiplier has crashed at %s! You have lost %s%s!"
                         .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount))).queue(
-                                ignored -> close(thread));
+                        ignored -> close(thread));
                 EconomyManager.betLoss(account, this.amount);
                 EconomyManager.updateAccount(account);
 
@@ -183,13 +182,13 @@ public class CrashCommand extends EconomyCommand {
             }
 
             int amount = (int) (this.amount * MathUtils.clamp(multiplier, 1.0, 10.0));
-            if(multiplier >= 10) {
+            if (multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
+                                .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
                         .queue(ignored -> close(thread));
             } else {
                 thread.sendMessage("You have cashed out at %s! You have won %s%s!"
-                        .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
+                                .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
                         .queue(ignored -> close(thread));
             }
 
@@ -200,7 +199,7 @@ public class CrashCommand extends EconomyCommand {
 
         private void close(@Nullable ThreadChannel thread) {
             this.future.cancel(true);
-            if(thread != null) {
+            if (thread != null) {
                 thread.getManager().setArchived(true).setLocked(true).queue();
             }
 

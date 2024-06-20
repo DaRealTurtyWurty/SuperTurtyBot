@@ -21,10 +21,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// Thanks maty
+// Thanks matyrobbrt
 public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
     /**
-     * The emote used when the given {@link Level} does not a corresponding emote in {@link #LEVEL_TO_EMOTE}.
+     * The emote used when the given {@link Level} does not correspond to an emote in {@link #LEVEL_TO_EMOTE}.
      */
     private static final String UNKNOWN_EMOTE = ":radio_button:";
 

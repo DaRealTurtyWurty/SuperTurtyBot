@@ -168,7 +168,7 @@ public class GuildData {
         this.economyEnabled = true;
         this.defaultEconomyBalance = 200;
         this.incomeTax = 0.1F;
-        this.endOfDayIncomeTax = new HashMap<String, Integer>();
+        this.endOfDayIncomeTax = new HashMap<>();
 
         // Logging
         this.loggingChannel = 0L;

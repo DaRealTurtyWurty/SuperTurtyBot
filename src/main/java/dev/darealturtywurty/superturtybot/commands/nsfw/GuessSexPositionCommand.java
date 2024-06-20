@@ -136,34 +136,33 @@ public class GuessSexPositionCommand extends CoreCommand {
         var upload = FileUpload.fromData(boas.toByteArray(), "sex_position.jpg");
         event.deferReply().setContent("Reveal tiles one-by-one and guess the sex position when you are ready 😜!")
                 .setFiles(upload).setComponents().queue(hook -> {
-                    hook.retrieveOriginal().queue(message -> {
-                        message.reply("Which tile do you want to reveal?").queue(msg -> {
-                            GAMES.add(new SexPositionGame(position, url, event.getGuild().getIdLong(),
-                                    event.getChannel().getIdLong(), message.getIdLong(), msg.getIdLong(),
-                                    event.getUser().getIdLong()));
+                    hook.retrieveOriginal().queue(message ->
+                            message.reply("Which tile do you want to reveal?").queue(msg -> {
+                                GAMES.add(new SexPositionGame(position, url, guild == null ? 0 : guild.getIdLong(),
+                                        event.getChannel().getIdLong(), message.getIdLong(), msg.getIdLong(),
+                                        event.getUser().getIdLong()));
 
-                            var tileSelectMenu = StringSelectMenu.create(
-                                    "position_tile-" + message.getId() + "-" + msg.getId() + "-" + event.getUser().getId());
-                            tileSelectMenu.setPlaceholder("Select a tile to reveal");
-                            tileSelectMenu.setRequiredRange(1, 1);
-                            TILE_MAP.forEach(
-                                    (pair, name) -> tileSelectMenu.addOption(name, pair.getLeft() + "-" + pair.getRight()));
+                                var tileSelectMenu = StringSelectMenu.create(
+                                        "position_tile-" + message.getId() + "-" + msg.getId() + "-" + event.getUser().getId());
+                                tileSelectMenu.setPlaceholder("Select a tile to reveal");
+                                tileSelectMenu.setRequiredRange(1, 1);
+                                TILE_MAP.forEach(
+                                        (pair, name) -> tileSelectMenu.addOption(name, pair.getLeft() + "-" + pair.getRight()));
 
-                            msg.editMessageComponents(ActionRow.of(tileSelectMenu.build())).queue();
+                                msg.editMessageComponents(ActionRow.of(tileSelectMenu.build())).queue();
 
-                            var positionSelectMenu = StringSelectMenu.create(
-                                    "position_select_menu-" + message.getId() + "-" + msg.getId() + "-" + event.getUser()
-                                            .getId());
-                            positionSelectMenu.setPlaceholder("Guess which sex position");
-                            positionSelectMenu.setRequiredRange(1, 1);
-                            for (SexPosition sexPosition : SexPosition.values()) {
-                                positionSelectMenu.addOption(sexPosition.getName(),
-                                        sexPosition.name().toLowerCase(Locale.ROOT));
-                            }
+                                var positionSelectMenu = StringSelectMenu.create(
+                                        "position_select_menu-" + message.getId() + "-" + msg.getId() + "-" + event.getUser()
+                                                .getId());
+                                positionSelectMenu.setPlaceholder("Guess which sex position");
+                                positionSelectMenu.setRequiredRange(1, 1);
+                                for (SexPosition sexPosition : SexPosition.values()) {
+                                    positionSelectMenu.addOption(sexPosition.getName(),
+                                            sexPosition.name().toLowerCase(Locale.ROOT));
+                                }
 
-                            message.editMessageComponents(ActionRow.of(positionSelectMenu.build())).queue();
-                        });
-                    });
+                                message.editMessageComponents(ActionRow.of(positionSelectMenu.build())).queue();
+                            }));
 
                     try {
                         upload.close();
@@ -284,7 +283,7 @@ public class GuessSexPositionCommand extends CoreCommand {
                 event.reply(
                         "❌ " + sexPosition.getName() + " was not the right position! The correct position was " + game.getPosition()
                                 .getName() + "!").queue();
-            } else if(LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
+            } else if (LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
                 int xpEarned = ThreadLocalRandom.current()
                         .nextInt((9 - game.getRevealedCount()) * 5, (9 - game.getRevealedCount()) * 20);
                 event.reply("✅ You were correct! The correct position was " + game.getPosition()
@@ -352,19 +351,19 @@ public class GuessSexPositionCommand extends CoreCommand {
 
     @Getter
     public enum SexPosition {
-        SIXTYNINE("69", "http://mysexpics.com/69/"), MISSIONARY("Missionary",
-                "http://www.mysexpics.com/missionary/"), DOGGY_STYLE("Doggy Style",
-                "http://mysexpics.com/doggystyle/"), ANAL("Anal", "http://mysexpics.com/anal/",
-                "http://mysexpics.com/painful-anal/", "http://mysexpics.com/lesbian-anal/",
-                "http://mysexpics.com/big-ass-anal/"), BLOWJOB("Blowjob", "http://mysexpics.com/blowjob/"), STANDING(
-                "Standing", "http://mysexpics.com/standing/"), COWGIRL("Cowgirl",
-                "http://mysexpics.com/cowgirl/"), MASTURBATION("Masturbation",
-                "http://mysexpics.com/masturbation/"), ORGY("Orgy", "http://mysexpics.com/gangbang/",
-                "http://mysexpics.com/orgy/", "http://mysexpics.com/group-sex/"), FISTING("Fisting",
-                "http://mysexpics.com/fisting/"), HANDJOB("Handjob",
-                "http://mysexpics.com/handjob/"), DOUBLE_PENETRATION("Double Penetration",
-                "http://mysexpics.com/double-penetration/"), PUSSY_LICKING("Pussy Licking",
-                "http://mysexpics.com/pussy-licking/");
+        SIXTYNINE("69", "https://mysexpics.com/69/"), MISSIONARY("Missionary",
+                "https://www.mysexpics.com/missionary/"), DOGGY_STYLE("Doggy Style",
+                "https://mysexpics.com/doggystyle/"), ANAL("Anal", "https://mysexpics.com/anal/",
+                "https://mysexpics.com/painful-anal/", "https://mysexpics.com/lesbian-anal/",
+                "https://mysexpics.com/big-ass-anal/"), BLOWJOB("Blowjob", "https://mysexpics.com/blowjob/"), STANDING(
+                "Standing", "https://mysexpics.com/standing/"), COWGIRL("Cowgirl",
+                "https://mysexpics.com/cowgirl/"), MASTURBATION("Masturbation",
+                "https://mysexpics.com/masturbation/"), ORGY("Orgy", "https://mysexpics.com/gangbang/",
+                "https://mysexpics.com/orgy/", "https://mysexpics.com/group-sex/"), FISTING("Fisting",
+                "https://mysexpics.com/fisting/"), HANDJOB("Handjob",
+                "https://mysexpics.com/handjob/"), DOUBLE_PENETRATION("Double Penetration",
+                "https://mysexpics.com/double-penetration/"), PUSSY_LICKING("Pussy Licking",
+                "https://mysexpics.com/pussy-licking/");
 
 
         private final String name;

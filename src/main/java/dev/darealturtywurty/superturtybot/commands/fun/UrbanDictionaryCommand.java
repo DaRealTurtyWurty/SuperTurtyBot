@@ -91,6 +91,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
 
     private static Pair<Boolean, Either<String, EmbedBuilder>> makeRequest(String searchTerm) {
         try {
+            //noinspection OptionalGetWithoutIsPresent
             final Request request = new Request.Builder()
                 .url("https://mashape-community-urban-dictionary.p.rapidapi.com/define?term=" + searchTerm).get()
                 .addHeader("X-RapidAPI-Host", "mashape-community-urban-dictionary.p.rapidapi.com")
