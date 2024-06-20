@@ -3,7 +3,6 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -14,14 +13,12 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-// TODO: Make this command only store the love for a certain amount of time and then it will be recalculated.
 public class LoveCommand extends CoreCommand {
-    private static final Map<Pair<Long, Long>, Float> USER_LOVE_MAP = new HashMap<>();
+    private static final List<LoveData> USER_LOVE_CACHE = new ArrayList<>();
 
     public LoveCommand() {
         super(new Types(true, false, false, true));
@@ -80,19 +77,18 @@ public class LoveCommand extends CoreCommand {
             return 100;
 
         // check if the love has already been calculated
-        love = USER_LOVE_MAP.entrySet().stream()
-                .filter(entry -> (entry.getKey().getLeft() == user1 && entry.getKey().getRight() == user2)
-                        || (entry.getKey().getLeft() == user2 && entry.getKey().getRight() == user1))
-                .map(Map.Entry::getValue)
+        LoveData data = USER_LOVE_CACHE.stream()
+                .filter(d -> (d.user1() == user1 && d.user2() == user2) || (d.user1() == user2 && d.user2() == user1))
                 .findFirst()
-                .orElse(-1f);
+                .orElse(null);
 
-        if (love == -1f) {
+        if(data == null || System.currentTimeMillis() - data.timeCalculated() > TimeUnit.DAYS.toMillis(1)) {
             love = (float) (Math.random() * 100);
-            USER_LOVE_MAP.put(Pair.of(user1, user2), love);
+            USER_LOVE_CACHE.add(new LoveData(user1, user2, love, System.currentTimeMillis()));
+            return love;
         }
 
-        return love;
+        return data.love();
     }
 
     public static String makeProgressBar(int max, float current, int length, String filled, String empty) {
@@ -134,4 +130,6 @@ public class LoveCommand extends CoreCommand {
         // Create and return the Color object
         return new Color(red, green, blue);
     }
+
+    public record LoveData(long user1, long user2, float love, long timeCalculated) {}
 }
