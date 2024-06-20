@@ -5,7 +5,6 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.commands.fun.WouldYouRatherCommand;
 import dev.darealturtywurty.superturtybot.commands.util.TopicCommand;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
-import dev.darealturtywurty.superturtybot.core.api.pojo.WouldYouRather;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.ChatReviver;
