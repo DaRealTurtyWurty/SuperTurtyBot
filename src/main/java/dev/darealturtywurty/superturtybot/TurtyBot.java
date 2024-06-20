@@ -11,6 +11,7 @@ import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
+import lombok.Getter;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
@@ -35,6 +36,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +44,11 @@ import java.util.logging.Logger;
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
+
+    @Getter
+    private static long lastStartTime = 0L;
+    @Getter
+    private static Path lastStartTimePath;
 
     public static void main(String[] args) throws InvalidTokenException {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
@@ -57,9 +64,26 @@ public class TurtyBot {
                 .setDefault(Path.of("./.env"))
                 .help("The path to the environment file.");
 
+        parser.addArgument("-startTime", "--startTime")
+                .type(new PathArgumentType().verifyIsFile().verifyCanRead().verifyCanWrite())
+                .setDefault(Path.of("./lastStartTime.txt"))
+                .help("The path to the file that stores the last start time.");
+
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
         Constants.LOGGER.info("Loaded environment file!");
+
+        Path lastStartTimePath = namespace.get("startTime");
+        if (Files.exists(lastStartTimePath)) {
+            TurtyBot.lastStartTimePath = lastStartTimePath;
+
+            try {
+                lastStartTime = Long.parseLong(Files.readString(lastStartTimePath).trim());
+            } catch (IOException exception) {
+                Constants.LOGGER.error("Failed to read the last start time!", exception);
+                lastStartTime = 0L;
+            }
+        }
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
 
