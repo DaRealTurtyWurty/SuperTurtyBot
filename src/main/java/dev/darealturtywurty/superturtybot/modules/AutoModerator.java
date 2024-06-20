@@ -76,7 +76,7 @@ public class AutoModerator extends ListenerAdapter {
     private void scamDetection(Message message) {
         final String content = message.getContentRaw();
         for (final String domain : SCAM_DOMAINS) {
-            if (content.contains(domain)) {
+            if (content.contains(domain) && (!content.contains("." + domain) && !content.contains("/" + domain))) {
                 message.delete().flatMap(success ->
                         message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
                                 "If this was not you, then your account has been compromised. " +
