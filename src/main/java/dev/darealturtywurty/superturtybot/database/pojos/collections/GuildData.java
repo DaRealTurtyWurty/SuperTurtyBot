@@ -120,6 +120,7 @@ public class GuildData {
     private boolean warningsModeratorOnly;
     private long patronRole;
     private boolean shouldSendStartupMessage;
+    private boolean shouldSendChangelog;
     private float warningXpPercentage;
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
@@ -210,6 +211,7 @@ public class GuildData {
         this.warningsModeratorOnly = false;
         this.patronRole = 0L;
         this.shouldSendStartupMessage = true;
+        this.shouldSendChangelog = true;
         this.chatRevivalEnabled = false;
         this.chatRevivalTime = 24;
         this.chatRevivalChannel = 0L;
