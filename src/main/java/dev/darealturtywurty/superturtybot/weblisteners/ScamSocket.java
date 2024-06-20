@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.AutoModerator;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -14,20 +13,23 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ScamSocket extends WebSocketListener {
     private static final WebSocket SOCKET = Constants.HTTP_CLIENT.newWebSocket(
-        new Request.Builder().url("wss://phish.sinking.yachts/feed").addHeader("X-Identity", "TurtyBot#8108").build(),
-        new ScamSocket());
-    
+            new Request.Builder()
+                    .url("wss://phish.sinking.yachts/feed")
+                    .addHeader("X-Identity", "TurtyBot#8108")
+                    .build(),
+            new ScamSocket());
+
     private ScamSocket() {
         ShutdownHooks.register(() -> SOCKET.close(1001, "Bot shutting down"));
     }
-    
+
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         final JsonObject response = Constants.GSON.fromJson(text, JsonObject.class);
         final String type = response.has("type") ? response.get("type").getAsString() : "none";
         if ("none".equals(type))
             return;
-        
+
         final JsonArray domains = response.has("domains") ? response.getAsJsonArray("domains") : new JsonArray();
         for (final JsonElement elem : domains) {
             final String domain = elem.getAsString();

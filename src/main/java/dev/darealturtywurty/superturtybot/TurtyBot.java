@@ -69,7 +69,7 @@ public class TurtyBot {
             throw new InvalidTokenException();
         });
 
-        loadRegisterers();
+        loadRegistrars();
         Constants.LOGGER.info("Loaded registries!");
     }
 
@@ -153,7 +153,7 @@ public class TurtyBot {
         builder.addEventListeners(EVENT_WAITER);
     }
 
-    private static void loadRegisterers() {
+    private static void loadRegistrars() {
         final var reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(""))
                 .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
                 .filterInputsBy(new FilterBuilder().includePackage("io")));

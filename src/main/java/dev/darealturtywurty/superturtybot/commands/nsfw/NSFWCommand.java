@@ -170,16 +170,16 @@ public class NSFWCommand extends CoreCommand {
         if(channel.getType() == ChannelType.UNKNOWN)
             return false;
 
-        // if its a private channel
+        // if it's a private channel
         // TODO: Add a check for if the user is 18+ (and utilise the user config too)
         if(channel.getType() == ChannelType.PRIVATE)
             return true;
 
-        // if its a text channel and is nsfw
+        // if it's a text channel and is nsfw
         if (channel.getType() == ChannelType.TEXT && channel.asTextChannel().isNSFW())
             return true;
 
-        // if its a thread channel and the parent is nsfw
+        // if it's a thread channel and the parent is nsfw
         if ((channel.getType() == ChannelType.GUILD_PUBLIC_THREAD
                 || channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
                 || channel.getType() == ChannelType.GUILD_NEWS_THREAD
@@ -228,7 +228,7 @@ public class NSFWCommand extends CoreCommand {
                         hook.editOriginal(
                                         "❌  There has been an error processing the command you tried to run. Please try again!")
                                 .setComponents().setEmbeds().setFiles().queue();
-                        Constants.LOGGER.error("Error getting image from URL: " + image, exception);
+                        Constants.LOGGER.error("Error getting image from URL: {}", image, exception);
                         return;
                     }
                 }

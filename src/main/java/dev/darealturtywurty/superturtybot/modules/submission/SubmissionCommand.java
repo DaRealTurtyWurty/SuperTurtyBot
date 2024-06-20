@@ -15,11 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+// TODO: Finish this
 public class SubmissionCommand extends CoreCommand {
     public SubmissionCommand() {
         super(new Types(false, true, false, false));
     }
-
 
     @Override
     public CommandCategory getCategory() {
