@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
 import java.util.*;
@@ -370,19 +371,20 @@ public class EconomyManager {
      * Handles the payout and level increase of a heist
      *
      * @param account The user's economy account
-     * @return Whether the user leveled up from the heist
+     * @return A pair containing the amount earned and whether the user leveled up
      */
-    public static boolean heistCompleted(Economy account, long timeTaken) {
+    public static Pair<Integer, Boolean> heistCompleted(Economy account, long timeTaken) {
         int payout = determineHeistPayout(account);
-        addMoney(account, payout / (int) (timeTaken / 1000), true);
+        int earned = payout / (int) (timeTaken / 10_000) + determineHeistSetupCost(account);
+        addMoney(account, earned, true);
 
         account.setTotalHeists(account.getTotalHeists() + 1);
 
         if (ThreadLocalRandom.current().nextInt(3) == 0) {
             account.setHeistLevel(account.getHeistLevel() + 1);
-            return true;
+            return Pair.of(earned, true);
         }
 
-        return false;
+        return Pair.of(earned, false);
     }
 }
