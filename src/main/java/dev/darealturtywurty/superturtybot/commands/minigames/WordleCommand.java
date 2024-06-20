@@ -10,7 +10,8 @@ import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.FileUtils;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
@@ -42,28 +43,24 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-// TODO: Make this use the daily task system
 @SuppressWarnings("SuspiciousNameCombination")
 public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
     private static final RandomWordRequestData REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
-    public static final Path WORDLE_FILE = Path.of("./wordle.json");
-    private static final BufferedImage DEFAULT_IMAGE;
+    private static final Path WORDLE_FILE = Path.of("./wordle.json");
 
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final Map<Long, List<Game>> GUILD_GAMES = new HashMap<>();
-    private static final Map<Long, Game> DM_GAMES = new HashMap<>();
+    private static final Map<Long, Game> PRIVATE_GAMES = new HashMap<>();
 
     private static final Map<Character, CoupledPair<Integer>> LETTER_POSITIONS = new HashMap<>();
+    private static final BufferedImage DEFAULT_IMAGE;
 
     static {
         if(Environment.INSTANCE.turtyApiKey().isPresent()) {
@@ -97,17 +94,18 @@ public class WordleCommand extends CoreCommand {
                 LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
             }
 
-            loadTodaysWords();
-            EXECUTOR.scheduleAtFixedRate(() -> {
+            loadTodayWords();
+            DailyTaskScheduler.addTask(new DailyTask(() -> {
                 fetchAndStoreWords();
                 RATE_LIMITS.clear();
-            }, getInitialDelay(), 24, TimeUnit.HOURS);
-        }
-        {
-            DEFAULT_IMAGE = FileUtils.loadImage("wordle.png");
+            }, 0, 0));
+
+            DEFAULT_IMAGE = TurtyBot.loadImage("wordle.png");
             if(DEFAULT_IMAGE == null) {
                 throw new IllegalStateException("Failed to load 'wordle.png'!");
             }
+        } else {
+            DEFAULT_IMAGE = null;
         }
     }
 
@@ -170,7 +168,7 @@ public class WordleCommand extends CoreCommand {
 
     private static void runGlobal(SlashCommandInteractionEvent event) {
         // check if game is already running
-        if (DM_GAMES.containsKey(event.getUser().getIdLong())) {
+        if (PRIVATE_GAMES.containsKey(event.getUser().getIdLong())) {
             event.getHook().sendMessage("❌ You already have a game running!").queue();
             return;
         }
@@ -297,7 +295,7 @@ public class WordleCommand extends CoreCommand {
             if (guildId != null) {
                 GUILD_GAMES.computeIfAbsent(channelId, id -> new ArrayList<>()).add(game);
             } else {
-                DM_GAMES.put(userId, game);
+                PRIVATE_GAMES.put(userId, game);
             }
 
             createEventWaiter(event.getGuild(), game).build();
@@ -355,13 +353,14 @@ public class WordleCommand extends CoreCommand {
     private static void sendUpdatedImage(MessageChannel channel, Game game) {
         try {
             BufferedImage image = createImage(game.getGuesses(), game::getLetterState, game::getCharacterColor);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            var baos = new ByteArrayOutputStream();
             ImageIO.write(image, "png", baos);
             byte[] data = baos.toByteArray();
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
             channel.sendFiles(upload).queue();
         } catch (IOException exception) {
             Constants.LOGGER.error("An error occurred whilst sending end game image!", exception);
+            channel.sendMessage("❌ An error occurred whilst sending the updated image!").queue();
         }
     }
 
@@ -422,7 +421,7 @@ public class WordleCommand extends CoreCommand {
     }
 
     private static void endGame(@NotNull User user, @NotNull Game game) {
-        DM_GAMES.remove(user.getIdLong());
+        PRIVATE_GAMES.remove(user.getIdLong());
 
         user.openPrivateChannel().queue(channel -> {
             if (channel == null) return;
@@ -499,20 +498,6 @@ public class WordleCommand extends CoreCommand {
         return image;
     }
 
-    private static long getInitialDelay() {
-        Calendar now = Calendar.getInstance();
-        Calendar midnight = (Calendar) now.clone();
-        midnight.set(Calendar.HOUR_OF_DAY, 0);
-        midnight.set(Calendar.MINUTE, 0);
-        midnight.set(Calendar.SECOND, 0);
-        midnight.set(Calendar.MILLISECOND, 0);
-
-        if (now.after(midnight)) {
-            midnight.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        return midnight.getTimeInMillis() - now.getTimeInMillis();
-    }
 
     private static void fetchAndStoreWords() {
         resetDaily();
@@ -590,7 +575,7 @@ public class WordleCommand extends CoreCommand {
         return Optional.empty();
     }
 
-    private static void loadTodaysWords() {
+    private static void loadTodayWords() {
         try {
             if (Files.notExists(WORDLE_FILE)) {
                 Files.createDirectories(WORDLE_FILE.getParent());
@@ -728,10 +713,10 @@ public class WordleCommand extends CoreCommand {
                             color = LetterState.CORRECT.getColor(); // Green has the highest priority
                             return color;
                         } else {
-                            color = LetterState.WRONG_POSITION.getColor(); // Yellow has the second highest priority
+                            color = LetterState.WRONG_POSITION.getColor(); // Yellow has the second-highest priority
                         }
                     } else {
-                        color = LetterState.INCORRECT.getColor(); // Red has the third highest priority
+                        color = LetterState.INCORRECT.getColor(); // Red has the third-highest priority
                     }
                 }
             }
