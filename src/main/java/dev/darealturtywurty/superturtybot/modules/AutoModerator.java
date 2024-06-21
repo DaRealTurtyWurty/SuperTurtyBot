@@ -22,9 +22,9 @@ public class AutoModerator extends ListenerAdapter {
     public static final AutoModerator INSTANCE = new AutoModerator();
     public static final Set<String> SCAM_DOMAINS = ConcurrentHashMap.newKeySet();
 
-    static {
-        loadScamDomains();
-    }
+//    static {
+//        loadScamDomains();
+//    }
 
     private AutoModerator() {
     }
@@ -35,7 +35,7 @@ public class AutoModerator extends ListenerAdapter {
             return;
 
         discordInvites(event.getMessage());
-        scamDetection(event.getMessage());
+        // scamDetection(event.getMessage());
     }
 
     @Override
@@ -45,7 +45,7 @@ public class AutoModerator extends ListenerAdapter {
             return;
 
         discordInvites(event.getMessage());
-        scamDetection(event.getMessage());
+        // scamDetection(event.getMessage());
     }
 
     private static void loadScamDomains() {
@@ -76,7 +76,7 @@ public class AutoModerator extends ListenerAdapter {
     private void scamDetection(Message message) {
         final String content = message.getContentRaw();
         for (final String domain : SCAM_DOMAINS) {
-            if (content.contains(domain) && (!content.contains("." + domain) && !content.contains("/" + domain))) {
+            if (content.contains(domain) && (!content.contains("." + domain) && !content.contains("https://" + domain))) {
                 message.delete().flatMap(success ->
                         message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
                                 "If this was not you, then your account has been compromised. " +
