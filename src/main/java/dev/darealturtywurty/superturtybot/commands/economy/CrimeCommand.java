@@ -131,14 +131,14 @@ public class CrimeCommand extends EconomyCommand {
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
         if (level.hasSuccess(account.getCrimeLevel())) {
-            int amount = EconomyManager.successfulCrime(account, level);
+            long amount = EconomyManager.successfulCrime(account, level);
             int newCrimeLevel = account.getCrimeLevel();
             embed.setDescription(getSuccess(config, event.getUser(), amount) +
                     (crimeLevel != newCrimeLevel ? "\n\n✅ You are now a level %d criminal!".formatted(newCrimeLevel) : ""));
             embed.setColor(0x00AA00);
         } else {
             int jobLevel = account.getJobLevel();
-            int amount = EconomyManager.caughtCrime(account, level);
+            long amount = EconomyManager.caughtCrime(account, level);
             int newJobLevel = account.getJobLevel();
             embed.setDescription(getFail(config, event.getUser(), amount) +
                     (jobLevel != newJobLevel ? "\n\n❌ You have been demoted to level %d(%d levels) for your job!".formatted(newJobLevel, newJobLevel - jobLevel) : ""));
@@ -149,13 +149,13 @@ public class CrimeCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
-    private static String getSuccess(GuildData config, User user, int amount) {
+    private static String getSuccess(GuildData config, User user, long amount) {
         return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", StringUtils.numberFormat(amount));
     }
 
-    private static String getFail(GuildData config, User user, int amount) {
+    private static String getFail(GuildData config, User user, long amount) {
         return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
                 .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
                 .replace("{amount}", StringUtils.numberFormat(amount));

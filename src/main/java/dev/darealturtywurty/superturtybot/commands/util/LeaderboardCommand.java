@@ -239,7 +239,7 @@ public class LeaderboardCommand extends CoreCommand {
 
             final Economy account = accounts.get(indexedRank);
             final long userId = account.getUser();
-            final int balance = EconomyManager.getBalance(account);
+            final long balance = EconomyManager.getBalance(account);
             String username = drawUser(guild, graphics, metrics, indexedRank, userId);
 
             GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();

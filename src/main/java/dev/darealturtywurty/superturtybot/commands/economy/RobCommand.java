@@ -107,7 +107,7 @@ public class RobCommand extends EconomyCommand {
 
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
-            final int robbedAmount = random.nextInt(1, Math.max(robAccount.getWallet() / 4, 100_000));
+            final long robbedAmount = random.nextLong(1, Math.max(robAccount.getWallet() / 4, 100_000));
             account.addWallet(robbedAmount);
             robAccount.removeWallet(robbedAmount);
 
@@ -127,13 +127,13 @@ public class RobCommand extends EconomyCommand {
     }
 
     public record Responses(List<String> success, List<String> fail) {
-        public String getSuccess(GuildData config, User robber, User robbed, int amount) {
+        public String getSuccess(GuildData config, User robber, User robbed, long amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());
         }
 
-        public String getFail(GuildData config, User robber, User robbed, int amount) {
+        public String getFail(GuildData config, User robber, User robbed, long amount) {
             return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());

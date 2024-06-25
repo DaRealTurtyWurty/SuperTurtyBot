@@ -115,22 +115,22 @@ public class SlotsCommand extends EconomyCommand {
     private static EmbedBuilder createEmbed(Outcome outcome, Member member, GuildData config, String title) {
         var embed = new EmbedBuilder();
         embed.setTitle(title);
-        embed.setColor(outcome.type().getColor());
+        embed.setColor(outcome.getType().getColor());
         embed.setTimestamp(Instant.now());
         embed.setFooter(member.getEffectiveName() + "'s Slots", member.getEffectiveAvatarUrl());
 
         embed.addField("Slots",
-                outcome.emojis()[0] + " | " + outcome.emojis()[1] + " | " + outcome.emojis()[2],
+                outcome.getEmojis()[0] + " | " + outcome.getEmojis()[1] + " | " + outcome.getEmojis()[2],
                 false);
 
         embed.addField("Outcome", WordUtils.capitalize(
-                        outcome.type()
+                        outcome.getType()
                                 .name()
                                 .replace("_", " ")
                                 .toLowerCase(Locale.ROOT)),
                 false);
 
-        embed.addField("Winnings", config.getEconomyCurrency() + StringUtils.numberFormat(outcome.amount()), false);
+        embed.addField("Winnings", config.getEconomyCurrency() + StringUtils.numberFormat(outcome.getAmount()), false);
 
         return embed;
     }
@@ -144,7 +144,7 @@ public class SlotsCommand extends EconomyCommand {
         return createEmbed(outcome, member, config, "Slots");
     }
 
-    private static void play(InteractionHook hook, Member member, Guild guild, GuildData config, int betAmount) {
+    private static void play(InteractionHook hook, Member member, Guild guild, GuildData config, long betAmount) {
         if (betAmount < 1) {
             hook.editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
@@ -164,7 +164,7 @@ public class SlotsCommand extends EconomyCommand {
         Outcome outcome = outcomes.getFirst();
         var embed = createNormalEmbed(outcome, member, config);
 
-        final int finalBetAmount = betAmount;
+        final long finalBetAmount = betAmount;
         hook.editOriginalEmbeds(embed.build()).queue(message -> {
             if (outcomes.size() == 1) {
                 // create button to play again
@@ -176,11 +176,11 @@ public class SlotsCommand extends EconomyCommand {
             }
         });
 
-        EconomyManager.addMoney(account, outcome.amount());
-        if (outcome.amount() > 0) {
-            EconomyManager.betWin(account, outcome.amount());
+        EconomyManager.addMoney(account, outcome.getAmount());
+        if (outcome.getAmount() > 0) {
+            EconomyManager.betWin(account, outcome.getAmount());
         } else {
-            EconomyManager.betLoss(account, outcome.amount());
+            EconomyManager.betLoss(account, outcome.getAmount());
         }
 
         if (outcomes.size() > 1) {
@@ -196,9 +196,9 @@ public class SlotsCommand extends EconomyCommand {
                     }
                 });
 
-                EconomyManager.addMoney(account, freeSpinOutcome.amount());
-                if (freeSpinOutcome.amount() > 0) {
-                    EconomyManager.betWin(account, freeSpinOutcome.amount());
+                EconomyManager.addMoney(account, freeSpinOutcome.getAmount());
+                if (freeSpinOutcome.getAmount() > 0) {
+                    EconomyManager.betWin(account, freeSpinOutcome.getAmount());
                 }
             }
         }
@@ -206,7 +206,7 @@ public class SlotsCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
-    private static void play(Message message, Member member, Guild guild, GuildData config, int betAmount) {
+    private static void play(Message message, Member member, Guild guild, GuildData config, long betAmount) {
         if (betAmount < 1) {
             message.editMessage("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
@@ -226,7 +226,7 @@ public class SlotsCommand extends EconomyCommand {
         Outcome outcome = outcomes.getFirst();
         var embed = createNormalEmbed(outcome, member, config);
 
-        final int finalBetAmount = betAmount;
+        final long finalBetAmount = betAmount;
         message.editMessageEmbeds(embed.build()).queue(msg -> {
             if (outcomes.size() == 1) {
                 // create button to play again
@@ -238,11 +238,11 @@ public class SlotsCommand extends EconomyCommand {
             }
         });
 
-        EconomyManager.addMoney(account, outcome.amount());
-        if (outcome.amount() > 0) {
-            EconomyManager.betWin(account, outcome.amount());
+        EconomyManager.addMoney(account, outcome.getAmount());
+        if (outcome.getAmount() > 0) {
+            EconomyManager.betWin(account, outcome.getAmount());
         } else {
-            EconomyManager.betLoss(account, outcome.amount());
+            EconomyManager.betLoss(account, outcome.getAmount());
         }
 
         if (outcomes.size() > 1) {
@@ -258,9 +258,9 @@ public class SlotsCommand extends EconomyCommand {
                     }
                 });
 
-                EconomyManager.addMoney(account, freeSpinOutcome.amount());
-                if (freeSpinOutcome.amount() > 0) {
-                    EconomyManager.betWin(account, freeSpinOutcome.amount());
+                EconomyManager.addMoney(account, freeSpinOutcome.getAmount());
+                if (freeSpinOutcome.getAmount() > 0) {
+                    EconomyManager.betWin(account, freeSpinOutcome.getAmount());
                 }
             }
         }
@@ -268,7 +268,7 @@ public class SlotsCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, int betAmount) {
+    private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, long betAmount) {
         //noinspection DataFlowIssue - This is a false positive
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .timeout(1, TimeUnit.MINUTES)
@@ -286,18 +286,18 @@ public class SlotsCommand extends EconomyCommand {
                                 .queue(msg -> play(msg, member, guild, config, betAmount)));
     }
 
-    private static List<Outcome> handleFreeSpins(int betAmount, int freeSpins) {
+    private static List<Outcome> handleFreeSpins(long betAmount, int freeSpins) {
         List<Outcome> outcomes = new ArrayList<>();
         for (int spin = 0; spin < freeSpins; spin++) {
             Outcome freeSpinOutcome = spin(betAmount, true).getFirst();
-            if (freeSpinOutcome.amount() < 0)
+            if (freeSpinOutcome.getAmount() < 0)
                 freeSpinOutcome.amount = 0;
             outcomes.add(freeSpinOutcome);
         }
         return outcomes;
     }
 
-    private static List<Outcome> spin(int betAmount, boolean isFreeSpin) {
+    private static List<Outcome> spin(long betAmount, boolean isFreeSpin) {
         WeightedRandomBag<String>.Entry entry1 = EMOJIS.getRandomEntry();
         WeightedRandomBag<String>.Entry entry2 = EMOJIS.getRandomEntry();
         WeightedRandomBag<String>.Entry entry3 = EMOJIS.getRandomEntry();
@@ -339,20 +339,20 @@ public class SlotsCommand extends EconomyCommand {
         return outcomes;
     }
 
-    private static Outcome fetchOutcome(WeightedRandomBag<String>.Entry entry1, WeightedRandomBag<String>.Entry entry2, WeightedRandomBag<String>.Entry entry3, int betAmount) {
+    private static Outcome fetchOutcome(WeightedRandomBag<String>.Entry entry1, WeightedRandomBag<String>.Entry entry2, WeightedRandomBag<String>.Entry entry3, long betAmount) {
         if (Objects.equals(entry1, entry2) && Objects.equals(entry2, entry3)) {
-            int winnings;
+            long winnings;
             String fullString = entry1.getObject() + entry2.getObject() + entry3.getObject();
             for (Map.Entry<String, Outcome> outcomeEntry : WINNING_FORMATS.entrySet()) {
                 String pattern = outcomeEntry.getKey();
                 Outcome outcome = outcomeEntry.getValue();
 
                 if (fullString.contains(pattern)) {
-                    winnings = outcome.amount();
-                    if (outcome.type() == Outcome.OutcomeType.WIN) {
+                    winnings = outcome.getAmount();
+                    if (outcome.getType() == Outcome.OutcomeType.WIN) {
                         winnings *= betAmount;
                         return new Outcome(Outcome.OutcomeType.WIN, winnings);
-                    } else if (outcome.type() == Outcome.OutcomeType.FREE_SPIN) {
+                    } else if (outcome.getType() == Outcome.OutcomeType.FREE_SPIN) {
                         return new Outcome(Outcome.OutcomeType.FREE_SPIN, betAmount * 2);
                     }
                 }
@@ -364,27 +364,16 @@ public class SlotsCommand extends EconomyCommand {
         return new Outcome(Outcome.OutcomeType.LOSS, -betAmount);
     }
 
+    @Getter
     public static class Outcome {
         private final SlotsCommand.Outcome.OutcomeType type;
         private final String[] emojis = new String[3];
 
-        private int amount;
+        private long amount;
 
-        public Outcome(SlotsCommand.Outcome.OutcomeType type, int amount) {
+        public Outcome(SlotsCommand.Outcome.OutcomeType type, long amount) {
             this.type = type;
             this.amount = amount;
-        }
-
-        public SlotsCommand.Outcome.OutcomeType type() {
-            return this.type;
-        }
-
-        public int amount() {
-            return this.amount;
-        }
-
-        public String[] emojis() {
-            return this.emojis;
         }
 
         public void setEmoji(int index, String emoji) {

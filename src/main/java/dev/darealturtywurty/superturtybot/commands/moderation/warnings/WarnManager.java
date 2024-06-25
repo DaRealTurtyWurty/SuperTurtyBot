@@ -61,10 +61,10 @@ public class WarnManager {
         if (economyPercentage > 0 && config.isEconomyEnabled()) {
             Economy account = EconomyManager.getOrCreateAccount(guild, toWarn);
 
-            int balance = EconomyManager.getBalance(account);
+            long balance = EconomyManager.getBalance(account);
 
             // take economyPercentage% of balance
-            int toTake = (int) (balance / economyPercentage);
+            long toTake = (long) (balance / economyPercentage);
 
             EconomyManager.removeMoney(account, toTake, true);
             EconomyManager.updateAccount(account);

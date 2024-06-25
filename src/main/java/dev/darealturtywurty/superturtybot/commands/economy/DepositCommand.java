@@ -42,7 +42,7 @@ public class DepositCommand extends EconomyCommand {
             return;
         }
 
-        int amount = event.getOption("amount", account.getWallet(), OptionMapping::getAsInt);
+        long amount = event.getOption("amount", account.getWallet(), OptionMapping::getAsLong);
         if (amount <= 0) {
             event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;

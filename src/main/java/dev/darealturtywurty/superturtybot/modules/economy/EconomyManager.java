@@ -30,15 +30,15 @@ public class EconomyManager {
         return IS_RUNNING.get();
     }
 
-    public static int addMoney(Economy account, int amount) {
+    public static long addMoney(Economy account, long amount) {
         return addMoney(account, amount, false);
     }
 
-    public static int getBalance(Economy account) {
+    public static long getBalance(Economy account) {
         return account.getWallet() + account.getBank();
     }
 
-    public static int addMoney(Economy account, int amount, boolean bank) {
+    public static long addMoney(Economy account, long amount, boolean bank) {
         if (bank) {
             account.addBank(amount);
             return account.getBank();
@@ -75,11 +75,11 @@ public class EconomyManager {
         return account;
     }
 
-    public static int removeMoney(Economy account, int amount) {
+    public static long removeMoney(Economy account, long amount) {
         return removeMoney(account, amount, false);
     }
 
-    public static int removeMoney(Economy account, int amount, boolean bank) {
+    public static long removeMoney(Economy account, long amount, boolean bank) {
         if (bank) {
             account.removeBank(amount);
             return account.getBank();
@@ -89,11 +89,11 @@ public class EconomyManager {
         }
     }
 
-    public static void setMoney(Economy account, int amount) {
+    public static void setMoney(Economy account, long amount) {
         setMoney(account, amount, false);
     }
 
-    public static void setMoney(Economy account, int amount, boolean bank) {
+    public static void setMoney(Economy account, long amount, boolean bank) {
         if (bank) {
             account.setBank(amount);
         } else {
@@ -101,12 +101,12 @@ public class EconomyManager {
         }
     }
 
-    public static void withdraw(Economy account, int amount) {
+    public static void withdraw(Economy account, long amount) {
         account.removeBank(amount);
         account.addWallet(amount);
     }
 
-    public static void deposit(Economy account, int amount) {
+    public static void deposit(Economy account, long amount) {
         account.removeWallet(amount);
         account.addBank(amount);
     }
@@ -268,11 +268,11 @@ public class EconomyManager {
         return amount;
     }
 
-    public static void betWin(Economy account, int amount) {
+    public static void betWin(Economy account, long amount) {
         account.setTotalBetWin(account.getTotalBetWin() + amount);
     }
 
-    public static void betLoss(Economy account, int amount) {
+    public static void betLoss(Economy account, long amount) {
         account.setTotalBetLoss(account.getTotalBetLoss() + amount);
     }
 
@@ -294,7 +294,7 @@ public class EconomyManager {
         return score;
     }
 
-    public static Loan addLoan(Economy account, int amount) {
+    public static Loan addLoan(Economy account, long amount) {
         var loan = new Loan(
                 UUID.randomUUID().toString(),
                 amount,
@@ -309,26 +309,26 @@ public class EconomyManager {
         return loan;
     }
 
-    public static boolean payLoan(Economy account, Loan loan, int amount) {
-        int returned = loan.pay(amount);
+    public static boolean payLoan(Economy account, Loan loan, long amount) {
+        long returned = loan.pay(amount);
         removeMoney(account, amount - returned, true);
         updateAccount(account);
 
         return loan.isPaidOff();
     }
 
-    public static int getTimeToPayOff(int amount) {
+    public static long getTimeToPayOff(long amount) {
         return amount / 1000;
     }
 
-    public static float getInterestRate(int amount) {
+    public static float getInterestRate(long amount) {
         if (amount < 5000) return 0.5f;
 
         return 0.5f + (0.5f * (amount / 5000f));
     }
 
-    public static int caughtCrime(Economy account, CrimeCommand.CrimeType level) {
-        int amount = level.getAmountForLevel(account.getCrimeLevel()) / 2;
+    public static long caughtCrime(Economy account, CrimeCommand.CrimeType level) {
+        long amount = level.getAmountForLevel(account.getCrimeLevel()) / 2;
         removeMoney(account, amount, true);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);
@@ -341,9 +341,9 @@ public class EconomyManager {
         return amount;
     }
 
-    public static int successfulCrime(Economy account, CrimeCommand.CrimeType level) {
+    public static long successfulCrime(Economy account, CrimeCommand.CrimeType level) {
         int crimeLevel = account.getCrimeLevel();
-        int amount = level.getAmountForLevel(crimeLevel);
+        long amount = level.getAmountForLevel(crimeLevel);
         addMoney(account, amount, true);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);
@@ -357,14 +357,14 @@ public class EconomyManager {
     }
 
     // Should exponentially increase the cost and payout of a heist based on the user's account
-    public static int determineHeistSetupCost(Economy account) {
+    public static long determineHeistSetupCost(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (int) Math.pow(heistLevel, 2) * 100_000;
+        return (int) Math.pow(heistLevel, 2) * 100_000L;
     }
 
-    private static int determineHeistPayout(Economy account) {
+    private static long determineHeistPayout(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (int) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextInt(500_000, 1_000_000);
+        return (int) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(500_000, 1_000_000);
     }
 
     /**
@@ -373,9 +373,9 @@ public class EconomyManager {
      * @param account The user's economy account
      * @return A pair containing the amount earned and whether the user leveled up
      */
-    public static Pair<Integer, Boolean> heistCompleted(Economy account, long timeTaken) {
-        int payout = determineHeistPayout(account);
-        int earned = payout / (int) (timeTaken / 10_000) + determineHeistSetupCost(account);
+    public static Pair<Long, Boolean> heistCompleted(Economy account, long timeTaken) {
+        long payout = determineHeistPayout(account);
+        long earned = payout / (int) (timeTaken / 10_000) + determineHeistSetupCost(account);
         addMoney(account, earned, true);
 
         account.setTotalHeists(account.getTotalHeists() + 1);

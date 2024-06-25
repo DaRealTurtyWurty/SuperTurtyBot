@@ -48,7 +48,7 @@ public class SetMoneyCommand extends EconomyCommand {
 
         Type type = Type.SET;
         long user;
-        int amount = 0;
+        long amount = 0;
         try {
             user = Long.parseLong(args[1]);
         } catch (NumberFormatException ignored) {
@@ -74,7 +74,7 @@ public class SetMoneyCommand extends EconomyCommand {
             }
 
             try {
-                amount = Integer.parseInt(args[3]);
+                amount = Long.parseLong(args[3]);
                 if (amount == 0 && type != Type.SET) {
                     reply(event, "❌ You cannot add or remove 0!", false);
                     return;
@@ -87,7 +87,7 @@ public class SetMoneyCommand extends EconomyCommand {
 
         if (amount == 0) {
             try {
-                amount = Integer.parseInt(args[2]);
+                amount = Long.parseLong(args[2]);
             } catch (NumberFormatException ignored) {
                 reply(event, "❌ You must provide an amount!", false);
                 return;
@@ -125,6 +125,11 @@ public class SetMoneyCommand extends EconomyCommand {
         }
 
         EconomyManager.updateAccount(account);
+    }
+
+    @Override
+    public String getHowToUse() {
+        return "setmoney <user> <amount> [add/remove/set]";
     }
 
     public enum Type {

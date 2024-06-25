@@ -10,16 +10,16 @@ import java.util.List;
 @NoArgsConstructor
 public class Loan {
     private String id;
-    private int amount;
+    private long amount;
     private double interestRate;
     private long timeTaken;
     private long timeToPay;
     private final List<Payment> payments = new ArrayList<>();
 
-    private int amountPaid = 0;
+    private long amountPaid = 0;
     private boolean paidOff = false;
 
-    public Loan(String id, int amount, double interestRate, long timeTaken, long timeToPay) {
+    public Loan(String id, long amount, double interestRate, long timeTaken, long timeToPay) {
         this.id = id;
         this.amount = amount;
         this.interestRate = interestRate;
@@ -33,11 +33,11 @@ public class Loan {
      * @param amount The amount of money to request as a loan
      * @return The amount to give back to the user if it exceeds the amount they need to pay
      */
-    public int pay(int amount) {
+    public long pay(long amount) {
         if(this.paidOff) return amount;
 
-        int remaining = calculateAmountLeftToPay();
-        int toPay = Math.min(amount, remaining);
+        long remaining = calculateAmountLeftToPay();
+        long toPay = Math.min(amount, remaining);
         this.amountPaid += toPay;
 
         this.payments.add(new Payment(toPay, System.currentTimeMillis()));
@@ -53,8 +53,8 @@ public class Loan {
      *
      * @return The total amount to pay back
      */
-    public int calculateTotalAmountToPay() {
-        int totalAmountToPay = this.amount;
+    public long calculateTotalAmountToPay() {
+        long totalAmountToPay = this.amount;
         if (System.currentTimeMillis() > this.timeToPay) {
             totalAmountToPay += (int) (this.amount * this.interestRate);
         }
@@ -67,8 +67,8 @@ public class Loan {
      *
      * @return The amount left to pay
      */
-    public int calculateAmountLeftToPay() {
-        int totalAmountToPay = calculateTotalAmountToPay();
+    public long calculateAmountLeftToPay() {
+        long totalAmountToPay = calculateTotalAmountToPay();
         return totalAmountToPay - this.amountPaid;
     }
 

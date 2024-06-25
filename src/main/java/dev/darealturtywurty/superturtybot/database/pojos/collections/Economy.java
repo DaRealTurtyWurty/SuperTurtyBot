@@ -16,8 +16,8 @@ public class Economy {
     private long guild;
     private long user;
 
-    private int wallet;
-    private int bank;
+    private long wallet;
+    private long bank;
 
     private long nextRob;
     private long nextWork;
@@ -59,19 +59,19 @@ public class Economy {
         this.user = user;
     }
 
-    public void addBank(int amount) {
+    public void addBank(long amount) {
         this.bank += amount;
     }
 
-    public void addWallet(int amount) {
+    public void addWallet(long amount) {
         this.wallet += amount;
     }
 
-    public void removeBank(int amount) {
+    public void removeBank(long amount) {
         this.bank -= amount;
     }
 
-    public void removeWallet(int amount) {
+    public void removeWallet(long amount) {
         this.wallet -= amount;
     }
 
