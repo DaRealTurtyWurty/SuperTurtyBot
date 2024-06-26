@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.Permission;
@@ -33,33 +34,27 @@ public class ThreadManager extends ListenerAdapter {
         }
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
-        thread.addThreadMember(guild.getSelfMember()).queue(
-                RestAction.getDefaultSuccess(),
-                RestAction.getDefaultSuccess());
+        thread.addThreadMember(guild.getSelfMember()).queue(RestAction.getDefaultSuccess(), RestAction.getDefaultSuccess());
 
         if (!config.isShouldModeratorsJoinThreads())
             return;
 
         long ownerId = guild.getOwnerIdLong();
-        thread.sendMessage("Beans").queue(message -> message.editMessage("<@" + ownerId + ">")
-                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
-                                RestAction.getDefaultSuccess(),
-                                RestAction.getDefaultSuccess()),
-                        RestAction.getDefaultSuccess()));
+        thread.sendMessage("Beans").setAllowedMentions(List.of()).queue(message -> {
+            var mentions = new StringBuilder("<@" + ownerId + ">");
+            guild.getRoles().stream()
+                    .filter(role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(Permission.MESSAGE_MANAGE))
+                    .map(guild::findMembersWithRoles)
+                    .forEach(task -> task.onSuccess(members -> {
+                        members.stream().map(Member::getAsMention).forEach(mentions::append);
 
-        guild.getRoles().stream().filter(role ->
-                        role.hasPermission(Permission.MANAGE_THREADS) ||
-                                role.hasPermission(Permission.MESSAGE_MANAGE))
-                .map(guild::findMembersWithRoles)
-                .forEach(task -> task.onSuccess(members -> {
-                    final var strBuilder = new StringBuilder();
-                    members.stream().map(Member::getAsMention).forEach(strBuilder::append);
-                    thread.sendMessage("Beans").queue(message -> message.editMessage(strBuilder)
-                            .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
-                                            RestAction.getDefaultSuccess(),
-                                            RestAction.getDefaultSuccess()),
-                                    RestAction.getDefaultSuccess()));
-                }));
+                        message.editMessage(mentions).queueAfter(2, TimeUnit.SECONDS,
+                                msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
+                                        RestAction.getDefaultSuccess(),
+                                        throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
+                                throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
+                    }));
+        });
     }
 
     @Override
