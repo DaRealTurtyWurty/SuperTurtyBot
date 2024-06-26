@@ -73,7 +73,7 @@ public class AIMessageResponder extends ListenerAdapter {
                 !event.isFromGuild() ||
                 event.getMember() == null ||
                 event.getMessage().getContentRaw().length() < 10 ||
-                !event.getMessage().getMentions().isMentioned(event.getJDA().getSelfUser()))
+                !event.getMessage().getContentRaw().contains(event.getJDA().getSelfUser().getAsMention()))
             return;
 
         long userId = event.getAuthor().getIdLong();
@@ -138,7 +138,7 @@ public class AIMessageResponder extends ListenerAdapter {
                     chatMsgResponse.setRole(delta.getRole());
                 } else if (delta.getContent() != null && !delta.getContent().isEmpty()) {
                     content.append(delta.getContent());
-                    System.out.print(delta.getContent());
+                    //System.out.print(delta.getContent());
                 } else if (delta.getToolCalls() != null) {
                     ToolCall toolCall = delta.getToolCalls().getFirst();
                     if (toolCall.getIndex() != indexTool.get()) {
@@ -167,7 +167,7 @@ public class AIMessageResponder extends ListenerAdapter {
             }
         });
 
-        System.out.println();
+        //System.out.println();
 
         return choice;
     }
