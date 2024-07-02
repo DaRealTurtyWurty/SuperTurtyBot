@@ -14,11 +14,13 @@ import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.ext.java7.PathArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -38,6 +40,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,6 +94,9 @@ public class TurtyBot {
             final var jdaBuilder = JDABuilder.createDefault(token);
             configureBuilder(jdaBuilder);
             jdaBuilder.build();
+
+            List<Message.MentionType> allowedMentions = List.of(Message.MentionType.ROLE, Message.MentionType.USER, Message.MentionType.CHANNEL, Message.MentionType.EMOJI, Message.MentionType.SLASH_COMMAND);
+            MessageRequest.setDefaultMentions(allowedMentions);
             Constants.LOGGER.info("Setup JDA!");
         }, () -> {
             throw new InvalidTokenException();
