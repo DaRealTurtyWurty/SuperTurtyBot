@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.core.command;
 
 import dev.darealturtywurty.superturtybot.Environment;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 
 // TODO: Rate-limits per subcommand
 public abstract class CoreCommand extends ListenerAdapter implements BotCommand {
+    private static final List<Message.MentionType> ALLOWED_MENTIONS = List.of(Message.MentionType.EMOJI, Message.MentionType.ROLE, Message.MentionType.CHANNEL, Message.MentionType.SLASH_COMMAND, Message.MentionType.USER);
     protected static final Map<Long, Pair<String, Long>> RATE_LIMITS = new ConcurrentHashMap<>();
 
     public final Types types;
@@ -36,7 +38,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(MessageReceivedEvent event, String message, boolean mention) {
-        event.getMessage().reply(message).mentionRepliedUser(mention).queue();
+        event.getMessage().reply(message).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).queue();
     }
 
     public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed) {
@@ -48,7 +50,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).setEphemeral(ephemeral).queue();
     }
 
     public static void reply(SlashCommandInteractionEvent event, String message) {
@@ -60,11 +62,11 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
-        event.deferReply().setContent(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+        event.deferReply().setContent(message).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).setEphemeral(ephemeral).queue();
     }
 
     public static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
-        event.reply(message).mentionRepliedUser(mention).queue();
+        event.reply(message).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).queue();
     }
 
     public static void reply(MessageContextInteractionEvent event, String message) {
@@ -72,7 +74,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).queue();
     }
 
     public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed) {
@@ -80,7 +82,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(UserContextInteractionEvent event, String message, boolean mention) {
-        event.reply(message).mentionRepliedUser(mention).queue();
+        event.reply(message).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).queue();
     }
 
     public static void reply(UserContextInteractionEvent event, String message) {
@@ -88,7 +90,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(UserContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).setAllowedMentions(ALLOWED_MENTIONS).queue();
     }
 
     public static void reply(UserContextInteractionEvent event, EmbedBuilder embed) {
