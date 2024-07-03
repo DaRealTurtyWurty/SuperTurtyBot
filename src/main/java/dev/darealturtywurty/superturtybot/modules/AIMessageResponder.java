@@ -15,6 +15,7 @@ import io.github.sashirestela.openai.common.tool.ToolCall;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +53,10 @@ public class AIMessageResponder extends ListenerAdapter {
             .build();
 
     private final Map<Long, Integer> tokensUsed = new HashMap<>(); // Map of user ID to tokens used
+
+    public int getTokens(User user) {
+        return tokensUsed.getOrDefault(user.getIdLong(), 0);
+    }
 
     public AIMessageResponder() {
         DailyTaskScheduler.addTask(new DailyTask(() ->
