@@ -185,8 +185,7 @@ public class AIMessageResponder extends ListenerAdapter {
                 .append("memberName is:").append(event.getMember().getEffectiveName()).append(",")
                 .append("memberId is:").append(event.getAuthor().getId()).append(",")
                 .append("channelId is:").append(event.getChannel().getId()).append(",")
-                .append("serverId is:").append(event.getGuild().getId()).append(",")
-                .append("tokensLeft is:").append(500 - event.getMessage().getContentRaw().length());
+                .append("serverId is:").append(event.getGuild().getId()).append(",");
     }
 
     public record UserChatMessage(long userId, ChatMessage message) {
