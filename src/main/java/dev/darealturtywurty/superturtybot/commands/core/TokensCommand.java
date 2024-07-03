@@ -17,7 +17,7 @@ public class TokensCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Shows how many tokens you have.";
+        return "Shows how many tokens you have left.";
     }
 
     @Override
