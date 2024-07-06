@@ -33,6 +33,6 @@ public class TokensCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         int tokens = AIMessageResponder.INSTANCE.getTokens(event.getUser());
-        reply(event, "✅ You have %d tokens left!".formatted(500 - tokens));
+        reply(event, "✅ You have %d tokens left!".formatted(Math.max(0, 500 - tokens)));
     }
 }
