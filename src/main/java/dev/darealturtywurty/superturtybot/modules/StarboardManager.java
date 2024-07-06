@@ -51,7 +51,7 @@ public final class StarboardManager extends ListenerAdapter {
 
         final TextChannel channel = event.getChannel().asTextChannel();
 
-        final List<Long> channels = GuildData.getChannels(config.getShowcaseChannels());
+        final List<Long> channels = GuildData.getLongs(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
 
@@ -126,7 +126,7 @@ public final class StarboardManager extends ListenerAdapter {
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
         final GuildData config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
-        final List<Long> channels = GuildData.getChannels(config.getShowcaseChannels());
+        final List<Long> channels = GuildData.getLongs(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
 

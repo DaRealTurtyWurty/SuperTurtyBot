@@ -64,7 +64,7 @@ public class NSFWSmashOrPassCommand extends CoreCommand {
                 return;
             }
 
-            List<Long> enabledChannels = GuildData.getChannels(config.getNsfwChannels());
+            List<Long> enabledChannels = GuildData.getLongs(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
                 event.deferReply(true).setContent("❌ This server has no NSFW channels configured!").queue();
                 return;

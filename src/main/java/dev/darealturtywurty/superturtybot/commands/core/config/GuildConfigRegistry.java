@@ -375,4 +375,37 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setShouldSendChangelog(Boolean.parseBoolean(value)))
                     .valueFromConfig(GuildData::isShouldSendChangelog).build());
+
+    private static final GuildConfigOption AI_CHANNEL_WHITELIST = GUILD_CONFIG_OPTIONS.register("ai_channel_whitelist",
+            new GuildConfigOption.Builder().dataType(DataType.STRING)
+                    .serializer(GuildData::setAiChannelWhitelist)
+                    .valueFromConfig(GuildData::getAiChannelWhitelist)
+                    .validator((event, value) -> {
+                        final String[] channels = value.split("[ ;]");
+                        for (final String channelStr : channels) {
+                            if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
+                                return false;
+                        }
+
+                        return true;
+                    }).build());
+
+    private static final GuildConfigOption AI_USER_BLACKLIST = GUILD_CONFIG_OPTIONS.register("ai_user_blacklist",
+            new GuildConfigOption.Builder().dataType(DataType.STRING)
+                    .serializer(GuildData::setAiUserBlacklist)
+                    .valueFromConfig(GuildData::getAiUserBlacklist)
+                    .validator((event, value) -> {
+                        final String[] users = value.split("[ ;]");
+                        for (final String userStr : users) {
+                            if (!Validators.USER_VALIDATOR.test(event, userStr))
+                                return false;
+                        }
+
+                        return true;
+                    }).build());
+
+    private static final GuildConfigOption AI_ENABLED = GUILD_CONFIG_OPTIONS.register("ai_enabled",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setAiEnabled(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isAiEnabled).build());
 }

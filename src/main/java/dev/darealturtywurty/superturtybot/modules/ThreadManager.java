@@ -72,7 +72,7 @@ public class ThreadManager extends ListenerAdapter {
             return;
         }
 
-        final List<Long> channels = GuildData.getChannels(config.getAutoThreadChannels());
+        final List<Long> channels = GuildData.getLongs(config.getAutoThreadChannels());
         if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong())) return;
 
         final String content = event.getMessage().getContentRaw();

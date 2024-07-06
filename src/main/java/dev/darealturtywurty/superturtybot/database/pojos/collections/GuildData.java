@@ -113,6 +113,11 @@ public class GuildData {
     private int chatRevivalTime;
     private long chatRevivalChannel;
 
+    // AI
+    private boolean aiEnabled;
+    private String aiChannelWhitelist;
+    private String aiUserBlacklist;
+
     // Misc
     private boolean shouldModeratorsJoinThreads;
     private String autoThreadChannels;
@@ -204,6 +209,11 @@ public class GuildData {
         this.canAddPlaylists = true;
         this.musicPermissions = new ArrayList<>();
 
+        // AI
+        this.aiEnabled = false;
+        this.aiChannelWhitelist = "";
+        this.aiUserBlacklist = "";
+
         // Misc
         this.shouldModeratorsJoinThreads = true;
         this.autoThreadChannels = "";
@@ -251,7 +261,7 @@ public class GuildData {
         return false;
     }
 
-    public static List<Long> getChannels(String str) {
+    public static List<Long> getLongs(String str) {
         return Stream.of(str.split("[ ;]")).map(Longs::tryParse).filter(Objects::nonNull).toList();
     }
 }

@@ -6,16 +6,20 @@ import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.ModelType;
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.common.tool.ToolCall;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -83,13 +87,29 @@ public class AIMessageResponder extends ListenerAdapter {
                 !event.getMessage().getContentRaw().contains(event.getJDA().getSelfUser().getAsMention()))
             return;
 
+        Guild guild = event.getGuild();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+        if(config == null) {
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
+            return;
+        }
+
+        if (!config.isAiEnabled())
+            return;
+
+        long channelId = event.getChannel().getIdLong();
+        List<Long> whitelistedChannels = GuildData.getLongs(config.getAiChannelWhitelist());
+        if (whitelistedChannels.isEmpty() || !whitelistedChannels.contains(channelId))
+            return;
+
         long userId = event.getAuthor().getIdLong();
-        if (tokensUsed.getOrDefault(userId, 0) >= 500)
+        List<Long> blacklistedUsers = GuildData.getLongs(config.getAiUserBlacklist());
+        if (blacklistedUsers.contains(userId) || tokensUsed.getOrDefault(userId, 0) >= 500)
             return;
 
         event.getChannel().sendTyping().queue();
 
-        long channelId = event.getChannel().getIdLong();
         String content = event.getMessage().getContentRaw().replace(event.getJDA().getSelfUser().getAsMention(), "");
         int tokens = ENCODING.countTokensOrdinary(content);
         tokensUsed.put(userId, tokensUsed.getOrDefault(userId, 0) + tokens);
@@ -148,7 +168,6 @@ public class AIMessageResponder extends ListenerAdapter {
                     chatMsgResponse.setRole(delta.getRole());
                 } else if (delta.getContent() != null && !delta.getContent().isEmpty()) {
                     content.append(delta.getContent());
-                    //System.out.print(delta.getContent());
                 } else if (delta.getToolCalls() != null) {
                     ToolCall toolCall = delta.getToolCalls().getFirst();
                     if (toolCall.getIndex() != indexTool.get()) {
@@ -176,8 +195,6 @@ public class AIMessageResponder extends ListenerAdapter {
                 }
             }
         });
-
-        //System.out.println();
 
         return choice;
     }

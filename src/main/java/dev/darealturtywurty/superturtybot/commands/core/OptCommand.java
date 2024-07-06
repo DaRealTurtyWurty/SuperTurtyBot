@@ -105,7 +105,7 @@ public class OptCommand extends CoreCommand {
 
         List<Long> userChannels = userConfig.getOptInChannels();
 
-        event.replyChoices(GuildData.getChannels(config.getOptInChannels()).stream()
+        event.replyChoices(GuildData.getLongs(config.getOptInChannels()).stream()
                 .filter(channel -> !userChannels.contains(channel))
                 .map(channel -> guild.getChannels().stream().filter(guildChannel -> guildChannel.getIdLong() == channel)
                         .findFirst().orElse(null)).filter(Objects::nonNull).map(GuildChannel::getName)
@@ -132,7 +132,7 @@ public class OptCommand extends CoreCommand {
             return;
         }
 
-        List<Long> channels = GuildData.getChannels(config.getOptInChannels());
+        List<Long> channels = GuildData.getLongs(config.getOptInChannels());
         if (channels.isEmpty()) {
             reply(event, "❌ This server has no opt-in channels!", false, true);
             return;

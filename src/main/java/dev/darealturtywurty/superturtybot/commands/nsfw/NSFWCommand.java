@@ -125,7 +125,7 @@ public class NSFWCommand extends CoreCommand {
                 Database.getDatabase().guildData.insertOne(config);
             }
 
-            List<Long> enabledChannels = GuildData.getChannels(config.getNsfwChannels());
+            List<Long> enabledChannels = GuildData.getLongs(config.getNsfwChannels());
             if (enabledChannels.isEmpty()) {
                 event.getHook().editOriginal("❌ This server has no NSFW channels configured!").queue();
                 return;

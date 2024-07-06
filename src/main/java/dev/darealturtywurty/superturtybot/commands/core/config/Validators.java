@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.core.config;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Message.MentionType;
@@ -68,5 +69,14 @@ public final class Validators {
         }
 
         return guild.getRolesByName(str, false).isEmpty();
+    };
+    public static final BiPredicate<SlashCommandInteractionEvent, String> USER_VALIDATOR = (event, str) -> {
+        JDA jda = event.getJDA();
+        if (MentionType.USER.getPattern().matcher(str).matches()) {
+            final String id = str.replace("<@!", "").replace(">", "");
+            return jda.getUserById(id) != null;
+        }
+
+        return jda.getUsersByName(str, false).isEmpty();
     };
 }
