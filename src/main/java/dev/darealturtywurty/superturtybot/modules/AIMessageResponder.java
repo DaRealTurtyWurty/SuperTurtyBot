@@ -7,6 +7,7 @@ import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.ModelType;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
@@ -15,6 +16,7 @@ import io.github.sashirestela.openai.common.tool.ToolCall;
 import io.github.sashirestela.openai.domain.chat.Chat;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -116,7 +118,10 @@ public class AIMessageResponder extends ListenerAdapter {
                             "I'm sorry, I don't know how to respond to that.";
                     chat.add(new UserChatMessage(event.getJDA().getSelfUser().getIdLong(), ChatMessage.AssistantMessage.of(responseContent)));
 
-                    CoreCommand.reply(event, responseContent);
+                    List<Message.MentionType> allowedMentions = new ArrayList<>(TurtyBot.DEFAULT_ALLOWED_MENTIONS);
+                    allowedMentions.remove(Message.MentionType.USER);
+                    allowedMentions.remove(Message.MentionType.ROLE);
+                    event.getMessage().reply(responseContent).mentionRepliedUser(false).setAllowedMentions(allowedMentions).queue();
                 }).exceptionally(throwable -> {
                     chat.remove(message);
                     CoreCommand.reply(event, "I'm sorry, I don't know how to respond to that.");

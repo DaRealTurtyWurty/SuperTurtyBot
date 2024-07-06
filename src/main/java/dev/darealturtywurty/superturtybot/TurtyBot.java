@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
+    public static final List<Message.MentionType> DEFAULT_ALLOWED_MENTIONS = List.of(Message.MentionType.ROLE, Message.MentionType.USER, Message.MentionType.CHANNEL, Message.MentionType.EMOJI, Message.MentionType.SLASH_COMMAND);
 
     @Getter
     private static long lastStartTime = 0L;
@@ -95,8 +96,7 @@ public class TurtyBot {
             configureBuilder(jdaBuilder);
             jdaBuilder.build();
 
-            List<Message.MentionType> allowedMentions = List.of(Message.MentionType.ROLE, Message.MentionType.USER, Message.MentionType.CHANNEL, Message.MentionType.EMOJI, Message.MentionType.SLASH_COMMAND);
-            MessageRequest.setDefaultMentions(allowedMentions);
+            MessageRequest.setDefaultMentions(DEFAULT_ALLOWED_MENTIONS);
             Constants.LOGGER.info("Setup JDA!");
         }, () -> {
             throw new InvalidTokenException();
