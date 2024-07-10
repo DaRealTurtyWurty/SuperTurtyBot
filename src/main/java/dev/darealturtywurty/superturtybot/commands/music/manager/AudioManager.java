@@ -73,7 +73,7 @@ public final class AudioManager {
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
 
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
-        final var ytSource = new YoutubeAudioSourceManager(true, new MusicWithThumbnail());
+        final var ytSource = new YoutubeAudioSourceManager(true, new WebWithThumbnail());
         ytSource.setPlaylistPageCount(100);
         AUDIO_MANAGER.registerSourceManager(ytSource);
         //noinspection deprecation
