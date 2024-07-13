@@ -25,8 +25,6 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
-import dev.lavalink.youtube.clients.AndroidWithThumbnail;
-import dev.lavalink.youtube.clients.MusicWithThumbnail;
 import dev.lavalink.youtube.clients.WebWithThumbnail;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -76,8 +74,6 @@ public final class AudioManager {
         final var ytSource = new YoutubeAudioSourceManager(true, new WebWithThumbnail());
         ytSource.setPlaylistPageCount(100);
         AUDIO_MANAGER.registerSourceManager(ytSource);
-        //noinspection deprecation
-        AudioSourceManagers.registerRemoteSources(AUDIO_MANAGER, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
 
         ShutdownHooks.register(() -> {
             AUDIO_MANAGER.shutdown();
