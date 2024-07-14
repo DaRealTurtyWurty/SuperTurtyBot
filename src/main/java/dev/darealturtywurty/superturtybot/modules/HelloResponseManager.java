@@ -87,7 +87,7 @@ public class HelloResponseManager extends ListenerAdapter {
         long selfId = message.getJDA().getSelfUser().getIdLong();
 
         // If it's replying to me
-        boolean isMentioned = message.getReferencedMessage() != null && message.getReferencedMessage().getAuthor().getIdLong() == selfId;
+        boolean isMentioned = message.getContentRaw().contains("<@" + selfId + ">");
 
         // If it mentions me
         if(message.getMentions().isMentioned(message.getJDA().getSelfUser()))
