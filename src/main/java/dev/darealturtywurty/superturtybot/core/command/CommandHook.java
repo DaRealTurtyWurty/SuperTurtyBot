@@ -300,6 +300,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new BirthdayCommand());
         commands.add(new LatexCommand());
         commands.add(new AddRoleToThreadCommand());
+        commands.add(new RunCodeCommand());
 
         // Moderation
         commands.add(new BanCommand());
