@@ -142,7 +142,7 @@ public class WarnManager {
             guild.kick(user).reason(kickReason).queue(ignored -> {}, ignored -> {});
             if (Boolean.TRUE.equals(logging.getKey())) {
                 BanCommand.log(logging.getValue(),
-                        warner.getAsMention() + " has banned " + user.getAsMention() + " for reason: `" + kickReason + "`!",
+                        warner.getAsMention() + " has kicked " + user.getAsMention() + " for reason: `" + kickReason + "`!",
                         false);
             }
         } else if (warnings.size() >= 5) {
