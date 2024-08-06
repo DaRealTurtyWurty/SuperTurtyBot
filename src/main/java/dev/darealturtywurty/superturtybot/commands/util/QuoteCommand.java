@@ -333,8 +333,8 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        var quote = new Quote(guild.getIdLong(), message.getAuthor().getIdLong(), message.getContentRaw(),
-                message.getTimeCreated().toInstant().toEpochMilli(), user.getIdLong());
+        var quote = new Quote(guild.getIdLong(), message.getAuthor().getIdLong(), user.getIdLong(), message.getContentRaw(),
+                message.getTimeCreated().toInstant().toEpochMilli());
         Database.getDatabase().quotes.insertOne(quote);
         event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
     }
@@ -386,7 +386,7 @@ public class QuoteCommand extends CoreCommand {
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", event.getGuild().getIdLong()))
                 .into(new ArrayList<>());
 
-        var quote = new Quote(guildId, userId, text, System.currentTimeMillis(), addedBy);
+        var quote = new Quote(guildId, userId, addedBy, text, System.currentTimeMillis());
         Database.getDatabase().quotes.insertOne(quote);
         event.getMessage().editMessage("✅ Quote added! #" + (quotes.size() + 1)).setComponents().queue();
     }
