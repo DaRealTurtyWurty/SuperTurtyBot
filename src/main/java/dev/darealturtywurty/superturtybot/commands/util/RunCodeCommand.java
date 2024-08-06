@@ -360,71 +360,73 @@ public class RunCodeCommand extends CoreCommand {
             PREFERRED_COMPILERS.put("ocaml", "ocaml5200");
             PREFERRED_COMPILERS.put("swift", "swift510");
             PREFERRED_COMPILERS.put("zig", "z0120");
-            addCustomCompiler("brainfuck", "Brainf*ck", List.of(".b", ".bf"), (code) -> {
-                code = code.replaceAll("[^+\\-.<>\\[\\]]", "");
-                try {
-                    final int length = 65535;
-                    StringBuilder resultBuilder = new StringBuilder();
+            addCustomCompiler("brainfuck", "Brainf*ck", List.of(".b", ".bf"), ProgrammingLanguage::brainfuckCompiler);
+        }
 
-                    byte[] array = new byte[length];
-                    int index = 0;
-                    int c = 0;
-                    for(int currentChar = 0; currentChar < code.length(); currentChar++) {
-                        char ch = code.charAt(currentChar);
-                        switch (ch) {
-                            case '>' -> {
-                                if (index == length - 1)
-                                    index = 0;
-                                else
-                                    index++;
-                            }
-                            case '<' -> {
-                                if (index == 0)
-                                    index = length - 1;
-                                else
-                                    index--;
-                            }
-                            case '+' -> array[index]++;
-                            case '-' -> array[index]--;
-                            case '.' -> resultBuilder.append((char)(array[index]));
-                            case '[' -> {
-                                if (array[index] == 0)
+        private static EvaluationResult brainfuckCompiler(String code) {
+            try {
+                code = code.replaceAll("[^+\\-.<>\\[\\]]", "");
+                final int length = 65535;
+                StringBuilder resultBuilder = new StringBuilder();
+
+                byte[] array = new byte[length];
+                int index = 0;
+                int c = 0;
+                for(int currentChar = 0; currentChar < code.length(); currentChar++) {
+                    char ch = code.charAt(currentChar);
+                    switch (ch) {
+                        case '>' -> {
+                            if (index == length - 1)
+                                index = 0;
+                            else
+                                index++;
+                        }
+                        case '<' -> {
+                            if (index == 0)
+                                index = length - 1;
+                            else
+                                index--;
+                        }
+                        case '+' -> array[index]++;
+                        case '-' -> array[index]--;
+                        case '.' -> resultBuilder.append((char)(array[index]));
+                        case '[' -> {
+                            if (array[index] == 0)
+                            {
+                                currentChar++;
+                                while (c > 0 || code.charAt(currentChar) != ']')
                                 {
+                                    if (code.charAt(currentChar) == '[')
+                                        c++;
+                                    else if (code.charAt(currentChar) == ']')
+                                        c--;
                                     currentChar++;
-                                    while (c > 0 || code.charAt(currentChar) != ']')
-                                    {
-                                        if (code.charAt(currentChar) == '[')
-                                            c++;
-                                        else if (code.charAt(currentChar) == ']')
-                                            c--;
-                                        currentChar++;
-                                    }
                                 }
-                            }
-                            case ']' -> {
-                                if (array[index] != 0)
-                                {
-                                    currentChar--;
-                                    while (c > 0 || code.charAt(currentChar) != '[')
-                                    {
-                                        if (code.charAt(currentChar) == ']')
-                                            c ++;
-                                        else if (code.charAt(currentChar) == '[')
-                                            c --;
-                                        currentChar--;
-                                    }
-                                }
-                            }
-                            default -> {
-                                return new EvaluationResult(false, "Unknown character: \"%s\" at %d, this shouldn't be possible".formatted(ch, currentChar+1));
                             }
                         }
+                        case ']' -> {
+                            if (array[index] != 0)
+                            {
+                                currentChar--;
+                                while (c > 0 || code.charAt(currentChar) != '[')
+                                {
+                                    if (code.charAt(currentChar) == ']')
+                                        c ++;
+                                    else if (code.charAt(currentChar) == '[')
+                                        c --;
+                                    currentChar--;
+                                }
+                            }
+                        }
+                        default -> {
+                            return new EvaluationResult(false, "Unknown character: \"%s\" at %d, this shouldn't be possible".formatted(ch, currentChar+1));
+                        }
                     }
-                    return new EvaluationResult(true, resultBuilder.toString());
-                } catch (Exception e) {
-                    return new EvaluationResult(false, "Something went wrong: %s".formatted(e.getMessage()));
                 }
-            });
+                return new EvaluationResult(true, resultBuilder.toString());
+            } catch (Exception e) {
+                return new EvaluationResult(false, "Something went wrong: %s".formatted(e.getMessage()));
+            }
         }
 
         public ProgrammingLanguage {
