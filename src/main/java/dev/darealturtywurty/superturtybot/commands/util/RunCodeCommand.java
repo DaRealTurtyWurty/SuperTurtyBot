@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class RunCodeCommand extends CoreCommand {
     static {
@@ -108,7 +109,11 @@ public class RunCodeCommand extends CoreCommand {
     }
 
     private static EvaluationResult evaluateCode(ProgrammingLanguage language, String code) {
-        String endpoint = "https://godbolt.org/api/compiler/" + language.compiler() + "/compile";
+        String compiler = language.compiler();
+        if(Objects.equals(compiler, "custom")) {
+            return language.customCompiler().apply(code);
+        }
+        String endpoint = "https://godbolt.org/api/compiler/" + compiler + "/compile";
 
         var request = new Request.Builder()
                 .url(endpoint)
@@ -287,6 +292,7 @@ public class RunCodeCommand extends CoreCommand {
         private static final List<ProgrammingLanguage> VALUES = new ArrayList<>();
 
         private static final Map<String, String> PREFERRED_COMPILERS = new HashMap<>();
+        private static final Map<String, Function<String, EvaluationResult>> CUSTOM_COMPILERS = new HashMap<>();
 
         static {
             PREFERRED_COMPILERS.put("csharp", "dotnet707csharp");
@@ -354,10 +360,81 @@ public class RunCodeCommand extends CoreCommand {
             PREFERRED_COMPILERS.put("ocaml", "ocaml5200");
             PREFERRED_COMPILERS.put("swift", "swift510");
             PREFERRED_COMPILERS.put("zig", "z0120");
+            addCustomCompiler("brainfuck", "Brainf*ck", List.of(".b", ".bf"), (code) -> {
+                code = code.replaceAll("[^+\\-.<>\\[\\]]", "");
+                try {
+                    final int length = 65535;
+                    StringBuilder resultBuilder = new StringBuilder();
+
+                    byte[] array = new byte[length];
+                    int index = 0;
+                    int c = 0;
+                    for(int currentChar = 0; currentChar < code.length(); currentChar++) {
+                        char ch = code.charAt(currentChar);
+                        switch (ch) {
+                            case '>' -> {
+                                if (index == length - 1)
+                                    index = 0;
+                                else
+                                    index++;
+                            }
+                            case '<' -> {
+                                if (index == 0)
+                                    index = length - 1;
+                                else
+                                    index--;
+                            }
+                            case '+' -> array[index]++;
+                            case '-' -> array[index]--;
+                            case '.' -> resultBuilder.append((char)(array[index]));
+                            case '[' -> {
+                                if (array[index] == 0)
+                                {
+                                    currentChar++;
+                                    while (c > 0 || code.charAt(currentChar) != ']')
+                                    {
+                                        if (code.charAt(currentChar) == '[')
+                                            c++;
+                                        else if (code.charAt(currentChar) == ']')
+                                            c--;
+                                        currentChar++;
+                                    }
+                                }
+                            }
+                            case ']' -> {
+                                if (array[index] != 0)
+                                {
+                                    currentChar--;
+                                    while (c > 0 || code.charAt(currentChar) != '[')
+                                    {
+                                        if (code.charAt(currentChar) == ']')
+                                            c ++;
+                                        else if (code.charAt(currentChar) == '[')
+                                            c --;
+                                        currentChar--;
+                                    }
+                                }
+                            }
+                            default -> {
+                                return new EvaluationResult(false, "Unknown character: \"%s\" at %d, this shouldn't be possible".formatted(ch, currentChar+1));
+                            }
+                        }
+                    }
+                    return new EvaluationResult(true, resultBuilder.toString());
+                } catch (Exception e) {
+                    return new EvaluationResult(false, "Something went wrong: %s".formatted(e.getMessage()));
+                }
+            });
         }
 
         public ProgrammingLanguage {
             VALUES.add(this);
+        }
+
+        public static void addCustomCompiler(String id, String name, List<String> fileExtensions, Function<String, EvaluationResult> compiler) {
+            new ProgrammingLanguage(id, name, fileExtensions, List.of("custom"));
+            PREFERRED_COMPILERS.put(id, "custom");
+            CUSTOM_COMPILERS.put(id, compiler);
         }
 
         public static ProgrammingLanguage fromString(String id) {
@@ -372,6 +449,10 @@ public class RunCodeCommand extends CoreCommand {
 
         public String compiler() {
             return PREFERRED_COMPILERS.getOrDefault(id, compilers.getFirst());
+        }
+
+        public Function<String, EvaluationResult> customCompiler() {
+            return CUSTOM_COMPILERS.get(id);
         }
 
         public static List<ProgrammingLanguage> values() {
