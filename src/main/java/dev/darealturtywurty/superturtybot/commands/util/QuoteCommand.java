@@ -152,8 +152,7 @@ public class QuoteCommand extends CoreCommand {
                         return;
                     }
 
-                    var quote = new Quote(guild.getIdLong(), user.getIdLong(), text,
-                            found.get().getTimeCreated().toInstant().toEpochMilli(), event.getUser().getIdLong());
+                    var quote = new Quote(guild.getIdLong(), user.getIdLong(), event.getUser().getIdLong(), text, found.get().getTimeCreated().toInstant().toEpochMilli());
                     Database.getDatabase().quotes.insertOne(quote);
                     event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
                 });
@@ -247,7 +246,10 @@ public class QuoteCommand extends CoreCommand {
                     return;
                 }
 
-                Quote quote = quotes.get(ThreadLocalRandom.current().nextInt(quotes.size()));
+                quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
+
+                int index = ThreadLocalRandom.current().nextInt(quotes.size());
+                Quote quote = quotes.get(index);
 
                 User addedBy = event.getJDA().getUserById(quote.getAddedBy());
                 User saidBy = event.getJDA().getUserById(quote.getUser());
@@ -256,14 +258,14 @@ public class QuoteCommand extends CoreCommand {
                 String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
 
                 var builder = new EmbedBuilder()
-                        .setTitle("Quote #" + (quotes.indexOf(quote) + 1))
+                        .setTitle("Quote #" + index)
                         .setDescription(quote.getText())
-                        .addField("Added by", addedByName, true)
                         .addField("Said by", saidByName, true)
+                        .addField("Added by", addedByName, true)
                         .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
                         .setColor(Color.CYAN)
                         .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getAsMention(), event.getUser().getEffectiveAvatarUrl());
+                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
                 event.replyEmbeds(builder.build()).queue();
             }

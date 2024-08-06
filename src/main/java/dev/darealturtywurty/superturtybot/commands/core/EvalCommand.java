@@ -19,14 +19,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class EvalCommand extends CoreCommand {
-
     private static final Engine ENGINE = Engine.newBuilder("js")
             .option("js.ecmascript-version", "2022")
-            .allowExperimentalOptions(true)
             .option("js.console", "true")
-            .option("js.nashorn-compat", "true")
-            .option("js.disable-eval", "true")
-            .option("js.load", "false")
             .option("log.level", "OFF")
             .build();
 
