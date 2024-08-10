@@ -35,10 +35,12 @@ public class UptimeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         long uptime = System.currentTimeMillis() - TurtyBot.START_TIME;
         String formatted = millisecondsFormatted(uptime);
 
-        reply(event, "The bot has been running for `" + formatted + "`!");
+        event.getHook().sendMessage("The bot has been running for `" + formatted + "`!").queue();
     }
 
     @Override
