@@ -44,6 +44,8 @@ public abstract class EconomyCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().mentionRepliedUser(false).queue();
+
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if(config == null) {
             config = new GuildData(guild.getIdLong());
@@ -51,11 +53,10 @@ public abstract class EconomyCommand extends CoreCommand {
         }
 
         if(!config.isEconomyEnabled()) {
-            reply(event, "❌ Economy is not enabled in this server!", false, true);
+            event.getHook().sendMessage("❌ Economy is not enabled in this server!").queue();
             return;
         }
 
-        event.deferReply().mentionRepliedUser(false).queue();
         runSlash(event, guild, config);
     }
 
