@@ -25,10 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
@@ -114,6 +111,8 @@ public class MinecraftCommand extends CoreCommand {
             }
 
             event.getHook().sendMessage("✅ The UUID for `%s` is: `%s`".formatted(username, responseString)).queue();
+        } catch (SocketTimeoutException exception) {
+            event.getHook().sendMessage("❌ The request timed out! Please try again later.").queue();
         } catch (final IOException exception) {
             Constants.LOGGER.error("Error getting UUID for {}", username, exception);
             event.getHook().sendMessage("❌ An error occurred while getting the UUID!").queue();
