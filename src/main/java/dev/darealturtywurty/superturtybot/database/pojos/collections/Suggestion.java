@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -16,7 +17,7 @@ public class Suggestion {
     private long message;
     
     private long createdAt;
-    private List<SuggestionResponse> responses;
+    private List<SuggestionResponse> responses = new ArrayList<>();
     
     public Suggestion(long guildId, long authorId, long messageId, long createdAt) {
         this();
