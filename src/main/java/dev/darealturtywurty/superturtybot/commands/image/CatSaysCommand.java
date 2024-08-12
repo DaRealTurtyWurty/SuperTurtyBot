@@ -66,7 +66,6 @@ public class CatSaysCommand extends CoreCommand {
         event.deferReply().queue();
 
         var request = new Request.Builder().get().url(url).build();
-
         try (var response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 event.getHook().editOriginal("❌ Something went wrong!").queue();
@@ -79,7 +78,7 @@ public class CatSaysCommand extends CoreCommand {
                 return;
             }
 
-            try (var upload = FileUpload.fromData(body.byteStream(), "catsays.png")) {
+            try (var upload = FileUpload.fromData(body.bytes(), "catsays.png")) {
                 event.getHook().sendFiles(upload).queue();
             }
         } catch (IOException exception) {
