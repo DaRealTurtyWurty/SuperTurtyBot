@@ -12,8 +12,10 @@ import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.thread.ThreadRevealedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +36,40 @@ public class ThreadManager extends ListenerAdapter {
         }
 
         final ThreadChannel thread = event.getChannel().asThreadChannel();
-        thread.addThreadMember(guild.getSelfMember()).queue(RestAction.getDefaultSuccess(), RestAction.getDefaultSuccess());
+        thread.addThreadMember(guild.getSelfMember()).queue(RestAction.getDefaultSuccess(),
+                throwable -> Constants.LOGGER.error("Unable to add myself to a thread!", throwable));
+
+        if (!config.isShouldModeratorsJoinThreads())
+            return;
+
+        long ownerId = guild.getOwnerIdLong();
+        thread.sendMessage("Beans").setAllowedMentions(List.of()).queue(message -> {
+            var mentions = new StringBuilder("<@" + ownerId + ">");
+            guild.getRoles().stream()
+                    .filter(role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(Permission.MESSAGE_MANAGE))
+                    .map(guild::findMembersWithRoles)
+                    .forEach(task -> task.onSuccess(members -> {
+                        members.stream().map(Member::getAsMention).forEach(mentions::append);
+
+                        message.editMessage(mentions).queueAfter(2, TimeUnit.SECONDS,
+                                msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
+                                        RestAction.getDefaultSuccess(),
+                                        throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
+                                throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
+                    }));
+        });
+    }
+
+    @Override
+    public void onThreadRevealed(@NotNull ThreadRevealedEvent event) {
+        final ThreadChannel thread = event.getThread();
+        final Guild guild = thread.getGuild();
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
+                .first();
+        if (config == null) {
+            config = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(config);
+        }
 
         if (!config.isShouldModeratorsJoinThreads())
             return;
