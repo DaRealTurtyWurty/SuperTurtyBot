@@ -59,6 +59,7 @@ public class CommandHook extends ListenerAdapter {
     private static final String STARTUP_MESSAGE = "Initiating... Startup... Sequence.. Hello! I'm TurtyBot. I have a bunch of commands you can use, and I'm always adding more! You can see all of my commands by typing `/commands` in any channel that you and I can access.";
     private static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     private static boolean IS_DEV_MODE = false;
+    private static final Set<Long> LOADED_GUILDS = new HashSet<>();
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
@@ -113,7 +114,7 @@ public class CommandHook extends ListenerAdapter {
     private static void sendStartupMessage(@Nullable TextChannel channel, boolean shouldSendChangelog) {
         if (channel == null) return;
 
-        if(shouldSendChangelog) {
+        if (shouldSendChangelog) {
             String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
             channel.sendMessage(changelog).queue();
         } else {
@@ -460,20 +461,23 @@ public class CommandHook extends ListenerAdapter {
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         Guild guild = event.getGuild();
 
-        TextChannel generalChannel = guild.getTextChannels()
-                .stream()
-                .filter(channel -> channel.getName().equals("general"))
-                .findFirst()
-                .orElseGet(guild::getSystemChannel);
+        // This ensures that the startup message can't be sent multiple times
+        if (!LOADED_GUILDS.add(guild.getIdLong())) {
+            TextChannel generalChannel = guild.getTextChannels()
+                    .stream()
+                    .filter(channel -> channel.getName().equals("general"))
+                    .findFirst()
+                    .orElseGet(guild::getSystemChannel);
 
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
+            GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+            if (config == null) {
+                config = new GuildData(guild.getIdLong());
+                Database.getDatabase().guildData.insertOne(config);
+            }
 
-        if (config.isShouldSendStartupMessage()) {
-            sendStartupMessage(generalChannel, config.isShouldSendChangelog());
+            if (config.isShouldSendStartupMessage()) {
+                sendStartupMessage(generalChannel, config.isShouldSendChangelog());
+            }
         }
 
         if (this.commands.isEmpty())
