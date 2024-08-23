@@ -44,6 +44,7 @@ public class GuildData {
     private long birthdayChannel;
     private long welcomeChannel;
     private long collectorChannel;
+    private String discordInviteWhitelistChannels;
 
     // Showcases
     private long starboard;
@@ -149,6 +150,7 @@ public class GuildData {
         this.birthdayChannel = 0L;
         this.welcomeChannel = 0L;
         this.collectorChannel = 0L;
+        this.discordInviteWhitelistChannels = "";
 
         // Showcases
         this.starboard = 0L;

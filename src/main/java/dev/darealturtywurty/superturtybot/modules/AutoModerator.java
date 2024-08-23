@@ -1,6 +1,10 @@
 package dev.darealturtywurty.superturtybot.modules;
 
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -66,6 +70,13 @@ public class AutoModerator extends ListenerAdapter {
     }
 
     private void discordInvites(Message message) {
+        if(!message.isFromGuild()) return;
+
+        Guild guild = message.getGuild();
+        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (data == null || !GuildData.getLongs(data.getDiscordInviteWhitelistChannels()).contains(message.getChannel().getIdLong()))
+            return;
+
         if (INVITE_REGEX.matcher(message.getContentRaw()).find()) {
             message.delete()
                     .queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!")

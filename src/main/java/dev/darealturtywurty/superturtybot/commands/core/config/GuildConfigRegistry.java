@@ -419,4 +419,18 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setCollectingEnabled(Boolean.parseBoolean(value)))
                     .valueFromConfig(GuildData::isCollectingEnabled).build());
+
+    public static final GuildConfigOption DISCORD_INVITE_WHITELIST_CHANNELS = GUILD_CONFIG_OPTIONS.register("discord_invite_whitelist_channels",
+            new GuildConfigOption.Builder().dataType(DataType.STRING)
+                    .serializer(GuildData::setDiscordInviteWhitelistChannels)
+                    .valueFromConfig(GuildData::getDiscordInviteWhitelistChannels)
+                    .validator((event, value) -> {
+                        final String[] channels = value.split("[ ;]");
+                        for (final String channelStr : channels) {
+                            if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
+                                return false;
+                        }
+
+                        return true;
+                    }).build());
 }
