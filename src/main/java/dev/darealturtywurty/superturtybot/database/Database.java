@@ -42,6 +42,7 @@ public class Database {
     public final MongoCollection<ChatReviver> chatRevivers;
     public final MongoCollection<Birthday> birthdays;
     public final MongoCollection<SubmissionCategory> submissionCategories;
+    public final MongoCollection<UserCollectables> userCollectables;
 
     @SuppressWarnings("resource")
     public Database() {
@@ -77,6 +78,7 @@ public class Database {
         this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = database.getCollection("birthdays", Birthday.class);
         this.submissionCategories = database.getCollection("submissionCategories", SubmissionCategory.class);
+        this.userCollectables = database.getCollection("userCollectables", UserCollectables.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -107,6 +109,7 @@ public class Database {
         this.chatRevivers.createIndex(guildIndex);
         this.birthdays.createIndex(userIndex);
         this.submissionCategories.createIndex(guildIndex);
+        this.userCollectables.createIndex(userIndex);
     }
 
     public static Database getDatabase() {

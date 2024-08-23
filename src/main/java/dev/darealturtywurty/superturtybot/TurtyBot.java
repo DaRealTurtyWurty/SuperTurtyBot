@@ -7,8 +7,11 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicL
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
+import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollector;
+import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
@@ -73,6 +76,11 @@ public class TurtyBot {
                 .setDefault(Path.of("./lastStartTime.txt"))
                 .help("The path to the file that stores the last start time.");
 
+        parser.addArgument("-emojis", "--emojis")
+                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+                .setDefault(Path.of("./emojis.json"))
+                .help("The path to the emojis json file.");
+
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
         Constants.LOGGER.info("Loaded environment file!");
@@ -88,6 +96,9 @@ public class TurtyBot {
                 lastStartTime = 0L;
             }
         }
+
+        Path emojisPath = namespace.get("emojis");
+        EmojiReader.setEmojisPath(emojisPath);
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
 
@@ -181,6 +192,9 @@ public class TurtyBot {
 
         // Add AI message responder so that we can respond to messages using AI
         builder.addEventListeners(AIMessageResponder.INSTANCE);
+
+        // Add the minecraft mob collector so that we can collect minecraft mobs
+        builder.addEventListeners(new MinecraftMobCollector());
 
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);

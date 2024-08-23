@@ -408,4 +408,15 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setAiEnabled(Boolean.parseBoolean(value)))
                     .valueFromConfig(GuildData::isAiEnabled).build());
+
+    private static final GuildConfigOption COLLECTOR_CHANNEL = GUILD_CONFIG_OPTIONS.register("collector_channel",
+            new GuildConfigOption.Builder().dataType(DataType.LONG)
+                    .serializer((config, value) -> config.setCollectorChannel(Long.parseLong(value)))
+                    .valueFromConfig(GuildData::getCollectorChannel)
+                    .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+
+    public static final GuildConfigOption COLLECTING_ENABLED = GUILD_CONFIG_OPTIONS.register("collecting_enabled",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setCollectingEnabled(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isCollectingEnabled).build());
 }

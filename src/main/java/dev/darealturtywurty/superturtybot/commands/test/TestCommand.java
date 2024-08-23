@@ -45,6 +45,8 @@ public class TestCommand extends CoreCommand {
             return;
         }
 
-        reply(event, "✅ Test command!");
+        event.deferReply().queue();
+
+        event.getHook().editOriginal("✅ Test command!").queue();
     }
 }

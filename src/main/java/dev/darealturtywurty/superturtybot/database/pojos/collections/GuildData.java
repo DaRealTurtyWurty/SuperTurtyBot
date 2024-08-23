@@ -43,6 +43,7 @@ public class GuildData {
     private String nsfwChannels;
     private long birthdayChannel;
     private long welcomeChannel;
+    private long collectorChannel;
 
     // Showcases
     private long starboard;
@@ -131,6 +132,7 @@ public class GuildData {
     private boolean announceBirthdays;
     private List<Long> enabledBirthdayUsers;
     private boolean addSmashOrPassButtons;
+    private boolean isCollectingEnabled;
 
     public GuildData() {
         this(0L);
@@ -145,6 +147,8 @@ public class GuildData {
         this.optInChannels = "";
         this.nsfwChannels = "";
         this.birthdayChannel = 0L;
+        this.welcomeChannel = 0L;
+        this.collectorChannel = 0L;
 
         // Showcases
         this.starboard = 0L;
@@ -230,6 +234,7 @@ public class GuildData {
         this.announceBirthdays = true;
         this.enabledBirthdayUsers = new ArrayList<>();
         this.addSmashOrPassButtons = true;
+        this.isCollectingEnabled = true;
     }
 
     public boolean shouldLog(Event event) {

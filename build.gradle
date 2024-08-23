@@ -48,10 +48,10 @@ dependencies {
     implementation group: "io.github.cdimascio", name: "dotenv-java", version: "3.0.0"
     implementation group: "org.spongepowered", name: "configurate-hocon", version: "4.1.2"
     
-    implementation group: "ch.qos.logback", name: "logback-classic", version: "1.5.6"
+    implementation group: "ch.qos.logback", name: "logback-classic", version: '1.5.7'
     
     implementation group: "com.vdurmont", name: "emoji-java", version: "5.1.1"
-    implementation group: "org.jsoup", name: "jsoup", version: "1.17.2"
+    implementation group: "org.jsoup", name: "jsoup", version: '1.18.1'
     implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
@@ -59,7 +59,7 @@ dependencies {
     implementation group: 'io.github.matyrobbrt', name: 'curseforgeapi', version: '1.8.0'
     implementation group: 'net.bramp.ffmpeg', name: 'ffmpeg', version: '0.8.0'
     implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
-    implementation group: 'io.github.sashirestela', name: 'simple-openai', version: '3.5.0'
+    implementation group: 'io.github.sashirestela', name: 'simple-openai', version: '3.5.1'
     implementation group: 'com.knuddels', name: 'jtokkit', version: '1.1.0'
     
     implementation group: "org.jfree", name: "jfreechart", version: "1.5.4"
@@ -84,7 +84,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.8.0'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.7.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '6.1.4'
+    implementation group: 'io.javalin', name: 'javalin', version: '6.2.0'
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.0.2'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.0.2'
 

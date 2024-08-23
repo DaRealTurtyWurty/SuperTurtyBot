@@ -29,6 +29,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
+import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
@@ -109,6 +110,8 @@ public class CommandHook extends ListenerAdapter {
         if (devGuild != null) {
             IS_DEV_MODE = true;
         }
+
+        MinecraftMobRegistry.load();
     }
 
     private static void sendStartupMessage(@Nullable TextChannel channel, boolean shouldSendChangelog) {
@@ -371,6 +374,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new PetPetGifCommand());
         commands.add(new LoveCommand());
         commands.add(new SmashOrPassCommand());
+        commands.add(new CollectablesCommand());
 
         // Levelling
         commands.add(new RankCommand());
