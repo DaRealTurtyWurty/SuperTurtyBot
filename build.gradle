@@ -11,8 +11,7 @@ java {
 }
 
 repositories {
-    //noinspection JCenterRepository - JCenter is still required for JRAW and possibly some other dependencies
-    jcenter()
+    mavenCentral()
 
     maven {
         url "https://jitpack.io"
@@ -26,7 +25,12 @@ repositories {
         url "https://maven.lavalink.dev/releases"
     }
 
-    mavenCentral()
+    maven {
+        url 'https://mlt.jfrog.io/artifactory/mlt-mvn-releases-local'
+    }
+
+    //noinspection JCenterRepository - JCenter is still required for JRAW and mary-tts
+    jcenter()
 }
 
 dependencies {
@@ -72,7 +76,7 @@ dependencies {
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.9.0"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
-    implementation("com.sedmelluq:jda-nas:1.1.0") {
+    implementation (group: 'com.github.sedmelluq.jda-nas', name: 'jda-nas', version: 'master') {
         exclude module: "udp-queue"
     }
     implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.7")
