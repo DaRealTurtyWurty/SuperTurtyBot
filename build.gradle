@@ -16,21 +16,15 @@ repositories {
     maven {
         url "https://jitpack.io"
     }
-    
+
     maven { 
         url "https://m2.duncte123.dev/releases"
     }
 
-    maven{
+    maven {
+        name "arbjergDevReleases"
         url "https://maven.lavalink.dev/releases"
     }
-
-    maven {
-        url 'https://mlt.jfrog.io/artifactory/mlt-mvn-releases-local'
-    }
-
-    //noinspection JCenterRepository - JCenter is still required for JRAW and mary-tts
-    jcenter()
 }
 
 dependencies {
@@ -56,7 +50,7 @@ dependencies {
     
     implementation group: "com.vdurmont", name: "emoji-java", version: "5.1.1"
     implementation group: "org.jsoup", name: "jsoup", version: '1.18.1'
-    implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
+    implementation group: "com.github.mattbdean", name: "JRAW", version: "v1.1.0"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
     implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.6.0'
@@ -72,16 +66,14 @@ dependencies {
     implementation group: "net.sourceforge.argparse4j", name: "argparse4j", version: "0.9.0"
     
     implementation group: "net.dv8tion", name: "JDA", version: '5.0.0-beta.24'
-    implementation group: "dev.arbjerg", name: "lavaplayer", version: '2.1.2'
+    implementation group: "dev.arbjerg", name: "lavaplayer", version: '2.2.1'
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.9.0"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
-    implementation (group: 'com.github.sedmelluq.jda-nas', name: 'jda-nas', version: 'master') {
-        exclude module: "udp-queue"
-    }
-    implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.7")
-    implementation("club.minnced:udpqueue-native-win-x86-64:0.2.7")
-    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.4.0"
+    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.7.2"
+    implementation group: "dev.arbjerg", name: "lavaplayer-natives", version: "2.2.1"
+    implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.9") // adds linux 64bit
+    implementation("club.minnced:udpqueue-native-win-x86-64:0.2.9") // adds windows 64bit
 
     implementation group: 'com.github.twitch4j', name: 'twitch4j', version: '1.20.0'
     implementation group: 'com.github.philippheuer.events4j', name: 'events4j-handler-reactor', version: '0.12.1'
@@ -99,6 +91,12 @@ dependencies {
 
     annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.32"
     compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.32"
+}
+
+configurations.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute module("de.dfki.lt.jtok:jtok-core:1.9.3") using module("com.github.DFKI-MLT:JTok:v2.16") because "JTok is not available in Maven Central"
+    }
 }
 
 application {

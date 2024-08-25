@@ -25,6 +25,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.Web;
 import dev.lavalink.youtube.clients.WebWithThumbnail;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -73,6 +74,7 @@ public final class AudioManager {
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
         final var ytSource = new YoutubeAudioSourceManager(true, new WebWithThumbnail());
         ytSource.setPlaylistPageCount(100);
+        Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
         AUDIO_MANAGER.registerSourceManager(ytSource);
 
         ShutdownHooks.register(() -> {

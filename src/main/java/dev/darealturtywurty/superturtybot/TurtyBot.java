@@ -11,7 +11,6 @@ import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollector;
-import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;

@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.core;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import marytts.LocalMaryInterface;
 import marytts.exceptions.MaryConfigurationException;
 import marytts.exceptions.SynthesisException;
@@ -17,7 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class SpeakVoiceCommand extends CoreCommand {
-    private static final LocalMaryInterface MARY;
+    private static LocalMaryInterface MARY = null;
 
     static {
         try {
@@ -26,7 +27,7 @@ public class SpeakVoiceCommand extends CoreCommand {
             MARY = new LocalMaryInterface();
             System.setProperty("java.version", javaVersion);
         } catch (MaryConfigurationException exception) {
-            throw new IllegalStateException("Could not initialize MaryTTS interface", exception);
+            Constants.LOGGER.error("Could not initialize MaryTTS", exception);
         }
     }
 
@@ -65,6 +66,11 @@ public class SpeakVoiceCommand extends CoreCommand {
             return;
 
         event.getMessage().delete().queue();
+
+        if(MARY == null) {
+            reply(event, "❌ Could not initialize MaryTTS!");
+            return;
+        }
 
         int commandIndex = event.getMessage().getContentRaw().indexOf(getName());
         String content = event.getMessage().getContentRaw().substring(commandIndex + getName().length());

@@ -149,6 +149,14 @@ public final class Environment {
         return getString("OPENAI_ORGANIZATION_ID");
     }
 
+    public Optional<String> poToken() {
+        return getString("PO_TOKEN");
+    }
+
+    public Optional<String> poVisitorData() {
+        return getString("PO_VISITOR_DATA");
+    }
+
     public Optional<Double> getDouble(String key){
         try {
             return getString(key).map(Double::parseDouble);
