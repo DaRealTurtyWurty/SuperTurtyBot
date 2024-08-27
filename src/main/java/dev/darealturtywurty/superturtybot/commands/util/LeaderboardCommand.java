@@ -270,16 +270,23 @@ public class LeaderboardCommand extends CoreCommand {
         final int rank = indexedRank + 1;
 
         final Member member = guild.getMemberById(userId);
-        String avatarURL, username;
+        User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
+        String username;
+        InputStream avatarStream;
         if (member == null) {
-            avatarURL = DISCORD_ICON_URL;
-            username = "Unknown";
+            if(user != null) {
+                avatarStream = user.getEffectiveAvatar().download(512).join();
+                username = user.getEffectiveName();
+            } else {
+                avatarStream = new URI(DISCORD_ICON_URL).toURL().openStream();
+                username = "Unknown";
+            }
         } else {
-            avatarURL = member.getEffectiveAvatarUrl();
+            avatarStream = member.getEffectiveAvatar().download(512).join();
             username = member.getEffectiveName();
         }
 
-        final BufferedImage avatarImage = ImageIO.read(new URI(avatarURL).toURL());
+        final BufferedImage avatarImage = ImageIO.read(avatarStream);
         graphics.drawImage(avatarImage, START_X, START_Y + (SPACING + PART_SIZE) * indexedRank, PART_SIZE, PART_SIZE, null);
 
         switch (rank) {
@@ -337,12 +344,12 @@ public class LeaderboardCommand extends CoreCommand {
     }
 
     private static void drawGuildInfo(Guild guild, Graphics2D graphics, FontMetrics metrics) throws IOException, NullPointerException, URISyntaxException {
-        String guildIconURL = guild.getIconUrl();
-        if (guildIconURL == null) {
-            guildIconURL = DISCORD_ICON_URL;
+        InputStream guildIconStream = guild.getIcon().download().join();
+        if (guildIconStream == null) {
+            guildIconStream = new URI(DISCORD_ICON_URL).toURL().openStream();
         }
 
-        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(new URI(guildIconURL).toURL()), 420);
+        final BufferedImage guildIcon = BotUtils.resize(ImageIO.read(guildIconStream), 420);
         graphics.drawImage(guildIcon, 125, 125, guildIcon.getWidth(), guildIcon.getHeight(), null);
 
         final String guildName = guild.getName();

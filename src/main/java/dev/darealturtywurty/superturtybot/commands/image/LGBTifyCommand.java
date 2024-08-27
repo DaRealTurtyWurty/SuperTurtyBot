@@ -62,7 +62,7 @@ public class LGBTifyCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        Either<BufferedImage, HttpStatus> response = ApiHandler.lgbtify(target.getEffectiveAvatarUrl());
+        Either<BufferedImage, HttpStatus> response = ApiHandler.lgbtify(target.getEffectiveAvatar().getUrl());
         if(response.isRight()) {
             event.getHook().editOriginal("❌ Failed to LGBTify user!")
                     .queue();

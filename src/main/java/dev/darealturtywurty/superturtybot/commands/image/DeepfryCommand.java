@@ -115,7 +115,7 @@ public class DeepfryCommand extends CoreCommand {
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
         Member member = event.getTargetMember();
-        String url = member != null ? member.getEffectiveAvatarUrl() : event.getTarget().getEffectiveAvatarUrl();
+        String url = member != null ? member.getEffectiveAvatar().getUrl() : event.getTarget().getEffectiveAvatar().getUrl();
 
         event.deferReply().queue();
 

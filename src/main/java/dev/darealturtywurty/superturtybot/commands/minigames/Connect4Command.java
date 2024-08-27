@@ -179,9 +179,9 @@ public class Connect4Command extends CoreCommand {
         BufferedImage yellow = null;
 
         try {
-            red = ImageIO.read(new URI(jda.getUserById(game.getUserId()).getEffectiveAvatarUrl()).toURL());
-            yellow = ImageIO.read(game.isBot() ? new URI(jda.getSelfUser().getEffectiveAvatarUrl()).toURL() : new URI(jda.getUserById(game.getOpponentId()).getEffectiveAvatarUrl()).toURL());
-        } catch (IOException | URISyntaxException exception) {
+            red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar().download().join());
+            yellow = ImageIO.read(game.isBot() ? jda.getSelfUser().getEffectiveAvatar().download().join() : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
+        } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
         }
 

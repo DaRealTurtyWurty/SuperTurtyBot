@@ -335,8 +335,7 @@ public class RankCommand extends CoreCommand {
             graphics.drawString(DECIMAL_FORMAT.format(xpPercent) + "%", 1500, 640);
 
             // User Avatar
-            BufferedImage userAvatar = ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL());
-            userAvatar = BotUtils.resize(userAvatar, 512);
+            BufferedImage userAvatar = ImageIO.read(member.getEffectiveAvatar().download(512).join());
 
             if (!card.getAvatarOutlineImage().isBlank()) {
                 final var avatarOut = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
@@ -362,7 +361,7 @@ public class RankCommand extends CoreCommand {
             graphics.dispose();
 
             return rankCardBuffer;
-        } catch (final IOException | URISyntaxException exception) {
+        } catch (final IOException exception) {
             Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
         }
 

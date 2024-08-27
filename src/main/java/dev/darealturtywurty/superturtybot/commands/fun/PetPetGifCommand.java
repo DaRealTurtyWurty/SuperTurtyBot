@@ -83,7 +83,7 @@ public class PetPetGifCommand extends CoreCommand {
                     reply(event, "❌ You must provide a user to pet pet gif!", false, true);
                     return;
                 }
-                imageStr = user.getEffectiveAvatarUrl();
+                imageStr = user.getEffectiveAvatar().getUrl();
                 break;
             case "image":
                 imageStr = event.getOption("image", null, OptionMapping::getAsString);

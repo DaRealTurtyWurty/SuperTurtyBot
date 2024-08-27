@@ -69,7 +69,7 @@ public class FlagifyCommand extends CoreCommand {
         event.deferReply().queue();
 
         Either<BufferedImage, HttpStatus> response = ApiHandler.flagify(
-                new ImageFlagifyRequestData.Builder(target.getEffectiveAvatarUrl())
+                new ImageFlagifyRequestData.Builder(target.getEffectiveAvatar().getUrl())
                         .colors(5)
                         .build());
         if(response.isRight()) {
