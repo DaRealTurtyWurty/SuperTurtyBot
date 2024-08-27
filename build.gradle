@@ -84,19 +84,8 @@ dependencies {
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.0.2'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.0.2'
 
-    implementation group: 'de.dfki.mary', name: 'voice-cmu-slt-hsmm', version: '5.2.1', {
-        exclude group: 'com.twmacinta', module: 'fast-md5'
-        exclude group: 'gov.nist.math', module: 'Jampack'
-    }
-
     annotationProcessor group: "org.projectlombok", name: "lombok", version: "1.18.32"
     compileOnly group: "org.projectlombok", name: "lombok", version: "1.18.32"
-}
-
-configurations.configureEach {
-    resolutionStrategy.dependencySubstitution {
-        substitute module("de.dfki.lt.jtok:jtok-core:1.9.3") using module("com.github.DFKI-MLT:JTok:v2.16") because "JTok is not available in Maven Central"
-    }
 }
 
 application {
