@@ -100,7 +100,7 @@ public class PetPetGifCommand extends CoreCommand {
         BufferedImage image;
         try {
             image = ImageIO.read(new URI(imageStr).toURL());
-        } catch (IOException | URISyntaxException exception) {
+        } catch (IOException | URISyntaxException | IllegalArgumentException exception) {
             event.getHook().editOriginal("❌ The image you provided is invalid!").queue();
             return;
         }
