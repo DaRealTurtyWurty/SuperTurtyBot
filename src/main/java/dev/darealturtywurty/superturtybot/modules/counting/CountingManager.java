@@ -76,7 +76,6 @@ public class CountingManager extends ListenerAdapter {
         if (Float.isNaN(given)) return;
 
         UserData data;
-        // If the user is the latest counter
         if (profile.getLatestCounter() == user.getIdLong()) {
             final List<UserData> users = profile.getUsers();
             final Optional<UserData> optData = users.stream().filter(d -> d.getUser() == user.getIdLong()).findFirst();
@@ -95,7 +94,6 @@ public class CountingManager extends ListenerAdapter {
                     return;
                 }
             } else {
-                // Add their data since it's not present but will now need to be
                 data = new UserData(user.getIdLong());
                 profile.getUsers().add(data);
             }

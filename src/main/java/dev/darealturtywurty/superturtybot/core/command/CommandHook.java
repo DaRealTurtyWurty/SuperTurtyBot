@@ -465,7 +465,7 @@ public class CommandHook extends ListenerAdapter {
         Guild guild = event.getGuild();
 
         // This ensures that the startup message can't be sent multiple times
-        if (!LOADED_GUILDS.add(guild.getIdLong())) {
+        if (LOADED_GUILDS.add(guild.getIdLong())) {
             TextChannel generalChannel = guild.getTextChannels()
                     .stream()
                     .filter(channel -> channel.getName().equals("general"))
