@@ -67,10 +67,8 @@ public class EvalCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if(event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElse(0L)) {
-            reply(event, "❌ You do not have permission to use this command!");
+        if(event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
-        }
 
         String content = event.getMessage().getContentRaw();
         String code = content.substring(content.indexOf(" ") + 1);

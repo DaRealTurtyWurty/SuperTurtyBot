@@ -43,7 +43,7 @@ public class RestartCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if (Environment.INSTANCE.ownerId().map(id -> event.getAuthor().getIdLong() == id).orElse(false))
+        if(event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
 
         event.getMessage().reply("I am restarting! 👍 😎").mentionRepliedUser(false).queue();
