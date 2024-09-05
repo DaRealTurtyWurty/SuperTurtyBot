@@ -287,6 +287,7 @@ public class LeaderboardCommand extends CoreCommand {
         }
 
         final BufferedImage avatarImage = ImageIO.read(avatarStream);
+        BotUtils.resize(avatarImage, PART_SIZE);
         graphics.drawImage(avatarImage, START_X, START_Y + (SPACING + PART_SIZE) * indexedRank, PART_SIZE, PART_SIZE, null);
 
         switch (rank) {

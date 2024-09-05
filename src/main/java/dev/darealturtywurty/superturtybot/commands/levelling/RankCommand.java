@@ -336,6 +336,7 @@ public class RankCommand extends CoreCommand {
 
             // User Avatar
             BufferedImage userAvatar = ImageIO.read(member.getEffectiveAvatar().download(512).join());
+            userAvatar = BotUtils.resize(userAvatar, 512);
 
             if (!card.getAvatarOutlineImage().isBlank()) {
                 final var avatarOut = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
