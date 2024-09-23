@@ -47,18 +47,43 @@ public final class LevellingManager extends ListenerAdapter {
             if (currentDay == Calendar.MONDAY) {
                 long currentTime = System.currentTimeMillis();
                 long sevenDaysInMillis = TimeUnit.DAYS.toMillis(7);
+
+                Map<Long, List<Levelling>> levellingPerGuild = new HashMap<>();
                 for (Levelling levelling : Database.getDatabase().levelling.find()
                         .filter(Filters.and(
                                 Filters.lt("lastMessageTime", currentTime - sevenDaysInMillis),
                                 Filters.gt("xp", 0)))
                         .into(new ArrayList<>())) {
-                    int xp = levelling.getXp();
-                    int newXP = xp - (int) (xp * 0.05);
-                    Database.getDatabase().levelling.updateOne(
-                            Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())),
-                            Updates.set("xp", newXP));
+                    levellingPerGuild.computeIfAbsent(levelling.getGuild(), id -> new ArrayList<>()).add(levelling);
+                }
 
-                    Constants.LOGGER.info("Removed 5% ({}) XP from {} in {}", xp - newXP, levelling.getUser(), levelling.getGuild());
+                Map<Long, GuildData> guildConfigs = new HashMap<>();
+                for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
+                    guildConfigs.computeIfAbsent(entry.getKey(), id -> {
+                        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", id)).first();
+                        if(guildData == null) {
+                            guildData = new GuildData(id);
+                            Database.getDatabase().guildData.insertOne(guildData);
+                        }
+
+                        return guildData;
+                    });
+                }
+
+                for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
+                    GuildData config = guildConfigs.get(entry.getKey());
+                    if(!config.isShouldDepleteLevels() || !config.isLevellingEnabled())
+                        continue;
+
+                    for (Levelling levelling : entry.getValue()) {
+                        int xp = levelling.getXp();
+                        int newXP = xp - (int) (xp * 0.05);
+                        Database.getDatabase().levelling.updateOne(
+                                Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())),
+                                Updates.set("xp", newXP));
+
+                        Constants.LOGGER.info("Removed 5% ({}) XP from {} in {}", xp - newXP, levelling.getUser(), levelling.getGuild());
+                    }
                 }
             }
         }, 10, 30));
