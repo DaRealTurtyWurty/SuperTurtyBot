@@ -433,4 +433,9 @@ public class GuildConfigRegistry {
 
                         return true;
                     }).build());
+
+    public static final GuildConfigOption LEVEL_DEPLETION_ENABLED = GUILD_CONFIG_OPTIONS.register("level_depletion_enabled",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setShouldDepleteLevels(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isShouldDepleteLevels).build());
 }

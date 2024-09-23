@@ -5,6 +5,9 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
+import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -29,7 +32,7 @@ import java.util.stream.Stream;
 
 public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
-    private final Map<Long, Set<Long>> disabledChannels = new HashMap<>();
+    private final Map<Long, Set<Long>> disabledChannels = Map.of();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
     private final List<Long> disabledGuilds = List.of();
 
@@ -38,10 +41,31 @@ public final class LevellingManager extends ListenerAdapter {
         ScheduledExecutorService cooldownScheduler = Executors.newSingleThreadScheduledExecutor();
         cooldownScheduler.scheduleAtFixedRate(new CooldownManager(), 0, 1000, TimeUnit.MILLISECONDS);
         ShutdownHooks.register(cooldownScheduler::shutdown);
+
+        DailyTaskScheduler.addTask(new DailyTask(() -> {
+            int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+            if (currentDay == Calendar.MONDAY) {
+                long currentTime = System.currentTimeMillis();
+                long sevenDaysInMillis = TimeUnit.DAYS.toMillis(7);
+                for (Levelling levelling : Database.getDatabase().levelling.find()
+                        .filter(Filters.and(
+                                Filters.lt("lastMessageTime", currentTime - sevenDaysInMillis),
+                                Filters.gt("xp", 0)))
+                        .into(new ArrayList<>())) {
+                    int xp = levelling.getXp();
+                    int newXP = xp - (int) (xp * 0.05);
+                    Database.getDatabase().levelling.updateOne(
+                            Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())),
+                            Updates.set("xp", newXP));
+
+                    Constants.LOGGER.info("Removed 5% ({}) XP from {} in {}", xp - newXP, levelling.getUser(), levelling.getGuild());
+                }
+            }
+        }, 10, 30));
     }
 
     public boolean areLevelsEnabled(Guild guild) {
-        if(this.disabledGuilds.contains(guild.getIdLong()))
+        if (this.disabledGuilds.contains(guild.getIdLong()))
             return false;
 
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
@@ -51,7 +75,8 @@ public final class LevellingManager extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem() || event.getAuthor().isBot()) return;
+        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem() || event.getAuthor().isBot())
+            return;
 
         final Guild guild = event.getGuild();
 
@@ -59,11 +84,28 @@ public final class LevellingManager extends ListenerAdapter {
         final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
 
         final List<Long> disabledChannels = GuildData.getLongs(config.getDisabledLevellingChannels());
-        if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong())) return;
-        if(event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong())) return;
+        if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong()) || this.disabledChannels.getOrDefault(guild.getIdLong(), Set.of()).contains(event.getChannel().getIdLong()))
+            return;
+
+        if (event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()) || this.disabledChannels.getOrDefault(guild.getIdLong(), Set.of()).contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))
+            return;
 
         Member member = event.getMember();
-        if (member == null || !cooldown(guild, member, config)) return;
+        if (member == null)
+            return;
+
+        if (config.isShouldDepleteLevels()) {
+            final Levelling userProfile = getProfile(guild, member);
+            if (userProfile.getXp() <= 0)
+                return;
+
+            Database.getDatabase().levelling.updateOne(
+                    Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", member.getIdLong())),
+                    Updates.set("lastMessageTime", System.currentTimeMillis()));
+        }
+
+        if (!cooldown(guild, member, config))
+            return;
 
         int xp = addXP(guild, member.getUser(),
                 ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP()),
@@ -179,9 +221,9 @@ public final class LevellingManager extends ListenerAdapter {
         final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
         final var levelRoles = getLevelRoles(config);
         final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
-                                         .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
-                                         .map(guild::getRoleById)
-                                         .filter(Objects::nonNull).toList();
+                .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
+                .map(guild::getRoleById)
+                .filter(Objects::nonNull).toList();
         guild.modifyMemberRoles(member, toAddRoles, null).queue();
     }
 
@@ -222,7 +264,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         final Map<String, Rarity> canAdd = new HashMap<>();
         RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values()
-                                            .forEach(item -> canAdd.put(item.getName(), item.rarity));
+                .forEach(item -> canAdd.put(item.getName(), item.rarity));
 
         inventory.forEach(canAdd::remove);
 
@@ -237,8 +279,8 @@ public final class LevellingManager extends ListenerAdapter {
         if (config.getLevelRoles().isEmpty()) return Map.of();
 
         return Stream.of(config.getLevelRoles().split("[ ;]")).map(it -> it.split("->"))
-                     .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
-                     .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
+                .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
+                .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }
 
     public static int getLevelForXP(final int xp) {

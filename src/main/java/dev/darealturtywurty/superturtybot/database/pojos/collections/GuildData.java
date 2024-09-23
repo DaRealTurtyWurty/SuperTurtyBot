@@ -67,6 +67,7 @@ public class GuildData {
     private boolean hasLevelUpChannel;
     private long levelUpMessageChannel;
     private boolean shouldEmbedLevelUpMessage;
+    private boolean shouldDepleteLevels;
 
     // Economy
     private String economyCurrency;

@@ -17,6 +17,7 @@ public class Levelling {
     
     private int level;
     private int xp;
+    private long lastMessageTime;
     
     private RankCard rankCard;
     private List<String> inventory;
