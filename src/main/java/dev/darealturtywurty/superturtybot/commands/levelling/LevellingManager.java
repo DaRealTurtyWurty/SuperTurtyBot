@@ -32,9 +32,7 @@ import java.util.stream.Stream;
 
 public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
-    private final Map<Long, Set<Long>> disabledChannels = Map.of();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
-    private final List<Long> disabledGuilds = List.of();
 
     @SuppressWarnings("resource")
     private LevellingManager() {
@@ -90,9 +88,6 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     public boolean areLevelsEnabled(Guild guild) {
-        if (this.disabledGuilds.contains(guild.getIdLong()))
-            return false;
-
         final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
         final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
         return config.isLevellingEnabled();
@@ -109,10 +104,10 @@ public final class LevellingManager extends ListenerAdapter {
         final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
 
         final List<Long> disabledChannels = GuildData.getLongs(config.getDisabledLevellingChannels());
-        if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong()) || this.disabledChannels.getOrDefault(guild.getIdLong(), Set.of()).contains(event.getChannel().getIdLong()))
+        if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong()))
             return;
 
-        if (event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()) || this.disabledChannels.getOrDefault(guild.getIdLong(), Set.of()).contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))
+        if (event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))
             return;
 
         Member member = event.getMember();
