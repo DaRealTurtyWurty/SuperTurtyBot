@@ -30,8 +30,20 @@ public class TimeUtils {
         return LocalDate.now().getYear() - 100;
     }
 
-    public static int calculateMaxBirthYear() {
-        return LocalDate.now().getYear() - 12;
+    /**
+     * The returned year must be the current year negative 13 years.
+     *
+     * @return The maximum birth year
+     */
+    public static int calculateMaxBirthYear(int month, int day) {
+        var currentDate = LocalDate.now();
+        var birthday = LocalDate.of(currentDate.getYear(), month, day);
+
+        if (birthday.isAfter(currentDate)) {
+            return currentDate.getYear() - 13;
+        }
+
+        return currentDate.getYear() - 12;
     }
 
     public static String mapMonth(int month) {
@@ -139,5 +151,16 @@ public class TimeUtils {
 
     public static int calculateAge(int day, int month, int year) {
         return Period.between(LocalDate.of(year, month, day), LocalDate.now()).getYears();
+    }
+
+    public static int determineAge(int year, int month, int day) {
+        var currentDate = LocalDate.now();
+        var birthday = LocalDate.of(year, month, day);
+
+        if (birthday.isAfter(currentDate)) {
+            return -1;
+        }
+
+        return Period.between(birthday, currentDate).getYears();
     }
 }
