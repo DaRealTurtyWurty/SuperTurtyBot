@@ -10,14 +10,18 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,6 +45,7 @@ public class UserConfigCommand extends CoreCommand {
                         .addOption(OptionType.STRING, "key", "The data key to change", true, true)
                         .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
+
 
     @Override
     public CommandCategory getCategory() {
@@ -82,16 +87,47 @@ public class UserConfigCommand extends CoreCommand {
         if (!event.isFromGuild() || !event.getName().equals(getName()))
             return;
 
-        final String term = event.getFocusedOption().getValue();
+        AutoCompleteQuery query = event.getFocusedOption();
+        if (query.getName().equals("key")) {
+            final String term = query.getValue();
 
-        final List<String> keys = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                .values()
-                .stream()
-                .map(UserConfigOption::getSaveName)
-                .filter(key -> key.contains(term))
-                .limit(25)
-                .toList();
-        event.replyChoiceStrings(keys).queue();
+            final List<String> keys = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
+                    .values()
+                    .stream()
+                    .map(UserConfigOption::getSaveName)
+                    .filter(key -> key.contains(term))
+                    .limit(25)
+                    .toList();
+            event.replyChoiceStrings(keys).queue();
+        } else if (query.getName().equals("value")) {
+            String key = event.getOption("key", null, OptionMapping::getAsString);
+            if (key == null) {
+                event.replyChoices().queue();
+                return;
+            }
+
+            final Optional<UserConfigOption> found = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
+                    .values()
+                    .stream()
+                    .filter(userConfigOption -> userConfigOption.getSaveName().equalsIgnoreCase(key))
+                    .findFirst();
+            if (found.isEmpty()) {
+                event.replyChoices().queue();
+                return;
+            }
+
+            final UserConfigOption option = found.get();
+            final List<Pair<String, String>> values = option.getAutoComplete().apply(query.getValue());
+            if (values == null || values.isEmpty()) {
+                event.replyChoices().queue();
+                return;
+            }
+
+            event.replyChoices(values.stream()
+                            .map(pair -> new Command.Choice(pair.getLeft(), pair.getRight()))
+                            .toList())
+                    .queue();
+        }
     }
 
     @Override
