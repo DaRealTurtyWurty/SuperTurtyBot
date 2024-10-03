@@ -83,8 +83,9 @@ public class LoggingManager extends ListenerAdapter {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> event.getGuild().retrieveAuditLogs().type(ActionType.CHANNEL_CREATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -103,8 +104,9 @@ public class LoggingManager extends ListenerAdapter {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.CHANNEL_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -127,8 +129,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onEmojiAdded(EmojiAddedEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_CREATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -147,8 +150,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onEmojiRemoved(EmojiRemovedEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -168,8 +172,9 @@ public class LoggingManager extends ListenerAdapter {
         if (!event.isFromGuild()) return;
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.CHANNEL_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -190,8 +195,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGenericEmojiUpdate(GenericEmojiUpdateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.EMOJI_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -234,8 +240,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGenericGuildStickerUpdate(GenericGuildStickerUpdateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.STICKER_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -258,8 +265,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGenericGuildUpdate(GenericGuildUpdateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.GUILD_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -280,8 +288,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGenericRoleUpdate(GenericRoleUpdateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -302,8 +311,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildBan(GuildBanEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.BAN).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -324,8 +334,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildInviteCreate(GuildInviteCreateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.INVITE_CREATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -346,8 +357,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildInviteDelete(GuildInviteDeleteEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.INVITE_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -424,8 +436,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildStickerRemoved(GuildStickerRemovedEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.STICKER_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -444,8 +457,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildMemberUpdateTimeOut(GuildMemberUpdateTimeOutEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.MEMBER_UPDATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -469,8 +483,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onGuildUnban(GuildUnbanEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.UNBAN).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -491,8 +506,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.MESSAGE_BULK_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -607,8 +623,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onRoleCreate(RoleCreateEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_CREATE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();
@@ -642,8 +659,9 @@ public class LoggingManager extends ListenerAdapter {
     public void onRoleDelete(RoleDeleteEvent event) {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.ROLE_DELETE).queue(entries -> {
+            if (entries.isEmpty()) return;
+
             AuditLogEntry entry = entries.getFirst();
-            if (entry == null) return;
 
             User user = entry.getUser();
             String userName = user == null ? "Unknown" : user.getAsMention();

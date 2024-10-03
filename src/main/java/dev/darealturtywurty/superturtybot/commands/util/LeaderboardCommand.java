@@ -208,8 +208,12 @@ public class LeaderboardCommand extends CoreCommand {
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
-            String str = "%s | XP: %s | Level: %s".formatted(StringUtils.truncateString(username, 20),
-                    StringUtils.numberFormat(xp, 0).replace(".0", ""), StringUtils.numberFormat(level).replace(".0", ""));
+
+            // TODO: Apply padding between the name, xp and level so that they align properly
+            String str = "%s | XP: %s | Level: %s".formatted(
+                    StringUtils.truncateString(username, 20),
+                    StringUtils.numberFormat(xp, 0).replace(".0", ""),
+                    StringUtils.numberFormat(level).replace(".0", ""));
             while (metrics1.stringWidth(str) > 1850) {
                 font = font.deriveFont(font.getSize() - 1f);
                 metrics1 = graphics.getFontMetrics(font);
@@ -250,8 +254,11 @@ public class LeaderboardCommand extends CoreCommand {
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
-            String str = "%s | Balance: %s%s".formatted(StringUtils.truncateString(username, 20),
-                    guildData.getEconomyCurrency(), StringUtils.numberFormat(balance));
+            // TODO: Apply padding between the name and balance so that they align properly
+            String str = "%s | Balance: %s%s".formatted(
+                    StringUtils.truncateString(username, 20),
+                    guildData.getEconomyCurrency(),
+                    StringUtils.numberFormat(balance));
             while (metrics1.stringWidth(str) > 1850) {
                 font = font.deriveFont(font.getSize() - 1f);
                 metrics1 = graphics.getFontMetrics(font);
