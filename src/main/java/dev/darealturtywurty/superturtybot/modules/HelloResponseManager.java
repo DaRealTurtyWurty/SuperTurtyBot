@@ -1,9 +1,10 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageType;
-import net.dv8tion.jda.api.entities.User;
+import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -52,6 +53,20 @@ public class HelloResponseManager extends ListenerAdapter {
             return;
 
         if (shouldRespond(message)) {
+            if(message.isFromGuild()) {
+                Guild guild = message.getGuild();
+                GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+                if(data == null) {
+                    data = new GuildData(guild.getIdLong());
+                    Database.getDatabase().guildData.insertOne(data);
+                }
+
+                MessageChannelUnion channel = message.getChannel();
+
+                if(data.isAiEnabled() && !GuildData.getLongs(data.getAiUserBlacklist()).contains(author.getIdLong()) && GuildData.getLongs(data.getAiChannelWhitelist()).contains(channel.getIdLong()))
+                    return;
+            }
+
             message.getChannel().sendTyping().queue();
             String response = RESPONSES.get((int) (Math.random() * RESPONSES.size()));
 
