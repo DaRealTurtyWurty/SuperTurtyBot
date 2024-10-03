@@ -97,7 +97,7 @@ public final class WelcomeManager extends ListenerAdapter {
             String goodbyeMessage = GOODBYE_MESSAGES.get((int) (Math.random() * GOODBYE_MESSAGES.size()));
             TextChannel welcomeChannel = guild.getTextChannelById(data.getWelcomeChannel());
             if (welcomeChannel != null)
-                welcomeChannel.sendMessageFormat(goodbyeMessage, user.getAsMention() + "(" + user.getEffectiveName().replace("%", "%%") + ")").queue();
+                welcomeChannel.sendMessage(goodbyeMessage.replace("%s", user.getAsMention() + "(" + user.getEffectiveName() + ")")).queue();
             else {
                 data.setWelcomeChannel(0);
                 Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), data);
