@@ -45,7 +45,8 @@ public class ApiHandler {
     public static Either<BufferedImage, HttpStatus> getFlag(String cca3) {
         try (Response response = makeRequest("geo/flag?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
             return respondWithImage(response);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -78,7 +79,8 @@ public class ApiHandler {
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
 
             return Either.left(Pair.of(image, region));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -90,7 +92,8 @@ public class ApiHandler {
     public static Either<BufferedImage, HttpStatus> getOutline(String cca3) {
         try (Response response = makeRequest("geo/outline?apiKey=%s&cca3=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), cca3))) {
             return respondWithImage(response);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -123,7 +126,8 @@ public class ApiHandler {
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
 
             return Either.left(Pair.of(image, region));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -145,7 +149,8 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -173,7 +178,8 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(body.string(), Region.class));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -212,7 +218,8 @@ public class ApiHandler {
             }
 
             return Either.left(territories);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -246,7 +253,8 @@ public class ApiHandler {
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -283,7 +291,8 @@ public class ApiHandler {
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -304,7 +313,8 @@ public class ApiHandler {
             JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
 
             return Either.left(object.get("valid").getAsBoolean());
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -327,7 +337,8 @@ public class ApiHandler {
             String release = object.get("release").getAsString();
             String snapshot = object.get("snapshot").getAsString();
             return Either.left(new CoupledPair<>(new MinecraftVersion(release, true), new MinecraftVersion(snapshot, false)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -351,7 +362,8 @@ public class ApiHandler {
                     .map(obj -> new MinecraftVersion(obj.get("version").getAsString(), obj.get("isRelease").getAsBoolean()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -373,7 +385,8 @@ public class ApiHandler {
             String stable = object.get("stable").getAsString();
             String latest = object.get("latest").getAsString();
             return Either.left(new CoupledPair<>(new ForgeVersion(stable, true), new ForgeVersion(latest, false)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -397,7 +410,8 @@ public class ApiHandler {
                     .map(obj -> new ForgeVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -419,7 +433,8 @@ public class ApiHandler {
             String stable = object.get("stable").getAsString();
             String latest = object.get("latest").getAsString();
             return Either.left(new CoupledPair<>(new NeoforgeVersion(stable, true), new NeoforgeVersion(latest, false)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -443,7 +458,8 @@ public class ApiHandler {
                     .map(obj -> new NeoforgeVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -466,7 +482,8 @@ public class ApiHandler {
             String stable = object.get("stable").getAsString();
             String unstable = object.get("unstable").getAsString();
             return Either.left(new CoupledPair<>(new FabricVersion(stable, true), new FabricVersion(unstable, false)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -491,7 +508,8 @@ public class ApiHandler {
                     .map(obj -> new FabricVersion(obj.get("version").getAsString(), obj.get("isStable").getAsBoolean()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -514,7 +532,8 @@ public class ApiHandler {
             String stable = object.get("stable").getAsString();
             String unstable = object.get("unstable").getAsString();
             return Either.left(new CoupledPair<>(new QuiltVersion(stable, true), new QuiltVersion(unstable, false)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -539,7 +558,8 @@ public class ApiHandler {
                     .map(obj -> new QuiltVersion(obj.get("version").getAsString(), obj.get("isRelease").getAsBoolean()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -560,7 +580,8 @@ public class ApiHandler {
 
             String version = object.get("version").getAsString();
             return Either.left(new ParchmentVersion(version));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -584,7 +605,8 @@ public class ApiHandler {
                     .map(obj -> new ParchmentVersion(obj.get("version").getAsString()))
                     .toList();
             return Either.left(versions);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -605,7 +627,8 @@ public class ApiHandler {
 
             String parchmentVersion = object.get("version").getAsString();
             return Either.left(new ParchmentVersion(parchmentVersion));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -645,7 +668,8 @@ public class ApiHandler {
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
             return Either.left(image);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -677,7 +701,8 @@ public class ApiHandler {
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
             return Either.left(image);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -699,7 +724,8 @@ public class ApiHandler {
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
             return Either.left(image);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -721,7 +747,8 @@ public class ApiHandler {
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
             return Either.left(image);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -743,7 +770,8 @@ public class ApiHandler {
             var stream = new ByteArrayInputStream(bytes);
             BufferedImage image = ImageIO.read(stream);
             return Either.left(image);
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -770,7 +798,8 @@ public class ApiHandler {
             BufferedImage image = ImageIO.read(stream);
 
             return Either.left(new Geoguesser(country, image));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -789,7 +818,8 @@ public class ApiHandler {
                 return Either.right(HttpStatus.NOT_FOUND);
 
             return Either.left(Constants.GSON.fromJson(json, Pornstar.class));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -814,7 +844,8 @@ public class ApiHandler {
             String optionB = object.get("optionB").getAsString();
 
             return Either.left(new WouldYouRather(optionA, optionB));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -839,7 +870,8 @@ public class ApiHandler {
             String extension = languageObj.get("extension").getAsString();
 
             return Either.left(new JobCommand.Code(code, new JobCommand.Code.Language(language, extension)));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -863,16 +895,17 @@ public class ApiHandler {
             byte[] bytes = Base64.getDecoder().decode(base64);
 
             return Either.left(Pair.of(name, bytes));
-        } catch (IOException ignored) {
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private static Response makeRequest(String path) {
+    private static Response makeRequest(String path) throws IOException {
         try {
             return Constants.HTTP_CLIENT.newCall(new Request.Builder().url(BASE_URL + path).build()).execute();
         } catch (IOException exception) {
-            throw new IllegalStateException("Failed to make request!", exception);
+            throw new IOException("Failed to make request!", exception);
         }
     }
 
