@@ -8,9 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.GenericAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
@@ -21,7 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.List;
@@ -141,8 +138,7 @@ public class UserConfigCommand extends CoreCommand {
         if ("get".equalsIgnoreCase(subcommand)) {
             final String key = event.getOption("key", null, OptionMapping::getAsString);
 
-            final Bson filter = getFilter(event.getGuild(), event.getUser());
-            final UserConfig config = get(filter, event.getGuild(), event.getUser());
+            final UserConfig config = get(event.getUser());
 
             if (key == null) {
                 // Get all data
@@ -185,8 +181,7 @@ public class UserConfigCommand extends CoreCommand {
             final String key = event.getOption("key", "", OptionMapping::getAsString);
             final String value = event.getOption("value", "", OptionMapping::getAsString);
 
-            final Bson filter = getFilter(event.getGuild(), event.getUser());
-            final UserConfig config = get(filter, event.getGuild(), event.getUser());
+            final UserConfig config = get(event.getUser());
 
             final Optional<Entry<String, UserConfigOption>> found = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
                     .entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(key)).findFirst();
@@ -213,7 +208,7 @@ public class UserConfigCommand extends CoreCommand {
 
             option.serialize(config, value);
             final Bson update = Updates.set(option.getSaveName(), option.getValueFromConfig().apply(config));
-            final UpdateResult result = Database.getDatabase().userConfig.updateOne(filter, update);
+            final UpdateResult result = Database.getDatabase().userConfig.updateOne(Filters.eq("user", event.getUser().getIdLong()), update);
             if (result.getModifiedCount() > 0) {
                 event.getHook().editOriginal("✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!").mentionRepliedUser(false).queue();
                 return;
@@ -226,17 +221,13 @@ public class UserConfigCommand extends CoreCommand {
         reply(event, "❌ `" + subcommand + "` is not a valid subcommand!", false, true);
     }
 
-    private static UserConfig get(Bson filter, Guild guild, User user) {
-        UserConfig found = Database.getDatabase().userConfig.find(filter).first();
+    private static UserConfig get(User user) {
+        UserConfig found = Database.getDatabase().userConfig.find(Filters.eq("user", user.getIdLong())).first();
         if (found == null) {
-            found = new UserConfig(guild.getIdLong(), user.getIdLong());
+            found = new UserConfig(user.getIdLong());
             Database.getDatabase().userConfig.insertOne(found);
         }
 
         return found;
-    }
-
-    private static Bson getFilter(Guild guild, User user) {
-        return Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
     }
 }

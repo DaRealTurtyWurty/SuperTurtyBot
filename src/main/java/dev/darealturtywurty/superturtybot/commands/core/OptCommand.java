@@ -95,11 +95,9 @@ public class OptCommand extends CoreCommand {
             return;
         }
 
-        Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
-                Filters.eq("guild", guild.getIdLong()));
-        UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
+        UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", event.getUser().getIdLong())).first();
         if (userConfig == null) {
-            userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
+            userConfig = new UserConfig(event.getUser().getIdLong());
             Database.getDatabase().userConfig.insertOne(userConfig);
         }
 
@@ -160,11 +158,10 @@ public class OptCommand extends CoreCommand {
                     return;
                 }
 
-                Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
-                        Filters.eq("guild", guild.getIdLong()));
+                Bson userFilter = Filters.eq("user", event.getUser().getIdLong());
                 UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
                 if (userConfig == null) {
-                    userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
+                    userConfig = new UserConfig(event.getUser().getIdLong());
                     Database.getDatabase().userConfig.insertOne(userConfig);
                 }
 
@@ -207,11 +204,10 @@ public class OptCommand extends CoreCommand {
                     return;
                 }
 
-                Bson userFilter = Filters.and(Filters.eq("user", event.getUser().getIdLong()),
-                        Filters.eq("guild", guild.getIdLong()));
+                Bson userFilter = Filters.eq("user", event.getUser().getIdLong());
                 UserConfig userConfig = Database.getDatabase().userConfig.find(userFilter).first();
                 if (userConfig == null) {
-                    userConfig = new UserConfig(guild.getIdLong(), event.getUser().getIdLong());
+                    userConfig = new UserConfig(event.getUser().getIdLong());
                     Database.getDatabase().userConfig.insertOne(userConfig);
                 }
 
