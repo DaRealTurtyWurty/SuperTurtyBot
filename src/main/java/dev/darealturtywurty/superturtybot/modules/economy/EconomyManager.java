@@ -8,16 +8,19 @@ import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -149,11 +152,23 @@ public class EconomyManager {
                                 updateAccount(account);
                                 endOfDayIncomeTaxes.remove(String.valueOf(account.getUser()));
 
-                                user.openPrivateChannel().queue(channel -> channel.sendMessage(
-                                        "You have been taxed <>%d! Your new balance is <>%d."
-                                                .replace("<>", guildData.getEconomyCurrency())
-                                                .formatted(amount, account.getBank())
-                                ).queue(), RestAction.getDefaultSuccess());
+                                UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", account.getUser())).first();
+                                if (userConfig == null) {
+                                    userConfig = new UserConfig(account.getUser());
+                                    Database.getDatabase().userConfig.insertOne(userConfig);
+                                }
+
+                                UserConfig.TaxMessageType taxMessageType = userConfig.getTaxMessageType();
+                                if (taxMessageType != UserConfig.TaxMessageType.OFF) {
+                                    user.openPrivateChannel()
+                                            .flatMap(channel -> channel.sendMessageFormat(
+                                                    "%s You were taxed %s%d for the end of the day in %s!",
+                                                    taxMessageType == UserConfig.TaxMessageType.SILENT ? "@silent" : "",
+                                                    guildData.getEconomyCurrency(),
+                                                    amount,
+                                                    guild.getName()))
+                                            .queue();
+                                }
                             }
                         });
 
@@ -176,12 +191,12 @@ public class EconomyManager {
         return account.getJob() != null;
     }
 
-    public static boolean canWork(Economy account) {
-        return account.getNextWork() < System.currentTimeMillis();
+    public static boolean isOnWorkCooldown(Economy account) {
+        return account.getNextWork() >= System.currentTimeMillis();
     }
 
     public static int work(Economy account) {
-        if (!canWork(account)) return 0;
+        if (isOnWorkCooldown(account)) return 0;
 
         int amount = getPayAmount(account);
         int earned = Math.max(10, amount);

@@ -100,7 +100,7 @@ public class JobCommand extends EconomyCommand {
 
         switch (subcommand) {
             case "work" -> {
-                if (!EconomyManager.canWork(account)) {
+                if (EconomyManager.isOnWorkCooldown(account)) {
                     event.getHook().editOriginal("❌ You can start working %s!"
                             .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
                     return;
