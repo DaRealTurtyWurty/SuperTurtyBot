@@ -195,6 +195,21 @@ public class LeaderboardCommand extends CoreCommand {
 
         drawGuildInfo(guild, graphics, metrics);
 
+        int maxUsernameLength = 0;
+        int maxXPWidth = 0;
+        int maxLevelWidth = 0;
+
+        for (Levelling profile : profiles) {
+            String username = getUsername(guild, profile.getUser());
+            String truncatedUsername = StringUtils.truncateString(username, 20);
+            String formattedXP = StringUtils.numberFormat(profile.getXp(), 0).replace(".0", "");
+            String formattedLevel = StringUtils.numberFormat(profile.getLevel()).replace(".0", "");
+
+            maxUsernameLength = Math.max(maxUsernameLength, truncatedUsername.length());
+            maxXPWidth = Math.max(maxXPWidth, formattedXP.length());
+            maxLevelWidth = Math.max(maxLevelWidth, formattedLevel.length());
+        }
+
         for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
             if (indexedRank >= profiles.size()) {
                 break;
@@ -204,16 +219,20 @@ public class LeaderboardCommand extends CoreCommand {
             final long userId = profile.getUser();
             final int level = profile.getLevel();
             final int xp = profile.getXp();
-            String username = drawUser(guild, graphics, metrics, indexedRank, userId);
+            String username = getUsername(guild, userId);
+            drawUser(guild, graphics, metrics, indexedRank, userId);
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
 
-            // TODO: Apply padding between the name, xp and level so that they align properly
-            String str = "%s | XP: %s | Level: %s".formatted(
-                    StringUtils.truncateString(username, 20),
-                    StringUtils.numberFormat(xp, 0).replace(".0", ""),
-                    StringUtils.numberFormat(level).replace(".0", ""));
+            String truncatedUsername = StringUtils.truncateString(username, 20);
+            String formattedXP = StringUtils.numberFormat(xp, 0).replace(".0", "");
+            String formattedLevel = StringUtils.numberFormat(level).replace(".0", "");
+
+            String str = String.format(
+                    "%-" + maxUsernameLength + "s | XP: %" + maxXPWidth + "s | Level: %" + maxLevelWidth + "s",
+                    truncatedUsername, formattedXP, formattedLevel);
+
             while (metrics1.stringWidth(str) > 1850) {
                 font = font.deriveFont(font.getSize() - 1f);
                 metrics1 = graphics.getFontMetrics(font);
@@ -236,6 +255,18 @@ public class LeaderboardCommand extends CoreCommand {
 
         drawGuildInfo(guild, graphics, metrics);
 
+        int maxUsernameLength = 0;
+        int maxBalanceWidth = 0;
+
+        for (Economy account : accounts) {
+            String username = getUsername(guild, account.getUser());
+            String truncatedUsername = StringUtils.truncateString(username, 20);
+            String formattedBalance = StringUtils.numberFormat(EconomyManager.getBalance(account));
+
+            maxUsernameLength = Math.max(maxUsernameLength, truncatedUsername.length());
+            maxBalanceWidth = Math.max(maxBalanceWidth, formattedBalance.length());
+        }
+
         for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
             if (indexedRank >= accounts.size()) {
                 break;
@@ -244,7 +275,8 @@ public class LeaderboardCommand extends CoreCommand {
             final Economy account = accounts.get(indexedRank);
             final long userId = account.getUser();
             final long balance = EconomyManager.getBalance(account);
-            String username = drawUser(guild, graphics, metrics, indexedRank, userId);
+            String username = getUsername(guild, userId);
+            drawUser(guild, graphics, metrics, indexedRank, userId);
 
             GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
             if (guildData == null) {
@@ -254,11 +286,13 @@ public class LeaderboardCommand extends CoreCommand {
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
-            // TODO: Apply padding between the name and balance so that they align properly
-            String str = "%s | Balance: %s%s".formatted(
-                    StringUtils.truncateString(username, 20),
-                    guildData.getEconomyCurrency(),
-                    StringUtils.numberFormat(balance));
+
+            String truncatedUsername = StringUtils.truncateString(username, 20);
+            String formattedBalance = StringUtils.numberFormat(balance);
+            String str = String.format(
+                    "%-" + maxUsernameLength + "s | Balance: %s%s",
+                    truncatedUsername, guildData.getEconomyCurrency(), formattedBalance);
+
             while (metrics1.stringWidth(str) > 1850) {
                 font = font.deriveFont(font.getSize() - 1f);
                 metrics1 = graphics.getFontMetrics(font);
@@ -273,24 +307,26 @@ public class LeaderboardCommand extends CoreCommand {
         return buffer;
     }
 
-    private static String drawUser(Guild guild, Graphics2D graphics, FontMetrics metrics, int indexedRank, long userId) throws IOException, URISyntaxException {
+    private static String getUsername(Guild guild, long userId) {
+        final Member member = guild.getMemberById(userId);
+        User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
+        return user == null ? "Unknown" : user.getEffectiveName();
+    }
+
+    private static void drawUser(Guild guild, Graphics2D graphics, FontMetrics metrics, int indexedRank, long userId) throws IOException, URISyntaxException {
         final int rank = indexedRank + 1;
 
         final Member member = guild.getMemberById(userId);
         User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
-        String username;
         InputStream avatarStream;
         if (member == null) {
-            if(user != null) {
+            if (user != null) {
                 avatarStream = user.getEffectiveAvatar().download(512).join();
-                username = user.getEffectiveName();
             } else {
                 avatarStream = new URI(DISCORD_ICON_URL).toURL().openStream();
-                username = "Unknown";
             }
         } else {
             avatarStream = member.getEffectiveAvatar().download(512).join();
-            username = member.getEffectiveName();
         }
 
         final BufferedImage avatarImage = ImageIO.read(avatarStream);
@@ -336,8 +372,6 @@ public class LeaderboardCommand extends CoreCommand {
                 graphics.setColor(Color.WHITE);
             }
         }
-
-        return username;
     }
 
     private static Pair<BufferedImage, Graphics2D> constructTemplate() throws IOException {
