@@ -12,6 +12,7 @@ import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import dev.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -20,6 +21,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -34,7 +36,7 @@ public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
     private final Map<Long, Map<Long, Long>> cooldownMap = new ConcurrentHashMap<>();
 
-    @SuppressWarnings("resource")
+    @SuppressWarnings("resource") // It is closed in the shutdown hook
     private LevellingManager() {
         ScheduledExecutorService cooldownScheduler = Executors.newSingleThreadScheduledExecutor();
         cooldownScheduler.scheduleAtFixedRate(new CooldownManager(), 0, 1000, TimeUnit.MILLISECONDS);
@@ -55,22 +57,11 @@ public final class LevellingManager extends ListenerAdapter {
                     levellingPerGuild.computeIfAbsent(levelling.getGuild(), id -> new ArrayList<>()).add(levelling);
                 }
 
-                Map<Long, GuildData> guildConfigs = new HashMap<>();
-                for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
-                    guildConfigs.computeIfAbsent(entry.getKey(), id -> {
-                        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", id)).first();
-                        if(guildData == null) {
-                            guildData = new GuildData(id);
-                            Database.getDatabase().guildData.insertOne(guildData);
-                        }
-
-                        return guildData;
-                    });
-                }
+                Map<Long, GuildData> guildConfigs = getGuildDataMap(levellingPerGuild);
 
                 for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
                     GuildData config = guildConfigs.get(entry.getKey());
-                    if(!config.isShouldDepleteLevels() || !config.isLevellingEnabled())
+                    if (!config.isShouldDepleteLevels() || !config.isLevellingEnabled())
                         continue;
 
                     for (Levelling levelling : entry.getValue()) {
@@ -85,6 +76,22 @@ public final class LevellingManager extends ListenerAdapter {
                 }
             }
         }, 10, 30));
+    }
+
+    private static @NotNull Map<Long, GuildData> getGuildDataMap(Map<Long, List<Levelling>> levellingPerGuild) {
+        Map<Long, GuildData> guildConfigs = new HashMap<>();
+        for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
+            guildConfigs.computeIfAbsent(entry.getKey(), id -> {
+                GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", id)).first();
+                if (guildData == null) {
+                    guildData = new GuildData(id);
+                    Database.getDatabase().guildData.insertOne(guildData);
+                }
+
+                return guildData;
+            });
+        }
+        return guildConfigs;
     }
 
     public boolean areLevelsEnabled(Guild guild) {
@@ -250,6 +257,16 @@ public final class LevellingManager extends ListenerAdapter {
     private void sendLevelUpMessage(GuildData config, Member member, int level, @Nullable Message replyTo) {
         if (config.isDisableLevelUpMessages()) return;
 
+        UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", member.getIdLong())).first();
+        if (userConfig == null) {
+            userConfig = new UserConfig(member.getIdLong());
+            Database.getDatabase().userConfig.insertOne(userConfig);
+        }
+
+        UserConfig.LevelUpMessageType type = userConfig.getLevelUpMessageType();
+        if (type == UserConfig.LevelUpMessageType.NONE)
+            return;
+
         final var description = new StringBuilder(member.getAsMention() + ", you are now Level " + level + "! 🎉");
 
         final var embed = new EmbedBuilder();
@@ -258,20 +275,24 @@ public final class LevellingManager extends ListenerAdapter {
         embed.setColor(Color.BLUE);
 
         if (!config.isHasLevelUpChannel() && replyTo != null) {
-            if (config.isShouldEmbedLevelUpMessage()) {
-                replyTo.replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+            if (config.isShouldEmbedLevelUpMessage() && type != UserConfig.LevelUpMessageType.NORMAL) {
+                if (type == UserConfig.LevelUpMessageType.DM) {
+                    member.getUser().openPrivateChannel().queue(channel -> channel.sendMessage(description).queue());
+                } else {
+                    replyTo.replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
+                }
             } else {
                 replyTo.reply(description).mentionRepliedUser(false).queue();
             }
         } else {
             final TextChannel channel = member.getJDA().getTextChannelById(config.getLevelUpMessageChannel());
             if (channel == null && replyTo != null) {
-                if (config.isShouldEmbedLevelUpMessage()) {
+                if (config.isShouldEmbedLevelUpMessage() && type != UserConfig.LevelUpMessageType.NORMAL) {
                     replyTo.replyEmbeds(embed.build()).mentionRepliedUser(false).queue();
-                } else {
+                } else if (type != UserConfig.LevelUpMessageType.NORMAL) {
                     replyTo.reply(description).mentionRepliedUser(false).queue();
                 }
-            } else if (config.isShouldEmbedLevelUpMessage() && channel != null) {
+            } else if (config.isShouldEmbedLevelUpMessage() && channel != null && type != UserConfig.LevelUpMessageType.NORMAL) {
                 channel.sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
             } else if (channel != null) {
                 channel.sendMessage(description).mentionRepliedUser(false).queue();
