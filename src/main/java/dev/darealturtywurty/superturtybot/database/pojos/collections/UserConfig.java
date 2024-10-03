@@ -14,7 +14,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserConfig {
-    private long guild;
     private long user;
 
     // Might need this in the future? Discord doesn't want to state how it works.
@@ -25,8 +24,7 @@ public class UserConfig {
     private LevelUpMessageType levelUpMessageType = LevelUpMessageType.EMBED;
     private TaxMessageType taxMessageType = TaxMessageType.ON;
 
-    public UserConfig(long guildId, long userId) {
-        this.guild = guildId;
+    public UserConfig(long userId) {
         this.user = userId;
     }
 
@@ -53,7 +51,7 @@ public class UserConfig {
     }
 
     public enum LevelUpMessageType {
-        EMBED, NORMAL, NONE
+        EMBED, NORMAL, DM, NONE
     }
 
     public enum TaxMessageType {
