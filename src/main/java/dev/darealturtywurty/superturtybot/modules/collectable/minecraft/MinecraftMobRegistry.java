@@ -560,7 +560,7 @@ public class MinecraftMobRegistry {
             .emoji("silverfish")
             .question("List 3 blocks that silverfish can hide in.")
             .answer()
-            .anyNof(3, "Stone", "Cobblestone", "Stone Bricks", "Mossy Stone Bricks", "Cracked Stone Bricks", "Chiseled Stone Bricks")
+            .anyNof(3, "Stone", "Cobblestone", "Stone Bricks", "Mossy Stone Bricks", "Cracked Stone Bricks", "Chiseled Stone Bricks", "Deepslate")
             .notSegment(new Answer.NotSegment.Builder()
                     .segments("Mossy Cobblestone", "Andesite", "Diorite", "Granite", "Polished Andesite", "Polished Diorite", "Polished Granite", "Smooth Stone"))
             .finish()

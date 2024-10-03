@@ -452,7 +452,7 @@ public class Answer {
 
         public Builder anyNof(int number, String... segments) {
             return anyNof(number, Arrays.stream(segments)
-                    .map(segment -> new AnswerSegment.Builder().segment(segment).build())
+                    .map(segment -> new AnswerSegment.Builder().segment(segment).contains(true).build())
                     .toArray(AnswerSegment[]::new));
         }
 

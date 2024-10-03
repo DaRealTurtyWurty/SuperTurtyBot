@@ -48,12 +48,31 @@ public class MinecraftMobCollector extends ListenerAdapter {
         if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong())
             return;
 
+        test(event, guild);
+
         List<Long> messageTimes = guildMessageMap.computeIfAbsent(guild.getIdLong(), k -> new ArrayList<>());
         messageTimes.removeIf(time -> time < System.currentTimeMillis() - TimeUnit.HOURS.toMillis(8));
         messageTimes.add(event.getMessage().getTimeCreated().toInstant().toEpochMilli());
 
         handleAnswer(event, guild);
         handleScheduling(event, guild);
+    }
+
+    private void test(MessageReceivedEvent event, Guild guild) {
+        if(gameInstances.stream().anyMatch(instance -> instance.collectable() == MinecraftMobRegistry.SILVERFISH))
+            return;
+
+        MinecraftMobCollectable collectable = MinecraftMobRegistry.SILVERFISH;
+
+        var embed = new EmbedBuilder()
+                .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
+                .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
+                .setTimestamp(Instant.now())
+                .setColor(collectable.getRarity().getColor())
+                .build();
+        event.getChannel().sendMessageEmbeds(embed).queue(message -> {
+            gameInstances.add(new CollectableGameInstance<>(guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(), collectable));
+        });
     }
 
     private void handleAnswer(MessageReceivedEvent event, Guild guild) {
