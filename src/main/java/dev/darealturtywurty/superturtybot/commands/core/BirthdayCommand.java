@@ -37,7 +37,7 @@ public class BirthdayCommand extends CoreCommand {
                 new SubcommandData("set", "Sets your birthday").addOptions(
                         new OptionData(OptionType.INTEGER, "day", "The day of your birthday", true, true).setRequiredRange(1, 31),
                         new OptionData(OptionType.INTEGER, "month", "The month of your birthday", true).setRequiredRange(1, 12),
-                        new OptionData(OptionType.INTEGER, "year", "The year of your birthday", true).setRequiredRange(TimeUtils.calculateMinBirthYear(), TimeUtils.calculateMaxBirthYear(0, 0))
+                        new OptionData(OptionType.INTEGER, "year", "The year of your birthday", true).setRequiredRange(TimeUtils.calculateMinBirthYear(), TimeUtils.calculateMaxBirthYear(1, 1))
                 ),
                 new SubcommandData("view", "Views a user's birthday").addOptions(
                         new OptionData(OptionType.USER, "user", "The user to view the birthday of", false)
