@@ -87,8 +87,13 @@ public class HeistCommand extends EconomyCommand {
             return;
         }
 
-        if (EconomyManager.getBalance(account) < EconomyManager.determineHeistSetupCost(account)) {
-            event.getHook().editOriginal("❌ You do not have enough money to start a heist!").queue();
+        long balance = EconomyManager.getBalance(account);
+        long setupCost = EconomyManager.determineHeistSetupCost(account);
+        if (balance < setupCost) {
+            event.getHook().editOriginalFormat("❌ You need another %s%s to start a heist!",
+                    config.getEconomyCurrency(),
+                    StringUtils.numberFormat(setupCost - balance)
+            ).queue();
             return;
         }
 
@@ -114,8 +119,13 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    if (EconomyManager.getBalance(account) < EconomyManager.determineHeistSetupCost(account)) {
-                        message.editMessage("❌ You do not have enough money to start a heist!").queue();
+                    long balance = EconomyManager.getBalance(account);
+                    long setupCost = EconomyManager.determineHeistSetupCost(account);
+                    if (balance < setupCost) {
+                        message.editMessageFormat("❌ You need another %s%s to start a heist!",
+                                config.getEconomyCurrency(),
+                                StringUtils.numberFormat(setupCost - balance)
+                        ).queue();
                         return;
                     }
 
