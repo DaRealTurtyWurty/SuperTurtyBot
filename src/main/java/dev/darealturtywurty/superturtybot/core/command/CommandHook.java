@@ -412,7 +412,6 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new JobCommand());
         commands.add(new RewardCommand());
         commands.add(new RobCommand());
-        commands.add(new SexWorkCommand());
         commands.add(new ShopCommand());
         commands.add(new WithdrawCommand());
         commands.add(new SlotsCommand());

@@ -22,7 +22,6 @@ public class Economy {
     private long nextRob;
     private long nextWork;
     private long nextCrime;
-    private long nextSexWork;
     private long nextHeist;
 
     private long nextDaily;
