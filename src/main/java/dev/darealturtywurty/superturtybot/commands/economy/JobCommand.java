@@ -132,8 +132,8 @@ public class JobCommand extends EconomyCommand {
                     levelUpMessage = "You are ready for a promotion! Type `/job promote` to start the promotion minigame!";
                 }
 
-                event.getHook().editOriginal("✅ You worked and earned %s%s! %s"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(money), levelUpMessage)).queue();
+                event.getHook().editOriginal("✅ You worked and earned %s%s! You can start working in %s!\n%s"
+                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(money), TimeFormat.RELATIVE.format(account.getNextWork()), levelUpMessage)).queue();
             }
             case "register" -> {
                 String job = Objects.requireNonNull(event.getOption("job")).getAsString();
