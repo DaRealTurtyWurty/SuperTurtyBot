@@ -81,14 +81,14 @@ public class MinecraftMobCollector extends ListenerAdapter {
 
             Answer answer = collectable.getAnswer();
             String content = event.getMessage().getContentRaw();
+
+            UserCollectables.Collectables minecraftMobCollectables = userCollectables.getCollectables(UserCollectables.CollectionType.MINECRAFT_MOBS);
+            if (minecraftMobCollectables.hasCollectable(collectable)) {
+                CoreCommand.reply(event, "❌ You already have this collectable!");
+                return;
+            }
+
             if (answer.matches(content)) {
-                UserCollectables.Collectables minecraftMobCollectables = userCollectables.getCollectables(UserCollectables.CollectionType.MINECRAFT_MOBS);
-
-                if (minecraftMobCollectables.hasCollectable(collectable)) {
-                    CoreCommand.reply(event, "❌ You already have this collectable!");
-                    return;
-                }
-
                 minecraftMobCollectables.collect(collectable);
                 Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
                 CoreCommand.reply(event, "✅ You have successfully collected a `" + collectable.getRichName() + "`!");
