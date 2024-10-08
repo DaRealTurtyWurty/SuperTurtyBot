@@ -119,7 +119,7 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         if (account.getNextCrime() > System.currentTimeMillis()) {
-            event.getHook().editOriginalFormat("❌ You must wait %s before committing another crime!",
+            event.getHook().editOriginalFormat("❌ You can commit a crime again %s!",
                     TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
             return;
         }
