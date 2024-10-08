@@ -49,16 +49,18 @@ public class BalanceCommand extends EconomyCommand {
                         StringUtils.numberFormat(account.getBank()),
                         StringUtils.numberFormat(EconomyManager.getBalance(account))));
 
+        long betWins = account.getTotalBetWin();
+        long betLosses = account.getTotalBetLoss();
         embed.addField("Bet Losses",
-                currency + StringUtils.numberFormat(Math.abs(account.getTotalBetLoss())),
+                currency + StringUtils.numberFormat(Math.abs(betLosses)),
                 true);
         embed.addField("Bet Wins",
-                currency + StringUtils.numberFormat(account.getTotalBetWin()),
+                currency + StringUtils.numberFormat(betWins),
                 true);
 
-        long betTotal = account.getTotalBetWin() - account.getTotalBetLoss();
+        long betTotal = betWins - betLosses;
         embed.addField("Bet Total",
-                betTotal < 0 ? "-" + currency + StringUtils.numberFormat(Math.abs(betTotal)) : currency + StringUtils.numberFormat(betTotal),
+                (betTotal < 0 ? "-" : "") + (currency + StringUtils.numberFormat(Math.abs(betTotal))),
                 true);
 
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
