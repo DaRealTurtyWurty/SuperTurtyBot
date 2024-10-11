@@ -183,8 +183,7 @@ public class TurtyBot {
         builder.addEventListeners(HelloResponseManager.INSTANCE);
 
         // Add file conversion manager so that we can convert files
-        // TODO: Figure out FFmpeg on Ubuntu
-        // builder.addEventListeners(FileConversionManager.INSTANCE);
+        builder.addEventListeners(FileConversionManager.INSTANCE);
 
         // Add welcome manager so that we can welcome new members and say goodbye to leaving members
         builder.addEventListeners(WelcomeManager.INSTANCE);

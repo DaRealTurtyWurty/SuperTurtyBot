@@ -36,13 +36,13 @@ public class GistManager extends ListenerAdapter {
     }
 
     private static final List<String> ACCEPTED_EXTENSIONS = List.of("txt", "gradle", "log", "java", "txt", "kt",
-        "groovy", "js", "json", "kts");
+            "groovy", "js", "json", "kts");
 
     public static final GistManager INSTANCE = new GistManager();
-    
+
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        if (GITHUB == null || GIST == null)
+        if (GITHUB == null || GIST == null || !event.getEmoji().getAsReactionCode().equals("📝"))
             return;
 
         if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
@@ -50,7 +50,7 @@ public class GistManager extends ListenerAdapter {
 
         final Guild guild = event.getGuild();
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-            .first();
+                .first();
         if (config == null) {
             config = new GuildData(guild.getIdLong());
             Database.getDatabase().guildData.insertOne(config);
@@ -58,7 +58,7 @@ public class GistManager extends ListenerAdapter {
 
         if (!config.isShouldCreateGists())
             return;
-        
+
         event.retrieveMessage().queue(message -> {
             final List<Attachment> attachments = getValidAttachments(message.getAttachments());
             if (attachments.isEmpty())
@@ -77,11 +77,11 @@ public class GistManager extends ListenerAdapter {
                             final String content = Files.readString(path);
                             if (!content.isBlank()) {
                                 gistFiles.put(attachment.getFileName(),
-                                    new GistFile().setContent(content).setFilename(attachment.getFileName()));
+                                        new GistFile().setContent(content).setFilename(attachment.getFileName()));
                             }
                         } catch (final IOException ignored) {
                         }
-                        
+
                         if (counter.incrementAndGet() >= attachments.size()) {
                             futureMap.complete(gistFiles);
                         }
@@ -95,40 +95,40 @@ public class GistManager extends ListenerAdapter {
                 } catch (final IOException ignored) {
                 }
             }
-            
+
             futureMap.thenAccept(files -> {
                 if (files.isEmpty())
                     return;
-                
+
                 try {
                     final Gist gist = GIST
-                        .createGist(new Gist().setDescription("").setPublic(false).setFiles(gistFiles));
+                            .createGist(new Gist().setDescription("").setPublic(false).setFiles(gistFiles));
                     final String url = gist.getHtmlUrl();
                     event.getReaction().clearReactions()
-                        .queue(v -> message
-                            .reply("Gist created at the request of " + event.getUser().getAsMention() + "!\n" + url)
-                            .mentionRepliedUser(false).queue());
+                            .queue(v -> message
+                                    .reply("Gist created at the request of " + event.getUser().getAsMention() + "!\n" + url)
+                                    .mentionRepliedUser(false).queue());
                 } catch (final IOException exception) {
                     message.reply("There has been an error creating a gist for this file!").mentionRepliedUser(false)
-                        .queue();
+                            .queue();
                     Constants.LOGGER.error("Failed to create gist!", exception);
                 }
             });
         });
     }
-    
+
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (GITHUB == null || GIST == null)
             return;
 
         if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot()
-            || event.getAuthor().isSystem())
+                || event.getAuthor().isSystem())
             return;
-        
+
         final Guild guild = event.getGuild();
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-            .first();
+                .first();
         if (config == null) {
             config = new GuildData(guild.getIdLong());
             Database.getDatabase().guildData.insertOne(config);
@@ -136,32 +136,32 @@ public class GistManager extends ListenerAdapter {
 
         if (!config.isShouldCreateGists())
             return;
-        
+
         final List<Attachment> attachments = event.getMessage().getAttachments();
         if (getValidAttachments(attachments).isEmpty())
             return;
 
         event.getMessage().addReaction(Emoji.fromFormatted("📝")).queue();
     }
-    
+
     private static List<Attachment> getValidAttachments(List<Attachment> attachments) {
         if (attachments.isEmpty())
             return List.of();
-        
+
         final List<Attachment> retVal = new ArrayList<>();
         for (final Attachment attachment : attachments) {
             if (!isValidAttachment(attachment)) {
                 continue;
             }
-            
+
             retVal.add(attachment);
         }
-        
+
         return retVal;
     }
 
     private static boolean isValidAttachment(Attachment attachment) {
         return !attachment.isImage() && !attachment.isVideo() && attachment.getFileExtension() != null
-            && ACCEPTED_EXTENSIONS.contains(attachment.getFileExtension().toLowerCase(Locale.ROOT));
+                && ACCEPTED_EXTENSIONS.contains(attachment.getFileExtension().toLowerCase(Locale.ROOT));
     }
 }
