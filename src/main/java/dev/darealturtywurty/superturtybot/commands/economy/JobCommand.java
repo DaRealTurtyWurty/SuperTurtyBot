@@ -11,6 +11,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import io.javalin.http.HttpStatus;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -20,16 +21,24 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.WordUtils;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +69,8 @@ public class JobCommand extends EconomyCommand {
                                 true, true)),
                 new SubcommandData("quit", "Quit your job"),
                 new SubcommandData("profile", "View your job profile"),
-                new SubcommandData("promote", "Promote yourself to the next job level"));
+                new SubcommandData("promote", "Promote yourself to the next job level"),
+                new SubcommandData("info", "Get information about the different jobs"));
     }
 
     @Override
@@ -171,7 +181,7 @@ public class JobCommand extends EconomyCommand {
                     event.getHook().editOriginal("❌ You must have a job to promote yourself!").queue();
                     return;
                 }
-                
+
                 if (!account.isReadyForPromotion()) {
                     event.getHook().editOriginal("❌ You are not ready for a promotion!").queue();
                     return;
@@ -183,6 +193,30 @@ public class JobCommand extends EconomyCommand {
                 }
 
                 startMathChallenge(event, account); // TODO: Minigame depending on job
+            }
+            case "info" -> {
+                var embed = new EmbedBuilder()
+                        .setTimestamp(Instant.now())
+                        .setColor(Color.CYAN)
+                        .setTitle("Job Information")
+                        .setDescription("Here is some information about the different jobs you can register for!")
+                        .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+
+                for (Economy.Job job : Economy.Job.values()) {
+                    embed.addField(WordUtils.capitalize(job.name().toLowerCase(Locale.ROOT).replace("_", " ")),
+                            """
+                                    **Salary**: %s%s
+                                    **Promotion Chance**: %d%%
+                                    **Promotion Multiplier**: %sx
+                                    **Work Cooldown**: %d minutes
+                                    """.formatted(config.getEconomyCurrency(), StringUtils.numberFormat(job.getSalary()),
+                                    Math.round(job.getPromotionChance() * 100),
+                                    StringUtils.numberFormat(job.getPromotionMultiplier(), 2),
+                                    TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds())),
+                            false);
+                }
+
+                event.getHook().sendMessageEmbeds(embed.build()).queue();
             }
             case null, default -> event.getHook().editOriginal("❌ You must specify a valid subcommand!").queue();
         }
@@ -235,37 +269,67 @@ public class JobCommand extends EconomyCommand {
                 .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
                 .queue(channel -> {
                     channel.addThreadMember(event.getUser()).queue();
-                    channel.sendMessageFormat(
-                            "Solve the following math problem to get promoted to the next job level!\n\n%s",
-                            challenge.question() + " = ?"
-                    ).queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                            .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                    && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                    && StringUtils.isNumber(e.getMessage().getContentRaw()))
-                            .timeout(time, TimeUnit.SECONDS)
-                            .timeoutAction(() -> {
-                                channel.sendMessage("❌ You took too long to answer!")
-                                        .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                account.setReadyForPromotion(false);
-                                EconomyManager.updateAccount(account);
-                            })
-                            .success(messageEvent -> {
-                                double answer = Double.parseDouble(messageEvent.getMessage().getContentRaw());
-                                if (answer == challenge.result()) {
-                                    channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                                                    account.getJobLevel() + 1)
-                                            .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                    account.setJobLevel(account.getJobLevel() + 1);
-                                } else {
-                                    channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
-                                                    challenge.result())
-                                            .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                }
 
-                                account.setReadyForPromotion(false);
-                                EconomyManager.updateAccount(account);
-                            }).build());
+                    channel.sendMessage("Solve the following math problem to get promoted to the next job level!")
+                            .addFiles(createMathChallengeImageUpload(challenge.question()))
+                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                                    .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
+                                            && e.getAuthor().getIdLong() == event.getUser().getIdLong()
+                                            && StringUtils.isNumber(e.getMessage().getContentRaw()))
+                                    .timeout(time, TimeUnit.SECONDS)
+                                    .timeoutAction(() -> {
+                                        channel.sendMessage("❌ You took too long to answer!")
+                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                        account.setReadyForPromotion(false);
+                                        EconomyManager.updateAccount(account);
+                                    })
+                                    .success(messageEvent -> {
+                                        double answer = Double.parseDouble(messageEvent.getMessage().getContentRaw());
+                                        if (answer == challenge.result()) {
+                                            channel.sendMessageFormat("✅ You have been promoted to level %d!",
+                                                            account.getJobLevel() + 1)
+                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                            account.setJobLevel(account.getJobLevel() + 1);
+                                        } else {
+                                            channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
+                                                            challenge.result())
+                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                        }
+
+                                        account.setReadyForPromotion(false);
+                                        EconomyManager.updateAccount(account);
+                                    }).build());
                 });
+    }
+
+    private static BufferedImage createMathChallengeImage(String question) {
+        Font font = new Font("Arial", Font.PLAIN, 20);
+        FontMetrics metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
+        int width = metrics.stringWidth(question + " = ") + 5;
+        int height = metrics.getHeight() + 5;
+
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        var graphics = image.createGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, width, height);
+        graphics.setFont(font);
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(question + " = ", 5, height - 5);
+        graphics.dispose();
+
+        return image;
+    }
+
+    private static FileUpload createMathChallengeImageUpload(String question) {
+        BufferedImage image = createMathChallengeImage(question);
+        var stream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(image, "png", stream);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not write image!", exception);
+        }
+
+        return FileUpload.fromData(stream.toByteArray(), "math_challenge.png");
     }
 
     public record Code(String code, Language language) {

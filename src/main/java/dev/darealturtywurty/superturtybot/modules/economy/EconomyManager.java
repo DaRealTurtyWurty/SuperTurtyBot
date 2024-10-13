@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.commands.economy.CrimeCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
@@ -201,7 +202,10 @@ public class EconomyManager {
         int amount = getPayAmount(account);
         int earned = Math.max(10, amount);
 
-        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+        if (!Environment.INSTANCE.isDevelopment()) {
+            account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+        }
+
         addMoney(account, earned, true);
 
         if (ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
@@ -278,7 +282,9 @@ public class EconomyManager {
 
         final int amount = ThreadLocalRandom.current().nextInt(1000);
         account.setWallet(EconomyManager.addMoney(account, amount));
-        account.setNextWork(System.currentTimeMillis() + 3600000L);
+        if (!Environment.INSTANCE.isDevelopment()) {
+            account.setNextWork(System.currentTimeMillis() + 3600000L);
+        }
         EconomyManager.updateAccount(account);
         return amount;
     }
