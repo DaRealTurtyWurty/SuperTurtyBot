@@ -1,4 +1,4 @@
-FROM ubuntu:20.04  # Or any newer version
+FROM ubuntu:24.10
 
 WORKDIR /opt/SuperTurtyBot/
 
