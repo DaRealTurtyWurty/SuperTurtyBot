@@ -1,15 +1,12 @@
-FROM openjdk:21-slim-buster as builder
+FROM ubuntu:20.04  # Or any newer version
 
-WORKDIR /opt/SuperTurtyBot/
-COPY build/libs/SuperTurtyBot-all.jar SuperTurtyBot.jar
-
-FROM debian:bullseye-slim
 WORKDIR /opt/SuperTurtyBot/
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get upgrade -y && \
+    apt-get install -y openjdk-21-jre ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /opt/SuperTurtyBot/SuperTurtyBot.jar .
+COPY build/libs/SuperTurtyBot-all.jar SuperTurtyBot.jar
 
 CMD ["java", "-jar", "SuperTurtyBot.jar", "-env", "/env/.env"]
