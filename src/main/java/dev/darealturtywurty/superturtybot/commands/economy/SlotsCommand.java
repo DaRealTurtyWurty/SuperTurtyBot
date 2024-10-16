@@ -108,8 +108,20 @@ public class SlotsCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        int betAmount = event.getOption("bet-amount", 1, OptionMapping::getAsInt);
-        play(event.getHook(), event.getMember(), guild, config, betAmount);
+        long amount;
+        try {
+            amount = event.getOption("amount", 1L, OptionMapping::getAsLong);
+        } catch (IllegalStateException | NumberFormatException exception) {
+            event.getHook().editOriginal("❌ You must provide a valid amount to bet!").queue();
+            return;
+        }
+
+        if (amount < 1) {
+            event.getHook().editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
+            return;
+        }
+
+        play(event.getHook(), event.getMember(), guild, config, amount);
     }
 
     private static EmbedBuilder createEmbed(Outcome outcome, Member member, GuildData config, String title) {

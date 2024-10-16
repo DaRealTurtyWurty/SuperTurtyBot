@@ -117,7 +117,7 @@ public class JobCommand extends EconomyCommand {
                 }
 
                 if (!EconomyManager.hasJob(account)) {
-                    int amount = EconomyManager.workNoJob(account);
+                    long amount = EconomyManager.workNoJob(account);
                     if (amount == 0) {
                         event.getHook().editOriginal("❌ You are not able to work right now!").queue();
                         EconomyManager.setNextWork(account, System.currentTimeMillis());
@@ -129,7 +129,7 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                int money = EconomyManager.work(account);
+                long money = EconomyManager.work(account);
                 if (money == 0) {
                     event.getHook().editOriginal("❌ You are not able to work right now!").queue();
                     EconomyManager.setNextWork(account, System.currentTimeMillis());
@@ -222,7 +222,7 @@ public class JobCommand extends EconomyCommand {
         }
     }
 
-    private static String getResponse(GuildData config, User user, int amount) {
+    private static String getResponse(GuildData config, User user, long amount) {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
                 .replace("<>", config.getEconomyCurrency())
                 .replace("{user}", user.getAsMention())

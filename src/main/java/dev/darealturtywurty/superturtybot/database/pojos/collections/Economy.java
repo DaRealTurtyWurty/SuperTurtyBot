@@ -85,7 +85,7 @@ public class Economy {
         DOCTOR(350, 1.125f, 0.25f, 1350),
         MATHEMATICIAN(150, 1.4f, 0.35f, 225);
 
-        private final int salary;
+        private final long salary;
         private final float promotionMultiplier;
         private final float promotionChance;
         private final int workCooldownSeconds;

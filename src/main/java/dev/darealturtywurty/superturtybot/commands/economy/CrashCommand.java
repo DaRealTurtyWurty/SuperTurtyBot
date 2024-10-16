@@ -29,7 +29,7 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.INTEGER, "amount", "The amount of money to bet.", true).setMinValue(1));
+        return List.of(new OptionData(OptionType.NUMBER, "amount", "The amount of money to bet.", true).setMinValue(1));
     }
 
     @Override
@@ -54,7 +54,14 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        int amount = event.getOption("amount", 1, OptionMapping::getAsInt);
+        long amount;
+        try {
+            amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
+        } catch (IllegalStateException | NumberFormatException exception) {
+            event.getHook().editOriginal("❌ You must provide a valid amount to crash!").queue();
+            return;
+        }
+
         if (amount < 1) {
             event.getHook().editOriginal("❌ You must bet at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
@@ -80,9 +87,9 @@ public class CrashCommand extends EconomyCommand {
             thread.addThreadMember(event.getUser()).queue();
             thread.sendMessage(("""
                     You have bet %s%s! The multiplier has started at 1.0x!
-
+                    
                     It will increase by a random amount every 5 seconds, however, it will crash at a random point between 1.0x and 10.0x!
-
+                    
                     You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
                 var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
                 games.add(game);
@@ -112,12 +119,12 @@ public class CrashCommand extends EconomyCommand {
         private final long guild;
         private final long channel;
         private final long user;
-        private final int amount;
+        private final long amount;
 
         private double multiplier = 1.0;
         private ScheduledFuture<?> future;
 
-        public Game(long guild, long channel, long user, int amount) {
+        public Game(long guild, long channel, long user, long amount) {
             this.guild = guild;
             this.channel = channel;
             this.user = user;

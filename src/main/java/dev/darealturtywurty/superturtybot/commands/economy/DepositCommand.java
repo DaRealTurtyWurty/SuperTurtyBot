@@ -31,7 +31,7 @@ public class DepositCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.INTEGER, "amount", "The amount of money to deposit.", false).setMinValue(0));
+                new OptionData(OptionType.NUMBER, "amount", "The amount of money to deposit.", false).setMinValue(0));
     }
 
     @Override
@@ -42,7 +42,14 @@ public class DepositCommand extends EconomyCommand {
             return;
         }
 
-        long amount = event.getOption("amount", account.getWallet(), OptionMapping::getAsLong);
+        long amount;
+        try {
+            amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
+        } catch (IllegalStateException | NumberFormatException exception) {
+            event.getHook().editOriginal("❌ You must provide a valid amount to deposit!").queue();
+            return;
+        }
+
         if (amount <= 0) {
             event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
@@ -55,7 +62,6 @@ public class DepositCommand extends EconomyCommand {
 
         EconomyManager.deposit(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginal("✅ You have deposited %s%s into your bank!"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue();
+        event.getHook().editOriginal("✅ You have deposited %s%s into your bank!".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue();
     }
 }

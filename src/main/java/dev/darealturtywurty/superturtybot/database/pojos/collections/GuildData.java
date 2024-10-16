@@ -74,7 +74,7 @@ public class GuildData {
     private boolean economyEnabled;
     private int defaultEconomyBalance;
     private float incomeTax;
-    private Map<String, Integer> endOfDayIncomeTax;
+    private Map<String, Long> endOfDayIncomeTax;
 
     // Logging
     private long loggingChannel;

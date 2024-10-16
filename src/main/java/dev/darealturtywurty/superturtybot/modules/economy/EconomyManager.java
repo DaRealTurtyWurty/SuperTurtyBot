@@ -138,12 +138,12 @@ public class EconomyManager {
                 if (guildData == null || !guildData.isEconomyEnabled() || guildData.getEndOfDayIncomeTax().isEmpty())
                     continue;
 
-                Map<String, Integer> endOfDayIncomeTaxes = guildData.getEndOfDayIncomeTax();
+                Map<String, Long> endOfDayIncomeTaxes = guildData.getEndOfDayIncomeTax();
                 guildAccounts.getValue()
                         .stream()
                         .filter(account -> endOfDayIncomeTaxes.containsKey(String.valueOf(account.getUser())))
                         .forEach(account -> {
-                            int amount = endOfDayIncomeTaxes.get(String.valueOf(account.getUser()));
+                            long amount = endOfDayIncomeTaxes.get(String.valueOf(account.getUser()));
                             if (amount > 0) {
                                 User user = jda.getUserById(account.getUser());
                                 if (user == null)
@@ -196,11 +196,11 @@ public class EconomyManager {
         return account.getNextWork() >= System.currentTimeMillis();
     }
 
-    public static int work(Economy account) {
+    public static long work(Economy account) {
         if (isOnWorkCooldown(account)) return 0;
 
-        int amount = getPayAmount(account);
-        int earned = Math.max(10, amount);
+        long amount = getPayAmount(account);
+        long earned = Math.max(10, amount);
 
         if (!Environment.INSTANCE.isDevelopment()) {
             account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
@@ -220,8 +220,8 @@ public class EconomyManager {
 
         updateAccount(account);
 
-        Map<String, Integer> endOfDayIncome = data.getEndOfDayIncomeTax();
-        int newAmount = (int) (endOfDayIncome.getOrDefault(String.valueOf(account.getUser()), 0) + earned * data.getIncomeTax());
+        Map<String, Long> endOfDayIncome = data.getEndOfDayIncomeTax();
+        long newAmount = (long) (endOfDayIncome.getOrDefault(String.valueOf(account.getUser()), 0L) + earned * data.getIncomeTax());
         endOfDayIncome.put(String.valueOf(account.getUser()), newAmount);
         data.setEndOfDayIncomeTax(endOfDayIncome);
         Database.getDatabase().guildData.updateOne(Filters.eq("guild", account.getGuild()),
@@ -230,8 +230,8 @@ public class EconomyManager {
         return amount;
     }
 
-    public static int getPayAmount(Economy account) {
-        int salary = account.getJob().getSalary();
+    public static long getPayAmount(Economy account) {
+        long salary = account.getJob().getSalary();
         int jobLevel = account.getJobLevel();
         float promotionMultiplier = account.getJob().getPromotionMultiplier();
         return Math.round(salary * (jobLevel + 1) * promotionMultiplier);
@@ -277,10 +277,10 @@ public class EconomyManager {
         return builder;
     }
 
-    public static int workNoJob(Economy account) {
+    public static long workNoJob(Economy account) {
         if (account.getNextWork() > System.currentTimeMillis()) return 0;
 
-        final int amount = ThreadLocalRandom.current().nextInt(1000);
+        final long amount = ThreadLocalRandom.current().nextInt(1000);
         account.setWallet(EconomyManager.addMoney(account, amount));
         if (!Environment.INSTANCE.isDevelopment()) {
             account.setNextWork(System.currentTimeMillis() + 3600000L);
@@ -380,12 +380,12 @@ public class EconomyManager {
     // Should exponentially increase the cost and payout of a heist based on the user's account
     public static long determineHeistSetupCost(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (int) Math.pow(heistLevel, 2) * 100_000L;
+        return (long) Math.pow(heistLevel, 2) * 100_000L;
     }
 
     private static long determineHeistPayout(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (int) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(500_000, 1_000_000);
+        return (long) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(500_000, 1_000_000);
     }
 
     /**
@@ -396,7 +396,7 @@ public class EconomyManager {
      */
     public static Pair<Long, Boolean> heistCompleted(Economy account, long timeTaken) {
         long payout = determineHeistPayout(account);
-        long earned = payout / (int) (timeTaken / 10_000) + determineHeistSetupCost(account);
+        long earned = payout / (timeTaken / 10_000) + determineHeistSetupCost(account);
         addMoney(account, earned, true);
 
         account.setTotalHeists(account.getTotalHeists() + 1);

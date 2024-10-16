@@ -55,7 +55,7 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int dailyReward = 1000;
+                long dailyReward = 1000;
                 if(account.getJob() != null)
                     dailyReward = EconomyManager.getPayAmount(account) * 2;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
@@ -77,7 +77,7 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int weeklyReward = 10000;
+                long weeklyReward = 10000;
                 if(account.getJob() != null)
                     weeklyReward = EconomyManager.getPayAmount(account) * 5;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
@@ -97,7 +97,7 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int monthlyReward = 50000;
+                long monthlyReward = 50000;
                 if(account.getJob() != null)
                     monthlyReward = EconomyManager.getPayAmount(account) * 10;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
@@ -117,7 +117,7 @@ public class RewardCommand extends EconomyCommand {
                     return;
                 }
 
-                int yearlyReward = 100000;
+                long yearlyReward = 100000;
                 if(account.getJob() != null)
                     yearlyReward = EconomyManager.getPayAmount(account) * 20;
                 if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
