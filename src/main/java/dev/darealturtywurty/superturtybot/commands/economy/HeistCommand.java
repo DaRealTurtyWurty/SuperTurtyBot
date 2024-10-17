@@ -82,7 +82,7 @@ public class HeistCommand extends EconomyCommand {
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextHeist() > System.currentTimeMillis()) {
-            event.getHook().editOriginalFormat("❌ You must wait %s before starting another heist!",
+            event.getHook().editOriginalFormat("❌ You can start another heist %s!",
                     TimeFormat.RELATIVE.format(account.getNextHeist())).queue();
             return;
         }
@@ -97,25 +97,28 @@ public class HeistCommand extends EconomyCommand {
             return;
         }
 
-        event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s%s. (Yes/No)",
+        event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s%s.",
                         config.getEconomyCurrency(), StringUtils.numberFormat(EconomyManager.determineHeistSetupCost(account)))
+                .setActionRow(Button.success("heist:yes", "Yes"), Button.danger("heist:no", "No"))
                 .queue(message -> createHeistSetupWaiter(guild, member, message, config, account).build());
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createHeistSetupWaiter(Guild guild, Member member, Message message, GuildData config, Economy account) {
-        return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+        return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .timeout(2, TimeUnit.MINUTES)
-                .timeoutAction(() -> message.editMessage("❌ Heist setup has timed out!").queue())
-                .failure(() -> message.editMessage("❌ An error occurred while setting up the heist!").queue())
+                .timeoutAction(() -> message.editMessage("❌ Heist setup has timed out!").setComponents().queue())
+                .failure(() -> message.editMessage("❌ An error occurred while setting up the heist!").setComponents().queue())
                 .condition(event -> event.isFromGuild() &&
-                        event.getGuild().getIdLong() == guild.getIdLong() &&
+                        Objects.requireNonNull(event.getGuild()).getIdLong() == guild.getIdLong() &&
                         Objects.requireNonNull(event.getMember()).getIdLong() == member.getIdLong() &&
                         event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
-                        (event.getMessage().getContentRaw().equalsIgnoreCase("yes") ||
-                                event.getMessage().getContentRaw().equalsIgnoreCase("no")))
+                        event.getMessageIdLong() == message.getIdLong() &&
+                        event.getComponentId().startsWith("heist:"))
                 .success(event -> {
-                    if (event.getMessage().getContentRaw().equalsIgnoreCase("no")) {
-                        message.editMessage("❌ Heist setup has been cancelled!").queue();
+                    event.deferEdit().queue();
+
+                    if (event.getComponentId().equals("heist:no")) {
+                        message.editMessage("❌ Heist setup has been cancelled!").setComponents().queue();
                         return;
                     }
 
@@ -125,7 +128,7 @@ public class HeistCommand extends EconomyCommand {
                         message.editMessageFormat("❌ You need another %s%s to start a heist!",
                                 config.getEconomyCurrency(),
                                 StringUtils.numberFormat(setupCost - balance)
-                        ).queue();
+                        ).setComponents().queue();
                         return;
                     }
 
@@ -134,6 +137,7 @@ public class HeistCommand extends EconomyCommand {
                     EconomyManager.updateAccount(account);
 
                     message.editMessage("✅ Heist started!")
+                            .setComponents()
                             .flatMap(msg -> msg.createThreadChannel(Objects.requireNonNull(event.getMember()).getEffectiveName() + "'s Heist"))
                             .queue(thread -> {
                                 Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
