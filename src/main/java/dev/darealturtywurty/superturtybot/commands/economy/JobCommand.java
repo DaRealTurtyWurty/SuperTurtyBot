@@ -211,7 +211,7 @@ public class JobCommand extends EconomyCommand {
                                     **Work Cooldown**: %d minutes
                                     """.formatted(config.getEconomyCurrency(), StringUtils.numberFormat(job.getSalary()),
                                     Math.round(job.getPromotionChance() * 100),
-                                    StringUtils.numberFormat(job.getPromotionMultiplier(), 2),
+                                    job.getPromotionMultiplier(),
                                     TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds())),
                             false);
                 }
