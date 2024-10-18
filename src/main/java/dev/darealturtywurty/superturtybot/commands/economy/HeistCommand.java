@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -145,11 +144,11 @@ public class HeistCommand extends EconomyCommand {
                                 List<Quadrant> quadrants = new ArrayList<>();
                                 BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
                                 try (FileUpload upload = createUpload(matcher)) {
-                                    thread.sendMessageFormat("🔍 **Fingerprint Matcher** %s", event.getAuthor().getAsMention())
+                                    thread.sendMessageFormat("🔍 **Fingerprint Matcher** %s", event.getUser().getAsMention())
                                             .setFiles(upload)
                                             .setComponents(createHeistButtons(null))
                                             .queue(msg -> {
-                                                var heist = new Heist(guild.getIdLong(), event.getAuthor().getIdLong(), thread.getIdLong(),
+                                                var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
                                                         msg.getIdLong(), fingerprint, positions);
                                                 heist.getQuadrants().addAll(quadrants);
                                                 createHeistWaiter(guild, thread, member, msg, heist, config, account).build();
