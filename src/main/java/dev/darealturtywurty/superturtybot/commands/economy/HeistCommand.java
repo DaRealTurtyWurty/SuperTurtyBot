@@ -103,7 +103,7 @@ public class HeistCommand extends EconomyCommand {
                 .queue(message -> createHeistSetupWaiter(guild, member, message, config, account).build());
     }
 
-    private static EventWaiter.Builder<MessageReceivedEvent> createHeistSetupWaiter(Guild guild, Member member, Message message, GuildData config, Economy account) {
+    private static EventWaiter.Builder<ButtonInteractionEvent> createHeistSetupWaiter(Guild guild, Member member, Message message, GuildData config, Economy account) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .timeout(2, TimeUnit.MINUTES)
                 .timeoutAction(() -> message.editMessage("❌ Heist setup has timed out!").setComponents().queue())
