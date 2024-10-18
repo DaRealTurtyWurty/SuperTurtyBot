@@ -106,9 +106,10 @@ public class DonateCommand extends EconomyCommand {
                     .setAllowedMentions(List.of())
                     .queue(ignored -> {
                         MessageChannelUnion channel = event.getChannel();
-                        channel.sendMessage("Hello %s! %s has donated %s%s to you!"
-                                        .formatted(user.getAsMention(), event.getUser().getAsMention(),
-                                                config.getEconomyCurrency(), StringUtils.numberFormat(amount)))
+                        channel.sendMessage("%s has donated %s%s to %s!"
+                                        .formatted(event.getUser().getAsMention(),
+                                                config.getEconomyCurrency(), StringUtils.numberFormat(amount),
+                                                user.getAsMention()))
                                 .queue();
                     });
         });

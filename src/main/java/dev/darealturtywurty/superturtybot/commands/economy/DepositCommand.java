@@ -62,6 +62,9 @@ public class DepositCommand extends EconomyCommand {
 
         EconomyManager.deposit(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginal("✅ You have deposited %s%s into your bank!".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue();
+        event.getHook().editOriginal("✅ You have deposited %s%s into your bank!\nYou now have %s%s in your bank.".formatted(
+                config.getEconomyCurrency(), StringUtils.numberFormat(amount),
+                config.getEconomyCurrency(), StringUtils.numberFormat(account.getBank())
+        )).queue();
     }
 }
