@@ -208,11 +208,13 @@ public class JobCommand extends EconomyCommand {
                                     **Salary**: %s%s
                                     **Promotion Chance**: %d%%
                                     **Promotion Multiplier**: %sx
-                                    **Work Cooldown**: %d minutes
+                                    **Work Cooldown**: %s
                                     """.formatted(config.getEconomyCurrency(), StringUtils.numberFormat(job.getSalary()),
                                     Math.round(job.getPromotionChance() * 100),
                                     job.getPromotionMultiplier(),
-                                    TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds())),
+                                    TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds()) + " minutes" + (
+                                            job.getWorkCooldownSeconds() % 60 != 0 ? " and " + job.getWorkCooldownSeconds() % 60 + " seconds" : ""
+                                    )),
                             false);
                 }
 
