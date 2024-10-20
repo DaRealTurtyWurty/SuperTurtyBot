@@ -163,11 +163,11 @@ public class EconomyManager {
                                 if (taxMessageType != UserConfig.TaxMessageType.OFF) {
                                     user.openPrivateChannel()
                                             .flatMap(channel -> channel.sendMessageFormat(
-                                                    "%s You were taxed %s%d for the end of the day in %s!",
-                                                    taxMessageType == UserConfig.TaxMessageType.SILENT ? "@silent" : "",
-                                                    guildData.getEconomyCurrency(),
-                                                    amount,
-                                                    guild.getName()))
+                                                            "You were taxed %s%d for the end of the day in %s!",
+                                                            guildData.getEconomyCurrency(),
+                                                            amount,
+                                                            guild.getName())
+                                                    .setSuppressedNotifications(taxMessageType == UserConfig.TaxMessageType.SILENT))
                                             .queue();
                                 }
                             }
