@@ -60,7 +60,7 @@ public class BalanceCommand extends EconomyCommand {
 
         long betTotal = betWins - betLosses;
         embed.addField("Bet Total",
-                (betTotal < 0 ? "-" : "") + (currency + StringUtils.numberFormat(Math.abs(betTotal))),
+                (betTotal < 0 ? "-" : "+") + (currency + StringUtils.numberFormat(Math.abs(betTotal))),
                 true);
 
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
