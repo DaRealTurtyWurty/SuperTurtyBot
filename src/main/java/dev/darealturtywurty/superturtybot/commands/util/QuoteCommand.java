@@ -211,16 +211,16 @@ public class QuoteCommand extends CoreCommand {
                         text = text.substring(0, 100) + "...";
                     }
 
-                    User addedBy = event.getJDA().getUserById(quote.getAddedBy());
                     User saidBy = event.getJDA().getUserById(quote.getUser());
+                    User addedBy = event.getJDA().getUserById(quote.getAddedBy());
 
-                    String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
                     String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
+                    String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
-                    contents.field("Quote #" + (index + 1), "%s%n%nAdded by: %s%nSaid by: %s%nDate: %s".formatted(
+                    contents.field("Quote #" + (index + 1), "%s%n%nSaid by: %s%nAdded by: %s%nHappened: %s".formatted(
                                     text,
-                                    addedByName,
                                     saidByName,
+                                    addedByName,
                                     TimeFormat.RELATIVE.format(quote.getTimestamp())),
                             false);
                 }
@@ -251,11 +251,11 @@ public class QuoteCommand extends CoreCommand {
                 int index = ThreadLocalRandom.current().nextInt(quotes.size());
                 Quote quote = quotes.get(index);
 
-                User addedBy = event.getJDA().getUserById(quote.getAddedBy());
                 User saidBy = event.getJDA().getUserById(quote.getUser());
+                User addedBy = event.getJDA().getUserById(quote.getAddedBy());
 
-                String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
                 String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
+                String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
                 var builder = new EmbedBuilder()
                         .setTitle("Quote #" + index)
@@ -282,17 +282,17 @@ public class QuoteCommand extends CoreCommand {
                 quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
                 Quote quote = quotes.get(number - 1);
 
-                User addedBy = event.getJDA().getUserById(quote.getAddedBy());
                 User saidBy = event.getJDA().getUserById(quote.getUser());
+                User addedBy = event.getJDA().getUserById(quote.getAddedBy());
 
-                String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
                 String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
+                String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
                 var builder = new EmbedBuilder()
                         .setTitle("Quote #" + (quotes.indexOf(quote) + 1))
                         .setDescription(quote.getText())
-                        .addField("Added by", addedByName, true)
                         .addField("Said by", saidByName, true)
+                        .addField("Added by", addedByName, true)
                         .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
                         .setColor(Color.CYAN)
                         .setTimestamp(Instant.now())
