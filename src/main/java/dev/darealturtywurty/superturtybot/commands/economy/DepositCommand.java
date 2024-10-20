@@ -31,7 +31,8 @@ public class DepositCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.INTEGER, "amount", "The amount of money to deposit.", false).setMinValue(1));
+                new OptionData(OptionType.INTEGER, "amount", "The amount of money to deposit.", false)
+                        .setMinValue(1));
     }
 
     @Override
@@ -42,7 +43,7 @@ public class DepositCommand extends EconomyCommand {
             return;
         }
 
-        long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
+        long amount = event.getOption("amount", 1L, OptionMapping::getAsLong);
         if (amount < 1) {
             event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
