@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
@@ -77,7 +78,8 @@ public class CrimeCommand extends EconomyCommand {
                 new SubcommandData("expert", "Commit an expert crime"),
                 new SubcommandData("master", "Commit a master crime"),
                 new SubcommandData("profile", "Info about your crime level")
-                        .addOption(OptionType.INTEGER, "level", "Optionally define a crime level", false)
+                        .addOptions(new OptionData(OptionType.INTEGER, "level", "Optionally define a crime level", false)
+                                .setRequiredRange(0, Integer.MAX_VALUE))
         );
     }
 
