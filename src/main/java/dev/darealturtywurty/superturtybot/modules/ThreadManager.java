@@ -56,8 +56,8 @@ public class ThreadManager extends ListenerAdapter {
                                         RestAction.getDefaultSuccess(),
                                         throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
                                 throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
-                    }));
-        });
+                    }).onError(throwable -> Constants.LOGGER.error("Failed to get members with roles!", throwable)));
+        }, throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
     }
 
     @Override
@@ -88,8 +88,8 @@ public class ThreadManager extends ListenerAdapter {
                                         RestAction.getDefaultSuccess(),
                                         throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
                                 throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
-                    }));
-        });
+                    }).onError(throwable -> Constants.LOGGER.error("Failed to get members with roles!", throwable)));
+        }, throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
     }
 
     @Override
