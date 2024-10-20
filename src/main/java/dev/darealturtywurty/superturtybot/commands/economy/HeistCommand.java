@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
@@ -183,8 +184,10 @@ public class HeistCommand extends EconomyCommand {
             }
 
             return List.of(
-                    ActionRow.of(buttons.subList(0, 4)),
-                    ActionRow.of(buttons.subList(4, 8)),
+                    ActionRow.of(buttons.subList(0, 2)),
+                    ActionRow.of(buttons.subList(2, 4)),
+                    ActionRow.of(buttons.subList(4, 6)),
+                    ActionRow.of(buttons.subList(6, 8)),
                     ActionRow.of(Button.success("heist:confirm", "Confirm"))
             );
         }
@@ -193,15 +196,17 @@ public class HeistCommand extends EconomyCommand {
         for (int index = 1; index <= 8; index++) {
             var button = Button.primary("heist:" + index, String.valueOf(index));
             if (heist.isQuadrantSelected(index - 1)) {
-                button = button.asDisabled();
+                button = button.withStyle(ButtonStyle.SUCCESS);
             }
 
             buttons.add(button);
         }
 
         return List.of(
-                ActionRow.of(buttons.subList(0, 4)),
-                ActionRow.of(buttons.subList(4, 8)),
+                ActionRow.of(buttons.subList(0, 2)),
+                ActionRow.of(buttons.subList(2, 4)),
+                ActionRow.of(buttons.subList(4, 6)),
+                ActionRow.of(buttons.subList(6, 8)),
                 ActionRow.of(Button.success("heist:confirm", "Confirm"))
         );
     }
@@ -263,7 +268,12 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    heist.selectQuadrant(quadrant - 1);
+                    if(event.getComponent().getStyle() == ButtonStyle.SUCCESS) {
+                        heist.deselectQuadrant(quadrant - 1);
+                    } else {
+                        heist.selectQuadrant(quadrant - 1);
+                    }
+
                     try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
                         event.getHook().editOriginalFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
                                 .setFiles(upload)
@@ -440,6 +450,10 @@ public class HeistCommand extends EconomyCommand {
 
         public void selectQuadrant(int quadrant) {
             this.selectedQuadrants.add(quadrant);
+        }
+
+        public void deselectQuadrant(int quadrant) {
+            this.selectedQuadrants.remove(quadrant);
         }
 
         public boolean isQuadrantSelected(int quadrant) {
