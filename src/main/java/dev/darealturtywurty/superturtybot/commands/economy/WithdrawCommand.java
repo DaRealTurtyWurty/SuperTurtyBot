@@ -31,20 +31,13 @@ public class WithdrawCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.NUMBER, "amount", "The amount of money to withdraw.", true).setMinValue(0));
+                new OptionData(OptionType.INTEGER, "amount", "The amount of money to withdraw.", true).setMinValue(1));
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        long amount;
-        try {
-            amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
-        } catch (IllegalStateException | NumberFormatException exception) {
-            event.getHook().editOriginal("❌ You must provide a valid amount to withdraw!").queue();
-            return;
-        }
-
-        if (amount <= 0) {
+        long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
+        if (amount < 1) {
             event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
             return;
         }

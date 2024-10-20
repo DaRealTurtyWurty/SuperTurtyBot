@@ -26,10 +26,10 @@ public class LoanCommand extends EconomyCommand {
     public List<SubcommandData> createSubcommandData() {
         return List.of(
                 new SubcommandData("request", "Request a loan from the bank that you must pay back with interest at a later date.")
-                        .addOptions(new OptionData(OptionType.NUMBER, "amount", "The amount of money to request as a loan", true).setMinValue(1000)),
+                        .addOptions(new OptionData(OptionType.INTEGER, "amount", "The amount of money to request as a loan", true).setMinValue(1000)),
                 new SubcommandData("pay", "Pay back a loan you have taken out from the bank.")
                         .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to pay back", true, true),
-                                new OptionData(OptionType.NUMBER, "amount", "The amount of money to pay back", true).setMinValue(100)),
+                                new OptionData(OptionType.INTEGER, "amount", "The amount of money to pay back", true).setMinValue(200)),
                 new SubcommandData("list", "List all of the loans you have taken out from the bank.")
                         .addOptions(new OptionData(OptionType.BOOLEAN, "paid", "Whether or not to only list paid off loans", false)),
                 new SubcommandData("info", "Get information about a loan you have taken out from the bank.")
@@ -88,14 +88,7 @@ public class LoanCommand extends EconomyCommand {
                     return;
                 }
 
-                long amount;
-                try {
-                    amount = event.getOption("amount", 1000L, OptionMapping::getAsLong);
-                } catch (IllegalStateException | NumberFormatException exception) {
-                    event.getHook().editOriginal("❌ You must provide a valid amount to request!").queue();
-                    return;
-                }
-
+                long amount = event.getOption("amount", 1000L, OptionMapping::getAsLong);
                 if (amount < 1000) {
                     event.getHook().editOriginalFormat("❌ You must request at least %s1000!", config.getEconomyCurrency()).queue();
                     return;
@@ -106,8 +99,6 @@ public class LoanCommand extends EconomyCommand {
                     event.getHook().editOriginal("❌ You can only have a maximum of 3 loans at a time!").queue();
                     return;
                 }
-
-                System.out.println(EconomyManager.getCreditScore(account));
 
                 Loan loan = EconomyManager.addLoan(account, amount);
                 event.getHook().editOriginalFormat("✅ You have successfully received a loan of %s%s! You will have to pay back %s%s %s with an interest rate of %s%%!",
@@ -133,14 +124,7 @@ public class LoanCommand extends EconomyCommand {
                     return;
                 }
 
-                long amount;
-                try {
-                    amount = event.getOption("amount", 200L, OptionMapping::getAsLong);
-                } catch (IllegalStateException | NumberFormatException exception) {
-                    event.getHook().editOriginal("❌ You must provide a valid amount to pay!").queue();
-                    return;
-                }
-
+                long amount = event.getOption("amount", 200L, OptionMapping::getAsLong);
                 if (amount < 200) {
                     event.getHook().editOriginalFormat("❌ You must pay back at least %s200!", config.getEconomyCurrency()).queue();
                     return;

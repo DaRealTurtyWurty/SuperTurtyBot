@@ -108,14 +108,7 @@ public class SlotsCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        long amount;
-        try {
-            amount = event.getOption("amount", 1L, OptionMapping::getAsLong);
-        } catch (IllegalStateException | NumberFormatException exception) {
-            event.getHook().editOriginal("❌ You must provide a valid amount to bet!").queue();
-            return;
-        }
-
+        long amount = event.getOption("amount", 1L, OptionMapping::getAsLong);
         if (amount < 1) {
             event.getHook().editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
             return;

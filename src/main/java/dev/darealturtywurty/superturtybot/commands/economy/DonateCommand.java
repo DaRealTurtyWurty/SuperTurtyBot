@@ -21,7 +21,7 @@ public class DonateCommand extends EconomyCommand {
     public List<OptionData> createOptions() {
         return List.of(
                 new OptionData(OptionType.USER, "user", "The user to donate money to.", true),
-                new OptionData(OptionType.NUMBER, "amount", "The amount of money to donate.", true).setMinValue(0)
+                new OptionData(OptionType.INTEGER, "amount", "The amount of money to donate.", true).setMinValue(1)
         );
     }
 
@@ -66,14 +66,7 @@ public class DonateCommand extends EconomyCommand {
             return;
         }
 
-        long amount;
-        try {
-            amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
-        } catch (IllegalStateException | NumberFormatException exception) {
-            event.getHook().editOriginal("❌ You must provide a valid amount to donate!").queue();
-            return;
-        }
-
+        long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
         if (amount < 1) {
             event.getHook().editOriginal("❌ You must donate at least %s1!"
                     .formatted(config.getEconomyCurrency())).queue();
