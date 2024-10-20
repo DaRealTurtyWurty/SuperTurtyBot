@@ -1,5 +1,3 @@
-[![Project Map](https://sourcespy.com/shield.svg)](https://sourcespy.com/github/darealturtywurtysuperturtybot/)
-
 # TurtyBot
 
 ## Description
