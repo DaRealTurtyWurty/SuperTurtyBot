@@ -79,7 +79,7 @@ public class EightBallCommand extends CoreCommand {
             embed.setTitle("8 Ball 🎱");
             embed.setDescription("You asked: " + question + "\n My answer: "
                 + URLDecoder.decode(result.get("reading").getAsString(), StandardCharsets.UTF_8).replace("€“", ""));
-            embed.setFooter(event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+            embed.setFooter(event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         } catch (final IOException | URISyntaxException exception) {
             event.getHook().sendMessage("❌ There has been an issue with the 8 Ball command!").queue();

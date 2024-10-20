@@ -1120,7 +1120,7 @@ public class ConvertCommand extends CoreCommand {
                         .setTitle(value + " " + from.richName + " (" + from.symbol + ") converted to all other " + measurement.richName())
                         .setColor(Color.GREEN)
                         .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
                 for (Unit unit : UNITS.get(measurement).stream().filter(u -> !u.equals(from)).toList()) {
                     double converted = unit.fromBase(base);

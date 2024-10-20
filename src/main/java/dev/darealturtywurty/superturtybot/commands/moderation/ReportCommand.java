@@ -85,9 +85,9 @@ public class ReportCommand extends CoreCommand {
         Optional<Report> report = ReportManager.reportUser(event.getGuild(), user, reporter, reason);
         report.ifPresentOrElse(
                 ignored -> reply(event,
-                        "✅ Successfully reported " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "`"),
+                        "✅ Successfully reported " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "`"),
                 () -> reply(event,
-                        "❌ Failed to report " + user.getName() + " for `" + ReportManager.truncate(reason, 1720) + "1",
+                        "❌ Failed to report " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "1",
                         false,
                         true)
         );

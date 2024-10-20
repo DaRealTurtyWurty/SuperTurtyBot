@@ -67,7 +67,7 @@ public final class SuggestionManager extends ListenerAdapter {
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GRAY);
         embed.setTitle("Suggestion #" + counter.get());
-        embed.setFooter("Suggested by " + suggester.getUser().getName(), suggester.getUser().getEffectiveAvatarUrl());
+        embed.setFooter("Suggested by " + suggester.getUser().getEffectiveName(), suggester.getUser().getEffectiveAvatarUrl());
         embed.setDescription(content);
         if (mediaUrl != null && !mediaUrl.isBlank()) {
             embed.setImage(mediaUrl);
@@ -184,7 +184,7 @@ public final class SuggestionManager extends ListenerAdapter {
         final var future = new CompletableFuture<Suggestion>();
         suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
             message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().getFirst()).addField(
-                type.richName + " by " + responder.getUser().getName(),  response, false).build()).queue();
+                type.richName + " by " + responder.getUser().getEffectiveName(),  response, false).build()).queue();
             suggestion.getResponses().add(new SuggestionResponse(type.name(), response, responder.getIdLong(), time));
             Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
             future.complete(suggestion);

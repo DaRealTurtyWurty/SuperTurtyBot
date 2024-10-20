@@ -157,7 +157,7 @@ public class CommandListCommand extends CoreCommand {
         if (fromGuild) {
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
         } else {
-            embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
+            embed.setFooter(author.getEffectiveName(), author.getEffectiveAvatarUrl());
         }
     }
 

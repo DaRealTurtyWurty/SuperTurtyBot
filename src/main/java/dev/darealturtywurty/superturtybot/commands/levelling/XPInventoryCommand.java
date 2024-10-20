@@ -115,7 +115,7 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawImage(profilePic, 80, 68, profilePic.getWidth(), profilePic.getHeight(), null);
 
         graphics.setFont(this.usedFont);
-        final String name = member.getUser().getName();
+        final String name = member.getUser().getEffectiveName();
         graphics.drawString((name.length() > 22 ? name.substring(0, 22) + "..." : name) + "'s Levelling Inventory",
                 80 + profilePic.getWidth() + 30,
                 68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);

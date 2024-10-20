@@ -249,7 +249,7 @@ public class OptCommand extends CoreCommand {
                         .description("Use `/opt channel in <channel>` or `/opt channel out <channel>` to opt-in/out of a channel.")
                         .timestamp(Instant.now())
                         .color(Color.GREEN)
-                        .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
                         .authorOnly(event.getUser().getIdLong())
                         .thumbnail(guild.getIconUrl())
                         .build(event.getJDA());

@@ -346,7 +346,7 @@ public class TagCommand extends CoreCommand {
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (Tag tag : tags) {
                     User user = event.getJDA().getUserById(tag.getUser());
-                    String name = user == null ? "Unknown" : user.getName();
+                    String name = user == null ? "Unknown" : user.getEffectiveName();
                     contents.field(tag.getName(), "Created by: " + name);
                 }
 
@@ -356,7 +356,7 @@ public class TagCommand extends CoreCommand {
                         .color(Color.GREEN)
                         .timestamp(Instant.now())
                         .authorOnly(event.getUser().getIdLong())
-                        .footer("Requested by " + event.getUser().getName(), event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
+                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
                         .thumbnail(event.getGuild().getIconUrl())
                         .build(event.getJDA());
 

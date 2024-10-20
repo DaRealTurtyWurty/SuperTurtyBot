@@ -151,7 +151,7 @@ public class GuildConfigCommand extends CoreCommand {
 
                 final var embed = new EmbedBuilder();
                 configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n"));
-                embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
+                embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("Server Config for: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
                 embed.setTimestamp(Instant.now());

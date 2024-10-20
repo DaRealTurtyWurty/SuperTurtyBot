@@ -107,7 +107,7 @@ public class LoveCommand extends CoreCommand {
                 .setDescription("**" + user1.getAsMention() + "** and **" + user2.getAsMention() + "** are " + String.format("%.2f", love) + "% compatible!\n" + loveBar)
                 .setTimestamp(Instant.now())
                 .setColor(calculateColorOfPercentage(love))
-                .setFooter("Requested by " + user1.getName(), user1.getEffectiveAvatarUrl());
+                .setFooter("Requested by " + user1.getEffectiveName(), user1.getEffectiveAvatarUrl());
     }
 
     public static Color calculateColorOfPercentage(double percentage) {

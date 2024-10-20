@@ -118,7 +118,7 @@ public class PollCommand extends CoreCommand {
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.CYAN);
-        embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
+        embed.setFooter(author.getEffectiveName(), author.getEffectiveAvatarUrl());
         embed.setTitle(question);
 
         final List<String> emotes = new ArrayList<>();

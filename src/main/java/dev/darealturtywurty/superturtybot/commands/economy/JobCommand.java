@@ -200,7 +200,7 @@ public class JobCommand extends EconomyCommand {
                         .setColor(Color.CYAN)
                         .setTitle("Job Information")
                         .setDescription("Here is some information about the different jobs you can register for!")
-                        .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
                 for (Economy.Job job : Economy.Job.values()) {
                     embed.addField(WordUtils.capitalize(job.name().toLowerCase(Locale.ROOT).replace("_", " ")),

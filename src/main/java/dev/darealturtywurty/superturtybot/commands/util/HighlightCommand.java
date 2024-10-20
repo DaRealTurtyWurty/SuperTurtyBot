@@ -229,7 +229,7 @@ public class HighlightCommand extends CoreCommand {
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                .title(event.getUser().getName() + "'s Highlighters")
+                .title(event.getUser().getEffectiveName() + "'s Highlighters")
                 .color(event.getMember() == null ? Color.BLUE : new Color(event.getMember().getColorRaw()))
                 .timestamp(Instant.now())
                 .description("Here are your highlighters!")

@@ -141,7 +141,7 @@ public class HelpCommand extends CoreCommand {
         if (fromGuild && member != null) {
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
         } else if (author != null) {
-            embed.setFooter(author.getName(), author.getEffectiveAvatarUrl());
+            embed.setFooter(author.getEffectiveName(), author.getEffectiveAvatarUrl());
         }
     }
 }

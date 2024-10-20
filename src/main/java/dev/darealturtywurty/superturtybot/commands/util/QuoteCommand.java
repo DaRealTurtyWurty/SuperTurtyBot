@@ -230,7 +230,7 @@ public class QuoteCommand extends CoreCommand {
                         .description("Total Quotes: " + quotes.size())
                         .color(Color.CYAN)
                         .timestamp(Instant.now())
-                        .footer("Requested by " + event.getUser().getAsMention(), event.getUser().getEffectiveAvatarUrl())
+                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
                         .authorOnly(event.getUser().getIdLong())
                         .build(event.getJDA());
 

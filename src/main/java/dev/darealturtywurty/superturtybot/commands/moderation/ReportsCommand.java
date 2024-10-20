@@ -100,7 +100,7 @@ public class ReportsCommand extends CoreCommand {
 
             int finalIndex = index;
             event.getJDA().retrieveUserById(report.getReporter()).queue(reporter -> {
-                contents.field(String.format("Reported by %s", reporter.getName()),
+                contents.field(String.format("Reported by %s", reporter.getEffectiveName()),
                         ReportManager.truncate(report.getReason(), 256));
 
                 if (finalIndex == reports.size() - 1) {
@@ -111,11 +111,11 @@ public class ReportsCommand extends CoreCommand {
 
         future.thenRun(() -> {
             PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                    .title(String.format("Reports for %s", user.getName()))
-                    .description(user.getName() + " has " + reports.size() + " reports")
+                    .title(String.format("Reports for %s", user.getEffectiveName()))
+                    .description(user.getEffectiveName() + " has " + reports.size() + " reports")
                     .color(Color.RED)
                     .timestamp(Instant.now())
-                    .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                    .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
                     .authorOnly(event.getUser().getIdLong())
                     .build(event.getJDA());
 

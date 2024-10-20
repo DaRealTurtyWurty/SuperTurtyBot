@@ -97,7 +97,7 @@ public class RemoveWarnCommand extends CoreCommand {
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
             final var embed = new EmbedBuilder();
             embed.setColor(Color.GREEN);
-            embed.setTitle(user.getName() + "'s warn has been removed!");
+            embed.setTitle(user.getEffectiveName() + "'s warn has been removed!");
             embed.setDescription(
                 "Warn Reason: " + warn.getReason() + "\nOriginal Warner: " + warner.getAsMention() + "\nWarned At: "
                     + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC))

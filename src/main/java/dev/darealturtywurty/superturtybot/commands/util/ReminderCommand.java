@@ -228,7 +228,7 @@ public class ReminderCommand extends CoreCommand {
 
         var embed = new PaginatedEmbed.Builder(10, contents)
                 .timestamp(Instant.now())
-                .title(event.getUser().getName() + "'s Reminders")
+                .title(event.getUser().getEffectiveName() + "'s Reminders")
                 .description("Here are your reminders!")
                 .color(Color.ORANGE)
                 .build(event.getJDA());

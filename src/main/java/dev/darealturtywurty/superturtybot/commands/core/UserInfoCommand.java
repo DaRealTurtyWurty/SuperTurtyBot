@@ -106,7 +106,7 @@ public class UserInfoCommand extends CoreCommand {
     
     private static EmbedBuilder createEmbed(@NotNull Member member) {
         final var embed = new EmbedBuilder();
-        embed.setTitle("User Info for user: " + member.getUser().getName());
+        embed.setTitle("User Info for user: " + member.getUser().getEffectiveName());
         embed.setTimestamp(Instant.now());
         embed.setColor(member.getColorRaw());
         embed.addField("Nickname", member.getNickname() == null ? "N/A" : member.getNickname(), false);

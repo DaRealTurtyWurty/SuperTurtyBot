@@ -217,7 +217,7 @@ public class CurseforgeCommand extends CoreCommand {
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contentsBuilder)
                         .title("Search Results for " + search)
-                        .footer("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl())
+                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
                         .timestamp(Instant.now())
                         .color(Color.BLUE)
                         .authorOnly(event.getUser().getIdLong())

@@ -147,7 +147,7 @@ public class SaveSongCommand extends CoreCommand {
                 songs.forEach(contents::field);
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                        .title(event.getUser().getName() + "'s Saved Songs")
+                        .title(event.getUser().getEffectiveName() + "'s Saved Songs")
                         .description("Here are all of your saved songs!")
                         .color(event.getMember() == null ? Color.LIGHT_GRAY : new Color(event.getMember().getColorRaw()))
                         .timestamp(Instant.now())

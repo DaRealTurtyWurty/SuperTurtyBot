@@ -149,7 +149,7 @@ public class SuggestCommand extends CoreCommand {
                             ? "https://discord.com/channels/" + event.getGuild().getIdLong() + "/"
                             + suggestionChannel.getIdLong() + "/" + sug.getMessage()
                             : "");
-            embed.setFooter("Created by: " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
+            embed.setFooter("Created by: " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         });
@@ -182,11 +182,11 @@ public class SuggestCommand extends CoreCommand {
                 final var embed = new EmbedBuilder();
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.GREEN);
-                embed.setTitle("✅" + event.getUser().getName() + " has approved your suggestion!",
+                embed.setTitle("✅" + event.getUser().getEffectiveName() + " has approved your suggestion!",
                         "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
                                 + "/" + sug.getMessage());
                 embed.setDescription(reason);
-                embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
+                embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
             }, throwable -> {});
@@ -222,11 +222,11 @@ public class SuggestCommand extends CoreCommand {
                 final var embed = new EmbedBuilder();
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.RED);
-                embed.setTitle("❌" + event.getUser().getName() + " has denied your suggestion!",
+                embed.setTitle("❌" + event.getUser().getEffectiveName() + " has denied your suggestion!",
                         "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
                                 + "/" + sug.getMessage());
                 embed.setDescription(reason);
-                embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
+                embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
             }, throwable -> {});
@@ -263,11 +263,11 @@ public class SuggestCommand extends CoreCommand {
                 final var embed = new EmbedBuilder();
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.YELLOW);
-                embed.setTitle("⚠" + event.getUser().getName() + " has considered your suggestion!",
+                embed.setTitle("⚠" + event.getUser().getEffectiveName() + " has considered your suggestion!",
                         "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
                                 + "/" + sug.getMessage());
                 embed.setDescription(reason);
-                embed.setFooter(event.getUser().getName(), event.getMember().getEffectiveAvatarUrl());
+                embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
             }, throwable -> {});

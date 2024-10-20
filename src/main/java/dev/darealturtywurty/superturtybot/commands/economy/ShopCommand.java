@@ -94,7 +94,7 @@ public class ShopCommand extends EconomyCommand {
                             .timestamp(Instant.now())
                             .title("Shop for " + user.getName())
                             .color(member.getColorRaw())
-                            .footer(user.getName(), member.getEffectiveAvatarUrl())
+                            .footer(user.getEffectiveName(), member.getEffectiveAvatarUrl())
                             .authorOnly(event.getUser().getIdLong())
                             .build(event.getJDA());
 

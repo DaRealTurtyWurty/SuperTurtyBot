@@ -292,7 +292,7 @@ public class EmbedCommand extends CoreCommand {
         event.deferReply().queue();
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                .title(event.getUser().getName() + "'s Embeds")
+                .title(event.getUser().getEffectiveName() + "'s Embeds")
                 .description("Use `/embed view <name>` to view an embed")
                 .color(event.getMember() == null ? Color.GRAY : new Color(event.getMember().getColorRaw()))
                 .timestamp(Instant.now())

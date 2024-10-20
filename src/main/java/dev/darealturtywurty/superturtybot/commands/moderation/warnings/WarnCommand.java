@@ -92,7 +92,7 @@ public class WarnCommand extends CoreCommand {
 
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
             final var embed = new EmbedBuilder();
-            embed.setTitle(user.getName() + " has been warned!");
+            embed.setTitle(user.getEffectiveName() + " has been warned!");
             embed.setFooter("Warned At: "
                 + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)));
             embed.setDescription(

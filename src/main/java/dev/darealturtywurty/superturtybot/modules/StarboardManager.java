@@ -180,7 +180,7 @@ public final class StarboardManager extends ListenerAdapter {
 
             channel.sendMessage("⭐ **" + showcase.getStars() + "** from <#" + showcase.getChannel() + ">")
                     .setEmbeds(new EmbedBuilder()
-                            .setAuthor(author.getName(),
+                            .setAuthor(author.getEffectiveName(),
                                     member == null ? author.getEffectiveAvatarUrl() : member.getEffectiveAvatarUrl())
                             .setColor(member == null ? Color.CYAN : member.getColor() == null ? Color.CYAN : member.getColor())
                             .setDescription(msg.getContentRaw()).setFooter(showcase.getMessage() + " • " + formattedTime)

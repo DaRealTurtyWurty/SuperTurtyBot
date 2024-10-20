@@ -106,7 +106,7 @@ public class SearchCommand extends CoreCommand {
                         .title("Search results for: " + search)
                         .description("Searched By: " + event.getUser().getAsMention())
                         .color(Color.BLUE)
-                        .footer("Searched By: " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                        .footer("Searched By: " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
                         .thumbnail(event.getGuild().getIconUrl())
                         .timestamp(Instant.now())
                         .build(event.getJDA());

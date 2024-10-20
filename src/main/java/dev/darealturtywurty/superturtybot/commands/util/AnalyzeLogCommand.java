@@ -83,10 +83,10 @@ public class AnalyzeLogCommand extends CoreCommand {
         List<PossibleError> possibleErrors = locateErrors(information.get(), lines);
 
         var embed = new EmbedBuilder()
-                .setTitle("Analyzed %s's log file".formatted(message.getAuthor().getName()))
+                .setTitle("Analyzed %s's log file".formatted(message.getAuthor().getEffectiveName()))
                 .setColor(Color.BLUE)
                 .setTimestamp(message.getTimeCreated().toInstant())
-                .setFooter("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl());
+                .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
         embed.addField("Environment Information",
                 "Minecraft Version: %s%nForge Version: %s%nJava Version: %s%nOperating System: %s%nArchitecture: %s"

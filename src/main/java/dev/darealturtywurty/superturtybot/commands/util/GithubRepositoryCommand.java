@@ -160,7 +160,7 @@ public class GithubRepositoryCommand extends CoreCommand {
                 .description("Here are the repositories I found matching the search term: `" + repositoryName + "`")
                 .color(Color.BLUE)
                 .timestamp(Instant.now())
-                .footer("Requested by " + event.getUser().getName(), event.getUser().getEffectiveAvatarUrl())
+                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
                 .authorOnly(event.getUser().getIdLong())
                 .build(event.getJDA());
 
