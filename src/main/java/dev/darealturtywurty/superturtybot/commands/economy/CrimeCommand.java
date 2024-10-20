@@ -103,9 +103,20 @@ public class CrimeCommand extends EconomyCommand {
             embed.setTimestamp(Instant.now());
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
-            embed.setDescription("Crime Level: %d%nHere are the chances for each crime level:".formatted(crimeLevel));
+            embed.setDescription("Crime Level: %d%nHere are the chances, earnings and losses for each crime level:".formatted(crimeLevel));
             for (var level : CrimeType.values()) {
-                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), String.format("%.2f", level.getChanceForLevel(crimeLevel) * 100f) + "%", false);
+                float chance = level.getChanceForLevel(crimeLevel);
+                long minAmount = level.getMinAmountForLevel(crimeLevel);
+                long maxAmount = level.getMaxAmountForLevel(crimeLevel);
+
+                long minLoss = (long) (minAmount * 0.5);
+                long maxLoss = (long) (maxAmount * 0.5);
+                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nEarnings: %s%s-%s%s\nLosses: %s%s-%s%s".formatted(
+                        StringUtils.numberFormat(chance * 100),
+                        config.getEconomyCurrency(), StringUtils.numberFormat(minAmount),
+                        config.getEconomyCurrency(), StringUtils.numberFormat(maxAmount),
+                        config.getEconomyCurrency(), StringUtils.numberFormat(minLoss),
+                        config.getEconomyCurrency(), StringUtils.numberFormat(maxLoss)), false);
             }
 
             event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -179,15 +190,23 @@ public class CrimeCommand extends EconomyCommand {
         public static final int MAX_LEVEL = values().length;
 
         private final float successChance;
-        private final int minBaseAmount;
-        private final int maxBaseAmount;
+        private final long minBaseAmount;
+        private final long maxBaseAmount;
 
-        public int getBaseAmount() {
-            return ThreadLocalRandom.current().nextInt(this.minBaseAmount, this.maxBaseAmount + 1);
+        public long getBaseAmount() {
+            return ThreadLocalRandom.current().nextLong(this.minBaseAmount, this.maxBaseAmount + 1);
         }
 
-        public int getAmountForLevel(int level) {
-            return (int) (getBaseAmount() * Math.pow(1.05, level));
+        public long getMinAmountForLevel(int level) {
+            return (long) (this.minBaseAmount * Math.pow(1.05, level - 1));
+        }
+
+        public long getMaxAmountForLevel(int level) {
+            return (long) (this.maxBaseAmount * Math.pow(1.05, level - 1));
+        }
+
+        public long getAmountForLevel(int level) {
+            return (long) (getBaseAmount() * Math.pow(1.05, level));
         }
 
         public float getChanceForLevel(int level) {
