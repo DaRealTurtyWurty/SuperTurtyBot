@@ -15,14 +15,14 @@ public class Property {
     private String name;
     private long owner;
     private String description;
-    private int originalPrice;
-    private List<Integer> upgradePrices;
+    private long originalPrice;
+    private List<Long> upgradePrices;
     private Rent rent;
     private Loan mortgage;
     private long buyDate;
 
     private List<Long> previousOwners;
-    private int estateTax;
+    private long estateTax;
     private int upgradeLevel;
     
     private Property(Builder builder) {
@@ -40,7 +40,7 @@ public class Property {
         this.buyDate = System.currentTimeMillis();
     }
 
-    public int getUpgradePrice() {
+    public long getUpgradePrice() {
         return this.upgradePrices.get(this.upgradeLevel);
     }
 
@@ -64,41 +64,56 @@ public class Property {
         return this.owner != -1;
     }
 
-    public int calculateCurrentWorth() {
-        int worth = this.originalPrice;
+    public long calculateCurrentWorth() {
+        long worth = this.originalPrice;
         if (this.upgradeLevel > 0) {
             for (int i = 0; i < this.upgradeLevel; i++) {
                 worth += this.upgradePrices.get(i);
             }
         }
 
-        worth *= (int) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f);
+        worth *= (long) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f);
 
         if (this.mortgage != null && !this.mortgage.isPaidOff()) {
             worth -= this.mortgage.calculateAmountLeftToPay();
         }
 
         if(ThreadLocalRandom.current().nextInt(0, 100) < 10) {
-            worth -= (int) (worth * 0.01f);
+            worth -= (long) (worth * 0.01f);
         }
 
         return worth;
     }
 
+    public long calculateCostToPurchase() {
+        long cost = this.originalPrice;
+        if (this.upgradeLevel > 0) {
+            for (int i = 0; i < this.upgradeLevel; i++) {
+                cost += this.upgradePrices.get(i);
+            }
+        }
+
+        if (this.mortgage != null) {
+            cost += this.mortgage.calculateAmountLeftToPay();
+        }
+
+        return cost;
+    }
+
     public static class Builder {
         private final String name;
         private final String description;
-        private final int price;
-        private final List<Integer> upgradePrices = new ArrayList<>();
+        private final long price;
+        private final List<Long> upgradePrices = new ArrayList<>();
         private final List<Long> previousOwners = new ArrayList<>();
-        private final int estateTax;
+        private final long estateTax;
 
         private long owner = -1;
         private Rent rent;
         private Loan mortgage;
         private int upgradeLevel = 0;
 
-        public Builder(String name, String description, int price, int estateTax) {
+        public Builder(String name, String description, long price, long estateTax) {
             this.name = name;
             this.description = description;
             this.price = price;
@@ -120,12 +135,12 @@ public class Property {
             return this;
         }
 
-        public Builder upgradePrice(int upgradePrice) {
+        public Builder addUpgradePrice(long upgradePrice) {
             this.upgradePrices.add(upgradePrice);
             return this;
         }
 
-        public Builder previousOwner(long previousOwner) {
+        public Builder addPreviousOwner(long previousOwner) {
             this.previousOwners.add(previousOwner);
             return this;
         }

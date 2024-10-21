@@ -11,9 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Rent {
-    private int baseRent;
-    private List<Integer> previousRents;
-    private int currentRent;
+    private long baseRent;
+    private List<Long> previousRents;
+    private long currentRent;
     private boolean isPaused;
 
     public Rent(int baseRent) {
@@ -22,7 +22,7 @@ public class Rent {
         this.currentRent = baseRent;
     }
 
-    public void setRent(int amount) {
+    public void setRent(long amount) {
         this.previousRents.add(this.currentRent);
         this.currentRent = amount;
     }
