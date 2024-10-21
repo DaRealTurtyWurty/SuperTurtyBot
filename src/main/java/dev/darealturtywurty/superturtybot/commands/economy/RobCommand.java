@@ -114,7 +114,11 @@ public class RobCommand extends EconomyCommand {
             event.getHook().sendMessageEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.GREEN)
                     .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount)).build()).queue();
         } else {
-            long fineAmount = random.nextLong(1, Math.max(EconomyManager.getBalance(account) / 10, 100_000));
+            int crimeLevel = account.getCrimeLevel();
+            long balance = EconomyManager.getBalance(account);
+            long balanceFine = (balance / 100) * crimeLevel;
+            long fineAmount = random.nextLong(1, Math.max(balanceFine, 100_000L));
+
             account.removeWallet(fineAmount);
             robAccount.addWallet(fineAmount);
 
