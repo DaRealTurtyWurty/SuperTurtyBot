@@ -24,7 +24,7 @@ public class Property {
     private List<Long> previousOwners;
     private long estateTax;
     private int upgradeLevel;
-    
+
     private Property(Builder builder) {
         this.name = builder.name;
         this.owner = builder.owner;
@@ -51,15 +51,15 @@ public class Property {
     public boolean isPaidOff() {
         return !isMortgaged() || this.mortgage.isPaidOff();
     }
-    
+
     public boolean hasRent() {
         return this.rent != null;
     }
-    
+
     public boolean hasPreviousOwners() {
         return this.previousOwners != null && !this.previousOwners.isEmpty();
     }
-    
+
     public boolean hasOwner() {
         return this.owner != -1;
     }
@@ -78,7 +78,7 @@ public class Property {
             worth -= this.mortgage.calculateAmountLeftToPay();
         }
 
-        if(ThreadLocalRandom.current().nextInt(0, 100) < 10) {
+        if (ThreadLocalRandom.current().nextInt(0, 100) < 10) {
             worth -= (long) (worth * 0.01f);
         }
 
@@ -98,6 +98,11 @@ public class Property {
         }
 
         return cost;
+    }
+
+    public String getAsReadableString() {
+        return String.format("Name: %s%nDescription: %s%nOriginal Price: %s%nEstate Tax: %s%n",
+                this.name, this.description, this.originalPrice, this.estateTax);
     }
 
     public static class Builder {

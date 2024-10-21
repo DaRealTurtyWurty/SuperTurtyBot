@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.commands.economy.property.BuyPropertyCommand;
+import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -20,38 +22,40 @@ import java.util.List;
 
 // TODO: Finish this command
 public class PropertyCommand extends EconomyCommand {
-    @Override
-    public List<SubcommandData> createSubcommandData() {
-        return List.of(
-                new SubcommandData("buy", "Buy a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to buy", true, true)),
-                new SubcommandData("sell", "Sell a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to sell", true, true),
-                        new OptionData(OptionType.INTEGER, "price", "The price to sell the property for", true)),
-                new SubcommandData("list", "List all properties").addOptions(
-                        new OptionData(OptionType.STRING, "user", "The user to list properties for", false),
-                        new OptionData(OptionType.BOOLEAN, "include-sold", "Include sold properties", false),
-                        new OptionData(OptionType.BOOLEAN, "include-rented", "Include rented properties", false)),
-                new SubcommandData("info", "Get info on a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to get info on", true, true)),
-                new SubcommandData("upgrade", "Upgrade a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to upgrade", true, true)),
-                new SubcommandData("trade", "Trade a property for another user's property").addOptions(
-                        new OptionData(OptionType.USER, "user", "The user to trade with", true),
-                        new OptionData(OptionType.STRING, "property-to-trade", "The property to trade for", true, true)),
-                new SubcommandData("rent", "Rent a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to rent", true, true),
-                        new OptionData(OptionType.INTEGER, "price", "The price to rent the property for", true)),
-                new SubcommandData("stop-rent", "Stop renting a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to stop renting", true, true)),
-                new SubcommandData("pause-rent", "Pause renting a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to pause renting", true, true)),
-                new SubcommandData("resume-rent", "Resume renting a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to resume renting", true, true)),
-                new SubcommandData("set-rent", "Set the rent price of a property").addOptions(
-                        new OptionData(OptionType.STRING, "property", "The property to set the rent price of", true, true),
-                        new OptionData(OptionType.INTEGER, "price", "The price to set the rent price to", true)));
+    public PropertyCommand() {
+        addSubcommands(new BuyPropertyCommand());
     }
+
+//    @Override
+//    public List<SubcommandData> createSubcommandData() {
+//        return List.of(
+//                new SubcommandData("sell", "Sell a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to sell", true, true),
+//                        new OptionData(OptionType.INTEGER, "price", "The price to sell the property for", true)),
+//                new SubcommandData("list", "List all properties").addOptions(
+//                        new OptionData(OptionType.STRING, "user", "The user to list properties for", false),
+//                        new OptionData(OptionType.BOOLEAN, "include-sold", "Include sold properties", false),
+//                        new OptionData(OptionType.BOOLEAN, "include-rented", "Include rented properties", false)),
+//                new SubcommandData("info", "Get info on a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to get info on", true, true)),
+//                new SubcommandData("upgrade", "Upgrade a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to upgrade", true, true)),
+//                new SubcommandData("trade", "Trade a property for another user's property").addOptions(
+//                        new OptionData(OptionType.USER, "user", "The user to trade with", true),
+//                        new OptionData(OptionType.STRING, "property-to-trade", "The property to trade for", true, true)),
+//                new SubcommandData("rent", "Rent a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to rent", true, true),
+//                        new OptionData(OptionType.INTEGER, "price", "The price to rent the property for", true)),
+//                new SubcommandData("stop-rent", "Stop renting a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to stop renting", true, true)),
+//                new SubcommandData("pause-rent", "Pause renting a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to pause renting", true, true)),
+//                new SubcommandData("resume-rent", "Resume renting a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to resume renting", true, true)),
+//                new SubcommandData("set-rent", "Set the rent price of a property").addOptions(
+//                        new OptionData(OptionType.STRING, "property", "The property to set the rent price of", true, true),
+//                        new OptionData(OptionType.INTEGER, "price", "The price to set the rent price to", true)));
+//    }
 
     @Override
     public String getDescription() {
@@ -104,21 +108,10 @@ public class PropertyCommand extends EconomyCommand {
             return;
         }
 
-        Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(subcommand.equals("buy"))
+            return;
 
-        switch (subcommand) {
-            case "buy" -> buyProperty(event, guild, account, config);
-            case "sell" -> sellProperty(event, guild, account, config);
-            case "list" -> listProperties(event, guild, account, config);
-            case "info" -> getPropertyInfo(event, guild, account, config);
-            case "upgrade" -> upgradeProperty(event, guild, account, config);
-            case "trade" -> tradeProperty(event, guild, account, config);
-            case "rent" -> rentProperty(event, guild, account, config);
-            case "stop-rent" -> stopRentingProperty(event, guild, account, config);
-            case "pause-rent" -> pauseRentingProperty(event, guild, account, config);
-            case "resume-rent" -> resumeRentingProperty(event, guild, account, config);
-            case "set-rent" -> setRentPrice(event, guild, account, config);
-        }
+        event.getHook().editOriginal("❌ That subcommand does not exist!").queue();
     }
 
     private void buyProperty(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
