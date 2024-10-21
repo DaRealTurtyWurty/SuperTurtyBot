@@ -91,7 +91,7 @@ public class RobCommand extends EconomyCommand {
             return;
         }
 
-        if(CrashCommand.isPlaying(guild.getIdLong(), user.getIdLong())) {
+        if (CrashCommand.isPlaying(guild.getIdLong(), user.getIdLong())) {
             event.getHook().editOriginal("❌ You can't rob a user who is playing the crash game!").queue();
             return;
         }
@@ -114,7 +114,7 @@ public class RobCommand extends EconomyCommand {
             event.getHook().sendMessageEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.GREEN)
                     .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount)).build()).queue();
         } else {
-            final long fineAmount = random.nextInt(1, 100_000);
+            long fineAmount = random.nextLong(1, Math.max(EconomyManager.getBalance(account) / 10, 100_000));
             account.removeWallet(fineAmount);
             robAccount.addWallet(fineAmount);
 
