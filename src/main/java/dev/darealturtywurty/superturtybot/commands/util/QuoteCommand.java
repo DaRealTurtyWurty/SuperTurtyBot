@@ -296,7 +296,7 @@ public class QuoteCommand extends CoreCommand {
                         .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
                         .setColor(Color.CYAN)
                         .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getAsMention(), event.getUser().getEffectiveAvatarUrl());
+                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
                 event.replyEmbeds(builder.build()).queue();
             }
