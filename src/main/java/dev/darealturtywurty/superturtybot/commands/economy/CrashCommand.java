@@ -114,7 +114,8 @@ public class CrashCommand extends EconomyCommand {
         private final long user;
         private final long amount;
 
-        private double multiplier = 1.0;
+        private double multiplier = 0.75;
+        private int ticksPassed = 0;
         private ScheduledFuture<?> future;
 
         public Game(long guild, long channel, long user, long amount) {
@@ -146,7 +147,7 @@ public class CrashCommand extends EconomyCommand {
             if (thread == null)
                 return;
 
-            boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0 && multiplier > 1.15;
+            boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0 && this.ticksPassed > 5;
             if (crashed) {
                 thread.sendMessage("The multiplier has crashed at %s! You have lost %s%s!"
                         .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount))).queue(
@@ -158,14 +159,15 @@ public class CrashCommand extends EconomyCommand {
                 return;
             }
 
-            thread.sendMessage("The multiplier is now at %s!".formatted(stringifyMultiplier(multiplier))).queue();
-
             if (multiplier >= 10.0) {
                 cashout(jda, config, account);
                 return;
             }
 
             multiplier += getMultiplier();
+
+            thread.sendMessage("The multiplier is now at %s!".formatted(stringifyMultiplier(multiplier))).queue();
+            this.ticksPassed++;
         }
 
         public void cashout(JDA jda, GuildData config, Economy account) {
@@ -181,7 +183,7 @@ public class CrashCommand extends EconomyCommand {
                 return;
             }
 
-            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 1.0, 10.0));
+            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 0.75, 10.0));
             if (multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
                                 .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
