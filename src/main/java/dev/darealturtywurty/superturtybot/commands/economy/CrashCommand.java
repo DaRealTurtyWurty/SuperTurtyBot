@@ -181,7 +181,7 @@ public class CrashCommand extends EconomyCommand {
                 return;
             }
 
-            long amount = this.amount * MathUtils.clamp(multiplier, 1.0, 10.0);
+            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 1.0, 10.0));
             if (multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
                                 .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
