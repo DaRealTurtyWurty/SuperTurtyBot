@@ -286,7 +286,7 @@ public class JobCommand extends EconomyCommand {
                                         EconomyManager.updateAccount(account);
                                     })
                                     .success(messageEvent -> {
-                                        double answer = Double.parseDouble(messageEvent.getMessage().getContentRaw());
+                                        int answer = Integer.parseInt(messageEvent.getMessage().getContentRaw());
                                         if (answer == challenge.result()) {
                                             channel.sendMessageFormat("✅ You have been promoted to level %d!",
                                                             account.getJobLevel() + 1)
@@ -347,14 +347,14 @@ public class JobCommand extends EconomyCommand {
         }
     }
 
-    public record MathChallenge(String question, double result, int numberOfOperations) {
+    public record MathChallenge(String question, int result, int numberOfOperations) {
         private static final char[] OPERATORS = {'+', '-'};
         private static final Random RANDOM = new Random();
         private static final Context CONTEXT = Context.newBuilder("js").allowAllAccess(true).build();
 
         public static MathChallenge generateMathChallenge() {
-            String equation = generateRandomEquation().replace(".0", "");
-            double result = evaluateEquationWithGraalVM(equation);
+            String equation = generateRandomEquation();
+            int result = evaluateEquationWithGraalVM(equation);
             return new MathChallenge(equation, result, equation.split(" ").length / 2);
         }
 
@@ -364,7 +364,7 @@ public class JobCommand extends EconomyCommand {
 
             for (int i = 0; i < numberOfOperations; i++) {
                 char operator = generateRandomOperator();
-                double operand = generateRandomOperand();
+                int operand = generateRandomOperand();
                 equation.append(operator).append(" ").append(operand).append(" ");
             }
 
@@ -375,13 +375,13 @@ public class JobCommand extends EconomyCommand {
             return OPERATORS[RANDOM.nextInt(OPERATORS.length)];
         }
 
-        private static double generateRandomOperand() {
+        private static int generateRandomOperand() {
             return RANDOM.nextInt(100) + 1; // Between 1 and 100
         }
 
-        public static double evaluateEquationWithGraalVM(String equation) {
+        public static int evaluateEquationWithGraalVM(String equation) {
             Value value = CONTEXT.eval("js", equation);
-            return value.asDouble();
+            return value.asInt();
         }
     }
 }
