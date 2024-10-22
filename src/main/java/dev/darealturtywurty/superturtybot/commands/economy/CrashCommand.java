@@ -79,9 +79,9 @@ public class CrashCommand extends EconomyCommand {
                 message.createThreadChannel(event.getUser().getName() + "'s Crash Game")).queue(thread -> {
             thread.addThreadMember(event.getUser()).queue();
             thread.sendMessage(("""
-                    You have bet %s%s! The multiplier has started at 1.0x!
+                    You have bet %s%s! The multiplier has started at 0.75x!
                     
-                    It will increase by a random amount every 5 seconds, however, it will crash at a random point between 1.0x and 10.0x!
+                    It will increase by a random amount every 5 seconds, however, it will crash at a random point between 0.8x and 10.0x!
                     
                     You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
                 var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
