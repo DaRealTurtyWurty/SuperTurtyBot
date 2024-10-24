@@ -107,23 +107,31 @@ public class RobCommand extends EconomyCommand {
 
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
-            final long robbedAmount = random.nextLong(1, Math.max(robAccount.getWallet() / 4, 100_000));
+            final long robbedAmount = random.nextLong(1, robAccount.getWallet() / 4);
             account.addWallet(robbedAmount);
             robAccount.removeWallet(robbedAmount);
 
-            event.getHook().sendMessageEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.GREEN)
-                    .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount)).build()).queue();
+            event.getHook().sendMessageEmbeds(new EmbedBuilder()
+                            .setTimestamp(Instant.now())
+                            .setColor(Color.GREEN)
+                            .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount))
+                            .build())
+                    .queue();
         } else {
             int crimeLevel = account.getCrimeLevel();
-            long balance = EconomyManager.getBalance(account);
-            long balanceFine = (balance / 100) * crimeLevel;
-            long fineAmount = random.nextLong(1, Math.max(balanceFine, 100_000L));
+            long bank = account.getBank();
+            long bankFine = (bank / 100) * crimeLevel;
+            long fineAmount = random.nextLong(1_000, bankFine);
 
             account.removeWallet(fineAmount);
             robAccount.addWallet(fineAmount);
 
-            event.getHook().sendMessageEmbeds(new EmbedBuilder().setTimestamp(Instant.now()).setColor(Color.RED)
-                    .setDescription(RESPONSES.getFail(config, event.getUser(), user, fineAmount)).build()).queue();
+            event.getHook().sendMessageEmbeds(new EmbedBuilder()
+                            .setTimestamp(Instant.now())
+                            .setColor(Color.RED)
+                            .setDescription(RESPONSES.getFail(config, event.getUser(), user, fineAmount))
+                            .build())
+                    .queue();
         }
 
         EconomyManager.updateAccount(account);

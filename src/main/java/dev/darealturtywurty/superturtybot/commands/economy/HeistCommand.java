@@ -237,26 +237,16 @@ public class HeistCommand extends EconomyCommand {
                                             heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel()) : "").trim())
                                     .queue(ignored -> close(thread));
                         } else {
-                            if (heist.isHeistFailed()) {
-                                thread.sendMessage("❌ **Heist failed!**")
-                                        .queue(ignored -> close(thread));
-                            } else {
-                                heist.resetQuadrants();
-
-                                thread.sendMessageFormat("❌ **Incorrect!**").queue();
-
-                                try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
-                                    event.getHook().editOriginalFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
-                                            .setFiles(upload)
-                                            .setComponents(createHeistButtons(heist))
-                                            .queue(ignored -> createHeistWaiter(guild, thread, member, message, heist, config, account).build());
-                                    return;
-                                } catch (IOException exception) {
-                                    Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
-                                    thread.sendMessage("❌ **An error occurred while processing the heist!**")
-                                            .queue(ignored -> close(thread));
-                                }
-                            }
+                            event.getHook().editOriginal("❌ Failed to complete the heist!")
+                                    .setComponents(createHeistButtons(heist).stream()
+                                            .map(row -> ActionRow.of(row.getComponents().stream()
+                                                    .filter(Button.class::isInstance)
+                                                    .map(Button.class::cast)
+                                                    .map(Button::asDisabled)
+                                                    .toList()))
+                                            .toList())
+                                    .queue(ignored -> thread.sendMessage("❌ **Heist failed!**")
+                                            .queue(ignored_ -> close(thread)));
                         }
 
                         return;
@@ -268,7 +258,7 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    if(event.getComponent().getStyle() == ButtonStyle.SUCCESS) {
+                    if (event.getComponent().getStyle() == ButtonStyle.SUCCESS) {
                         heist.deselectQuadrant(quadrant - 1);
                     } else {
                         heist.selectQuadrant(quadrant - 1);
@@ -463,14 +453,6 @@ public class HeistCommand extends EconomyCommand {
         public boolean isHeistComplete() {
             return this.fingerprintPositions.size() == this.selectedQuadrants.size() &&
                     this.fingerprintPositions.containsAll(this.selectedQuadrants);
-        }
-
-        public boolean isHeistFailed() {
-            return System.currentTimeMillis() - this.startTime > TimeUnit.MINUTES.toMillis(1);
-        }
-
-        public void resetQuadrants() {
-            this.selectedQuadrants.clear();
         }
     }
 }

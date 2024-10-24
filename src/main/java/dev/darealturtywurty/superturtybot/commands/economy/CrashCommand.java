@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -53,6 +55,11 @@ public class CrashCommand extends EconomyCommand {
     }
 
     @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 1L);
+    }
+
+    @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
         if (amount < 1) {
@@ -72,6 +79,12 @@ public class CrashCommand extends EconomyCommand {
             return;
         }
 
+        if (account.getNextCrash() > System.currentTimeMillis()) {
+            event.getHook().editOriginalFormat("❌ You may crash again %s!", TimeFormat.RELATIVE.format(account.getNextCrash())).queue();
+            return;
+        }
+
+        account.setNextCrash(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
@@ -79,9 +92,9 @@ public class CrashCommand extends EconomyCommand {
                 message.createThreadChannel(event.getUser().getName() + "'s Crash Game")).queue(thread -> {
             thread.addThreadMember(event.getUser()).queue();
             thread.sendMessage(("""
-                    You have bet %s%s! The multiplier has started at 0.75x!
+                    You have bet %s%s! The multiplier has started at 0.25x!
                     
-                    It will increase by a random amount every 5 seconds, however, it will crash at a random point between 0.8x and 10.0x!
+                    It will increase by a random amount every 3 seconds, however, it will crash at a random point between 0.3x and 10.0x!
                     
                     You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
                 var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
@@ -114,7 +127,7 @@ public class CrashCommand extends EconomyCommand {
         private final long user;
         private final long amount;
 
-        private double multiplier = 0.75;
+        private double multiplier = 0.25;
         private int ticksPassed = 0;
         private ScheduledFuture<?> future;
 
@@ -134,8 +147,18 @@ public class CrashCommand extends EconomyCommand {
             this.future = EXECUTOR.scheduleAtFixedRate(
                     () -> tick(jda, config, account, crashChance),
                     5,
-                    5,
+                    3,
                     TimeUnit.SECONDS);
+
+            Guild guild = jda.getGuildById(this.guild);
+            if (guild == null)
+                return;
+
+            ThreadChannel thread = guild.getThreadChannelById(this.channel);
+            if (thread == null)
+                return;
+
+            thread.sendMessage("The multiplier has started at 0.25x!").queue();
         }
 
         private void tick(final JDA jda, final GuildData config, final Economy account, final int crashChance) {
@@ -183,7 +206,7 @@ public class CrashCommand extends EconomyCommand {
                 return;
             }
 
-            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 0.75, 10.0));
+            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 0.25, 10.0));
             if (multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
                                 .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
@@ -215,7 +238,7 @@ public class CrashCommand extends EconomyCommand {
          * @return The multiplier
          */
         private static double getMultiplier() {
-            return MathUtils.clamp(Math.floor(ThreadLocalRandom.current().nextDouble(0, 0.2) * 100) / 100.0D, 0.01, 1);
+            return MathUtils.clamp(Math.floor(ThreadLocalRandom.current().nextDouble(0, 0.25) * 100) / 100.0D, 0.01, 1);
         }
 
         /**

@@ -339,7 +339,7 @@ public class EconomyManager {
     }
 
     public static long getTimeToPayOff(long amount) {
-        return amount / 1000;
+        return Math.min(TimeUnit.DAYS.toMillis(7), Math.max(TimeUnit.HOURS.toMillis(12), amount / 100_000));
     }
 
     public static float getInterestRate(long amount) {
@@ -385,7 +385,7 @@ public class EconomyManager {
 
     private static long determineHeistPayout(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (long) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(500_000, 1_000_000);
+        return (long) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(200_000, 500_000);
     }
 
     /**
@@ -401,7 +401,7 @@ public class EconomyManager {
 
         account.setTotalHeists(account.getTotalHeists() + 1);
 
-        if (ThreadLocalRandom.current().nextInt(3) == 0) {
+        if (ThreadLocalRandom.current().nextInt(4) == 0) {
             account.setHeistLevel(account.getHeistLevel() + 1);
             return Pair.of(earned, true);
         }

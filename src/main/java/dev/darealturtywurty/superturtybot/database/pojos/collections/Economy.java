@@ -23,6 +23,7 @@ public class Economy {
     private long nextWork;
     private long nextCrime;
     private long nextHeist;
+    private long nextCrash;
 
     private long nextDaily;
     private long nextWeekly;
