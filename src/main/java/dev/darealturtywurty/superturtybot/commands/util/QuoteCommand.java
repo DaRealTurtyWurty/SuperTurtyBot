@@ -152,7 +152,8 @@ public class QuoteCommand extends CoreCommand {
                         return;
                     }
 
-                    var quote = new Quote(guild.getIdLong(), user.getIdLong(), event.getUser().getIdLong(), text, found.get().getTimeCreated().toInstant().toEpochMilli());
+                    var quote = new Quote(guild.getIdLong(), found.get().getChannelIdLong(), found.get().getIdLong(),
+                            user.getIdLong(), event.getUser().getIdLong(), text, found.get().getTimeCreated().toInstant().toEpochMilli());
                     Database.getDatabase().quotes.insertOne(quote);
                     event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
                 });
@@ -217,11 +218,12 @@ public class QuoteCommand extends CoreCommand {
                     String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
                     String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
-                    contents.field("Quote #" + (index + 1), "%s%n%nSaid by: %s%nAdded by: %s%nHappened: %s".formatted(
+                    contents.field("Quote #" + (index + 1), "%s%n%nSaid by: %s%nAdded by: %s%nHappened: %s%nLink: [Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
                                     text,
                                     saidByName,
                                     addedByName,
-                                    TimeFormat.RELATIVE.format(quote.getTimestamp())),
+                                    TimeFormat.RELATIVE.format(quote.getTimestamp()),
+                                    quote.getGuild(), quote.getChannel(), quote.getMessage()),
                             false);
                 }
 
@@ -263,6 +265,8 @@ public class QuoteCommand extends CoreCommand {
                         .addField("Said by", saidByName, true)
                         .addField("Added by", addedByName, true)
                         .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
+                        .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
+                                quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
                         .setColor(Color.CYAN)
                         .setTimestamp(Instant.now())
                         .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
@@ -294,6 +298,8 @@ public class QuoteCommand extends CoreCommand {
                         .addField("Said by", saidByName, true)
                         .addField("Added by", addedByName, true)
                         .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
+                        .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
+                                quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
                         .setColor(Color.CYAN)
                         .setTimestamp(Instant.now())
                         .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
@@ -333,7 +339,8 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
-        var quote = new Quote(guild.getIdLong(), message.getAuthor().getIdLong(), user.getIdLong(), message.getContentRaw(),
+        var quote = new Quote(guild.getIdLong(), message.getChannelIdLong(), message.getIdLong(),
+                message.getAuthor().getIdLong(), user.getIdLong(), message.getContentRaw(),
                 message.getTimeCreated().toInstant().toEpochMilli());
         Database.getDatabase().quotes.insertOne(quote);
         event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
@@ -386,7 +393,7 @@ public class QuoteCommand extends CoreCommand {
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", event.getGuild().getIdLong()))
                 .into(new ArrayList<>());
 
-        var quote = new Quote(guildId, userId, addedBy, text, System.currentTimeMillis());
+        var quote = new Quote(guildId, event.getChannelIdLong(), messageId, userId, addedBy, text, System.currentTimeMillis());
         Database.getDatabase().quotes.insertOne(quote);
         event.getMessage().editMessage("✅ Quote added! #" + (quotes.size() + 1)).setComponents().queue();
     }

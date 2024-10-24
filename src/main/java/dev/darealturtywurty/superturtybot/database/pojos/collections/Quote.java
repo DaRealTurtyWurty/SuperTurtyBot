@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Quote {
     private long guild;
+    private long channel = -1L;
+    private long message = -1L;
 
     private long user;
     private long addedBy;
