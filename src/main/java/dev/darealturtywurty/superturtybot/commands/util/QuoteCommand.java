@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -64,7 +65,8 @@ public class QuoteCommand extends CoreCommand {
                         .addOption(OptionType.USER, "user", "The user who said the quote.", true),
                 new SubcommandData("remove", "Removes a quote.")
                         .addOption(OptionType.INTEGER, "number", "The number of the quote to remove.", true),
-                new SubcommandData("list", "Lists" + " all quotes."),
+                new SubcommandData("list", "Lists all quotes.")
+                        .addOption(OptionType.USER, "user", "The user to list quotes for.", false),
                 new SubcommandData("get", "Gets a quote.")
                         .addOption(OptionType.INTEGER, "number", "The number of the quote to get.", true),
                 new SubcommandData("random", "Gets a random quote."));
@@ -192,8 +194,11 @@ public class QuoteCommand extends CoreCommand {
             }
 
             case "list" -> {
-                List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                Bson filter = user == null ?
+                        Filters.eq("guild", guild.getIdLong()) :
+                        Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
+                List<Quote> quotes = Database.getDatabase().quotes.find(filter).into(new ArrayList<>());
                 if (quotes.isEmpty()) {
                     reply(event, "❌ There are no quotes!", false, true);
                     return;
@@ -228,7 +233,7 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(5, contents)
-                        .title("Quotes for " + guild.getName())
+                        .title("Quotes " + (user == null ? "" : "by " + user.getEffectiveName()) + " in " + guild.getName())
                         .description("Total Quotes: " + quotes.size())
                         .color(Color.CYAN)
                         .timestamp(Instant.now())
