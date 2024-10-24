@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -61,20 +63,17 @@ public final class StringUtils {
 
         // Determine the class of the number
         if (d >= 1000)
-            return numberFormat(d, iteration + 1, removeTrailingZeros);
+            return (isNegative ? "-" : "") + numberFormat(d, iteration + 1, removeTrailingZeros);
 
-        // No decimal part or the decimal part is equal to 0
-        String formatted;
-        if(isRound)
-            formatted = String.format("%.0f", d);
-        else
-            formatted = String.format("%.1f", d);
+        var df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.FLOOR);
+        String formatted = df.format(d);
 
         // Add the corresponding letter for the class
         formatted += CHARS[iteration];
 
         if(removeTrailingZeros)
-            formatted = formatted.replace(".0", "");
+            formatted = formatted.replaceAll("\\.0*$", "");
 
         if (isNegative)
             formatted = "-" + formatted;
