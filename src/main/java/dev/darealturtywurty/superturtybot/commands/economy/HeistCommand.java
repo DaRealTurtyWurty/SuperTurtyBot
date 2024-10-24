@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
@@ -133,7 +134,11 @@ public class HeistCommand extends EconomyCommand {
                     }
 
                     EconomyManager.removeMoney(account, -EconomyManager.determineHeistSetupCost(account), true);
-                    account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
+
+                    if (!Environment.INSTANCE.isDevelopment()) {
+                        account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
+                    }
+
                     EconomyManager.updateAccount(account);
 
                     message.editMessage("✅ Heist started!")
