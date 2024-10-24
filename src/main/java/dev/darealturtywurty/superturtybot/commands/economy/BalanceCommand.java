@@ -43,11 +43,13 @@ public class BalanceCommand extends EconomyCommand {
         embed.setTimestamp(Instant.now());
         embed.setColor(EconomyManager.getBalance(account) > 0 ? Color.GREEN : Color.RED);
         embed.setTitle("Economy Balance for: " + member.getEffectiveName());
-        embed.setDescription("**Wallet:** <>%s%n**Bank:** <>%s%n**Total Balance:** <>%s%n"
-                .replace("<>", config.getEconomyCurrency())
-                .formatted(StringUtils.numberFormat(account.getWallet()),
-                        StringUtils.numberFormat(account.getBank()),
-                        StringUtils.numberFormat(EconomyManager.getBalance(account))));
+        embed.setDescription("**Wallet:** %s%s%n**Bank:** %s%s%n**Total Balance:** %s%s%n"
+                .formatted((account.getWallet() < 0 ? "-" : "") + config.getEconomyCurrency(),
+                        StringUtils.numberFormat(Math.abs(account.getWallet())),
+                        (account.getBank() < 0 ? "-" : "") + config.getEconomyCurrency(),
+                        StringUtils.numberFormat(Math.abs(account.getBank())),
+                        (EconomyManager.getBalance(account) < 0 ? "-" : "") + config.getEconomyCurrency(),
+                        StringUtils.numberFormat(Math.abs(EconomyManager.getBalance(account)))));
 
         long betWins = account.getTotalBetWin();
         long betLosses = account.getTotalBetLoss();
@@ -58,7 +60,7 @@ public class BalanceCommand extends EconomyCommand {
                 currency + StringUtils.numberFormat(betWins),
                 true);
 
-        long betTotal = betWins - betLosses;
+        long betTotal = betWins + betLosses;
         embed.addField("Bet Total",
                 (betTotal < 0 ? "-" : "+") + (currency + StringUtils.numberFormat(Math.abs(betTotal))),
                 true);
