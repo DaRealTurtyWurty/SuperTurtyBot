@@ -301,7 +301,7 @@ public class WordleCommand extends CoreCommand {
             createEventWaiter(event.getGuild(), game).build();
         });
 
-        return createImage(new ArrayList<>(), (letterIndex, character) -> Game.LetterState.NOT_GUESSED, character -> new Color(0x6D7C87));
+        return createImage(new ArrayList<>(), (letterIndex, character) -> Game.LetterState.NOT_GUESSED, character -> Game.LetterState.NOT_GUESSED.color);
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Guild guild, Game game) {
@@ -446,7 +446,8 @@ public class WordleCommand extends CoreCommand {
     }
 
     private static BufferedImage createImage(List<String> guesses, BiFunction<Integer, Character, Game.LetterState> letterStateGetter, Function<Character, Color> characterColorGetter) {
-        BufferedImage image = new BufferedImage(DEFAULT_IMAGE.getWidth(), DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        int imageWidth = DEFAULT_IMAGE.getWidth();
+        BufferedImage image = new BufferedImage(imageWidth, DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         FontMetrics metrics = graphics.getFontMetrics();
 
@@ -459,17 +460,17 @@ public class WordleCommand extends CoreCommand {
         final int startX = 280, startY = 70, spacing = 36, guessedSize = 100;
         for (int guessIndex = 0; guessIndex < guesses.size(); guessIndex++) {
             String guess = guesses.get(guessIndex);
-            for (int letterIndex = 0; letterIndex < guess.toCharArray().length; letterIndex++) {
+            for (int letterIndex = 0; letterIndex < guess.length(); letterIndex++) {
                 char character = guess.charAt(letterIndex);
                 graphics.setColor(letterStateGetter.apply(letterIndex, character).getColor());
 
                 graphics.fillRect(
-                        startX + (letterIndex * (guessedSize + spacing)),
-                        startY + (guessIndex * (guessedSize + spacing)),
+                        startX + letterIndex * (guessedSize + spacing),
+                        startY + guessIndex * (guessedSize + spacing),
                         guessedSize,
                         guessedSize);
 
-                graphics.setColor(Color.BLACK);
+                graphics.setColor(Color.WHITE);
 
                 String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
                 graphics.drawString(
@@ -486,7 +487,7 @@ public class WordleCommand extends CoreCommand {
             graphics.setColor(characterColorGetter.apply(character));
             graphics.fillRoundRect(position.getLeft(), position.getRight(), letterWidth, letterHeight, 25, 25);
 
-            graphics.setColor(Color.BLACK);
+            graphics.setColor(Color.WHITE);
 
             String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
             graphics.drawString(
@@ -681,7 +682,7 @@ public class WordleCommand extends CoreCommand {
                 return LetterState.WRONG_POSITION;
             }
 
-            return LetterState.NOT_GUESSED;
+            return LetterState.INCORRECT;
         }
 
         /**
@@ -690,8 +691,8 @@ public class WordleCommand extends CoreCommand {
          * The color is based on the letter state of the character.
          * - If the character is in the word and is part of one of the guesses but not at the right index then the color is yellow.
          * - If the character is in the word and is part of one of the guesses and is at the right index then the color is green.
-         * - If the character is not in the word and is part of one of the guesses then the color is red.
-         * - If the character is not in the word and is not part of one of the guesses then the color is white.
+         * - If the character is not in the word and is part of one of the guesses then the color is dark gray.
+         * - If the character is not in the word and is not part of one of the guesses then the color is light gray.
          *
          * @param character The character to get the color of.
          * @return The color of the character.
@@ -701,7 +702,7 @@ public class WordleCommand extends CoreCommand {
             char lowercaseChar = Character.toLowerCase(character);
             boolean isInWord = lowercaseWord.contains(String.valueOf(lowercaseChar));
             boolean isAtCorrectIndex;
-            Color color = LetterState.NOT_GUESSED.getColor(); // Default color is white
+            Color color = LetterState.NOT_GUESSED.getColor(); // Default color is light gray
 
             for (String guess : guesses) {
                 String lowercaseGuess = guess.toLowerCase();
@@ -716,7 +717,7 @@ public class WordleCommand extends CoreCommand {
                             color = LetterState.WRONG_POSITION.getColor(); // Yellow has the second-highest priority
                         }
                     } else {
-                        color = LetterState.INCORRECT.getColor(); // Red has the third-highest priority
+                        color = LetterState.INCORRECT.getColor(); // Dark gray has the third-highest priority
                     }
                 }
             }
@@ -730,10 +731,10 @@ public class WordleCommand extends CoreCommand {
 
         @Getter
         public enum LetterState {
-            CORRECT(Color.GREEN),
-            INCORRECT(Color.RED),
-            WRONG_POSITION(Color.YELLOW),
-            NOT_GUESSED(new Color(0x6D7C87));
+            CORRECT(new Color(0x538d4e)),
+            INCORRECT(new Color(0x3a3a3c)),
+            WRONG_POSITION(new Color(0xb59f3b)),
+            NOT_GUESSED(new Color(0x818384));
 
             private final Color color;
 
