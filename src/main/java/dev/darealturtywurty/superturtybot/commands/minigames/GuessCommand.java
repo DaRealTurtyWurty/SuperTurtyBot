@@ -11,10 +11,10 @@ public class GuessCommand extends CoreCommand {
     public GuessCommand() {
         super(new Types(true, false, false, false));
 
-        addSubcommands(new GeoGuesserCommand(),
-                new GuessCombinedFlagsCommand(),
-                new GuessRegionBorderCommand(),
-                new GuessSongCommand());
+        addSubcommands(new GeoGuesserCommand(this),
+                new GuessCombinedFlagsCommand(this),
+                new GuessRegionBorderCommand(this),
+                new GuessSongCommand(this));
     }
 
     @Override

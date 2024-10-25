@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
@@ -35,8 +36,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GuessCombinedFlagsCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    public GuessCombinedFlagsCommand() {
-        super("combinedflags", "Guess the regions that make up the combined flag!");
+    public GuessCombinedFlagsCommand(CoreCommand parent) {
+        super(parent, "combinedflags", "Guess the regions that make up the combined flag!");
 
         addOptions(List.of(
                 new OptionData(OptionType.INTEGER, "number", "The number of flags to combine", false).setRequiredRange(2, 16),

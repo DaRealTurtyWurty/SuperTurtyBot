@@ -15,13 +15,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
 @SuppressWarnings("UnnecessaryDefault")
 public final class StringUtils {
-    private static final char[] CHARS = {'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd', 'U', 'D', 'T'};
+    private static final String[] NUMBER_ABBREVS = {"K", "M", "B", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No", "De", "Ud",
+            "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Ovd", "Nvd", "Vgn", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg",
+            "Spvg", "Ocvg", "Novg", "Tgn", "Utg", "Dtg", "Ttg", "Qatg", "Qitg", "Sxtg", "Sptg", "Octg", "Notg", "Qag",
+            "Uqag", "Dqag", "Tqag", "Qaqag", "Qiqag", "Sxqag", "Spqag", "Ocqag", "Noqag", "Qig", "UQig", "DQig", "TQig",
+            "QaQig", "QiQig", "SxQig", "SpQig", "OcQig", "NoQig", "Sxg", "USxg", "DSxg", "TSxg", "QaSxg", "QiSxg",
+            "SxSxg", "SpSxg", "OcSxg", "NoSxg", "Spg", "USpg", "DSpg", "TSpg", "QaSpg", "QiSpg", "SxSpg", "SpSpg",
+            "OcSpg", "NoSpg", "Ocg", "UOcg", "DOcg", "TOcg", "QaOcg", "QiOcg", "SxOcg", "SpOcg", "OcOcg", "NoOcg",
+            "Nog", "UNog", "DNog", "TNog", "QaNog", "QiNog", "SxNog", "SpNog", "OcNog", "NoNog", "Ct", "UCt", "DCt",
+            "TCt", "QaCt", "QiCt", "SxCt", "SpCt", "OcCt", "NoCt", "Dct", "UDct", "DDct", "TDct", "QaDct"};
 
     private StringUtils() {
         throw new IllegalAccessError("Cannot access private constructor!");
@@ -65,15 +74,15 @@ public final class StringUtils {
 
         // No decimal part or the decimal part is equal to 0
         String formatted;
-        if(isRound)
+        if (isRound)
             formatted = String.format("%.0f", d);
         else
             formatted = String.format("%.1f", d);
 
         // Add the corresponding letter for the class
-        formatted += CHARS[iteration];
+        formatted += NUMBER_ABBREVS[iteration];
 
-        if(removeTrailingZeros)
+        if (removeTrailingZeros)
             formatted = formatted.replace(".0", "");
 
         if (isNegative)
@@ -307,5 +316,49 @@ public final class StringUtils {
         formattedAmount = formattedAmount.replace(".00", "");
 
         return formattedAmount;
+    }
+
+    public static int levenshteinDistance(String str1, String str2) {
+        int[][] dp = new int[str1.length() + 1][str2.length() + 1];
+
+        for (int i = 0; i <= str1.length(); i++) {
+            for (int j = 0; j <= str2.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    dp[i][j] = Math.min(Math.min(dp[i - 1][j - 1] + costOfSubstitution(str1.charAt(i - 1), str2.charAt(j - 1)),
+                                    dp[i - 1][j] + 1),
+                            dp[i][j - 1] + 1);
+                }
+            }
+        }
+
+        return dp[str1.length()][str2.length()];
+    }
+
+    public static List<String> getMatching(Collection<String> strings, String input, boolean contains, boolean caseSensitive) {
+        return strings.stream().filter(str -> {
+            if (caseSensitive) {
+                return contains ? str.contains(input) :
+                        str.startsWith(input);
+            } else {
+                return contains ? str.toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)) :
+                        str.toLowerCase(Locale.ROOT).startsWith(input.toLowerCase(Locale.ROOT));
+            }
+        }).toList();
+    }
+
+    public static List<String> closestMatches(Collection<String> strings, String input, int maxNumber) {
+        return strings.stream().sorted((str1, str2) -> {
+            int dist1 = StringUtils.levenshteinDistance(str1, input);
+            int dist2 = StringUtils.levenshteinDistance(str2, input);
+            return Integer.compare(dist1, dist2);
+        }).limit(maxNumber).toList();
+    }
+
+    private static int costOfSubstitution(char a, char b) {
+        return a == b ? 0 : 1;
     }
 }

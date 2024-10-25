@@ -23,7 +23,7 @@ import java.util.List;
 // TODO: Finish this command
 public class PropertyCommand extends EconomyCommand {
     public PropertyCommand() {
-        addSubcommands(new BuyPropertyCommand());
+        addSubcommands(new BuyPropertyCommand(this));
     }
 
 //    @Override

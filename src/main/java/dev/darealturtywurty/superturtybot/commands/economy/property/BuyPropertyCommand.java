@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy.property;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
@@ -10,7 +11,9 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
@@ -18,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class BuyPropertyCommand extends SubcommandCommand {
-    public BuyPropertyCommand() {
-        super("buy", "Buy a property");
+    public BuyPropertyCommand(CoreCommand parent) {
+        super(parent, "buy", "Buy a property");
         addOption(OptionType.STRING, "property", "The property to buy", true, true);
     }
 
@@ -75,5 +78,23 @@ public class BuyPropertyCommand extends SubcommandCommand {
 
         event.getHook().sendMessageFormat("✅ You have successfully bought the property `%s` for %s%s!",
                 property.getName(), guildData.getEconomyCurrency(), StringUtils.numberFormat(cost)).queue();
+    }
+
+    @Override
+    public void handleAutocomplete(CommandAutoCompleteInteractionEvent event) {
+        if(!event.isFromGuild())
+            return;
+
+        AutoCompleteQuery query = event.getFocusedOption();
+        if(!query.getName().equals("property"))
+            return;
+
+        String input = query.getValue();
+
+        List<String> propertyNames = PropertyManager.getPropertyNames(event.getGuild().getIdLong());
+        propertyNames = StringUtils.getMatching(propertyNames, input, true, false);
+        propertyNames = StringUtils.closestMatches(propertyNames, input, 25);
+
+        event.replyChoiceStrings(propertyNames).queue();
     }
 }

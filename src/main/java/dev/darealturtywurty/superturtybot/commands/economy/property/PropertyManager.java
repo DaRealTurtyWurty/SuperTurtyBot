@@ -37,7 +37,7 @@ public class PropertyManager {
     }
 
     public static boolean canBuyProperty(Economy account) {
-        return account.getBank() >= 10_000 && account.getProperties().size() < EconomyManager.getCreditScore(account) * 100;
+        return account.getBank() >= 10_000 && account.getProperties().size() < (int) Math.floor(EconomyManager.getCreditScore(account) * 100);
     }
 
     public static List<Property> getProperties(long guildId) {
@@ -388,5 +388,18 @@ public class PropertyManager {
 
     public static long calculatePropertyCost(Property property) {
         return property.calculateCostToPurchase();
+    }
+
+    public static List<String> getPropertyNames(long guild) {
+        List<Property> properties = GUILD_PROPERTY_MARKET.get(guild);
+        if (properties == null)
+            return Collections.emptyList();
+
+        List<String> propertyNames = new ArrayList<>();
+        for (Property property : properties) {
+            propertyNames.add(property.getName());
+        }
+
+        return propertyNames;
     }
 }

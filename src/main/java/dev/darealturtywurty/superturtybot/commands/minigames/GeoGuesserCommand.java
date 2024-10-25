@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Geoguesser;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
@@ -28,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 public class GeoGuesserCommand extends SubcommandCommand {
     private static final List<Game> GAMES = new ArrayList<>();
 
-    public GeoGuesserCommand() {
-        super("geoguesser", "Play a game of GeoGuesser!");
+    public GeoGuesserCommand(CoreCommand parent) {
+        super(parent, "geoguesser", "Play a game of GeoGuesser!");
     }
 
     @Override

@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
@@ -35,8 +36,8 @@ import java.util.Map;
 public class GuessRegionBorderCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    public GuessRegionBorderCommand() {
-        super("border", "Guess the region that has the border shown.");
+    public GuessRegionBorderCommand(CoreCommand parent) {
+        super(parent, "border", "Guess the region that has the border shown.");
 
         addOptions(List.of(
                 new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.", false),

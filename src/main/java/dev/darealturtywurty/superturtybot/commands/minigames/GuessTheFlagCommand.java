@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.minigames;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.Region;
 import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestData;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
@@ -33,8 +34,8 @@ import java.util.Map;
 public class GuessTheFlagCommand extends SubcommandCommand {
     private static final Map<Long, Game> GAMES = new HashMap<>();
 
-    public GuessTheFlagCommand() {
-        super("flag", "Guess the flag of a region!");
+    public GuessTheFlagCommand(CoreCommand parent) {
+        super(parent, "flag", "Guess the flag of a region!");
         addOption(OptionType.BOOLEAN, "include-territories", "Whether to include territories in the flag guessing.", false);
         addOption(OptionType.BOOLEAN, "exclude-countries", "Whether to exclude countries in the flag guessing.", false);
     }

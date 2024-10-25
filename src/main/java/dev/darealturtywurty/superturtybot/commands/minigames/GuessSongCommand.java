@@ -34,8 +34,8 @@ public class GuessSongCommand extends SubcommandCommand {
     private static final String PLAYLIST = "https://open.spotify.com/playlist/0Dsp6i8lvmcTg5aiusjnFH";
     private static final Map<Long, Tuple3<Long, AudioTrack, Integer>> GUESS_THE_SONG_TRACKS = new HashMap<>();
 
-    public GuessSongCommand() {
-        super("song", "Guess the title of the song that is currently playing!");
+    public GuessSongCommand(CoreCommand parent) {
+        super(parent, "song", "Guess the title of the song that is currently playing!");
     }
 
     @Override

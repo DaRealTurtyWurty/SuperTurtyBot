@@ -2,20 +2,24 @@ package dev.darealturtywurty.superturtybot.core.command;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 @Getter
 public abstract class SubcommandCommand extends ListenerAdapter {
+    private final CoreCommand parent;
     private final String name;
     private final String description;
     private final List<OptionData> options = new ArrayList<>();
 
-    public SubcommandCommand(String name, String description) {
+    public SubcommandCommand(CoreCommand parent, String name, String description) {
+        this.parent = parent;
         this.name = name;
         this.description = description;
     }
@@ -48,6 +52,7 @@ public abstract class SubcommandCommand extends ListenerAdapter {
     }
 
     public abstract void execute(SlashCommandInteractionEvent event);
+    public void handleAutocomplete(CommandAutoCompleteInteractionEvent event) {}
 
     protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean isEphemeral) {
         CoreCommand.reply(event, message, mention, isEphemeral);
@@ -71,5 +76,13 @@ public abstract class SubcommandCommand extends ListenerAdapter {
 
     protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed) {
         CoreCommand.reply(event, embed);
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        if(!event.getName().equals(this.parent.getName()) || !Objects.equals(event.getSubcommandName(), this.name))
+            return;
+
+        handleAutocomplete(event);
     }
 }
