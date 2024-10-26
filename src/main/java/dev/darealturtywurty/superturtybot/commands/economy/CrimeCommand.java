@@ -154,7 +154,7 @@ public class CrimeCommand extends EconomyCommand {
             long amount = EconomyManager.caughtCrime(account, level);
             int newJobLevel = account.getJobLevel();
             embed.setDescription(getFail(config, event.getUser(), amount) +
-                    (jobLevel != newJobLevel ? "\n\n❌ You have been demoted by %d levels to level %d in your current job.".formatted(jobLevel - newJobLevel, newJobLevel) : ""));
+                    (jobLevel != newJobLevel ? "\n\n❌ You have been demoted, by %d level(s), to level %d in your current job.".formatted(-(jobLevel - newJobLevel), newJobLevel) : ""));
             embed.setColor(0xAA0000);
         }
 
