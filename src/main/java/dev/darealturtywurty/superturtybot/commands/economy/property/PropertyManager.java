@@ -22,7 +22,7 @@ public class PropertyManager {
     static {
         DailyTaskScheduler.addTask(new DailyTask(() -> {
             Calendar calendar = Calendar.getInstance();
-            if (GUILD_PROPERTY_MARKET.isEmpty() || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY && calendar.get(Calendar.WEEK_OF_MONTH) == 4) {
+            if (GUILD_PROPERTY_MARKET.isEmpty() || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
                 generatePropertyMarket();
             }
         }, 0, 0));

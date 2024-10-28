@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy.property;
 
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
@@ -71,10 +70,10 @@ public class BuyPropertyCommand extends SubcommandCommand {
 
         account.getProperties().add(property);
         account.setBank(account.getBank() - cost);
-        Database.getDatabase().economy.updateOne(Filters.eq("user", account.getUser()), List.of(
-                Updates.set("properties", account.getProperties()),
-                Updates.set("bank", account.getBank())
-        ));
+        Database.getDatabase().economy.replaceOne(Filters.and(
+                Filters.eq("user", event.getUser().getIdLong()),
+                Filters.eq("guild", event.getGuild().getIdLong())
+        ), account);
 
         event.getHook().sendMessageFormat("✅ You have successfully bought the property `%s` for %s%s!",
                 property.getName(), guildData.getEconomyCurrency(), StringUtils.numberFormat(cost)).queue();

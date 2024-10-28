@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -40,7 +41,10 @@ public class Property {
         this.buyDate = System.currentTimeMillis();
     }
 
-    public long getUpgradePrice() {
+    public long getUpgradePriceForLevel() {
+        if(this.upgradeLevel >= this.upgradePrices.size())
+            return -1;
+
         return this.upgradePrices.get(this.upgradeLevel);
     }
 
@@ -72,11 +76,7 @@ public class Property {
             }
         }
 
-        worth *= (long) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f);
-
-        if (this.mortgage != null && !this.mortgage.isPaidOff()) {
-            worth -= this.mortgage.calculateAmountLeftToPay();
-        }
+        worth *= 1 + (long) ((this.buyDate - System.currentTimeMillis()) / 1000f / 60f / 60f / 24f / 7f / 31f / 12f);
 
         if (ThreadLocalRandom.current().nextInt(0, 100) < 10) {
             worth -= (long) (worth * 0.01f);

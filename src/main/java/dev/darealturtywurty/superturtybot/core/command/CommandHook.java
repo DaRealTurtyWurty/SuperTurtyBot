@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigComman
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.*;
+import dev.darealturtywurty.superturtybot.commands.economy.property.PropertyCommand;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
