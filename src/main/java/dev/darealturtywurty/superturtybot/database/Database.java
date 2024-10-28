@@ -53,7 +53,7 @@ public class Database {
 
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
-        final MongoDatabase database = client.getDatabase("TurtyBot");
+        final MongoDatabase database = client.getDatabase(Environment.INSTANCE.isDevelopment() ? "TurtyBotDev" : "TurtyBot");
 
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
