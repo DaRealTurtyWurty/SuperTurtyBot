@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.minigames;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mongodb.client.model.Filters;
@@ -45,7 +47,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @SuppressWarnings("SuspiciousNameCombination")
@@ -64,32 +65,32 @@ public class WordleCommand extends CoreCommand {
 
     static {
         if(Environment.INSTANCE.turtyApiKey().isPresent()) {
-            List<Character> topRow = List.of('Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P');
-            List<Character> middleRow = List.of('A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L');
-            List<Character> bottomRow = List.of('Z', 'X', 'C', 'V', 'B', 'N', 'M');
+            char[] topRow = "QWERTYUIOP".toCharArray();
+            char[] middleRow = "ASDFGHJKL".toCharArray();
+            char[] bottomRow = "ZXCVBNM".toCharArray();
 
             final int width = 85, spacing = 10;
 
             final int topRowStartX = 131;
             final int topRowStartY = 958;
-            for (int column = 0; column < topRow.size(); column++) {
-                char character = topRow.get(column);
+            for (int column = 0; column < topRow.length; column++) {
+                char character = topRow[column];
                 int x = topRowStartX + (column * (width + spacing));
                 LETTER_POSITIONS.put(character, new CoupledPair<>(x, topRowStartY));
             }
 
             final int middleRowStartX = 178;
             final int middleRowStartY = 1068;
-            for (int column = 0; column < middleRow.size(); column++) {
-                char character = middleRow.get(column);
+            for (int column = 0; column < middleRow.length; column++) {
+                char character = middleRow[column];
                 int x = middleRowStartX + (column * (width + spacing));
                 LETTER_POSITIONS.put(character, new CoupledPair<>(x, middleRowStartY));
             }
 
             final int bottomRowStartX = 273;
             final int bottomRowStartY = 1178;
-            for (int column = 0; column < bottomRow.size(); column++) {
-                char character = bottomRow.get(column);
+            for (int column = 0; column < bottomRow.length; column++) {
+                char character = bottomRow[column];
                 int x = bottomRowStartX + (column * (width + spacing));
                 LETTER_POSITIONS.put(character, new CoupledPair<>(x, bottomRowStartY));
             }
@@ -300,8 +301,15 @@ public class WordleCommand extends CoreCommand {
 
             createEventWaiter(event.getGuild(), game).build();
         });
-
-        return createImage(new ArrayList<>(), (letterIndex, character) -> Game.LetterState.NOT_GUESSED, character -> Game.LetterState.NOT_GUESSED.color);
+        return createImage(new ArrayList<>(),
+                guess -> new Game.LetterState[] {
+                        Game.LetterState.NOT_GUESSED,
+                        Game.LetterState.NOT_GUESSED,
+                        Game.LetterState.NOT_GUESSED,
+                        Game.LetterState.NOT_GUESSED,
+                        Game.LetterState.NOT_GUESSED
+                },
+                character -> Game.LetterState.NOT_GUESSED);
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Guild guild, Game game) {
@@ -352,14 +360,15 @@ public class WordleCommand extends CoreCommand {
 
     private static void sendUpdatedImage(MessageChannel channel, Game game) {
         try {
-            BufferedImage image = createImage(game.getGuesses(), game::getLetterState, game::getCharacterColor);
+            Map<Character, Game.LetterState> characterColors = game.getCharacterColors();
+            BufferedImage image = createImage(game.getGuesses(), game::getLetterStates, key -> characterColors.getOrDefault(key, Game.LetterState.NOT_GUESSED));
             var baos = new ByteArrayOutputStream();
             ImageIO.write(image, "png", baos);
             byte[] data = baos.toByteArray();
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
             channel.sendFiles(upload).queue();
         } catch (IOException exception) {
-            Constants.LOGGER.error("An error occurred whilst sending end game image!", exception);
+            Constants.LOGGER.error("An error occurred whilst sending the updated image!", exception);
             channel.sendMessage("❌ An error occurred whilst sending the updated image!").queue();
         }
     }
@@ -445,24 +454,24 @@ public class WordleCommand extends CoreCommand {
         });
     }
 
-    private static BufferedImage createImage(List<String> guesses, BiFunction<Integer, Character, Game.LetterState> letterStateGetter, Function<Character, Color> characterColorGetter) {
-        int imageWidth = DEFAULT_IMAGE.getWidth();
-        BufferedImage image = new BufferedImage(imageWidth, DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    private static BufferedImage createImage(List<String> guesses, Function<String, Game.LetterState[]> letterStateGetter, Function<Character, Game.LetterState> letterToState) {
+        BufferedImage image = new BufferedImage(DEFAULT_IMAGE.getWidth(), DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
-        FontMetrics metrics = graphics.getFontMetrics();
 
         graphics.drawImage(DEFAULT_IMAGE, 0, 0, null);
 
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        graphics.setColor(new Color(0x151515));
-        graphics.setFont(new Font("Arial", Font.BOLD, 50));
+        graphics.setColor(Color.WHITE);
+        graphics.setFont(new Font("Arial", Font.BOLD, 75));
+        FontMetrics metrics = graphics.getFontMetrics();
 
-        final int startX = 280, startY = 70, spacing = 36, guessedSize = 100;
+        final int startX = 280, startY = 62, spacing = 10, guessedSize = 120, letterHeight = 54;
         for (int guessIndex = 0; guessIndex < guesses.size(); guessIndex++) {
             String guess = guesses.get(guessIndex);
+            Game.LetterState[] letterStates = letterStateGetter.apply(guess);
             for (int letterIndex = 0; letterIndex < guess.length(); letterIndex++) {
                 char character = guess.charAt(letterIndex);
-                graphics.setColor(letterStateGetter.apply(letterIndex, character).getColor());
+                graphics.setColor(letterStates[letterIndex].getColor());
 
                 graphics.fillRect(
                         startX + letterIndex * (guessedSize + spacing),
@@ -475,25 +484,25 @@ public class WordleCommand extends CoreCommand {
                 String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
                 graphics.drawString(
                         characterStr,
-                        startX + (letterIndex * (guessedSize + spacing)) + guessedSize / 2 - metrics.stringWidth(characterStr),
-                        startY + (guessIndex * (guessedSize + spacing)) + guessedSize / 2 + (metrics.getAscent() - metrics.getDescent()) / 2);
+                        startX + (letterIndex * (guessedSize + spacing)) + guessedSize / 2f - metrics.stringWidth(characterStr) / 2f - 0.5f,
+                        startY + (guessIndex * (guessedSize + spacing)) + guessedSize / 2f + letterHeight / 2f
+                );
             }
         }
 
-        final int letterWidth = 85, letterHeight = 100;
-        int ascent = metrics.getAscent();
-        int descent = metrics.getDescent();
+        final int keyWidth = 85, keyHeight = 100;
         LETTER_POSITIONS.forEach((character, position) -> {
-            graphics.setColor(characterColorGetter.apply(character));
-            graphics.fillRoundRect(position.getLeft(), position.getRight(), letterWidth, letterHeight, 25, 25);
+            graphics.setColor(letterToState.apply(Character.toLowerCase(character)).color);
+            graphics.fillRoundRect(position.getLeft(), position.getRight(), keyWidth, keyHeight, 25, 25);
 
             graphics.setColor(Color.WHITE);
 
             String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
             graphics.drawString(
                     characterStr,
-                    position.getLeft() + letterWidth / 2 - metrics.stringWidth(characterStr),
-                    position.getRight() + letterHeight / 2 + (ascent - descent) / 2);
+                    position.getLeft() + keyWidth / 2f - metrics.stringWidth(characterStr) / 2f - 0.5f,
+                    position.getRight() + keyHeight / 2f + letterHeight / 2f
+            );
         });
 
         return image;
@@ -673,56 +682,64 @@ public class WordleCommand extends CoreCommand {
             return false;
         }
 
-        public LetterState getLetterState(int letterIndex, char character) {
-            if (this.word.charAt(letterIndex) == character) {
-                return LetterState.CORRECT;
+        public LetterState[] getLetterStates(String guess) {
+            // TRANSLATED TO JAVA FROM: https://breq.dev/projects/wordle
+
+            ArrayList<@Nullable Character> targetLetters = new ArrayList<>(Lists.charactersOf(this.word));
+
+            int length = this.word.length();
+            LetterState[] letterStates = new LetterState[length];
+            // Mark correct letters as correct
+            for (int i = 0; i < length; i++) {
+                if (guess.charAt(i) == this.word.charAt(i)) {
+                    // Remove matching green letters from the pool
+                    // so that they aren't also matched as yellows
+                    targetLetters.set(i, null);
+                    letterStates[i] = LetterState.CORRECT;
+                } else {
+                    letterStates[i] = LetterState.INCORRECT;
+                }
             }
 
-            if (this.word.contains(String.valueOf(character))) {
-                return LetterState.WRONG_POSITION;
+            // Second pass: greedily match yellow letters
+            for (int letterToColorIndex = 0; letterToColorIndex < length; letterToColorIndex++) {
+                // Only change letters that were not marked as correct
+                if (letterStates[letterToColorIndex] == LetterState.CORRECT) continue;
+                // Yellow letters are matched by searching the entire target word
+                int letterIndexInTarget = targetLetters.indexOf(guess.charAt(letterToColorIndex));
+                if (letterIndexInTarget == -1) continue;
+                // Remove yellow letters once matched,
+                // each letter only matches once
+                targetLetters.set(letterIndexInTarget, null);
+                letterStates[letterToColorIndex] = LetterState.WRONG_POSITION;
             }
 
-            return LetterState.INCORRECT;
+            return letterStates;
         }
 
-        /**
-         * Gets the color of the character.
-         * <p>
-         * The color is based on the letter state of the character.
-         * - If the character is in the word and is part of one of the guesses but not at the right index then the color is yellow.
-         * - If the character is in the word and is part of one of the guesses and is at the right index then the color is green.
-         * - If the character is not in the word and is part of one of the guesses then the color is dark gray.
-         * - If the character is not in the word and is not part of one of the guesses then the color is light gray.
-         *
-         * @param character The character to get the color of.
-         * @return The color of the character.
-         */
-        public Color getCharacterColor(Character character) {
-            String lowercaseWord = word.toLowerCase();
-            char lowercaseChar = Character.toLowerCase(character);
-            boolean isInWord = lowercaseWord.contains(String.valueOf(lowercaseChar));
-            boolean isAtCorrectIndex;
-            Color color = LetterState.NOT_GUESSED.getColor(); // Default color is light gray
+        public Map<Character, LetterState> getCharacterColors() {
+            // TRANSLATED TO JAVA FROM: https://breq.dev/projects/wordle
 
-            for (String guess : guesses) {
-                String lowercaseGuess = guess.toLowerCase();
-                if (lowercaseGuess.contains(String.valueOf(lowercaseChar))) {
-                    if (isInWord) {
-                        // Check if the character is at the right index
-                        isAtCorrectIndex = lowercaseWord.indexOf(lowercaseChar) == lowercaseGuess.indexOf(lowercaseChar);
-                        if (isAtCorrectIndex) {
-                            color = LetterState.CORRECT.getColor(); // Green has the highest priority
-                            return color;
-                        } else {
-                            color = LetterState.WRONG_POSITION.getColor(); // Yellow has the second-highest priority
-                        }
-                    } else {
-                        color = LetterState.INCORRECT.getColor(); // Dark gray has the third-highest priority
+            HashMap<Character, LetterState> letters = new HashMap<>();
+
+            for (String guess : this.guesses) {
+                LetterState[] letterStates = getLetterStates(guess);
+
+                for (int i = 0; i < guess.length(); i++) {
+                    LetterState letterState = letterStates[i];
+                    char letter = guess.charAt(i);
+                    boolean noExistingData = letters.getOrDefault(letter, LetterState.NOT_GUESSED) == LetterState.NOT_GUESSED;
+
+                    if (noExistingData && letterState == LetterState.NOT_GUESSED) {
+                        letters.put(letter, LetterState.INCORRECT);
+                    }
+                    if (noExistingData || letterState == LetterState.CORRECT) {
+                        letters.put(letter, letterState);
                     }
                 }
             }
 
-            return color;
+            return ImmutableMap.copyOf(letters);
         }
 
         public boolean isWon() {
