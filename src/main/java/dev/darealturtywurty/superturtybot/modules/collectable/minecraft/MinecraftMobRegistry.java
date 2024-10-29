@@ -116,7 +116,7 @@ public class MinecraftMobRegistry {
     public static final MinecraftMobCollectable HORSE = register("horse", new MinecraftMobCollectable.Builder()
             .name("Horse")
             .emoji("horse")
-            .question("How many different types of horses are there?")
+            .question("How many different colours of horse are there?")
             .answer(7)
             .category(MobCategory.PASSIVE)
             .rarity(CollectableRarity.UNCOMMON));
