@@ -30,7 +30,7 @@ import static net.dv8tion.jda.api.EmbedBuilder.ZERO_WIDTH_SPACE;
 @Getter
 public class PaginatedEmbed extends ListenerAdapter {
     private final int pageSize;
-    private final List<MessageEmbed.Field> contents;
+    private final List<Consumer<EmbedBuilder>> contents;
     private final JDA jda;
 
     private final String title;
@@ -62,7 +62,7 @@ public class PaginatedEmbed extends ListenerAdapter {
         this.jda = jda;
 
         this.title = builder.title;
-        this.description = builder.description;
+        this.description = builder.description == null ? null : builder.description.toString();
         this.footer = builder.footer;
         this.footerIconUrl = builder.footerIconUrl;
         this.thumbnail = builder.thumbnail;
@@ -138,7 +138,7 @@ public class PaginatedEmbed extends ListenerAdapter {
             toIndex = Math.min(fromIndex + pageSize, contents.size());
         }
 
-        List<MessageEmbed.Field> pageContents = contents.subList(fromIndex, toIndex);
+        List<Consumer<EmbedBuilder>> pageContents = contents.subList(fromIndex, toIndex);
 
         var builder = new EmbedBuilder()
                 .setTitle(this.title, this.url)
@@ -150,9 +150,7 @@ public class PaginatedEmbed extends ListenerAdapter {
                 .setImage(this.imageUrl)
                 .setTimestamp(this.timestamp);
 
-        for (MessageEmbed.Field content : pageContents) {
-            builder.addField(content);
-        }
+        pageContents.forEach(builderConsumer -> builderConsumer.accept(builder));
 
         return builder.build();
     }
@@ -241,10 +239,10 @@ public class PaginatedEmbed extends ListenerAdapter {
 
     public static class Builder {
         private final int pageSize;
-        private final List<MessageEmbed.Field> contents;
+        private final List<Consumer<EmbedBuilder>> contents;
 
         private String title;
-        private String description;
+        private StringBuilder description;
         private String footer;
         private String footerIconUrl;
         private String thumbnail;
@@ -273,7 +271,7 @@ public class PaginatedEmbed extends ListenerAdapter {
         }
 
         public Builder description(String description) {
-            this.description = description;
+            this.description = new StringBuilder(description);
             return this;
         }
 
@@ -358,9 +356,9 @@ public class PaginatedEmbed extends ListenerAdapter {
     }
 
     public static class ContentsBuilder {
-        private final List<MessageEmbed.Field> contents;
+        private final List<Consumer<EmbedBuilder>> contents;
 
-        public ContentsBuilder(List<MessageEmbed.Field> contents) {
+        public ContentsBuilder(List<Consumer<EmbedBuilder>> contents) {
             this.contents = contents;
         }
 
@@ -368,8 +366,13 @@ public class PaginatedEmbed extends ListenerAdapter {
             this.contents = new ArrayList<>();
         }
 
+        public ContentsBuilder custom(Consumer<EmbedBuilder> embedBuilderConsumer) {
+            this.contents.add(embedBuilderConsumer);
+            return this;
+        }
+
         public ContentsBuilder field(String name, String value, boolean inline) {
-            this.contents.add(new MessageEmbed.Field(name, value, inline));
+            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(name, value, inline)));
             return this;
         }
 
@@ -386,11 +389,11 @@ public class PaginatedEmbed extends ListenerAdapter {
         }
 
         public ContentsBuilder field(boolean inline) {
-            this.contents.add(new MessageEmbed.Field(ZERO_WIDTH_SPACE, ZERO_WIDTH_SPACE, inline));
+            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(ZERO_WIDTH_SPACE, ZERO_WIDTH_SPACE, inline)));
             return this;
         }
 
-        public List<MessageEmbed.Field> build() {
+        public List<Consumer<EmbedBuilder>> build() {
             return this.contents;
         }
     }
