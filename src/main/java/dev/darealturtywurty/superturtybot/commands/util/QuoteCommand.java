@@ -328,7 +328,7 @@ public class QuoteCommand extends CoreCommand {
                         .setTimestamp(Instant.now())
                         .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
-                event.replyEmbeds(builder.build()).queue();
+                event.getHook().editOriginalEmbeds(builder.build()).queue();
             }
 
             case "get" -> {
@@ -361,7 +361,7 @@ public class QuoteCommand extends CoreCommand {
                         .setTimestamp(Instant.now())
                         .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
-                event.replyEmbeds(builder.build()).queue();
+                event.getHook().editOriginalEmbeds(builder.build()).queue();
             }
         }
     }
