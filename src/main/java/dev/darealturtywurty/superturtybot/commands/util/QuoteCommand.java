@@ -23,8 +23,10 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class QuoteCommand extends CoreCommand {
@@ -88,16 +90,14 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
         switch (subcommand) {
             case "add" -> {
                 Member commandExecutioner = event.getMember();
-                if (commandExecutioner == null) {
-                    reply(event, "❌ You must be in the server to use this command!", false, true);
-                    return;
-                }
 
                 if (!commandExecutioner.hasPermission(Permission.VIEW_CHANNEL)) {
-                    reply(event, "❌ You must be able to read messages to use this command!", false, true);
+                    event.getHook().editOriginal("❌ You must be able to read messages to use this command!").queue();
                     return;
                 }
 
@@ -106,34 +106,34 @@ public class QuoteCommand extends CoreCommand {
 
                 Member memberToQuote = guild.getMember(userToQuote);
                 if (memberToQuote == null || memberToQuote.getIdLong() == event.getUser().getIdLong()) {
-                    reply(event, "❌ You can't quote yourself!", false, true);
+                    event.getHook().editOriginal("❌ You can't quote yourself!").queue();
                     return;
                 }
 
                 if (userToQuote.isSystem() || userToQuote.isBot()) {
-                    reply(event, "❌ You can't quote a bot or system user!", false, true);
+                    event.getHook().editOriginal("❌ You can't quote a bot or system user!").queue();
                     return;
                 }
 
                 if (text.length() > 1000) {
-                    reply(event, "❌ That quote must be at maximum 1000 characters!", false, true);
+                    event.getHook().editOriginal("❌ That quote must be at maximum 1000 characters!").queue();
                     return;
                 }
 
                 if (text.isBlank() || text.length() < 3) {
-                    reply(event, "❌ That quote must be at least 3 characters.", false, true);
+                    event.getHook().editOriginal("❌ That quote must be at least 3 characters.").queue();
                     return;
                 }
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());
                 if (quotes.stream().anyMatch(quote -> quote.getText().equals(text))) {
-                    reply(event, "❌ That quote already exists!", false, true);
+                    event.getHook().editOriginal("❌ That quote already exists!").queue();
                     return;
                 }
 
                 // Search the last 100 messages to see if that text was said by that user
-                reply(event, "Checking to see if that quote was said...");
+                event.getHook().editOriginal("Checking to see if that quote was said...").queue();
                 GuildMessageChannel channel = event.getChannel().asGuildMessageChannel();
                 channel.getHistory().retrievePast(100).queue(messages -> {
                     Message found = null;
@@ -164,14 +164,14 @@ public class QuoteCommand extends CoreCommand {
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());
                 if (number < 1 || number > quotes.size()) {
-                    reply(event, "❌ That quote does not exist!", false, true);
+                    event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
                 }
 
                 quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
                 Quote quote = quotes.get(number - 1);
                 if (quote.getAddedBy() != event.getUser().getIdLong() && !event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
-                    reply(event, "❌ You cannot remove someone else's quote!", false, true);
+                    event.getHook().editOriginal("❌ You cannot remove someone else's quote!").queue();
                     return;
                 }
 
@@ -184,25 +184,29 @@ public class QuoteCommand extends CoreCommand {
                                 Filters.eq("user", quote.getUser())
                         ));
                 if (result.getDeletedCount() == 0) {
-                    reply(event, "❌ That quote does not exist!", false, true);
+                    event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
                 }
 
-                reply(event, "✅ Quote #" + number + " removed!");
+                event.getHook().editOriginal("✅ Quote #" + number + " removed!").queue();
             }
 
             case "list" -> {
                 User user = event.getOption("user", null, OptionMapping::getAsUser);
-                List<Quote> quotes = Database.getDatabase().quotes.find().into(new ArrayList<>());
 
-                event.deferReply().queue();
+                List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
+                        .into(new ArrayList<>());
+                if (quotes.isEmpty()) {
+                    event.getHook().editOriginal("❌ There are no quotes!").queue();
+                    return;
+                }
 
                 quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
 
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (int index = 0; index < quotes.size(); index++) {
                     Quote quote = quotes.get(index);
-                    if (quote.getGuild() != guild.getIdLong() || (user != null && quote.getUser() != user.getIdLong())) continue;
+                    if (user != null && quote.getUser() != user.getIdLong()) continue;
 
                     String text = quote.getText();
                     if (text.length() > 100) {
@@ -222,8 +226,8 @@ public class QuoteCommand extends CoreCommand {
                                     TimeFormat.RELATIVE.format(quote.getTimestamp()),
                                     quote.getGuild(), quote.getChannel(), quote.getMessage()));
                 }
-                if (contents.build().isEmpty()) {
-                    reply(event, "❌ There are no quotes" + (user != null ? " by " + user.getAsMention() : "") + "!", false, true);
+                if (contents.build().isEmpty() && user != null) {
+                    event.getHook().editOriginal("❌ There are no quotes by " + user.getAsMention() + "!").queue();
                     return;
                 }
 
@@ -242,9 +246,13 @@ public class QuoteCommand extends CoreCommand {
 
             case "list_compact" -> {
                 User user = event.getOption("user", null, OptionMapping::getAsUser);
-                List<Quote> quotes = Database.getDatabase().quotes.find().into(new ArrayList<>());
 
-                event.deferReply().queue();
+                List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
+                        .into(new ArrayList<>());
+                if (quotes.isEmpty()) {
+                    event.getHook().editOriginal("❌ There are no quotes!").queue();
+                    return;
+                }
 
                 quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
 
@@ -272,6 +280,10 @@ public class QuoteCommand extends CoreCommand {
                                     ))
                     );
                 }
+                if (contents.build().isEmpty() && user != null) {
+                    event.getHook().editOriginal("❌ There are no quotes by " + user.getAsMention() + "!").queue();
+                    return;
+                }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(20, contents)
                         .title("Quotes%s in %s\nTotal Quotes: %d".formatted(user == null ? "" : " by " + user.getEffectiveName(), guild.getName(), quotes.size()))
@@ -289,7 +301,7 @@ public class QuoteCommand extends CoreCommand {
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());
                 if (quotes.isEmpty()) {
-                    reply(event, "❌ There are no quotes!", false, true);
+                    event.getHook().editOriginal("❌ There are no quotes!").queue();
                     return;
                 }
 
@@ -324,7 +336,7 @@ public class QuoteCommand extends CoreCommand {
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());
                 if (number < 1 || number > quotes.size()) {
-                    reply(event, "❌ That quote does not exist!", false, true);
+                    event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
                 }
 
@@ -367,37 +379,37 @@ public class QuoteCommand extends CoreCommand {
             return;
         }
 
+        event.deferReply().queue();
+
         User user = event.getUser();
         Message message = event.getTarget();
         String messageContent = message.getContentRaw();
         User messageAuthor = message.getAuthor();
 
-        event.deferReply().queue();
-
         if (message.getMember() == null || message.getMember().getIdLong() == event.getUser().getIdLong()) {
-            event.reply("❌ You can't quote yourself!").setEphemeral(true).queue();
+            event.getHook().editOriginal("❌ You can't quote yourself!").queue();
             return;
         }
 
         if (messageAuthor.isSystem() || messageAuthor.isBot()) {
-            event.reply("❌ You can't quote a bot or system user!").setEphemeral(true).queue();
+            event.getHook().editOriginal("❌ You can't quote a bot or system user!").queue();
             return;
         }
 
         if (messageContent.length() > 1000) {
-            event.reply("❌ That quote must be at maximum 1000 characters!").setEphemeral(true).queue();
+            event.getHook().editOriginal("❌ That quote must be at maximum 1000 characters!").queue();
             return;
         }
 
         if (messageContent.isBlank() || messageContent.length() < 3) {
-            event.reply("❌ That quote must be at least 3 characters.").setEphemeral(true).queue();
+            event.getHook().editOriginal("❌ That quote must be at least 3 characters.").queue();
             return;
         }
 
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                 .into(new ArrayList<>());
         if (quotes.stream().anyMatch(quote -> quote.getText().equals(messageContent))) {
-            event.reply("❌ That quote already exists!").setEphemeral(true).queue();
+            event.getHook().editOriginal("❌ That quote already exists!").queue();
             return;
         }
 
