@@ -80,6 +80,11 @@ public class TurtyBot {
                 .setDefault(Path.of("./emojis.json"))
                 .help("The path to the emojis json file.");
 
+        parser.addArgument("-serverIcons", "--serverIcons")
+                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+                .setDefault(Path.of("./serverIcons.json"))
+                .help("The path to the server icons json file.");
+
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
         Constants.LOGGER.info("Loaded environment file!");
@@ -98,6 +103,9 @@ public class TurtyBot {
 
         Path emojisPath = namespace.get("emojis");
         EmojiReader.setEmojisPath(emojisPath);
+
+        Path serverIconsPath = namespace.get("serverIcons");
+        ServerIconManager.setIconsPath(serverIconsPath);
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
 
