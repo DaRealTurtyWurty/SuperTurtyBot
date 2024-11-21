@@ -438,4 +438,14 @@ public class GuildConfigRegistry {
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                     .serializer((config, value) -> config.setShouldDepleteLevels(Boolean.parseBoolean(value)))
                     .valueFromConfig(GuildData::isShouldDepleteLevels).build());
+
+    public static final GuildConfigOption SHOULD_ANNOUNCE_JOINS = GUILD_CONFIG_OPTIONS.register("should_announce_joins",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setShouldAnnounceJoins(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isShouldAnnounceJoins).build());
+
+    public static final GuildConfigOption SHOULD_ANNOUNCE_LEAVES = GUILD_CONFIG_OPTIONS.register("should_announce_leaves",
+            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setShouldAnnounceLeaves(Boolean.parseBoolean(value)))
+                    .valueFromConfig(GuildData::isShouldAnnounceLeaves).build());
 }

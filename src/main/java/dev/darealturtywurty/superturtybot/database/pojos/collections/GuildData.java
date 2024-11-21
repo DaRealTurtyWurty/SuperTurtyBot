@@ -135,6 +135,8 @@ public class GuildData {
     private List<Long> enabledBirthdayUsers;
     private boolean addSmashOrPassButtons;
     private boolean isCollectingEnabled;
+    private boolean shouldAnnounceJoins;
+    private boolean shouldAnnounceLeaves;
 
     public GuildData() {
         this(0L);
@@ -238,6 +240,8 @@ public class GuildData {
         this.enabledBirthdayUsers = new ArrayList<>();
         this.addSmashOrPassButtons = true;
         this.isCollectingEnabled = true;
+        this.shouldAnnounceJoins = true;
+        this.shouldAnnounceLeaves = false;
     }
 
     public boolean shouldLog(Event event) {

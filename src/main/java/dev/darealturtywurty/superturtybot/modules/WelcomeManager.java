@@ -39,7 +39,13 @@ public final class WelcomeManager extends ListenerAdapter {
             "*Sprinkles confetti everywhere* Welcome, {user}! (We may have gotten a little carried away with the welcome committee.)",
             "Welcome, {user}! Just remember, the only rule here is: there are no rules. (Except maybe don't set the server on fire. Please. We just got it redecorated.)",
             "Welcome, {user}! We're so glad you could join us. Just a heads up, we're a little... quirky around here. (But we promise it's all in good fun!)",
-            "Welcome, {user}! We're so excited you're here. Just a heads up, we have a strict \"no boring people allowed\" policy. (Just kidding! ...Mostly.)"
+            "Welcome, {user}! We're so excited you're here. Just a heads up, we have a strict \"no boring people allowed\" policy. (Just kidding! ...Mostly.)",
+            "Welcome, {user}! We hope you're ready for a wild ride. (And by \"wild ride,\" we mean a lot of memes and a few existential crises.)",
+            "H-he-ewwo, {user} :3. Wewcome <UwU> to the *boops your nose* sewvew. We hope you enjoy youw stay hewe. Expect to see wandom memes and wots of sillinyess.",
+            "Howdy new friend! Welcome to the server, {user}! We hope you're ready for a good time. (And by \"good time,\" we mean complete and utter chaos.)",
+            "Did you hear about {user}? They've been spotted je-... Oh hello there {user}, we definitely weren't talking about you. Welcome to the server!",
+            "Did you know that {user} can recite the entire Bee Movie script from memory? Well it looks like they just joined, so we're about to find out!",
+            "Lets make a toast to our newest member, {user}! *Raises glass* Here's to good times, bad jokes, and a whole lot of fun in this server."
     );
 
     private static final List<String> GOODBYE_MESSAGES = List.of(
@@ -57,7 +63,11 @@ public final class WelcomeManager extends ListenerAdapter {
             "*Points to a door marked \"Exit\"* That way out, {user}? But seriously, take care!",
             "*Inserts \"Directed by Robert B. Weide\" meme* So {user} decided to leave the server. Let's hear what the folks at home have to say!",
             "*Puts a \"For Sale\" sign on {user}'s former role* Slightly used server member slot for sale! Must love bad jokes and existential dread. (Inquiries welcome, {user} not included.)",
-            "*Plays \"The Funeral March\"* RIP, {user}'s time in this server. (They may still be alive, but their server presence is deceased.)");
+            "*Plays \"The Funeral March\"* RIP, {user}'s time in this server. (They may still be alive, but their server presence is deceased.)",
+            "{user} just left the server. We're not crying, you're crying! (Okay, fine, we're all crying. We'll miss you, {user}!)",
+            "{user} seems to have just left us. OFF WITH THEIR HEAD!",
+            "🥲 I'm not crying, you're crying! {user} just left the server. We'll miss you, {user}! 😭"
+    );
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
@@ -69,16 +79,17 @@ public final class WelcomeManager extends ListenerAdapter {
             Database.getDatabase().guildData.insertOne(data);
         }
 
-        if (data.getWelcomeChannel() != 0) {
-            Member member = event.getMember();
-            String welcomeMessage = WELCOME_MESSAGES.get((int) (Math.random() * WELCOME_MESSAGES.size()));
-            TextChannel welcomeChannel = guild.getTextChannelById(data.getWelcomeChannel());
-            if (welcomeChannel != null)
-                welcomeChannel.sendMessage(welcomeMessage.replace("{user}", member.getAsMention())).queue();
-            else {
-                data.setWelcomeChannel(0);
-                Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), data);
-            }
+        if (data.getWelcomeChannel() == 0 || !data.isShouldAnnounceJoins())
+            return;
+
+        Member member = event.getMember();
+        String welcomeMessage = WELCOME_MESSAGES.get((int) (Math.random() * WELCOME_MESSAGES.size()));
+        TextChannel welcomeChannel = guild.getTextChannelById(data.getWelcomeChannel());
+        if (welcomeChannel != null)
+            welcomeChannel.sendMessage(welcomeMessage.replace("{user}", member.getAsMention())).queue();
+        else {
+            data.setWelcomeChannel(0);
+            Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), data);
         }
     }
 
@@ -92,16 +103,17 @@ public final class WelcomeManager extends ListenerAdapter {
             Database.getDatabase().guildData.insertOne(data);
         }
 
-        if (data.getWelcomeChannel() != 0) {
-            User user = event.getUser();
-            String goodbyeMessage = GOODBYE_MESSAGES.get((int) (Math.random() * GOODBYE_MESSAGES.size()));
-            TextChannel welcomeChannel = guild.getTextChannelById(data.getWelcomeChannel());
-            if (welcomeChannel != null)
-                welcomeChannel.sendMessage(goodbyeMessage.replace("{user}", user.getAsMention() + "(" + user.getEffectiveName() + ")")).queue();
-            else {
-                data.setWelcomeChannel(0);
-                Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), data);
-            }
+        if (data.getWelcomeChannel() == 0 || !data.isShouldAnnounceLeaves())
+            return;
+
+        User user = event.getUser();
+        String goodbyeMessage = GOODBYE_MESSAGES.get((int) (Math.random() * GOODBYE_MESSAGES.size()));
+        TextChannel welcomeChannel = guild.getTextChannelById(data.getWelcomeChannel());
+        if (welcomeChannel != null)
+            welcomeChannel.sendMessage(goodbyeMessage.replace("{user}", user.getAsMention() + "(" + user.getEffectiveName() + ")")).queue();
+        else {
+            data.setWelcomeChannel(0);
+            Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), data);
         }
     }
 }
