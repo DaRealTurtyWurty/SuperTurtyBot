@@ -233,7 +233,7 @@ public class QuoteCommand extends CoreCommand {
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(5, contents)
                         .title("Quotes" + (user == null ? "" : " by " + user.getEffectiveName()) + " in " + guild.getName())
-                        .description("Total Quotes: " + quotes.size())
+                        .description("Total Quotes: " + contents.build().size())
                         .color(Color.CYAN)
                         .timestamp(Instant.now())
                         .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
@@ -259,7 +259,7 @@ public class QuoteCommand extends CoreCommand {
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (int index = 0; index < quotes.size(); index++) {
                     Quote quote = quotes.get(index);
-                    if (quote.getGuild() != guild.getIdLong() || (user != null && quote.getUser() != user.getIdLong())) continue;
+                    if (user != null && quote.getUser() != user.getIdLong()) continue;
 
                     String text = quote.getText();
                     if (text.length() > 100) {
@@ -286,7 +286,7 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(20, contents)
-                        .title("Quotes%s in %s\nTotal Quotes: %d".formatted(user == null ? "" : " by " + user.getEffectiveName(), guild.getName(), quotes.size()))
+                        .title("Quotes%s in %s\nTotal Quotes: %d".formatted(user == null ? "" : " by " + user.getEffectiveName(), guild.getName(), contents.build().size()))
                         .color(Color.CYAN)
                         .timestamp(Instant.now())
                         .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
