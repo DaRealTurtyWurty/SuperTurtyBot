@@ -8,9 +8,11 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.filter.CommitTimeRevFilter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,57 +38,46 @@ public class ChangelogFetcher {
     }
 
     private void fetchChangelog() {
-        try {
-            Path gitpath = Paths.get("../git");
-            if(Files.exists(gitpath) && Files.isDirectory(gitpath))
-                return;
+        try(Git git = Git.open(new File(""))) {
+            Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(TurtyBot.getLastStartTime())).call();
+            for (RevCommit commit : logs) {
+                String message = commit.getShortMessage();
 
-            CloneCommand cloneCommand = Git.cloneRepository();
-            cloneCommand.setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git");
-            cloneCommand.setDirectory(gitpath.toFile());
-            try (Git git = cloneCommand.call()) {
-                Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(TurtyBot.getLastStartTime())).call();
-                for (RevCommit commit : logs) {
-                    String message = commit.getShortMessage();
+                if (isDependabotCommit(commit.getAuthorIdent())) {
+                    try {
+                        Constants.LOGGER.debug("Found dependabot commit: {}", message);
 
-                    // Dependabot commits
-                    // format:
-                    // Bumps com.github.oshi:oshi-core from 6.4.6 to 6.4.7.- Release notes- Changelog- Commits
-                    // Bumps net.dv8tion:JDA from 5.0.0-beta.16 to 5.0.0-beta.17.- Release notes- Commits
-                    if (commit.getAuthorIdent().getName().equals("dependabot[bot]") || commit.getAuthorIdent().getName().equals("dependabot-preview[bot]")) {
-                        try {
-                            Constants.LOGGER.debug("Found dependabot commit: {}", message);
+                        String dependency = message.split("from")[0]
+                                .replace("Bumps ", "")
+                                .replace("Merges ", "")
+                                .replace("Updates ", "")
+                                .trim();
 
-                            String dependency = message.split("from")[0]
-                                    .replace("Bumps ", "")
-                                    .replace("Merges ", "")
-                                    .replace("Updates ", "")
-                                    .trim();
+                        String fromVersion = message.split("from")[1].split("to")[0].trim();
+                        String toVersion = message.split("to")[1].split("- ")[0].trim();
 
-                            String fromVersion = message.split("from")[1].split("to")[0].trim();
-                            String toVersion = message.split("to")[1].split("- ")[0].trim();
+                        message = "Updated %s from %s to %s".formatted(dependency, fromVersion, toVersion);
+                    } catch (IndexOutOfBoundsException exception) {
+                        message = "Updated a dependency";
+                    }
+                } else if (message.startsWith("Merge")) continue;
 
-                            message = "Updated %s from %s to %s".formatted(dependency, fromVersion, toVersion);
-                        } catch (IndexOutOfBoundsException exception) {
-                            message = "Updated a dependency";
-                        }
-                    } else if (message.startsWith("Merge")) continue;
-
-                    Date date = commit.getAuthorIdent().getWhen();
-                    String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
-                    this.changelog.add(commitMessage);
-                }
+                Date date = commit.getAuthorIdent().getWhen();
+                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
+                this.changelog.add(commitMessage);
             }
-
-            // Delete the git folder
-            if (Files.notExists(gitpath) || !Files.isDirectory(gitpath))
-                return;
-
-            FileUtils.deleteDirectory(gitpath.toFile());
-            Files.deleteIfExists(gitpath);
-        } catch (IOException | GitAPIException exception) {
-            Constants.LOGGER.error("Failed to fetch git changes", exception);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("An IO error occurred fetching the changelog", exception);
+        } catch (GitAPIException exception) {
+            Constants.LOGGER.error("A git error occurred fetching the changelog", exception);
         }
+    }
+
+    // format:
+    // Bumps com.github.oshi:oshi-core from 6.4.6 to 6.4.7.- Release notes- Changelog- Commits
+    // Bumps net.dv8tion:JDA from 5.0.0-beta.16 to 5.0.0-beta.17.- Release notes- Commits
+    private static boolean isDependabotCommit(PersonIdent author) {
+        return author.getName().equals("dependabot[bot]") || author.getName().equals("dependabot-preview[bot]");
     }
 
     private void saveLastStartTime() {
