@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.util;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import feign.template.UriUtils;
+import com.google.common.net.UrlEscapers;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -55,6 +55,6 @@ public class LatexCommand extends CoreCommand {
             return;
         }
 
-        reply(event, "https://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20%5Cbg_white%20" + UriUtils.encode(latex));
+        reply(event, "https://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20%5Cbg_white%20" + UrlEscapers.urlFragmentEscaper().escape(latex));
     }
 }
