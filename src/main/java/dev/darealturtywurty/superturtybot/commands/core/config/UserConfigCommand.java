@@ -21,12 +21,11 @@ import org.apache.commons.text.WordUtils;
 import org.bson.conversions.Bson;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class UserConfigCommand extends CoreCommand {
     public UserConfigCommand() {
@@ -42,7 +41,6 @@ public class UserConfigCommand extends CoreCommand {
                         .addOption(OptionType.STRING, "key", "The data key to change", true, true)
                         .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
-
 
     @Override
     public CommandCategory getCategory() {
@@ -141,14 +139,16 @@ public class UserConfigCommand extends CoreCommand {
             final UserConfig config = get(event.getUser());
 
             if (key == null) {
-                // Get all data
-                final Map<String, Object> configValues = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
+                final var embed = new EmbedBuilder();
+                UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
                         .values()
                         .stream()
-                        .collect(Collectors.toMap(UserConfigOption::getRichName, option ->
-                                option.getValueFromConfig().apply(config), (a, b) -> b));
-                final var embed = new EmbedBuilder();
-                configValues.forEach((name, value) -> embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n"));
+                        .sorted(Comparator.comparing(UserConfigOption::getRichName))
+                        .forEach((option) -> {
+                            final String name = option.getRichName();
+                            final Object value = option.getValueFromConfig().apply(config);
+                            embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n");
+                        });
                 embed.setFooter("For server: " + event.getGuild().getName(), event.getGuild().getIconUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("User Config for: " + event.getUser().getEffectiveName());
