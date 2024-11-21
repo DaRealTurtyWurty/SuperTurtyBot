@@ -19,14 +19,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class EvalCommand extends CoreCommand {
-    private static final Engine ENGINE = Engine.newBuilder("js")
-            .option("js.ecmascript-version", "2022")
-            .option("js.console", "true")
-            .option("log.level", "OFF")
-            .build();
+    private static Engine ENGINE;
 
     static {
-        ShutdownHooks.register(ENGINE::close);
+        new Thread(() -> {
+            ENGINE = Engine.newBuilder("js")
+                    .option("js.ecmascript-version", "2022")
+                    .option("js.console", "true")
+                    .option("log.level", "OFF")
+                    .build();
+            ShutdownHooks.register(ENGINE::close);
+        }).start();
     }
 
     public EvalCommand() {
@@ -67,7 +70,7 @@ public class EvalCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if(event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
+        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
 
         String content = event.getMessage().getContentRaw();
@@ -76,7 +79,7 @@ public class EvalCommand extends CoreCommand {
         Map<String, Object> bindings = new HashMap<>();
         bindings.put("event", event);
         bindings.put("say", function(values -> {
-            if(values.isEmpty() || !values.getFirst().isString())
+            if (values.isEmpty() || !values.getFirst().isString())
                 return null;
 
             event.getChannel().sendMessage(values.getFirst().asString()).queue();
@@ -84,9 +87,9 @@ public class EvalCommand extends CoreCommand {
         }));
         bindings.put("database", Database.getDatabase());
 
-        try(Context context = createContext(bindings)) {
+        try (Context context = createContext(bindings)) {
             Value value = context.eval("js", code);
-            if(value.hasArrayElements()) {
+            if (value.hasArrayElements()) {
                 StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < value.getArraySize(); i++) {
                     builder.append(value.getArrayElement(i).toString()).append("\n");
@@ -96,11 +99,11 @@ public class EvalCommand extends CoreCommand {
                 return;
             }
 
-            if(value.toString().equals("undefined") || value.toString().equals("null")) {
+            if (value.toString().equals("undefined") || value.toString().equals("null")) {
                 event.getMessage().addReaction(Emoji.fromUnicode("✅")).
                         queue(ignored -> event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS));
                 return;
-            } else if(value.toString().equals("delete me!")) {
+            } else if (value.toString().equals("delete me!")) {
                 event.getMessage().delete().queue();
                 return;
             }

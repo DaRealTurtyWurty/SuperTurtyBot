@@ -31,15 +31,17 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SteamCommand extends CoreCommand {
-    private static final SteamWebApiClient STEAM_WEB_CLIENT;
+    private static SteamWebApiClient STEAM_WEB_CLIENT;
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
 
     static {
-        if (Environment.INSTANCE.steamKey().isPresent()) {
-            STEAM_WEB_CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();
-        } else {
-            STEAM_WEB_CLIENT = null;
-        }
+        new Thread(() -> {
+            if (Environment.INSTANCE.steamKey().isPresent()) {
+                STEAM_WEB_CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();
+            } else {
+                STEAM_WEB_CLIENT = null;
+            }
+        }).start();
     }
 
     public SteamCommand() {

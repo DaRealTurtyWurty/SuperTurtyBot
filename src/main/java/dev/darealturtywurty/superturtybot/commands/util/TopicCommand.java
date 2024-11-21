@@ -20,17 +20,19 @@ public class TopicCommand extends CoreCommand {
     private static final List<String> TOPICS = new ArrayList<>();
 
     static {
-        try(final InputStream stream = TurtyBot.loadResource("topics.txt")) {
-            if (stream == null)
-                throw new IllegalStateException("Unable to load topics.txt");
+        new Thread(() -> {
+            try(final InputStream stream = TurtyBot.loadResource("topics.txt")) {
+                if (stream == null)
+                    throw new IllegalStateException("Unable to load topics.txt");
 
-            final var reader = new BufferedReader(new InputStreamReader(stream));
-            if (reader.ready()) {
-                reader.lines().forEach(TOPICS::add);
+                final var reader = new BufferedReader(new InputStreamReader(stream));
+                if (reader.ready()) {
+                    reader.lines().forEach(TOPICS::add);
+                }
+            } catch (final IOException exception) {
+                Constants.LOGGER.error("❌ There has been an issue parsing topics.txt", exception);
             }
-        } catch (final IOException exception) {
-            Constants.LOGGER.error("❌ There has been an issue parsing topics.txt", exception);
-        }
+        }).start();
     }
 
     public TopicCommand() {

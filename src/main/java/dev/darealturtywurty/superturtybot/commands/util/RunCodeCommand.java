@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 public class RunCodeCommand extends CoreCommand {
     static {
-        requestLanguages();
+        new Thread(RunCodeCommand::requestLanguages).start();
     }
 
     public RunCodeCommand() {

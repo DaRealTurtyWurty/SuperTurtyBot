@@ -24,7 +24,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class WikipediaCommand extends CoreCommand {
-    public static final Wiki WIKI = new Wiki.Builder().build();
+    private static Wiki WIKI;
+
+    static {
+        new Thread(() -> WIKI = new Wiki.Builder().build()).start();
+    }
 
     public WikipediaCommand() {
         super(new Types(true, false, false, false));

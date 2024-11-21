@@ -22,17 +22,19 @@ public class InternetRulesCommand extends CoreCommand {
     private static final List<String> RULES = new ArrayList<>();
 
     static {
-        try(final InputStream stream = TurtyBot.loadResource("rules_of_the_internet.txt")) {
-            if (stream == null)
-                throw new IllegalStateException("Could not find rules_of_the_internet.txt!");
+        new Thread(() -> {
+            try(final InputStream stream = TurtyBot.loadResource("rules_of_the_internet.txt")) {
+                if (stream == null)
+                    throw new IllegalStateException("Could not find rules_of_the_internet.txt!");
 
-            final var reader = new BufferedReader(new InputStreamReader(stream));
-            if (reader.ready()) {
-                reader.lines().forEach(RULES::add);
+                final var reader = new BufferedReader(new InputStreamReader(stream));
+                if (reader.ready()) {
+                    reader.lines().forEach(RULES::add);
+                }
+            } catch (final IOException exception) {
+                Constants.LOGGER.error("There has been an issue parsing file: rules_of_the_internet.txt", exception);
             }
-        } catch (final IOException exception) {
-            Constants.LOGGER.error("There has been an issue parsing file: rules_of_the_internet.txt", exception);
-        }
+        }).start();
     }
 
     public InternetRulesCommand() {

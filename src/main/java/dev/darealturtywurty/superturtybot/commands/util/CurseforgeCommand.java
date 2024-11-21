@@ -51,7 +51,7 @@ public class CurseforgeCommand extends CoreCommand {
     private static final Map<Game, Set<Category>> CATEGORIES = new HashMap<>();
 
     static {
-        Environment.INSTANCE.curseforgeKey().ifPresent(apiKey -> {
+        new Thread(() -> Environment.INSTANCE.curseforgeKey().ifPresent(apiKey -> {
             try {
                 CURSE_FORGE_API = CurseForgeAPI.builder()
                         .apiKey(apiKey)
@@ -79,13 +79,13 @@ public class CurseforgeCommand extends CoreCommand {
                     }
                 });
             }
-        });
+        })).start();
     }
 
     public CurseforgeCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "game", "The game to search for", true, true),
@@ -99,22 +99,22 @@ public class CurseforgeCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.UTILITY;
     }
-    
+
     @Override
     public String getDescription() {
         return "Get stats about a curseforge project";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/curseforge <game> <search> [type] [category] [game-version]";
     }
-    
+
     @Override
     public String getName() {
         return "curseforge";
     }
-    
+
     @Override
     public String getRichName() {
         return "Curseforge Project";
@@ -124,7 +124,7 @@ public class CurseforgeCommand extends CoreCommand {
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 15L);
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (Environment.INSTANCE.curseforgeKey().isEmpty()) {
@@ -138,13 +138,13 @@ public class CurseforgeCommand extends CoreCommand {
         String type = event.getOption("type", null, OptionMapping::getAsString);
         String category = event.getOption("category", null, OptionMapping::getAsString);
 
-        if(game == null || search == null) {
+        if (game == null || search == null) {
             reply(event, "❌ You must provide a game and search query!", false, true);
             return;
         }
 
         // Check if game exists
-        if(!GAMES.containsKey(game.toUpperCase(Locale.ROOT))) {
+        if (!GAMES.containsKey(game.toUpperCase(Locale.ROOT))) {
             reply(event, "❌ That game does not exist!", false, true);
             return;
         }
@@ -153,7 +153,7 @@ public class CurseforgeCommand extends CoreCommand {
 
         // Check if type exists
         int classId = -1;
-        if(type != null) {
+        if (type != null) {
             try {
                 classId = Integer.parseInt(type);
             } catch (NumberFormatException exception) {
@@ -164,7 +164,7 @@ public class CurseforgeCommand extends CoreCommand {
 
         // Check if category exists
         Category categoryObj = null;
-        if(category != null) {
+        if (category != null) {
             try {
                 categoryObj = CATEGORIES.get(gameObj)
                         .stream()
@@ -189,11 +189,11 @@ public class CurseforgeCommand extends CoreCommand {
             ModSearchQuery query = ModSearchQuery.of(gameObj)
                     .sortField(ModSearchQuery.SortField.NAME)
                     .searchFilter(search);
-            if(categoryObj != null) {
+            if (categoryObj != null) {
                 query.category(categoryObj);
             }
 
-            if(classId != -1) {
+            if (classId != -1) {
                 query.classId(classId);
             }
 
@@ -204,7 +204,7 @@ public class CurseforgeCommand extends CoreCommand {
                     return;
                 }
 
-                if(mods.size() == 1) {
+                if (mods.size() == 1) {
                     EmbedBuilder embed = createEmbed(mods.getFirst());
                     event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(false).queue();
                     return;
@@ -261,16 +261,16 @@ public class CurseforgeCommand extends CoreCommand {
                             Guild guild = event1.getGuild();
                             if (guildId == 0 && guild != null) return;
                             else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
-                            else if(event1.getChannel().getIdLong() != channelId) return;
-                            else if(event1.getMessageIdLong() != messageId) return;
-                            else if(event1.getUser().getIdLong() != userId) {
+                            else if (event1.getChannel().getIdLong() != channelId) return;
+                            else if (event1.getMessageIdLong() != messageId) return;
+                            else if (event1.getUser().getIdLong() != userId) {
                                 event1.deferEdit().queue();
                                 return;
                             }
 
                             int value = Integer.parseInt(event1.getSelectedOptions().getFirst().getValue());
                             Mod mod = mods.stream().filter(mod1 -> mod1.id() == value).findFirst().orElse(null);
-                            if(mod == null) {
+                            if (mod == null) {
                                 event1.deferEdit().queue();
                                 return;
                             }
@@ -280,7 +280,8 @@ public class CurseforgeCommand extends CoreCommand {
 
                             embed.finish();
                         })
-                        .failure(() -> {})
+                        .failure(() -> {
+                        })
                         .build();
             }, () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue()));
         } catch (CurseForgeException exception) {
@@ -290,7 +291,7 @@ public class CurseforgeCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if(!event.getName().equals(getName())) return;
+        if (!event.getName().equals(getName())) return;
 
         String focusedValue = event.getFocusedOption().getValue();
         switch (event.getFocusedOption().getName()) {
@@ -300,18 +301,24 @@ public class CurseforgeCommand extends CoreCommand {
                             .filter(game -> containsIgnoreCase(game, focusedValue))
                             .limit(25)
                             .toList()
-                ).queue(unused -> {}, throwable -> {});
+            ).queue(unused -> {
+            }, throwable -> {
+            });
 
             case "type" -> {
                 Game typeGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
                 if (typeGame == null) {
-                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    event.replyChoices(List.of()).queue(unused -> {
+                    }, throwable -> {
+                    });
                     return;
                 }
 
                 Set<Category> typeCategories = CATEGORIES.get(typeGame);
                 if (typeCategories == null || typeCategories.isEmpty()) {
-                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    event.replyChoices(List.of()).queue(unused -> {
+                    }, throwable -> {
+                    });
                     return;
                 }
 
@@ -322,19 +329,25 @@ public class CurseforgeCommand extends CoreCommand {
                                 .limit(25)
                                 .map(category -> new Command.Choice(category.name(), category.id()))
                                 .toList()
-                        ).queue(unused -> {}, throwable -> {});
+                ).queue(unused -> {
+                }, throwable -> {
+                });
             }
 
             case "category" -> {
                 Game categoryGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
                 if (categoryGame == null) {
-                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    event.replyChoices(List.of()).queue(unused -> {
+                    }, throwable -> {
+                    });
                     return;
                 }
 
                 Set<Category> categoryCategories = CATEGORIES.get(categoryGame);
                 if (categoryCategories == null || categoryCategories.isEmpty()) {
-                    event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+                    event.replyChoices(List.of()).queue(unused -> {
+                    }, throwable -> {
+                    });
                     return;
                 }
 
@@ -344,9 +357,13 @@ public class CurseforgeCommand extends CoreCommand {
                                 .filter(name -> containsIgnoreCase(name, focusedValue))
                                 .limit(25)
                                 .toList()
-                ).queue(unused -> {}, throwable -> {});
+                ).queue(unused -> {
+                }, throwable -> {
+                });
             }
-            default -> event.replyChoices(List.of()).queue(unused -> {}, throwable -> {});
+            default -> event.replyChoices(List.of()).queue(unused -> {
+            }, throwable -> {
+            });
         }
     }
 
@@ -363,9 +380,9 @@ public class CurseforgeCommand extends CoreCommand {
 
         String status = WordUtils.capitalize(
                 mod.status()
-                .name()
-                .toLowerCase(Locale.ROOT)
-                .replace("_", " ")
+                        .name()
+                        .toLowerCase(Locale.ROOT)
+                        .replace("_", " ")
         );
         embed.addField("Status:", status, true);
 
