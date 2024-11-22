@@ -5,14 +5,12 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import lombok.Getter;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.filter.CommitTimeRevFilter;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +36,33 @@ public class ChangelogFetcher {
     }
 
     private void fetchChangelog() {
-        try(Git git = Git.open(new File(""))) {
+        Path gitPath = Paths.get(".git");
+        boolean deleteAfter = false;
+        if(Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
+            gitPath = Paths.get("../SuperTurtyBotGit");
+            if(Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
+                try {
+                    Files.createDirectories(gitPath);
+                } catch (IOException exception) {
+                    Constants.LOGGER.error("Failed to create git directory", exception);
+                    return;
+                }
+
+                deleteAfter = true;
+
+                try(Git ignored = Git.cloneRepository()
+                        .setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git")
+                        .setDirectory(gitPath.toFile())
+                        .call()) {
+                    Constants.LOGGER.info("Cloned git repository");
+                } catch (GitAPIException exception) {
+                    Constants.LOGGER.error("Failed to clone git repository", exception);
+                    return;
+                }
+            }
+        }
+
+        try(Git git = Git.open(gitPath.toFile())) {
             Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(TurtyBot.getLastStartTime())).call();
             for (RevCommit commit : logs) {
                 String message = commit.getShortMessage();
@@ -66,10 +90,18 @@ public class ChangelogFetcher {
                 String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
                 this.changelog.add(commitMessage);
             }
-        } catch (IOException exception) {
-            Constants.LOGGER.error("An IO error occurred fetching the changelog", exception);
         } catch (GitAPIException exception) {
             Constants.LOGGER.error("A git error occurred fetching the changelog", exception);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("An IO error occurred fetching the changelog", exception);
+        }
+
+        if(deleteAfter) {
+            try {
+                FileUtils.deleteDirectory(gitPath.toFile());
+            } catch (IOException exception) {
+                Constants.LOGGER.error("Failed to delete git directory", exception);
+            }
         }
     }
 
