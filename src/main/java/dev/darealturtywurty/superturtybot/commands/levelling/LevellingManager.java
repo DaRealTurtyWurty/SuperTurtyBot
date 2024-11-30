@@ -329,7 +329,7 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     public static int getXPForLevel(final int level) {
-        return (int) (5 * Math.pow(level, 2) + 50 * level + 5);
+        return 5 * level * level + 50 * level + 5;
     }
 
     public void setXP(Guild guild, User user1, int amount) {
