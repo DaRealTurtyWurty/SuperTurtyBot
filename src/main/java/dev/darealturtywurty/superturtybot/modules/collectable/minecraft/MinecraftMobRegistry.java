@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules.collectable.minecraft;
 
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.modules.collectable.Answer;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableRarity;
@@ -853,6 +854,6 @@ public class MinecraftMobRegistry {
     }
 
     public static void load() {
-        System.out.println("Loading Minecraft Mob Collectables...");
+        Constants.LOGGER.info("Loading Minecraft Mob Collectables...");
     }
 }

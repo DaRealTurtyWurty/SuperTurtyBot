@@ -55,7 +55,7 @@ public class HeistCommand extends EconomyCommand {
             }
         }
 
-        System.out.println("Loaded " + FINGERPRINTS.size() + " fingerprints!");
+        Constants.LOGGER.info("Loaded " + FINGERPRINTS.size() + " fingerprints!");
     }
 
     @Override
