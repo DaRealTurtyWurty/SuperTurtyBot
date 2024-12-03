@@ -55,7 +55,7 @@ public class HeistCommand extends EconomyCommand {
             }
         }
 
-        System.out.println("Loaded " + FINGERPRINTS.size() + " fingerprints!");
+        Constants.LOGGER.info("Loaded {} fingerprints!", FINGERPRINTS.size());
     }
 
     @Override
@@ -71,6 +71,11 @@ public class HeistCommand extends EconomyCommand {
     @Override
     public String getRichName() {
         return "Heist";
+    }
+
+    @Override
+    public Pair<TimeUnit, Long> getRatelimit() {
+        return Pair.of(TimeUnit.MINUTES, 2L);
     }
 
     @Override
