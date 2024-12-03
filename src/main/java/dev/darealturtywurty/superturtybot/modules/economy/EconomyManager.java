@@ -380,12 +380,12 @@ public class EconomyManager {
     // Should exponentially increase the cost and payout of a heist based on the user's account
     public static long determineHeistSetupCost(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (long) Math.pow(heistLevel, 2) * 100_000L;
+        return 100_000L * heistLevel * heistLevel;
     }
 
     private static long determineHeistPayout(Economy account) {
         int heistLevel = account.getHeistLevel();
-        return (long) Math.pow(heistLevel, 2) * ThreadLocalRandom.current().nextLong(200_000, 500_000);
+        return ThreadLocalRandom.current().nextLong(200_000, 500_000) * heistLevel * heistLevel;
     }
 
     /**
@@ -396,7 +396,7 @@ public class EconomyManager {
      */
     public static Pair<Long, Boolean> heistCompleted(Economy account, long timeTaken) {
         long payout = determineHeistPayout(account);
-        long earned = payout / (timeTaken / 10_000) + determineHeistSetupCost(account);
+        long earned = payout * 10_000L / timeTaken + determineHeistSetupCost(account);
         addMoney(account, earned, true);
 
         account.setTotalHeists(account.getTotalHeists() + 1);
