@@ -138,7 +138,9 @@ public class AIMessageResponder extends ListenerAdapter {
                 try {
                     InputStream stream = attachment.getProxy().download().get();
                     String base64 = Base64.getEncoder().encodeToString(stream.readAllBytes());
-                    contentParts.add(ContentPart.ContentPartImageUrl.of(ContentPart.ContentPartImageUrl.ImageUrl.of("data:image/" + attachment.getFileExtension() + ";base64," + base64)));
+                    String url = "data:image/" + attachment.getFileExtension().toLowerCase(Locale.ROOT) + ";base64," + base64;
+                    //System.out.println(url);
+                    contentParts.add(ContentPart.ContentPartImageUrl.of(ContentPart.ContentPartImageUrl.ImageUrl.of(url)));
                 } catch (IOException | InterruptedException | ExecutionException exception) {
                     Constants.LOGGER.error("Failed to download attachment!", exception);
                 }
@@ -160,7 +162,7 @@ public class AIMessageResponder extends ListenerAdapter {
                                 .map(UserChatMessage::message)
                                 .toList())
                         .temperature(1.2)
-                        .maxTokens(300)
+                        .maxCompletionTokens(300)
                         .build())
                 .thenAccept(chatStream -> {
                     var args = new StringBuilder();
