@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.levelling;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
@@ -43,7 +44,8 @@ public final class LevellingManager extends ListenerAdapter {
         ShutdownHooks.register(cooldownScheduler::shutdown);
 
         DailyTaskScheduler.addTask(new DailyTask(() -> {
-            int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+            Calendar calendar = Calendar.getInstance();
+            int currentDay = calendar.get(Calendar.DAY_OF_WEEK);
             if (currentDay == Calendar.MONDAY) {
                 long currentTime = System.currentTimeMillis();
                 long sevenDaysInMillis = TimeUnit.DAYS.toMillis(7);
@@ -64,15 +66,38 @@ public final class LevellingManager extends ListenerAdapter {
                     if (!config.isShouldDepleteLevels() || !config.isLevellingEnabled())
                         continue;
 
+                    Map<Long, Guild> guildCacheMap = new HashMap<>();
+                    Map<Long, User> userCacheMap = new HashMap<>();
                     for (Levelling levelling : entry.getValue()) {
                         int xp = levelling.getXp();
                         int newXP = xp - (int) (xp * 0.05);
-                        Database.getDatabase().levelling.updateOne(
-                                Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())),
-                                Updates.set("xp", newXP));
+
+                        Guild guild = guildCacheMap.computeIfAbsent(levelling.getGuild(), id -> TurtyBot.getJDA().getGuildById(id));
+                        if (guild == null)
+                            continue;
+
+                        User user = userCacheMap.computeIfAbsent(levelling.getUser(), id -> TurtyBot.getJDA().getUserById(id));
+                        if (user == null)
+                            continue;
+
+                        setXP(guild, user, newXP);
 
                         Constants.LOGGER.info("Removed 5% ({}) XP from {} in {}", xp - newXP, levelling.getUser(), levelling.getGuild());
                     }
+
+                    guildCacheMap.clear();
+                    userCacheMap.clear();
+                }
+            }
+
+            if(calendar.get(Calendar.DAY_OF_MONTH) == 1) {
+                for (Levelling levelling : Database.getDatabase().levelling.find().into(new ArrayList<>())) {
+                    int newLevel = LevellingManager.getLevelForXP(levelling.getXp());
+                    if (newLevel != levelling.getLevel()) {
+                        levelling.setLevel(newLevel);
+                        Database.getDatabase().levelling.updateOne(Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())), Updates.set("level", newLevel));
+                        Constants.LOGGER.info("Updated {}'s level from {} to {}", levelling.getUser(), levelling.getLevel(), newLevel);
+                    }                    
                 }
             }
         }, 10, 30));
@@ -332,10 +357,10 @@ public final class LevellingManager extends ListenerAdapter {
         return 5 * level * level + 50 * level + 5;
     }
 
-    public void setXP(Guild guild, User user1, int amount) {
-        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user1.getIdLong()));
+    public void setXP(Guild guild, User user, int amount) {
+        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
 
-        Member member = guild.getMember(user1);
+        Member member = guild.getMember(user);
         if (member == null)
             return;
 

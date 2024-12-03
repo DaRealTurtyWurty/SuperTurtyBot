@@ -14,6 +14,7 @@ import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.Minecraf
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
@@ -55,6 +56,8 @@ public class TurtyBot {
     private static long lastStartTime = 0L;
     @Getter
     private static Path lastStartTimePath;
+
+    private static JDA jda;
 
     public static void main(String[] args) throws InvalidTokenException {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
@@ -112,7 +115,7 @@ public class TurtyBot {
         Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
             final var jdaBuilder = JDABuilder.createDefault(token);
             configureBuilder(jdaBuilder);
-            jdaBuilder.build();
+            TurtyBot.jda = jdaBuilder.build();
 
             MessageRequest.setDefaultMentions(DEFAULT_ALLOWED_MENTIONS);
             Constants.LOGGER.info("Setup JDA!");
@@ -122,6 +125,10 @@ public class TurtyBot {
 
         loadRegistrars();
         Constants.LOGGER.info("Loaded registries!");
+    }
+
+    public static JDA getJDA() {
+        return TurtyBot.jda;
     }
 
     private static void configureBuilder(JDABuilder builder) {
