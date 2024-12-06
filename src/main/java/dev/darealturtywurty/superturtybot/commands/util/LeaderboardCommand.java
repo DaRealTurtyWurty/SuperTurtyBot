@@ -202,8 +202,15 @@ public class LeaderboardCommand extends CoreCommand {
         for (Levelling profile : profiles) {
             String username = getUsername(guild, profile.getUser());
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedXP = StringUtils.numberFormat(profile.getXp(), 0).replace(".0", "");
-            String formattedLevel = StringUtils.numberFormat(profile.getLevel()).replace(".0", "");
+            String formattedXP = StringUtils.numberFormat(profile.getXp(), 0);
+            if(formattedXP.endsWith(".0k")) {
+                formattedXP = formattedXP.replace(".0k", "k");
+            }
+
+            String formattedLevel = StringUtils.numberFormat(profile.getLevel());
+            if(formattedLevel.endsWith(".0k")) {
+                formattedLevel = formattedLevel.replace(".0k", "k");
+            }
 
             maxUsernameLength = Math.max(maxUsernameLength, truncatedUsername.length());
             maxXPWidth = Math.max(maxXPWidth, formattedXP.length());
