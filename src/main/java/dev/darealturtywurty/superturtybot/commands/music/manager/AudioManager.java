@@ -25,8 +25,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
-import dev.lavalink.youtube.clients.Web;
-import dev.lavalink.youtube.clients.WebWithThumbnail;
+import dev.lavalink.youtube.clients.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -72,7 +71,7 @@ public final class AudioManager {
         DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
 
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
-        final var ytSource = new YoutubeAudioSourceManager(true, new WebWithThumbnail());
+        final var ytSource = new YoutubeAudioSourceManager(true, new Music(), new AndroidVr(), new WebWithThumbnail(), new WebEmbedded());
         ytSource.setPlaylistPageCount(100);
         Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
         AUDIO_MANAGER.registerSourceManager(ytSource);
