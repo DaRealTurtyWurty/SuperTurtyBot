@@ -1,10 +1,12 @@
 <configuration>
+    <conversionRule conversionWord="customhighlight" class="dev.darealturtywurty.superturtybot.logback.TurtyBotHighlightingCompositeConverter" />
+
     <appender name="CONSOLE"
               class="ch.qos.logback.core.ConsoleAppender">
         <encoder
                 class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                %d [%thread] %level %logger{50}/%marker - %msg%n
+                %blue([%d{YYYY-MM-dd HH:mm:ss}]) %customhighlight([%t/%level]){thread} %cyan(\(%logger{0}\)) %customhighlight(%msg){msg}%n
             </pattern>
         </encoder>
     </appender>

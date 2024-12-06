@@ -369,7 +369,7 @@ public class WordSearchCommand extends CoreCommand {
             if (response.isLeft())
                 return List.copyOf(response.getLeft());
             else
-                System.err.println("Failed to get words for word search! Status: " + response.getRight());
+                Constants.LOGGER.error("Failed to get words for word search! Status: " + response.getRight());
 
             return List.of();
         }
