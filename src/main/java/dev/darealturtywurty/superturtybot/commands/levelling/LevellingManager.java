@@ -88,16 +88,14 @@ public final class LevellingManager extends ListenerAdapter {
                     guildCacheMap.clear();
                     userCacheMap.clear();
                 }
-            }
 
-            if(calendar.get(Calendar.DAY_OF_MONTH) == 1) {
                 for (Levelling levelling : Database.getDatabase().levelling.find().into(new ArrayList<>())) {
                     int newLevel = LevellingManager.getLevelForXP(levelling.getXp());
                     if (newLevel != levelling.getLevel()) {
                         levelling.setLevel(newLevel);
                         Database.getDatabase().levelling.updateOne(Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())), Updates.set("level", newLevel));
                         Constants.LOGGER.info("Updated {}'s level from {} to {}", levelling.getUser(), levelling.getLevel(), newLevel);
-                    }                    
+                    }
                 }
             }
         }, 10, 30));
