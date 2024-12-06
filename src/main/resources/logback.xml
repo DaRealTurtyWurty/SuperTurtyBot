@@ -1,12 +1,12 @@
 <configuration>
-    <conversionRule conversionWord="mchighlight" class="dev.darealturtywurty.superturtybot.logback.MinecraftHighlightingCompositeConverter" />
+    <conversionRule conversionWord="customhighlight" class="dev.darealturtywurty.superturtybot.logback.TurtyBotHighlightingCompositeConverter" />
 
     <appender name="CONSOLE"
               class="ch.qos.logback.core.ConsoleAppender">
         <encoder
                 class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                %blue([%d{YYYY-MM-dd HH:mm:ss}]) %mchighlight([%t/%level]){thread} %cyan(\(%logger{0}\)) %mchighlight(%msg){msg}%n
+                %blue([%d{YYYY-MM-dd HH:mm:ss}]) %customhighlight([%t/%level]){thread} %cyan(\(%logger{0}\)) %customhighlight(%msg){msg}%n
             </pattern>
         </encoder>
     </appender>
