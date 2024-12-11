@@ -25,4 +25,5 @@
     <logger name="net.dv8tion.jda.internal.requests" level="WARN" />
     <logger name="net.dv8tion.jda.api.utils.SessionControllerAdapter" level="WARN" />
     <logger name="net.dv8tion.jda.internal.handle.GuildSetupController" level="WARN" />
+    <logger name="dev.lavalink.youtube.http.YoutubeOauth2Handler" level="INFO" />
 </configuration>

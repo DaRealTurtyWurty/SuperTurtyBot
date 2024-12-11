@@ -157,6 +157,10 @@ public final class Environment {
         return getString("PO_VISITOR_DATA");
     }
 
+    public Optional<String> googleOauthRefreshToken() {
+        return getString("GOOGLE_OAUTH_REFRESH_TOKEN");
+    }
+
     public Optional<Double> getDouble(String key){
         try {
             return getString(key).map(Double::parseDouble);

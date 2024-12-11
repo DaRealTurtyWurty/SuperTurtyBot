@@ -73,7 +73,10 @@ public final class AudioManager {
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
         final var ytSource = new YoutubeAudioSourceManager(true, new Music(), new AndroidVr(), new WebWithThumbnail(), new WebEmbedded());
         ytSource.setPlaylistPageCount(100);
+
         Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
+        ytSource.useOauth2(Environment.INSTANCE.googleOauthRefreshToken().orElse(null), Environment.INSTANCE.googleOauthRefreshToken().isPresent() || Environment.INSTANCE.poToken().isEmpty());
+
         AUDIO_MANAGER.registerSourceManager(ytSource);
 
         ShutdownHooks.register(() -> {
