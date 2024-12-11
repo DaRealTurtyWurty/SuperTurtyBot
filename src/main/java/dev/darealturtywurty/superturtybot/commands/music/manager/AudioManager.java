@@ -75,7 +75,7 @@ public final class AudioManager {
         ytSource.setPlaylistPageCount(100);
 
         Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
-        ytSource.useOauth2(Environment.INSTANCE.googleOauthRefreshToken().orElse(null), Environment.INSTANCE.googleOauthRefreshToken().isPresent() || Environment.INSTANCE.poToken().isEmpty());
+        ytSource.useOauth2(Environment.INSTANCE.googleOauthRefreshToken().orElse(null), Environment.INSTANCE.googleOauthRefreshToken().isPresent() || (Environment.INSTANCE.poToken().isPresent() && Environment.INSTANCE.poVisitorData().isPresent()));
 
         AUDIO_MANAGER.registerSourceManager(ytSource);
 
