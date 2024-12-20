@@ -352,6 +352,7 @@ public class LeaderboardCommand extends CoreCommand {
 
         graphics.drawString("#" + rank, 240, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
 
+        // region username color
         GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (guildData == null) {
             guildData = new GuildData(guild.getIdLong());
@@ -380,6 +381,7 @@ public class LeaderboardCommand extends CoreCommand {
         } else {
             graphics.setColor(Color.WHITE);
         }
+        // endregion
     }
 
     private static Pair<BufferedImage, Graphics2D> constructTemplate() throws IOException {
