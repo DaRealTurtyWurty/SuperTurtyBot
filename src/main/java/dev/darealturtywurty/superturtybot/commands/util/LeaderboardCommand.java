@@ -202,7 +202,7 @@ public class LeaderboardCommand extends CoreCommand {
         for (Levelling profile : profiles) {
             String username = getUsername(guild, profile.getUser());
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedXP = StringUtils.numberFormat(profile.getXp(), 0);
+            String formattedXP = StringUtils.numberFormat(profile.getXp());
             if(formattedXP.endsWith(".0k")) {
                 formattedXP = formattedXP.replace(".0k", "k");
             }
@@ -224,17 +224,22 @@ public class LeaderboardCommand extends CoreCommand {
 
             final Levelling profile = profiles.get(indexedRank);
             final long userId = profile.getUser();
-            final int level = profile.getLevel();
-            final int xp = profile.getXp();
-            String username = getUsername(guild, userId);
             drawUser(guild, graphics, metrics, indexedRank, userId);
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
 
+            String username = getUsername(guild, userId);
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedXP = StringUtils.numberFormat(xp, 0).replace(".0", "");
-            String formattedLevel = StringUtils.numberFormat(level).replace(".0", "");
+            String formattedXP = StringUtils.numberFormat(profile.getXp());
+            if(formattedXP.endsWith(".0k")) {
+                formattedXP = formattedXP.replace(".0k", "k");
+            }
+
+            String formattedLevel = StringUtils.numberFormat(profile.getLevel());
+            if(formattedLevel.endsWith(".0k")) {
+                formattedLevel = formattedLevel.replace(".0k", "k");
+            }
 
             String str = String.format(
                     "%-" + maxUsernameLength + "s | XP: %" + maxXPWidth + "s | Level: %" + maxLevelWidth + "s",
@@ -326,14 +331,12 @@ public class LeaderboardCommand extends CoreCommand {
         final Member member = guild.getMemberById(userId);
         User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
         InputStream avatarStream;
-        if (member == null) {
-            if (user != null) {
-                avatarStream = user.getEffectiveAvatar().download(512).join();
-            } else {
-                avatarStream = new URI(DISCORD_ICON_URL).toURL().openStream();
-            }
-        } else {
+        if (member != null) {
             avatarStream = member.getEffectiveAvatar().download(512).join();
+        } else if (user != null) {
+            avatarStream = user.getEffectiveAvatar().download(512).join();
+        } else {
+            avatarStream = new URI(DISCORD_ICON_URL).toURL().openStream();
         }
 
         final BufferedImage avatarImage = ImageIO.read(avatarStream);
@@ -349,36 +352,36 @@ public class LeaderboardCommand extends CoreCommand {
 
         graphics.drawString("#" + rank, 240, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
 
-        {
-            GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-            if (guildData == null) {
-                guildData = new GuildData(guild.getIdLong());
-                Database.getDatabase().guildData.insertOne(guildData);
-            }
+        // region username color
+        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
+        if (guildData == null) {
+            guildData = new GuildData(guild.getIdLong());
+            Database.getDatabase().guildData.insertOne(guildData);
+        }
 
-            long patronRoleId = guildData.getPatronRole();
-            Role patronRole = guild.getRoleById(patronRoleId);
+        long patronRoleId = guildData.getPatronRole();
+        Role patronRole = guild.getRoleById(patronRoleId);
 
-            boolean isPatron = patronRole != null && member != null && member.getRoles().contains(patronRole);
-            boolean isBooster = member != null && member.isBoosting();
-            boolean isOwner = member != null && member.isOwner();
+        boolean isPatron = patronRole != null && member != null && member.getRoles().contains(patronRole);
+        boolean isBooster = member != null && member.isBoosting();
+        boolean isOwner = member != null && member.isOwner();
 
-            if (isPatron || isBooster || isOwner) {
-                UserConfig userConfig = Database.getDatabase().userConfig.find(
-                        Filters.and(
-                                Filters.eq("user", userId),
-                                Filters.eq("guild", guild.getIdLong())
-                        )).first();
+        if (isPatron || isBooster || isOwner) {
+            UserConfig userConfig = Database.getDatabase().userConfig.find(
+                    Filters.and(
+                            Filters.eq("user", userId),
+                            Filters.eq("guild", guild.getIdLong())
+                    )).first();
 
-                if (userConfig != null && userConfig.getLeaderboardColor() != null) {
-                    graphics.setColor(Color.decode(userConfig.getLeaderboardColor()));
-                } else {
-                    graphics.setColor(Color.WHITE);
-                }
+            if (userConfig != null && userConfig.getLeaderboardColor() != null) {
+                graphics.setColor(Color.decode(userConfig.getLeaderboardColor()));
             } else {
                 graphics.setColor(Color.WHITE);
             }
+        } else {
+            graphics.setColor(Color.WHITE);
         }
+        // endregion
     }
 
     private static Pair<BufferedImage, Graphics2D> constructTemplate() throws IOException {
@@ -393,8 +396,10 @@ public class LeaderboardCommand extends CoreCommand {
     }
 
     private static void drawGuildInfo(Guild guild, Graphics2D graphics, FontMetrics metrics) throws IOException, NullPointerException, URISyntaxException {
-        InputStream guildIconStream = guild.getIcon().download().join();
-        if (guildIconStream == null) {
+        InputStream guildIconStream;
+        if (guild.getIcon() != null) {
+            guildIconStream = guild.getIcon().download().join();
+        } else {
             guildIconStream = new URI(DISCORD_ICON_URL).toURL().openStream();
         }
 
