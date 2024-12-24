@@ -200,11 +200,11 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public long getMinAmountForLevel(int level) {
-            return (long) (this.minBaseAmount * Math.pow(1.05, level - 1));
+            return (long) (this.minBaseAmount * Math.pow(1.05, level));
         }
 
         public long getMaxAmountForLevel(int level) {
-            return (long) (this.maxBaseAmount * Math.pow(1.05, level - 1));
+            return (long) (this.maxBaseAmount * Math.pow(1.05, level));
         }
 
         public long getAmountForLevel(int level) {
