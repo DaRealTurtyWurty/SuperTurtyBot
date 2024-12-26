@@ -185,7 +185,7 @@ public class SlotsCommand extends EconomyCommand {
         if (outcome.getAmount() > 0) {
             EconomyManager.betWin(account, outcome.getAmount());
         } else {
-            EconomyManager.betLoss(account, outcome.getAmount());
+            EconomyManager.betLoss(account, -outcome.getAmount());
         }
 
         if (outcomes.size() > 1) {
@@ -247,7 +247,7 @@ public class SlotsCommand extends EconomyCommand {
         if (outcome.getAmount() > 0) {
             EconomyManager.betWin(account, outcome.getAmount());
         } else {
-            EconomyManager.betLoss(account, outcome.getAmount());
+            EconomyManager.betLoss(account, -outcome.getAmount());
         }
 
         if (outcomes.size() > 1) {
