@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -20,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
@@ -28,6 +30,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class SlotsCommand extends EconomyCommand {
     private static final WeightedRandomBag<String> EMOJIS = new WeightedRandomBag<>();
@@ -149,9 +153,9 @@ public class SlotsCommand extends EconomyCommand {
         return createEmbed(outcome, member, config, "Slots");
     }
 
-    private static void play(InteractionHook hook, Member member, Guild guild, GuildData config, long betAmount) {
+    private static void play(Consumer<String> editText, Function<MessageEmbed, RestAction<Message>> editEmbeds, Member member, Guild guild, GuildData config, long betAmount) {
         if (betAmount < 1) {
-            hook.editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
+            editText.accept("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency()));
             return;
         }
 
@@ -160,7 +164,7 @@ public class SlotsCommand extends EconomyCommand {
             betAmount = account.getWallet();
 
             if (betAmount < 1) {
-                hook.editOriginal("❌ You do not have enough money in your wallet to bet that much!").queue();
+                editText.accept("❌ You do not have enough money in your wallet to bet that much!");
                 return;
             }
         }
@@ -170,7 +174,7 @@ public class SlotsCommand extends EconomyCommand {
         var embed = createNormalEmbed(outcome, member, config);
 
         final long finalBetAmount = betAmount;
-        hook.editOriginalEmbeds(embed.build()).queue(message -> {
+        editEmbeds.apply(embed.build()).queue(message -> {
             if (outcomes.size() == 1) {
                 // create button to play again
                 if (account.getWallet() >= finalBetAmount) {
@@ -193,7 +197,7 @@ public class SlotsCommand extends EconomyCommand {
                 Outcome freeSpinOutcome = outcomes.get(i);
                 var freeSpinEmbed = createFreeSpinEmbed(freeSpinOutcome, member, config);
                 int finalI = i;
-                hook.editOriginalEmbeds(freeSpinEmbed.build()).queue(message -> {
+                editEmbeds.apply(freeSpinEmbed.build()).queue(message -> {
                     if (finalI == outcomes.size() - 1 && account.getWallet() >= finalBetAmount) {
                         message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
                         createButtonWaiter(message, member, guild, message.getChannel().getIdLong(),
@@ -211,66 +215,12 @@ public class SlotsCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
+    private static void play(InteractionHook hook, Member member, Guild guild, GuildData config, long betAmount) {
+        play(str -> hook.editOriginal(str).queue(), hook::editOriginalEmbeds, member, guild, config, betAmount);
+    }
+
     private static void play(Message message, Member member, Guild guild, GuildData config, long betAmount) {
-        if (betAmount < 1) {
-            message.editMessage("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
-            return;
-        }
-
-        final Economy account = EconomyManager.getOrCreateAccount(guild, member.getUser());
-        if (account.getWallet() < betAmount) {
-            betAmount = account.getWallet();
-
-            if (betAmount < 1) {
-                message.editMessage("❌ You do not have enough money in your wallet to bet that much!").queue();
-                return;
-            }
-        }
-
-        List<Outcome> outcomes = spin(betAmount, false);
-        Outcome outcome = outcomes.getFirst();
-        var embed = createNormalEmbed(outcome, member, config);
-
-        final long finalBetAmount = betAmount;
-        message.editMessageEmbeds(embed.build()).queue(msg -> {
-            if (outcomes.size() == 1) {
-                // create button to play again
-                if (account.getWallet() >= finalBetAmount) {
-                    msg.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
-                    createButtonWaiter(msg, member, guild, msg.getChannel().getIdLong(),
-                            msg.getIdLong(), config, finalBetAmount).build();
-                }
-            }
-        });
-
-        EconomyManager.addMoney(account, outcome.getAmount());
-        if (outcome.getAmount() > 0) {
-            EconomyManager.betWin(account, outcome.getAmount());
-        } else {
-            EconomyManager.betLoss(account, -outcome.getAmount());
-        }
-
-        if (outcomes.size() > 1) {
-            for (int i = 1; i < outcomes.size(); i++) {
-                Outcome freeSpinOutcome = outcomes.get(i);
-                var freeSpinEmbed = createFreeSpinEmbed(freeSpinOutcome, member, config);
-                int finalI = i;
-                message.editMessageEmbeds(freeSpinEmbed.build()).queue(msg -> {
-                    if (finalI == outcomes.size() - 1 && account.getWallet() >= finalBetAmount) {
-                        msg.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
-                        createButtonWaiter(msg, member, guild, msg.getChannel().getIdLong(),
-                                msg.getIdLong(), config, finalBetAmount).build();
-                    }
-                });
-
-                EconomyManager.addMoney(account, freeSpinOutcome.getAmount());
-                if (freeSpinOutcome.getAmount() > 0) {
-                    EconomyManager.betWin(account, freeSpinOutcome.getAmount());
-                }
-            }
-        }
-
-        EconomyManager.updateAccount(account);
+        play(str -> message.editMessage(str).queue(), message::editMessageEmbeds, member, guild, config, betAmount);
     }
 
     private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, long betAmount) {
