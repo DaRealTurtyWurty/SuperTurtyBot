@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
 import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.commands.util.AddReactionCommand;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
@@ -304,6 +305,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new LatexCommand());
         commands.add(new AddRoleToThreadCommand());
         commands.add(new RunCodeCommand());
+        commands.add(new AddReactionCommand());
 
         // Moderation
         commands.add(new BanCommand());
