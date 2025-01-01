@@ -16,12 +16,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -104,16 +102,9 @@ public class PetPetGifCommand extends CoreCommand {
             event.getHook().editOriginal("❌ The image you provided is invalid!").queue();
             return;
         }
-        CompletableFuture<Path> future = createPetPetGif(image);
-        future.thenAccept(path -> {
-            try {
-                InputStream stream = Files.newInputStream(path);
-                FileUpload upload = FileUpload.fromData(stream, "petpet.gif");
-                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-            } catch (IOException exception) {
-                event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                        .queue();
-            }
+        createPetPetGif(image).thenAccept(baos -> {
+            FileUpload upload = FileUpload.fromData(baos.toByteArray(), "petpet.gif");
+            event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
         });
     }
 
@@ -139,16 +130,9 @@ public class PetPetGifCommand extends CoreCommand {
                         return;
                     }
 
-                    CompletableFuture<Path> future = createPetPetGif(image);
-                    future.thenAccept(path -> {
-                        try {
-                            InputStream outStream = Files.newInputStream(path);
-                            FileUpload upload = FileUpload.fromData(outStream, "petpet.gif");
-                            event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-                        } catch (IOException exception) {
-                            event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                                    .queue();
-                        }
+                    createPetPetGif(image).thenAccept(baos -> {
+                        FileUpload upload = FileUpload.fromData(baos.toByteArray(), "petpet.gif");
+                        event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
                     });
                 }).exceptionally(exception -> {
                     event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
@@ -180,27 +164,13 @@ public class PetPetGifCommand extends CoreCommand {
             return;
         }
 
-        CompletableFuture<Path> future = createPetPetGif(image);
-        future.thenAccept(path -> {
-            try {
-                InputStream stream = Files.newInputStream(path);
-                FileUpload upload = FileUpload.fromData(stream, "petpet.gif");
-                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-            } catch (IOException exception) {
-                event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                        .queue();
-            }
+        createPetPetGif(image).thenAccept(baos -> {
+            FileUpload upload = FileUpload.fromData(baos.toByteArray(), "petpet.gif");
+            event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
         });
     }
 
-    private CompletableFuture<Path> createPetPetGif(BufferedImage inputImage) {
-        Path tempFile;
-        try {
-            tempFile = Files.createTempFile("petpet", ".gif");
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not create temp file!", exception);
-        }
-
-        return new PetPetGifCreator(tempFile, inputImage).start();
+    private CompletableFuture<ByteArrayOutputStream> createPetPetGif(BufferedImage inputImage) {
+        return new PetPetGifCreator(new ByteArrayOutputStream(), inputImage).start();
     }
 }
