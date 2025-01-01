@@ -104,7 +104,7 @@ public class LeaderboardCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
-            reply(event, "❌ You can only use this command inside of a server!", false, true);
+            reply(event, "❌ You can only use this command inside a server!", false, true);
             return;
         }
 
@@ -172,10 +172,10 @@ public class LeaderboardCommand extends CoreCommand {
 
     private static void createAndSend(SlashCommandInteractionEvent event, BufferedImage bufferedImage) {
         try {
-            final var bao = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage, "png", bao);
+            final var baos = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "png", baos);
             event.getHook()
-                    .sendFiles(FileUpload.fromData(bao.toByteArray(), "leaderboard.png"))
+                    .sendFiles(FileUpload.fromData(baos.toByteArray(), "leaderboard.png"))
                     .mentionRepliedUser(false)
                     .queue();
         } catch (final IOException | NullPointerException exception) {

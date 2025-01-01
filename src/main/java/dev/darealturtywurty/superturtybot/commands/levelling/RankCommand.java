@@ -172,9 +172,9 @@ public class RankCommand extends CoreCommand {
                 return;
             }
 
-            final var bao = new ByteArrayOutputStream();
-            ImageIO.write(card, "png", bao);
-            event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), member.getId() + ".png")).queue();
+            final var baos = new ByteArrayOutputStream();
+            ImageIO.write(card, "png", baos);
+            event.getHook().sendFiles(FileUpload.fromData(baos.toByteArray(), member.getId() + ".png")).queue();
         } catch (final IOException exception) {
             Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
             event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
