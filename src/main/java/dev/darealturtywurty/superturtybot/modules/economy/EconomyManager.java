@@ -330,12 +330,10 @@ public class EconomyManager {
         return loan;
     }
 
-    public static boolean payLoan(Economy account, Loan loan, long amount) {
+    public static void payLoan(Economy account, Loan loan, long amount) {
         long returned = loan.pay(amount);
         removeMoney(account, amount - returned, true);
         updateAccount(account);
-
-        return loan.isPaidOff();
     }
 
     public static long getTimeToPayOff(long amount) {
