@@ -16,11 +16,13 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
@@ -164,9 +166,27 @@ public class JobCommand extends EconomyCommand {
                     event.getHook().editOriginal("❌ You must have a job to quit your job!").queue();
                     return;
                 }
-
-                EconomyManager.quitJob(account);
-                event.getHook().editOriginal("✅ You have quit your job!").queue();
+                event.getHook().editOriginalFormat("❓ Are you sure you want to quit your job?%nYou are currently a level %s %s.", account.getJobLevel(), WordUtils.capitalize(account.getJob().name().toLowerCase()))
+                        .setActionRow(Button.danger("job:quit", "Quit Job"), Button.success("job:cancel_quit", "Cancel"))
+                        .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
+                                .timeout(2, TimeUnit.MINUTES)
+                                .timeoutAction(() -> message.editMessage("❌ Job quitting has timed out!").setComponents().queue())
+                                .failure(() -> message.editMessage("❌ An error occurred while quitting the job!").setComponents().queue())
+                                .condition(buttonEvent -> buttonEvent.isFromGuild() &&
+                                        Objects.requireNonNull(buttonEvent.getGuild()).getIdLong() == guild.getIdLong() &&
+                                        Objects.requireNonNull(buttonEvent.getMember()).getIdLong() == Objects.requireNonNull(event.getMember()).getIdLong() &&
+                                        buttonEvent.getChannel().getIdLong() == message.getChannel().getIdLong() &&
+                                        buttonEvent.getMessageIdLong() == message.getIdLong() &&
+                                        buttonEvent.getComponentId().startsWith("job:"))
+                                .success(buttonEvent -> {
+                                    buttonEvent.deferEdit().queue();
+                                    if (buttonEvent.getComponentId().equals("job:cancel_quit")) {
+                                        message.editMessage("❌ Job quitting has been cancelled!").setComponents().queue();
+                                        return;
+                                    }
+                                    EconomyManager.quitJob(account);
+                                })
+                                .build());
             }
             case "profile" -> {
                 if (!EconomyManager.hasJob(account)) {

@@ -30,10 +30,10 @@ public class LoanCommand extends EconomyCommand {
                 new SubcommandData("pay", "Pay back a loan you have taken out from the bank.")
                         .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to pay back", true, true),
                                 new OptionData(OptionType.INTEGER, "amount", "The amount of money to pay back", true).setMinValue(200)),
-                new SubcommandData("list", "List all of the loans you have taken out from the bank.")
-                        .addOptions(new OptionData(OptionType.BOOLEAN, "paid", "Whether or not to only list paid off loans", false)),
+                new SubcommandData("list", "List all the loans you have taken out from the bank.")
+                        .addOptions(new OptionData(OptionType.BOOLEAN, "paid", "Whether to only list paid off loans", false)),
                 new SubcommandData("info", "Get information about a loan you have taken out from the bank.")
-                        .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to get information about", false, true))
+                        .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to get information about", true, true))
         );
     }
 
@@ -63,7 +63,11 @@ public class LoanCommand extends EconomyCommand {
         }
 
         switch (event.getSubcommandName()) {
-            case "pay", "info" -> {
+            case "pay" -> {
+                Economy account = EconomyManager.getOrCreateAccount(event.getGuild(), event.getUser());
+                event.replyChoiceStrings(account.getLoans().stream().filter(loan -> !loan.isPaidOff()).map(Loan::getId).toList()).queue();
+            }
+            case "info" -> {
                 Economy account = EconomyManager.getOrCreateAccount(event.getGuild(), event.getUser());
                 event.replyChoiceStrings(account.getLoans().stream().map(Loan::getId).toList()).queue();
             }
@@ -83,7 +87,7 @@ public class LoanCommand extends EconomyCommand {
         switch (subcommand) {
             case "request" -> {
                 if (account.getNextLoan() > System.currentTimeMillis()) {
-                    event.getHook().editOriginalFormat("❌ You must wait %s before requesting another loan!",
+                    event.getHook().editOriginalFormat("❌ You can request another loan %s!",
                             TimeFormat.RELATIVE.format(account.getNextLoan())).queue();
                     return;
                 }
@@ -105,22 +109,23 @@ public class LoanCommand extends EconomyCommand {
                         config.getEconomyCurrency(),
                         StringUtils.numberFormat(amount),
                         config.getEconomyCurrency(),
-                        StringUtils.numberFormat(loan.calculateTotalAmountToPay()),
+                        StringUtils.numberFormat(amount),
                         TimeFormat.RELATIVE.format(loan.getTimeToPay()),
                         String.format("%.2f", loan.getInterestRate())
                 ).queue();
             }
 
             case "pay" -> {
-                String id = event.getOption("id", null, OptionMapping::getAsString);
-                if (id == null) {
-                    event.getHook().editOriginal("❌ You must provide the ID of the loan you want to pay back!").queue();
-                    return;
-                }
+                String id = event.getOption("id", "", OptionMapping::getAsString);
 
                 Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst().orElse(null);
                 if (loan == null) {
                     event.getHook().editOriginalFormat("❌ You do not have a loan with the ID of %s! Use `/loan list` to view all of your loans.", id).queue();
+                    return;
+                }
+
+                if (loan.isPaidOff()) {
+                    event.getHook().editOriginal("❌ You have already paid off this loan!").queue();
                     return;
                 }
 
@@ -129,21 +134,17 @@ public class LoanCommand extends EconomyCommand {
                     event.getHook().editOriginalFormat("❌ You must pay back at least %s200!", config.getEconomyCurrency()).queue();
                     return;
                 }
+                long amountToPay = Math.min(loan.calculateAmountLeftToPay(), Math.min(amount, account.getBank()));
 
-                if (amount > account.getBank()) {
-                    event.getHook().editOriginal("❌ You do not have enough money in the bank to pay back this loan!").queue();
-                    return;
-                }
-
-                boolean paidOff = EconomyManager.payLoan(account, loan, amount);
-                if (paidOff) {
-                    event.getHook().editOriginal("✅ You have successfully paid off your loan!").queue();
+                EconomyManager.payLoan(account, loan, amountToPay);
+                if (loan.isPaidOff()) {
+                    event.getHook().editOriginal("✅ You have paid back %s%s and paid off your loan!".formatted(
+                            config.getEconomyCurrency(), StringUtils.numberFormat(amountToPay)
+                    )).queue();
                 } else {
                     event.getHook().editOriginal("✅ You have successfully paid back %s%s of your loan! You still have %s%s left to pay back!".formatted(
-                            config.getEconomyCurrency(),
-                            StringUtils.numberFormat(amount),
-                            config.getEconomyCurrency(),
-                            StringUtils.numberFormat(loan.calculateAmountLeftToPay())
+                            config.getEconomyCurrency(), StringUtils.numberFormat(amountToPay),
+                            config.getEconomyCurrency(), StringUtils.numberFormat(loan.calculateAmountLeftToPay())
                     )).queue();
                 }
             }
@@ -176,11 +177,7 @@ public class LoanCommand extends EconomyCommand {
             }
 
             case "info" -> {
-                String id = event.getOption("id", null, OptionMapping::getAsString);
-                if (id == null) {
-                    event.getHook().editOriginal("❌ You must provide the ID of the loan you want to get information about!").queue();
-                    return;
-                }
+                String id = event.getOption("id", "", OptionMapping::getAsString);
 
                 Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst().orElse(null);
                 if (loan == null) {
@@ -196,7 +193,7 @@ public class LoanCommand extends EconomyCommand {
                 embed.addField("Original Amount", "%s%s".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(loan.getAmount())), false);
                 embed.addField("Interest Rate", "%s%%".formatted(String.format("%.2f", loan.getInterestRate())), false);
                 embed.addField("Time to Pay", TimeFormat.RELATIVE.format(loan.getTimeToPay()), false);
-                embed.addField("Paid Off", loan.isPaidOff() ? "Yes" : "No", false);
+                embed.addField("Paid Off", loan.isPaidOff() ? "✅" : "❌", false);
                 embed.addField("Total Amount to Pay", "%s%s".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(loan.calculateTotalAmountToPay())), false);
                 embed.addField("Amount Left to Pay", "%s%s".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(loan.calculateAmountLeftToPay())), false);
                 embed.addField("Amount Paid", "%s%s".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(loan.getAmountPaid())), false);
@@ -220,7 +217,7 @@ public class LoanCommand extends EconomyCommand {
                     StringUtils.numberFormat(loan.getAmount()),
                     String.format("%.2f", loan.getInterestRate()),
                     TimeFormat.RELATIVE.format(loan.getTimeToPay()),
-                    loan.isPaidOff() ? "Yes" : "No"
+                    loan.isPaidOff() ? "✅" : "❌"
             ), false);
         }
 
