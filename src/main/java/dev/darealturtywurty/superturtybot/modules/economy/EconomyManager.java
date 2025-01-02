@@ -258,7 +258,7 @@ public class EconomyManager {
     public static void quitJob(Economy account) {
         account.setJob(null);
         account.setJobLevel(0);
-        account.setNextWork(System.currentTimeMillis());
+        account.setNextWork(System.currentTimeMillis() + 3600000L);
         updateAccount(account);
     }
 
