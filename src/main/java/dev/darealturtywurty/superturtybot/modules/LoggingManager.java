@@ -30,10 +30,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateTimeOutEvent;
 import net.dv8tion.jda.api.events.guild.update.GenericGuildUpdateEvent;
-import net.dv8tion.jda.api.events.message.MessageBulkDeleteEvent;
-import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.*;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveAllEvent;
 import net.dv8tion.jda.api.events.role.RoleCreateEvent;
 import net.dv8tion.jda.api.events.role.RoleDeleteEvent;
@@ -170,6 +167,7 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onGenericChannelUpdate(GenericChannelUpdateEvent<?> event) {
         if (!event.isFromGuild()) return;
+
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> guild.retrieveAuditLogs().type(ActionType.CHANNEL_UPDATE).queue(entries -> {
             if (entries.isEmpty()) return;
@@ -528,6 +526,7 @@ public class LoggingManager extends ListenerAdapter {
     @Override
     public void onMessageDelete(MessageDeleteEvent event) {
         if (!event.isFromGuild()) return;
+
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
             List<MessageData> messages = MESSAGE_CACHE.get(event.getChannel().getIdLong());
@@ -583,7 +582,8 @@ public class LoggingManager extends ListenerAdapter {
 
     @Override
     public void onMessageUpdate(MessageUpdateEvent event) {
-        if (!event.isFromGuild()) return;
+        if (!event.isFromGuild() || event.getAuthor().isBot()) return;
+
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
             List<MessageData> messages = MESSAGE_CACHE.computeIfAbsent(event.getChannel().getIdLong(), id -> new ArrayList<>());
