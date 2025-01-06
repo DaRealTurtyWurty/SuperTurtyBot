@@ -159,7 +159,7 @@ public class ChessCommand extends CoreCommand {
             return;
         }
 
-        if (false && opponent.getUser().getIdLong() == event.getUser().getIdLong()) {
+        if (opponent.getUser().getIdLong() == event.getUser().getIdLong()) {
             reply(event, "❌ You cannot play against yourself!", false, true);
             return;
         }
@@ -223,7 +223,7 @@ public class ChessCommand extends CoreCommand {
                         event.getChannel().getIdLong() == game.threadId &&
                         !event.getAuthor().isBot() &&
                         !event.getAuthor().isSystem() &&
-                        !event.isWebhookMessage() && (game.isTurn(event.getAuthor().getIdLong()) || true))
+                        !event.isWebhookMessage() && game.isTurn(event.getAuthor().getIdLong()))
                 .timeout(10, TimeUnit.MINUTES)
                 .timeoutAction(() -> channel.sendMessageFormat("❌ <@%d> did not make a move in time!", game.getCurrentTurnId()).queue(
                         ignored -> channel.getManager().setArchived(true).setLocked(true).queue()))
