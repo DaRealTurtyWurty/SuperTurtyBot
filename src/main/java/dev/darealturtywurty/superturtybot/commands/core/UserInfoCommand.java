@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.TwoThousandFortyEightProfile;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
@@ -136,8 +137,9 @@ public class UserInfoCommand extends CoreCommand {
             embed.addField("Timeout End", TimeFormat.TIME_SHORT.format(member.getTimeOutEnd()), false);
         }
         
-        embed.addField("Created", TimeFormat.RELATIVE.format(member.getTimeCreated()), false);
-        embed.addField("Joined", TimeFormat.RELATIVE.format(member.getTimeJoined()), false);
+        embed.addField("Created", TimeFormat.RELATIVE.format(member.getTimeCreated()), true);
+        embed.addField("Joined", TimeFormat.RELATIVE.format(member.getTimeJoined()), true);
+        embed.addBlankField(true);
         embed.addField("Is Owner", StringUtils.trueFalseToYesNo(member.isOwner()), true);
         embed.addField("Is Bot", StringUtils.trueFalseToYesNo(member.getUser().isBot()), true);
         embed.addField("Is System", StringUtils.trueFalseToYesNo(member.getUser().isSystem()), true);
@@ -148,7 +150,13 @@ public class UserInfoCommand extends CoreCommand {
             if (streakData != null) {
                 embed.addField("Wordle Streak", streakData.getStreak() + " days", true);
                 embed.addField("Wordle Best Streak", streakData.getBestStreak() + " days", true);
+                embed.addBlankField(true);
             }
+        }
+
+        TwoThousandFortyEightProfile twoThousandFortyEightProfile = Database.getDatabase().twoThousandFortyEight.find(Filters.eq("user", member.getIdLong())).first();
+        if (twoThousandFortyEightProfile != null) {
+            embed.addField("2048 Best Score", twoThousandFortyEightProfile.bestScore + " points", true);
         }
 
         embed.setThumbnail(member.getEffectiveAvatarUrl());
