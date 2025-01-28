@@ -1,7 +1,9 @@
-package dev.darealturtywurty.superturtybot.core.command;
+package dev.darealturtywurty.superturtybot.commands.minigames;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.Database;
