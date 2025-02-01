@@ -166,6 +166,7 @@ public class JobCommand extends EconomyCommand {
                     event.getHook().editOriginal("❌ You must have a job to quit your job!").queue();
                     return;
                 }
+
                 event.getHook().editOriginalFormat("❓ Are you sure you want to quit your job?%nYou are currently a level %s %s.", account.getJobLevel(), WordUtils.capitalize(account.getJob().name().toLowerCase()))
                         .setActionRow(Button.danger("job:quit", "Quit Job"), Button.success("job:cancel_quit", "Cancel"))
                         .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)

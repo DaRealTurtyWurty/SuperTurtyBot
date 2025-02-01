@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -89,7 +90,10 @@ public class DonateCommand extends EconomyCommand {
             Economy otherAccount = EconomyManager.getOrCreateAccount(guild, user);
 
             EconomyManager.removeMoney(account, amount, true);
+            account.addTransaction(-amount, MoneyTransaction.DONATE, otherAccount.getUser());
+
             EconomyManager.addMoney(otherAccount, amount);
+            otherAccount.addTransaction(amount, MoneyTransaction.DONATE, account.getUser());
 
             EconomyManager.updateAccount(account);
             EconomyManager.updateAccount(otherAccount);

@@ -269,6 +269,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new AnnounceCommand());
         commands.add(new TestCommand());
         commands.add(new TokensCommand());
+        commands.add(new TransactionHistoryCommand());
 
         // Utility
         commands.add(new BotInfoCommand());
