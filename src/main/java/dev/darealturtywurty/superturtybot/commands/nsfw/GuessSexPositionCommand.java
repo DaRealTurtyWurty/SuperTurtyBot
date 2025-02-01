@@ -337,11 +337,8 @@ public class GuessSexPositionCommand extends CoreCommand {
     private static String getRandomImage(String url) {
         try {
             Document document = Jsoup.connect(url).get();
-            Elements elements = document.select("div.container");
-            Elements images = elements.select("div.qsxgsmgmari");
-            Elements links = images.select("a");
-            Elements img = links.select("img");
-            List<String> urls = img.eachAttr("src");
+            Elements images = document.select("div > a > img");
+            List<String> urls = images.eachAttr("src");
             return urls.get(ThreadLocalRandom.current().nextInt(urls.size()));
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to get random image!", exception);
