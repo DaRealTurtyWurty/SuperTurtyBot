@@ -277,16 +277,18 @@ public class GuessSexPositionCommand extends CoreCommand {
                             .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
             if (game == null) return;
 
+            event.deferEdit().queue();
+
             String value = event.getValues().getFirst();
             SexPosition sexPosition = SexPosition.valueOf(value.toUpperCase(Locale.ROOT));
             if (sexPosition != game.getPosition()) {
-                event.reply(
+                event.getHook().sendMessage(
                         "❌ " + sexPosition.getName() + " was not the right position! The correct position was " + game.getPosition()
                                 .getName() + "!").queue();
             } else if (LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
                 int xpEarned = ThreadLocalRandom.current()
                         .nextInt((9 - game.getRevealedCount()) * 5, (9 - game.getRevealedCount()) * 20);
-                event.reply("✅ You were correct! The correct position was " + game.getPosition()
+                event.getHook().sendMessage("✅ You were correct! The correct position was " + game.getPosition()
                         .getName() + "! You " + "earned " + xpEarned + " XP!").queue();
                 LevellingManager.INSTANCE.addXP(event.getGuild(), event.getUser(), xpEarned);
             }
@@ -299,13 +301,13 @@ public class GuessSexPositionCommand extends CoreCommand {
                 image = ImageIO.read(new URI(game.getUrl()).toURL());
             } catch (IOException | URISyntaxException exception) {
                 Constants.LOGGER.error("Failed to load image!", exception);
-                event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ An error occurred while trying to load the image!").queue();
                 return;
             }
 
             if (image == null) {
                 Constants.LOGGER.error("Image is null!");
-                event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ An error occurred while trying to load the image!").queue();
                 return;
             }
 
@@ -324,12 +326,12 @@ public class GuessSexPositionCommand extends CoreCommand {
                 ImageIO.write(newImage, "jpg", boas);
             } catch (IOException exception) {
                 Constants.LOGGER.error("Failed to write image!", exception);
-                event.reply("❌ An error occurred while trying to load the image!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ An error occurred while trying to load the image!").queue();
                 return;
             }
 
             var upload = FileUpload.fromData(boas.toByteArray(), "sex_position.jpg");
-            event.getMessage().editMessageComponents().setFiles(upload).queue();
+            event.getHook().editOriginalComponents().setFiles(upload).queue();
             event.getChannel().asGuildMessageChannel().deleteMessageById(replyId).queue();
         }
     }
