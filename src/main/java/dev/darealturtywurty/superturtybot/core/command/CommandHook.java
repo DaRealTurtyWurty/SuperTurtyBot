@@ -392,8 +392,8 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new WordSearchCommand());
         commands.add(new Connect4Command());
         commands.add(new CheckersCommand());
-//        commands.add(new ChessCommand());
         commands.add(new TwoThousandFortyEightCommand());
+        commands.add(new ChessCommand());
 //        commands.add(new MinesweeperCommand());
 //        commands.add(new CrosswordCommand());
 //        commands.add(new SudokuCommand());
