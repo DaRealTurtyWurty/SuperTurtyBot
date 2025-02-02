@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -63,6 +64,7 @@ public class RewardCommand extends EconomyCommand {
 
                 EconomyManager.addMoney(account, dailyReward, true);
                 account.setNextDaily(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+                account.addTransaction(dailyReward, MoneyTransaction.REWARD);
                 EconomyManager.updateAccount(account);
                 event.getHook().editOriginalFormat("✅ You claimed your daily reward of %s%s!",
                         config.getEconomyCurrency(), StringUtils.numberFormat(dailyReward)).queue();
@@ -85,6 +87,7 @@ public class RewardCommand extends EconomyCommand {
 
                 EconomyManager.addMoney(account, weeklyReward, true);
                 account.setNextWeekly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7));
+                account.addTransaction(weeklyReward, MoneyTransaction.REWARD);
                 EconomyManager.updateAccount(account);
                 event.getHook().editOriginalFormat("✅ You claimed your weekly reward of %s%s!",
                         config.getEconomyCurrency(), StringUtils.numberFormat(weeklyReward)).queue();
@@ -105,6 +108,7 @@ public class RewardCommand extends EconomyCommand {
 
                 EconomyManager.addMoney(account, monthlyReward, true);
                 account.setNextMonthly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(31));
+                account.addTransaction(monthlyReward, MoneyTransaction.REWARD);
                 EconomyManager.updateAccount(account);
                 event.getHook().editOriginal("✅ You claimed your monthly reward of %s%s!"
                         .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(monthlyReward))).queue();
@@ -125,6 +129,7 @@ public class RewardCommand extends EconomyCommand {
 
                 EconomyManager.addMoney(account, yearlyReward, true);
                 account.setNextYearly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365));
+                account.addTransaction(yearlyReward, MoneyTransaction.REWARD);
                 EconomyManager.updateAccount(account);
                 event.getHook().editOriginal("✅ You claimed your yearly reward of %s%s!"
                         .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(yearlyReward))).queue();

@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import lombok.Data;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -176,6 +177,7 @@ public class CrashCommand extends EconomyCommand {
                         .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount))).queue(
                         ignored -> close(thread));
                 EconomyManager.betLoss(account, this.amount);
+                account.addTransaction(-this.amount, MoneyTransaction.CRASH);
                 EconomyManager.updateAccount(account);
 
                 close(thread);
@@ -219,6 +221,7 @@ public class CrashCommand extends EconomyCommand {
 
             EconomyManager.addMoney(account, amount);
             EconomyManager.betWin(account, amount - this.amount);
+            account.addTransaction(amount - this.amount, MoneyTransaction.CRASH);
             EconomyManager.updateAccount(account);
         }
 

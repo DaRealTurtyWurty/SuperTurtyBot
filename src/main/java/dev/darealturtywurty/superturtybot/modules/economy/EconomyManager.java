@@ -18,10 +18,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,6 +49,14 @@ public class EconomyManager {
         }
     }
 
+    public static Optional<Economy> getAccount(Guild guild, User user) {
+        return Optional.ofNullable(Database.getDatabase().economy.find(
+                Filters.and(
+                        Filters.eq("guild", guild.getIdLong()),
+                        Filters.eq("user", user.getIdLong())
+                )).first());
+    }
+
     public static Economy createAccount(Guild guild, User user) {
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
@@ -61,22 +66,13 @@ public class EconomyManager {
 
         final var economy = new Economy(guild.getIdLong(), user.getIdLong());
         economy.setBank(config.getDefaultEconomyBalance());
+        economy.addTransaction(config.getDefaultEconomyBalance(), MoneyTransaction.CREATE_ACCOUNT);
         Database.getDatabase().economy.insertOne(economy);
         return economy;
     }
 
     public static Economy getOrCreateAccount(Guild guild, User user) {
-        Economy account = Database.getDatabase().economy.find(
-                Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", user.getIdLong())
-                )).first();
-
-        if (account == null) {
-            account = createAccount(guild, user);
-        }
-
-        return account;
+        return getAccount(guild, user).orElseGet(() -> createAccount(guild, user));
     }
 
     public static long removeMoney(Economy account, long amount) {
@@ -108,11 +104,13 @@ public class EconomyManager {
     public static void withdraw(Economy account, long amount) {
         account.removeBank(amount);
         account.addWallet(amount);
+        account.addTransaction(amount, MoneyTransaction.WITHDRAW);
     }
 
     public static void deposit(Economy account, long amount) {
         account.removeWallet(amount);
         account.addBank(amount);
+        account.addTransaction(amount, MoneyTransaction.DEPOSIT);
     }
 
     public static void start(JDA jda) {
@@ -150,6 +148,8 @@ public class EconomyManager {
                                     return;
 
                                 removeMoney(account, amount, true);
+                                account.addTransaction(-amount, MoneyTransaction.TAX);
+
                                 updateAccount(account);
                                 endOfDayIncomeTaxes.remove(String.valueOf(account.getUser()));
 
@@ -207,6 +207,7 @@ public class EconomyManager {
         }
 
         addMoney(account, earned, true);
+        account.addTransaction(earned, MoneyTransaction.JOB);
 
         if (ThreadLocalRandom.current().nextInt(100) < (int) (account.getJob().getPromotionChance() * 100)) {
             account.setReadyForPromotion(true);
@@ -242,7 +243,7 @@ public class EconomyManager {
 
         Economy.Job found;
         try {
-            found = Economy.Job.valueOf(job.toUpperCase());
+            found = Economy.Job.valueOf(job.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -258,7 +259,7 @@ public class EconomyManager {
     public static void quitJob(Economy account) {
         account.setJob(null);
         account.setJobLevel(0);
-        account.setNextWork(System.currentTimeMillis());
+        account.setNextWork(System.currentTimeMillis() + 3600000L);
         updateAccount(account);
     }
 
@@ -278,13 +279,17 @@ public class EconomyManager {
     }
 
     public static long workNoJob(Economy account) {
-        if (account.getNextWork() > System.currentTimeMillis()) return 0;
+        if (account.getNextWork() > System.currentTimeMillis())
+            return 0;
 
         final long amount = ThreadLocalRandom.current().nextInt(1000);
-        account.setWallet(EconomyManager.addMoney(account, amount));
+        EconomyManager.addMoney(account, amount);
+        account.addTransaction(amount, MoneyTransaction.WORK);
+
         if (!Environment.INSTANCE.isDevelopment()) {
             account.setNextWork(System.currentTimeMillis() + 3600000L);
         }
+
         EconomyManager.updateAccount(account);
         return amount;
     }
@@ -326,16 +331,19 @@ public class EconomyManager {
         account.setNextLoan(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
 
         addMoney(account, amount, true);
+        account.addTransaction(amount, MoneyTransaction.LOAN);
         updateAccount(account);
         return loan;
     }
 
-    public static boolean payLoan(Economy account, Loan loan, long amount) {
+    public static void payLoan(Economy account, Loan loan, long amount) {
         long returned = loan.pay(amount);
-        removeMoney(account, amount - returned, true);
-        updateAccount(account);
 
-        return loan.isPaidOff();
+        long paid = amount - returned;
+        removeMoney(account, paid, true);
+        account.addTransaction(-paid, MoneyTransaction.PAY_LOAN);
+
+        updateAccount(account);
     }
 
     public static long getTimeToPayOff(long amount) {
@@ -351,6 +359,7 @@ public class EconomyManager {
     public static long caughtCrime(Economy account, CrimeCommand.CrimeType level) {
         long amount = level.getAmountForLevel(account.getCrimeLevel()) / 2;
         removeMoney(account, amount, true);
+        account.addTransaction(-amount, MoneyTransaction.CRIME);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalCaughtCrimes(account.getTotalCaughtCrimes() + 1);
@@ -366,6 +375,7 @@ public class EconomyManager {
         int crimeLevel = account.getCrimeLevel();
         long amount = level.getAmountForLevel(crimeLevel);
         addMoney(account, amount, true);
+        account.addTransaction(amount, MoneyTransaction.CRIME);
 
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
@@ -379,12 +389,12 @@ public class EconomyManager {
 
     // Should exponentially increase the cost and payout of a heist based on the user's account
     public static long determineHeistSetupCost(Economy account) {
-        int heistLevel = account.getHeistLevel();
+        int heistLevel = account.getHeistLevel() + 1;
         return 100_000L * heistLevel * heistLevel;
     }
 
     private static long determineHeistPayout(Economy account) {
-        int heistLevel = account.getHeistLevel();
+        int heistLevel = account.getHeistLevel() + 1;
         return ThreadLocalRandom.current().nextLong(200_000, 500_000) * heistLevel * heistLevel;
     }
 
@@ -398,6 +408,7 @@ public class EconomyManager {
         long payout = determineHeistPayout(account);
         long earned = payout * 10_000L / timeTaken + determineHeistSetupCost(account);
         addMoney(account, earned, true);
+        account.addTransaction(earned, MoneyTransaction.HEIST);
 
         account.setTotalHeists(account.getTotalHeists() + 1);
 

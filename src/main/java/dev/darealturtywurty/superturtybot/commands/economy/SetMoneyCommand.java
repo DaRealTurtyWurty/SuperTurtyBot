@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -104,19 +105,26 @@ public class SetMoneyCommand extends EconomyCommand {
         switch (type) {
             case ADD -> {
                 EconomyManager.addMoney(account, amount);
+                account.addTransaction(amount, MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Added %s%d to %s's balance!"
                                 .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
                         false);
             }
             case REMOVE -> {
                 EconomyManager.removeMoney(account, amount);
+                account.addTransaction(-amount, MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Removed %s%d from %s's balance!"
                                 .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
                         false);
             }
             case SET -> {
+                long prevBank = account.getBank();
+                long prevWallet = account.getWallet();
                 EconomyManager.setMoney(account, amount, true);
                 EconomyManager.setMoney(account, 0, false);
+
+                long difference = (account.getBank() + account.getWallet()) - (prevBank + prevWallet);
+                account.addTransaction(difference, MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Set %s's balance to %s%d!"
                                 .formatted(user1.getAsMention(), config.getEconomyCurrency(), amount),
                         false);

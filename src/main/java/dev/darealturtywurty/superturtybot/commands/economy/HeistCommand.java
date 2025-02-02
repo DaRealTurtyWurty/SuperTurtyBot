@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -104,7 +105,7 @@ public class HeistCommand extends EconomyCommand {
         }
 
         event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s%s.",
-                        config.getEconomyCurrency(), StringUtils.numberFormat(EconomyManager.determineHeistSetupCost(account)))
+                        config.getEconomyCurrency(), StringUtils.numberFormat(setupCost))
                 .setActionRow(Button.success("heist:yes", "Yes"), Button.danger("heist:no", "No"))
                 .queue(message -> createHeistSetupWaiter(guild, member, message, config, account).build());
     }
@@ -138,7 +139,8 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    EconomyManager.removeMoney(account, -EconomyManager.determineHeistSetupCost(account), true);
+                    EconomyManager.removeMoney(account, setupCost, true);
+                    account.addTransaction(-setupCost, MoneyTransaction.HEIST_SETUP);
 
                     if (!Environment.INSTANCE.isDevelopment()) {
                         account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
@@ -244,7 +246,7 @@ public class HeistCommand extends EconomyCommand {
                             thread.sendMessage("✅ **Heist successful!** You have earned %s%s!%n%n%s".formatted(
                                             config.getEconomyCurrency(),
                                             StringUtils.numberFormat(heistResult.getLeft()),
-                                            heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel()) : "").trim())
+                                            heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
                                     .queue(ignored -> close(thread));
                         } else {
                             event.getHook().editOriginal("❌ Failed to complete the heist!")

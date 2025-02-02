@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -67,6 +68,7 @@ public class WarnManager {
             long toTake = (long) (balance / economyPercentage);
 
             EconomyManager.removeMoney(account, toTake, true);
+            account.addTransaction(-toTake, MoneyTransaction.WARNING);
             EconomyManager.updateAccount(account);
         }
 
