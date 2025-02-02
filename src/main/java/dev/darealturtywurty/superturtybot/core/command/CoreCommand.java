@@ -2,11 +2,13 @@ package dev.darealturtywurty.superturtybot.core.command;
 
 import dev.darealturtywurty.superturtybot.Environment;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -39,59 +41,43 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         event.getMessage().reply(message).mentionRepliedUser(mention).queue();
     }
 
-    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed) {
+    public static void reply(GenericCommandInteractionEvent event, EmbedBuilder embed) {
         reply(event, embed, false);
     }
 
-    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention) {
+    public static void reply(GenericCommandInteractionEvent event, EmbedBuilder embed, boolean mention) {
         reply(event, embed, mention, false);
     }
 
-    public static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
+    public static void reply(GenericCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
         event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
     }
 
-    public static void reply(SlashCommandInteractionEvent event, String message) {
+    public static void reply(GenericCommandInteractionEvent event, String message) {
         reply(event, message, false);
     }
 
-    public static void reply(SlashCommandInteractionEvent event, String message, boolean mention) {
+    public static void reply(GenericCommandInteractionEvent event, String message, boolean mention) {
         reply(event, message, mention, false);
     }
 
-    public static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
+    public static void reply(GenericCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
         event.deferReply().setContent(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
     }
 
-    public static void reply(MessageContextInteractionEvent event, String message, boolean mention) {
+    public static void reply(IReplyCallback event, String message, boolean mention) {
         event.reply(message).mentionRepliedUser(mention).queue();
     }
 
-    public static void reply(MessageContextInteractionEvent event, String message) {
+    public static void reply(IReplyCallback event, String message) {
         reply(event, message, false);
     }
 
-    public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
+    public static void reply(IReplyCallback event, EmbedBuilder embed, boolean mention) {
         event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
     }
 
-    public static void reply(MessageContextInteractionEvent event, EmbedBuilder embed) {
-        reply(event, embed, false);
-    }
-
-    public static void reply(UserContextInteractionEvent event, String message, boolean mention) {
-        event.reply(message).mentionRepliedUser(mention).queue();
-    }
-
-    public static void reply(UserContextInteractionEvent event, String message) {
-        reply(event, message, false);
-    }
-
-    public static void reply(UserContextInteractionEvent event, EmbedBuilder embed, boolean mention) {
-        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).queue();
-    }
-
-    public static void reply(UserContextInteractionEvent event, EmbedBuilder embed) {
+    public static void reply(IReplyCallback event, EmbedBuilder embed) {
         reply(event, embed, false);
     }
 
