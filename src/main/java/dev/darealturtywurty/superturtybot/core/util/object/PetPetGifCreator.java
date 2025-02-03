@@ -3,46 +3,46 @@ package dev.darealturtywurty.superturtybot.core.util.object;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import lombok.Getter;
 
-import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
 public class PetPetGifCreator {
-    private static final int DELAY = 50; // changed the delay to 50
+    private static final int DELAY = 50;
     private static final List<BufferedImage> PET_PET_FRAMES;
 
     static {
         PET_PET_FRAMES = new ArrayList<>();
-        PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_0.png"));
-        PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_1.png"));
-        PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_2.png"));
-        PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_3.png"));
-        PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_4.png"));
+        for (int frameIndex = 0; frameIndex < 5; frameIndex++) {
+            PET_PET_FRAMES.add(TurtyBot.loadImage("petpet/frame_%d.png".formatted(frameIndex)));
+        }
     }
 
-    private final Path outputPath;
+    private final ByteArrayOutputStream baos;
     private final BufferedImage inputImage;
     private final GifSequenceWriter writer;
-    private final CompletableFuture<Path> future = new CompletableFuture<>();
+    private final CompletableFuture<ByteArrayOutputStream> future = new CompletableFuture<>();
+    private final MemoryCacheImageOutputStream imageOutputStream;
 
-    public PetPetGifCreator(Path outputPath, BufferedImage inputImage) {
-        this.outputPath = outputPath;
+    public PetPetGifCreator(ByteArrayOutputStream baos, BufferedImage inputImage) {
+        this.baos = baos;
         this.inputImage = inputImage;
 
         try {
-            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so I set it to be used here
+            this.imageOutputStream = new MemoryCacheImageOutputStream(baos);
+            this.writer = new GifSequenceWriter(this.imageOutputStream, BufferedImage.TYPE_INT_ARGB, DELAY, true);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create GifSequenceWriter!", exception);
         }
     }
 
-    public CompletableFuture<Path> start() {
+    public CompletableFuture<ByteArrayOutputStream> start() {
         new Thread(() -> {
             for (int index = 0; index < PET_PET_FRAMES.size() * 2; index++) {
                 BufferedImage frame = PET_PET_FRAMES.get(index % PET_PET_FRAMES.size());
@@ -77,8 +77,13 @@ public class PetPetGifCreator {
             } catch (IOException exception) {
                 throw new IllegalStateException("Could not close writer!", exception);
             }
+            try {
+                this.imageOutputStream.flush();
+            } catch (IOException exception) {
+                throw new IllegalStateException("Could not flush image output stream!", exception);
+            }
 
-            this.future.complete(this.outputPath);
+            this.future.complete(this.baos);
         }).start();
 
         return this.future;

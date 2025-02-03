@@ -18,8 +18,6 @@ import org.eclipse.egit.github.core.service.GistService;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,32 +66,28 @@ public class GistManager extends ListenerAdapter {
             final CompletableFuture<Map<String, GistFile>> futureMap = new CompletableFuture<>();
             final var counter = new AtomicInteger();
             for (final Attachment attachment : attachments) {
-                try {
-                    final Path path = Files.createTempDirectory("TurtyBot").resolve(attachment.getFileName());
-                    final var proxy = attachment.getProxy();
-                    final CompletableFuture<Path> future = proxy.downloadToPath(path);
-                    future.thenAccept(file -> {
-                        try {
-                            final String content = Files.readString(path);
-                            if (!content.isBlank()) {
-                                gistFiles.put(attachment.getFileName(),
-                                        new GistFile().setContent(content).setFilename(attachment.getFileName()));
-                            }
-                        } catch (final IOException ignored) {
+                final var proxy = attachment.getProxy();
+                proxy.download().thenAccept(inputStream -> {
+                    try {
+                        final String content = new String(inputStream.readAllBytes());
+                        inputStream.close();
+                        if (!content.isBlank()) {
+                            gistFiles.put(attachment.getFileName(),
+                                    new GistFile().setContent(content).setFilename(attachment.getFileName()));
                         }
+                    } catch (final IOException ignored) {
+                    }
 
-                        if (counter.incrementAndGet() >= attachments.size()) {
-                            futureMap.complete(gistFiles);
-                        }
-                    }).exceptionally(exception -> {
-                        Constants.LOGGER.error("Failed to download attachment!", exception);
-                        if (counter.incrementAndGet() >= attachments.size()) {
-                            futureMap.complete(gistFiles);
-                        }
-                        return null;
-                    });
-                } catch (final IOException ignored) {
-                }
+                    if (counter.incrementAndGet() >= attachments.size()) {
+                        futureMap.complete(gistFiles);
+                    }
+                }).exceptionally(exception -> {
+                    Constants.LOGGER.error("Failed to download attachment!", exception);
+                    if (counter.incrementAndGet() >= attachments.size()) {
+                        futureMap.complete(gistFiles);
+                    }
+                    return null;
+                });
             }
 
             futureMap.thenAccept(files -> {

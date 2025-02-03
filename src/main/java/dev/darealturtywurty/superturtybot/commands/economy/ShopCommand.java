@@ -110,9 +110,9 @@ public class ShopCommand extends EconomyCommand {
                 }
 
                 try {
-                    var boas = new ByteArrayOutputStream();
-                    ImageIO.write(generateShopImage(), "png", boas);
-                    var upload = FileUpload.fromData(boas.toByteArray(), "shop.png");
+                    var baos = new ByteArrayOutputStream();
+                    ImageIO.write(generateShopImage(), "png", baos);
+                    var upload = FileUpload.fromData(baos.toByteArray(), "shop.png");
                     event.getHook().sendFiles(upload).queue();
                 } catch (IOException exception) {
                     event.getHook().editOriginal("❌ An error occurred while generating the shop image!").queue();

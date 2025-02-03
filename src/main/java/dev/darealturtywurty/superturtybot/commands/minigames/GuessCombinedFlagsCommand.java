@@ -68,17 +68,17 @@ public class GuessCombinedFlagsCommand extends SubcommandCommand {
 
         graphics.dispose();
 
-        var boas = new ByteArrayOutputStream();
+        var baos = new ByteArrayOutputStream();
         try {
-            ImageIO.write(combined, "png", boas);
-            boas.flush();
+            ImageIO.write(combined, "png", baos);
+            baos.flush();
         } catch (IOException exception) {
             throw new IllegalStateException(
                     "An error occurred while trying to write the combined image to a " + "ByteArrayOutputStream!",
                     exception);
         }
 
-        return boas;
+        return baos;
     }
 
     @Override
@@ -147,8 +147,8 @@ public class GuessCombinedFlagsCommand extends SubcommandCommand {
         int width = regions.values().stream().mapToInt(BufferedImage::getWidth).max().orElse(0);
         int height = regions.values().stream().mapToInt(BufferedImage::getHeight).max().orElse(0);
 
-        ByteArrayOutputStream boas = createImage(regions.values().stream().toList(), width, height);
-        var upload = FileUpload.fromData(boas.toByteArray(), "combined_flags.png");
+        ByteArrayOutputStream baos = createImage(regions.values().stream().toList(), width, height);
+        var upload = FileUpload.fromData(baos.toByteArray(), "combined_flags.png");
 
         String toSend = String.format("Guess the regions that make up the combined flag! (There are %d regions)",
                 numberOfRegions);
@@ -175,7 +175,7 @@ public class GuessCombinedFlagsCommand extends SubcommandCommand {
                     thread.sendMessage("✅ Game started! " + event.getUser().getAsMention()).queue();
 
                     try {
-                        boas.close();
+                        baos.close();
                         upload.close();
                     } catch (IOException exception) {
                         Constants.LOGGER.error(
