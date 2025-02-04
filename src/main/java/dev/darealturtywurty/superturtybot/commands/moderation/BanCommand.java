@@ -1,7 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.moderation;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -19,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.math3.util.Pair;
-import org.bson.conversions.Bson;
 
 import java.awt.*;
 import java.time.Instant;
@@ -81,7 +78,7 @@ public class BanCommand extends CoreCommand {
             return;
         }
         
-        final User user = event.getOption("user", null, OptionMapping::getAsUser);
+        final User user = event.getOption("user", OptionMapping::getAsUser);
         if (user == null) {
             reply(event, "❌ You must provide a user to ban!", false, true);
             return;
@@ -132,8 +129,7 @@ public class BanCommand extends CoreCommand {
     }
     
     public static Pair<Boolean, TextChannel> canLog(Guild guild) {
-        final Bson filter = Filters.eq("guild", guild.getIdLong());
-        GuildData config = GuildConfigCommand.get(filter, guild);
+        final GuildData config = GuildData.getOrCreateGuildData(guild);
 
         final long modLogging = config.getModLogging();
         final TextChannel channel = guild.getTextChannelById(modLogging);

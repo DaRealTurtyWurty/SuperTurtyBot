@@ -73,11 +73,7 @@ public final class WelcomeManager extends ListenerAdapter {
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Guild guild = event.getGuild();
 
-        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (data == null) {
-            data = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(data);
-        }
+        GuildData data = GuildData.getOrCreateGuildData(guild);
 
         if (data.getWelcomeChannel() == 0 || !data.isShouldAnnounceJoins())
             return;
@@ -97,11 +93,7 @@ public final class WelcomeManager extends ListenerAdapter {
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         Guild guild = event.getGuild();
 
-        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (data == null) {
-            data = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(data);
-        }
+        GuildData data = GuildData.getOrCreateGuildData(guild);
 
         if (data.getWelcomeChannel() == 0 || !data.isShouldAnnounceLeaves())
             return;

@@ -10,6 +10,10 @@ import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.database.codecs.BigDecimalCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.BigIntegerCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.ColorCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.NewsitemCodec;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -48,8 +52,14 @@ public class Database {
     public Database() {
         final CodecRegistry pojoRegistry = CodecRegistries
             .fromProviders(PojoCodecProvider.builder().automatic(true).build());
+        final CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(
+                new BigIntegerCodec(),
+                new BigDecimalCodec(),
+                new ColorCodec(),
+                new NewsitemCodec()
+        );
         final CodecRegistry codecRegistry = CodecRegistries
-            .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
+            .fromRegistries(customCodecRegistry, MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
 
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);

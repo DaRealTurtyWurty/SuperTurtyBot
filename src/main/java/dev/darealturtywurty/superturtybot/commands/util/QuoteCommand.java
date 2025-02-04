@@ -192,7 +192,7 @@ public class QuoteCommand extends CoreCommand {
             }
 
             case "list" -> {
-                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                User user = event.getOption("user", OptionMapping::getAsUser);
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());
@@ -245,7 +245,7 @@ public class QuoteCommand extends CoreCommand {
             }
 
             case "list_compact" -> {
-                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                User user = event.getOption("user", OptionMapping::getAsUser);
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
                         .into(new ArrayList<>());

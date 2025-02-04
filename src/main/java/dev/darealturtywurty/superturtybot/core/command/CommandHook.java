@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
@@ -25,7 +24,6 @@ import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
@@ -471,11 +469,7 @@ public class CommandHook extends ListenerAdapter {
                     .findFirst()
                     .orElseGet(guild::getSystemChannel);
 
-            GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-            if (config == null) {
-                config = new GuildData(guild.getIdLong());
-                Database.getDatabase().guildData.insertOne(config);
-            }
+            GuildData config = GuildData.getOrCreateGuildData(guild);
 
             if (config.isShouldSendStartupMessage()) {
                 sendStartupMessage(generalChannel, config.isShouldSendChangelog());

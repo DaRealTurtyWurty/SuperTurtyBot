@@ -123,7 +123,7 @@ public class TriviaCommand extends CoreCommand {
             return;
         }
 
-        String category = event.getOption("category", null, OptionMapping::getAsString);
+        String category = event.getOption("category", OptionMapping::getAsString);
         if (category != null && category.isBlank()) {
             category = null;
         }
@@ -138,7 +138,7 @@ public class TriviaCommand extends CoreCommand {
             url += "&categories=" + category;
         }
 
-        String difficulty = event.getOption("difficulty", null, OptionMapping::getAsString);
+        String difficulty = event.getOption("difficulty", OptionMapping::getAsString);
         if (difficulty != null && difficulty.isBlank()) {
             difficulty = null;
         }

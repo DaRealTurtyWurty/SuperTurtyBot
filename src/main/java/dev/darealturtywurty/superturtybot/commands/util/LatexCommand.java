@@ -49,7 +49,7 @@ public class LatexCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        String latex = event.getOption("latex", null, OptionMapping::getAsString);
+        String latex = event.getOption("latex", OptionMapping::getAsString);
         if (latex == null || latex.isBlank()) {
             reply(event, "❌ You must provide some latex to convert!", false, true);
             return;

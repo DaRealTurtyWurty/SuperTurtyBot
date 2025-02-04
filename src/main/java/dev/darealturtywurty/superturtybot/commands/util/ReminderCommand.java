@@ -112,9 +112,9 @@ public class ReminderCommand extends CoreCommand {
 
     private void runCreateReminder(SlashCommandInteractionEvent event) {
         String reminder = event.getOption("reminder", "Unspecified", OptionMapping::getAsString);
-        String date = event.getOption("date", null, OptionMapping::getAsString);
-        String time = event.getOption("time", null, OptionMapping::getAsString);
-        GuildChannelUnion channel = event.getOption("channel", null, OptionMapping::getAsChannel);
+        String date = event.getOption("date", OptionMapping::getAsString);
+        String time = event.getOption("time", OptionMapping::getAsString);
+        GuildChannelUnion channel = event.getOption("channel", OptionMapping::getAsChannel);
         String message = event.getOption("message", "{@user} your reminder for {reminder} has been reached!", OptionMapping::getAsString);
 
         if(date == null || date.isBlank()) {

@@ -1,6 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.util;
 
 import com.vdurmont.emoji.EmojiParser;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Guild;
@@ -9,12 +11,13 @@ import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.apache.commons.text.WordUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
+import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -23,8 +26,6 @@ import java.util.function.Function;
 
 @SuppressWarnings("UnnecessaryDefault")
 public final class StringUtils {
-    private static final char[] CHARS = {'k', 'm', 'b', 't', 'q', 'Q', 's', 'S', 'o', 'n', 'd', 'U', 'D', 'T'};
-
     private StringUtils() {
         throw new IllegalAccessError("Cannot access private constructor!");
     }
@@ -41,56 +42,34 @@ public final class StringUtils {
         };
     }
 
-    /**
-     * Recursive implementation, invokes itself for each factor of a thousand, increasing the class on each invocation.
-     *
-     * @param n                   the number to format
-     * @param iteration           the class of the number
-     *                            (0 for units, 1 for thousands, 2 for millions, etc.)
-     * @param removeTrailingZeros whether to remove trailing zeros
-     * @return a formatted string
-     */
-    public static String numberFormat(final double n, final int iteration, boolean removeTrailingZeros) {
-        boolean isNegative = n < 0;
-        if (n < 1000 && n > -1000) {
-            return removeTrailingZeros ? String.valueOf((int) n) : String.valueOf(n);
+    private static String getSuffixForIteration(int iteration) {
+        if (iteration > 1000) {
+            return "e" + iteration * 3;
         }
+        // suffixes taken from: https://button-simulatored.fandom.com/wiki/Suffix_List
+        String[] suffixForOnesDigit = {"", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"};
+        String[] suffixForTensDigit = {"", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"};
+        String[] suffixForHundredsDigit = {"", "Ce", "Du", "Tr", "Qa", "Qi", "Se", "Si", "Ot", "Ni"};
+        switch (iteration) {
+            case 0 -> {
+                return "";
+            }
+            case 1 -> {
+                return "k";
+            }
+            case 2 -> {
+                return "m";
+            }
+            case 3 -> {
+                return "b";
+            }
+        }
+        int numberYouSayItAs = iteration - 1;
+        int ones = numberYouSayItAs % 10;
+        int tens = numberYouSayItAs / 10 % 10;
+        int hundreds = numberYouSayItAs / 100 % 10;
 
-        double newNumber = Math.abs(n);
-
-        final double d = newNumber / 1000;
-        final boolean isRound = d * 10 % 10 == 0; // true if the decimal part is equal to 0 (then it's trimmed anyway)
-
-        // Determine the class of the number
-        if (d >= 1000)
-            return (isNegative ? "-" : "") + numberFormat(d, iteration + 1, removeTrailingZeros);
-
-        var df = new DecimalFormat("#.##");
-        df.setRoundingMode(RoundingMode.FLOOR);
-        String formatted = df.format(d);
-
-        // Add the corresponding letter for the class
-        formatted += CHARS[iteration];
-
-        if(removeTrailingZeros)
-            formatted = formatted.replaceAll("\\.0*$", "");
-
-        if (isNegative)
-            formatted = "-" + formatted;
-
-        return formatted;
-    }
-
-    /**
-     * Formats a number to a readable format.
-     *
-     * @param n         the number to format
-     * @param iteration the class of the number
-     *                  (0 for units, 1 for thousands, 2 for millions, etc.)
-     * @return a formatted string
-     */
-    public static String numberFormat(final double n, final int iteration) {
-        return numberFormat(n, iteration, true);
+        return suffixForOnesDigit[ones] + suffixForTensDigit[tens] + suffixForHundredsDigit[hundreds];
     }
 
     /**
@@ -99,8 +78,87 @@ public final class StringUtils {
      * @param n the number to format
      * @return a formatted string
      */
-    public static String numberFormat(final double n) {
-        return numberFormat(n, 0);
+    public static String numberFormat(final BigInteger n) {
+        return numberFormat(n, "");
+    }
+
+    /**
+     * Formats a number to a readable format with the currency symbol from the guild data.
+     *
+     * @param n the number to format
+     * @param configWithCurrencySymbol a config with a currency symbol
+     * @return a formatted string
+     */
+    public static String numberFormat(final BigInteger n, GuildData configWithCurrencySymbol) {
+        return numberFormat(n, configWithCurrencySymbol.getEconomyCurrency());
+    }
+
+    /**
+     * Formats a number to a readable format with a string between the sign and the number.
+     *
+     * @param n the number to format
+     * @param betweenSignAndNumber a string between the sign and the number
+     * @return a formatted string
+     */
+    public static String numberFormat(BigInteger n, String betweenSignAndNumber) {
+        boolean isNegative = n.signum() < 0;
+        n = n.abs();
+        int iteration = 0;
+        BigInteger oneHundred = BigInteger.valueOf(100);
+        n = n.multiply(oneHundred);
+        while (n.compareTo(BigInteger.valueOf(100_000)) >= 0) {
+            n = n.divide(BigInteger.valueOf(1000));
+            iteration++;
+        }
+
+        BigInteger[] divMod = n.divideAndRemainder(oneHundred);
+        String divStr = divMod[0].toString();
+        String numberSuffix = getSuffixForIteration(iteration);
+        String formattedNumber;
+        if (divMod[1].signum() == 0) {
+            formattedNumber = divStr + numberSuffix;
+        } else {
+            String modStr = divMod[1].toString();
+            formattedNumber = divStr + "." + (modStr.length() < 2 ? "0" : "") + modStr + numberSuffix;
+        }
+
+        return (isNegative ? "-" : "") + betweenSignAndNumber + formattedNumber;
+    }
+
+    /**
+     * Returns a function that parses a string OptionMapping to a BigInteger.
+     * If the string is not a valid number, the event will be replied to with an error message, and the BigInteger will be null.
+     * @param event the event to reply to if the number is not valid
+     * @param wasDeferred whether the event was already deferred
+     * @return a function that parses a string OptionMapping to a BigInteger
+     * @see #getAsBigInteger(SlashCommandInteractionEvent)
+     */
+    public static Function<OptionMapping, @Nullable BigInteger> getAsBigInteger(SlashCommandInteractionEvent event, boolean wasDeferred) {
+        return option -> {
+            final String string = option.getAsString();
+            try {
+                return new BigInteger(string);
+            } catch (final NumberFormatException exception) {
+                String message = "❌ That is not a valid number!";
+                if (wasDeferred) {
+                    event.getHook().editOriginal(message).mentionRepliedUser(false).queue();
+                } else {
+                    CoreCommand.reply(event, message, false, true);
+                }
+                return null;
+            }
+        };
+    }
+
+    /**
+     * Returns a function that parses a string OptionMapping to a BigInteger.</br>
+     * Identical to calling {@link #getAsBigInteger(SlashCommandInteractionEvent, boolean) StringUtils.getAsBigInteger(event, true)}.
+     * @param event the event to reply to if the number is not valid
+     * @return a function that parses a string OptionMapping to a BigInteger
+     * @see #getAsBigInteger(SlashCommandInteractionEvent, boolean)
+     */
+    public static Function<OptionMapping, @Nullable BigInteger> getAsBigInteger(SlashCommandInteractionEvent event) {
+        return getAsBigInteger(event, true);
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")

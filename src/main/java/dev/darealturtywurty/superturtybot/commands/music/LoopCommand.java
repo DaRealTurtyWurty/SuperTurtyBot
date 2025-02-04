@@ -95,7 +95,7 @@ public class LoopCommand extends CoreCommand {
                     reply(event, "The current loop state is: " + AudioManager.getLoopState(event.getGuild()), false,
                             true);
             case "set" -> {
-                String loopStateStr = event.getOption("state", null, OptionMapping::getAsString);
+                String loopStateStr = event.getOption("state", OptionMapping::getAsString);
                 LoopState loopState = LoopState.fromString(loopStateStr);
                 if (loopState == null) {
                     reply(event, "❌ You must specify a loop state!", false, true);

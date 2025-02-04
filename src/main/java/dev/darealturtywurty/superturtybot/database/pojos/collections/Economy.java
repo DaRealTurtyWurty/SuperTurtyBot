@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +17,8 @@ public class Economy {
     private long guild;
     private long user;
 
-    private long wallet;
-    private long bank;
+    private BigInteger wallet;
+    private BigInteger bank;
 
     private long nextRob;
     private long nextWork;
@@ -36,8 +37,8 @@ public class Economy {
     private int jobLevel;
     private boolean readyForPromotion;
 
-    private long totalBetLoss;
-    private long totalBetWin;
+    private BigInteger totalBetLoss;
+    private BigInteger totalBetWin;
 
     private int crimeLevel;
     private int heistLevel = 1;
@@ -57,22 +58,28 @@ public class Economy {
     public Economy(long guild, long user) {
         this.guild = guild;
         this.user = user;
+
+        this.bank = BigInteger.ZERO;
+        this.wallet = BigInteger.ZERO;
+
+        this.totalBetWin = BigInteger.ZERO;
+        this.totalBetLoss = BigInteger.ZERO;
     }
 
-    public void addBank(long amount) {
-        this.bank += amount;
+    public void addBank(BigInteger amount) {
+        this.bank = this.bank.add(amount);
     }
 
-    public void addWallet(long amount) {
-        this.wallet += amount;
+    public void addWallet(BigInteger amount) {
+        this.wallet = this.wallet.add(amount);
     }
 
-    public void removeBank(long amount) {
-        this.bank -= amount;
+    public void removeBank(BigInteger amount) {
+        this.bank = this.bank.subtract(amount);
     }
 
-    public void removeWallet(long amount) {
-        this.wallet -= amount;
+    public void removeWallet(BigInteger amount) {
+        this.wallet = this.wallet.subtract(amount);
     }
 
     @Getter

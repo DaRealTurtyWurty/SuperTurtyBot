@@ -37,12 +37,7 @@ public class MinecraftMobCollector extends ListenerAdapter {
             return;
 
         Guild guild = event.getGuild();
-        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (data == null) {
-            data = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(data);
-            return;
-        }
+        GuildData data = GuildData.getOrCreateGuildData(guild);
 
         long collectorChannel = data.getCollectorChannel();
         if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong())

@@ -140,7 +140,7 @@ public class TurtyBot {
 
         // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
-                GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
+                GatewayIntent.GUILD_EXPRESSIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
 
         // Cache all members. This makes it easier to do any kind of retrieval.
         builder.setMemberCachePolicy(MemberCachePolicy.ALL.and(MemberCachePolicy.lru(1000)));

@@ -238,7 +238,7 @@ public class TagCommand extends CoreCommand {
 
                 // TODO: Check user permission
                 if (embedOption == null || !embedOption.getAsBoolean()) {
-                    final String content = event.getOption("content", null, OptionMapping::getAsString);
+                    final String content = event.getOption("content", OptionMapping::getAsString);
                     Database.getDatabase().tags
                             .insertOne(new Tag(event.getGuild().getIdLong(), event.getUser().getIdLong(),
                                     tagName0.getAsString(), "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
@@ -250,7 +250,7 @@ public class TagCommand extends CoreCommand {
                     return;
                 }
 
-                final String content = event.getOption("content", null, OptionMapping::getAsString);
+                final String content = event.getOption("content", OptionMapping::getAsString);
                 long userId = event.getUser().getIdLong();
                 UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
                 if (userEmbeds == null) {
@@ -346,13 +346,13 @@ public class TagCommand extends CoreCommand {
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (Tag tag : tags) {
                     User user = event.getJDA().getUserById(tag.getUser());
-                    String name = user == null ? "Unknown" : user.getEffectiveName();
-                    contents.field(tag.getName(), "Created by: " + name);
+                    String name = user == null ? "Unknown" : user.getAsMention();
+                    contents.custom(embedBuilder -> embedBuilder.appendDescription("\n" + name + ": " + tag.getName()));
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(15, contents)
                         .title("Tags for " + event.getGuild().getName())
-                        .description("Use `/tag <name>` to view a tag!")
+                        .description("Use `/tag get <name>` to view a tag!")
                         .color(Color.GREEN)
                         .timestamp(Instant.now())
                         .authorOnly(event.getUser().getIdLong())
@@ -362,7 +362,6 @@ public class TagCommand extends CoreCommand {
 
                 embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No tags were found!").mentionRepliedUser(false).queue());
             }
-            default -> reply(event, "⚠️ This command is still a Work In Progress!", false, true);
         }
     }
 

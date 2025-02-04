@@ -66,7 +66,7 @@ public class WikipediaCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        String pageName = event.getOption("page-name", null, OptionMapping::getAsString);
+        String pageName = event.getOption("page-name", OptionMapping::getAsString);
         if (pageName == null) {
             reply(event, "❌ You must supply a page to view", false, true);
             return;

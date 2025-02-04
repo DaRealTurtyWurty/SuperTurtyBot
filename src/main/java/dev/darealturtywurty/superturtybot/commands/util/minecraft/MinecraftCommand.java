@@ -38,7 +38,7 @@ public class MinecraftCommand extends CoreCommand {
     }
 
     private static void handleUsername(SlashCommandInteractionEvent event) {
-        String rawUUID = event.getOption("uuid", null, OptionMapping::getAsString);
+        String rawUUID = event.getOption("uuid", OptionMapping::getAsString);
         if (rawUUID == null) {
             event.getHook().sendMessage("❌ You must provide a UUID!").queue();
             return;
@@ -78,7 +78,7 @@ public class MinecraftCommand extends CoreCommand {
     }
 
     private static void handleUUID(SlashCommandInteractionEvent event) {
-        String username = event.getOption("username", null, OptionMapping::getAsString);
+        String username = event.getOption("username", OptionMapping::getAsString);
         if (username == null) {
             event.getHook().sendMessage("❌ You must provide a username!").queue();
             return;
@@ -120,7 +120,7 @@ public class MinecraftCommand extends CoreCommand {
     }
 
     private static void handleSkin(SlashCommandInteractionEvent event) {
-        final String username = event.getOption("uuid", null, OptionMapping::getAsString);
+        final String username = event.getOption("uuid", OptionMapping::getAsString);
         if (username == null) {
             event.getHook().sendMessage("❌ You must provide a UUID!").queue();
             return;

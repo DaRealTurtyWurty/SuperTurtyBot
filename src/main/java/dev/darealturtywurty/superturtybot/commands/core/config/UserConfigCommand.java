@@ -95,7 +95,7 @@ public class UserConfigCommand extends CoreCommand {
                     .toList();
             event.replyChoiceStrings(keys).queue();
         } else if (query.getName().equals("value")) {
-            String key = event.getOption("key", null, OptionMapping::getAsString);
+            String key = event.getOption("key", OptionMapping::getAsString);
             if (key == null) {
                 event.replyChoices().queue();
                 return;
@@ -134,7 +134,7 @@ public class UserConfigCommand extends CoreCommand {
 
         final String subcommand = event.getSubcommandName();
         if ("get".equalsIgnoreCase(subcommand)) {
-            final String key = event.getOption("key", null, OptionMapping::getAsString);
+            final String key = event.getOption("key", OptionMapping::getAsString);
 
             final UserConfig config = get(event.getUser());
 

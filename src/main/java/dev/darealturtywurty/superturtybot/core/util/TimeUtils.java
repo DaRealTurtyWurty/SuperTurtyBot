@@ -39,11 +39,11 @@ public class TimeUtils {
         var currentDate = LocalDate.now();
         var birthday = LocalDate.of(currentDate.getYear(), month, day);
 
-        if (birthday.isAfter(currentDate)) {
+        if (currentDate.isAfter(birthday)) {
             return currentDate.getYear() - 13;
         }
 
-        return currentDate.getYear() - 12;
+        return currentDate.getYear() - 14;
     }
 
     public static String mapMonth(int month) {
@@ -153,7 +153,7 @@ public class TimeUtils {
         return Period.between(LocalDate.of(year, month, day), LocalDate.now()).getYears();
     }
 
-    public static int determineAge(int year, int month, int day) {
+    public static int determineCurrentAge(int year, int month, int day) {
         var currentDate = LocalDate.now();
         var birthday = LocalDate.of(year, month, day);
 

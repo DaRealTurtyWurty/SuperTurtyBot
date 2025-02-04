@@ -81,7 +81,7 @@ public class CollectablesCommand extends CoreCommand {
             return;
         }
 
-        String collection = event.getOption("collection", null, OptionMapping::getAsString);
+        String collection = event.getOption("collection", OptionMapping::getAsString);
         if(collection == null) {
             event.getHook().sendMessage("❌ You need to specify a collection!").queue();
             return;

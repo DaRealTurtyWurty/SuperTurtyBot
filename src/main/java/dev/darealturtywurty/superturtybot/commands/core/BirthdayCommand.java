@@ -151,7 +151,7 @@ public class BirthdayCommand extends CoreCommand {
                 event.reply("🎂 " + user.getAsMention() + "'s birthday is on the " +
                                 TimeUtils.mapDay(birthday.getDay()) + " of " + TimeUtils.mapMonth(birthday.getMonth()) +
                                 "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ") This year they will be " +
-                                TimeUtils.determineAge(birthday.getYear(), birthday.getMonth(), birthday.getDay()) + " years old!")
+                                (TimeUtils.determineCurrentAge(birthday.getYear(), birthday.getMonth(), birthday.getDay()) + 1) + " years old!")
                         .mentionRepliedUser(false)
                         .setAllowedMentions(Set.of())
                         .queue();

@@ -12,7 +12,6 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.SteamAppNews;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SteamNotifier;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -85,22 +84,23 @@ public class SteamListener {
                 }
 
                 final GetNewsForAppRequest request = SteamWebApiRequestFactory.createGetNewsForAppRequest(appId, 1,
-                    MessageEmbed.DESCRIPTION_MAX_LENGTH);
+                        MessageEmbed.DESCRIPTION_MAX_LENGTH);
                 try {
                     final GetNewsForApp newses = CLIENT.processRequest(request);
-                    final Newsitem news = newses.getAppnews().getNewsitems().getFirst();
-                    final SteamAppNews current = constructPojo(news);
+                    final Newsitem current = newses.getAppnews().getNewsitems().getFirst();
+                    current.getAdditionalProperties().clear();
                     for (final SteamNotifier steamNotifier : notifiers) {
-                        final SteamAppNews original = steamNotifier.getPreviousData();
-                        if (isNew(original, current)) {
+                        final Newsitem original = steamNotifier.getPreviousData();
+                        if (current.equals(original)) continue;
+                        if (original != null) {
                             final EmbedBuilder changes = getFormattedChanges(original, current);
                             sendUpdate(jda, steamNotifier, original, current, changes);
-                            steamNotifier.setPreviousData(current);
-                            Database.getDatabase().steamNotifier.updateOne(
-                                Filters.and(Filters.eq("guild", steamNotifier.getGuild()),
-                                    Filters.eq("channel", steamNotifier.getChannel()), Filters.eq("appId", appId)),
-                                Updates.set("previousData", steamNotifier.getPreviousData()));
                         }
+                        steamNotifier.setPreviousData(current);
+                        Database.getDatabase().steamNotifier.updateOne(
+                                Filters.and(Filters.eq("guild", steamNotifier.getGuild()),
+                                        Filters.eq("channel", steamNotifier.getChannel()), Filters.eq("appId", appId)),
+                                Updates.set("previousData", steamNotifier.getPreviousData()));
                     }
                 } catch (final SteamApiException exception) {
                     Constants.LOGGER.error("Failed to get news for app!", exception);
@@ -109,17 +109,11 @@ public class SteamListener {
         }, 0, 30, TimeUnit.MINUTES);
     }
 
-    private static SteamAppNews constructPojo(Newsitem news) {
-        return new SteamAppNews(news.getAuthor(), news.getContents(), news.getDate(), news.getFeedlabel(),
-            news.getFeedname(), news.getGid(), news.getIsExternalUrl(), news.getTitle(), news.getUrl(),
-            news.getAdditionalProperties());
-    }
-
-    private static EmbedBuilder getFormattedChanges(SteamAppNews original, SteamAppNews current) {
+    private static EmbedBuilder getFormattedChanges(Newsitem original, Newsitem current) {
         final var embed = new EmbedBuilder();
 
         class Utils {
-            void appendChange(String name, Function<SteamAppNews, String> str) {
+            void appendChange(String name, Function<Newsitem, String> str) {
                 embed.addField(name,
                     getEmojiForChange(str.apply(original), str.apply(current))
                         + (!str.apply(original).isBlank() ? " `" + str.apply(original) + "` ->" : "") + " `"
@@ -127,13 +121,13 @@ public class SteamListener {
                     false);
             }
 
-            void compareAndAdd(String name, Function<SteamAppNews, String> str) {
+            void compareAndAdd(String name, Function<Newsitem, String> str) {
                 if (compareData(str)) {
                     appendChange(name, str);
                 }
             }
 
-            boolean compareData(Function<SteamAppNews, String> str) {
+            boolean compareData(Function<Newsitem, String> str) {
                 return !str.apply(original).equals(str.apply(current));
             }
 
@@ -150,14 +144,14 @@ public class SteamListener {
 
         final var utils = new Utils();
 
-        utils.compareAndAdd("Title", SteamAppNews::getTitle);
-        utils.compareAndAdd("URL", SteamAppNews::getUrl);
-        utils.compareAndAdd("Author", SteamAppNews::getAuthor);
-        utils.compareAndAdd("Contents", SteamAppNews::getContents);
-        utils.compareAndAdd("Has External URL", news -> Boolean.toString(news.isExternalUrl()));
-        utils.compareAndAdd("Feed Label", SteamAppNews::getFeedlabel);
-        utils.compareAndAdd("Feed Name", SteamAppNews::getFeedname);
-        utils.compareAndAdd("Group ID", SteamAppNews::getGid);
+        utils.compareAndAdd("Title", Newsitem::getTitle);
+        utils.compareAndAdd("URL", Newsitem::getUrl);
+        utils.compareAndAdd("Author", Newsitem::getAuthor);
+        utils.compareAndAdd("Contents", Newsitem::getContents);
+        utils.compareAndAdd("Has External URL", news -> Boolean.toString(news.getIsExternalUrl()));
+        utils.compareAndAdd("Feed Label", Newsitem::getFeedlabel);
+        utils.compareAndAdd("Feed Name", Newsitem::getFeedname);
+        utils.compareAndAdd("Group ID", Newsitem::getGid);
 
         return embed;
     }
@@ -189,18 +183,8 @@ public class SteamListener {
             return Optional.empty();
         }
     }
-    
-    private static boolean isNew(SteamAppNews original, SteamAppNews current) {
-        return !original.getAuthor().equals(current.getAuthor())
-            || !original.getContents().equals(current.getContents()) || original.getDate() != current.getDate()
-            || !original.getFeedlabel().equals(current.getFeedlabel())
-            || !original.getFeedname().equals(current.getFeedname()) || !original.getGid().equals(current.getGid())
-            || original.isExternalUrl() != current.isExternalUrl() || !original.getTitle().equals(current.getTitle())
-            || !original.getUrl().equals(current.getUrl())
-            || !original.getAdditionalProperties().equals(current.getAdditionalProperties());
-    }
 
-    private static void sendUpdate(JDA jda, SteamNotifier notifier, SteamAppNews original, SteamAppNews current,
+    private static void sendUpdate(JDA jda, SteamNotifier notifier, Newsitem original, Newsitem current,
         EmbedBuilder changed) {
         final Guild guild = jda.getGuildById(notifier.getGuild());
         if (guild == null) {

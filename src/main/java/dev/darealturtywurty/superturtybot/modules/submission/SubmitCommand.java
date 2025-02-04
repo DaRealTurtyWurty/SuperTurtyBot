@@ -99,13 +99,13 @@ public class SubmitCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        String category = event.getOption("category", null, OptionMapping::getAsString);
+        String category = event.getOption("category", OptionMapping::getAsString);
         if (category == null) {
             reply(event, "❌ You must provide a submission category!", true);
             return;
         }
 
-        String submissionContent = event.getOption("submission", null, OptionMapping::getAsString);
+        String submissionContent = event.getOption("submission", OptionMapping::getAsString);
         if (submissionContent == null) {
             reply(event, "❌ You must provide a submission!", true);
             return;

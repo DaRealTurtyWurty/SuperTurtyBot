@@ -1,12 +1,10 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.Message;
@@ -22,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -104,12 +103,7 @@ public class SmashOrPassCommand extends CoreCommand {
                     .setFiles(upload);
 
             if (event.isFromGuild()) {
-                //noinspection DataFlowIssue
-                GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", event.getGuild().getIdLong())).first();
-                if (data == null) {
-                    data = new GuildData(event.getGuild().getIdLong());
-                    Database.getDatabase().guildData.insertOne(data);
-                }
+                GuildData data = GuildData.getOrCreateGuildData(Objects.requireNonNull(event.getGuild()));
 
                 if (data.isAddSmashOrPassButtons()) {
                     request.setComponents(ActionRow.of(BUTTONS)).queue(message -> {

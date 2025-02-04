@@ -191,12 +191,12 @@ public class RoleSelectionCommand extends CoreCommand {
 
         switch (subcommand) {
             case "create" -> {
-                final TextChannel channel = event.getOption("channel", null,
+                final TextChannel channel = event.getOption("channel",
                         mapping -> mapping.getChannelType().isMessage() ? mapping.getAsChannel()
                                 .asTextChannel() : null);
 
                 final String title = event.getOption("title", "Unknown", OptionMapping::getAsString);
-                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+                final Role role = event.getOption("role", OptionMapping::getAsRole);
                 final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
                 final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
                 final int color = event.getOption("embed_color", 0x0000FF, OptionMapping::getAsInt);
@@ -300,7 +300,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+                final Role role = event.getOption("role", OptionMapping::getAsRole);
                 final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
                 final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
 
@@ -394,7 +394,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                final Role role = event.getOption("role", null, OptionMapping::getAsRole);
+                final Role role = event.getOption("role", OptionMapping::getAsRole);
 
                 if (role == null) {
                     reply(event, "❌ The role that you have provided is invalid!", false, true);

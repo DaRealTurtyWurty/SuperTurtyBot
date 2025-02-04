@@ -1,9 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -46,11 +44,7 @@ public abstract class EconomyCommand extends CoreCommand {
 
         event.deferReply().mentionRepliedUser(false).queue();
 
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if(config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
+        GuildData config = GuildData.getOrCreateGuildData(guild);
 
         if(!config.isEconomyEnabled()) {
             event.getHook().sendMessage("❌ Economy is not enabled in this server!").queue();
@@ -68,11 +62,7 @@ public abstract class EconomyCommand extends CoreCommand {
         }
 
         Guild guild = event.getGuild();
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if(config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
+        GuildData config = GuildData.getOrCreateGuildData(guild);
 
         if(!config.isEconomyEnabled()) {
             reply(event, "❌ Economy is not enabled in this server!", false);

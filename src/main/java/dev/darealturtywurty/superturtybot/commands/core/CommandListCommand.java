@@ -330,7 +330,7 @@ public class CommandListCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        final String category = event.getOption("category", null, OptionMapping::getAsString);
+        final String category = event.getOption("category", OptionMapping::getAsString);
         if (category == null) {
             final EmbedBuilder embed = categoriesEmbed(
                     event.isFromGuild() ? event.getGuild() : null,

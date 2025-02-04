@@ -6,14 +6,12 @@ import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 import com.knuddels.jtokkit.api.ModelType;
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.common.content.ContentPart;
@@ -95,12 +93,7 @@ public class AIMessageResponder extends ListenerAdapter {
             return;
 
         Guild guild = event.getGuild();
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-            return;
-        }
+        GuildData config = GuildData.getOrCreateGuildData(guild);
 
         if (!config.isAiEnabled())
             return;

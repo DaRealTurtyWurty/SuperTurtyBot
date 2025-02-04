@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.awt.*;
+import java.math.BigInteger;
 import java.time.Instant;
 
 public class BalanceCommand extends EconomyCommand {
@@ -37,32 +38,28 @@ public class BalanceCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        String currency = config.getEconomyCurrency();
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
-        embed.setColor(EconomyManager.getBalance(account) > 0 ? Color.GREEN : Color.RED);
+        embed.setColor(EconomyManager.getBalance(account).signum() > 0 ? Color.GREEN : Color.RED);
         embed.setTitle("Economy Balance for: " + member.getEffectiveName());
-        embed.setDescription("**Wallet:** %s%s%n**Bank:** %s%s%n**Total Balance:** %s%s%n"
-                .formatted((account.getWallet() < 0 ? "-" : "") + currency,
-                        StringUtils.numberFormat(Math.abs(account.getWallet())),
-                        (account.getBank() < 0 ? "-" : "") + currency,
-                        StringUtils.numberFormat(Math.abs(account.getBank())),
-                        (EconomyManager.getBalance(account) < 0 ? "-" : "") + currency,
-                        StringUtils.numberFormat(Math.abs(EconomyManager.getBalance(account)))));
+        embed.setDescription("**Wallet:** %s%n**Bank:** %s%n**Total Balance:** %s%n".formatted(
+                StringUtils.numberFormat(account.getWallet(), config),
+                StringUtils.numberFormat(account.getBank(), config),
+                StringUtils.numberFormat(EconomyManager.getBalance(account), config)));
 
-        long betWins = account.getTotalBetWin();
-        long betLosses = account.getTotalBetLoss();
+        BigInteger betWins = account.getTotalBetWin();
+        BigInteger betLosses = account.getTotalBetLoss();
         embed.addField("Bet Losses",
-                currency + StringUtils.numberFormat(Math.abs(betLosses)),
+                StringUtils.numberFormat(betLosses.abs(), config),
                 true);
         embed.addField("Bet Wins",
-                currency + StringUtils.numberFormat(betWins),
+                StringUtils.numberFormat(betWins, config),
                 true);
 
-        long betTotal = betWins - betLosses;
+        BigInteger betTotal = betWins.subtract(betLosses);
         embed.addField("Bet Total",
-                (betTotal < 0 ? "-" : "+") + (currency + StringUtils.numberFormat(Math.abs(betTotal))),
+                (betTotal.signum() < 0 ? "-" : "+") + StringUtils.numberFormat(betTotal.abs(), config),
                 true);
 
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());

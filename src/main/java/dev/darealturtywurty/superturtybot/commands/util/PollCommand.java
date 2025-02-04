@@ -74,15 +74,15 @@ public class PollCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String question = event.getOption("question", null, OptionMapping::getAsString);
+        final String question = event.getOption("question", OptionMapping::getAsString);
         if (question == null) {
             reply(event, "❌ You must provide a question to ask!", false, true);
             return;
         }
 
         final String[] options = new String[10];
-        options[0] = event.getOption("option1", null, OptionMapping::getAsString);
-        options[1] = event.getOption("option2", null, OptionMapping::getAsString);
+        options[0] = event.getOption("option1", OptionMapping::getAsString);
+        options[1] = event.getOption("option2", OptionMapping::getAsString);
         if (options[0] == null || options[1] == null) {
             reply(event, "❌ You must provide at least 2 options!", false, true);
             return;

@@ -36,6 +36,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
@@ -142,8 +143,8 @@ public class JobCommand extends EconomyCommand {
                     levelUpMessage = "You are ready for a promotion! Type `/job promote` to start the promotion minigame!";
                 }
 
-                event.getHook().editOriginal("✅ You worked and earned %s%s!%nYou can start working %s!%n%s"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(money), TimeFormat.RELATIVE.format(account.getNextWork()), levelUpMessage)).queue();
+                event.getHook().editOriginal("✅ You worked and earned %s!%nYou can start working %s!%n%s"
+                        .formatted(StringUtils.numberFormat(BigInteger.valueOf(money), config), TimeFormat.RELATIVE.format(account.getNextWork()), levelUpMessage)).queue();
             }
             case "register" -> {
                 String job = Objects.requireNonNull(event.getOption("job")).getAsString();
@@ -205,11 +206,11 @@ public class JobCommand extends EconomyCommand {
                 for (Economy.Job job : Economy.Job.values()) {
                     embed.addField(WordUtils.capitalize(job.name().toLowerCase(Locale.ROOT).replace("_", " ")),
                             """
-                                    **Salary**: %s%s
+                                    **Salary**: %s
                                     **Promotion Chance**: %d%%
                                     **Promotion Multiplier**: %sx
                                     **Work Cooldown**: %s
-                                    """.formatted(config.getEconomyCurrency(), StringUtils.numberFormat(job.getSalary()),
+                                    """.formatted(StringUtils.numberFormat(BigInteger.valueOf(job.getSalary()), config),
                                     Math.round(job.getPromotionChance() * 100),
                                     job.getPromotionMultiplier(),
                                     TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds()) + " minutes" + (
@@ -226,9 +227,8 @@ public class JobCommand extends EconomyCommand {
 
     private static String getResponse(GuildData config, User user, long amount) {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
-                .replace("<>", config.getEconomyCurrency())
                 .replace("{user}", user.getAsMention())
-                .replace("{amount}", String.valueOf(amount));
+                .replace("{amount}", config.getEconomyCurrency() + amount);
     }
 
     private static void startCodeGuesser(SlashCommandInteractionEvent event, Economy account) {

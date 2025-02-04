@@ -89,7 +89,7 @@ public class SeekCommand extends CoreCommand {
             return;
         }
 
-        Integer time = event.getOption("time", null, OptionMapping::getAsInt);
+        Integer time = event.getOption("time", OptionMapping::getAsInt);
         if (time == null) {
             reply(event, "❌ You must provide a time to seek to!", false, true);
             return;

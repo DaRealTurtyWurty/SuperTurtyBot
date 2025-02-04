@@ -84,7 +84,7 @@ public class GithubRepositoryCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        String rawOption = event.getOption("repository", null, OptionMapping::getAsString);
+        String rawOption = event.getOption("repository", OptionMapping::getAsString);
 
         if (rawOption == null) {
             reply(event, "❌ You must provide a repository name!", false, true);

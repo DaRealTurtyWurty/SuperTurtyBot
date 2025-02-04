@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.core.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MathUtils {
     public static int clamp(int value, int min, int max) {
@@ -120,6 +121,31 @@ public class MathUtils {
             return (T) clamp(bigDecimalV, (BigDecimal) min, (BigDecimal) max);
 
         throw new IllegalArgumentException("Cannot clamp " + value.getClass().getSimpleName());
+    }
+
+    /**
+     * Returns a pseudorandom {@link BigInteger} between {@code 0} (inclusive) and {@code upperLimit} (exclusive)
+     * @param upperLimit the upper limit of the random {@link BigInteger}, exclusive
+     * @return a pseudorandom {@link BigInteger} between {@code 0} (inclusive) and {@code upperLimit} (exclusive)
+     */
+    public static BigInteger getRandomBigInteger(BigInteger upperLimit) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        BigInteger randomNumber;
+        do {
+            randomNumber = new BigInteger(upperLimit.bitLength(), random);
+        } while (randomNumber.compareTo(upperLimit) >= 0);
+
+        return randomNumber;
+    }
+
+    /**
+     * Returns a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit} (exclusive)
+     * @param lowerLimit the lower limit of the random {@link BigInteger}, inclusive
+     * @param upperLimit the upper limit of the random {@link BigInteger}, exclusive
+     * @return a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit} (exclusive)
+     */
+    public static BigInteger getRandomBigInteger(BigInteger lowerLimit, BigInteger upperLimit) {
+        return getRandomBigInteger(upperLimit.subtract(lowerLimit)).add(lowerLimit);
     }
 
     public static int map(int stage, int min1, int max1, int min2, int max2) {
