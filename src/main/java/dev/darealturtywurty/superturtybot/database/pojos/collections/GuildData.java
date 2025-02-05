@@ -78,7 +78,7 @@ public class GuildData {
     private boolean economyEnabled;
     private BigInteger defaultEconomyBalance;
     private float incomeTax;
-    private Map<Long, Long> endOfDayIncomeTax;
+    private Map<String, Long> endOfDayIncomeTax;
 
     // Logging
     private long loggingChannel;
@@ -137,7 +137,6 @@ public class GuildData {
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
     private List<Long> enabledBirthdayUsers;
-    private boolean addSmashOrPassButtons;
     private boolean isCollectingEnabled;
     private boolean shouldAnnounceJoins;
     private boolean shouldAnnounceLeaves;
@@ -242,7 +241,6 @@ public class GuildData {
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;
         this.enabledBirthdayUsers = new ArrayList<>();
-        this.addSmashOrPassButtons = true;
         this.isCollectingEnabled = true;
         this.shouldAnnounceJoins = true;
         this.shouldAnnounceLeaves = false;

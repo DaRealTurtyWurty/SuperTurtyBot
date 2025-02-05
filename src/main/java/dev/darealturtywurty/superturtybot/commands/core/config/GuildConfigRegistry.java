@@ -367,11 +367,6 @@ public class GuildConfigRegistry {
                     .valueFromConfig(GuildData::getBirthdayChannel)
                     .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
 
-    private static final GuildConfigOption ADD_SMASH_OR_PASS_BUTTONS = GUILD_CONFIG_OPTIONS.register("add_smash_or_pass_buttons",
-            new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
-                    .serializer((config, value) -> config.setAddSmashOrPassButtons(Boolean.parseBoolean(value)))
-                    .valueFromConfig(GuildData::isAddSmashOrPassButtons).build());
-
     private static final GuildConfigOption WELCOME_CHANNEL = GUILD_CONFIG_OPTIONS.register("welcome_channel",
             new GuildConfigOption.Builder().dataType(DataType.LONG)
                     .serializer((config, value) -> config.setWelcomeChannel(Long.parseLong(value)))

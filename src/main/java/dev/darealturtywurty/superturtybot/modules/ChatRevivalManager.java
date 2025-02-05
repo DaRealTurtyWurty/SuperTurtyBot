@@ -63,7 +63,7 @@ public class ChatRevivalManager extends ListenerAdapter {
                     }
                 },
                 0,
-                TimeUnit.SECONDS.toMillis(5),
+                chatReviver.nextRunTime(),
                 TimeUnit.MILLISECONDS
         );
 
@@ -169,7 +169,7 @@ public class ChatRevivalManager extends ListenerAdapter {
         chatReviver.setLastRunTime(System.currentTimeMillis());
         Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
-        textChannel.sendMessage("🤔 Would you rather:\n **" + wyr + "**\n Happy chatting! 🤔").queue();
+        textChannel.sendMessage("🤔 Would you rather:\n " + wyr + "\n Happy chatting! 🤔").queue();
     }
 
     private static ChatReviver getChatReviver(Guild guild) {

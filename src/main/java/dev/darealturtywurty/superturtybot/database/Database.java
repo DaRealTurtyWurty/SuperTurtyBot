@@ -47,6 +47,7 @@ public class Database {
     public final MongoCollection<Birthday> birthdays;
     public final MongoCollection<SubmissionCategory> submissionCategories;
     public final MongoCollection<UserCollectables> userCollectables;
+    public final MongoCollection<TwoThousandFortyEightProfile> twoThousandFortyEight;
 
     @SuppressWarnings("resource")
     public Database() {
@@ -63,7 +64,7 @@ public class Database {
 
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
-        final MongoDatabase database = client.getDatabase("TurtyBot");
+        final MongoDatabase database = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
         this.levelling = database.getCollection("levelling", Levelling.class);
         this.counting = database.getCollection("counting", Counting.class);
@@ -89,6 +90,7 @@ public class Database {
         this.birthdays = database.getCollection("birthdays", Birthday.class);
         this.submissionCategories = database.getCollection("submissionCategories", SubmissionCategory.class);
         this.userCollectables = database.getCollection("userCollectables", UserCollectables.class);
+        this.twoThousandFortyEight = database.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
@@ -120,6 +122,7 @@ public class Database {
         this.birthdays.createIndex(userIndex);
         this.submissionCategories.createIndex(guildIndex);
         this.userCollectables.createIndex(userIndex);
+        this.twoThousandFortyEight.createIndex(userIndex);
     }
 
     public static Database getDatabase() {

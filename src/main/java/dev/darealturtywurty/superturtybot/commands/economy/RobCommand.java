@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -110,8 +111,12 @@ public class RobCommand extends EconomyCommand {
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
             final BigInteger robbedAmount = MathUtils.getRandomBigInteger(BigInteger.ONE, robAccount.getWallet().divide(BigInteger.valueOf(4)));
-            account.addWallet(robbedAmount);
-            robAccount.removeWallet(robbedAmount);
+
+            EconomyManager.addMoney(account, robbedAmount, false);
+            account.addTransaction(robbedAmount, MoneyTransaction.ROB);
+
+            EconomyManager.removeMoney(robAccount, robbedAmount, false);
+            robAccount.addTransaction(robbedAmount.negate(), MoneyTransaction.ROB);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
                             .setTimestamp(Instant.now())
@@ -125,8 +130,11 @@ public class RobCommand extends EconomyCommand {
             BigInteger bankFine = bank.multiply(BigInteger.valueOf(crimeLevel)).divide(BigInteger.valueOf(100));
             BigInteger fineAmount = MathUtils.getRandomBigInteger(BigInteger.valueOf(1000), bankFine);
 
-            account.removeWallet(fineAmount);
-            robAccount.addWallet(fineAmount);
+            EconomyManager.removeMoney(account, fineAmount, false);
+            account.addTransaction(fineAmount.negate(), MoneyTransaction.ROB);
+
+            EconomyManager.addMoney(robAccount, fineAmount, false);
+            robAccount.addTransaction(fineAmount, MoneyTransaction.ROB);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
                             .setTimestamp(Instant.now())

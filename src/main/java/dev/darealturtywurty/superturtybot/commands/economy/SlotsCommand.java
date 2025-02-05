@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -186,6 +187,7 @@ public class SlotsCommand extends EconomyCommand {
         });
 
         EconomyManager.addMoney(account, outcome.getAmount());
+        account.addTransaction(outcome.getAmount(), MoneyTransaction.SLOTS);
         if (outcome.getAmount().signum() > 0) {
             EconomyManager.betWin(account, outcome.getAmount());
         } else {
@@ -207,6 +209,7 @@ public class SlotsCommand extends EconomyCommand {
 
                 EconomyManager.addMoney(account, freeSpinOutcome.getAmount());
                 if (freeSpinOutcome.getAmount().signum() > 0) {
+                    account.addTransaction(freeSpinOutcome.getAmount(), MoneyTransaction.SLOTS);
                     EconomyManager.betWin(account, freeSpinOutcome.getAmount());
                 }
             }

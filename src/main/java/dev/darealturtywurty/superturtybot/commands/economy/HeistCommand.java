@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -137,7 +138,8 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    EconomyManager.removeMoney(account, setupCost.negate(), true);
+                    EconomyManager.removeMoney(account, setupCost, true);
+                    account.addTransaction(setupCost.negate(), MoneyTransaction.HEIST_SETUP);
 
                     if (!Environment.INSTANCE.isDevelopment()) {
                         account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
@@ -242,7 +244,7 @@ public class HeistCommand extends EconomyCommand {
                             EconomyManager.updateAccount(account);
                             thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
                                             StringUtils.numberFormat(BigInteger.valueOf(heistResult.getLeft()), config),
-                                            heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel()) : "").trim())
+                                            heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
                                     .queue(ignored -> close(thread));
                         } else {
                             event.getHook().editOriginal("❌ Failed to complete the heist!")

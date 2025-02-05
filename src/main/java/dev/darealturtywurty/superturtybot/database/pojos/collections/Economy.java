@@ -1,12 +1,14 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import dev.darealturtywurty.superturtybot.modules.economy.Loan;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import dev.darealturtywurty.superturtybot.modules.economy.ShopItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class Economy {
     private BigInteger totalBetWin;
 
     private int crimeLevel;
-    private int heistLevel = 1;
+    private int heistLevel;
     private int totalHeists;
     private long totalCrimes;
     private long totalSuccessfulCrimes;
@@ -50,6 +52,8 @@ public class Economy {
     private List<ShopItem> shopItems = new ArrayList<>();
     private List<Loan> loans = new ArrayList<>();
     private List<Property> properties = new ArrayList<>();
+
+    private List<MoneyTransaction> transactions = new ArrayList<>();
 
     public Economy() {
         this(0, 0);
@@ -64,6 +68,22 @@ public class Economy {
 
         this.totalBetWin = BigInteger.ZERO;
         this.totalBetLoss = BigInteger.ZERO;
+    }
+
+    public void addTransaction(BigInteger amount, byte type) {
+        addTransaction(System.currentTimeMillis(), amount, type);
+    }
+
+    public void addTransaction(BigInteger amount, byte type, long targetId) {
+        addTransaction(System.currentTimeMillis(), amount, type, targetId);
+    }
+
+    public void addTransaction(long timestamp, BigInteger amount, byte type) {
+        this.transactions.add(new MoneyTransaction(timestamp, amount, type, null));
+    }
+
+    public void addTransaction(long timestamp, BigInteger amount, byte type, @Nullable Long targetId) {
+        this.transactions.add(new MoneyTransaction(timestamp, amount, type, targetId));
     }
 
     public void addBank(BigInteger amount) {

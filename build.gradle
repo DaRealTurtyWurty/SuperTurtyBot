@@ -59,6 +59,7 @@ dependencies {
     implementation group: 'io.github.fastily', name: 'jwiki', version: '1.11.0'
     implementation group: 'io.github.sashirestela', name: 'simple-openai', version: '3.10.0'
     implementation group: 'com.knuddels', name: 'jtokkit', version: '1.1.0'
+    implementation group: 'com.github.bhlangonijr', name: 'chesslib', version: '1.3.4'
 
     implementation group: "org.jfree", name: "jfreechart", version: '1.5.5'
     implementation group: "com.jhlabs", name: "filters", version: "2.0.235-1"
@@ -70,7 +71,7 @@ dependencies {
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.dunctebot", name: "sourcemanagers", version: "1.9.0"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
-    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.11.2"
+    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.11.4"
     implementation group: "dev.arbjerg", name: "lavaplayer-natives", version: "2.2.2"
     implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.9") // adds linux 64bit
     implementation("club.minnced:udpqueue-native-win-x86-64:0.2.9") // adds windows 64bit
@@ -80,7 +81,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.9.0'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.9.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '6.3.0'
+    implementation group: 'io.javalin', name: 'javalin', version: '6.4.0'
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.1.1'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.1.1'
 

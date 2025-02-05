@@ -267,6 +267,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new AnnounceCommand());
         commands.add(new TestCommand());
         commands.add(new TokensCommand());
+        //commands.add(new TransactionHistoryCommand());
 
         // Utility
         commands.add(new BotInfoCommand());
@@ -389,7 +390,8 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new WordSearchCommand());
         commands.add(new Connect4Command());
         commands.add(new CheckersCommand());
-//        commands.add(new ChessCommand());
+        commands.add(new TwoThousandFortyEightCommand());
+        commands.add(new ChessCommand());
 //        commands.add(new MinesweeperCommand());
 //        commands.add(new CrosswordCommand());
 //        commands.add(new SudokuCommand());
@@ -401,7 +403,6 @@ public class CommandHook extends ListenerAdapter {
 //        commands.add(new UnoCommand());
 //        commands.add(new LudoCommand());
 //        commands.add(new MonopolyCommand());
-//        commands.add(new 2048Command());
 
         // Economy
         commands.add(new BalanceCommand());

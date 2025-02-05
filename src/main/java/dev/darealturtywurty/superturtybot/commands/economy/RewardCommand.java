@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -91,6 +92,7 @@ public class RewardCommand extends EconomyCommand {
         BigInteger rewardBigInteger = BigInteger.valueOf(reward);
         EconomyManager.addMoney(account, rewardBigInteger, true);
         setNextRewardTime.accept(account);
+        account.addTransaction(rewardBigInteger, MoneyTransaction.REWARD);
         EconomyManager.updateAccount(account);
         event.getHook().editOriginalFormat("✅ You claimed your %s reward of %s!",
                 subcommand, StringUtils.numberFormat(rewardBigInteger, config)).queue();
