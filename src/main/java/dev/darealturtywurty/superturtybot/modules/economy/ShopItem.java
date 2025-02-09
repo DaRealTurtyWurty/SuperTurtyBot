@@ -3,15 +3,17 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 import lombok.Data;
 
+import java.math.BigInteger;
+
 @Data
 public class ShopItem implements Registerable {
     private static int ID = 0;
 
     public ShopItem() {
-        this(0, "", "N/A", 1, 1);
+        this(0, "", "N/A", BigInteger.ONE, BigInteger.ONE);
     }
 
-    private ShopItem(int id, String image, String description, int startPrice, int currentPrice) {
+    private ShopItem(int id, String image, String description, BigInteger startPrice, BigInteger currentPrice) {
         setId(id);
         setImage(image);
         setDescription(description);
@@ -23,8 +25,8 @@ public class ShopItem implements Registerable {
     private String name = "Unknown";
     private String image;
     private String description;
-    private int originalPrice;
-    private int price;
+    private BigInteger originalPrice;
+    private BigInteger price;
 
     @Override
     public Registerable setName(String name) {
@@ -35,7 +37,8 @@ public class ShopItem implements Registerable {
     public static class Builder {
         private final int id;
 
-        private int startPrice = 1, currentPrice = 1;
+        private BigInteger startPrice = BigInteger.ONE;
+        private BigInteger currentPrice = BigInteger.ONE;
         private String image = "";
         private String description = "N/A";
 
@@ -43,17 +46,17 @@ public class ShopItem implements Registerable {
             this.id = ID++;
         }
 
-        public Builder startPrice(int price) {
+        public Builder startPrice(BigInteger price) {
             this.startPrice = price;
             return this;
         }
 
-        public Builder currentPrice(int price) {
+        public Builder currentPrice(BigInteger price) {
             this.currentPrice = price;
             return this;
         }
 
-        public Builder price(int price) {
+        public Builder price(BigInteger price) {
             return startPrice(price).currentPrice(price);
         }
 

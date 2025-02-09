@@ -200,7 +200,7 @@ public class LoanCommand extends EconomyCommand {
                 embed.addField("Original Amount", "%s".formatted(StringUtils.numberFormat(loan.getAmount(), config)), false);
                 embed.addField("Interest Rate", "%s%%".formatted(String.format("%.2f", loan.getInterestRate())), false);
                 embed.addField("Time to Pay", TimeFormat.RELATIVE.format(loan.getTimeToPay()), false);
-                embed.addField("Paid Off", loan.isPaidOff() ? "✅" : "❌", false);
+                embed.addField("Paid Off", StringUtils.booleanToEmoji(loan.isPaidOff()), false);
                 embed.addField("Total Amount to Pay", "%s".formatted(StringUtils.numberFormat(loan.calculateTotalAmountToPay(), config)), false);
                 embed.addField("Amount Left to Pay", "%s".formatted(StringUtils.numberFormat(loan.calculateAmountLeftToPay(), config)), false);
                 embed.addField("Amount Paid", "%s".formatted(StringUtils.numberFormat(loan.getAmountPaid(), config)), false);
@@ -223,7 +223,7 @@ public class LoanCommand extends EconomyCommand {
                     StringUtils.numberFormat(loan.getAmount(), config),
                     String.format("%.2f", loan.getInterestRate()),
                     TimeFormat.RELATIVE.format(loan.getTimeToPay()),
-                    loan.isPaidOff() ? "✅" : "❌"
+                    StringUtils.booleanToEmoji(loan.isPaidOff())
             ), false);
         }
 

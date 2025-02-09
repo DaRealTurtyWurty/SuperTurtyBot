@@ -37,9 +37,9 @@ public class TimeUtils {
      */
     public static int calculateMaxBirthYear(int month, int day) {
         var currentDate = LocalDate.now();
-        var birthday = LocalDate.of(currentDate.getYear(), month, day);
+        var birthdayThisYear = LocalDate.of(currentDate.getYear(), month, day);
 
-        if (currentDate.isAfter(birthday)) {
+        if (currentDate.isAfter(birthdayThisYear)) {
             return currentDate.getYear() - 13;
         }
 
@@ -149,18 +149,7 @@ public class TimeUtils {
         return dayOfYear;
     }
 
-    public static int calculateAge(int day, int month, int year) {
+    public static int calculateCurrentAge(int year, int month, int day) {
         return Period.between(LocalDate.of(year, month, day), LocalDate.now()).getYears();
-    }
-
-    public static int determineCurrentAge(int year, int month, int day) {
-        var currentDate = LocalDate.now();
-        var birthday = LocalDate.of(year, month, day);
-
-        if (birthday.isAfter(currentDate)) {
-            return -1;
-        }
-
-        return Period.between(birthday, currentDate).getYears();
     }
 }

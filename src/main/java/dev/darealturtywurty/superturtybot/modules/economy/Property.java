@@ -23,7 +23,7 @@ public class Property {
     private long buyDate;
 
     private List<Long> previousOwners;
-    private int estateTax;
+    private BigInteger estateTax;
     private int upgradeLevel;
     
     private Property(Builder builder) {
@@ -92,14 +92,14 @@ public class Property {
         private final BigInteger price;
         private final List<BigInteger> upgradePrices = new ArrayList<>();
         private final List<Long> previousOwners = new ArrayList<>();
-        private final int estateTax;
+        private final BigInteger estateTax;
 
         private long owner = -1;
         private Rent rent;
         private Loan mortgage;
         private int upgradeLevel = 0;
 
-        public Builder(String name, String description, BigInteger price, int estateTax) {
+        public Builder(String name, String description, BigInteger price, BigInteger estateTax) {
             this.name = name;
             this.description = description;
             this.price = price;

@@ -18,10 +18,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 
 @SuppressWarnings("UnnecessaryDefault")
@@ -235,6 +233,10 @@ public final class StringUtils {
         return value ? "Yes" : "No";
     }
 
+    public static String booleanToEmoji(final boolean value) {
+        return value ? "✅" : "❌";
+    }
+
     public static String truncateString(String str, int length) {
         if (str.length() > length)
             return str.substring(0, length - 3) + "...";
@@ -351,18 +353,5 @@ public final class StringUtils {
         } catch (final NumberFormatException exception) {
             return false;
         }
-    }
-
-    public static String formatCurrency(String currencySymbol, long amount) {
-        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US);
-        String formattedAmount = currencyFormatter.format(amount);
-
-        // Remove the default currency symbol and replace it with the custom symbol
-        formattedAmount = formattedAmount.replace(NumberFormat.getCurrencyInstance(Locale.US).getCurrency().getSymbol(), currencySymbol);
-
-        // Remove the decimal point and the cents
-        formattedAmount = formattedAmount.replace(".00", "");
-
-        return formattedAmount;
     }
 }

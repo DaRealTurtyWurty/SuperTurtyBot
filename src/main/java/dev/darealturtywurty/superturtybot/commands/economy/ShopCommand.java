@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -87,7 +88,7 @@ public class ShopCommand extends EconomyCommand {
                     var contents = new PaginatedEmbed.ContentsBuilder();
                     for (ShopItem item : shop) {
                         contents.field(item.getImage() + " " + item.getName(),
-                                "ID: " + item.getId() + "\nPrice: " + item.getPrice());
+                                "ID: " + item.getId() + "\nPrice: " + StringUtils.numberFormat(item.getPrice(), config));
                     }
 
                     PaginatedEmbed paginatedEmbed = new PaginatedEmbed.Builder(10, contents)

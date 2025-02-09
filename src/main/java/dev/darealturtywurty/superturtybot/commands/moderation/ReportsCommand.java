@@ -68,17 +68,17 @@ public class ReportsCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            reply(event, "This command can only be used in a server!", false, true);
+            reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
 
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            reply(event, "You do not have permission to use this command!", false, true);
+            reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
         }
 
         if (!event.getGuild().getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
-            reply(event, "I do not have permission to use this command!", false, true);
+            reply(event, "❌ I do not have permission to use this command!", false, true);
             return;
         }
 
@@ -86,7 +86,7 @@ public class ReportsCommand extends CoreCommand {
 
         List<Report> reports = ReportManager.getReports(event.getGuild(), user);
         if (reports.isEmpty()) {
-            reply(event, "There are no reports for this user!");
+            reply(event, "❌ There are no reports for this user!");
             return;
         }
 
@@ -100,7 +100,7 @@ public class ReportsCommand extends CoreCommand {
 
             int finalIndex = index;
             event.getJDA().retrieveUserById(report.getReporter()).queue(reporter -> {
-                contents.field(String.format("Reported by %s", reporter.getEffectiveName()),
+                contents.field("Reported by %s".formatted(reporter.getEffectiveName()),
                         ReportManager.truncate(report.getReason(), 256));
 
                 if (finalIndex == reports.size() - 1) {
@@ -111,7 +111,7 @@ public class ReportsCommand extends CoreCommand {
 
         future.thenRun(() -> {
             PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                    .title(String.format("Reports for %s", user.getEffectiveName()))
+                    .title("Reports for %s".formatted(user.getEffectiveName()))
                     .description(user.getEffectiveName() + " has " + reports.size() + " reports")
                     .color(Color.RED)
                     .timestamp(Instant.now())
