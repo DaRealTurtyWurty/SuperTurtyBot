@@ -17,10 +17,8 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -949,7 +947,7 @@ public class ConvertCommand extends CoreCommand {
         if (query.getName().equals("from")) {
             String typed = query.getValue();
 
-            String to = event.getOption("to", null, OptionMapping::getAsString);
+            String to = event.getOption("to", OptionMapping::getAsString);
             List<String> units = UNITS.get(measurement)
                     .stream()
                     .map(u -> u.name)
@@ -972,7 +970,7 @@ public class ConvertCommand extends CoreCommand {
         if (query.getName().equals("to")) {
             String typed = query.getValue();
 
-            String from = event.getOption("from", null, OptionMapping::getAsString);
+            String from = event.getOption("from", OptionMapping::getAsString);
             List<String> units = UNITS.get(measurement)
                     .stream()
                     .map(u -> u.name)
@@ -1069,7 +1067,7 @@ public class ConvertCommand extends CoreCommand {
                 return;
             }
             case "info" -> {
-                String unitStr = event.getOption("unit", null, OptionMapping::getAsString);
+                String unitStr = event.getOption("unit", OptionMapping::getAsString);
                 if (unitStr == null) {
                     reply(event, "❌ Please specify a unit!", true);
                     return;
@@ -1087,8 +1085,8 @@ public class ConvertCommand extends CoreCommand {
                 return;
             }
             case "all" -> {
-                String fromStr = event.getOption("from", null, OptionMapping::getAsString);
-                double value = event.getOption("value", null, OptionMapping::getAsDouble);
+                String fromStr = event.getOption("from", OptionMapping::getAsString);
+                double value = Objects.requireNonNull(event.getOption("value", OptionMapping::getAsDouble));
 
                 if (fromStr == null) {
                     reply(event, "❌ Please specify the unit!", true);
@@ -1143,9 +1141,9 @@ public class ConvertCommand extends CoreCommand {
 
         Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst().orElse(null);
         if (measurement != null) {
-            String fromStr = event.getOption("from", null, OptionMapping::getAsString);
-            String toStr = event.getOption("to", null, OptionMapping::getAsString);
-            double value = event.getOption("value", null, OptionMapping::getAsDouble);
+            String fromStr = event.getOption("from", OptionMapping::getAsString);
+            String toStr = event.getOption("to", OptionMapping::getAsString);
+            double value = Objects.requireNonNull(event.getOption("value", OptionMapping::getAsDouble));
 
             if (fromStr == null || toStr == null) {
                 reply(event, "❌ Please specify the units!", true);

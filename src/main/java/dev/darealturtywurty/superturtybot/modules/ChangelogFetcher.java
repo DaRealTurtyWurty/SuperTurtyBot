@@ -16,8 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -86,8 +86,8 @@ public class ChangelogFetcher {
                     }
                 } else if (message.startsWith("Merge")) continue;
 
-                Date date = commit.getAuthorIdent().getWhen();
-                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(date.toInstant()), message.replace("\n-", "\\-").replace("\n*", "\\*"));
+                Instant instant = commit.getAuthorIdent().getWhenAsInstant();
+                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(instant), message.replace("\n-", "\\-").replace("\n*", "\\*"));
                 this.changelog.add(commitMessage);
             }
         } catch (GitAPIException exception) {

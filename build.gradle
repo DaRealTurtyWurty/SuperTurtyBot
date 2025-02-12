@@ -81,7 +81,7 @@ dependencies {
     implementation group: 'com.lukaspradel', name: 'steam-web-api', version: '1.9.0'
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.9.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
-    implementation group: 'io.javalin', name: 'javalin', version: '6.3.0'
+    implementation group: 'io.javalin', name: 'javalin', version: '6.4.0'
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.1.1'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.1.1'
 

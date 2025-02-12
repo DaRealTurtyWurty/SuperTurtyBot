@@ -45,7 +45,7 @@ public class BotInfoCommand extends CoreCommand {
         embed.setColor(fromGuild ? guild.getSelfMember().getColor() : Color.CYAN);
         embed.setTimestamp(Instant.now());
         embed.setTitle("Bot Information");
-        embed.addField("Name", fromGuild ? guild.getSelfMember().getEffectiveName() : jda.getSelfUser().getEffectiveName(), false);
+        embed.addField("Mention", jda.getSelfUser().getAsMention(), false);
         embed.addField("Created", TimeFormat.RELATIVE.format(jda.getSelfUser().getTimeCreated()), false);
         if (fromGuild) {
             embed.addField("Joined", TimeFormat.RELATIVE.format(guild.getSelfMember().getTimeJoined()), false);

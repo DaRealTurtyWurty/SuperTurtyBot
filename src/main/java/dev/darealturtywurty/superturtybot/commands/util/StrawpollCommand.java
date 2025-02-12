@@ -92,9 +92,9 @@ public class StrawpollCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String question = event.getOption("question", null, OptionMapping::getAsString);
-        final String option1 = event.getOption("option1", null, OptionMapping::getAsString);
-        final String option2 = event.getOption("option2", null, OptionMapping::getAsString);
+        final String question = event.getOption("question", OptionMapping::getAsString);
+        final String option1 = event.getOption("option1", OptionMapping::getAsString);
+        final String option2 = event.getOption("option2", OptionMapping::getAsString);
         if (question == null) {
             reply(event, "You must supply a question!", false, true);
             return;
@@ -105,9 +105,9 @@ public class StrawpollCommand extends CoreCommand {
             return;
         }
 
-        final String option3 = event.getOption("option3", null, OptionMapping::getAsString);
-        final String option4 = event.getOption("option4", null, OptionMapping::getAsString);
-        final String option5 = event.getOption("option5", null, OptionMapping::getAsString);
+        final String option3 = event.getOption("option3", OptionMapping::getAsString);
+        final String option4 = event.getOption("option4", OptionMapping::getAsString);
+        final String option5 = event.getOption("option5", OptionMapping::getAsString);
         final String description = event.getOption("description", "", OptionMapping::getAsString);
         final boolean isPrivate = event.getOption("private", false, OptionMapping::getAsBoolean);
         final boolean multipleChoice = event.getOption("multiple_choice", false, OptionMapping::getAsBoolean);
@@ -117,7 +117,7 @@ public class StrawpollCommand extends CoreCommand {
         final boolean allowComments = event.getOption("allow_comments", true, OptionMapping::getAsBoolean);
         final DuplicationType duplicationType = event.getOption("duplication_type", DuplicationType.IP,
                 mapping -> DuplicationType.valueOf(mapping.getAsString()));
-        final Date deadline = (Date) event.getOption("deadline", null, mapping -> {
+        final Date deadline = (Date) event.getOption("deadline", mapping -> {
             final String dateStr = mapping.getAsString();
             final String[] parts = dateStr.split("-");
             if (parts.length < 3) {

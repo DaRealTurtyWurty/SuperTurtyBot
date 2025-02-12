@@ -71,7 +71,7 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private void drawingChatRevival(Guild guild, ChatReviver chatReviver) {
-        GuildData config = getGuildConfig(guild);
+        GuildData config = GuildData.getOrCreateGuildData(guild);
         if (!config.isChatRevivalEnabled())
             return;
 
@@ -119,7 +119,7 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private void topicChatRevival(Guild guild, ChatReviver chatReviver) {
-        GuildData config = getGuildConfig(guild);
+        GuildData config = GuildData.getOrCreateGuildData(guild);
         if (!config.isChatRevivalEnabled())
             return;
 
@@ -146,7 +146,7 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private void wyrChatRevival(Guild guild, ChatReviver chatReviver) {
-        GuildData config = getGuildConfig(guild);
+        GuildData config = GuildData.getOrCreateGuildData(guild);
         if (!config.isChatRevivalEnabled())
             return;
 
@@ -170,16 +170,6 @@ public class ChatRevivalManager extends ListenerAdapter {
         Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
         textChannel.sendMessage("🤔 Would you rather:\n " + wyr + "\n Happy chatting! 🤔").queue();
-    }
-
-    private static GuildData getGuildConfig(Guild guild) {
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
-
-        return config;
     }
 
     private static ChatReviver getChatReviver(Guild guild) {

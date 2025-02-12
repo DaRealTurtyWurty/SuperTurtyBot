@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -344,10 +345,16 @@ public class GuildConfigRegistry {
                     .build());
 
     private static final GuildConfigOption DEFAULT_ECONOMY_BALANCE = GUILD_CONFIG_OPTIONS.register("default_economy_balance",
-            new GuildConfigOption.Builder().dataType(DataType.INTEGER)
-                    .serializer((config, value) -> config.setDefaultEconomyBalance(Integer.parseInt(value)))
+            new GuildConfigOption.Builder().dataType(DataType.STRING)
+                    .serializer((config, value) -> config.setDefaultEconomyBalance(new BigInteger(value)))
                     .valueFromConfig(GuildData::getDefaultEconomyBalance)
-                    .validator((event, value) -> Integer.parseInt(value) > 0).build());
+                    .validator((event, value) -> {
+                        try {
+                            return new BigInteger(value).signum() > 0;
+                        } catch (NumberFormatException ignored) {
+                            return false;
+                        }
+                    }).build());
 
     private static final GuildConfigOption ANNOUNCE_BIRTHDAYS = GUILD_CONFIG_OPTIONS.register("announce_birthdays",
             new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)

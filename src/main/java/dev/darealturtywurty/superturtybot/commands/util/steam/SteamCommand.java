@@ -49,7 +49,7 @@ public class SteamCommand extends CoreCommand {
     }
 
     private static void handleUserID(SlashCommandInteractionEvent event, String steamKey) {
-        String steamName = event.getOption("vanityurl", null, OptionMapping::getAsString);
+        String steamName = event.getOption("vanityurl", OptionMapping::getAsString);
         if (steamName == null) {
             event.getHook().sendMessage("❌ You must provide a Steam vanity URL!").queue();
             return;
@@ -97,7 +97,7 @@ public class SteamCommand extends CoreCommand {
     }
 
     private static void handleUserGames(SlashCommandInteractionEvent event) {
-        String steamId = event.getOption("user", null, OptionMapping::getAsString);
+        String steamId = event.getOption("user", OptionMapping::getAsString);
         if (steamId == null) {
             event.getHook().sendMessage("❌ You must provide a valid Steam User! Use `/steam-id` with your vanity url to get an ID.").queue();
             return;
@@ -126,7 +126,7 @@ public class SteamCommand extends CoreCommand {
     }
 
     private static void handleGameDetails(SlashCommandInteractionEvent event, String steamKey) {
-        String appID = event.getOption("appid", null, OptionMapping::getAsString);
+        String appID = event.getOption("appid", OptionMapping::getAsString);
         if (appID == null) {
             event.getHook().sendMessage("❌ You must provide a Steam App ID!").queue();
             return;

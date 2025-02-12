@@ -27,7 +27,7 @@ public class RobloxCommand extends CoreCommand {
     }
 
     private static void handleUsername(SlashCommandInteractionEvent event) {
-        String username = event.getOption("username", null, OptionMapping::getAsString);
+        String username = event.getOption("username", OptionMapping::getAsString);
         if (username == null) {
             event.getHook().sendMessage("❌ You must provide a valid username!").queue();
             return;
@@ -83,7 +83,7 @@ public class RobloxCommand extends CoreCommand {
     }
 
     private static void handleAvatar(SlashCommandInteractionEvent event) {
-        String robloxUserId = event.getOption("userid", null, OptionMapping::getAsString);
+        String robloxUserId = event.getOption("userid", OptionMapping::getAsString);
         if (robloxUserId == null) {
             event.getHook().sendMessage("❌ You must provide a user id!").queue();
             return;
@@ -121,7 +121,7 @@ public class RobloxCommand extends CoreCommand {
     }
 
     private static void handleFriends(SlashCommandInteractionEvent event) {
-        String robloxUserId = event.getOption("userid", null, OptionMapping::getAsString);
+        String robloxUserId = event.getOption("userid", OptionMapping::getAsString);
         if (robloxUserId == null) {
             event.getHook().sendMessage("❌ You must provide a valid user id!").queue();
             return;
@@ -179,7 +179,7 @@ public class RobloxCommand extends CoreCommand {
     }
 
     private static void handleFavouriteGames(SlashCommandInteractionEvent event) {
-        String robloxUserId = event.getOption("userid", null, OptionMapping::getAsString);
+        String robloxUserId = event.getOption("userid", OptionMapping::getAsString);
         if (robloxUserId == null) {
             event.getHook().sendMessage("❌ You must provide a valid user id!").queue();
             return;

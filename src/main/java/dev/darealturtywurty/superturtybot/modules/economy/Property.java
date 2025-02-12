@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,14 +16,14 @@ public class Property {
     private String name;
     private long owner;
     private String description;
-    private int originalPrice;
-    private List<Integer> upgradePrices;
+    private BigInteger originalPrice;
+    private List<BigInteger> upgradePrices;
     private Rent rent;
     private Loan mortgage;
     private long buyDate;
 
     private List<Long> previousOwners;
-    private int estateTax;
+    private BigInteger estateTax;
     private int upgradeLevel;
     
     private Property(Builder builder) {
@@ -40,7 +41,7 @@ public class Property {
         this.buyDate = System.currentTimeMillis();
     }
 
-    public int getUpgradePrice() {
+    public BigInteger getUpgradePrice() {
         return this.upgradePrices.get(this.upgradeLevel);
     }
 
@@ -64,22 +65,22 @@ public class Property {
         return this.owner != -1;
     }
 
-    public int calculateCurrentWorth() {
-        int worth = this.originalPrice;
+    public BigInteger calculateCurrentWorth() {
+        BigInteger worth = this.originalPrice;
         if (this.upgradeLevel > 0) {
             for (int i = 0; i < this.upgradeLevel; i++) {
-                worth += this.upgradePrices.get(i);
+                worth = worth.add(this.upgradePrices.get(i));
             }
         }
 
-        worth *= (int) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f);
+        worth = worth.multiply(BigInteger.valueOf((long) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f)));
 
         if (this.mortgage != null && !this.mortgage.isPaidOff()) {
-            worth -= this.mortgage.calculateAmountLeftToPay();
+            worth = worth.subtract(this.mortgage.calculateAmountLeftToPay());
         }
 
-        if(ThreadLocalRandom.current().nextInt(0, 100) < 10) {
-            worth -= (int) (worth * 0.01f);
+        if (ThreadLocalRandom.current().nextInt(0, 100) < 10) {
+            worth = worth.subtract(worth.divide(BigInteger.valueOf(100)));
         }
 
         return worth;
@@ -88,17 +89,17 @@ public class Property {
     public static class Builder {
         private final String name;
         private final String description;
-        private final int price;
-        private final List<Integer> upgradePrices = new ArrayList<>();
+        private final BigInteger price;
+        private final List<BigInteger> upgradePrices = new ArrayList<>();
         private final List<Long> previousOwners = new ArrayList<>();
-        private final int estateTax;
+        private final BigInteger estateTax;
 
         private long owner = -1;
         private Rent rent;
         private Loan mortgage;
         private int upgradeLevel = 0;
 
-        public Builder(String name, String description, int price, int estateTax) {
+        public Builder(String name, String description, BigInteger price, BigInteger estateTax) {
             this.name = name;
             this.description = description;
             this.price = price;
@@ -120,7 +121,7 @@ public class Property {
             return this;
         }
 
-        public Builder upgradePrice(int upgradePrice) {
+        public Builder upgradePrice(BigInteger upgradePrice) {
             this.upgradePrices.add(upgradePrice);
             return this;
         }

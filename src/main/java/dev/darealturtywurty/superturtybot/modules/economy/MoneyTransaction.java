@@ -2,7 +2,9 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 
 import org.jetbrains.annotations.Nullable;
 
-public record MoneyTransaction(long timestamp, long amount, byte type, @Nullable Long targetId) {
+import java.math.BigInteger;
+
+public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nullable Long targetId) {
     public static final byte DEPOSIT = 0;
     public static final byte WITHDRAW = 1;
     public static final byte DONATE = 2;

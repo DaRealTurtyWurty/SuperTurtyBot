@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.apache.commons.text.WordUtils;
-import org.bson.conversions.Bson;
 
 import java.awt.*;
 import java.time.Instant;
@@ -25,7 +24,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class GuildConfigCommand extends CoreCommand {
     public GuildConfigCommand() {
@@ -103,13 +101,7 @@ public class GuildConfigCommand extends CoreCommand {
 
         final TextChannel defaultChannel = guild.getDefaultChannel().asTextChannel();
 
-        final Bson filter = Filters.eq("guild", guild.getIdLong());
-        final AtomicReference<GuildData> found = new AtomicReference<>(
-                Database.getDatabase().guildData.find(filter).first());
-        if (found.get() == null) {
-            found.set(new GuildData(guild.getIdLong()));
-            Database.getDatabase().guildData.insertOne(found.get());
-        }
+        GuildData guildData = GuildData.getOrCreateGuildData(guild);
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -123,7 +115,7 @@ public class GuildConfigCommand extends CoreCommand {
                 .stream()
                 .sorted(Comparator.comparing(GuildConfigOption::getRichName))
                 .forEach(option -> embed.appendDescription(
-                        "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(found.get()) + "`\n"));
+                        "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(guildData) + "`\n"));
         defaultChannel.sendMessageEmbeds(embed.build()).queue();
     }
 
@@ -136,10 +128,9 @@ public class GuildConfigCommand extends CoreCommand {
 
         final String subcommand = event.getSubcommandName();
         if ("get".equalsIgnoreCase(subcommand)) {
-            final String key = event.getOption("key", null, OptionMapping::getAsString);
+            final String key = event.getOption("key", OptionMapping::getAsString);
 
-            final Bson filter = getFilter(event.getGuild());
-            final GuildData config = get(filter, event.getGuild());
+            final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
 
             if (key == null) {
                 final var embed = new EmbedBuilder();
@@ -183,8 +174,7 @@ public class GuildConfigCommand extends CoreCommand {
             final String key = event.getOption("key", "", OptionMapping::getAsString);
             final String value = event.getOption("value", "", OptionMapping::getAsString);
 
-            final Bson filter = getFilter(event.getGuild());
-            final GuildData config = get(filter, event.getGuild());
+            final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
 
             final Optional<Entry<String, GuildConfigOption>> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
                     .entrySet()
@@ -212,7 +202,7 @@ public class GuildConfigCommand extends CoreCommand {
             }
 
             option.serialize(config, value);
-            UpdateResult result = Database.getDatabase().guildData.replaceOne(filter, config);
+            UpdateResult result = Database.getDatabase().guildData.replaceOne(Filters.eq("guild", event.getGuild().getIdLong()), config);
             if (result.getModifiedCount() == 0) {
                 reply(event, "❌ Failed to update the server config!", false, true);
                 return;
@@ -220,19 +210,5 @@ public class GuildConfigCommand extends CoreCommand {
 
             reply(event, "✅ Successfully updated `" + option.getRichName() + "` to `" + option.getValueFromConfig().apply(config) + "`!");
         }
-    }
-
-    public static GuildData get(Bson filter, Guild guild) {
-        GuildData found = Database.getDatabase().guildData.find(filter).first();
-        if (found == null) {
-            found = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(found);
-        }
-
-        return found;
-    }
-
-    public static Bson getFilter(Guild guild) {
-        return Filters.eq("guild", guild.getIdLong());
     }
 }

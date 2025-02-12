@@ -133,10 +133,10 @@ public class CurseforgeCommand extends CoreCommand {
             return;
         }
 
-        String game = event.getOption("game", null, OptionMapping::getAsString);
-        String search = event.getOption("search", null, OptionMapping::getAsString);
-        String type = event.getOption("type", null, OptionMapping::getAsString);
-        String category = event.getOption("category", null, OptionMapping::getAsString);
+        String game = event.getOption("game", OptionMapping::getAsString);
+        String search = event.getOption("search", OptionMapping::getAsString);
+        String type = event.getOption("type", OptionMapping::getAsString);
+        String category = event.getOption("category", OptionMapping::getAsString);
 
         if (game == null || search == null) {
             reply(event, "❌ You must provide a game and search query!", false, true);
@@ -306,7 +306,7 @@ public class CurseforgeCommand extends CoreCommand {
             });
 
             case "type" -> {
-                Game typeGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
+                Game typeGame = GAMES.get(Objects.requireNonNull(event.getOption("game", OptionMapping::getAsString)).toUpperCase(Locale.ROOT));
                 if (typeGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {
                     }, throwable -> {
@@ -335,7 +335,7 @@ public class CurseforgeCommand extends CoreCommand {
             }
 
             case "category" -> {
-                Game categoryGame = GAMES.get(event.getOption("game", null, OptionMapping::getAsString).toUpperCase(Locale.ROOT));
+                Game categoryGame = GAMES.get(Objects.requireNonNull(event.getOption("game", OptionMapping::getAsString)).toUpperCase(Locale.ROOT));
                 if (categoryGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {
                     }, throwable -> {

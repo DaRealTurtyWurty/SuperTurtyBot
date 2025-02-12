@@ -13,13 +13,14 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(new OptionData(OptionType.INTEGER, "amount", "The amount of money to bet.", true).setMinValue(1));
+        return List.of(new OptionData(OptionType.STRING, "amount", "The amount of money to bet.", true));
     }
 
     @Override
@@ -62,14 +63,15 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
-        if (amount < 1) {
+        BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
+        if (amount == null) return;
+        if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You must bet at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if (amount > account.getWallet()) {
+        if (amount.compareTo(account.getWallet()) > 0) {
             event.getHook().editOriginal("❌ You cannot bet more than you have in your wallet!").queue();
             return;
         }
@@ -89,15 +91,15 @@ public class CrashCommand extends EconomyCommand {
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
-        event.getHook().editOriginal("✅ You have bet %s%s!".formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).flatMap(message ->
+        event.getHook().editOriginal("✅ You have bet %s!".formatted(StringUtils.numberFormat(amount, config))).flatMap(message ->
                 message.createThreadChannel(event.getUser().getName() + "'s Crash Game")).queue(thread -> {
             thread.addThreadMember(event.getUser()).queue();
             thread.sendMessage(("""
-                    You have bet %s%s! The multiplier has started at 0.25x!
+                    You have bet %s! The multiplier has started at 0.25x!
                     
                     It will increase by a random amount every 3 seconds, however, it will crash at a random point between 0.3x and 10.0x!
                     
-                    You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount))).queue(ignored -> {
+                    You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(StringUtils.numberFormat(amount, config))).queue(ignored -> {
                 var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
                 games.add(game);
 
@@ -126,13 +128,13 @@ public class CrashCommand extends EconomyCommand {
         private final long guild;
         private final long channel;
         private final long user;
-        private final long amount;
+        private final BigInteger amount;
 
         private double multiplier = 0.25;
         private int ticksPassed = 0;
         private ScheduledFuture<?> future;
 
-        public Game(long guild, long channel, long user, long amount) {
+        public Game(long guild, long channel, long user, BigInteger amount) {
             this.guild = guild;
             this.channel = channel;
             this.user = user;
@@ -173,11 +175,11 @@ public class CrashCommand extends EconomyCommand {
 
             boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0 && this.ticksPassed > 5;
             if (crashed) {
-                thread.sendMessage("The multiplier has crashed at %s! You have lost %s%s!"
-                        .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(this.amount))).queue(
+                thread.sendMessage("The multiplier has crashed at %s! You have lost %s!"
+                        .formatted(stringifyMultiplier(multiplier), StringUtils.numberFormat(this.amount, config))).queue(
                         ignored -> close(thread));
                 EconomyManager.betLoss(account, this.amount);
-                account.addTransaction(-this.amount, MoneyTransaction.CRASH);
+                account.addTransaction(this.amount.negate(), MoneyTransaction.CRASH);
                 EconomyManager.updateAccount(account);
 
                 close(thread);
@@ -208,20 +210,21 @@ public class CrashCommand extends EconomyCommand {
                 return;
             }
 
-            long amount = (long) (this.amount * MathUtils.clamp(multiplier, 0.25, 10.0));
+            double clampedMultiplier = MathUtils.clamp(multiplier, 0.25, 10.0);
+            BigInteger amount = new BigDecimal(this.amount).multiply(BigDecimal.valueOf(clampedMultiplier)).toBigInteger();
             if (multiplier >= 10) {
-                thread.sendMessage("The multiplier has reached 10.0x! You have won %s%s!"
-                                .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
+                thread.sendMessage("The multiplier has reached 10.0x! You have won %s!"
+                                .formatted(StringUtils.numberFormat(amount.subtract(this.amount), config)))
                         .queue(ignored -> close(thread));
             } else {
-                thread.sendMessage("You have cashed out at %s! You have won %s%s!"
-                                .formatted(stringifyMultiplier(multiplier), config.getEconomyCurrency(), StringUtils.numberFormat(amount - this.amount)))
+                thread.sendMessage("You have cashed out at %s! You have won %s!"
+                                .formatted(stringifyMultiplier(multiplier), StringUtils.numberFormat(amount.subtract(this.amount), config)))
                         .queue(ignored -> close(thread));
             }
 
             EconomyManager.addMoney(account, amount);
-            EconomyManager.betWin(account, amount - this.amount);
-            account.addTransaction(amount - this.amount, MoneyTransaction.CRASH);
+            EconomyManager.betWin(account, amount.subtract(this.amount));
+            account.addTransaction(amount.subtract(this.amount), MoneyTransaction.CRASH);
             EconomyManager.updateAccount(account);
         }
 
@@ -236,12 +239,12 @@ public class CrashCommand extends EconomyCommand {
         }
 
         /**
-         * Gets a random multiplier between 0 and 1 truncated to 2 decimal places
+         * Gets a random multiplier between 0 and 0.25 truncated to 2 decimal places
          *
          * @return The multiplier
          */
         private static double getMultiplier() {
-            return MathUtils.clamp(Math.floor(ThreadLocalRandom.current().nextDouble(0, 0.25) * 100) / 100.0D, 0.01, 1);
+            return MathUtils.clamp(ThreadLocalRandom.current().nextInt(25) / 100d, 0.01, 1);
         }
 
         /**

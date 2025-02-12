@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -202,15 +203,9 @@ public class LeaderboardCommand extends CoreCommand {
         for (Levelling profile : profiles) {
             String username = getUsername(guild, profile.getUser());
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedXP = StringUtils.numberFormat(profile.getXp());
-            if(formattedXP.endsWith(".0k")) {
-                formattedXP = formattedXP.replace(".0k", "k");
-            }
+            String formattedXP = StringUtils.numberFormat(BigInteger.valueOf(profile.getXp()));
 
-            String formattedLevel = StringUtils.numberFormat(profile.getLevel());
-            if(formattedLevel.endsWith(".0k")) {
-                formattedLevel = formattedLevel.replace(".0k", "k");
-            }
+            String formattedLevel = String.valueOf(profile.getLevel());
 
             maxUsernameLength = Math.max(maxUsernameLength, truncatedUsername.length());
             maxXPWidth = Math.max(maxXPWidth, formattedXP.length());
@@ -231,15 +226,9 @@ public class LeaderboardCommand extends CoreCommand {
 
             String username = getUsername(guild, userId);
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedXP = StringUtils.numberFormat(profile.getXp());
-            if(formattedXP.endsWith(".0k")) {
-                formattedXP = formattedXP.replace(".0k", "k");
-            }
+            String formattedXP = StringUtils.numberFormat(BigInteger.valueOf(profile.getXp()));
 
-            String formattedLevel = StringUtils.numberFormat(profile.getLevel());
-            if(formattedLevel.endsWith(".0k")) {
-                formattedLevel = formattedLevel.replace(".0k", "k");
-            }
+            String formattedLevel = String.valueOf(profile.getLevel());
 
             String str = String.format(
                     "%-" + maxUsernameLength + "s | XP: %" + maxXPWidth + "s | Level: %" + maxLevelWidth + "s",
@@ -267,13 +256,15 @@ public class LeaderboardCommand extends CoreCommand {
 
         drawGuildInfo(guild, graphics, metrics);
 
+        GuildData guildData = GuildData.getOrCreateGuildData(guild);
+
         int maxUsernameLength = 0;
         int maxBalanceWidth = 0;
 
         for (Economy account : accounts) {
             String username = getUsername(guild, account.getUser());
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedBalance = StringUtils.numberFormat(EconomyManager.getBalance(account));
+            String formattedBalance = StringUtils.numberFormat(EconomyManager.getBalance(account), guildData);
 
             maxUsernameLength = Math.max(maxUsernameLength, truncatedUsername.length());
             maxBalanceWidth = Math.max(maxBalanceWidth, formattedBalance.length());
@@ -286,24 +277,18 @@ public class LeaderboardCommand extends CoreCommand {
 
             final Economy account = accounts.get(indexedRank);
             final long userId = account.getUser();
-            final long balance = EconomyManager.getBalance(account);
+            final BigInteger balance = EconomyManager.getBalance(account);
             String username = getUsername(guild, userId);
             drawUser(guild, graphics, metrics, indexedRank, userId);
-
-            GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-            if (guildData == null) {
-                guildData = new GuildData(guild.getIdLong());
-                Database.getDatabase().guildData.insertOne(guildData);
-            }
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
 
             String truncatedUsername = StringUtils.truncateString(username, 20);
-            String formattedBalance = StringUtils.numberFormat(balance);
+            String formattedBalance = StringUtils.numberFormat(balance, guildData);
             String str = String.format(
-                    "%-" + maxUsernameLength + "s | Balance: %s%s",
-                    truncatedUsername, guildData.getEconomyCurrency(), formattedBalance);
+                    "%-" + maxUsernameLength + "s | Balance: %s",
+                    truncatedUsername, formattedBalance);
 
             while (metrics1.stringWidth(str) > 1850) {
                 font = font.deriveFont(font.getSize() - 1f);
@@ -353,11 +338,7 @@ public class LeaderboardCommand extends CoreCommand {
         graphics.drawString("#" + rank, 240, START_Y + metrics.getHeight() + (SPACING + PART_SIZE) * indexedRank);
 
         // region username color
-        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (guildData == null) {
-            guildData = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(guildData);
-        }
+        GuildData guildData = GuildData.getOrCreateGuildData(guild);
 
         long patronRoleId = guildData.getPatronRole();
         Role patronRole = guild.getRoleById(patronRoleId);

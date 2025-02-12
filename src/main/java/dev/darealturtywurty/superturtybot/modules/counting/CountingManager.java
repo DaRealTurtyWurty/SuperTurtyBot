@@ -48,13 +48,7 @@ public class CountingManager extends ListenerAdapter {
         if(member == null)
             return;
 
-        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-                .first();
-        if (guildData == null) {
-            guildData = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(guildData).getInsertedId();
-            return;
-        }
+        GuildData guildData = GuildData.getOrCreateGuildData(guild);
 
         int maxSuccession = guildData.getMaxCountingSuccession();
 

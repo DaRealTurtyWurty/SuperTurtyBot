@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -7,7 +8,6 @@ import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -29,7 +29,7 @@ public class PropertyCommand extends EconomyCommand {
                         new OptionData(OptionType.STRING, "property", "The property to sell", true, true),
                         new OptionData(OptionType.INTEGER, "price", "The price to sell the property for", true)),
                 new SubcommandData("list", "List all properties").addOptions(
-                        new OptionData(OptionType.STRING, "user", "The user to list properties for", false),
+                        new OptionData(OptionType.USER, "user", "The user to list properties for", false),
                         new OptionData(OptionType.BOOLEAN, "include-sold", "Include sold properties", false),
                         new OptionData(OptionType.BOOLEAN, "include-rented", "Include rented properties", false)),
                 new SubcommandData("info", "Get info on a property").addOptions(
@@ -130,79 +130,85 @@ public class PropertyCommand extends EconomyCommand {
     }
 
     private void listProperties(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
-        User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
+        Member member = event.getOption("user", event.getMember(), OptionMapping::getAsMember);
+        if (member == null) {
+            hookReply(event, "❌ That user is not in this server!");
+            return;
+        }
         boolean includeSold = event.getOption("include-sold", false, OptionMapping::getAsBoolean);
         boolean includeRented = event.getOption("include-rented", false, OptionMapping::getAsBoolean);
 
-        if (user == null) {
-            user = event.getUser();
-        }
-
-        if (user.isBot()) {
+        if (member.getUser().isBot()) {
             hookReply(event, "❌ You cannot list properties for a bot!");
             return;
         }
 
-        if (user.isSystem()) {
+        if (member.getUser().isSystem()) {
             hookReply(event, "❌ You cannot list properties for a system user!");
             return;
         }
 
-        guild.retrieveMember(user).queue(member -> {
-            if (member == null) {
-                hookReply(event, "❌ That user is not in this server!");
-                return;
-            }
+        boolean isSelf = member.getUser().getIdLong() == event.getUser().getIdLong();
 
-            boolean isSelf = member.getIdLong() == event.getUser().getIdLong();
+        Economy userAccount = isSelf ? account : EconomyManager.getOrCreateAccount(guild, member.getUser());
 
-            Economy userAccount = account;
-            if (!isSelf) {
-                userAccount = EconomyManager.getOrCreateAccount(guild, member.getUser());
-            }
+        List<Property> properties = userAccount.getProperties();
+        if (properties.isEmpty()) {
+            hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
+            return;
+        }
 
-            List<Property> properties = userAccount.getProperties();
-            if (properties.isEmpty()) {
-                hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
-                return;
-            }
+        properties.removeIf(property -> !includeSold && !property.hasOwner());
+        properties.removeIf(property -> !includeRented && property.hasRent());
 
-            properties.removeIf(property -> !includeSold && !property.hasOwner());
-            properties.removeIf(property -> !includeRented && property.hasRent());
+        if (properties.isEmpty()) {
+            hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
+            return;
+        }
 
-            if (properties.isEmpty()) {
-                hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
-                return;
-            }
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        var embed = new PaginatedEmbed.Builder(5, contents)
+                .title(isSelf ? "Your Properties" : member.getEffectiveName() + "'s Properties")
+                .description(isSelf ? "You have " + properties.size() + " properties!" : member.getEffectiveName() + " has " + properties.size() + " properties!")
+                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+                .color(member.getColorRaw())
+                .timestamp(Instant.now())
+                .authorOnly(event.getUser().getIdLong());
 
-            var contents = new PaginatedEmbed.ContentsBuilder();
-            var embed = new PaginatedEmbed.Builder(5, contents)
-                    .title(isSelf ? "Your Properties" : member.getEffectiveName() + "'s Properties")
-                    .description(isSelf ? "You have " + properties.size() + " properties!" : member.getEffectiveName() + " has " + properties.size() + " properties!")
-                    .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                    .color(member.getColorRaw())
-                    .timestamp(Instant.now())
-                    .authorOnly(event.getUser().getIdLong());
+        for (Property property : properties) {
+            Member owner = guild.getMemberById(property.getOwner());
+            contents.field(property.getName(), """
+                    Value: %s
+                    Rent Price: %s
+                    Renting: %s
+                    Sold: %s
+                    Description: %s
+                    Upgrade Level: %d
+                    Mortgaged: %s
+                    Mortgage Paid Off: %s
+                    Previous Owners: %d
+                    Estate Tax: %s
+                    Buy Date: %s
+                    Owner: %s
+                    Mortgage: %s"""
+                    .formatted(
+                            StringUtils.numberFormat(property.calculateCurrentWorth(), config),
+                            StringUtils.numberFormat(property.getRent().getCurrentRent(), config),
+                            StringUtils.booleanToEmoji(property.hasRent()),
+                            StringUtils.booleanToEmoji(!property.hasOwner()),
+                            property.getDescription(),
+                            property.getUpgradeLevel(),
+                            StringUtils.booleanToEmoji(property.isMortgaged()),
+                            StringUtils.booleanToEmoji(property.isPaidOff()),
+                            property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0,
+                            StringUtils.numberFormat(property.getEstateTax(), config),
+                            TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()),
+                            property.hasOwner() ? owner == null ? "Unknown" : owner.getAsMention() : "None",
+                            property.isMortgaged() ? StringUtils.numberFormat(property.getMortgage().getAmount(), config) : "None"),
+                    false);
+        }
 
-            for (Property property : properties) {
-                Member owner = guild.getMemberById(property.getOwner());
-                contents.field(property.getName(), "Value: " + property.calculateCurrentWorth() + "\n" +
-                        "Rent Price: " + property.getRent().getCurrentRent() + "\n" +
-                        "Renting: " + property.hasRent() + "\n" +
-                        "Sold: " + !property.hasOwner() + "\n" +
-                        "Description: " + property.getDescription() + "\n" +
-                        "Upgrade Level: " + property.getUpgradeLevel() + "\n" +
-                        "Mortgaged: " + property.isMortgaged() + "\n" +
-                        "Mortgage Paid Off: " + property.isPaidOff() + "\n" +
-                        "Previous Owners: " + (property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0) + "\n" +
-                        "Estate Tax: " + property.getEstateTax() + "\n" +
-                        "Buy Date: " + TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()) + "\n" +
-                        "Owner: " + (property.hasOwner() ? owner == null ? "Unknown" : owner.getEffectiveName() : "None") + "\n" +
-                        "Mortgage: " + (property.isMortgaged() ? property.getMortgage().getAmount() : "None"), false);
-            }
-
-            embed.build(event.getJDA()).send(event.getHook());
-        }, ignored -> hookReply(event, "❌ That user is not in this server!"));
+        embed.build(event.getJDA()).send(event.getHook());
     }
 
     private void getPropertyInfo(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {

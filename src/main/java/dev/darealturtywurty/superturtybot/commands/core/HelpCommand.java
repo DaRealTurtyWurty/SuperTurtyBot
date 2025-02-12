@@ -86,7 +86,7 @@ public class HelpCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String command = event.getOption("command", null, OptionMapping::getAsString);
+        final String command = event.getOption("command", OptionMapping::getAsString);
         if (command == null) {
             final EmbedBuilder embed = commandlessEmbed();
             setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());

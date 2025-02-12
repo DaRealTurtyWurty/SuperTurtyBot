@@ -20,6 +20,9 @@ import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,11 +40,7 @@ public class WarnManager {
 
     public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
                                            @NotNull String reason, long time) {
-        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (config == null) {
-            config = new GuildData(guild.getIdLong());
-            Database.getDatabase().guildData.insertOne(config);
-        }
+        GuildData config = GuildData.getOrCreateGuildData(guild);
 
         float xpPercentage = config.getWarningXpPercentage();
         float economyPercentage = config.getWarningEconomyPercentage();
@@ -62,13 +61,13 @@ public class WarnManager {
         if (economyPercentage > 0 && config.isEconomyEnabled()) {
             Economy account = EconomyManager.getOrCreateAccount(guild, toWarn);
 
-            long balance = EconomyManager.getBalance(account);
+            BigInteger balance = EconomyManager.getBalance(account);
 
             // take economyPercentage% of balance
-            long toTake = (long) (balance / economyPercentage);
+            BigInteger toTake = new BigDecimal(balance).divide(BigDecimal.valueOf(economyPercentage), RoundingMode.DOWN).toBigInteger();
 
             EconomyManager.removeMoney(account, toTake, true);
-            account.addTransaction(-toTake, MoneyTransaction.WARNING);
+            account.addTransaction(toTake.negate(), MoneyTransaction.WARNING);
             EconomyManager.updateAccount(account);
         }
 

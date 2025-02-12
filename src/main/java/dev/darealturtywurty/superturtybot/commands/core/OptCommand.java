@@ -138,7 +138,7 @@ public class OptCommand extends CoreCommand {
 
         switch (subcommand) {
             case "in" -> {
-                String channelStr = event.getOption("channel", null, OptionMapping::getAsString);
+                String channelStr = event.getOption("channel", OptionMapping::getAsString);
                 if (channelStr == null || channelStr.isBlank()) {
                     reply(event, "❌ You must specify a channel!", false, true);
                     return;

@@ -8,21 +8,20 @@ import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import java.math.BigInteger;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public class DonateCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
                 new OptionData(OptionType.USER, "user", "The user to donate money to.", true),
-                new OptionData(OptionType.INTEGER, "amount", "The amount of money to donate.", true).setMinValue(1)
+                new OptionData(OptionType.STRING, "amount", "The amount of money to donate.", true)
         );
     }
 
@@ -43,19 +42,14 @@ public class DonateCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        if (event.getOption("user") == null || event.getOption("amount") == null) {
-            event.getHook().editOriginal("❌ You must provide a user and an amount!").queue();
+
+        Member member = event.getOption("user", OptionMapping::getAsMember);
+        if (member == null) {
+            event.getHook().editOriginal("❌ You must provide a valid user in this server!").queue();
             return;
         }
 
-        User user = event.getOption("user", null, OptionMapping::getAsUser);
-        if (user == null) {
-            event.getHook().editOriginal("❌ You must provide a valid user!").queue();
-            return;
-        }
-
-        CompletableFuture<Member> future = new CompletableFuture<>();
-        guild.retrieveMember(user).queue(future::complete);
+        User user = member.getUser();
 
         if (user.isBot()) {
             event.getHook().editOriginal("❌ You cannot donate money to a bot!").queue();
@@ -67,48 +61,36 @@ public class DonateCommand extends EconomyCommand {
             return;
         }
 
-        long amount = event.getOption("amount", 0L, OptionMapping::getAsLong);
-        if (amount < 1) {
+        BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
+        if (amount == null) return;
+        if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You must donate at least %s1!"
                     .formatted(config.getEconomyCurrency())).queue();
             return;
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if (account.getBank() < amount) {
-            event.getHook().editOriginal("❌ You are missing %s%d!"
-                    .formatted(config.getEconomyCurrency(), amount - account.getBank())).queue();
+        if (account.getBank().compareTo(amount) < 0) {
+            event.getHook().editOriginal("❌ You are missing %s!"
+                    .formatted(StringUtils.numberFormat(amount.subtract(account.getBank()), config))).queue();
             return;
         }
 
-        future.thenAccept(member -> {
-            if (member == null) {
-                event.getHook().editOriginal("❌ You must provide a valid user in this server!").queue();
-                return;
-            }
+        Economy otherAccount = EconomyManager.getOrCreateAccount(guild, user);
 
-            Economy otherAccount = EconomyManager.getOrCreateAccount(guild, user);
+        EconomyManager.removeMoney(account, amount, true);
+        account.addTransaction(amount.negate(), MoneyTransaction.DONATE, otherAccount.getUser());
 
-            EconomyManager.removeMoney(account, amount, true);
-            account.addTransaction(-amount, MoneyTransaction.DONATE, otherAccount.getUser());
+        EconomyManager.addMoney(otherAccount, amount);
+        otherAccount.addTransaction(amount, MoneyTransaction.DONATE, account.getUser());
 
-            EconomyManager.addMoney(otherAccount, amount);
-            otherAccount.addTransaction(amount, MoneyTransaction.DONATE, account.getUser());
+        EconomyManager.updateAccount(account);
+        EconomyManager.updateAccount(otherAccount);
 
-            EconomyManager.updateAccount(account);
-            EconomyManager.updateAccount(otherAccount);
-
-            event.getHook().editOriginal("✅ Donated %s%s to %s!"
-                            .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(amount), user.getAsMention()))
-                    .setAllowedMentions(List.of())
-                    .queue(ignored -> {
-                        MessageChannelUnion channel = event.getChannel();
-                        channel.sendMessage("%s has donated %s%s to %s!"
-                                        .formatted(event.getUser().getAsMention(),
-                                                config.getEconomyCurrency(), StringUtils.numberFormat(amount),
-                                                user.getAsMention()))
-                                .queue();
-                    });
-        });
+        event.getHook().editOriginal("✅ %s has donated %s to %s!"
+                        .formatted(event.getUser().getAsMention(),
+                                StringUtils.numberFormat(amount, config),
+                                member.getAsMention()))
+                .queue();
     }
 }

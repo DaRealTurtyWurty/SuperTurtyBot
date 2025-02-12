@@ -152,7 +152,7 @@ public class HighlightCommand extends CoreCommand {
             }
             
             case "delete": {
-                final String id = event.getOption("id", null, OptionMapping::getAsString);
+                final String id = event.getOption("id", OptionMapping::getAsString);
                 if(id == null) {
                     reply(event, "❌ You must supply a valid id to delete!", false, true);
                     return;

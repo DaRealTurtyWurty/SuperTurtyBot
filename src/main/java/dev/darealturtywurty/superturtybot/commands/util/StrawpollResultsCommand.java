@@ -83,7 +83,7 @@ public class StrawpollResultsCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        final String id = event.getOption("id", null, OptionMapping::getAsString);
+        final String id = event.getOption("id", OptionMapping::getAsString);
         if (id == null) {
             event.deferReply(true)
                     .setContent("❌ You must provide a strawpoll ID!")

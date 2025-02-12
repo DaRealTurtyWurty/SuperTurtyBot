@@ -29,8 +29,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -172,9 +170,9 @@ public class RankCommand extends CoreCommand {
                 return;
             }
 
-            final var bao = new ByteArrayOutputStream();
-            ImageIO.write(card, "png", bao);
-            event.getHook().sendFiles(FileUpload.fromData(bao.toByteArray(), member.getId() + ".png")).queue();
+            final var baos = new ByteArrayOutputStream();
+            ImageIO.write(card, "png", baos);
+            event.getHook().sendFiles(FileUpload.fromData(baos.toByteArray(), member.getId() + ".png")).queue();
         } catch (final IOException exception) {
             Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
             event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
@@ -206,7 +204,7 @@ public class RankCommand extends CoreCommand {
             } else {
                 final var bgBuf = new BufferedImage(base.getWidth(), base.getHeight(), BufferedImage.TYPE_INT_ARGB);
                 final var bgGraphics = bgBuf.createGraphics();
-                bgGraphics.setColor(card.getBackgroundColor().asColor());
+                bgGraphics.setColor(card.getBackgroundColor());
                 bgGraphics.fillRect(0, 0, base.getWidth(), base.getHeight());
                 bgGraphics.dispose();
                 background = bgBuf;
@@ -228,7 +226,7 @@ public class RankCommand extends CoreCommand {
                 final var outBuf = new BufferedImage(outline.getWidth(), outline.getHeight(),
                     BufferedImage.TYPE_INT_ARGB);
                 final var outGraphics = outBuf.createGraphics();
-                outGraphics.setColor(card.getOutlineColor().asColor());
+                outGraphics.setColor(card.getOutlineColor());
                 outGraphics.fillRect(0, 0, outline.getWidth(), outline.getHeight());
                 outGraphics.dispose();
                 outlineImg = outBuf;
@@ -244,7 +242,7 @@ public class RankCommand extends CoreCommand {
 
             // Name
             graphics.setStroke(new BasicStroke(3));
-            graphics.setColor(card.getNameTextColor().asColor());
+            graphics.setColor(card.getNameTextColor());
 
             final String name = member.getEffectiveName();
             final float nameFontSize = name.length() <= 12 ? 200f : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
@@ -252,7 +250,7 @@ public class RankCommand extends CoreCommand {
             graphics.drawString(name.length() > 26 ? name.substring(0, 26) + "..." : name, 700, 270);
 
             // Rank
-            graphics.setColor(card.getRankTextColor().asColor());
+            graphics.setColor(card.getRankTextColor());
             graphics.setFont(this.usedFont.deriveFont(105f));
 
             int rank = getRank(member);
@@ -287,7 +285,7 @@ public class RankCommand extends CoreCommand {
 
             // Level
             final var levelStr = String.valueOf(level);
-            graphics.setColor(card.getLevelTextColor().asColor());
+            graphics.setColor(card.getLevelTextColor());
             graphics.drawString("Level " + levelStr, 700, 450);
             graphics.setFont(this.usedFont.deriveFont(75f));
 
@@ -296,7 +294,7 @@ public class RankCommand extends CoreCommand {
             final var nextXp = nextLevelXp - LevellingManager.getXPForLevel(level);
             final var xpStr = currentXp + " / " + nextXp + " XP";
 
-            graphics.setColor(card.getXpTextColor().asColor());
+            graphics.setColor(card.getXpTextColor());
             drawRightAlignedString(graphics, xpStr, this.usedFont.deriveFont(75f), 2600, 375);
 
             // XP Bar
@@ -307,7 +305,7 @@ public class RankCommand extends CoreCommand {
                     20);
                 graphics.drawImage(xpBarOutline, 700, 550, 1900, 120, null);
             } else {
-                graphics.setColor(card.getXpOutlineColor().asColor());
+                graphics.setColor(card.getXpOutlineColor());
                 graphics.drawRoundRect(700, 550, 1900, 120, 30, 30);
             }
 
@@ -316,7 +314,7 @@ public class RankCommand extends CoreCommand {
                     TurtyBot.class.getResourceAsStream("/levels/xpEmpty/" + card.getXpEmptyImage() + ".png")), 20);
                 graphics.drawImage(xpBarEmpty, 700, 550, 1900, 120, null);
             } else {
-                graphics.setColor(card.getXpEmptyColor().asColor());
+                graphics.setColor(card.getXpEmptyColor());
                 graphics.fillRoundRect(700, 550, 1900, 120, 30, 30);
             }
 
@@ -325,11 +323,11 @@ public class RankCommand extends CoreCommand {
                     .read(TurtyBot.class.getResourceAsStream("/levels/xpFill/" + card.getXpFillImage() + ".png")), 20);
                 graphics.drawImage(xpBarFill, 700, 550, (int) (1900 * (xpPercent * 0.01f)), 120, null);
             } else {
-                graphics.setColor(card.getXpFillColor().asColor());
+                graphics.setColor(card.getXpFillColor());
                 graphics.fillRoundRect(700, 550, (int) (1900 * (xpPercent * 0.01f)), 120, 30, 30);
             }
 
-            graphics.setColor(card.getPercentTextColor().asColor());
+            graphics.setColor(card.getPercentTextColor());
             graphics.setFont(this.usedFont.deriveFont(90f));
 
             graphics.drawString(DECIMAL_FORMAT.format(xpPercent) + "%", 1500, 640);
@@ -342,7 +340,7 @@ public class RankCommand extends CoreCommand {
                 final var avatarOut = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
                     BufferedImage.TYPE_INT_ARGB);
                 final var avatarOutGraphics = avatarOut.createGraphics();
-                avatarOutGraphics.setColor(card.getBackgroundColor().asColor());
+                avatarOutGraphics.setColor(card.getBackgroundColor());
                 avatarOutGraphics.setClip(new Ellipse2D.Float(0, 0, userAvatar.getWidth(), userAvatar.getHeight()));
                 avatarOutGraphics.drawImage(
                     ImageIO.read(TurtyBot.class
@@ -353,7 +351,7 @@ public class RankCommand extends CoreCommand {
                 drawAvatar(userAvatar, graphics);
             } else {
                 drawAvatar(userAvatar, graphics);
-                graphics.setColor(card.getAvatarOutlineColor().asColor());
+                graphics.setColor(card.getAvatarOutlineColor());
                 final Shape shape = createRingShape(350, 300, userAvatar.getWidth() / 2f, 10);
                 graphics.fill(shape);
                 graphics.draw(shape);

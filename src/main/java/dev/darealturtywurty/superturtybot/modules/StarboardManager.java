@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -43,8 +42,7 @@ public final class StarboardManager extends ListenerAdapter {
                 || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
             return;
 
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
+        final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
 
         if (!config.getStarEmoji().equals(event.getReaction().getEmoji().getFormatted()))
             return;
@@ -124,8 +122,7 @@ public final class StarboardManager extends ListenerAdapter {
 
         final TextChannel channel = event.getChannel().asTextChannel();
 
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(event.getGuild());
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, event.getGuild());
+        final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
         final List<Long> channels = GuildData.getLongs(config.getShowcaseChannels());
         if (!channels.contains(channel.getIdLong()))
             return;
@@ -143,8 +140,7 @@ public final class StarboardManager extends ListenerAdapter {
     }
 
     private static CompletableFuture<TextChannel> getStarboard(Guild guild) {
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildData.getOrCreateGuildData(guild);
         if (!config.isStarboardEnabled())
             return CompletableFuture.completedFuture(null);
 

@@ -129,14 +129,14 @@ public class SuggestCommand extends CoreCommand {
     }
 
     private void runAddSuggestion(SlashCommandInteractionEvent event, TextChannel suggestionChannel) {
-        final String suggestionStr = event.getOption("suggestion", null, OptionMapping::getAsString);
+        final String suggestionStr = event.getOption("suggestion", OptionMapping::getAsString);
         if (suggestionStr == null || suggestionStr.isBlank()) {
             reply(event, "You must provide something to suggest!", false, true);
             return;
         }
 
         event.deferReply(false).mentionRepliedUser(false).queue();
-        final String mediaURL = event.getOption("media_url", null, OptionMapping::getAsString);
+        final String mediaURL = event.getOption("media_url", OptionMapping::getAsString);
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.addSuggestion(suggestionChannel,
                 event.getGuild(), event.getMember(), suggestionStr, mediaURL);
         suggestion.thenAccept(sug -> {

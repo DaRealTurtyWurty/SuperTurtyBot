@@ -36,28 +36,28 @@ public class NotifierCommand extends CoreCommand {
                     new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
                     new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                         "Who should be pinged when a notification happens", true),
-                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
+                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
                         false))),
             new SubcommandData("twitch", "Listens for when a Twitch channel goes live.").addOptions(
                 List.of(new OptionData(OptionType.STRING, "twitch_channel", "The name of the Twitch channel", true),
                     new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
                     new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                         "Who should be pinged when a notification happens", true),
-                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
+                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
                         false))),
             new SubcommandData("steam", "Listens for when a Steam game is updated.").addOptions(
                 List.of(new OptionData(OptionType.INTEGER, "steam_app_id", "The app ID of the game on steam", true),
                     new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
                     new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                         "Who should be pinged when a notification happens", true),
-                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
+                    new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
                         false))),
             new SubcommandData("reddit", "Listens for new posts on a subreddit.").addOptions(
                     List.of(new OptionData(OptionType.STRING, "subreddit", "The subreddit to listen to", true),
                             new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
                             new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                                     "Who should be pinged when a notification happens", true),
-                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether or not to unsubscribe this notifier",
+                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
                                     false))));
     }
 
@@ -110,7 +110,7 @@ public class NotifierCommand extends CoreCommand {
 
         switch (event.getSubcommandName()) {
             case "youtube": {
-                final String youtubeChannelId = event.getOption("youtube_channel_id", null, OptionMapping::getAsString);
+                final String youtubeChannelId = event.getOption("youtube_channel_id", OptionMapping::getAsString);
                 if (youtubeChannelId == null) {
                     reply(event, "❌ You must provide a YouTube channel ID!", false, true);
                     return;
@@ -136,13 +136,13 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
 
-                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
                 if (rawChannel == null) {
                     reply(event, "❌ You must provide a Discord channel!", false, true);
                     return;
                 }
 
-                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
                 if (rawMention == null) {
                     reply(event, "❌ You must provide someone to ping!", false, true);
                     return;
@@ -155,11 +155,11 @@ public class NotifierCommand extends CoreCommand {
                     new YoutubeNotifier(event.getGuild().getIdLong(), discordChannel, youtubeChannelId, mention));
 
                 reply(event,
-                    "✅ I have successfully setup a notifier for this YouTube channel in <#" + discordChannel + ">!");
+                    "✅ I have successfully set up a notifier for this YouTube channel in <#" + discordChannel + ">!");
                 break;
             }
             case "twitch": {
-                final String twitchChannel = event.getOption("twitch_channel", null, OptionMapping::getAsString);
+                final String twitchChannel = event.getOption("twitch_channel", OptionMapping::getAsString);
                 if (twitchChannel == null) {
                     reply(event, "❌ You must provide a Twitch channel!", false, true);
                     return;
@@ -186,13 +186,13 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
                 
-                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
                 if (rawChannel == null) {
                     reply(event, "❌ You must provide a Discord channel!", false, true);
                     return;
                 }
 
-                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
                 if (rawMention == null) {
                     reply(event, "❌ You must provide someone to ping!", false, true);
                     return;
@@ -205,10 +205,10 @@ public class NotifierCommand extends CoreCommand {
                     new TwitchNotifier(event.getGuild().getIdLong(), twitchChannel, discordChannel, mention));
                 if (TwitchListener.subscribeChannel(twitchChannel)) {
                     reply(event,
-                        "✅ I have successfully setup a notifier for this Twitch channel in <#" + discordChannel + ">!");
+                        "✅ I have successfully set up a notifier for this Twitch channel in <#" + discordChannel + ">!");
                 } else {
                     reply(event,
-                        "❌ I have failed to setup a notifier for this channel. Check that the channel name is correct!",
+                        "❌ I have failed to set up a notifier for this channel. Check that the channel name is correct!",
                         false, true);
                 }
                 break;
@@ -240,13 +240,13 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
 
-                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
                 if (rawChannel == null) {
                     reply(event, "❌ You must provide a Discord channel!", false, true);
                     return;
                 }
 
-                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
                 if (rawMention == null) {
                     reply(event, "❌ You must provide someone to ping!", false, true);
                     return;
@@ -258,11 +258,11 @@ public class NotifierCommand extends CoreCommand {
                 Database.getDatabase().steamNotifier
                     .insertOne(new SteamNotifier(event.getGuild().getIdLong(), discordChannel, appId, mention));
 
-                reply(event, "✅ I have successfully setup a notifier for this Steam app in <#" + discordChannel + ">!");
+                reply(event, "✅ I have successfully set up a notifier for this Steam app in <#" + discordChannel + ">!");
                 break;
             }
             case "reddit": {
-                final String subreddit = event.getOption("subreddit", null, OptionMapping::getAsString);
+                final String subreddit = event.getOption("subreddit", OptionMapping::getAsString);
                 if (subreddit == null) {
                     reply(event, "❌ You must provide a subreddit!", false, true);
                     return;
@@ -288,13 +288,13 @@ public class NotifierCommand extends CoreCommand {
                     return;
                 }
 
-                GuildChannelUnion rawChannel = event.getOption("discord_channel", null, OptionMapping::getAsChannel);
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
                 if (rawChannel == null) {
                     reply(event, "❌ You must provide a Discord channel!", false, true);
                     return;
                 }
 
-                IMentionable rawMention = event.getOption("who_to_ping", null, OptionMapping::getAsMentionable);
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
                 if (rawMention == null) {
                     reply(event, "❌ You must provide someone to ping!", false, true);
                     return;
@@ -306,7 +306,7 @@ public class NotifierCommand extends CoreCommand {
                 Database.getDatabase().redditNotifier
                         .insertOne(new RedditNotifier(event.getGuild().getIdLong(), subreddit, discordChannel, mention));
 
-                reply(event, "✅ I have successfully setup a notifier for this subreddit in <#" + discordChannel + ">!");
+                reply(event, "✅ I have successfully set up a notifier for this subreddit in <#" + discordChannel + ">!");
                 break;
             }
             case null:

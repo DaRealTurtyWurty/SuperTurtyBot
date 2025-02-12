@@ -25,6 +25,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -108,17 +110,17 @@ public class CrimeCommand extends EconomyCommand {
             embed.setDescription("Crime Level: %d%nHere are the chances, earnings and losses for each crime level:".formatted(crimeLevel));
             for (var level : CrimeType.values()) {
                 float chance = level.getChanceForLevel(crimeLevel);
-                long minAmount = level.getMinAmountForLevel(crimeLevel);
-                long maxAmount = level.getMaxAmountForLevel(crimeLevel);
+                BigInteger minAmount = level.getMinAmountForLevel(crimeLevel);
+                BigInteger maxAmount = level.getMaxAmountForLevel(crimeLevel);
 
-                long minLoss = (long) (minAmount * 0.5);
-                long maxLoss = (long) (maxAmount * 0.5);
-                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nEarnings: %s%s-%s%s\nLosses: %s%s-%s%s".formatted(
-                        StringUtils.numberFormat(chance * 100),
-                        config.getEconomyCurrency(), StringUtils.numberFormat(minAmount),
-                        config.getEconomyCurrency(), StringUtils.numberFormat(maxAmount),
-                        config.getEconomyCurrency(), StringUtils.numberFormat(minLoss),
-                        config.getEconomyCurrency(), StringUtils.numberFormat(maxLoss)), false);
+                BigInteger minLoss = minAmount.divide(BigInteger.TWO);
+                BigInteger maxLoss = maxAmount.divide(BigInteger.TWO);
+                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nEarnings: %s-%s\nLosses: %s-%s".formatted(
+                        (int) (chance * 100),
+                        StringUtils.numberFormat(minAmount, config),
+                        StringUtils.numberFormat(maxAmount, config),
+                        StringUtils.numberFormat(minLoss, config),
+                        StringUtils.numberFormat(maxLoss, config)), false);
             }
 
             event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -144,17 +146,18 @@ public class CrimeCommand extends EconomyCommand {
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
         if (level.hasSuccess(account.getCrimeLevel())) {
-            long amount = EconomyManager.successfulCrime(account, level);
+            BigInteger amount = EconomyManager.successfulCrime(account, level);
             int newCrimeLevel = account.getCrimeLevel();
             embed.setDescription(getSuccess(config, event.getUser(), amount) +
                     (crimeLevel != newCrimeLevel ? "\n\n✅ You are now a level %d criminal!".formatted(newCrimeLevel) : ""));
             embed.setColor(0x00AA00);
         } else {
-            int jobLevel = account.getJobLevel();
-            long amount = EconomyManager.caughtCrime(account, level);
+            int prevJobLevel = account.getJobLevel();
+            BigInteger amount = EconomyManager.caughtCrime(account, level);
             int newJobLevel = account.getJobLevel();
             embed.setDescription(getFail(config, event.getUser(), amount) +
-                    (jobLevel != newJobLevel ? "\n\n❌ You have been demoted, by %d level(s), to level %d in your current job.".formatted(-(jobLevel - newJobLevel), newJobLevel) : ""));
+                    (prevJobLevel != newJobLevel ? "\n\n❌ You have been demoted, by %d level%s, to level %d in your current job."
+                            .formatted(prevJobLevel - newJobLevel, prevJobLevel - newJobLevel == 1 ? "" : "s", newJobLevel) : ""));
             embed.setColor(0xAA0000);
         }
 
@@ -164,16 +167,16 @@ public class CrimeCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
     }
 
-    private static String getSuccess(GuildData config, User user, long amount) {
+    private static String getSuccess(GuildData config, User user, BigInteger amount) {
         return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
-                .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", StringUtils.numberFormat(amount));
+                .replace("{user}", user.getAsMention())
+                .replace("{amount}", StringUtils.numberFormat(amount, config));
     }
 
-    private static String getFail(GuildData config, User user, long amount) {
+    private static String getFail(GuildData config, User user, BigInteger amount) {
         return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
-                .replace("<>", config.getEconomyCurrency()).replace("{user}", user.getAsMention())
-                .replace("{amount}", StringUtils.numberFormat(amount));
+                .replace("{user}", user.getAsMention())
+                .replace("{amount}", StringUtils.numberFormat(amount, config));
     }
 
     private record Responses(List<String> success, List<String> fail) {
@@ -195,20 +198,20 @@ public class CrimeCommand extends EconomyCommand {
         private final long minBaseAmount;
         private final long maxBaseAmount;
 
-        public long getBaseAmount() {
+        public long getRandomBaseAmount() {
             return ThreadLocalRandom.current().nextLong(this.minBaseAmount, this.maxBaseAmount + 1);
         }
 
-        public long getMinAmountForLevel(int level) {
-            return (long) (this.minBaseAmount * Math.pow(1.05, level));
+        public BigInteger getMinAmountForLevel(int level) {
+            return BigDecimal.valueOf(this.minBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
         }
 
-        public long getMaxAmountForLevel(int level) {
-            return (long) (this.maxBaseAmount * Math.pow(1.05, level));
+        public BigInteger getMaxAmountForLevel(int level) {
+            return BigDecimal.valueOf(this.maxBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
         }
 
-        public long getAmountForLevel(int level) {
-            return (long) (getBaseAmount() * Math.pow(1.05, level));
+        public BigInteger getRandomAmountForLevel(int level) {
+            return BigDecimal.valueOf(getRandomBaseAmount()).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
         }
 
         public float getChanceForLevel(int level) {

@@ -3,6 +3,8 @@ package dev.darealturtywurty.superturtybot.modules.economy;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,16 +12,16 @@ import java.util.List;
 @NoArgsConstructor
 public class Loan {
     private String id;
-    private long amount;
-    private double interestRate;
+    private BigInteger amount;
+    private BigDecimal interestRate;
     private long timeTaken;
     private long timeToPay;
     private final List<Payment> payments = new ArrayList<>();
 
-    private long amountPaid = 0;
+    private BigInteger amountPaid = BigInteger.ZERO;
     private boolean paidOff = false;
 
-    public Loan(String id, long amount, double interestRate, long timeTaken, long timeToPay) {
+    public Loan(String id, BigInteger amount, BigDecimal interestRate, long timeTaken, long timeToPay) {
         this.id = id;
         this.amount = amount;
         this.interestRate = interestRate;
@@ -33,19 +35,19 @@ public class Loan {
      * @param amount The amount of money to request as a loan
      * @return The amount to give back to the user if it exceeds the amount they need to pay
      */
-    public long pay(long amount) {
-        if(this.paidOff) return amount;
+    public BigInteger pay(BigInteger amount) {
+        if (this.paidOff) return amount;
 
-        long remaining = calculateAmountLeftToPay();
-        long toPay = Math.min(amount, remaining);
-        this.amountPaid += toPay;
+        BigInteger remaining = calculateAmountLeftToPay();
+        BigInteger toPay = amount.min(remaining);
+        this.amountPaid = this.amountPaid.add(toPay);
 
-        this.payments.add(new Payment(toPay, System.currentTimeMillis()));
-        if (this.amountPaid >= calculateTotalAmountToPay()) {
+        this.payments.add(new Payment(System.currentTimeMillis(), toPay));
+        if (this.amountPaid.compareTo(calculateTotalAmountToPay()) >= 0) {
             this.paidOff = true;
         }
 
-        return amount - toPay;
+        return amount.subtract(toPay);
     }
 
     /**
@@ -53,10 +55,10 @@ public class Loan {
      *
      * @return The total amount to pay back
      */
-    public long calculateTotalAmountToPay() {
-        long totalAmountToPay = this.amount;
+    public BigInteger calculateTotalAmountToPay() {
+        BigInteger totalAmountToPay = this.amount;
         if (System.currentTimeMillis() > this.timeToPay) {
-            totalAmountToPay += (int) (this.amount * this.interestRate);
+            totalAmountToPay = totalAmountToPay.add(new BigDecimal(this.amount).multiply(this.interestRate).toBigInteger());
         }
 
         return totalAmountToPay;
@@ -67,9 +69,9 @@ public class Loan {
      *
      * @return The amount left to pay
      */
-    public long calculateAmountLeftToPay() {
-        long totalAmountToPay = calculateTotalAmountToPay();
-        return totalAmountToPay - this.amountPaid;
+    public BigInteger calculateAmountLeftToPay() {
+        BigInteger totalAmountToPay = calculateTotalAmountToPay();
+        return totalAmountToPay.subtract(this.amountPaid);
     }
 
     /**

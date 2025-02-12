@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -69,7 +70,7 @@ public class ShopCommand extends EconomyCommand {
 
         switch (subcommand) { // TODO: Finish this
             case "view" -> {
-                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                User user = event.getOption("user", OptionMapping::getAsUser);
                 if (user != null) {
                     Member member = guild.getMember(user);
                     if (member == null) {
@@ -87,7 +88,7 @@ public class ShopCommand extends EconomyCommand {
                     var contents = new PaginatedEmbed.ContentsBuilder();
                     for (ShopItem item : shop) {
                         contents.field(item.getImage() + " " + item.getName(),
-                                "ID: " + item.getId() + "\nPrice: " + item.getPrice());
+                                "ID: " + item.getId() + "\nPrice: " + StringUtils.numberFormat(item.getPrice(), config));
                     }
 
                     PaginatedEmbed paginatedEmbed = new PaginatedEmbed.Builder(10, contents)
@@ -110,9 +111,9 @@ public class ShopCommand extends EconomyCommand {
                 }
 
                 try {
-                    var boas = new ByteArrayOutputStream();
-                    ImageIO.write(generateShopImage(), "png", boas);
-                    var upload = FileUpload.fromData(boas.toByteArray(), "shop.png");
+                    var baos = new ByteArrayOutputStream();
+                    ImageIO.write(generateShopImage(), "png", baos);
+                    var upload = FileUpload.fromData(baos.toByteArray(), "shop.png");
                     event.getHook().sendFiles(upload).queue();
                 } catch (IOException exception) {
                     event.getHook().editOriginal("❌ An error occurred while generating the shop image!").queue();

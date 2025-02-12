@@ -78,7 +78,7 @@ public class ClearWarningsCommand extends CoreCommand {
         
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
-        final User user = event.getOption("user", null, OptionMapping::getAsUser);
+        final User user = event.getOption("user", OptionMapping::getAsUser);
         if (user == null) {
             reply(event, "❌ You must supply a valid user!", false, true);
             return;

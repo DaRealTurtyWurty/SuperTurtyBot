@@ -142,10 +142,13 @@ public class GuildConfigOption implements Registerable {
     }
     
     public enum DataType {
-        INTEGER(str -> Ints.tryParse(str) != null), DOUBLE(str -> Doubles.tryParse(str) != null),
+        INTEGER(str -> Ints.tryParse(str) != null),
+        DOUBLE(str -> Doubles.tryParse(str) != null),
         FLOAT(str -> Floats.tryParse(str) != null),
-        BOOLEAN(str -> "true".equalsIgnoreCase(str) || "false".equalsIgnoreCase(str)), STRING(str -> true),
-        LONG(str -> Longs.tryParse(str) != null), COLOR(str -> {
+        BOOLEAN(str -> "true".equalsIgnoreCase(str) || "false".equalsIgnoreCase(str)),
+        STRING(str -> true),
+        LONG(str -> Longs.tryParse(str) != null),
+        COLOR(str -> {
             try {
                 Color.decode(str);
                 return true;

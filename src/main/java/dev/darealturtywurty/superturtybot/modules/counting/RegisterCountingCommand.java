@@ -81,7 +81,7 @@ public class RegisterCountingCommand extends CoreCommand {
             return;
         }
 
-        GuildChannelUnion rawChannel = event.getOption("channel", null, OptionMapping::getAsChannel);
+        GuildChannelUnion rawChannel = event.getOption("channel", OptionMapping::getAsChannel);
         if(rawChannel == null || rawChannel.getType() != ChannelType.TEXT) {
             reply(event, "❌ You must supply a valid text channel!", false, true);
             return;
@@ -101,7 +101,7 @@ public class RegisterCountingCommand extends CoreCommand {
             return;
         }
 
-        final String strMode = event.getOption("mode", null, OptionMapping::getAsString);
+        final String strMode = event.getOption("mode", OptionMapping::getAsString);
         if (strMode == null) {
             reply(event, "❌ You must supply the counting mode!", false, true);
             return;

@@ -9,24 +9,43 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import oshi.util.tuples.Quintet;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class RewardCommand extends EconomyCommand {
+    private static final List<Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>>> REWARDS = List.of(
+            new Quintet<>("daily", 1000L, 2, Economy::getNextDaily, account -> account.setNextDaily(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))),
+            new Quintet<>("weekly", 10000L, 5, Economy::getNextWeekly, account -> account.setNextWeekly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7))),
+            new Quintet<>("monthly", 50000L, 10, Economy::getNextMonthly, account -> account.setNextMonthly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(31))),
+            new Quintet<>("yearly", 100000L, 20, Economy::getNextYearly, account -> account.setNextYearly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
+    );
+
     @Override
     public List<SubcommandData> createSubcommandData() {
-        return List.of(
-                new SubcommandData("daily", "Claim your daily reward!"),
-                new SubcommandData("weekly", "Claim your weekly reward!"),
-                new SubcommandData("monthly", "Claim your monthly reward!"),
-                new SubcommandData("yearly", "Claim your yearly reward!"));
+        return REWARDS.stream().map(quintet ->
+                new SubcommandData(quintet.getA(), "Claim your " + quintet.getA() + " reward!")).toList();
     }
 
     @Override
     public String getDescription() {
-        return "Claim your daily, weekly, monthly, and yearly rewards!";
+        List<String> rewardNames = REWARDS.stream().map(Quintet::getA).toList();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < rewardNames.size(); i++) {
+            builder.append(rewardNames.get(i));
+            if (i == rewardNames.size() - 1) continue;
+            if (i == rewardNames.size() - 2) {
+                builder.append(", and ");
+            } else {
+                builder.append(", ");
+            }
+        }
+        return "Claim your " + builder + " rewards!";
     }
 
     @Override
@@ -43,97 +62,40 @@ public class RewardCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         final String subcommand = event.getSubcommandName();
-        if(subcommand == null) {
+        if (subcommand == null) {
             event.getHook().editOriginal("❌ You need to specify a reward to claim!").queue();
             return;
         }
 
-        switch (subcommand) {
-            case "daily" -> {
-                if (account.getNextDaily() > System.currentTimeMillis()) {
-                    event.getHook().editOriginal("❌ You can next claim your daily reward %s!"
-                            .formatted(TimeFormat.RELATIVE.format(account.getNextDaily()))).queue();
-                    return;
-                }
-
-                long dailyReward = 1000;
-                if(account.getJob() != null)
-                    dailyReward = EconomyManager.getPayAmount(account) * 2;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
-                    dailyReward = (int) (dailyReward * 2.5f);
-
-                EconomyManager.addMoney(account, dailyReward, true);
-                account.setNextDaily(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
-                account.addTransaction(dailyReward, MoneyTransaction.REWARD);
-                EconomyManager.updateAccount(account);
-                event.getHook().editOriginalFormat("✅ You claimed your daily reward of %s%s!",
-                        config.getEconomyCurrency(), StringUtils.numberFormat(dailyReward)).queue();
-            }
-
-            case "weekly" -> {
-                if (account.getNextWeekly() > System.currentTimeMillis()) {
-                    event.getHook().editOriginal(
-                                    "❌ You can next claim your weekly reward %s!"
-                                            .formatted(TimeFormat.RELATIVE.format(account.getNextWeekly())))
-                            .mentionRepliedUser(false).queue();
-                    return;
-                }
-
-                long weeklyReward = 10000;
-                if(account.getJob() != null)
-                    weeklyReward = EconomyManager.getPayAmount(account) * 5;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
-                    weeklyReward = (int) (weeklyReward * 2.5f);
-
-                EconomyManager.addMoney(account, weeklyReward, true);
-                account.setNextWeekly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7));
-                account.addTransaction(weeklyReward, MoneyTransaction.REWARD);
-                EconomyManager.updateAccount(account);
-                event.getHook().editOriginalFormat("✅ You claimed your weekly reward of %s%s!",
-                        config.getEconomyCurrency(), StringUtils.numberFormat(weeklyReward)).queue();
-            }
-
-            case "monthly" -> {
-                if (account.getNextMonthly() > System.currentTimeMillis()) {
-                    event.getHook().editOriginal("❌ You can next claim your monthly reward %s!"
-                            .formatted(TimeFormat.RELATIVE.format(account.getNextMonthly()))).queue();
-                    return;
-                }
-
-                long monthlyReward = 50000;
-                if(account.getJob() != null)
-                    monthlyReward = EconomyManager.getPayAmount(account) * 10;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
-                    monthlyReward = (int) (monthlyReward * 2.5f);
-
-                EconomyManager.addMoney(account, monthlyReward, true);
-                account.setNextMonthly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(31));
-                account.addTransaction(monthlyReward, MoneyTransaction.REWARD);
-                EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your monthly reward of %s%s!"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(monthlyReward))).queue();
-            }
-
-            case "yearly" -> {
-                if (account.getNextYearly() > System.currentTimeMillis()) {
-                    event.getHook().editOriginal("❌ You can next claim your yearly reward %s!"
-                            .formatted(TimeFormat.RELATIVE.format(account.getNextYearly()))).queue();
-                    return;
-                }
-
-                long yearlyReward = 100000;
-                if(account.getJob() != null)
-                    yearlyReward = EconomyManager.getPayAmount(account) * 20;
-                if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
-                    yearlyReward = (int) (yearlyReward * 2.5f);
-
-                EconomyManager.addMoney(account, yearlyReward, true);
-                account.setNextYearly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365));
-                account.addTransaction(yearlyReward, MoneyTransaction.REWARD);
-                EconomyManager.updateAccount(account);
-                event.getHook().editOriginal("✅ You claimed your yearly reward of %s%s!"
-                        .formatted(config.getEconomyCurrency(), StringUtils.numberFormat(yearlyReward))).queue();
-            }
+        Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>> rewardQuintet = REWARDS.stream()
+                .filter(quintet -> quintet.getA().equals(subcommand)).findFirst().orElse(null);
+        if (rewardQuintet == null) {
+            event.getHook().editOriginal("❌ That is not a valid reward!").queue();
+            return;
         }
+        long reward = rewardQuintet.getB();
+        int payAmountMultiplier = rewardQuintet.getC();
+        Function<Economy, Long> getNextRewardTime = rewardQuintet.getD();
+        Consumer<Economy> setNextRewardTime = rewardQuintet.getE();
+
+        if (getNextRewardTime.apply(account) > System.currentTimeMillis()) {
+            event.getHook().editOriginal("❌ You can next claim your %s reward %s!"
+                    .formatted(subcommand, TimeFormat.RELATIVE.format(account.getNextDaily()))).queue();
+            return;
+        }
+
+        if (account.getJob() != null)
+            reward = EconomyManager.getPayAmount(account) * payAmountMultiplier;
+        if (Objects.requireNonNull(event.getMember()).getTimeBoosted() != null)
+            reward = (int) (reward * 2.5f);
+
+        BigInteger rewardBigInteger = BigInteger.valueOf(reward);
+        EconomyManager.addMoney(account, rewardBigInteger, true);
+        setNextRewardTime.accept(account);
+        account.addTransaction(rewardBigInteger, MoneyTransaction.REWARD);
+        EconomyManager.updateAccount(account);
+        event.getHook().editOriginalFormat("✅ You claimed your %s reward of %s!",
+                subcommand, StringUtils.numberFormat(rewardBigInteger, config)).queue();
+
     }
 }

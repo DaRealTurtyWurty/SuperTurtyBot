@@ -120,8 +120,8 @@ public class SaveSongCommand extends CoreCommand {
             }
 
             case "remove" -> {
-                String name = event.getOption("name", null, OptionMapping::getAsString);
-                String url = event.getOption("url", null, OptionMapping::getAsString);
+                String name = event.getOption("name", OptionMapping::getAsString);
+                String url = event.getOption("url", OptionMapping::getAsString);
                 if (name == null && url == null) {
                     reply(event, "❌ You must provide a name and url!", false, true);
                     return;
@@ -251,8 +251,8 @@ public class SaveSongCommand extends CoreCommand {
                     return;
                 }
 
-                String name = event.getOption("name", null, OptionMapping::getAsString);
-                String url = event.getOption("url", null, OptionMapping::getAsString);
+                String name = event.getOption("name", OptionMapping::getAsString);
+                String url = event.getOption("url", OptionMapping::getAsString);
 
                 if(name == null && url == null) {
                     reply(event, "❌ You must provide a name or url!", false, true);

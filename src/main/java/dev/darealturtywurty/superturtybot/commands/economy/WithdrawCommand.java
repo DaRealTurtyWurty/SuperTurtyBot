@@ -6,10 +6,10 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public class WithdrawCommand extends EconomyCommand {
@@ -30,28 +30,26 @@ public class WithdrawCommand extends EconomyCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        return List.of(
-                new OptionData(OptionType.INTEGER, "amount", "The amount of money to withdraw.", false)
-                        .setMinValue(1));
+        return List.of(new OptionData(OptionType.STRING, "amount", "The amount of money to withdraw.", false));
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        long amount = event.getOption("amount", account.getWallet() < 0 ? -account.getWallet() : 0L, OptionMapping::getAsLong);
-        if (amount < 1) {
+        BigInteger amount = event.getOption("amount", account.getWallet().signum() < 0 ? account.getWallet().negate() : BigInteger.ZERO, StringUtils.getAsBigInteger(event));
+        if (amount.signum() <= 0) {
             event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
             return;
         }
 
-        if (amount > account.getBank()) {
+        if (amount.compareTo(account.getBank()) > 0) {
             event.getHook().editOriginal("❌ You do not have enough money in your bank to withdraw that much!").queue();
             return;
         }
 
         EconomyManager.withdraw(account, amount);
         EconomyManager.updateAccount(account);
-        event.getHook().editOriginalFormat("✅ You have withdrawn %s%s from your bank!",
-                config.getEconomyCurrency(), StringUtils.numberFormat(amount)).queue();
+        event.getHook().editOriginalFormat("✅ You have withdrawn %s from your bank!",
+                StringUtils.numberFormat(amount, config)).queue();
     }
 }

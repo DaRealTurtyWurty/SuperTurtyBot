@@ -72,7 +72,7 @@ public class KickCommand extends CoreCommand {
             return;
         }
         
-        final Member member = event.getOption("member", null, OptionMapping::getAsMember);
+        final Member member = event.getOption("member", OptionMapping::getAsMember);
         if(member == null) {
             reply(event, "❌ You must specify a member to kick!", false, true);
             return;

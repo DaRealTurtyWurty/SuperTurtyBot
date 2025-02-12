@@ -10,17 +10,17 @@ import lombok.Getter;
 import lombok.ToString;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Data
 public class Economy {
     private long guild;
     private long user;
 
-    private long wallet;
-    private long bank;
+    private BigInteger wallet;
+    private BigInteger bank;
 
     private long nextRob;
     private long nextWork;
@@ -39,8 +39,8 @@ public class Economy {
     private int jobLevel;
     private boolean readyForPromotion;
 
-    private long totalBetLoss;
-    private long totalBetWin;
+    private BigInteger totalBetLoss;
+    private BigInteger totalBetWin;
 
     private int crimeLevel;
     private int heistLevel;
@@ -62,38 +62,44 @@ public class Economy {
     public Economy(long guild, long user) {
         this.guild = guild;
         this.user = user;
+
+        this.bank = BigInteger.ZERO;
+        this.wallet = BigInteger.ZERO;
+
+        this.totalBetWin = BigInteger.ZERO;
+        this.totalBetLoss = BigInteger.ZERO;
     }
 
-    public void addTransaction(long amount, byte type) {
+    public void addTransaction(BigInteger amount, byte type) {
         addTransaction(System.currentTimeMillis(), amount, type);
     }
 
-    public void addTransaction(long amount, byte type, long targetId) {
+    public void addTransaction(BigInteger amount, byte type, long targetId) {
         addTransaction(System.currentTimeMillis(), amount, type, targetId);
     }
 
-    public void addTransaction(long timestamp, long amount, byte type) {
+    public void addTransaction(long timestamp, BigInteger amount, byte type) {
         this.transactions.add(new MoneyTransaction(timestamp, amount, type, null));
     }
 
-    public void addTransaction(long timestamp, long amount, byte type, @Nullable Long targetId) {
+    public void addTransaction(long timestamp, BigInteger amount, byte type, @Nullable Long targetId) {
         this.transactions.add(new MoneyTransaction(timestamp, amount, type, targetId));
     }
 
-    public void addBank(long amount) {
-        this.bank += amount;
+    public void addBank(BigInteger amount) {
+        this.bank = this.bank.add(amount);
     }
 
-    public void addWallet(long amount) {
-        this.wallet += amount;
+    public void addWallet(BigInteger amount) {
+        this.wallet = this.wallet.add(amount);
     }
 
-    public void removeBank(long amount) {
-        this.bank -= amount;
+    public void removeBank(BigInteger amount) {
+        this.bank = this.bank.subtract(amount);
     }
 
-    public void removeWallet(long amount) {
-        this.wallet -= amount;
+    public void removeWallet(BigInteger amount) {
+        this.wallet = this.wallet.subtract(amount);
     }
 
     @Getter

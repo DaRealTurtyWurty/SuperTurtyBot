@@ -1,8 +1,11 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import com.google.common.primitives.Longs;
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.core.config.CommandPermission;
+import dev.darealturtywurty.superturtybot.database.Database;
 import lombok.Data;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent;
@@ -29,6 +32,7 @@ import net.dv8tion.jda.api.events.sticker.GuildStickerAddedEvent;
 import net.dv8tion.jda.api.events.sticker.GuildStickerRemovedEvent;
 import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -72,7 +76,7 @@ public class GuildData {
     // Economy
     private String economyCurrency;
     private boolean economyEnabled;
-    private int defaultEconomyBalance;
+    private BigInteger defaultEconomyBalance;
     private float incomeTax;
     private Map<String, Long> endOfDayIncomeTax;
 
@@ -179,7 +183,7 @@ public class GuildData {
         // Economy
         this.economyCurrency = "$";
         this.economyEnabled = true;
-        this.defaultEconomyBalance = 200;
+        this.defaultEconomyBalance = BigInteger.valueOf(200);
         this.incomeTax = 0.1F;
         this.endOfDayIncomeTax = new HashMap<>();
 
@@ -240,6 +244,19 @@ public class GuildData {
         this.isCollectingEnabled = true;
         this.shouldAnnounceJoins = true;
         this.shouldAnnounceLeaves = false;
+    }
+
+    public static GuildData getOrCreateGuildData(long guildId) {
+        GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guildId)).first();
+        if (config == null) {
+            config = new GuildData(guildId);
+            Database.getDatabase().guildData.insertOne(config);
+        }
+        return config;
+    }
+
+    public static GuildData getOrCreateGuildData(Guild guild) {
+        return GuildData.getOrCreateGuildData(guild.getIdLong());
     }
 
     public boolean shouldLog(Event event) {

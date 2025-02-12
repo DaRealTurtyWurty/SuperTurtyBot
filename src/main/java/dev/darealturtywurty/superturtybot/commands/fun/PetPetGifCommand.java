@@ -78,7 +78,7 @@ public class PetPetGifCommand extends CoreCommand {
         String imageStr;
         switch (subcommand) {
             case "user":
-                User user = event.getOption("user", null, OptionMapping::getAsUser);
+                User user = event.getOption("user", OptionMapping::getAsUser);
                 if (user == null) {
                     reply(event, "❌ You must provide a user to pet pet gif!", false, true);
                     return;
@@ -86,7 +86,7 @@ public class PetPetGifCommand extends CoreCommand {
                 imageStr = user.getEffectiveAvatar().getUrl();
                 break;
             case "image":
-                imageStr = event.getOption("image", null, OptionMapping::getAsString);
+                imageStr = event.getOption("image", OptionMapping::getAsString);
                 if (imageStr == null) {
                     reply(event, "❌ You must provide an image to pet pet gif!", false, true);
                     return;

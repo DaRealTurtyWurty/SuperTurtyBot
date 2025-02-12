@@ -3,7 +3,6 @@ package dev.darealturtywurty.superturtybot.commands.levelling;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -104,23 +103,13 @@ public final class LevellingManager extends ListenerAdapter {
     private static @NotNull Map<Long, GuildData> getGuildDataMap(Map<Long, List<Levelling>> levellingPerGuild) {
         Map<Long, GuildData> guildConfigs = new HashMap<>();
         for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
-            guildConfigs.computeIfAbsent(entry.getKey(), id -> {
-                GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", id)).first();
-                if (guildData == null) {
-                    guildData = new GuildData(id);
-                    Database.getDatabase().guildData.insertOne(guildData);
-                }
-
-                return guildData;
-            });
+            guildConfigs.computeIfAbsent(entry.getKey(), GuildData::getOrCreateGuildData);
         }
         return guildConfigs;
     }
 
     public boolean areLevelsEnabled(Guild guild) {
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
-        return config.isLevellingEnabled();
+        return GuildData.getOrCreateGuildData(guild).isLevellingEnabled();
     }
 
     @Override
@@ -130,8 +119,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         final Guild guild = event.getGuild();
 
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildData.getOrCreateGuildData(guild);
 
         final List<Long> disabledChannels = GuildData.getLongs(config.getDisabledLevellingChannels());
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong()))
@@ -212,8 +200,7 @@ public final class LevellingManager extends ListenerAdapter {
             updates.add(Updates.set("level", newLevel));
 
             if (levelUpMessage != null) {
-                final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-                final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
+                final GuildData config = GuildData.getOrCreateGuildData(guild);
 
                 sendLevelUpMessage(config, guild.getMember(user), newLevel, levelUpMessage.sendTo().orElse(null));
             }
@@ -266,8 +253,7 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     private void updateLevelRoles(Guild guild, Member member, int level) {
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildData.getOrCreateGuildData(guild);
         final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
         final var levelRoles = getLevelRoles(config);
         final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)

@@ -30,6 +30,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
@@ -94,18 +95,17 @@ public class HeistCommand extends EconomyCommand {
             return;
         }
 
-        long balance = EconomyManager.getBalance(account);
-        long setupCost = EconomyManager.determineHeistSetupCost(account);
-        if (balance < setupCost) {
-            event.getHook().editOriginalFormat("❌ You need another %s%s to start a heist!",
-                    config.getEconomyCurrency(),
-                    StringUtils.numberFormat(setupCost - balance)
+        BigInteger balance = EconomyManager.getBalance(account);
+        BigInteger setupCost = BigInteger.valueOf(EconomyManager.determineHeistSetupCost(account));
+        if (balance.compareTo(setupCost) < 0) {
+            event.getHook().editOriginalFormat("❌ You need another %s to start a heist!",
+                    StringUtils.numberFormat(setupCost.subtract(balance), config)
             ).queue();
             return;
         }
 
-        event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s%s.",
-                        config.getEconomyCurrency(), StringUtils.numberFormat(setupCost))
+        event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s.",
+                        StringUtils.numberFormat(setupCost, config))
                 .setActionRow(Button.success("heist:yes", "Yes"), Button.danger("heist:no", "No"))
                 .queue(message -> createHeistSetupWaiter(guild, member, message, config, account).build());
     }
@@ -129,18 +129,17 @@ public class HeistCommand extends EconomyCommand {
                         return;
                     }
 
-                    long balance = EconomyManager.getBalance(account);
-                    long setupCost = EconomyManager.determineHeistSetupCost(account);
-                    if (balance < setupCost) {
-                        message.editMessageFormat("❌ You need another %s%s to start a heist!",
-                                config.getEconomyCurrency(),
-                                StringUtils.numberFormat(setupCost - balance)
+                    BigInteger balance = EconomyManager.getBalance(account);
+                    BigInteger setupCost = BigInteger.valueOf(EconomyManager.determineHeistSetupCost(account));
+                    if (balance.compareTo(setupCost) < 0) {
+                        message.editMessageFormat("❌ You need another %s to start a heist!",
+                                StringUtils.numberFormat(setupCost.subtract(balance), config)
                         ).setComponents().queue();
                         return;
                     }
 
                     EconomyManager.removeMoney(account, setupCost, true);
-                    account.addTransaction(-setupCost, MoneyTransaction.HEIST_SETUP);
+                    account.addTransaction(setupCost.negate(), MoneyTransaction.HEIST_SETUP);
 
                     if (!Environment.INSTANCE.isDevelopment()) {
                         account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
@@ -243,9 +242,8 @@ public class HeistCommand extends EconomyCommand {
                         if (heist.isHeistComplete()) {
                             Pair<Long, Boolean> heistResult = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
                             EconomyManager.updateAccount(account);
-                            thread.sendMessage("✅ **Heist successful!** You have earned %s%s!%n%n%s".formatted(
-                                            config.getEconomyCurrency(),
-                                            StringUtils.numberFormat(heistResult.getLeft()),
+                            thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
+                                            StringUtils.numberFormat(BigInteger.valueOf(heistResult.getLeft()), config),
                                             heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
                                     .queue(ignored -> close(thread));
                         } else {

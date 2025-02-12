@@ -162,11 +162,7 @@ public final class AudioManager {
             public void playlistLoaded(AudioPlaylist playlist) {
                 if (textChannel != null) {
                     Guild guild = textChannel.getGuild();
-                    GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-                    if (config == null) {
-                        config = new GuildData(guild.getIdLong());
-                        Database.getDatabase().guildData.insertOne(config);
-                    }
+                    GuildData config = GuildData.getOrCreateGuildData(guild);
 
                     if (!config.isCanAddPlaylists()) {
                         textChannel.sendMessage("❌ You cannot add playlists!").queue();

@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -20,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -100,7 +102,7 @@ public class RobCommand extends EconomyCommand {
         account.setNextRob(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
 
         final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
-        if (robAccount.getWallet() <= 0) {
+        if (robAccount.getWallet().signum() <= 0) {
             event.getHook().editOriginal("❌ Better luck next time, this user's wallet is empty!").queue();
             EconomyManager.updateAccount(account);
             return;
@@ -108,13 +110,13 @@ public class RobCommand extends EconomyCommand {
 
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
-            final long robbedAmount = random.nextLong(1, robAccount.getWallet() / 4);
+            final BigInteger robbedAmount = MathUtils.getRandomBigInteger(BigInteger.ONE, robAccount.getWallet().divide(BigInteger.valueOf(4)));
 
             EconomyManager.addMoney(account, robbedAmount, false);
             account.addTransaction(robbedAmount, MoneyTransaction.ROB);
 
             EconomyManager.removeMoney(robAccount, robbedAmount, false);
-            robAccount.addTransaction(-robbedAmount, MoneyTransaction.ROB);
+            robAccount.addTransaction(robbedAmount.negate(), MoneyTransaction.ROB);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
                             .setTimestamp(Instant.now())
@@ -124,12 +126,12 @@ public class RobCommand extends EconomyCommand {
                     .queue();
         } else {
             int crimeLevel = account.getCrimeLevel();
-            long bank = account.getBank();
-            long bankFine = (bank / 100) * crimeLevel;
-            long fineAmount = random.nextLong(1_000, bankFine);
+            BigInteger bank = account.getBank();
+            BigInteger bankFine = bank.multiply(BigInteger.valueOf(crimeLevel)).divide(BigInteger.valueOf(100));
+            BigInteger fineAmount = MathUtils.getRandomBigInteger(BigInteger.valueOf(1000), bankFine);
 
             EconomyManager.removeMoney(account, fineAmount, false);
-            account.addTransaction(-fineAmount, MoneyTransaction.ROB);
+            account.addTransaction(fineAmount.negate(), MoneyTransaction.ROB);
 
             EconomyManager.addMoney(robAccount, fineAmount, false);
             robAccount.addTransaction(fineAmount, MoneyTransaction.ROB);
@@ -147,16 +149,16 @@ public class RobCommand extends EconomyCommand {
     }
 
     public record Responses(List<String> success, List<String> fail) {
-        public String getSuccess(GuildData config, User robber, User robbed, long amount) {
+        public String getSuccess(GuildData config, User robber, User robbed, BigInteger amount) {
             return success().get(ThreadLocalRandom.current().nextInt(success().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());
+                    .replace("{amount}", StringUtils.numberFormat(amount, config));
         }
 
-        public String getFail(GuildData config, User robber, User robbed, long amount) {
+        public String getFail(GuildData config, User robber, User robbed, BigInteger amount) {
             return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", StringUtils.numberFormat(amount)).replace("<>", config.getEconomyCurrency());
+                    .replace("{amount}", StringUtils.numberFormat(amount, config));
         }
     }
 }

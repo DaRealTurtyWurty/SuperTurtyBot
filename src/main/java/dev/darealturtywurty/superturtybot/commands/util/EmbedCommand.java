@@ -145,17 +145,17 @@ public class EmbedCommand extends CoreCommand {
         long userId = event.getUser().getIdLong();
         String name = event.getOption("name", UUID.randomUUID().toString(), OptionMapping::getAsString);
         String title = event.getOption("title", "", OptionMapping::getAsString);
-        String url = event.getOption("url", null, OptionMapping::getAsString);
+        String url = event.getOption("url", OptionMapping::getAsString);
         String description = event.getOption("description", "", OptionMapping::getAsString);
         String color = event.getOption("color", "black", OptionMapping::getAsString);
         String footer = event.getOption("footer", "", OptionMapping::getAsString);
-        String footerIconUrl = event.getOption("footer_icon_url", null, OptionMapping::getAsString);
-        String imageUrl = event.getOption("image_url", null, OptionMapping::getAsString);
-        String thumbnailUrl = event.getOption("thumbnail_url", null, OptionMapping::getAsString);
+        String footerIconUrl = event.getOption("footer_icon_url", OptionMapping::getAsString);
+        String imageUrl = event.getOption("image_url", OptionMapping::getAsString);
+        String thumbnailUrl = event.getOption("thumbnail_url", OptionMapping::getAsString);
         String author = event.getOption("author", "", OptionMapping::getAsString);
-        String authorIconUrl = event.getOption("author_icon_url", null, OptionMapping::getAsString);
-        String authorUrl = event.getOption("author_url", null, OptionMapping::getAsString);
-        String timestamp = event.getOption("timestamp", null, OptionMapping::getAsString);
+        String authorIconUrl = event.getOption("author_icon_url", OptionMapping::getAsString);
+        String authorUrl = event.getOption("author_url", OptionMapping::getAsString);
+        String timestamp = event.getOption("timestamp", OptionMapping::getAsString);
 
         UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
         if(userEmbeds == null) {
@@ -186,19 +186,19 @@ public class EmbedCommand extends CoreCommand {
 
     private void runEditEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
-        String title = event.getOption("title", null, OptionMapping::getAsString);
-        String url = event.getOption("url", null, OptionMapping::getAsString);
-        String description = event.getOption("description", null, OptionMapping::getAsString);
-        String color = event.getOption("color", null, OptionMapping::getAsString);
-        String footer = event.getOption("footer", null, OptionMapping::getAsString);
-        String footerIconUrl = event.getOption("footer_icon_url", null, OptionMapping::getAsString);
-        String imageUrl = event.getOption("image_url", null, OptionMapping::getAsString);
-        String thumbnailUrl = event.getOption("thumbnail_url", null, OptionMapping::getAsString);
-        String author = event.getOption("author", null, OptionMapping::getAsString);
-        String authorIconUrl = event.getOption("author_icon_url", null, OptionMapping::getAsString);
-        String authorUrl = event.getOption("author_url", null, OptionMapping::getAsString);
-        String timestamp = event.getOption("timestamp", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
+        String title = event.getOption("title", OptionMapping::getAsString);
+        String url = event.getOption("url", OptionMapping::getAsString);
+        String description = event.getOption("description", OptionMapping::getAsString);
+        String color = event.getOption("color", OptionMapping::getAsString);
+        String footer = event.getOption("footer", OptionMapping::getAsString);
+        String footerIconUrl = event.getOption("footer_icon_url", OptionMapping::getAsString);
+        String imageUrl = event.getOption("image_url", OptionMapping::getAsString);
+        String thumbnailUrl = event.getOption("thumbnail_url", OptionMapping::getAsString);
+        String author = event.getOption("author", OptionMapping::getAsString);
+        String authorIconUrl = event.getOption("author_icon_url", OptionMapping::getAsString);
+        String authorUrl = event.getOption("author_url", OptionMapping::getAsString);
+        String timestamp = event.getOption("timestamp", OptionMapping::getAsString);
 
         UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
         if(userEmbeds == null) {
@@ -234,7 +234,7 @@ public class EmbedCommand extends CoreCommand {
 
     private void runDeleteEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
 
         UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
         if(userEmbeds == null) {
@@ -255,7 +255,7 @@ public class EmbedCommand extends CoreCommand {
 
     private void runViewEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
 
         UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
         if(userEmbeds == null) {
@@ -305,7 +305,7 @@ public class EmbedCommand extends CoreCommand {
 
     private void runAddFieldEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
         String fieldName = event.getOption("field_name", ZERO_WIDTH_SPACE, OptionMapping::getAsString);
         String fieldValue = event.getOption("field_value", ZERO_WIDTH_SPACE, OptionMapping::getAsString);
         boolean inline = event.getOption("inline", false, OptionMapping::getAsBoolean);
@@ -335,7 +335,7 @@ public class EmbedCommand extends CoreCommand {
 
     private void runDeleteFieldEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
         int fieldIndex = event.getOption("field_index", 0, OptionMapping::getAsInt);
 
         UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
@@ -363,7 +363,7 @@ public class EmbedCommand extends CoreCommand {
 
     public void runEditFieldEmbed(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
-        String name = event.getOption("name", null, OptionMapping::getAsString);
+        String name = event.getOption("name", OptionMapping::getAsString);
         int fieldIndex = event.getOption("field_index", 0, OptionMapping::getAsInt);
         String fieldName = event.getOption("field_name", ZERO_WIDTH_SPACE, OptionMapping::getAsString);
         String fieldValue = event.getOption("field_value", ZERO_WIDTH_SPACE, OptionMapping::getAsString);
@@ -446,7 +446,7 @@ public class EmbedCommand extends CoreCommand {
         if(name.equals("field_index") &&
                 (subcommand.equals("edit_field") ||
                         subcommand.equals("delete_field"))) {
-            String embedName = event.getOption("name", null, OptionMapping::getAsString);
+            String embedName = event.getOption("name", OptionMapping::getAsString);
             if(embedName == null || embedName.isBlank()) {
                 event.replyChoices().queue();
                 return;

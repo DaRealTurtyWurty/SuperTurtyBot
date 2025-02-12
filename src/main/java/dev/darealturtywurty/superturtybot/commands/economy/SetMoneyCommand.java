@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
+import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -7,6 +8,8 @@ import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+
+import java.math.BigInteger;
 
 public class SetMoneyCommand extends EconomyCommand {
     public SetMoneyCommand() {
@@ -49,7 +52,7 @@ public class SetMoneyCommand extends EconomyCommand {
 
         Type type = Type.SET;
         long user;
-        long amount = 0;
+        BigInteger amount = BigInteger.ZERO;
         try {
             user = Long.parseLong(args[1]);
         } catch (NumberFormatException ignored) {
@@ -75,8 +78,8 @@ public class SetMoneyCommand extends EconomyCommand {
             }
 
             try {
-                amount = Long.parseLong(args[3]);
-                if (amount == 0 && type != Type.SET) {
+                amount = new BigInteger(args[3]);
+                if (amount.signum() == 0 && type != Type.SET) {
                     reply(event, "❌ You cannot add or remove 0!", false);
                     return;
                 }
@@ -86,9 +89,9 @@ public class SetMoneyCommand extends EconomyCommand {
             }
         }
 
-        if (amount == 0) {
+        if (amount.signum() == 0) {
             try {
-                amount = Long.parseLong(args[2]);
+                amount = new BigInteger(args[2]);
             } catch (NumberFormatException ignored) {
                 reply(event, "❌ You must provide an amount!", false);
                 return;
@@ -106,27 +109,26 @@ public class SetMoneyCommand extends EconomyCommand {
             case ADD -> {
                 EconomyManager.addMoney(account, amount);
                 account.addTransaction(amount, MoneyTransaction.SET_MONEY);
-                reply(event, "✅ Added %s%d to %s's balance!"
-                                .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
+                reply(event, "✅ Added %s to %s's balance!"
+                                .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
                         false);
             }
             case REMOVE -> {
                 EconomyManager.removeMoney(account, amount);
-                account.addTransaction(-amount, MoneyTransaction.SET_MONEY);
-                reply(event, "✅ Removed %s%d from %s's balance!"
-                                .formatted(config.getEconomyCurrency(), amount, user1.getAsMention()),
+                account.addTransaction(amount.negate(), MoneyTransaction.SET_MONEY);
+                reply(event, "✅ Removed %s from %s's balance!"
+                                .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
                         false);
             }
             case SET -> {
-                long prevBank = account.getBank();
-                long prevWallet = account.getWallet();
+                BigInteger prevBalance = EconomyManager.getBalance(account);
                 EconomyManager.setMoney(account, amount, true);
-                EconomyManager.setMoney(account, 0, false);
+                EconomyManager.setMoney(account, BigInteger.ZERO, false);
 
-                long difference = (account.getBank() + account.getWallet()) - (prevBank + prevWallet);
+                BigInteger difference = EconomyManager.getBalance(account).subtract(prevBalance);
                 account.addTransaction(difference, MoneyTransaction.SET_MONEY);
-                reply(event, "✅ Set %s's balance to %s%d!"
-                                .formatted(user1.getAsMention(), config.getEconomyCurrency(), amount),
+                reply(event, "✅ Set %s's balance to %s!"
+                                .formatted(user1.getAsMention(), StringUtils.numberFormat(amount, config)),
                         false);
             }
             default -> reply(event, "🤓 Hackerman!", false);

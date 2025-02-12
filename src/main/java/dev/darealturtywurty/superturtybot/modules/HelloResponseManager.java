@@ -1,7 +1,5 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -55,11 +53,7 @@ public class HelloResponseManager extends ListenerAdapter {
         if (shouldRespond(message)) {
             if(message.isFromGuild()) {
                 Guild guild = message.getGuild();
-                GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-                if(data == null) {
-                    data = new GuildData(guild.getIdLong());
-                    Database.getDatabase().guildData.insertOne(data);
-                }
+                GuildData data = GuildData.getOrCreateGuildData(guild);
 
                 MessageChannelUnion channel = message.getChannel();
 

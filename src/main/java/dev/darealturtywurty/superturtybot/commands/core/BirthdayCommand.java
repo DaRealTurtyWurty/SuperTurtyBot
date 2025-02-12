@@ -20,10 +20,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class BirthdayCommand extends CoreCommand {
@@ -111,8 +108,8 @@ public class BirthdayCommand extends CoreCommand {
                     return;
                 }
 
-                int day = event.getOption("day", 1, OptionMapping::getAsInt);
-                int month = event.getOption("month", 1, OptionMapping::getAsInt);
+                int day = Objects.requireNonNull(event.getOption("day", OptionMapping::getAsInt));
+                int month = Objects.requireNonNull(event.getOption("month", OptionMapping::getAsInt));
                 int year = event.getOption("year", Calendar.getInstance().get(Calendar.YEAR), OptionMapping::getAsInt);
                 if (day < 1 || day > TimeUtils.getDaysForMonth(month, year)) {
                     reply(event, "❌ You must provide a valid day for the month of " + TimeUtils.mapMonth(month) + "!", false, true);
@@ -151,7 +148,7 @@ public class BirthdayCommand extends CoreCommand {
                 event.reply("🎂 " + user.getAsMention() + "'s birthday is on the " +
                                 TimeUtils.mapDay(birthday.getDay()) + " of " + TimeUtils.mapMonth(birthday.getMonth()) +
                                 "! (" + TimeFormat.RELATIVE.format(TimeUtils.calculateTimeOfNextBirthday(birthday)) + ") This year they will be " +
-                                TimeUtils.determineAge(birthday.getYear(), birthday.getMonth(), birthday.getDay()) + " years old!")
+                                (TimeUtils.calculateCurrentAge(birthday.getYear(), birthday.getMonth(), birthday.getDay()) + 1) + " years old!")
                         .mentionRepliedUser(false)
                         .setAllowedMentions(Set.of())
                         .queue();

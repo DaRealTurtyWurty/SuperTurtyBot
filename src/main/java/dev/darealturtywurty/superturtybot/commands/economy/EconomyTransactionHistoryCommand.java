@@ -1,9 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
-import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
@@ -18,14 +16,10 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.AbstractXYAnnotation;
-import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.event.AnnotationChangeEvent;
-import org.jfree.chart.event.AnnotationChangeListener;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
@@ -34,7 +28,6 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.text.TextUtils;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.TextAnchor;
-import org.jfree.chart.util.PublicCloneable;
 import org.jfree.data.Range;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
@@ -48,10 +41,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
+import java.util.Optional;
 
 public class EconomyTransactionHistoryCommand extends SubcommandCommand {
     private static final TextAnchor[] ANCHORS = new TextAnchor[]
@@ -99,11 +94,13 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
         if(baos == null)
             return;
 
+        GuildData config = GuildData.getOrCreateGuildData(guild);
+
         StringBuilder transactionHistory = new StringBuilder();
         for (int i = 0; i < transactions.size(); i++) {
             MoneyTransaction transaction = transactions.get(i);
             transactionHistory.append("**Transaction ").append(i + 1).append(":**\n")
-                    .append("Amount: $").append(StringUtils.numberFormat(transaction.amount())).append("\n")
+                    .append("Amount: ").append(StringUtils.numberFormat(transaction.amount(), config)).append("\n")
                     .append("Type: ").append(transaction.type()).append("\n")
                     .append("Timestamp: ").append(TimeFormat.RELATIVE.format(transaction.timestamp())).append("\n");
         }
@@ -126,14 +123,14 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
     private static ByteArrayOutputStream createScatterPlot(SlashCommandInteractionEvent event, Economy account, List<MoneyTransaction> transactions) {
         XYSeries series = new XYSeries("Transactions");
 
-        long balance = EconomyManager.getBalance(account);
+        BigInteger balance = EconomyManager.getBalance(account);
 
         for (MoneyTransaction transaction : transactions) {
             long timestamp = transaction.timestamp();
-            long transactionAmount = transaction.amount();
+            BigInteger transactionAmount = transaction.amount();
 
             series.add(timestamp, balance);
-            balance -= transactionAmount;
+            balance = balance.subtract(transactionAmount);
         }
 
         XYSeriesCollection dataset = new XYSeriesCollection(series);
@@ -177,13 +174,13 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
     private static ByteArrayOutputStream createStepChart(SlashCommandInteractionEvent event, Economy account, List<MoneyTransaction> transactions) {
         TimeSeries series = new TimeSeries("Transactions");
 
-        long balance = EconomyManager.getBalance(account);
+        BigInteger balance = EconomyManager.getBalance(account);
 
-        long[] balances = new long[transactions.size()];
+        BigInteger[] balances = new BigInteger[transactions.size()];
         for (int i = transactions.size() - 1; i >= 0; i--) {
             MoneyTransaction transaction = transactions.get(i);
             balances[i] = balance;
-            balance -= transaction.amount();
+            balance = balance.subtract(transaction.amount());
         }
 
         for (int i = 0; i < transactions.size(); i++) {
@@ -207,19 +204,15 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
 
         XYPlot plot = chart.getXYPlot();
 
-        GuildData guildData = Database.getDatabase().guildData.find(Filters.eq("guild", account.getGuild())).first();
-        if (guildData == null) {
-            guildData = new GuildData(account.getGuild());
-            Database.getDatabase().guildData.insertOne(guildData);
-        }
+        GuildData config = GuildData.getOrCreateGuildData(account.getGuild());
 
         for (int index = 0; index < transactions.size(); index++) {
             MoneyTransaction transaction = transactions.get(index);
             double x = transaction.timestamp();
-            double y = balances[index];
+            double y = balances[index].doubleValue();
 
             String typeName = MoneyTransaction.getTypeName(transaction.type());
-            String label = typeName + "\n" + guildData.getEconomyCurrency() + StringUtils.numberFormat(transaction.amount());
+            String label = typeName + "\n" + StringUtils.numberFormat(transaction.amount(), config);
 
             var annotation = new MultiLineXYTextAnnotation(label, x, y);
             annotation.setFont(new Font("SansSerif", Font.PLAIN, 12));

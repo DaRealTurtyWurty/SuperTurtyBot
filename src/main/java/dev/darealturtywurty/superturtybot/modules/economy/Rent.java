@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,18 +12,18 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Rent {
-    private int baseRent;
-    private List<Integer> previousRents;
-    private int currentRent;
+    private BigInteger baseRent;
+    private List<BigInteger> previousRents;
+    private BigInteger currentRent;
     private boolean isPaused;
 
-    public Rent(int baseRent) {
+    public Rent(BigInteger baseRent) {
         this.baseRent = baseRent;
         this.previousRents = new ArrayList<>();
         this.currentRent = baseRent;
     }
 
-    public void setRent(int amount) {
+    public void setRent(BigInteger amount) {
         this.previousRents.add(this.currentRent);
         this.currentRent = amount;
     }
@@ -34,9 +35,9 @@ public class Rent {
     public void pauseRent() {
         this.isPaused = true;
 
-        if (this.currentRent != 0) {
+        if (this.currentRent.signum() != 0) {
             this.previousRents.add(this.currentRent);
-            this.currentRent = 0;
+            this.currentRent = BigInteger.ZERO;
         }
     }
 

@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.commands.core.suggestion;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
-import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -121,8 +120,7 @@ public final class SuggestionManager extends ListenerAdapter {
     }
     
     public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
-        final Bson serverConfigFilter = GuildConfigCommand.getFilter(guild);
-        final GuildData config = GuildConfigCommand.get(serverConfigFilter, guild);
+        final GuildData config = GuildData.getOrCreateGuildData(guild);
 
         TextChannel channel = guild.getTextChannelById(config.getSuggestions());
         if (channel == null) {
