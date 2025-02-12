@@ -20,6 +20,7 @@ import org.bson.conversions.Bson;
 public class Database {
     private static final Database DATABASE = new Database();
 
+    public final MongoDatabase mongoDatabase;
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
     public final MongoCollection<Suggestion> suggestions;
@@ -61,33 +62,33 @@ public class Database {
 
         final MongoClient client = connect(codecRegistry);
         ShutdownHooks.register(client::close);
-        final MongoDatabase database = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
+        this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
-        this.levelling = database.getCollection("levelling", Levelling.class);
-        this.counting = database.getCollection("counting", Counting.class);
-        this.suggestions = database.getCollection("suggestions", Suggestion.class);
-        this.highlighters = database.getCollection("highlighters", Highlighter.class);
-        this.warnings = database.getCollection("warnings", Warning.class);
-        this.tags = database.getCollection("tags", Tag.class);
-        this.starboard = database.getCollection("starboard", Showcase.class);
-        this.guildData = database.getCollection("guildData", GuildData.class);
-        this.userConfig = database.getCollection("userConfig", UserConfig.class);
-        this.youtubeNotifier = database.getCollection("youtubeNotifier", YoutubeNotifier.class);
-        this.twitchNotifier = database.getCollection("twitchNotifier", TwitchNotifier.class);
-        this.steamNotifier = database.getCollection("steamNotifier", SteamNotifier.class);
-        this.redditNotifier = database.getCollection("redditNotifier", RedditNotifier.class);
-        this.reports = database.getCollection("reports", Report.class);
-        this.quotes = database.getCollection("quotes", Quote.class);
-        this.userEmbeds = database.getCollection("userEmbeds", UserEmbeds.class);
-        this.reminders = database.getCollection("reminders", Reminder.class);
-        this.savedSongs = database.getCollection("savedSongs", SavedSongs.class);
-        this.wordleProfiles = database.getCollection("wordleProfiles", WordleProfile.class);
-        this.economy = database.getCollection("economy", Economy.class);
-        this.chatRevivers = database.getCollection("chatRevivers", ChatReviver.class);
-        this.birthdays = database.getCollection("birthdays", Birthday.class);
-        this.submissionCategories = database.getCollection("submissionCategories", SubmissionCategory.class);
-        this.userCollectables = database.getCollection("userCollectables", UserCollectables.class);
-        this.twoThousandFortyEight = database.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
+        this.levelling = mongoDatabase.getCollection("levelling", Levelling.class);
+        this.counting = mongoDatabase.getCollection("counting", Counting.class);
+        this.suggestions = mongoDatabase.getCollection("suggestions", Suggestion.class);
+        this.highlighters = mongoDatabase.getCollection("highlighters", Highlighter.class);
+        this.warnings = mongoDatabase.getCollection("warnings", Warning.class);
+        this.tags = mongoDatabase.getCollection("tags", Tag.class);
+        this.starboard = mongoDatabase.getCollection("starboard", Showcase.class);
+        this.guildData = mongoDatabase.getCollection("guildData", GuildData.class);
+        this.userConfig = mongoDatabase.getCollection("userConfig", UserConfig.class);
+        this.youtubeNotifier = mongoDatabase.getCollection("youtubeNotifier", YoutubeNotifier.class);
+        this.twitchNotifier = mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class);
+        this.steamNotifier = mongoDatabase.getCollection("steamNotifier", SteamNotifier.class);
+        this.redditNotifier = mongoDatabase.getCollection("redditNotifier", RedditNotifier.class);
+        this.reports = mongoDatabase.getCollection("reports", Report.class);
+        this.quotes = mongoDatabase.getCollection("quotes", Quote.class);
+        this.userEmbeds = mongoDatabase.getCollection("userEmbeds", UserEmbeds.class);
+        this.reminders = mongoDatabase.getCollection("reminders", Reminder.class);
+        this.savedSongs = mongoDatabase.getCollection("savedSongs", SavedSongs.class);
+        this.wordleProfiles = mongoDatabase.getCollection("wordleProfiles", WordleProfile.class);
+        this.economy = mongoDatabase.getCollection("economy", Economy.class);
+        this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
+        this.birthdays = mongoDatabase.getCollection("birthdays", Birthday.class);
+        this.submissionCategories = mongoDatabase.getCollection("submissionCategories", SubmissionCategory.class);
+        this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
+        this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
 
         final Bson guildIndex = Indexes.descending("guild");
         final Bson userIndex = Indexes.descending("user");
