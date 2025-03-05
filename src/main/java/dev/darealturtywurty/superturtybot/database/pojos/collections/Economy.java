@@ -86,6 +86,38 @@ public class Economy {
         this.transactions.add(new MoneyTransaction(timestamp, amount, type, targetId));
     }
 
+    public BigInteger getWallet() {
+        if(this.wallet == null) {
+            this.wallet = BigInteger.ZERO;
+        }
+
+        return this.wallet;
+    }
+
+    public BigInteger getBank() {
+        if(this.bank == null) {
+            this.bank = BigInteger.ZERO;
+        }
+
+        return this.bank;
+    }
+
+    public BigInteger getTotalBetLoss() {
+        if(this.totalBetLoss == null) {
+            this.totalBetLoss = BigInteger.ZERO;
+        }
+
+        return this.totalBetLoss;
+    }
+
+    public BigInteger getTotalBetWin() {
+        if(this.totalBetWin == null) {
+            this.totalBetWin = BigInteger.ZERO;
+        }
+
+        return this.totalBetWin;
+    }
+
     public void addBank(BigInteger amount) {
         this.bank = this.bank.add(amount);
     }
