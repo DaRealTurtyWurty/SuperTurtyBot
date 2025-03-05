@@ -81,20 +81,15 @@ public final class LevellingManager extends ListenerAdapter {
 
                         setXP(guild, user, newXP);
 
-                        Constants.LOGGER.info("Removed 5% ({}) XP from {} in {}", xp - newXP, levelling.getUser(), levelling.getGuild());
+                        Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
+                                xp - newXP,
+                                user.getId(),
+                                user.getAsMention(),
+                                guild.getName() + " (" + guild.getId() + ")");
                     }
 
                     guildCacheMap.clear();
                     userCacheMap.clear();
-                }
-
-                for (Levelling levelling : Database.getDatabase().levelling.find().into(new ArrayList<>())) {
-                    int newLevel = LevellingManager.getLevelForXP(levelling.getXp());
-                    if (newLevel != levelling.getLevel()) {
-                        levelling.setLevel(newLevel);
-                        Database.getDatabase().levelling.updateOne(Filters.and(Filters.eq("guild", levelling.getGuild()), Filters.eq("user", levelling.getUser())), Updates.set("level", newLevel));
-                        Constants.LOGGER.info("Updated {}'s level from {} to {}", levelling.getUser(), levelling.getLevel(), newLevel);
-                    }
                 }
             }
         }, 10, 30));
@@ -195,7 +190,7 @@ public final class LevellingManager extends ListenerAdapter {
         updates.add(Updates.set("xp", currentXP));
 
         final int newLevel = getLevelForXP(currentXP);
-        if (newLevel > level) {
+        if (newLevel != level) {
             userProfile.setLevel(newLevel);
             updates.add(Updates.set("level", newLevel));
 
@@ -342,26 +337,25 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     public void setXP(Guild guild, User user, int amount) {
-        final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
-
         Member member = guild.getMember(user);
         if (member == null)
             return;
 
-        final Levelling userProfile = getProfile(guild, member);
-        final List<Bson> updates = new ArrayList<>();
+        Levelling userProfile = getProfile(guild, member);
+        List<Bson> updates = new ArrayList<>();
 
-        final int level = userProfile.getLevel();
+        int level = userProfile.getLevel();
 
         userProfile.setXp(amount);
         updates.add(Updates.set("xp", amount));
 
-        final int newLevel = getLevelForXP(amount);
-        if (newLevel > level) {
+        int newLevel = getLevelForXP(amount);
+        if (newLevel != level) {
             userProfile.setLevel(newLevel);
             updates.add(Updates.set("level", newLevel));
         }
 
+        Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
         Database.getDatabase().levelling.updateOne(filter, updates);
         updateLevelRoles(guild, member, newLevel);
     }
