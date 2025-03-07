@@ -42,6 +42,7 @@ public class DepositCommand extends EconomyCommand {
         }
 
         BigInteger amount = event.getOption("amount", account.getWallet(), StringUtils.getAsBigInteger(event));
+        if (amount == null) return;
         if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
