@@ -303,8 +303,8 @@ public class MinecraftMobRegistry {
             .emoji("drowned")
             .question("What 3 items can the drowned spawn with (in hand)?")
             .answer()
-            .segments("Trident", "Nautilus Shell", "Fishing Rod")
-            .finish()
+                .segments("Trident", "Nautilus Shell", "Fishing Rod")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -313,8 +313,8 @@ public class MinecraftMobRegistry {
             .emoji("enderman")
             .question("What two overworld biomes can the enderman **NOT** spawn in?")
             .answer()
-            .segments("Mushroom Fields", "Deep Dark")
-            .finish()
+                .segments("Mushroom Fields", "Deep Dark")
+                .finish()
             .category(MobCategory.NEUTRAL)
             .rarity(CollectableRarity.RARE));
 
@@ -355,8 +355,8 @@ public class MinecraftMobRegistry {
             .emoji("panda")
             .question("What are the different personalities that pandas can have?")
             .answer()
-            .segments("Normal", "Lazy", "Worried", "Playful", "Aggressive", "Weak", "Brown")
-            .finish()
+                .segments("Normal", "Lazy", "Worried", "Playful", "Aggressive", "Weak", "Brown")
+                .finish()
             .category(MobCategory.NEUTRAL)
             .rarity(CollectableRarity.RARE));
 
@@ -365,8 +365,8 @@ public class MinecraftMobRegistry {
             .emoji("piglin")
             .question("What two biomes can piglins spawn in?")
             .answer()
-            .segments("Crimson Forest", "Nether Wastes")
-            .finish()
+                .segments("Crimson Forest", "Nether Wastes")
+                .finish()
             .category(MobCategory.NEUTRAL)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -383,8 +383,8 @@ public class MinecraftMobRegistry {
             .emoji("spider")
             .question("Name 2 possible status effects that the spider can spawn with.")
             .answer()
-            .anyNof(2, "Strength", "Speed", "Invisibility", "Regeneration")
-            .finish()
+                .anyNof(2, "Strength", "Speed", "Invisibility", "Regeneration")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.COMMON));
 
@@ -425,8 +425,8 @@ public class MinecraftMobRegistry {
             .emoji("bogged")
             .question("What two items can you get from shearing a bogged?")
             .answer()
-            .segments("Brown Mushroom", "Red Mushroom")
-            .finish()
+                .segments("Brown Mushroom", "Red Mushroom")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -525,10 +525,8 @@ public class MinecraftMobRegistry {
             .emoji("piglin_brute")
             .question("What item do piglin brutes hold?")
             .answer()
-            .orSegment(new Answer.OrSegment.Builder()
-                    .segment("Golden Axe")
-                    .segment("Gold Axe"))
-            .finish()
+                .or("Golden Axe", "Gold Axe")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.EPIC));
 
@@ -561,10 +559,9 @@ public class MinecraftMobRegistry {
             .emoji("silverfish")
             .question("List 3 blocks that silverfish can hide in.")
             .answer()
-            .anyNof(3, "Stone", "Cobblestone", "Stone Bricks", "Mossy Stone Bricks", "Cracked Stone Bricks", "Chiseled Stone Bricks", "Deepslate")
-            .notSegment(new Answer.NotSegment.Builder()
-                    .segments("Mossy Cobblestone", "Andesite", "Diorite", "Granite", "Polished Andesite", "Polished Diorite", "Polished Granite", "Smooth Stone"))
-            .finish()
+                .anyNof(3, "Stone", "Cobblestone", "Stone Bricks", "Mossy Stone Bricks", "Cracked Stone Bricks", "Chiseled Stone Bricks", "Deepslate")
+                .not("Mossy Cobblestone", "Andesite", "Diorite", "Granite", "Polished Andesite", "Polished Diorite", "Polished Granite", "Smooth Stone")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.COMMON));
 
@@ -589,8 +586,8 @@ public class MinecraftMobRegistry {
             .emoji("stray")
             .question("Name 3 biomes that strays can spawn in.")
             .answer()
-            .anyNof(3, "Snowy Tundra", "Snowy Plains", "Ice Spikes", "Frozen Ocean", "Frozen River", "Deep Frozen Ocean", "Legacy Frozen Ocean")
-            .finish()
+                .anyNof(3, "Snowy Tundra", "Snowy Plains", "Ice Spikes", "Frozen Ocean", "Frozen River", "Deep Frozen Ocean", "Legacy Frozen Ocean")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -623,10 +620,9 @@ public class MinecraftMobRegistry {
             .emoji("witch")
             .question("Name 2 potions that witches can drink.")
             .answer()
-            .anyNof(2, "Instant Health", "Fire Resistance", "Swiftness", "Water Breathing")
-            .notSegment(new Answer.NotSegment.Builder()
-                    .segments("Invisibility", "Night Vision", "Leaping", "Harming", "Poison", "Regeneration", "Strength", "Weakness", "Turtle Master", "Slow Falling"))
-                    .finish()
+                .anyNof(2, "Instant Health", "Fire Resistance", "Swiftness", "Water Breathing")
+                .not("Invisibility", "Night Vision", "Leaping", "Harming", "Poison", "Regeneration", "Strength", "Weakness", "Turtle Master", "Slow Falling")
+                .finish()
             .category(MobCategory.HOSTILE)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -732,9 +728,9 @@ public class MinecraftMobRegistry {
             .question("What two items do diamond chickens lay instead of eggs?")
             .answer()
                 .segment("Diamond")
-                .orSegment(new Answer.OrSegment.Builder()
-                    .segment("Lapis Lazuli")
-                    .segment("Lapis"))
+                .segment(new Answer.OrSegment.Builder()
+                        .segment("Lapis Lazuli", false, true)
+                        .segment("Lapis", false, true))
                 .finish()
             .category(MobCategory.JOKE)
             .rarity(CollectableRarity.EPIC));

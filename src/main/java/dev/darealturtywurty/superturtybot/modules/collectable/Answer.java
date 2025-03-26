@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 @Getter
 public class Answer {
@@ -30,18 +31,104 @@ public class Answer {
         return segments.length == 0 || Arrays.stream(segments).allMatch(AnswerSegment::isEmpty);
     }
 
+    public interface AnswerSegment {
+        boolean matches(String input);
+
+        boolean isEmpty();
+    }
+
+    public interface AnswerSegmentBuilder {
+        AnswerSegment build();
+    }
+
+    public interface MultipleSegmentAnswerSegmentBuilder<T> {
+
+        T segment(AnswerSegment segment);
+
+        default T segment(AnswerSegmentBuilder segment) {
+            return segment(segment.build());
+        }
+
+        default T segment(String segment, boolean caseSensitive, boolean contains) {
+            return segment(new StringAnswerSegment.Builder()
+                    .segment(segment)
+                    .caseSensitive(caseSensitive)
+                    .contains(contains));
+        }
+
+        default T segment(String segment) {
+            return segment(segment, false, false);
+        }
+
+        default T segment(String segment, boolean caseSensitive) {
+            return segment(segment, caseSensitive, false);
+        }
+
+        default T segments(String... segments) {
+            return segments(this::segment, segments);
+        }
+
+        default T segments(AnswerSegment... segments) {
+            return segments(this::segment, segments);
+        }
+
+        @SafeVarargs
+        private <S> T segments(Function<S, T> addSegment, S... segments) {
+            T self = null;
+            for (S segment : segments) {
+                self = addSegment.apply(segment);
+            }
+            return self;
+        }
+
+        default T numberSegment(double answer) {
+            return segment(new NumberSegment.Builder().answer(answer).build());
+        }
+
+        default T anyNof(int number, AnswerSegment... segments) {
+            var builder = new AnyNOfSegment.Builder().number(number).segments(segments);
+            return segment(builder);
+        }
+
+        default T anyNof(int number, String... segments) {
+            var builder = new AnyNOfSegment.Builder().number(number).segments(segments);
+            return segment(builder);
+        }
+
+        default T not(AnswerSegment... segments) {
+            var builder = new NotSegment.Builder().segments(segments);
+            return segment(builder);
+        }
+
+        default T not(String... segments) {
+            var builder = new NotSegment.Builder().segments(segments);
+            return segment(builder);
+        }
+
+        default T or(AnswerSegment... segments) {
+            var builder = new OrSegment.Builder().segments(segments);
+            return segment(builder);
+        }
+
+        default T or(String... segments) {
+            var builder = new OrSegment.Builder().segments(segments);
+            return segment(builder);
+        }
+    }
+
     @Getter
-    public static class AnswerSegment {
+    public static class StringAnswerSegment implements AnswerSegment {
         private final String segment;
         private final boolean caseSensitive;
         private final boolean contains;
 
-        private AnswerSegment(String segment, boolean caseSensitive, boolean contains) {
+        private StringAnswerSegment(String segment, boolean caseSensitive, boolean contains) {
             this.segment = segment;
             this.caseSensitive = caseSensitive;
             this.contains = contains;
         }
 
+        @Override
         public boolean matches(String input) {
             if (caseSensitive) {
                 if (contains) {
@@ -57,11 +144,12 @@ public class Answer {
             return input.equalsIgnoreCase(segment);
         }
 
+        @Override
         public boolean isEmpty() {
             return segment.isBlank();
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder {
             private String segment = "";
             private boolean caseSensitive = false;
             private boolean contains = false;
@@ -81,20 +169,20 @@ public class Answer {
                 return this;
             }
 
-            public AnswerSegment build() {
+            @Override
+            public StringAnswerSegment build() {
                 if (segment == null || segment.isBlank())
                     throw new IllegalArgumentException("Segment must be set!");
 
-                return new AnswerSegment(segment, caseSensitive, contains);
+                return new StringAnswerSegment(segment, caseSensitive, contains);
             }
         }
     }
 
-    public static class OrSegment extends AnswerSegment {
+    public static class OrSegment implements AnswerSegment {
         private final AnswerSegment[] segments;
 
         private OrSegment(AnswerSegment... segments) {
-            super("", false, false);
             this.segments = segments;
         }
 
@@ -114,44 +202,26 @@ public class Answer {
             return false;
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder, MultipleSegmentAnswerSegmentBuilder<Builder> {
             private final List<AnswerSegment> segments = new ArrayList<>();
 
-            public Builder segment(String segment) {
-                return segment(segment, false, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive) {
-                return segment(segment, caseSensitive, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive, boolean contains) {
-                return segment(new AnswerSegment.Builder()
-                        .segment(segment)
-                        .caseSensitive(caseSensitive)
-                        .contains(contains));
-            }
-
-            public Builder segment(AnswerSegment.Builder segment) {
-                return segment(segment.build());
-            }
-
+            @Override
             public Builder segment(AnswerSegment segment) {
                 segments.add(segment);
                 return this;
             }
 
+            @Override
             public OrSegment build() {
                 return new OrSegment(segments.toArray(new AnswerSegment[0]));
             }
         }
     }
 
-    public static class XOrSegment extends AnswerSegment {
+    public static class OneOfSegment implements AnswerSegment {
         private final AnswerSegment[] segments;
 
-        private XOrSegment(AnswerSegment... segments) {
-            super("", false, false);
+        private OneOfSegment(AnswerSegment... segments) {
             this.segments = segments;
         }
 
@@ -164,56 +234,37 @@ public class Answer {
         public boolean matches(String input) {
             boolean found = false;
             for (AnswerSegment segment : segments) {
-                if (segment.matches(input)) {
-                    if (found) {
-                        return false;
-                    }
+                if (!segment.matches(input))
+                    continue;
+                if (found)
+                    return false;
 
-                    found = true;
-                }
+                found = true;
             }
 
             return found;
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder, MultipleSegmentAnswerSegmentBuilder<Builder> {
             private final List<AnswerSegment> segments = new ArrayList<>();
 
-            public Builder segment(String segment) {
-                return segment(segment, false, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive) {
-                return segment(segment, caseSensitive, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive, boolean contains) {
-                return segment(new AnswerSegment.Builder()
-                        .segment(segment)
-                        .caseSensitive(caseSensitive)
-                        .contains(contains));
-            }
-
-            public Builder segment(AnswerSegment.Builder segment) {
-                return segment(segment.build());
-            }
-
+            @Override
             public Builder segment(AnswerSegment segment) {
                 segments.add(segment);
                 return this;
             }
 
-            public XOrSegment build() {
-                return new XOrSegment(segments.toArray(new AnswerSegment[0]));
+            @Override
+            public OneOfSegment build() {
+                return new OneOfSegment(segments.toArray(new AnswerSegment[0]));
             }
         }
     }
 
-    public static class NotSegment extends AnswerSegment {
+    public static class NotSegment implements AnswerSegment {
         private final AnswerSegment[] segments;
 
         private NotSegment(AnswerSegment... segments) {
-            super("", false, false);
             this.segments = segments;
         }
 
@@ -227,53 +278,26 @@ public class Answer {
             return Arrays.stream(segments).noneMatch(segment -> segment.matches(input));
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder, MultipleSegmentAnswerSegmentBuilder<Builder> {
             private final List<AnswerSegment> segments = new ArrayList<>();
 
-            public Builder segments(String... segments) {
-                for (String segment : segments) {
-                    segment(segment);
-                }
-
+            @Override
+            public Builder segment(AnswerSegment segment) {
+                this.segments.add(segment);
                 return this;
             }
 
-            public Builder segment(String segment) {
-                return segment(segment, false, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive) {
-                return segment(segment, caseSensitive, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive, boolean contains) {
-                return segment(new AnswerSegment.Builder()
-                        .segment(segment)
-                        .caseSensitive(caseSensitive)
-                        .contains(contains));
-            }
-
-            public Builder segment(AnswerSegment.Builder segment) {
-                this.segments.add(segment.build());
-                return this;
-            }
-
-            public Builder segments(AnswerSegment... segments) {
-                this.segments.addAll(Arrays.asList(segments));
-                return this;
-            }
-
+            @Override
             public NotSegment build() {
                 return new NotSegment(segments.toArray(new AnswerSegment[0]));
             }
         }
     }
 
-    public static class NumberSegment extends AnswerSegment {
+    public static class NumberSegment implements AnswerSegment {
         private final double answer;
 
         private NumberSegment(double answer) {
-            super("", false, false);
             this.answer = answer;
         }
 
@@ -291,7 +315,7 @@ public class Answer {
             }
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder {
             private double answer;
 
             public Builder answer(double answer) {
@@ -299,18 +323,18 @@ public class Answer {
                 return this;
             }
 
+            @Override
             public NumberSegment build() {
                 return new NumberSegment(answer);
             }
         }
     }
 
-    public static class AnyNofSegment extends AnswerSegment {
+    public static class AnyNOfSegment implements AnswerSegment {
         private final int number;
         private final AnswerSegment[] segments;
 
-        private AnyNofSegment(int number, AnswerSegment... segments) {
-            super("", false, false);
+        private AnyNOfSegment(int number, AnswerSegment... segments) {
             this.number = number;
             this.segments = segments;
         }
@@ -332,7 +356,7 @@ public class Answer {
             return count == number;
         }
 
-        public static class Builder {
+        public static class Builder implements AnswerSegmentBuilder, MultipleSegmentAnswerSegmentBuilder<Builder> {
             private int number;
             private final List<AnswerSegment> segments = new ArrayList<>();
 
@@ -341,37 +365,20 @@ public class Answer {
                 return this;
             }
 
-            public Builder segment(String segment) {
-                return segment(segment, false, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive) {
-                return segment(segment, caseSensitive, false);
-            }
-
-            public Builder segment(String segment, boolean caseSensitive, boolean contains) {
-                return segment(new AnswerSegment.Builder()
-                        .segment(segment)
-                        .caseSensitive(caseSensitive)
-                        .contains(contains));
-            }
-
-            public Builder segment(AnswerSegment.Builder segment) {
-                return segment(segment.build());
-            }
-
+            @Override
             public Builder segment(AnswerSegment segment) {
                 segments.add(segment);
                 return this;
             }
 
-            public AnyNofSegment build() {
-                return new AnyNofSegment(number, segments.toArray(new AnswerSegment[0]));
+            @Override
+            public AnyNOfSegment build() {
+                return new AnyNOfSegment(number, segments.toArray(new AnswerSegment[0]));
             }
         }
     }
 
-    public static class Builder {
+    public static class Builder implements MultipleSegmentAnswerSegmentBuilder<Builder> {
         private final List<AnswerSegment> segments = new ArrayList<>();
         private MinecraftMobCollectable.Builder parent;
 
@@ -380,80 +387,20 @@ public class Answer {
             return this;
         }
 
-        public Builder segment(String segment, boolean caseSensitive, boolean contains) {
-            return segment(new AnswerSegment.Builder()
-                    .segment(segment)
-                    .caseSensitive(caseSensitive)
-                    .contains(contains));
-        }
-
-        public Builder segment(String segment) {
-            return segment(segment, false, true);
-        }
-
-        public Builder segments(String... segments) {
-            for (String segment : segments) {
-                segment(segment);
-            }
-
-            return this;
-        }
-
-        public Builder segment(AnswerSegment.Builder segment) {
-            return segment(segment.build());
-        }
-
+        @Override
         public Builder segment(AnswerSegment segment) {
             segments.add(segment);
             return this;
         }
 
-        public Builder orSegment(OrSegment.Builder segment) {
-            return orSegment(segment.build());
+        @Override
+        public Builder segment(String segment) {
+            return segment(segment, false, true);
         }
 
-        public Builder orSegment(OrSegment segment) {
-            segments.add(segment);
-            return this;
-        }
-
-        public Builder xorSegment(XOrSegment.Builder segment) {
-            return xorSegment(segment.build());
-        }
-
-        public Builder xorSegment(XOrSegment segment) {
-            segments.add(segment);
-            return this;
-        }
-
-        public Builder notSegment(NotSegment.Builder segment) {
-            return notSegment(segment.build());
-        }
-
-        public Builder notSegment(NotSegment segment) {
-            segments.add(segment);
-            return this;
-        }
-
-        public Builder numberSegment(double answer) {
-            segments.add(new NumberSegment.Builder().answer(answer).build());
-            return this;
-        }
-
-        public Builder anyNof(int number, AnswerSegment... segments) {
-            var builder = new AnyNofSegment.Builder().number(number);
-            for (AnswerSegment segment : segments) {
-                builder.segment(segment);
-            }
-
-            this.segments.add(builder.build());
-            return this;
-        }
-
-        public Builder anyNof(int number, String... segments) {
-            return anyNof(number, Arrays.stream(segments)
-                    .map(segment -> new AnswerSegment.Builder().segment(segment).contains(true).build())
-                    .toArray(AnswerSegment[]::new));
+        @Override
+        public Builder segment(String segment, boolean caseSensitive) {
+            return segment(segment, caseSensitive, true);
         }
 
         public MinecraftMobCollectable.Builder finish() {
