@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 public class DatabaseConverter {
-    public static final String CONNECTION_STING = "mongodb+srv://TurtyBot:Np6Rp3Lbl4kZP9cF@turtybot.omb6j.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+    public static final String CONNECTION_STING = "";
 
     public static void main(String[] args) {
         System.out.println("Hello world!");

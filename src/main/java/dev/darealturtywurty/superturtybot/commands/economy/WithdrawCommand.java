@@ -36,7 +36,8 @@ public class WithdrawCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        BigInteger amount = event.getOption("amount", account.getWallet().signum() < 0 ? account.getWallet().negate() : BigInteger.ZERO, StringUtils.getAsBigInteger(event));
+        BigInteger amount = event.getOption("amount", BigInteger.ZERO.max(account.getWallet().negate()), StringUtils.getAsBigInteger(event));
+        if (amount == null) return;
         if (amount.signum() <= 0) {
             event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
             return;
