@@ -27,7 +27,7 @@ public class DatabaseConverter {
                 .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
 
         final MongoClient client = connect(codecRegistry);
-        final MongoDatabase database = client.getDatabase("TurtyBot");
+        final MongoDatabase database = client.getDatabase("TurtyBot-dev");
         upgradeData(database);
 
         client.close();

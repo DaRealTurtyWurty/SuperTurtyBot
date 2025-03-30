@@ -29,6 +29,7 @@ import java.net.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public final class RedditUtils {
@@ -46,6 +47,7 @@ public final class RedditUtils {
                 builder.proxy(proxy);
             }
 
+            builder.connectTimeout(30, TimeUnit.SECONDS);
             OkHttpClient client = builder.build();
             REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent, client), oAuthCreds);
             REDDIT.setLogHttp(true);

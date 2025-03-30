@@ -26,8 +26,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,46 +50,67 @@ public final class LevellingManager extends ListenerAdapter {
                 long sevenDaysInMillis = TimeUnit.DAYS.toMillis(7);
 
                 Map<Long, List<Levelling>> levellingPerGuild = new HashMap<>();
-                for (Levelling levelling : Database.getDatabase().levelling.find()
-                        .filter(Filters.and(
-                                Filters.lt("lastMessageTime", currentTime - sevenDaysInMillis),
-                                Filters.gt("xp", 0)))
-                        .into(new ArrayList<>())) {
-                    levellingPerGuild.computeIfAbsent(levelling.getGuild(), id -> new ArrayList<>()).add(levelling);
+                Map<Long, Guild> guildCacheMap = new HashMap<>();
+                for (Levelling levelling : Database.getDatabase().levelling.find()) {
+                    Guild guild = guildCacheMap.computeIfAbsent(levelling.getGuild(), id -> TurtyBot.getJDA().getGuildById(id));
+                    if (guild == null)
+                        continue;
+
+                    if (levelling.getLastMessageTime() < currentTime - sevenDaysInMillis) {
+                        if (levelling.getXp() <= 0) {
+                            Database.getDatabase().levelling.deleteOne(Filters.and(
+                                    Filters.eq("guild", levelling.getGuild()),
+                                    Filters.eq("user", levelling.getUser())));
+
+                            Member member = guild.getMemberById(levelling.getUser());
+                            if (member == null)
+                                continue;
+
+                            updateLevelRoles(guild, member, 0);
+                            continue;
+                        }
+
+                        levellingPerGuild.computeIfAbsent(levelling.getGuild(), id -> new ArrayList<>()).add(levelling);
+                    }
                 }
 
                 Map<Long, GuildData> guildConfigs = getGuildDataMap(levellingPerGuild);
-
                 for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
                     GuildData config = guildConfigs.get(entry.getKey());
                     if (!config.isShouldDepleteLevels() || !config.isLevellingEnabled())
                         continue;
 
-                    Map<Long, Guild> guildCacheMap = new HashMap<>();
-                    Map<Long, User> userCacheMap = new HashMap<>();
+                    Guild guild = guildCacheMap.get(entry.getKey());
+                    if (guild == null)
+                        continue;
+
                     for (Levelling levelling : entry.getValue()) {
-                        int xp = levelling.getXp();
-                        int newXP = xp - (int) (xp * 0.05);
+                        TurtyBot.getJDA().retrieveUserById(levelling.getUser())
+                                .useCache(true)
+                                .queue(user -> {
+                                    if (user == null) {
+                                        Constants.LOGGER.error("User {} ({}) not found in {}",
+                                                levelling.getUser(),
+                                                "<@" + levelling.getUser() + ">",
+                                                guild.getName() + " (" + guild.getId() + ")");
+                                        Database.getDatabase().levelling.deleteOne(Filters.and(
+                                                Filters.eq("guild", levelling.getGuild()),
+                                                Filters.eq("user", levelling.getUser())));
+                                        return;
+                                    }
 
-                        Guild guild = guildCacheMap.computeIfAbsent(levelling.getGuild(), id -> TurtyBot.getJDA().getGuildById(id));
-                        if (guild == null)
-                            continue;
+                                    int xp = levelling.getXp();
+                                    int newXP = Math.max(xp - (int) (xp * 0.05), 0);
 
-                        User user = userCacheMap.computeIfAbsent(levelling.getUser(), id -> TurtyBot.getJDA().getUserById(id));
-                        if (user == null)
-                            continue;
-
-                        setXP(guild, user, newXP);
-
-                        Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
-                                xp - newXP,
-                                user.getId(),
-                                user.getAsMention(),
-                                guild.getName() + " (" + guild.getId() + ")");
+                                    setXP(guild, user, newXP);
+                                    Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
+                                            xp - newXP,
+                                            user.getId(),
+                                            user.getAsMention(),
+                                            guild.getName() + " (" + guild.getId() + ")");
+                                }, throwable ->
+                                        Constants.LOGGER.error("Error retrieving user {} in {}: {}", levelling.getUser(), guild.getId(), throwable.getMessage()));
                     }
-
-                    guildCacheMap.clear();
-                    userCacheMap.clear();
                 }
             }
         }, 10, 30));
@@ -100,6 +121,7 @@ public final class LevellingManager extends ListenerAdapter {
         for (Map.Entry<Long, List<Levelling>> entry : levellingPerGuild.entrySet()) {
             guildConfigs.computeIfAbsent(entry.getKey(), GuildData::getOrCreateGuildData);
         }
+
         return guildConfigs;
     }
 
@@ -248,14 +270,20 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     private void updateLevelRoles(Guild guild, Member member, int level) {
-        final GuildData config = GuildData.getOrCreateGuildData(guild);
-        final var userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
-        final var levelRoles = getLevelRoles(config);
-        final var toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
+        GuildData config = GuildData.getOrCreateGuildData(guild);
+        Set<Long> userRoles = member.getRoles().stream().map(Role::getIdLong).collect(Collectors.toSet());
+        Map<Integer, Long> levelRoles = getLevelRoles(config);
+
+        List<Role> toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
                 .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
                 .map(guild::getRoleById)
                 .filter(Objects::nonNull).toList();
-        guild.modifyMemberRoles(member, toAddRoles, null).queue();
+        List<Role> toRemoveRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() > level)
+                .filter(it -> userRoles.contains(it.getValue())).map(Map.Entry::getValue)
+                .map(guild::getRoleById)
+                .filter(Objects::nonNull).toList();
+
+        guild.modifyMemberRoles(member, toAddRoles, toRemoveRoles).queue();
     }
 
     private void sendLevelUpMessage(GuildData config, Member member, int level, @Nullable Message replyTo) {
