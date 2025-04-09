@@ -26,7 +26,7 @@ public class FlagifyCommand extends CoreCommand {
 
     @Override
     public CommandCategory getCategory() {
-        return CommandCategory.IMAGE;
+        return CommandCategory.FUN;
     }
 
     @Override

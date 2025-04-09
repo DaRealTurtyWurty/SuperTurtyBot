@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -17,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class HttpDogCommand extends AbstractImageCommand {
+public class HttpDogCommand extends CoreCommand {
     private static final Map<Integer, String> STATUS_CODES = new HashMap<>();
     static {
         STATUS_CODES.put(100, "Continue");
@@ -99,6 +101,11 @@ public class HttpDogCommand extends AbstractImageCommand {
     }
 
     @Override
+    public CommandCategory getCategory() {
+        return CommandCategory.FUN;
+    }
+
+    @Override
     public String getDescription() {
         return "Gets a dog image for the corresponding http status code.";
     }
@@ -106,11 +113,6 @@ public class HttpDogCommand extends AbstractImageCommand {
     @Override
     public String getHowToUse() {
         return "/httpdog [statusCode]";
-    }
-
-    @Override
-    public ImageCategory getImageCategory() {
-        return ImageCategory.FUN;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.apache.commons.io.IOUtils;
@@ -13,19 +15,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class InspiroBotCommand extends AbstractImageCommand {
+public class InspiroBotCommand extends CoreCommand {
     public InspiroBotCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
+    @Override
+    public CommandCategory getCategory() {
+        return CommandCategory.FUN;
+    }
+
     @Override
     public String getDescription() {
         return "Gets an artificially generated inspirational quote";
-    }
-    
-    @Override
-    public ImageCategory getImageCategory() {
-        return ImageCategory.FUN;
     }
     
     @Override

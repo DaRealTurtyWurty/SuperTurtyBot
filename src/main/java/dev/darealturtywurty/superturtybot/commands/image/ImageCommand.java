@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.image;
 
+import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
+import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -13,7 +15,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-public class ImageCommand extends AbstractImageCommand {
+public class ImageCommand extends CoreCommand {
     public ImageCommand() {
         super(new Types(true, false, false, false));
     }
@@ -25,6 +27,11 @@ public class ImageCommand extends AbstractImageCommand {
     }
 
     @Override
+    public CommandCategory getCategory() {
+        return CommandCategory.FUN;
+    }
+
+    @Override
     public String getDescription() {
         return "Gets an image from the given type";
     }
@@ -32,11 +39,6 @@ public class ImageCommand extends AbstractImageCommand {
     @Override
     public String getHowToUse() {
         return "/image [type]";
-    }
-
-    @Override
-    public ImageCategory getImageCategory() {
-        return ImageCategory.MISC;
     }
 
     @Override
