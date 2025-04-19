@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.music.manager;
 
-import com.dunctebot.sourcemanagers.DuncteBotSources;
 import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -66,9 +65,6 @@ public final class AudioManager {
             spotifyManager.setPlaylistPageLimit(30);
             AUDIO_MANAGER.registerSourceManager(spotifyManager);
         }
-
-        // Clypit, Speech (TTS), PornHub, Reddit, OCRemix, TikTok, Mixcloud, SoundGasm
-        DuncteBotSources.registerAll(AUDIO_MANAGER, "en-US");
 
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
         final var ytSource = new YoutubeAudioSourceManager(true, new Music(), new AndroidVr(), new WebWithThumbnail(), new WebEmbedded());
