@@ -40,7 +40,7 @@ public class AIMessageResponder extends ListenerAdapter {
     private static final SimpleOpenAI OPEN_AI_CLIENT;
     private static final EncodingRegistry ENCODING_REGISTRY = Encodings.newLazyEncodingRegistry();
     private static final Encoding ENCODING = ENCODING_REGISTRY.getEncodingForModel(ModelType.GPT_4O_MINI);
-    private static final boolean INCLUDE_IMAGES = false;
+    private static final boolean INCLUDE_IMAGES = true;
 
     static {
         Optional<String> openAIKey = Environment.INSTANCE.openAIKey();
@@ -148,7 +148,7 @@ public class AIMessageResponder extends ListenerAdapter {
 
         OPEN_AI_CLIENT.chatCompletions()
                 .createStream(ChatRequest.builder()
-                        .model("gpt-4o-mini")
+                        .model("gpt-4.1-mini")
                         .message(ChatMessage.SystemMessage.of("Act as a fun discord bot, you can be as silly and playful as you want. Avoid saying too much for simple questions. Avoid asking questions and do not go over the character limit (4000 chars). Do not respond with random gibberish."))
                         .message(ChatMessage.SystemMessage.of(createArgs(event).toString()))
                         .messages(chat.stream()
