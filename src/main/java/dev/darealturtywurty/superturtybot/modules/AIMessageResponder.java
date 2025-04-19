@@ -234,13 +234,8 @@ public class AIMessageResponder extends ListenerAdapter {
                 .append("memberName is:").append(event.getMember().getEffectiveName()).append(",");
     }
 
-    // 512x512 = 40 tokens
     private static int countTokens(Message.Attachment attachment) {
-        int width = attachment.getWidth();
-        int height = attachment.getHeight();
-
-        Constants.LOGGER.debug("Tokens: {}", (width * height) / 512);
-        return (width * height) / 512;
+        return (int) Math.ceil(attachment.getSize() / 65536.0);
     }
 
     public record UserChatMessage(long userId, ChatMessage message) {
