@@ -30,4 +30,8 @@ public class Levelling {
         this.rankCard = new RankCard();
         this.inventory = new ArrayList<>();
     }
+
+    public void setXp(int xp) {
+        this.xp = Math.max(xp, 0);
+    }
 }

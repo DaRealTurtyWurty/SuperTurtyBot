@@ -206,9 +206,9 @@ public final class LevellingManager extends ListenerAdapter {
 
         final int level = userProfile.getLevel();
         int currentXP = userProfile.getXp();
-        currentXP += xp;
 
-        userProfile.setXp(currentXP);
+        userProfile.setXp(currentXP + xp);
+        currentXP = userProfile.getXp();
         updates.add(Updates.set("xp", currentXP));
 
         final int newLevel = getLevelForXP(currentXP);
@@ -240,13 +240,9 @@ public final class LevellingManager extends ListenerAdapter {
 
         final int level = userProfile.getLevel();
         int currentXP = userProfile.getXp();
-        currentXP -= xp;
 
-        if (currentXP < 0) {
-            currentXP = 0;
-        }
-
-        userProfile.setXp(currentXP);
+        userProfile.setXp(currentXP - xp);
+        currentXP = userProfile.getXp();
         updates.add(Updates.set("xp", currentXP));
 
         final int newLevel = getLevelForXP(currentXP);
