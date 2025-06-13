@@ -21,6 +21,7 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
+import dev.darealturtywurty.superturtybot.commands.util.minecraft.MappingsCommand;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
@@ -303,6 +304,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new LatexCommand());
         commands.add(new AddRoleToThreadCommand());
         commands.add(new RunCodeCommand());
+        commands.add(new MappingsCommand());
 
         // Moderation
         commands.add(new BanCommand());
