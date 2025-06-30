@@ -57,7 +57,7 @@ public final class LevellingManager extends ListenerAdapter {
                         continue;
 
                     if (levelling.getLastMessageTime() < currentTime - sevenDaysInMillis) {
-                        if (levelling.getXp() <= 0) {
+                        if (levelling.getXp() <= 0 && levelling.getInventory().isEmpty()) {
                             Database.getDatabase().levelling.deleteOne(Filters.and(
                                     Filters.eq("guild", levelling.getGuild()),
                                     Filters.eq("user", levelling.getUser())));
