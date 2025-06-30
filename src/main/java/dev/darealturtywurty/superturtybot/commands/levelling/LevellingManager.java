@@ -85,6 +85,12 @@ public final class LevellingManager extends ListenerAdapter {
                         continue;
 
                     for (Levelling levelling : entry.getValue()) {
+                        int xp = levelling.getXp();
+                        int newXP = Math.max(xp - (int) (xp * 0.05), 0);
+
+                        if (xp - newXP <= 0)
+                            continue;
+
                         TurtyBot.getJDA().retrieveUserById(levelling.getUser())
                                 .useCache(true)
                                 .queue(user -> {
@@ -98,9 +104,6 @@ public final class LevellingManager extends ListenerAdapter {
                                                 Filters.eq("user", levelling.getUser())));
                                         return;
                                     }
-
-                                    int xp = levelling.getXp();
-                                    int newXP = Math.max(xp - (int) (xp * 0.05), 0);
 
                                     setXP(guild, user, newXP);
                                     Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
