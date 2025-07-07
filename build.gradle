@@ -66,7 +66,7 @@ dependencies {
     implementation group: "dev.arbjerg", name: "lavaplayer", version: '2.2.2'
     implementation group: "com.github.natanbc", name: "lavadsp", version: "0.7.7"
     implementation group: "com.github.TopiSenpai.LavaSrc", name: "lavasrc", version: "4.0.1"
-    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.12.0"
+    implementation group: "dev.lavalink.youtube", name: "v2", version: "1.13.3"
     implementation group: "dev.arbjerg", name: "lavaplayer-natives", version: "2.2.2"
     implementation("club.minnced:udpqueue-native-linux-x86-64:0.2.9") // adds linux 64bit
     implementation("club.minnced:udpqueue-native-win-x86-64:0.2.9") // adds windows 64bit
