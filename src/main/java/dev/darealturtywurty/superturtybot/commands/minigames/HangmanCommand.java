@@ -208,8 +208,8 @@ public class HangmanCommand extends CoreCommand {
                         && Character.isLetter(event.getMessage().getContentRaw().charAt(0)))
                 .timeout(2, TimeUnit.MINUTES)
                 .timeoutAction(() -> {
-                    threadChannel.sendMessage("❌ You took too long to guess a letter!").queue(ignored ->
-                            threadChannel.getManager().setLocked(true).setArchived(true).queue());
+                    threadChannel.sendMessage("❌ You took too long to guess a letter! The word was `" + game.getWord() + "`!")
+                            .queue(ignored -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
                     GAMES.remove(game);
                 })
                 .success(event -> {
@@ -349,7 +349,7 @@ public class HangmanCommand extends CoreCommand {
         graphics.setColor(Color.BLACK);
         graphics.setFont(LETTER_FONT);
         FontMetrics metrics = graphics.getFontMetrics();
-        for (int index = 0; index < game.word.toCharArray().length; index++) {
+        for (int index = 0; index < game.word.length(); index++) {
             char letter = game.word.toCharArray()[index];
             if (game.getGuessedLetters().contains(letter)) {
                 String letterString = String.valueOf(letter);
@@ -357,6 +357,27 @@ public class HangmanCommand extends CoreCommand {
                         letterString,
                         startX + (index * 50) + 15 - (metrics.stringWidth(letterString) / 2),
                         485);
+            }
+        }
+
+        graphics.setFont(LETTER_FONT);
+        graphics.setColor(Color.BLACK);
+        graphics.drawString("Guessed Letters", 10, 100);
+        graphics.drawLine(10, 110, 10 + metrics.stringWidth("Guessed Letters"), 110);
+
+        int yPosition = 130;
+        int xPosition = 10;
+        int lettersPerColumn = 9;
+        int letterCount = 0;
+
+        for (char guessedLetter : game.getGuessedLetters()) {
+            graphics.drawString(String.valueOf(guessedLetter), xPosition, yPosition);
+            yPosition += 30;
+            letterCount++;
+
+            if (letterCount % lettersPerColumn == 0) {
+                yPosition = 130; // Reset y position for the new column
+                xPosition += 30; // Move to the next column
             }
         }
 
