@@ -40,7 +40,7 @@ public class AIMessageResponder extends ListenerAdapter {
     private static final SimpleOpenAI OPEN_AI_CLIENT;
     private static final EncodingRegistry ENCODING_REGISTRY = Encodings.newLazyEncodingRegistry();
     private static final Encoding ENCODING = ENCODING_REGISTRY.getEncodingForModel(ModelType.GPT_4O_MINI);
-    private static final boolean INCLUDE_IMAGES = true;
+    private static final boolean INCLUDE_IMAGES = false;
 
     static {
         Optional<String> openAIKey = Environment.INSTANCE.openAIKey();
@@ -132,7 +132,6 @@ public class AIMessageResponder extends ListenerAdapter {
                     InputStream stream = attachment.getProxy().download().get();
                     String base64 = Base64.getEncoder().encodeToString(stream.readAllBytes());
                     String url = "data:image/" + attachment.getFileExtension().toLowerCase(Locale.ROOT) + ";base64," + base64;
-                    //System.out.println(url);
                     contentParts.add(ContentPart.ContentPartImageUrl.of(ContentPart.ContentPartImageUrl.ImageUrl.of(url)));
                 } catch (IOException | InterruptedException | ExecutionException exception) {
                     Constants.LOGGER.error("Failed to download attachment!", exception);
@@ -148,7 +147,7 @@ public class AIMessageResponder extends ListenerAdapter {
 
         OPEN_AI_CLIENT.chatCompletions()
                 .createStream(ChatRequest.builder()
-                        .model("gpt-4.1-mini")
+                        .model("gpt-4.1-nano")
                         .message(ChatMessage.SystemMessage.of("Act as a fun discord bot, you can be as silly and playful as you want. Avoid saying too much for simple questions. Avoid asking questions and do not go over the character limit (4000 chars). Do not respond with random gibberish."))
                         .message(ChatMessage.SystemMessage.of(createArgs(event).toString()))
                         .messages(chat.stream()
