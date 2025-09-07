@@ -13,6 +13,7 @@ import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollector;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
+import dev.darealturtywurty.superturtybot.server.TurtyBotServer;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -111,6 +112,8 @@ public class TurtyBot {
         ServerIconManager.setIconsPath(serverIconsPath);
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
+
+        TurtyBotServer.init();
 
         Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
             final var jdaBuilder = JDABuilder.createDefault(token);

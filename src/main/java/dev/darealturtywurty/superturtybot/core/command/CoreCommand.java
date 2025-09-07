@@ -133,6 +133,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                 end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
             runMessageCtx(event);
+            CommandHook.commandUsed(this);
         }
     }
 
@@ -149,6 +150,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!this.types.normal())
             return;
 
+        // TODO: Probably rewrite this, cuz it runs the command methods twice.
         if (validateRatelimit(event.getAuthor().getIdLong(),
                 end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
             runNormalMessage(event);
@@ -156,14 +158,17 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             if (event.isFromGuild()) {
                 if (event.isFromThread()) {
                     runThreadMessage(event);
+                    CommandHook.commandUsed(this);
                     return;
                 }
 
                 runGuildMessage(event);
+                CommandHook.commandUsed(this);
                 return;
             }
 
             runPrivateMessage(event);
+            CommandHook.commandUsed(this);
         }
     }
 
@@ -179,6 +184,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             String subcommand = event.getSubcommandName();
             if (subcommand == null) {
                 runSlash(event);
+                CommandHook.commandUsed(this);
                 return;
             }
 
@@ -186,8 +192,14 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                     .filter(sub -> sub.getName().equalsIgnoreCase(subcommand))
                     .findFirst()
                     .ifPresentOrElse(
-                            sub -> sub.execute(event),
-                            () -> runSlash(event)
+                            sub -> {
+                                sub.execute(event);
+                                CommandHook.commandUsed(this);
+                            },
+                            () -> {
+                                runSlash(event);
+                                CommandHook.commandUsed(this);
+                            }
                     );
         }
     }
@@ -202,6 +214,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                 end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
             runUserCtx(event);
+            CommandHook.commandUsed(this);
         }
     }
 

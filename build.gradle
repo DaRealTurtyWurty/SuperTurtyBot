@@ -77,6 +77,9 @@ dependencies {
     implementation group: 'com.apptasticsoftware', name: 'rssreader', version: '3.9.0'
     implementation group: 'com.twitter', name: 'twitter-api-java-sdk', version: '2.0.3'
     implementation group: 'io.javalin', name: 'javalin', version: '6.4.0'
+    implementation group: 'io.prometheus', name: 'simpleclient', version: '0.16.0'
+    implementation group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.16.0'
+    implementation group: 'io.prometheus', name: 'simpleclient_common', version: '0.16.0'
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.1.1'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.1.1'
 

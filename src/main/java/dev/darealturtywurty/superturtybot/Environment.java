@@ -49,6 +49,18 @@ public final class Environment {
         return getString("MONGO_CONNECTION_STRING");
     }
 
+    public Optional<Integer> serverPort() {
+        return getInteger("SERVER_PORT");
+    }
+
+    public Optional<String> serverUsername() {
+        return getString("SERVER_USERNAME");
+    }
+
+    public Optional<String> serverPassword() {
+        return getString("SERVER_PASSWORD");
+    }
+
     public Optional<Long> ownerId() {
         return getLong("OWNER_ID");
     }

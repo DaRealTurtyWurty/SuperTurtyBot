@@ -21,7 +21,6 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
-import dev.darealturtywurty.superturtybot.commands.util.minecraft.MappingsCommand;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
@@ -46,10 +45,7 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -60,6 +56,7 @@ public class CommandHook extends ListenerAdapter {
     private static final Set<CommandCategory> CATEGORIES = new HashSet<>();
     private static boolean IS_DEV_MODE = false;
     private static final Set<Long> LOADED_GUILDS = new HashSet<>();
+    private static final Map<CoreCommand, Long> COMMAND_USAGE_COUNT = new HashMap<>();
 
     private final Set<CoreCommand> commands = new HashSet<>();
 
@@ -72,6 +69,18 @@ public class CommandHook extends ListenerAdapter {
 
     public static boolean isDevMode() {
         return IS_DEV_MODE;
+    }
+
+    public static void commandUsed(CoreCommand command) {
+        COMMAND_USAGE_COUNT.merge(command, 1L, Long::sum);
+    }
+
+    public static long getCommandUsageCount(CoreCommand command) {
+        return COMMAND_USAGE_COUNT.getOrDefault(command, 0L);
+    }
+
+    public static long getTotalCommandsUsed() {
+        return COMMAND_USAGE_COUNT.values().stream().mapToLong(Long::longValue).sum();
     }
 
     private static void init(JDA jda) {
