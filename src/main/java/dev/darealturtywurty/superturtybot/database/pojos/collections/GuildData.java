@@ -72,6 +72,10 @@ public class GuildData {
     private long levelUpMessageChannel;
     private boolean shouldEmbedLevelUpMessage;
     private boolean shouldDepleteLevels;
+    private String xpBoostedChannels;
+    private String xpBoostedRoles;
+    private int xpBoostPercentage;
+    private boolean doServerBoostsAffectXP;
 
     // Economy
     private String economyCurrency;
@@ -179,6 +183,11 @@ public class GuildData {
         this.hasLevelUpChannel = false;
         this.levelUpMessageChannel = 0L;
         this.shouldEmbedLevelUpMessage = true;
+        this.shouldDepleteLevels = false;
+        this.xpBoostedChannels = "";
+        this.xpBoostedRoles = "";
+        this.xpBoostPercentage = 15;
+        this.doServerBoostsAffectXP = true;
 
         // Economy
         this.economyCurrency = "$";

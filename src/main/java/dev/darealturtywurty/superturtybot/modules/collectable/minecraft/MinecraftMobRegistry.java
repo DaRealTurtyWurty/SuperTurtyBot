@@ -850,6 +850,6 @@ public class MinecraftMobRegistry {
     }
 
     public static void load() {
-        Constants.LOGGER.info("Loading Minecraft Mob Collectables...");
+        Constants.LOGGER.info("Loaded Minecraft Mob Collectables");
     }
 }

@@ -138,7 +138,6 @@ public final class LevellingManager extends ListenerAdapter {
             return;
 
         final Guild guild = event.getGuild();
-
         final GuildData config = GuildData.getOrCreateGuildData(guild);
 
         final List<Long> disabledChannels = GuildData.getLongs(config.getDisabledLevellingChannels());
@@ -165,10 +164,30 @@ public final class LevellingManager extends ListenerAdapter {
         if (!cooldown(guild, member, config))
             return;
 
-        int xp = addXP(guild, member.getUser(),
-                ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP()),
-                new LevelUpMessage(guild, Optional.of(event.getMessage())));
-        if (xp <= 0) return;
+        List<Long> boostedChannels = GuildData.getLongs(config.getXpBoostedChannels());
+        int boostPercentage = 100;
+        if (boostedChannels.contains(event.getChannel().getIdLong()) || (event.getChannel().getType().isThread() && boostedChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))) {
+            boostPercentage += config.getXpBoostPercentage();
+        }
+
+        List<Long> boostedRoles = GuildData.getLongs(config.getXpBoostedRoles());
+        for (Role role : member.getRoles()) {
+            if (boostedRoles.contains(role.getIdLong())) {
+                boostPercentage += config.getXpBoostPercentage();
+            }
+        }
+
+        if(config.isDoServerBoostsAffectXP() && member.getTimeBoosted() != null) {
+            boostPercentage += config.getXpBoostPercentage();
+        }
+
+        int xp = ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP());
+        System.out.println("Base XP: " + xp + " (Min: " + config.getMinXP() + ", Max: " + config.getMaxXP() + ")");
+        xp = Math.max((int) (xp * (boostPercentage / 100f)), 1);
+        System.out.println("Final XP: " + xp);
+
+        int newXp = addXP(guild, member.getUser(), xp, new LevelUpMessage(guild, Optional.of(event.getMessage())));
+        if (newXp <= 0) return;
 
         // TODO: Re-enable when implemented properly
         /*
