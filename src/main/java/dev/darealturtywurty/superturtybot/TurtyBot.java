@@ -4,11 +4,14 @@ import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
+import dev.darealturtywurty.superturtybot.core.ConsoleTee;
+import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
+import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollector;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
@@ -59,9 +62,9 @@ public class TurtyBot {
 
     private static JDA jda;
 
-    public static void main(String[] args) throws InvalidTokenException {
+    public static void main(String[] args) throws InvalidTokenException, IOException {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
-        Constants.LOGGER.info("Starting TurtyBot...");
+
 
         ArgumentParser parser = ArgumentParsers.newFor("TurtyBot")
                 .build()
@@ -88,6 +91,16 @@ public class TurtyBot {
                 .setDefault(Path.of("./serverIcons.json"))
                 .help("The path to the server icons json file.");
 
+        parser.addArgument("-logFile", "--logFile")
+                .type(new PathArgumentType().verifyCanWrite())
+                .setDefault(Path.of("./latest.log"))
+                .help("The path to the log file.");
+
+        var ctl = ConsoleTee.toFile(parser.parseArgsOrFail(args).get("logFile"), false);
+        ShutdownHooks.register(ctl::close);
+
+        Constants.LOGGER.info("Starting TurtyBot...");
+
         Namespace namespace = parser.parseArgsOrFail(args);
         Environment.INSTANCE.load(namespace.get("environment"));
         Constants.LOGGER.info("Loaded environment file!");
@@ -111,6 +124,8 @@ public class TurtyBot {
         ServerIconManager.setIconsPath(serverIconsPath);
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
+
+        Database.ensureIndexes();
 
         Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
             final var jdaBuilder = JDABuilder.createDefault(token);

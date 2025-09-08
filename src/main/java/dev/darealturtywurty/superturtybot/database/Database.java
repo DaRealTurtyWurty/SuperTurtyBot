@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.database;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
+import com.mongodb.*;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -10,15 +9,23 @@ import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.codecs.*;
+import dev.darealturtywurty.superturtybot.database.codecs.BigDecimalCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.BigIntegerCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.ColorCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.NewsitemCodec;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 public class Database {
-    private static final Database DATABASE = new Database();
+    private static volatile Database instance;
 
     public final MongoDatabase mongoDatabase;
     public final MongoCollection<Levelling> levelling;
@@ -47,21 +54,7 @@ public class Database {
     public final MongoCollection<UserCollectables> userCollectables;
     public final MongoCollection<TwoThousandFortyEightProfile> twoThousandFortyEight;
 
-    @SuppressWarnings("resource")
-    public Database() {
-        final CodecRegistry pojoRegistry = CodecRegistries
-            .fromProviders(PojoCodecProvider.builder().automatic(true).build());
-        final CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(
-                new BigIntegerCodec(),
-                new BigDecimalCodec(),
-                new ColorCodec(),
-                new NewsitemCodec()
-        );
-        final CodecRegistry codecRegistry = CodecRegistries
-            .fromRegistries(customCodecRegistry, MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
-
-        final MongoClient client = connect(codecRegistry);
-        ShutdownHooks.register(client::close);
+    private Database(MongoClient client) {
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
         this.levelling = mongoDatabase.getCollection("levelling", Levelling.class);
@@ -90,52 +83,129 @@ public class Database {
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
         this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
 
-        final Bson guildIndex = Indexes.descending("guild");
-        final Bson userIndex = Indexes.descending("user");
-        final Bson channelIndex = Indexes.descending("channel");
-        final Bson messageIndex = Indexes.descending("message");
-        final Bson guildUserIndex = Indexes.compoundIndex(guildIndex, userIndex);
-        
-        this.levelling.createIndex(guildUserIndex);
-        this.counting.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("users")));
-        this.suggestions.createIndex(guildUserIndex);
-        this.highlighters.createIndex(guildUserIndex);
-        this.warnings.createIndex(guildUserIndex);
-        this.tags.createIndex(guildUserIndex);
-        this.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
-        this.guildData.createIndex(guildIndex);
-        this.userConfig.createIndex(guildUserIndex);
-        this.youtubeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
-        this.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
-        this.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
-        this.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
-        this.reports.createIndex(guildIndex);
-        this.quotes.createIndex(guildUserIndex);
-        this.userEmbeds.createIndex(userIndex);
-        this.reminders.createIndex(guildUserIndex);
-        this.savedSongs.createIndex(userIndex);
-        this.wordleProfiles.createIndex(userIndex);
-        this.economy.createIndex(guildUserIndex);
-        this.chatRevivers.createIndex(guildIndex);
-        this.birthdays.createIndex(userIndex);
-        this.submissionCategories.createIndex(guildIndex);
-        this.userCollectables.createIndex(userIndex);
-        this.twoThousandFortyEight.createIndex(userIndex);
+        ShutdownHooks.register(client::close);
     }
 
     public static Database getDatabase() {
-        return DATABASE;
+        Database local = instance;
+        if (local == null) {
+            synchronized (Database.class) {
+                local = instance;
+                if (local == null) {
+                    MongoClient client = connect(buildCodecRegistry());
+                    instance = local = new Database(client);
+                }
+            }
+        }
+
+        return local;
+    }
+
+    public static void ensureIndexes() {
+        runWithRetry(3, Duration.ofSeconds(2), () -> {
+            Database db = getDatabase();
+
+            final Bson guildIndex = Indexes.descending("guild");
+            final Bson userIndex = Indexes.descending("user");
+            final Bson channelIndex = Indexes.descending("channel");
+            final Bson messageIndex = Indexes.descending("message");
+            final Bson guildUser = Indexes.compoundIndex(guildIndex, userIndex);
+
+            db.levelling.createIndex(guildUser);
+            db.counting.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("users")));
+            db.suggestions.createIndex(guildUser);
+            db.highlighters.createIndex(guildUser);
+            db.warnings.createIndex(guildUser);
+            db.tags.createIndex(guildUser);
+            db.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
+            db.guildData.createIndex(guildIndex);
+            db.userConfig.createIndex(guildUser);
+            db.youtubeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
+            db.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
+            db.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
+            db.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
+            db.reports.createIndex(guildIndex);
+            db.quotes.createIndex(guildUser);
+            db.userEmbeds.createIndex(userIndex);
+            db.reminders.createIndex(guildUser);
+            db.savedSongs.createIndex(userIndex);
+            db.wordleProfiles.createIndex(userIndex);
+            db.economy.createIndex(guildUser);
+            db.chatRevivers.createIndex(guildIndex);
+            db.birthdays.createIndex(userIndex);
+            db.submissionCategories.createIndex(guildIndex);
+            db.userCollectables.createIndex(userIndex);
+            db.twoThousandFortyEight.createIndex(userIndex);
+
+            return null;
+        });
+    }
+
+    private static CodecRegistry buildCodecRegistry() {
+        final CodecRegistry pojoRegistry = CodecRegistries
+                .fromProviders(PojoCodecProvider.builder().automatic(true).build());
+        final CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(
+                new BigIntegerCodec(),
+                new BigDecimalCodec(),
+                new ColorCodec(),
+                new NewsitemCodec()
+        );
+
+        return CodecRegistries.fromRegistries(
+                customCodecRegistry,
+                MongoClientSettings.getDefaultCodecRegistry(),
+                pojoRegistry
+        );
     }
 
     private static MongoClient connect(CodecRegistry codec) {
-        if (Environment.INSTANCE.mongoConnectionString().isEmpty()) {
+        String uri = Environment.INSTANCE.mongoConnectionString().orElse("");
+        if (uri.isBlank()) {
             Constants.LOGGER.error("MongoDB connection string has not been set!");
-            return MongoClients.create();
+            return MongoClients.create(
+                    MongoClientSettings.builder()
+                            .codecRegistry(codec)
+                            .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
+                            .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
+                            .build()
+            );
         }
 
-        final ConnectionString connectionString = new ConnectionString(Environment.INSTANCE.mongoConnectionString().get());
-        final MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connectionString)
-            .applicationName("TurtyBot").codecRegistry(codec).build();
+        var connectionString = new ConnectionString(uri);
+        var settings = MongoClientSettings.builder()
+                .applyConnectionString(connectionString)
+                .codecRegistry(codec)
+                .applicationName("TurtyBot")
+                .retryReads(true)
+                .retryWrites(true)
+                .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
+                .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
+                .build();
+
         return MongoClients.create(settings);
+    }
+
+    private static <T> T runWithRetry(int attempts, Duration backoffBase, Callable<T> callable) {
+        MongoException last = null;
+        for (int index = 1; index <= attempts; index++) {
+            try {
+                return callable.call();
+            } catch (MongoSocketReadException | MongoTimeoutException exception) {
+                last = exception;
+                if (index == attempts) break;
+                try {
+                    Thread.sleep(backoffBase.toMillis() * index);
+                } catch (InterruptedException ignored) {}
+            } catch (MongoException exception) {
+                throw exception;
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+        }
+
+        if (last == null)
+            throw new IllegalStateException("Unreachable code executed in runWithRetry");
+
+        throw last;
     }
 }

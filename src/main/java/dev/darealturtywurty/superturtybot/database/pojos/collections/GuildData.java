@@ -261,6 +261,7 @@ public class GuildData {
             config = new GuildData(guildId);
             Database.getDatabase().guildData.insertOne(config);
         }
+
         return config;
     }
 
