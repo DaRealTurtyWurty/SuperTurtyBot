@@ -182,9 +182,7 @@ public final class LevellingManager extends ListenerAdapter {
         }
 
         int xp = ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP());
-        System.out.println("Base XP: " + xp + " (Min: " + config.getMinXP() + ", Max: " + config.getMaxXP() + ")");
         xp = Math.max((int) (xp * (boostPercentage / 100f)), 1);
-        System.out.println("Final XP: " + xp);
 
         int newXp = addXP(guild, member.getUser(), xp, new LevelUpMessage(guild, Optional.of(event.getMessage())));
         if (newXp <= 0) return;
