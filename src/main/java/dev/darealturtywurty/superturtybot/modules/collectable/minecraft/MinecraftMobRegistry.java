@@ -834,7 +834,7 @@ public class MinecraftMobRegistry {
             .rarity(CollectableRarity.EPIC));
 
     public static void load() {
-        Constants.LOGGER.info("Loaded Minecraft Mob Collectables");
+        Constants.LOGGER.info("Loaded Minecraft Mob Collectables: {}", MOB_REGISTRY.size());
     }
 }
 

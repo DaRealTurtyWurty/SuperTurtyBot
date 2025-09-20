@@ -388,7 +388,7 @@ public class RainbowSixOperatorRegistry {
             .name("Amaru")
             .emoji("amaru")
             .question("Does Amaru's Garra Hook allow her to rappel up and over hatches?")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable OG_GOYO = register("og_goyo", RainbowSixOperatorCollectable.builder()
@@ -601,6 +601,6 @@ public class RainbowSixOperatorRegistry {
             .rarity(CollectableRarity.LEGENDARY));
 
     public static void load() {
-        Constants.LOGGER.info("Loaded Rainbow Six Operators");
+        Constants.LOGGER.info("Loaded Rainbow Six Operator Collectables: {}", RAINBOW_SIX_OPERATOR_REGISTRY.size());
     }
 }

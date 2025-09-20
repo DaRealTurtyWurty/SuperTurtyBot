@@ -30,4 +30,8 @@ public class Registry<Type extends Registerable> {
         this.registerables.put(name, object);
         return object;
     }
+
+    public int size() {
+        return this.registerables.size();
+    }
 }

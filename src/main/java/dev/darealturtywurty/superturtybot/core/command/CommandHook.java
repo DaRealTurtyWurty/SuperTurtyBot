@@ -27,6 +27,7 @@ import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
+import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -112,6 +113,7 @@ public class CommandHook extends ListenerAdapter {
 
         MinecraftMobRegistry.load();
         RainbowSixOperatorRegistry.load();
+        CountryCollectableRegistry.load();
     }
 
     private static void sendStartupMessage(@Nullable TextChannel channel, boolean shouldSendChangelog) {
