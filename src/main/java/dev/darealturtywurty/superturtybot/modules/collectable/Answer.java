@@ -1,22 +1,12 @@
 package dev.darealturtywurty.superturtybot.modules.collectable;
 
-import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollectable;
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
-@Getter
-public class Answer {
-    private final AnswerSegment[] segments;
-
-    private Answer(AnswerSegment... segments) {
-        this.segments = segments;
-    }
-
+public record Answer(AnswerSegment... segments) {
     public boolean matches(String input) {
         for (AnswerSegment segment : segments) {
             if (!segment.matches(input)) {
@@ -72,8 +62,7 @@ public class Answer {
             return segments(this::segment, segments);
         }
 
-        @SafeVarargs
-        private <S> T segments(Function<S, T> addSegment, S... segments) {
+        default <S> T segments(Function<S, T> addSegment, S... segments) {
             T self = null;
             for (S segment : segments) {
                 self = addSegment.apply(segment);
@@ -116,18 +105,8 @@ public class Answer {
         }
     }
 
-    @Getter
-    public static class StringAnswerSegment implements AnswerSegment {
-        private final String segment;
-        private final boolean caseSensitive;
-        private final boolean contains;
-
-        private StringAnswerSegment(String segment, boolean caseSensitive, boolean contains) {
-            this.segment = segment;
-            this.caseSensitive = caseSensitive;
-            this.contains = contains;
-        }
-
+    public record StringAnswerSegment(String segment, boolean caseSensitive,
+                                      boolean contains) implements AnswerSegment {
         @Override
         public boolean matches(String input) {
             if (caseSensitive) {
@@ -179,13 +158,7 @@ public class Answer {
         }
     }
 
-    public static class OrSegment implements AnswerSegment {
-        private final AnswerSegment[] segments;
-
-        private OrSegment(AnswerSegment... segments) {
-            this.segments = segments;
-        }
-
+    public record OrSegment(AnswerSegment... segments) implements AnswerSegment {
         @Override
         public boolean isEmpty() {
             return Arrays.stream(segments).allMatch(AnswerSegment::isEmpty);
@@ -218,13 +191,7 @@ public class Answer {
         }
     }
 
-    public static class OneOfSegment implements AnswerSegment {
-        private final AnswerSegment[] segments;
-
-        private OneOfSegment(AnswerSegment... segments) {
-            this.segments = segments;
-        }
-
+    public record OneOfSegment(AnswerSegment... segments) implements AnswerSegment {
         @Override
         public boolean isEmpty() {
             return Arrays.stream(segments).allMatch(AnswerSegment::isEmpty);
@@ -261,13 +228,7 @@ public class Answer {
         }
     }
 
-    public static class NotSegment implements AnswerSegment {
-        private final AnswerSegment[] segments;
-
-        private NotSegment(AnswerSegment... segments) {
-            this.segments = segments;
-        }
-
+    public record NotSegment(AnswerSegment... segments) implements AnswerSegment {
         @Override
         public boolean isEmpty() {
             return Arrays.stream(segments).allMatch(AnswerSegment::isEmpty);
@@ -294,13 +255,7 @@ public class Answer {
         }
     }
 
-    public static class NumberSegment implements AnswerSegment {
-        private final double answer;
-
-        private NumberSegment(double answer) {
-            this.answer = answer;
-        }
-
+    public record NumberSegment(double answer) implements AnswerSegment {
         @Override
         public boolean isEmpty() {
             return false;
@@ -330,15 +285,7 @@ public class Answer {
         }
     }
 
-    public static class AnyNOfSegment implements AnswerSegment {
-        private final int number;
-        private final AnswerSegment[] segments;
-
-        private AnyNOfSegment(int number, AnswerSegment... segments) {
-            this.number = number;
-            this.segments = segments;
-        }
-
+    public record AnyNOfSegment(int number, AnswerSegment... segments) implements AnswerSegment {
         @Override
         public boolean isEmpty() {
             return number == 0 || Arrays.stream(segments).allMatch(AnswerSegment::isEmpty);
@@ -353,7 +300,7 @@ public class Answer {
                 }
             }
 
-            return count == number;
+            return count >= number;
         }
 
         public static class Builder implements AnswerSegmentBuilder, MultipleSegmentAnswerSegmentBuilder<Builder> {
@@ -372,38 +319,43 @@ public class Answer {
             }
 
             @Override
+            public Builder segments(String... segments) {
+                return segments(str -> segment(str, false, true), segments);
+            }
+
+            @Override
             public AnyNOfSegment build() {
                 return new AnyNOfSegment(number, segments.toArray(new AnswerSegment[0]));
             }
         }
     }
 
-    public static class Builder implements MultipleSegmentAnswerSegmentBuilder<Builder> {
+    public static class Builder<T> implements MultipleSegmentAnswerSegmentBuilder<Builder<T>> {
         private final List<AnswerSegment> segments = new ArrayList<>();
-        private MinecraftMobCollectable.Builder parent;
+        private T parent;
 
-        public Builder start(MinecraftMobCollectable.Builder parent) {
+        public Builder<T> start(T parent) {
             this.parent = parent;
             return this;
         }
 
         @Override
-        public Builder segment(AnswerSegment segment) {
+        public Builder<T> segment(AnswerSegment segment) {
             segments.add(segment);
             return this;
         }
 
         @Override
-        public Builder segment(String segment) {
+        public Builder<T> segment(String segment) {
             return segment(segment, false, true);
         }
 
         @Override
-        public Builder segment(String segment, boolean caseSensitive) {
+        public Builder<T> segment(String segment, boolean caseSensitive) {
             return segment(segment, caseSensitive, true);
         }
 
-        public MinecraftMobCollectable.Builder finish() {
+        public T finish() {
             return parent;
         }
 

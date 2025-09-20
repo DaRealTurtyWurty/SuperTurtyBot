@@ -1,12 +1,14 @@
-package dev.darealturtywurty.superturtybot.modules.collectable.minecraft;
+package dev.darealturtywurty.superturtybot.modules.collectable;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserCollectables;
-import dev.darealturtywurty.superturtybot.modules.collectable.Answer;
-import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameInstance;
+import dev.darealturtywurty.superturtybot.registry.Registerable;
+import dev.darealturtywurty.superturtybot.registry.Registry;
+import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageReference;
@@ -25,11 +27,33 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MinecraftMobCollector extends ListenerAdapter {
+public class CollectableGameCollector<T extends Collectable> extends ListenerAdapter implements Registerable {
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private final List<CollectableGameInstance<MinecraftMobCollectable>> gameInstances = new ArrayList<>();
+    private final List<CollectableGameInstance<T>> gameInstances = new ArrayList<>();
     private final Map<Long, Boolean> scheduledGuilds = new HashMap<>();
     private final Map<Long, List<Long>> guildMessageMap = new HashMap<>();
+    @Getter
+    private final Registry<T> registry;
+    private String name;
+    @Getter
+    private final String displayName;
+
+    protected CollectableGameCollector(Registry<T> registry, String name, String displayName) {
+        this.registry = registry;
+        this.name = name;
+        this.displayName = displayName;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Registerable setName(String name) {
+        this.name = name;
+        return this;
+    }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -61,11 +85,11 @@ public class MinecraftMobCollector extends ListenerAdapter {
             if (message.getAuthor().getIdLong() != event.getJDA().getSelfUser().getIdLong())
                 return;
 
-            CollectableGameInstance<MinecraftMobCollectable> instance = gameInstances.stream().filter(gameInstance -> gameInstance.isSameMessage(guild.getIdLong(), channel.getIdLong(), message.getIdLong())).findFirst().orElse(null);
+            CollectableGameInstance<T> instance = gameInstances.stream().filter(gameInstance -> gameInstance.isSameMessage(guild.getIdLong(), channel.getIdLong(), message.getIdLong())).findFirst().orElse(null);
             if (instance == null)
                 return;
 
-            MinecraftMobCollectable collectable = instance.collectable();
+            T collectable = instance.collectable();
             User user = event.getAuthor();
 
             UserCollectables userCollectables = Database.getDatabase().userCollectables.find(Filters.eq("user", user.getIdLong())).first();
@@ -77,14 +101,14 @@ public class MinecraftMobCollector extends ListenerAdapter {
             Answer answer = collectable.getAnswer();
             String content = event.getMessage().getContentRaw();
 
-            UserCollectables.Collectables minecraftMobCollectables = userCollectables.getCollectables(UserCollectables.CollectionType.MINECRAFT_MOBS);
-            if (minecraftMobCollectables.hasCollectable(collectable)) {
+            UserCollectables.Collectables userCollectablesOfType = userCollectables.getCollectables(collectable.getCollectionType());
+            if (userCollectablesOfType.hasCollectable(collectable)) {
                 CoreCommand.reply(event, "❌ You already have this collectable!");
                 return;
             }
 
             if (answer.matches(content)) {
-                minecraftMobCollectables.collect(collectable);
+                userCollectablesOfType.collect(collectable);
                 Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
                 CoreCommand.reply(event, "✅ You have successfully collected a `" + collectable.getRichName() + "`!");
 
@@ -94,6 +118,18 @@ public class MinecraftMobCollector extends ListenerAdapter {
                 guildMessageMap.get(guild.getIdLong()).removeIf(time -> time < message.getTimeCreated().toInstant().toEpochMilli());
             }
         });
+    }
+
+    public T getRandomWeightedCollectable() {
+        List<T> collectables = new ArrayList<>(this.registry.getRegistry().values());
+        WeightedRandomBag<T> bag = new WeightedRandomBag<>();
+
+        for (T collectable : collectables) {
+            int weight = collectable.getRarity().calculateWeight();
+            bag.addEntry(collectable, weight);
+        }
+
+        return bag.getRandom();
     }
 
     // this method should schedule a game instance every 2-12 hours (depending on the message density). if the density is too low, it should not schedule a game instance.
@@ -121,7 +157,7 @@ public class MinecraftMobCollector extends ListenerAdapter {
         scheduledGuilds.put(guild.getIdLong(), true);
         executor.schedule(() -> {
             scheduledGuilds.put(guild.getIdLong(), false);
-            MinecraftMobCollectable collectable = MinecraftMobRegistry.getRandomWeightedMob();
+            T collectable = getRandomWeightedCollectable();
 
             var embed = new EmbedBuilder()
                     .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
@@ -135,3 +171,5 @@ public class MinecraftMobCollector extends ListenerAdapter {
         }, (long) (2 + (1 - messageDensity) * 10), TimeUnit.HOURS);
     }
 }
+
+

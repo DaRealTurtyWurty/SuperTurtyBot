@@ -1,8 +1,8 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import dev.darealturtywurty.superturtybot.modules.collectable.Collectable;
+import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollector;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class UserCollectables {
         this.user = user;
     }
 
-    public Collectables getCollectables(CollectionType type) {
+    public Collectables getCollectables(CollectableGameCollector<?> type) {
         return collectables.stream().filter(collectables -> collectables.getType().equals(type.getName())).findFirst().orElseGet(() -> {
             var collectables = new Collectables(type.getName());
             this.collectables.add(collectables);
@@ -26,11 +26,11 @@ public class UserCollectables {
         });
     }
 
-    public boolean hasCollectable(CollectionType type, Collectable collectable) {
+    public boolean hasCollectable(CollectableGameCollector<?> type, Collectable collectable) {
         return getCollectables(type).hasCollectable(collectable);
     }
 
-    public void collect(CollectionType type, Collectable collectable) {
+    public void collect(CollectableGameCollector<?> type, Collectable collectable) {
         getCollectables(type).collect(collectable);
     }
 
@@ -50,17 +50,6 @@ public class UserCollectables {
 
         public boolean hasCollectable(Collectable collectable) {
             return this.collectables.contains(collectable.getName());
-        }
-    }
-
-    @Getter
-    public enum CollectionType {
-        MINECRAFT_MOBS("minecraft_mobs");
-
-        private final String name;
-
-        CollectionType(String name) {
-            this.name = name;
         }
     }
 }

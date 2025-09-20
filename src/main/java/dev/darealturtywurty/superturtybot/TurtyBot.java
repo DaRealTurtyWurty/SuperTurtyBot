@@ -13,7 +13,7 @@ import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.modules.*;
-import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollector;
+import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
@@ -221,8 +221,8 @@ public class TurtyBot {
         // Add AI message responder so that we can respond to messages using AI
         builder.addEventListeners(AIMessageResponder.INSTANCE);
 
-        // Add the minecraft mob collector so that we can collect minecraft mobs
-        builder.addEventListeners(new MinecraftMobCollector());
+        // Add the collectable game listeners so that we can handle collectable game events
+        CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().values().forEach(builder::addEventListeners);
 
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);
@@ -251,7 +251,7 @@ public class TurtyBot {
 
     public static @Nullable BufferedImage loadImage(String filename) {
         InputStream stream = loadResource(filename);
-        if(stream == null)
+        if (stream == null)
             return null;
 
         try {

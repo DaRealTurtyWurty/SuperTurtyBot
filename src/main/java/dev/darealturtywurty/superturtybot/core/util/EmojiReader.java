@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.core.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EmojiReader {
+    @Getter
     private static Path emojisPath = Path.of("emojis.json");
     private static final Map<String, Long> EMOJIS = new HashMap<>();
 
@@ -52,6 +54,6 @@ public class EmojiReader {
     }
 
     public static long getEmoji(String name) {
-        return getEmojis().get(name);
+        return getEmojis().getOrDefault(name, 0L);
     }
 }

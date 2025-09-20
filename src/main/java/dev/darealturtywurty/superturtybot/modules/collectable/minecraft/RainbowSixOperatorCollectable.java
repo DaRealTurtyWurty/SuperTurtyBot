@@ -11,33 +11,34 @@ import java.util.Locale;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public class MinecraftMobCollectable extends Collectable {
+public class RainbowSixOperatorCollectable extends Collectable {
     private final String richName;
     private final String question;
     private final Answer answer;
-    private final MobCategory category;
     private final CollectableRarity rarity;
 
-    private MinecraftMobCollectable(String name, String emoji, String question, Answer answer, MobCategory category, CollectableRarity rarity) {
+    private RainbowSixOperatorCollectable(String name, String emoji, String question, Answer answer, CollectableRarity rarity) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
         this.answer = answer;
-        this.category = category;
         this.rarity = rarity;
     }
 
     @Override
     public CollectableGameCollector<?> getCollectionType() {
-        return CollectableGameCollectorRegistry.MINECRAFT_MOBS;
+        return CollectableGameCollectorRegistry.RAINBOW_SIX_OPERATORS;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
         private String name = "Unknown";
         private String emoji = "❓";
-        private String question = "Respond with the name of the mob to collect it!";
+        private String question = "Respond with the name of the operator to collect them!";
         private final Answer.Builder<Builder> answer = new Answer.Builder<>();
-        private MobCategory category = MobCategory.MISC;
         private CollectableRarity rarity = CollectableRarity.COMMON;
 
         public Builder name(String name) {
@@ -51,7 +52,11 @@ public class MinecraftMobCollectable extends Collectable {
         }
 
         public Builder emoji(String name) {
-            return emoji(name, EmojiReader.getEmoji(name));
+            long emojiId = EmojiReader.getEmoji(name);
+            if (emojiId == 0)
+                throw new IllegalArgumentException("Emoji with name '" + name + "' does not exist in " + EmojiReader.getEmojisPath().getFileName() + "!");
+
+            return emoji(name, emojiId);
         }
 
         public Builder question(String question) {
@@ -108,17 +113,12 @@ public class MinecraftMobCollectable extends Collectable {
             return this.answer.start(this);
         }
 
-        public Builder category(MobCategory category) {
-            this.category = category;
-            return this;
-        }
-
         public Builder rarity(CollectableRarity rarity) {
             this.rarity = rarity;
             return this;
         }
 
-        public MinecraftMobCollectable build() {
+        public RainbowSixOperatorCollectable build() {
             Answer answer = this.answer.build();
             if (answer.isEmpty())
                 throw new IllegalArgumentException("Answer must be set!");
@@ -132,24 +132,10 @@ public class MinecraftMobCollectable extends Collectable {
             if (question == null || question.isBlank())
                 throw new IllegalArgumentException("Question must be set!");
 
-            if (category == null)
-                throw new IllegalArgumentException("Category must be set!");
-
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            return new MinecraftMobCollectable(name, emoji, question, answer, category, rarity);
+            return new RainbowSixOperatorCollectable(name, emoji, question, answer, rarity);
         }
-    }
-
-    public enum MobCategory {
-        PASSIVE,
-        NEUTRAL,
-        HOSTILE,
-        BOSS,
-        UNUSED,
-        REMOVED,
-        JOKE,
-        MISC;
     }
 }
