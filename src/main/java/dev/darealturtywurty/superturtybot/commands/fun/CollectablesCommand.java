@@ -100,7 +100,7 @@ public class CollectablesCommand extends CoreCommand {
         UserCollectables.Collectables userCollection = userCollectables.getCollectables(collector);
 
         var embed = new EmbedBuilder()
-                .setTitle(event.getUser().getEffectiveName() + "'s " + collector.getName() + " Collection (" + userCollection.getCollectables().size() + ")")
+                .setTitle(event.getUser().getEffectiveName() + "'s " + collector.getDisplayName() + " Collection (" + userCollection.getCollectables().size() + ")")
                 .setTimestamp(Instant.now())
                 .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 

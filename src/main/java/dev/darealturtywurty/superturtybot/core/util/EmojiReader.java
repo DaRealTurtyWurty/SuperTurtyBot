@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.core.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ public class EmojiReader {
             try {
                 String emojisJsonContent = Files.readString(emojisPath);
                 JsonObject fullJson = Constants.GSON.fromJson(emojisJsonContent, JsonObject.class);
-                json = fullJson.getAsJsonObject(CommandHook.isDevMode() ? "dev" : "prod");
+                json = fullJson.getAsJsonObject(Environment.INSTANCE.isDevelopment() ? "dev" : "prod");
             } catch (IOException exception) {
                 Constants.LOGGER.error("Failed to read emojis from file!", exception);
                 return Map.of();
@@ -54,6 +55,6 @@ public class EmojiReader {
     }
 
     public static long getEmoji(String name) {
-        return getEmojis().getOrDefault(name, 0L);
+        return getEmojis().get(name);
     }
 }

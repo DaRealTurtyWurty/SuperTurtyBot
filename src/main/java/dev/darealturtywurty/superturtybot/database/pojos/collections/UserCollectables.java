@@ -26,10 +26,6 @@ public class UserCollectables {
         });
     }
 
-    public boolean hasCollectable(CollectableGameCollector<?> type, Collectable collectable) {
-        return getCollectables(type).hasCollectable(collectable);
-    }
-
     public void collect(CollectableGameCollector<?> type, Collectable collectable) {
         getCollectables(type).collect(collectable);
     }

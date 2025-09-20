@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.collectable.minecraft;
+package dev.darealturtywurty.superturtybot.modules.collectable.r6s;
 
 import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.modules.collectable.*;

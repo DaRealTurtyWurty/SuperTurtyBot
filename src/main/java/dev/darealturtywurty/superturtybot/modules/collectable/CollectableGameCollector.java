@@ -38,6 +38,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     @Getter
     private final String displayName;
 
+    private boolean hasDoneInitialLoad = false;
+
     protected CollectableGameCollector(Registry<T> registry, String name, String displayName) {
         this.registry = registry;
         this.name = name;
@@ -103,14 +105,15 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
 
             UserCollectables.Collectables userCollectablesOfType = userCollectables.getCollectables(collectable.getCollectionType());
             if (userCollectablesOfType.hasCollectable(collectable)) {
-                CoreCommand.reply(event, "❌ You already have this collectable!");
+                message.reply("❌ You have already collected " + collectable.getEmoji() + " `" + collectable.getRichName() + "`!").mentionRepliedUser(true)
+                        .queue(message1 -> message1.delete().queueAfter(5, TimeUnit.SECONDS));
                 return;
             }
 
             if (answer.matches(content)) {
                 userCollectablesOfType.collect(collectable);
                 Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
-                CoreCommand.reply(event, "✅ You have successfully collected a `" + collectable.getRichName() + "`!");
+                CoreCommand.reply(event, "✅ You have successfully collected " + collectable.getEmoji() + " `" + collectable.getRichName() + "`!");
 
                 gameInstances.remove(instance);
                 message.editMessage("\n\n**This collectable has been collected by " + user.getAsMention() + "!**").queue();
@@ -132,13 +135,20 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         return bag.getRandom();
     }
 
-    // this method should schedule a game instance every 2-12 hours (depending on the message density). if the density is too low, it should not schedule a game instance.
     private void handleScheduling(MessageReceivedEvent event, Guild guild) {
         if (scheduledGuilds.getOrDefault(guild.getIdLong(), false))
             return;
 
         if (gameInstances.stream().anyMatch(gameInstance -> gameInstance.isSameChannel(guild.getIdLong(), event.getChannel().getIdLong())))
             return;
+
+        if (!hasDoneInitialLoad) {
+            scheduledGuilds.put(guild.getIdLong(), true);
+            scheduleCollectable(event, guild);
+
+            hasDoneInitialLoad = true;
+            return;
+        }
 
         List<Long> messageTimes = guildMessageMap.get(guild.getIdLong());
         if (messageTimes == null || messageTimes.isEmpty())
@@ -154,21 +164,26 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         if (messageDensity < 0.1)
             return;
 
-        scheduledGuilds.put(guild.getIdLong(), true);
+        long delay = (long) (2 + (1 - messageDensity) * 10);
         executor.schedule(() -> {
             scheduledGuilds.put(guild.getIdLong(), false);
-            T collectable = getRandomWeightedCollectable();
+            scheduleCollectable(event, guild);
+        }, delay, TimeUnit.HOURS);
+    }
 
-            var embed = new EmbedBuilder()
-                    .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
-                    .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
-                    .setTimestamp(Instant.now())
-                    .setColor(collectable.getRarity().getColor())
-                    .build();
-            event.getChannel().sendMessageEmbeds(embed).queue(message -> {
-                gameInstances.add(new CollectableGameInstance<>(guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(), collectable));
-            });
-        }, (long) (2 + (1 - messageDensity) * 10), TimeUnit.HOURS);
+    private void scheduleCollectable(MessageReceivedEvent event, Guild guild) {
+        T collectable = getRandomWeightedCollectable();
+        var embed = new EmbedBuilder()
+                .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
+                .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
+                .setTimestamp(Instant.now())
+                .setAuthor("Part of the " + displayName + " Collection", null, event.getJDA().getSelfUser().getAvatarUrl())
+                .setColor(collectable.getRarity().getColor())
+                .build();
+        event.getChannel().sendMessageEmbeds(embed).queue(message ->
+                gameInstances.add(new CollectableGameInstance<>(
+                        guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(),
+                        collectable)));
     }
 }
 

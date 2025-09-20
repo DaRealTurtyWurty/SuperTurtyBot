@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.modules.collectable.minecraft;
+package dev.darealturtywurty.superturtybot.modules.collectable.r6s;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableRarity;
@@ -601,6 +601,6 @@ public class RainbowSixOperatorRegistry {
             .rarity(CollectableRarity.LEGENDARY));
 
     public static void load() {
-        Constants.LOGGER.info("Loaded Rainbow Six Operator Registry");
+        Constants.LOGGER.info("Loaded Rainbow Six Operators");
     }
 }
