@@ -145,6 +145,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         if (!hasDoneInitialLoad) {
             scheduledGuilds.put(guild.getIdLong(), true);
             scheduleCollectable(event, guild);
+            scheduledGuilds.put(guild.getIdLong(), false);
 
             hasDoneInitialLoad = true;
             return;
@@ -156,15 +157,16 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
 
         long currentTime = System.currentTimeMillis();
         long timeDifference = currentTime - messageTimes.getFirst();
-        if (timeDifference < 7200000)
+        if (timeDifference < 7_200_000)
             return;
 
-        float messageDensity = messageTimes.size() / (timeDifference / 3600000f);
+        float messageDensity = messageTimes.size() / (timeDifference / 3_600_000f);
         messageDensity = Math.min(1, Math.max(0, messageDensity / 10));
         if (messageDensity < 0.1)
             return;
 
         long delay = (long) (2 + (1 - messageDensity) * 10);
+        scheduledGuilds.put(guild.getIdLong(), true);
         executor.schedule(() -> {
             scheduledGuilds.put(guild.getIdLong(), false);
             scheduleCollectable(event, guild);
@@ -186,5 +188,4 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                         collectable)));
     }
 }
-
 

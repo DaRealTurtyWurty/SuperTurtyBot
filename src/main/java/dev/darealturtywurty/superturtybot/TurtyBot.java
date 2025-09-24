@@ -65,7 +65,6 @@ public class TurtyBot {
     public static void main(String[] args) throws InvalidTokenException, IOException {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
 
-
         ArgumentParser parser = ArgumentParsers.newFor("TurtyBot")
                 .build()
                 .defaultHelp(true)
