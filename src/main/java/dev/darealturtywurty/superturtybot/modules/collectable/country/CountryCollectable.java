@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules.collectable.country;
 
 import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.modules.collectable.*;
+import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollectable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -81,7 +82,7 @@ public class CountryCollectable extends Collectable {
         }
 
         public Builder answerYesOrNo(boolean yes) {
-            answerExact(yes ? "yes" : "no", false);
+            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah", yes ? "true" : "false");
             return this;
         }
 
@@ -91,19 +92,6 @@ public class CountryCollectable extends Collectable {
 
         public Builder answerNo() {
             return answerYesOrNo(false);
-        }
-
-        public Builder answerTrueOrFalse(boolean bool) {
-            answerExact(bool ? "true" : "false", false);
-            return this;
-        }
-
-        public Builder answerTrue() {
-            return answerTrueOrFalse(true);
-        }
-
-        public Builder answerFalse() {
-            return answerTrueOrFalse(false);
         }
 
         public Answer.Builder<Builder> answer() {

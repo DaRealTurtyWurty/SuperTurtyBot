@@ -42,7 +42,7 @@ public class MinecraftMobRegistry {
             .name("Bat")
             .emoji("bat")
             .question("True or False: Bats drop experience when killed.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.COMMON));
 
@@ -82,7 +82,7 @@ public class MinecraftMobRegistry {
             .name("Cow")
             .emoji("cow")
             .question("True or False: Cows will attempt to avoid walking into berry bushes.")
-            .answerTrue()
+            .answerYes()
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.COMMON));
 
@@ -138,7 +138,7 @@ public class MinecraftMobRegistry {
             .name("Ocelot")
             .emoji("ocelot")
             .question("True or False: Ocelots can be tamed.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.RARE));
 
@@ -146,7 +146,7 @@ public class MinecraftMobRegistry {
             .name("Parrot")
             .emoji("parrot")
             .question("True or False: There is a splash text noting to not feed parrots avocados.")
-            .answerTrue()
+            .answerYes()
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -202,7 +202,7 @@ public class MinecraftMobRegistry {
             .name("Sniffer")
             .emoji("sniffer")
             .question("True or False: The sniffer can sniff out of podzol blocks.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.EPIC));
 
@@ -404,7 +404,7 @@ public class MinecraftMobRegistry {
             .name("Zombified Piglin")
             .emoji("zombified_piglin")
             .question("True or False: Zombie Pigmen can drown.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.NEUTRAL)
             .rarity(CollectableRarity.UNCOMMON));
 
@@ -412,7 +412,7 @@ public class MinecraftMobRegistry {
             .name("Blaze")
             .emoji("blaze")
             .question("True or False: Blazes take damage from snowy weather.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.HOSTILE)
             .rarity(CollectableRarity.RARE));
 
@@ -488,7 +488,7 @@ public class MinecraftMobRegistry {
             .name("Hoglin")
             .emoji("hoglin")
             .question("True or False: Hoglins can be bred.")
-            .answerTrue()
+            .answerYes()
             .category(MinecraftMobCollectable.MobCategory.HOSTILE)
             .rarity(CollectableRarity.RARE));
 
@@ -591,7 +591,7 @@ public class MinecraftMobRegistry {
             .name("Vex")
             .emoji("vex")
             .question("True or False: Vexes are considered undead.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.HOSTILE)
             .rarity(CollectableRarity.EPIC));
 
@@ -642,7 +642,7 @@ public class MinecraftMobRegistry {
             .name("Zombie")
             .emoji("zombie")
             .question("True or False: It is possible for a zombie to drop a cooked food item.")
-            .answerTrue()
+            .answerYes()
             .category(MinecraftMobCollectable.MobCategory.HOSTILE)
             .rarity(CollectableRarity.COMMON));
 
@@ -682,7 +682,7 @@ public class MinecraftMobRegistry {
             .name("Giant")
             .emoji("zombie")
             .question("True or False: Giants can spawn naturally in the game.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.UNUSED)
             .rarity(CollectableRarity.EPIC));
 
@@ -690,7 +690,7 @@ public class MinecraftMobRegistry {
             .name("Illusioner")
             .emoji("illusioner")
             .question("True or False: Illusioners cannot join raids.")
-            .answerFalse()
+            .answerNo()
             .category(MinecraftMobCollectable.MobCategory.UNUSED)
             .rarity(CollectableRarity.EPIC));
 

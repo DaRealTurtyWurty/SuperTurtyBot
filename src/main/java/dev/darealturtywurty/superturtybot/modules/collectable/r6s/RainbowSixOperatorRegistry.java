@@ -38,7 +38,7 @@ public class RainbowSixOperatorRegistry {
             .name("Ash")
             .emoji("ash")
             .question("True or False: Ash is a hard breacher.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable THERMITE = register("thermite", RainbowSixOperatorCollectable.builder()
@@ -112,7 +112,7 @@ public class RainbowSixOperatorRegistry {
             .name("Kapkan")
             .emoji("kapkan")
             .question("True or False: Kapkan EDDs can detonate whilst meleeing a barricade.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable OG_TACHANKA = register("og_tachanka", RainbowSixOperatorCollectable.builder()
@@ -147,7 +147,7 @@ public class RainbowSixOperatorRegistry {
             .name("Jäger")
             .emoji("jager")
             .question("Can Jäger's ADS intercept Zero's Argus cameras?")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable BANDIT = register("bandit", RainbowSixOperatorCollectable.builder()
@@ -244,7 +244,7 @@ public class RainbowSixOperatorRegistry {
             .name("Mira")
             .emoji("mira")
             .question("True or False: Maverick can instantly destroy a Mira Black Mirror with his blowtorch.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.EPIC));
 
     public static final RainbowSixOperatorCollectable YING = register("ying", RainbowSixOperatorCollectable.builder()
@@ -293,14 +293,14 @@ public class RainbowSixOperatorRegistry {
             .name("Lion")
             .emoji("lion")
             .question("True or False: Lion's EE-ONE-D scan reveals defenders who stay perfectly still.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable FINKA = register("finka", RainbowSixOperatorCollectable.builder()
             .name("Finka")
             .emoji("finka")
             .question("True or False: Finka's Adrenal Surge can revive a downed teammate through solid walls.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.RARE));
 
     public static final RainbowSixOperatorCollectable MAESTRO = register("maestro", RainbowSixOperatorCollectable.builder()
@@ -323,7 +323,7 @@ public class RainbowSixOperatorRegistry {
             .name("Maverick")
             .emoji("maverick")
             .question("True or False: Maverick can use his blowtorch to create a hole in a reinforced wall.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.RARE));
 
     public static final RainbowSixOperatorCollectable OG_CLASH = register("og_clash", RainbowSixOperatorCollectable.builder()
@@ -344,14 +344,14 @@ public class RainbowSixOperatorRegistry {
             .name("Nomad")
             .emoji("nomad")
             .question("True or False: Nomad's Airjab can be used to destroy defender gadgets.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable KAID = register("kaid", RainbowSixOperatorCollectable.builder()
             .name("Kaid")
             .emoji("kaid")
             .question("True or False: Kaid's Electroclaw can electrify through walls and floors.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.RARE));
 
     public static final RainbowSixOperatorCollectable GRIDLOCK = register("gridlock", RainbowSixOperatorCollectable.builder()
@@ -374,14 +374,14 @@ public class RainbowSixOperatorRegistry {
             .name("Nøkk")
             .emoji("nokk")
             .question("True or False: Nøkk's face has been revealed in-game.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.EPIC));
 
     public static final RainbowSixOperatorCollectable WARDEN = register("warden", RainbowSixOperatorCollectable.builder()
             .name("Warden")
             .emoji("r6_warden")
             .question("True or False: Warden's Glance Smart Glasses can see through smoke.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable AMARU = register("amaru", RainbowSixOperatorCollectable.builder()
@@ -424,7 +424,7 @@ public class RainbowSixOperatorRegistry {
             .name("Iana")
             .emoji("iana")
             .question("True or False: Vigil can hide from Iana's Gemini Replicator.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.LEGENDARY));
 
     public static final RainbowSixOperatorCollectable ORYX = register("oryx", RainbowSixOperatorCollectable.builder()
@@ -484,7 +484,7 @@ public class RainbowSixOperatorRegistry {
             .name("Osa")
             .emoji("osa")
             .question("True or False: Osa's Talon-8 shield can be picked up after being cracked.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable THORN = register("thorn", RainbowSixOperatorCollectable.builder()
@@ -505,7 +505,7 @@ public class RainbowSixOperatorRegistry {
             .name("Sens")
             .emoji("sens")
             .question("True or False: Sens's gadget deals damage to defenders who pass through it.")
-            .answerFalse()
+            .answerNo()
             .rarity(CollectableRarity.RARE));
 
     public static final RainbowSixOperatorCollectable GRIM = register("grim", RainbowSixOperatorCollectable.builder()
@@ -535,7 +535,7 @@ public class RainbowSixOperatorRegistry {
             .name("Fenrir")
             .emoji("fenrir")
             .question("True or False: Fenrir's Dread Mines **used** to be bulletproof.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.EPIC));
 
     public static final RainbowSixOperatorCollectable RAM = register("ram", RainbowSixOperatorCollectable.builder()
@@ -576,7 +576,7 @@ public class RainbowSixOperatorRegistry {
             .name("Sentry")
             .emoji("sentry")
             .question("True or False: According to the lore of the game, Sentry is dead.")
-            .answerTrue()
+            .answerYes()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable SKOPOS = register("skopos", RainbowSixOperatorCollectable.builder()
