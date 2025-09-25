@@ -180,9 +180,13 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                 .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
                 .setTimestamp(Instant.now())
                 .setAuthor("Part of the " + displayName + " Collection", null, event.getJDA().getSelfUser().getAvatarUrl())
-                .setColor(collectable.getRarity().getColor())
-                .build();
-        event.getChannel().sendMessageEmbeds(embed).queue(message ->
+                .setColor(collectable.getRarity().getColor());
+
+        if(collectable.getNote() != null) {
+            embed.addField("Note", collectable.getNote(), false);
+        }
+
+        event.getChannel().sendMessageEmbeds(embed.build()).queue(message ->
                 gameInstances.add(new CollectableGameInstance<>(
                         guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(),
                         collectable)));
