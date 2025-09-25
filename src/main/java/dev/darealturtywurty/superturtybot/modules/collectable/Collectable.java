@@ -11,8 +11,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @AllArgsConstructor
 public abstract class Collectable implements Registerable {
-    private String name;
     private final String emoji;
+    private String name;
 
     public abstract String getRichName();
 
@@ -23,6 +23,8 @@ public abstract class Collectable implements Registerable {
     public abstract CollectableRarity getRarity();
 
     public abstract CollectableGameCollector<?> getCollectionType();
+
+    public abstract String getNote();
 
     @Override
     public Registerable setName(String name) {

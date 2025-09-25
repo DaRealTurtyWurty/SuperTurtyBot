@@ -120,7 +120,8 @@ public class RainbowSixOperatorRegistry {
             .emoji("og_tachanka")
             .question("Which operator does Tachanka often flirt with?")
             .answer("Finka")
-            .rarity(CollectableRarity.MYTHICAL));
+            .rarity(CollectableRarity.MYTHICAL)
+            .note("OG refers to the version of Tachanka before his rework."));
 
     public static final RainbowSixOperatorCollectable TACHANKA = register("tachanka", RainbowSixOperatorCollectable.builder()
             .name("Tachanka")
@@ -185,7 +186,8 @@ public class RainbowSixOperatorRegistry {
             .emoji("blackbeard")
             .question("How much HP does OG Blackbeard's shield have?")
             .answer(20)
-            .rarity(CollectableRarity.LEGENDARY));
+            .rarity(CollectableRarity.LEGENDARY)
+            .note("OG refers to the version of Blackbeard before his rework."));
 
     public static final RainbowSixOperatorCollectable BLACKBEARD = register("blackbeard", RainbowSixOperatorCollectable.builder()
             .name("Blackbeard")
@@ -331,7 +333,8 @@ public class RainbowSixOperatorRegistry {
             .emoji("clash")
             .question("Could Kali's LV Explosive Lances destroy Clash's shield?")
             .answerNo()
-            .rarity(CollectableRarity.MYTHICAL));
+            .rarity(CollectableRarity.MYTHICAL)
+            .note("OG refers to the version of Clash before her rework."));
 
     public static final RainbowSixOperatorCollectable CLASH = register("clash", RainbowSixOperatorCollectable.builder()
             .name("Clash")
@@ -396,7 +399,8 @@ public class RainbowSixOperatorRegistry {
             .emoji("goyo")
             .question("What is the name of Goyo's shield?")
             .answer("Volcan Shield")
-            .rarity(CollectableRarity.LEGENDARY));
+            .rarity(CollectableRarity.LEGENDARY)
+            .note("OG refers to the version of Goyo before his rework."));
 
     public static final RainbowSixOperatorCollectable GOYO = register("goyo", RainbowSixOperatorCollectable.builder()
             .name("Goyo")

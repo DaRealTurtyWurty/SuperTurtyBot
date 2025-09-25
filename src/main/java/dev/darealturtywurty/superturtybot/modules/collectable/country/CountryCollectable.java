@@ -1,8 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules.collectable.country;
 
-import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.modules.collectable.*;
-import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollectable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -17,13 +15,15 @@ public class CountryCollectable extends Collectable {
     private final String question;
     private final Answer answer;
     private final CollectableRarity rarity;
+    private final String note;
 
-    private CountryCollectable(String name, String emoji, String question, Answer answer, CollectableRarity rarity) {
+    private CountryCollectable(String name, String emoji, String question, Answer answer, CollectableRarity rarity, String note) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
         this.answer = answer;
         this.rarity = rarity;
+        this.note = note;
     }
 
     @Override
@@ -41,6 +41,7 @@ public class CountryCollectable extends Collectable {
         private String question = "Respond with the name of the country to collect them!";
         private final Answer.Builder<Builder> answer = new Answer.Builder<>();
         private CollectableRarity rarity = CollectableRarity.COMMON;
+        private String note = "";
 
         public Builder name(String name) {
             this.name = name;
@@ -103,6 +104,11 @@ public class CountryCollectable extends Collectable {
             return this;
         }
 
+        public Builder note(String note) {
+            this.note = note;
+            return this;
+        }
+
         public CountryCollectable build() {
             Answer answer = this.answer.build();
             if (answer.isEmpty())
@@ -120,7 +126,10 @@ public class CountryCollectable extends Collectable {
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            return new CountryCollectable(name, emoji, question, answer, rarity);
+            if(note != null && note.isBlank())
+                note = null;
+
+            return new CountryCollectable(name, emoji, question, answer, rarity, note);
         }
     }
 }

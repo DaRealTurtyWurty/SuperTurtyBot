@@ -17,14 +17,16 @@ public class MinecraftMobCollectable extends Collectable {
     private final Answer answer;
     private final MobCategory category;
     private final CollectableRarity rarity;
+    private final String note;
 
-    private MinecraftMobCollectable(String name, String emoji, String question, Answer answer, MobCategory category, CollectableRarity rarity) {
+    private MinecraftMobCollectable(String name, String emoji, String question, Answer answer, MobCategory category, CollectableRarity rarity, String note) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
         this.answer = answer;
         this.category = category;
         this.rarity = rarity;
+        this.note = note;
     }
 
     @Override
@@ -39,6 +41,7 @@ public class MinecraftMobCollectable extends Collectable {
         private final Answer.Builder<Builder> answer = new Answer.Builder<>();
         private MobCategory category = MobCategory.MISC;
         private CollectableRarity rarity = CollectableRarity.COMMON;
+        private String note = "";
 
         public Builder name(String name) {
             this.name = name;
@@ -105,6 +108,11 @@ public class MinecraftMobCollectable extends Collectable {
             return this;
         }
 
+        public Builder note(String note) {
+            this.note = note;
+            return this;
+        }
+
         public MinecraftMobCollectable build() {
             Answer answer = this.answer.build();
             if (answer.isEmpty())
@@ -125,7 +133,10 @@ public class MinecraftMobCollectable extends Collectable {
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            return new MinecraftMobCollectable(name, emoji, question, answer, category, rarity);
+            if(note != null && note.isBlank())
+                note = null;
+
+            return new MinecraftMobCollectable(name, emoji, question, answer, category, rarity, note);
         }
     }
 
