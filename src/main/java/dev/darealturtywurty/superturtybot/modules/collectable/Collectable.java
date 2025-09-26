@@ -9,10 +9,20 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-@AllArgsConstructor
 public abstract class Collectable implements Registerable {
     private final String emoji;
     private String name;
+
+    protected Collectable(String name, String emoji) {
+        if (name == null || name.isEmpty())
+            throw new IllegalArgumentException("Name cannot be null or empty!");
+
+        if (emoji == null || emoji.isEmpty())
+            throw new IllegalArgumentException("Emoji cannot be null or empty!");
+
+        this.name = name;
+        this.emoji = emoji;
+    }
 
     public abstract String getRichName();
 

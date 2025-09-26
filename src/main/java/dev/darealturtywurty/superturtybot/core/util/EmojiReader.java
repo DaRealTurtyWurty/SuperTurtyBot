@@ -51,6 +51,8 @@ public class EmojiReader {
             emojis.put(entry.getKey(), entry.getValue().getAsLong());
         }
 
+        EMOJIS.putAll(emojis);
+
         return emojis;
     }
 
