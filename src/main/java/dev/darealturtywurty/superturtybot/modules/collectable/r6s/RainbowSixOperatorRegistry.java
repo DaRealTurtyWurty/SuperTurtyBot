@@ -30,7 +30,7 @@ public class RainbowSixOperatorRegistry {
     public static final RainbowSixOperatorCollectable MUTE = register("mute", RainbowSixOperatorCollectable.builder()
             .name("Mute")
             .emoji("mute")
-            .question("What type of jammer does Mute use?")
+            .question("What is the name of the gadget that Mute uses?")
             .answer("Signal Disruptor")
             .rarity(CollectableRarity.COMMON));
 
