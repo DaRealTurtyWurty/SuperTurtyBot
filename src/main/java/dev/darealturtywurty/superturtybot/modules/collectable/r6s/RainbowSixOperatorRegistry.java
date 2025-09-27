@@ -45,7 +45,9 @@ public class RainbowSixOperatorRegistry {
             .name("Thermite")
             .emoji("thermite")
             .question("What type of breach does Thermite use?")
-            .answer("Exothermic Charge")
+            .answer()
+                .or("Exothermic Charge", "Exothermic")
+                .finish()
             .rarity(CollectableRarity.COMMON));
 
     public static final RainbowSixOperatorCollectable CASTLE = register("castle", RainbowSixOperatorCollectable.builder()
@@ -95,7 +97,7 @@ public class RainbowSixOperatorRegistry {
     public static final RainbowSixOperatorCollectable GLAZ = register("glaz", RainbowSixOperatorCollectable.builder()
             .name("Glaz")
             .emoji("glaz")
-            .question("On which map does Glax have a unique buff on?")
+            .question("On which map does Glaz have a unique buff on?")
             .answer()
                 .or("Plane", "Presidential Plane")
                 .finish()
@@ -209,7 +211,9 @@ public class RainbowSixOperatorRegistry {
             .name("Capitão")
             .emoji("capitao")
             .question("What are the name of Capitão's fire bolts?")
-            .answer("Asphyxiating Bolts")
+            .answer()
+                .or("Asphyxiating Bolts", "Asphyxiating Bolt")
+                .finish()
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable CAVEIRA = register("caveira", RainbowSixOperatorCollectable.builder()
@@ -273,7 +277,7 @@ public class RainbowSixOperatorRegistry {
     public static final RainbowSixOperatorCollectable ELA = register("ela", RainbowSixOperatorCollectable.builder()
             .name("Ela")
             .emoji("ela")
-            .question("What is the name of Ela's concussion mines?")
+            .question("What is the name of Ela's concussion gadget?")
             .answer("Grzmot Mine")
             .rarity(CollectableRarity.RARE));
 
@@ -361,7 +365,9 @@ public class RainbowSixOperatorRegistry {
             .name("Gridlock")
             .emoji("gridlock")
             .question("What is the name of Gridlock's gadget?")
-            .answer("Trax Stingers")
+            .answer()
+                .or("Trax Stingers", "Trax", "Trax Stinger")
+                .finish()
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable MOZZIE = register("mozzie", RainbowSixOperatorCollectable.builder()
@@ -422,7 +428,6 @@ public class RainbowSixOperatorRegistry {
             .question("Can Mag-NETs be EMP'd?")
             .answerYes()
             .rarity(CollectableRarity.UNCOMMON));
-
 
     public static final RainbowSixOperatorCollectable IANA = register("iana", RainbowSixOperatorCollectable.builder()
             .name("Iana")
@@ -558,8 +563,6 @@ public class RainbowSixOperatorRegistry {
                 .finish()
             .rarity(CollectableRarity.EPIC));
 
-    // Deimos, Striker, Sentry, Skopos, Rauora, Denari
-
     public static final RainbowSixOperatorCollectable DEIMOS = register("deimos", RainbowSixOperatorCollectable.builder()
             .name("Deimos")
             .emoji("deimos")
@@ -605,6 +608,6 @@ public class RainbowSixOperatorRegistry {
             .rarity(CollectableRarity.LEGENDARY));
 
     public static void load() {
-        Constants.LOGGER.info("Loaded Rainbow Six Operator Collectables: {}", RAINBOW_SIX_OPERATOR_REGISTRY.size());
+        Constants.LOGGER.info("Loaded {} Rainbow Six Operator Collectables", RAINBOW_SIX_OPERATOR_REGISTRY.size());
     }
 }
