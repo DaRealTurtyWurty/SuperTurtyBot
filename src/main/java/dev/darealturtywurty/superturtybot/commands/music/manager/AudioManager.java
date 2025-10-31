@@ -23,8 +23,6 @@ import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SavedSongs;
-import dev.lavalink.youtube.YoutubeAudioSourceManager;
-import dev.lavalink.youtube.clients.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -67,13 +65,13 @@ public final class AudioManager {
         }
 
         // YouTube, SoundCloud, Bandcamp, Vimeo, Twitch, Beam, GetYarn, Http
-        final var ytSource = new YoutubeAudioSourceManager(true, new Music(), new AndroidVr(), new WebWithThumbnail(), new WebEmbedded());
-        ytSource.setPlaylistPageCount(100);
+//        final var ytSource = new YoutubeAudioSourceManager(true, new Music(), new AndroidVr(), new WebWithThumbnail(), new WebEmbedded());
+//        ytSource.setPlaylistPageCount(100);
+//
+//        Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
+//        ytSource.useOauth2(Environment.INSTANCE.googleOauthRefreshToken().orElse(null), Environment.INSTANCE.googleOauthRefreshToken().isPresent() || (Environment.INSTANCE.poToken().isPresent() && Environment.INSTANCE.poVisitorData().isPresent()));
 
-        Web.setPoTokenAndVisitorData(Environment.INSTANCE.poToken().orElse(null), Environment.INSTANCE.poVisitorData().orElse(null));
-        ytSource.useOauth2(Environment.INSTANCE.googleOauthRefreshToken().orElse(null), Environment.INSTANCE.googleOauthRefreshToken().isPresent() || (Environment.INSTANCE.poToken().isPresent() && Environment.INSTANCE.poVisitorData().isPresent()));
-
-        AUDIO_MANAGER.registerSourceManager(ytSource);
+//        AUDIO_MANAGER.registerSourceManager(ytSource);
 
         ShutdownHooks.register(() -> {
             AUDIO_MANAGER.shutdown();
