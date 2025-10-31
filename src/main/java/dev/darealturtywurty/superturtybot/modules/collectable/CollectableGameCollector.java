@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules.collectable;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -157,19 +158,18 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
 
         long currentTime = System.currentTimeMillis();
         long timeDifference = currentTime - messageTimes.getFirst();
-        if (timeDifference < 7_200_000)
+        if (timeDifference < TimeUnit.HOURS.toMillis(2))
             return;
 
-        float messageDensity = messageTimes.size() / (timeDifference / 3_600_000f);
-        messageDensity = Math.min(1, Math.max(0, messageDensity / 10));
-        if (messageDensity < 0.1)
-            return;
-
-        long delay = (long) (2 + (1 - messageDensity) * 10);
+        long delay = 1 + (timeDifference - TimeUnit.HOURS.toMillis(2)) / TimeUnit.HOURS.toMillis(1);
         scheduledGuilds.put(guild.getIdLong(), true);
         executor.schedule(() -> {
-            scheduledGuilds.put(guild.getIdLong(), false);
-            scheduleCollectable(event, guild);
+            try {
+                scheduledGuilds.put(guild.getIdLong(), false);
+                scheduleCollectable(event, guild);
+            } catch (Exception exception) {
+                Constants.LOGGER.error("Error scheduling collectable in guild {}", guild.getIdLong(), exception);
+            }
         }, delay, TimeUnit.HOURS);
     }
 
