@@ -12,6 +12,9 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -22,11 +25,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import net.dv8tion.jda.api.modals.Modal;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 
@@ -46,24 +46,24 @@ public class TagCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("get", "Retrives an existing tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true, true)
-            ),
-            new SubcommandData("create", "Creates a new tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true),
-                new OptionData(OptionType.STRING, "content", "The content of this tag (or embed name)", true),
-                new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
-            ),
-            new SubcommandData("edit", "Edits an existing tag").addOptions(
-                new OptionData(OptionType.STRING, "name", "The name of the tag to edit.", true, true),
-                new OptionData(OptionType.STRING, "content", "The new content of this tag (or embed name)", true),
-                new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
-            ),
-            new SubcommandData("delete", "Deletes an existing tag").addOptions(
-                    new OptionData(OptionType.STRING, "name", "The name of the tag to delete.", true, true)
-            ),
-            new SubcommandData("list", "List the available tags"));
+                        new OptionData(OptionType.STRING, "name", "The name of the tag to retrieve.", true, true)
+                ),
+                new SubcommandData("create", "Creates a new tag").addOptions(
+                        new OptionData(OptionType.STRING, "name", "The name of the tag to create.", true),
+                        new OptionData(OptionType.STRING, "content", "The content of this tag (or embed name)", true),
+                        new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
+                ),
+                new SubcommandData("edit", "Edits an existing tag").addOptions(
+                        new OptionData(OptionType.STRING, "name", "The name of the tag to edit.", true, true),
+                        new OptionData(OptionType.STRING, "content", "The new content of this tag (or embed name)", true),
+                        new OptionData(OptionType.BOOLEAN, "embed", "Whether or not this is an embed.", false)
+                ),
+                new SubcommandData("delete", "Deletes an existing tag").addOptions(
+                        new OptionData(OptionType.STRING, "name", "The name of the tag to delete.", true, true)
+                ),
+                new SubcommandData("list", "List the available tags"));
     }
-    
+
     @Override
     public String getAccess() {
         return "Create, Edit, Delete - Moderator, Get, List - Everyone";
@@ -98,7 +98,7 @@ public class TagCommand extends CoreCommand {
     public String getRichName() {
         return "Create Tag";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
@@ -123,7 +123,7 @@ public class TagCommand extends CoreCommand {
 
         if (!"get".equals(subcommand)) {
             filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                Filters.eq("user", event.getUser().getIdLong()));
+                    Filters.eq("user", event.getUser().getIdLong()));
         } else {
             filter = Filters.eq("guild", event.getGuild().getIdLong());
         }
@@ -143,17 +143,17 @@ public class TagCommand extends CoreCommand {
     public void onModalInteraction(ModalInteractionEvent event) {
         if (event.getGuild() == null) {
             event.deferReply(true).setContent("❌ You must be in a server to use this modal!").mentionRepliedUser(false)
-                .queue();
+                    .queue();
             return;
         }
 
         final ModalMapping nameMapping = event.getValues().stream()
-            .filter(mapping -> mapping.getId().endsWith("-name_input")).findFirst().orElse(null);
+                .filter(mapping -> mapping.getCustomId().endsWith("-name_input")).findFirst().orElse(null);
         final ModalMapping contentMapping = event.getValues().stream()
-            .filter(mapping -> mapping.getId().endsWith("-content_input")).findFirst().orElse(null);
+                .filter(mapping -> mapping.getCustomId().endsWith("-content_input")).findFirst().orElse(null);
         if (nameMapping == null || contentMapping == null) {
             event.deferReply(true).setContent("❌ You must provide a name and content!").mentionRepliedUser(false)
-                .queue();
+                    .queue();
             return;
         }
 
@@ -161,7 +161,7 @@ public class TagCommand extends CoreCommand {
         final String content = contentMapping.getAsString();
         final long user = event.getUser().getIdLong();
         Database.getDatabase().tags.insertOne(new Tag(event.getGuild().getIdLong(), user, name,
-            "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
+                "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
         final var embed = new EmbedBuilder();
         embed.setColor(Color.GREEN);
         embed.setDescription("✅ Tag `" + name + "` has been created!");
@@ -173,20 +173,30 @@ public class TagCommand extends CoreCommand {
     protected void runMessageCtx(MessageContextInteractionEvent event) {
         if (!event.isFromGuild()) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
-                .mentionRepliedUser(false).queue();
+                    .mentionRepliedUser(false).queue();
             return;
         }
 
         final Message message = event.getTarget();
         final String content = message.getContentRaw();
         final Modal.Builder builder = Modal.create("tag-" + message.getIdLong() + "-" + event.getUser().getIdLong(),
-            "Create Tag");
-        final var nameInput = TextInput.create(builder.getId() + "-name_input", "Tag Name:", TextInputStyle.SHORT)
-            .setRequired(true).setPlaceholder("Name").setRequiredRange(2, 64).build();
+                "Create Tag");
+        final var nameInput = TextInput.create(builder.getId() + "-name_input", TextInputStyle.SHORT)
+                .setRequired(true)
+                .setPlaceholder("Name")
+                .setRequiredRange(2, 64)
+                .build();
+        final var nameLabel = Label.of("Tag Name:", nameInput);
         final var contentInput = TextInput
-            .create(builder.getId() + "-content_input", "Content:", TextInputStyle.PARAGRAPH).setRequired(true)
-            .setPlaceholder("Content").setValue(content).setMinLength(2).setMaxLength(2000).build();
-        final Modal modal = builder.addComponents(ActionRow.of(nameInput), ActionRow.of(contentInput)).build();
+                .create(builder.getId() + "-content_input", TextInputStyle.PARAGRAPH)
+                .setRequired(true)
+                .setPlaceholder("Content")
+                .setValue(content)
+                .setMinLength(2)
+                .setMaxLength(2000)
+                .build();
+        final var contentLabel = Label.of("Tag Content:", contentInput);
+        final Modal modal = builder.addComponents(nameLabel, contentLabel).build();
         event.replyModal(modal).queue();
     }
 
@@ -196,7 +206,7 @@ public class TagCommand extends CoreCommand {
             reply(event, "You can only use this command inside of a server!", false);
             return;
         }
-        
+
         final String subcommand = event.getSubcommandName();
         if (subcommand == null || subcommand.isBlank()) {
             reply(event, "❌ You must provide a valid subcommand!", false, true);
@@ -238,7 +248,12 @@ public class TagCommand extends CoreCommand {
 
                 // TODO: Check user permission
                 if (embedOption == null || !embedOption.getAsBoolean()) {
-                    final String content = event.getOption("content", OptionMapping::getAsString);
+                    final String content = event.getOption("content", "", OptionMapping::getAsString);
+                    if (content.isBlank()) {
+                        reply(event, "❌ You must supply some non-blank content!", false, true);
+                        return;
+                    }
+
                     Database.getDatabase().tags
                             .insertOne(new Tag(event.getGuild().getIdLong(), event.getUser().getIdLong(),
                                     tagName0.getAsString(), "{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}"));
@@ -250,7 +265,12 @@ public class TagCommand extends CoreCommand {
                     return;
                 }
 
-                final String content = event.getOption("content", OptionMapping::getAsString);
+                final String content = event.getOption("content", "", OptionMapping::getAsString);
+                if (content.isBlank()) {
+                    reply(event, "❌ You must supply some non-blank content!", false, true);
+                    return;
+                }
+
                 long userId = event.getUser().getIdLong();
                 UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", userId)).first();
                 if (userEmbeds == null) {
@@ -293,7 +313,7 @@ public class TagCommand extends CoreCommand {
                 }
 
                 boolean isEmbed = event.getOption("embed", false, OptionMapping::getAsBoolean);
-                if(!isEmbed) {
+                if (!isEmbed) {
                     found.setData("{" + "\"message\":\"" + content.replace("\"", "\\\"") + "\"}");
                     final Bson update = Updates.set("data", found.getData());
                     Database.getDatabase().tags.updateOne(editFilter, update);

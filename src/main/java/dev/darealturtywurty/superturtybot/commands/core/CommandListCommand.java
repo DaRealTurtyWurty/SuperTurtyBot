@@ -7,6 +7,8 @@ import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -19,8 +21,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.privileges.IntegrationPrivilege;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
 import org.jetbrains.annotations.Nullable;
 
@@ -220,8 +220,8 @@ public class CommandListCommand extends CoreCommand {
                 .condition(event -> event.isFromGuild() == message.isFromGuild()
                         && event.getChannelIdLong() == message.getChannelIdLong()
                         && event.getMessageIdLong() == message.getIdLong()
-                        && event.getButton().getId() != null
-                        && event.getButton().getId().startsWith("commandlist-"))
+                        && event.getButton().getCustomId() != null
+                        && event.getButton().getCustomId().startsWith("commandlist-"))
                 .timeout(1, TimeUnit.MINUTES)
                 .timeoutAction(() -> message.delete().queue())
                 .failure(() -> message.delete().queue())
@@ -231,7 +231,7 @@ public class CommandListCommand extends CoreCommand {
                         return;
                     }
 
-                    String buttonId = event.getButton().getId();
+                    String buttonId = event.getButton().getCustomId();
                     switch (buttonId) {
                         case "commandlist-trash" -> event.deferEdit().queue(hook -> hook.deleteOriginal().queue());
                         case "commandlist-back" -> {

@@ -9,6 +9,8 @@ import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -22,8 +24,6 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -284,9 +284,9 @@ public class NSFWCommand extends CoreCommand {
             return;
         }
 
-        if (!Objects.requireNonNull(event.getButton().getId()).startsWith("regenerate-")) return;
+        if (!Objects.requireNonNull(event.getButton().getCustomId()).startsWith("regenerate-")) return;
 
-        String[] split = event.getButton().getId().split("-");
+        String[] split = event.getButton().getCustomId().split("-");
         if (split.length != 5) {
             event.reply("❌ There has been an error processing the command you tried to run. Please try again!")
                     .setEphemeral(true).queue();

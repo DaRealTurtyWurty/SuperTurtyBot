@@ -10,6 +10,10 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,10 +21,6 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -171,13 +171,13 @@ public class GithubRepositoryCommand extends CoreCommand {
         );
 
         embed.setOnMessageUpdate(message -> {
-            List<LayoutComponent> components = new ArrayList<>(message.getComponents());
+            List<MessageTopLevelComponent> components = new ArrayList<>(message.getComponents());
 
             // get a list of the current page's fields
             List<Repository> currentRepos = repositories.subList(embed.getPage() * 10, Math.min(repositories.size(), (embed.getPage() + 1) * 10));
 
             //noinspection DataFlowIssue
-            StringSelectMenu menu = StringSelectMenu.create("github-%d-%d-%d-%d".formatted(
+            var menu = StringSelectMenu.create("github-%d-%d-%d-%d".formatted(
                             event.isFromGuild() ? event.getGuild().getIdLong() : 0,
                             event.getChannel().getIdLong(),
                             message.getIdLong(),

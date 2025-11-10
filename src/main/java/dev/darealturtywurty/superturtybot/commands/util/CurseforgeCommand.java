@@ -20,6 +20,10 @@ import io.github.matyrobbrt.curseforgeapi.schemas.mod.Mod;
 import io.github.matyrobbrt.curseforgeapi.schemas.mod.ModAuthor;
 import io.github.matyrobbrt.curseforgeapi.util.CurseForgeException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -28,10 +32,6 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
@@ -40,8 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -227,13 +227,13 @@ public class CurseforgeCommand extends CoreCommand {
 
                 embed.setOnMessageUpdate(message -> {
                     // create select menu
-                    List<LayoutComponent> components = new ArrayList<>(message.getComponents());
+                    List<MessageTopLevelComponent> components = new ArrayList<>(message.getComponents());
 
                     // get a list of the current page's fields
                     List<Mod> currentMods = mods.subList(embed.getPage() * 10, Math.min(mods.size(), (embed.getPage() + 1) * 10));
 
                     //noinspection DataFlowIssue
-                    StringSelectMenu menu = StringSelectMenu.create("curseforge-%d-%d-%d-%d".formatted(
+                    var menu = StringSelectMenu.create("curseforge-%d-%d-%d-%d".formatted(
                                     event.isFromGuild() ? event.getGuild().getIdLong() : 0,
                                     event.getChannel().getIdLong(),
                                     message.getIdLong(),
@@ -242,7 +242,6 @@ public class CurseforgeCommand extends CoreCommand {
                             .addOptions(currentMods.stream().map(mod -> SelectOption.of(mod.name(), String.valueOf(mod.id()))).toList())
                             .setRequiredRange(1, 1)
                             .build();
-
                     components.add(ActionRow.of(menu));
                     message.editMessageComponents(components).queue();
                 });

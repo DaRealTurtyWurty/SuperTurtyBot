@@ -10,15 +10,15 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import lombok.Getter;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
@@ -106,7 +106,7 @@ public class HeistCommand extends EconomyCommand {
 
         event.getHook().editOriginalFormat("❓ Would you like to start a heist? The setup cost is %s.",
                         StringUtils.numberFormat(setupCost, config))
-                .setActionRow(Button.success("heist:yes", "Yes"), Button.danger("heist:no", "No"))
+                .setComponents(ActionRow.of(Button.success("heist:yes", "Yes"), Button.danger("heist:no", "No")))
                 .queue(message -> createHeistSetupWaiter(guild, member, message, config, account).build());
     }
 

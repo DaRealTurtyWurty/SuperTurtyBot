@@ -1135,10 +1135,10 @@ public class NSFWCommandList {
         }
 
         public static CommandData from(final ButtonInteractionEvent event) {
-            if (!Objects.requireNonNull(event.getButton().getId()).startsWith("regenerate-"))
+            if (!Objects.requireNonNull(event.getButton().getCustomId()).startsWith("regenerate-"))
                 return null;
 
-            String[] split = event.getButton().getId().split("-");
+            String[] split = event.getButton().getCustomId().split("-");
             if (split.length != 5) {
                 event.getHook().editOriginal(
                                 "There has been an error processing the command you tried to run. Please try again!")

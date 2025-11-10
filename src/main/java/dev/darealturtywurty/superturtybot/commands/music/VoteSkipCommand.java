@@ -7,14 +7,14 @@ import dev.darealturtywurty.superturtybot.commands.music.manager.MusicTrackSched
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.awt.*;
 import java.time.Instant;
@@ -149,7 +149,7 @@ public class VoteSkipCommand extends CoreCommand {
     private static void addWaiter(final Button voteButton, final long initiatorId) {
         TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .timeout(1, TimeUnit.MINUTES)
-                .condition(event -> event.getComponentId().equals(voteButton.getId()) && event.getUser().getIdLong() != initiatorId)
+                .condition(event -> event.getComponentId().equals(voteButton.getCustomId()) && event.getUser().getIdLong() != initiatorId)
                 .success(event -> {
                     Guild guild = event.getGuild();
                     if (guild == null)

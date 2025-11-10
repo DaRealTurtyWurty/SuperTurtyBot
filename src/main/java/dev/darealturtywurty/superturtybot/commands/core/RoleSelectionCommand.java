@@ -4,6 +4,14 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.Component;
+import net.dv8tion.jda.api.components.MessageTopLevelComponentUnion;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponentUnion;
+import net.dv8tion.jda.api.components.selections.SelectMenu;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu.Builder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -16,13 +24,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Component;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -304,8 +305,12 @@ public class RoleSelectionCommand extends CoreCommand {
                 final String emoji = event.getOption("emoji", "❓", OptionMapping::getAsString);
                 final String description = event.getOption("description", "Unknown", OptionMapping::getAsString);
 
-                StringSelectMenu menu = getStringSelectMenu(message);
+                if (role == null) {
+                    reply(event, "❌ The role that you have provided is invalid!", false, true);
+                    return;
+                }
 
+                StringSelectMenu menu = getStringSelectMenu(message);
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
                             true);
@@ -325,7 +330,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                StringSelectMenu.Builder menuBuilder = menu.createCopy();
+                Builder menuBuilder = menu.createCopy();
                 menuBuilder.getOptions()
                         .add(SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
                                 .withDescription(description));
@@ -415,7 +420,7 @@ public class RoleSelectionCommand extends CoreCommand {
                     return;
                 }
 
-                StringSelectMenu.Builder menuBuilder = menu.createCopy();
+                Builder menuBuilder = menu.createCopy();
                 menuBuilder.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
                 menuBuilder.setMaxValues(menu.getMaxValues() - 1);
 
@@ -515,9 +520,9 @@ public class RoleSelectionCommand extends CoreCommand {
     @Nullable
     private static StringSelectMenu getStringSelectMenu(Message message) {
         StringSelectMenu menu = null;
-        for (final LayoutComponent component : message.getComponents()) {
+        for (final MessageTopLevelComponentUnion component : message.getComponents()) {
             if (component instanceof final ActionRow row) {
-                for (final ItemComponent column : row.getComponents()) {
+                for (final ActionRowChildComponentUnion column : row.getComponents()) {
                     if (column instanceof final StringSelectMenu selection) {
                         menu = selection;
                         break;

@@ -10,6 +10,8 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -22,7 +24,6 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -177,7 +178,7 @@ public class ChessCommand extends CoreCommand {
 
         event.reply("✅ Waiting for %s to accept the game of Chess...%s".formatted(
                 opponent.getAsMention(), startingFen != null ? "\nStarting FEN: `%s`".formatted(startingFen) : ""))
-                .setActionRow(Button.success("chess:accept", "Accept"))
+                .setComponents(ActionRow.of(Button.success("chess:accept", "Accept")))
                 .flatMap(InteractionHook::retrieveOriginal)
                 .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                         .condition(buttonEvent ->
@@ -187,7 +188,7 @@ public class ChessCommand extends CoreCommand {
                         .timeout(2, TimeUnit.MINUTES)
                         .timeoutAction(() -> message.editMessage("❌ %s did not accept in time!".formatted(opponent.getAsMention())).setComponents().queue())
                         .success(buttonEvent -> {
-                            if ("chess:accept".equals(buttonEvent.getButton().getId())) {
+                            if ("chess:accept".equals(buttonEvent.getButton().getCustomId())) {
                                 startGame(event, game, opponent);
                             }
                         })

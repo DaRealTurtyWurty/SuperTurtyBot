@@ -7,14 +7,14 @@ import io.github.fastily.jwiki.core.NS;
 import io.github.fastily.jwiki.core.Wiki;
 import io.github.fastily.jwiki.dwrap.ImageInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.actionrow.ActionRowChildComponent;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -99,10 +99,9 @@ public class WikipediaCommand extends CoreCommand {
         }
 
         event.getHook().editOriginalEmbeds(embed.build()).setComponents().queue(message -> {
-            List<ItemComponent> components = new ArrayList<>();
+            List<ActionRowChildComponent> components = new ArrayList<>();
             for (int index = 0; index < pages.size(); index++) {
-                components.add(Button.primary(
-                        "wikipedia-" + index, String.valueOf(index + 1)));
+                components.add(Button.primary("wikipedia-" + index, String.valueOf(index + 1)));
             }
 
             message.editMessageComponents(ActionRow.of(components)).queue(ignored -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
@@ -131,7 +130,7 @@ public class WikipediaCommand extends CoreCommand {
                         embed.setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
 
                         String summary = WIKI.getTextExtract(page);
-                        if(summary.length() > 350) {
+                        if (summary.length() > 350) {
                             summary = summary.substring(0, 350) + "...";
                         }
 
@@ -184,11 +183,11 @@ public class WikipediaCommand extends CoreCommand {
         Collections.shuffle(imageNames);
 
         String url = null;
-        while(url == null && !imageNames.isEmpty()) {
+        while (url == null && !imageNames.isEmpty()) {
             List<ImageInfo> imageInfos = WIKI.getImageInfo(imageNames.getFirst());
             url = imageInfos.isEmpty() ? null : imageInfos.getFirst().url.toString();
 
-            if(url == null) {
+            if (url == null) {
                 imageNames.removeFirst();
             }
         }

@@ -12,6 +12,8 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -22,7 +24,6 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
@@ -169,7 +170,7 @@ public class JobCommand extends EconomyCommand {
                 }
 
                 event.getHook().editOriginalFormat("❓ Are you sure you want to quit your job?%nYou are currently a level %s %s.", account.getJobLevel(), WordUtils.capitalize(account.getJob().name().toLowerCase()))
-                        .setActionRow(Button.danger("job:quit", "Quit Job"), Button.success("job:cancel_quit", "Cancel"))
+                        .setComponents(ActionRow.of(Button.danger("job:quit", "Quit Job"), Button.success("job:cancel_quit", "Cancel")))
                         .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                                 .timeout(2, TimeUnit.MINUTES)
                                 .timeoutAction(() -> message.editMessage("❌ Job quitting has timed out!").setComponents().queue())

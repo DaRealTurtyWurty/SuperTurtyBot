@@ -8,12 +8,12 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import genius.SongSearch;
 import genius.SongSearch.Hit;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
@@ -88,13 +88,13 @@ public class LyricsCommand extends CoreCommand {
             final String lyrics = ID_LYRIC_MAP.get(hitId);
             final String prevPage = lyrics.substring(newPage * 1024,
                 Math.min(lyrics.length(), 1024 + newPage * 1024));
-            final ActionRow row = event.getMessage().getActionRows().getFirst();
+            final ActionRow row = event.getMessage().getComponents().getFirst().asActionRow();
             Button previous = row.getButtons().get(0);
-            previous = previous.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
+            previous = previous.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
             Button close = row.getButtons().get(1).withDisabled(false);
-            close = close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
+            close = close.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
             Button next = row.getButtons().get(2).withDisabled(false);
-            next = next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
+            next = next.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
             
             if (newPage != 0) {
                 event
@@ -126,14 +126,13 @@ public class LyricsCommand extends CoreCommand {
                 final String nextPage = lyrics.substring(newPage * 1024,
                     Math.min(lyrics.length(), 1024 + newPage * 1024));
                 
-                final ActionRow row = event.getMessage().getActionRows().getFirst();
+                final ActionRow row = event.getMessage().getComponents().getFirst().asActionRow();
                 Button previous = row.getButtons().get(0).withDisabled(false);
-                previous = previous
-                    .withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
+                previous = previous.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-prev");
                 Button close = row.getButtons().get(1);
-                close = close.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
+                close = close.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-close");
                 Button next = row.getButtons().get(2);
-                next = next.withId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
+                next = next.withCustomId(parts[0] + "-" + channel + "-" + user + "-" + hitId + "-" + newPage + "-next");
                 
                 if (newPage != lyrics.length() / 1024) {
                     event

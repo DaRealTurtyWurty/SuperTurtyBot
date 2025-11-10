@@ -8,13 +8,15 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu.Builder;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import okhttp3.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -164,7 +166,7 @@ public class TriviaCommand extends CoreCommand {
 
             TriviaQuestion question = optional.get();
             String selectId = UUID.randomUUID().toString();
-            StringSelectMenu.Builder selectMenu = StringSelectMenu.create(selectId)
+            Builder selectMenu = StringSelectMenu.create(selectId)
                     .setPlaceholder("Select an answer...");
 
             List<String> answers = new ArrayList<>(question.incorrectAnswers);
@@ -181,7 +183,7 @@ public class TriviaCommand extends CoreCommand {
                                     .setTimestamp(Instant.now()).setColor(
                                             question.difficulty().equalsIgnoreCase("easy") ? 0x00FF00 : question.difficulty()
                                                     .equalsIgnoreCase("medium") ? 0xFFFF00 : 0xFF0000).build())
-                    .setActionRow(selectMenu.build()).queue(msg -> CACHED_TRIVIA.add(
+                    .setComponents(ActionRow.of(selectMenu.build())).queue(msg -> CACHED_TRIVIA.add(
                             new TriviaData(selectId, event.getGuild().getIdLong(), event.getChannel().getIdLong(),
                                     msg.getIdLong(), event.getUser().getIdLong(), question)));
         });
