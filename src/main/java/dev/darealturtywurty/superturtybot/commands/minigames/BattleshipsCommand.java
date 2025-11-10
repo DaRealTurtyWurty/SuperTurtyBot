@@ -50,6 +50,7 @@ public class BattleshipsCommand extends CoreCommand {
     public static class Game {
         @Getter
         private final long guildId, channelId, threadId, player1Id, player2Id;
+        @Getter
         private final boolean isPvP;
 
         private final Battleship[] player1Ships = new Battleship[5];
@@ -84,20 +85,40 @@ public class BattleshipsCommand extends CoreCommand {
             return this.isPlayer1Ready && this.isPlayer2Ready;
         }
 
-        public void setReady(long userId) {
+        public void setReady(long userId, boolean ready) {
             if (userId == this.player1Id) {
-                this.isPlayer1Ready = true;
+                this.isPlayer1Ready = ready;
             } else if (userId == this.player2Id) {
-                this.isPlayer2Ready = true;
+                this.isPlayer2Ready = ready;
             }
         }
 
         public void setShips(long userId, Battleship[] ships) {
             if (userId == this.player1Id) {
                 System.arraycopy(ships, 0, this.player1Ships, 0, 5);
+                this.isPlayer1Ready = false;
             } else if (userId == this.player2Id) {
                 System.arraycopy(ships, 0, this.player2Ships, 0, 5);
+                this.isPlayer2Ready = false;
             }
+        }
+
+        private int index(int x, int y) {
+            return (y * BOARD_SIZE) + x;
+        }
+
+        public void markHit(long userId, int x, int y) {
+            if (userId == this.player1Id) {
+                this.player2Board[index(x, y)] = true;
+            } else {
+                this.player1Board[index(x, y)] = true;
+            }
+        }
+
+        public boolean wasHit(long userId, int x, int y) {
+            return userId == this.player1Id
+                    ? this.player2Board[index(x, y)]
+                    : this.player1Board[index(x, y)];
         }
 
         public boolean isPlayer1(long userId) {
@@ -106,10 +127,6 @@ public class BattleshipsCommand extends CoreCommand {
 
         public boolean isPlayer2(long userId) {
             return this.player2Id == userId;
-        }
-
-        public boolean isPvP() {
-            return this.isPvP;
         }
     }
 
@@ -139,11 +156,12 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public static boolean isWithinBounds(int x, int y, ShipType type, Orientation orientation) {
+            final int length = type.getSize() - 1;
             return switch (orientation) {
-                case LEFT_TO_RIGHT -> x + type.getSize() <= BOARD_SIZE;
-                case RIGHT_TO_LEFT -> x - type.getSize() >= 0;
-                case TOP_TO_BOTTOM -> y + type.getSize() <= BOARD_SIZE;
-                case BOTTOM_TO_TOP -> y - type.getSize() >= 0;
+                case LEFT_TO_RIGHT -> x + length < BOARD_SIZE;
+                case RIGHT_TO_LEFT -> x - length >= 0;
+                case TOP_TO_BOTTOM -> y + length < BOARD_SIZE;
+                case BOTTOM_TO_TOP -> y - length >= 0;
             };
         }
 
