@@ -366,12 +366,16 @@ public class TicTacToeCommand extends CoreCommand {
             if (!isEmpty(x, y))
                 return;
 
-            board[x][y] = currentTurn == userId ? 'X' : 'O';
+            board[x][y] = getSymbolFor(currentTurn);
             switchTurn();
         }
 
         public boolean isEmpty(int x, int y) {
             return get(x, y) == '\u0000';
+        }
+
+        private char getSymbolFor(long userId) {
+            return userId == this.userId ? 'X' : 'O';
         }
 
         private void switchTurn() {
@@ -383,21 +387,28 @@ public class TicTacToeCommand extends CoreCommand {
         }
 
         public boolean hasWon(long userId) {
+            return hasWon(getSymbolFor(userId));
+        }
+
+        private boolean hasWon(char symbol) {
+            if (symbol == '\u0000')
+                return false;
+
             // Top left to bottom right
-            if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[2][2] == (userId == this.userId ? 'X' : 'O'))
+            if (board[0][0] == symbol && board[1][1] == symbol && board[2][2] == symbol)
                 return true;
 
             // Top right to bottom left
-            if (board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[2][0] == (userId == this.userId ? 'X' : 'O'))
+            if (board[0][2] == symbol && board[1][1] == symbol && board[2][0] == symbol)
                 return true;
 
             for (int x = 0; x < 3; x++) {
                 // Horizontal
-                if (board[x][0] == board[x][1] && board[x][1] == board[x][2] && board[x][2] == (userId == this.userId ? 'X' : 'O'))
+                if (board[x][0] == symbol && board[x][1] == symbol && board[x][2] == symbol)
                     return true;
 
                 // Vertical
-                if (board[0][x] == board[1][x] && board[1][x] == board[2][x] && board[2][x] == (userId == this.userId ? 'X' : 'O'))
+                if (board[0][x] == symbol && board[1][x] == symbol && board[2][x] == symbol)
                     return true;
             }
 
@@ -411,17 +422,71 @@ public class TicTacToeCommand extends CoreCommand {
         }
 
         public void playBot() {
-            List<Map.Entry<Integer, Integer>> moves = new ArrayList<>();
+            char botSymbol = getSymbolFor(opponentId);
+            char playerSymbol = getSymbolFor(userId);
+
+            Map.Entry<Integer, Integer> move = findWinningMove(botSymbol);
+            if (move == null)
+                move = findWinningMove(playerSymbol);
+
+            if (move == null && isEmpty(1, 1))
+                move = Map.entry(1, 1);
+
+            if (move == null)
+                move = findPreferredMove(new int[][]{{0, 0}, {2, 0}, {0, 2}, {2, 2}});
+
+            if (move == null)
+                move = findPreferredMove(new int[][]{{1, 0}, {0, 1}, {2, 1}, {1, 2}});
+
+            if (move == null)
+                move = randomMove();
+
+            if (move != null)
+                makeMove(move.getKey(), move.getValue());
+        }
+
+        private Map.Entry<Integer, Integer> findWinningMove(char symbol) {
             for (int column = 0; column < 3; column++) {
                 for (int row = 0; row < 3; row++) {
-                    if (isEmpty(column, row)) {
-                        moves.add(Map.entry(column, row));
-                    }
+                    if (!isEmpty(column, row))
+                        continue;
+
+                    board[column][row] = symbol;
+                    boolean wins = hasWon(symbol);
+                    board[column][row] = '\u0000';
+
+                    if (wins)
+                        return Map.entry(column, row);
                 }
             }
 
-            Map.Entry<Integer, Integer> move = moves.get(ThreadLocalRandom.current().nextInt(moves.size()));
-            makeMove(move.getKey(), move.getValue());
+            return null;
+        }
+
+        private Map.Entry<Integer, Integer> findPreferredMove(int[][] positions) {
+            for (int[] position : positions) {
+                int column = position[0];
+                int row = position[1];
+                if (isEmpty(column, row))
+                    return Map.entry(column, row);
+            }
+
+            return null;
+        }
+
+        private Map.Entry<Integer, Integer> randomMove() {
+            List<Map.Entry<Integer, Integer>> moves = new ArrayList<>();
+            for (int column = 0; column < 3; column++) {
+                for (int row = 0; row < 3; row++) {
+                    if (isEmpty(column, row))
+                        moves.add(Map.entry(column, row));
+                }
+            }
+
+            if (moves.isEmpty())
+                return null;
+
+            return moves.get(ThreadLocalRandom.current().nextInt(moves.size()));
         }
 
         public char get(int x, int y) {
