@@ -144,6 +144,12 @@ public class GuildData {
     private boolean isCollectingEnabled;
     private boolean shouldAnnounceJoins;
     private boolean shouldAnnounceLeaves;
+    private boolean imageSpamAutoBanEnabled;
+    private int imageSpamWindowSeconds;
+    private int imageSpamMinImages;
+    private int imageSpamNewMemberThresholdHours;
+    private boolean discordInviteGuardEnabled;
+    private boolean scamDetectionEnabled;
 
     public GuildData() {
         this(0L);
@@ -253,6 +259,12 @@ public class GuildData {
         this.isCollectingEnabled = true;
         this.shouldAnnounceJoins = true;
         this.shouldAnnounceLeaves = false;
+        this.imageSpamAutoBanEnabled = false;
+        this.imageSpamWindowSeconds = 10;
+        this.imageSpamMinImages = 3;
+        this.imageSpamNewMemberThresholdHours = 48;
+        this.discordInviteGuardEnabled = true;
+        this.scamDetectionEnabled = true;
     }
 
     public static GuildData getOrCreateGuildData(long guildId) {

@@ -488,5 +488,38 @@ public class GuildConfigRegistry {
                 new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                         .serializer((config, value) -> config.setDoServerBoostsAffectXP(Boolean.parseBoolean(value)))
                         .valueFromConfig(GuildData::isDoServerBoostsAffectXP).build());
+
+        GUILD_CONFIG_OPTIONS.register("image_spam_autoban_enabled",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                        .serializer((config, value) -> config.setImageSpamAutoBanEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isImageSpamAutoBanEnabled).build());
+
+        GUILD_CONFIG_OPTIONS.register("image_spam_window_seconds",
+                new GuildConfigOption.Builder().dataType(DataType.INTEGER)
+                        .serializer((config, value) -> config.setImageSpamWindowSeconds(Integer.parseInt(value)))
+                        .valueFromConfig(GuildData::getImageSpamWindowSeconds)
+                        .validator((event, value) -> Integer.parseInt(value) >= 1).build());
+
+        GUILD_CONFIG_OPTIONS.register("image_spam_min_images",
+                new GuildConfigOption.Builder().dataType(DataType.INTEGER)
+                        .serializer((config, value) -> config.setImageSpamMinImages(Integer.parseInt(value)))
+                        .valueFromConfig(GuildData::getImageSpamMinImages)
+                        .validator((event, value) -> Integer.parseInt(value) >= 1).build());
+
+        GUILD_CONFIG_OPTIONS.register("image_spam_new_member_threshold_hours",
+                new GuildConfigOption.Builder().dataType(DataType.INTEGER)
+                        .serializer((config, value) -> config.setImageSpamNewMemberThresholdHours(Integer.parseInt(value)))
+                        .valueFromConfig(GuildData::getImageSpamNewMemberThresholdHours)
+                        .validator((event, value) -> Integer.parseInt(value) >= 1).build());
+
+        GUILD_CONFIG_OPTIONS.register("discord_invite_guard_enabled",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                        .serializer((config, value) -> config.setDiscordInviteGuardEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isDiscordInviteGuardEnabled).build());
+
+        GUILD_CONFIG_OPTIONS.register("scam_detection_enabled",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                        .serializer((config, value) -> config.setScamDetectionEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isScamDetectionEnabled).build());
     }
 }

@@ -1,36 +1,25 @@
 package dev.darealturtywurty.superturtybot.modules;
 
-import com.mongodb.client.model.Filters;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.Database;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
 public class AutoModerator extends ListenerAdapter {
-    private static final Pattern INVITE_REGEX = Pattern.compile("(https?://)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com/invite)/[^ /]+?(?=\b)");
     public static final AutoModerator INSTANCE = new AutoModerator();
-    public static final Set<String> SCAM_DOMAINS = ConcurrentHashMap.newKeySet();
-
-//    static {
-//        loadScamDomains();
-//    }
+    private final DiscordInviteGuard inviteGuard = new DiscordInviteGuard();
+    private final ImageSpamAutoBanManager imageSpamAutoBanManager = new ImageSpamAutoBanManager();
+    private final ScamDomainDetector scamDomainDetector = new ScamDomainDetector();
+    private final boolean scamDetectionEnabled;
 
     private AutoModerator() {
+        this.scamDetectionEnabled = !Environment.INSTANCE.isDevelopment();
+        if (this.scamDetectionEnabled) {
+            this.scamDomainDetector.start();
+        } else {
+            Constants.LOGGER.info("Skipping scam-domain detector in development environment.");
+        }
     }
 
     @Override
@@ -38,8 +27,11 @@ public class AutoModerator extends ListenerAdapter {
         if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage() || event.getAuthor().isSystem())
             return;
 
-        discordInvites(event.getMessage());
-        // scamDetection(event.getMessage());
+        this.inviteGuard.handleMessage(event.getMessage());
+        this.imageSpamAutoBanManager.handleMessage(event.getMessage());
+        if (this.scamDetectionEnabled) {
+            this.scamDomainDetector.handleMessage(event.getMessage());
+        }
     }
 
     @Override
@@ -48,53 +40,9 @@ public class AutoModerator extends ListenerAdapter {
                 event.getAuthor().isSystem() || event.getMember() == null || event.getMember().isOwner())
             return;
 
-        discordInvites(event.getMessage());
-        // scamDetection(event.getMessage());
-    }
-
-    private static void loadScamDomains() {
-        new Thread(() -> {
-            try {
-                final URLConnection connection = new URI("https://phish.sinking.yachts/v2/all").toURL().openConnection();
-                connection.addRequestProperty("X-Identity", "TurtyBot#8108");
-                final InputStream stream = connection.getInputStream();
-                final String[] response = Constants.GSON.fromJson(new InputStreamReader(stream), String[].class);
-                for (String domain : response) {
-                    SCAM_DOMAINS.add(domain);
-                    Constants.LOGGER.debug("Scam link added: {}", domain);
-                }
-            } catch (final IOException | URISyntaxException exception) {
-                Constants.LOGGER.error("Failed to initialize scam links!", exception);
-            }
-        }).start();
-    }
-
-    private void discordInvites(Message message) {
-        if(!message.isFromGuild()) return;
-
-        Guild guild = message.getGuild();
-        GuildData data = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if (data == null || !GuildData.getLongs(data.getDiscordInviteWhitelistChannels()).contains(message.getChannel().getIdLong()))
-            return;
-
-        if (INVITE_REGEX.matcher(message.getContentRaw()).find()) {
-            message.delete()
-                    .queue(success -> message.getChannel().sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!")
-                            .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
-        }
-    }
-
-    private void scamDetection(Message message) {
-        final String content = message.getContentRaw();
-        for (final String domain : SCAM_DOMAINS) {
-            if (content.contains(domain) && (!content.contains("." + domain) && !content.contains("https://" + domain))) {
-                message.delete().flatMap(success ->
-                        message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
-                                "If this was not you, then your account has been compromised. " +
-                                "Please make sure to reset your login details to get your token changed. " +
-                                "In the future, be more careful what URLs you are opening, always check that its the real one.")).queue();
-                break;
-            }
+        this.inviteGuard.handleMessage(event.getMessage());
+        if (this.scamDetectionEnabled) {
+            this.scamDomainDetector.handleMessage(event.getMessage());
         }
     }
 }
