@@ -103,6 +103,7 @@ public class ScamDomainDetector {
         try {
             final HttpRequest request = HttpRequest.newBuilder(URI.create(ALL_URL))
                     .header("User-Agent", USER_AGENT)
+                    .header("X-Identity", USER_AGENT)
                     .GET()
                     .build();
             final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -138,6 +139,7 @@ public class ScamDomainDetector {
             final String url = RECENT_URL_TEMPLATE.formatted(this.lastUpdatedEpochSecond);
             final HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                     .header("User-Agent", USER_AGENT)
+                    .header("X-Identity", USER_AGENT)
                     .GET()
                     .build();
             final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -180,6 +182,7 @@ public class ScamDomainDetector {
     private void startWebSocket() {
         this.httpClient.newWebSocketBuilder()
                 .header("User-Agent", USER_AGENT)
+                .header("X-Identity", USER_AGENT)
                 .buildAsync(URI.create(WEBSOCKET_URL), new WebSocket.Listener() {
                     @Override
                     public void onOpen(WebSocket webSocket) {
