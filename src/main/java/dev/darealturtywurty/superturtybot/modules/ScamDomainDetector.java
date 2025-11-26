@@ -72,7 +72,7 @@ public class ScamDomainDetector {
             return;
 
         for (final String domain : scamDomains) {
-            if (content.contains(domain) && (!content.contains("." + domain) && !content.contains("https://" + domain))) {
+            if (content.contains(domain)) {
                 message.delete().flatMap(success ->
                         message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
                                 "If this was not you, then your account has been compromised. " +

@@ -2,9 +2,13 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 public class AutoModerator extends ListenerAdapter {
     public static final AutoModerator INSTANCE = new AutoModerator();
@@ -23,26 +27,31 @@ public class AutoModerator extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage() || event.getAuthor().isSystem())
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        Message message = event.getMessage();
+        if (shouldIgnoreMessage(event, event.getAuthor(), message))
             return;
 
-        this.inviteGuard.handleMessage(event.getMessage());
-        this.imageSpamAutoBanManager.handleMessage(event.getMessage());
+        this.inviteGuard.handleMessage(message);
+        this.imageSpamAutoBanManager.handleMessage(message);
         if (this.scamDetectionEnabled) {
-            this.scamDomainDetector.handleMessage(event.getMessage());
+            this.scamDomainDetector.handleMessage(message);
         }
     }
 
     @Override
-    public void onMessageUpdate(MessageUpdateEvent event) {
-        if (!event.isFromGuild() || event.getAuthor().isBot() || event.getMessage().isWebhookMessage() ||
-                event.getAuthor().isSystem() || event.getMember() == null || event.getMember().isOwner())
+    public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
+        Message message = event.getMessage();
+        if (shouldIgnoreMessage(event, event.getAuthor(), message))
             return;
 
-        this.inviteGuard.handleMessage(event.getMessage());
+        this.inviteGuard.handleMessage(message);
         if (this.scamDetectionEnabled) {
-            this.scamDomainDetector.handleMessage(event.getMessage());
+            this.scamDomainDetector.handleMessage(message);
         }
+    }
+
+    private boolean shouldIgnoreMessage(GenericMessageEvent event, User author, Message message) {
+        return !event.isFromGuild() || author.isBot() || message.isWebhookMessage() || author.isSystem();
     }
 }
