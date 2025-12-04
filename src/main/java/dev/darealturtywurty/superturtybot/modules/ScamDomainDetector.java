@@ -14,6 +14,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Responsible for loading, caching, and keeping scam-domain data in sync with phish.sinking.yachts.
@@ -31,7 +33,10 @@ public class ScamDomainDetector {
     private static final String ALL_URL = "https://phish.sinking.yachts/v2/all";
     private static final String RECENT_URL_TEMPLATE = "https://phish.sinking.yachts/v2/recent/%d";
     private static final String WEBSOCKET_URL = "wss://phish.sinking.yachts/feed";
-    private static final Duration CACHE_EXPIRY = Duration.ofSeconds(604800); // 7 days
+    private static final Duration CACHE_EXPIRY = Duration.ofDays(7);
+    private static final Duration WEBSOCKET_PING_INTERVAL = Duration.ofMinutes(4);
+    private static final Duration WEBSOCKET_RECONNECT_BASE_DELAY = Duration.ofSeconds(5);
+    private static final Duration WEBSOCKET_RECONNECT_MAX_DELAY = Duration.ofMinutes(5);
     private static final String USER_AGENT = "SuperTurtyBot/1.0 (https://github.com/darealturtywurty/SuperTurtyBot)";
     private static final Path CACHE_FILE = Path.of("cache", "scam_domains_cache.json");
 
@@ -42,8 +47,10 @@ public class ScamDomainDetector {
         thread.setDaemon(true);
         return thread;
     });
+    private final AtomicInteger consecutiveWebSocketFailures = new AtomicInteger();
 
     private volatile long lastUpdatedEpochSecond = 0L;
+    private volatile ScheduledFuture<?> pingTask;
 
     public void start() {
         ensureCacheDirectory();
@@ -187,6 +194,8 @@ public class ScamDomainDetector {
                     @Override
                     public void onOpen(WebSocket webSocket) {
                         webSocket.request(1);
+                        consecutiveWebSocketFailures.set(0);
+                        startPing(webSocket);
                         Constants.LOGGER.info("Connected to scam-domain websocket feed.");
                     }
 
@@ -216,13 +225,19 @@ public class ScamDomainDetector {
 
                     @Override
                     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                        Constants.LOGGER.warn("Scam-domain websocket closed: {} - {}", statusCode, reason);
+                        cancelPing();
+                        if (statusCode == 1000) {
+                            Constants.LOGGER.info("Scam-domain websocket closed normally: {} - {}", statusCode, reason);
+                        } else {
+                            Constants.LOGGER.warn("Scam-domain websocket closed unexpectedly: {} - {}", statusCode, reason);
+                        }
                         scheduleReconnect();
                         return null;
                     }
 
                     @Override
                     public void onError(WebSocket webSocket, Throwable error) {
+                        cancelPing();
                         Constants.LOGGER.error("Scam-domain websocket error!", error);
                         scheduleReconnect();
                     }
@@ -234,7 +249,11 @@ public class ScamDomainDetector {
     }
 
     private void scheduleReconnect() {
-        this.scheduler.schedule(this::startWebSocket, 30, TimeUnit.SECONDS);
+        final int attempt = this.consecutiveWebSocketFailures.incrementAndGet();
+        final long exponentialDelaySeconds = WEBSOCKET_RECONNECT_BASE_DELAY.getSeconds()
+                * (1L << Math.min(attempt - 1, 6)); // cap exponent to avoid overflow
+        final long delaySeconds = Math.min(exponentialDelaySeconds, WEBSOCKET_RECONNECT_MAX_DELAY.getSeconds());
+        this.scheduler.schedule(this::startWebSocket, delaySeconds, TimeUnit.SECONDS);
     }
 
     private void ensureCacheDirectory() {
@@ -275,6 +294,28 @@ public class ScamDomainDetector {
         } catch (final IOException exception) {
             Constants.LOGGER.warn("Failed to write scam-domain cache.", exception);
         }
+    }
+
+    private void startPing(WebSocket webSocket) {
+        cancelPing();
+
+        this.pingTask = this.scheduler.scheduleAtFixedRate(() -> {
+            webSocket.sendPing(ByteBuffer.wrap(new byte[]{1})).exceptionally(error -> {
+                Constants.LOGGER.debug("Failed to send scam-domain websocket ping, reconnecting.", error);
+                cancelPing();
+                scheduleReconnect();
+                return null;
+            });
+        }, WEBSOCKET_PING_INTERVAL.getSeconds(), WEBSOCKET_PING_INTERVAL.getSeconds(), TimeUnit.SECONDS);
+    }
+
+    private void cancelPing() {
+        final ScheduledFuture<?> existing = this.pingTask;
+        if (existing != null) {
+            existing.cancel(true);
+        }
+
+        this.pingTask = null;
     }
 
     private record CachePayload(long lastUpdatedEpochSecond, Set<String> domains) {
