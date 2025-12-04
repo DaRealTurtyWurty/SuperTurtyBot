@@ -20,11 +20,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Responsible for loading, caching, and keeping scam-domain data in sync with phish.sinking.yachts.
@@ -39,6 +42,7 @@ public class ScamDomainDetector {
     private static final Duration WEBSOCKET_RECONNECT_MAX_DELAY = Duration.ofMinutes(5);
     private static final String USER_AGENT = "SuperTurtyBot/1.0 (https://github.com/darealturtywurty/SuperTurtyBot)";
     private static final Path CACHE_FILE = Path.of("cache", "scam_domains_cache.json");
+    private static final Pattern URL_PATTERN = Pattern.compile("(?i)\\b((?:https?://)?[\\w.-]+\\.[a-z]{2,})(?:/[^\\s]*)?");
 
     private final Set<String> scamDomains = ConcurrentHashMap.newKeySet();
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -78,15 +82,12 @@ public class ScamDomainDetector {
         if (content.isBlank())
             return;
 
-        for (final String domain : scamDomains) {
-            if (content.contains(domain)) {
-                message.delete().flatMap(success ->
-                        message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
-                                "If this was not you, then your account has been compromised. " +
-                                "Please make sure to reset your login details to get your token changed. " +
-                                "In the future, be more careful what URLs you are opening, always check that it's the real one.")).queue();
-                break;
-            }
+        if (containsScamDomain(content)) {
+            message.delete().flatMap(success ->
+                    message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
+                            "If this was not you, then your account has been compromised. " +
+                            "Please make sure to reset your login details to get your token changed. " +
+                            "In the future, be more careful what URLs you are opening, always check that it's the real one.")).queue();
         }
     }
 
@@ -126,7 +127,13 @@ public class ScamDomainDetector {
             }
 
             this.scamDomains.clear();
-            Collections.addAll(this.scamDomains, responseDomains);
+            for (final String domain : responseDomains) {
+                final String normalized = normalizeDomain(domain);
+                if (normalized != null) {
+                    this.scamDomains.add(normalized);
+                }
+            }
+
             this.lastUpdatedEpochSecond = Instant.now().getEpochSecond();
             saveCache();
             Constants.LOGGER.info("Loaded {} scam domains from full dataset.", this.scamDomains.size());
@@ -179,9 +186,15 @@ public class ScamDomainDetector {
                 continue;
 
             if ("delete".equalsIgnoreCase(update.type())) {
-                update.domains().forEach(this.scamDomains::remove);
+                update.domains().stream()
+                        .map(this::normalizeDomain)
+                        .filter(Objects::nonNull)
+                        .forEach(this.scamDomains::remove);
             } else {
-                this.scamDomains.addAll(update.domains());
+                update.domains().stream()
+                        .map(this::normalizeDomain)
+                        .filter(Objects::nonNull)
+                        .forEach(this.scamDomains::add);
             }
         }
     }
@@ -278,7 +291,10 @@ public class ScamDomainDetector {
 
             this.scamDomains.clear();
             if (payload.domains() != null)
-                this.scamDomains.addAll(payload.domains());
+                payload.domains().stream()
+                        .map(this::normalizeDomain)
+                        .filter(Objects::nonNull)
+                        .forEach(this.scamDomains::add);
 
             this.lastUpdatedEpochSecond = payload.lastUpdatedEpochSecond();
             Constants.LOGGER.info("Loaded {} scam domains from cache.", this.scamDomains.size());
@@ -316,6 +332,55 @@ public class ScamDomainDetector {
         }
 
         this.pingTask = null;
+    }
+
+    private boolean containsScamDomain(String content) {
+        final Matcher matcher = URL_PATTERN.matcher(content);
+        while (matcher.find()) {
+            final String url = matcher.group(1);
+            final String host = extractHost(url);
+            if (isScamDomainHost(host))
+                return true;
+        }
+
+        return false;
+    }
+
+    private String extractHost(String url) {
+        try {
+            final String normalized = url.startsWith("http") ? url : "https://" + url;
+            final URI uri = URI.create(normalized);
+            return uri.getHost();
+        } catch (final Exception ignored) {
+            return null;
+        }
+    }
+
+    private boolean isScamDomainHost(String host) {
+        if (host == null)
+            return false;
+
+        String normalized = host.toLowerCase(Locale.ROOT);
+        if (this.scamDomains.contains(normalized))
+            return true;
+
+        int dotIndex = normalized.indexOf('.');
+        while (dotIndex > 0) {
+            normalized = normalized.substring(dotIndex + 1);
+            if (this.scamDomains.contains(normalized))
+                return true;
+
+            dotIndex = normalized.indexOf('.');
+        }
+
+        return false;
+    }
+
+    private String normalizeDomain(String domain) {
+        if (domain == null || domain.isBlank())
+            return null;
+
+        return domain.trim().toLowerCase(Locale.ROOT);
     }
 
     private record CachePayload(long lastUpdatedEpochSecond, Set<String> domains) {
