@@ -27,8 +27,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CollectableGameCollector<T extends Collectable> extends ListenerAdapter implements Registerable {
+    private static final AtomicInteger INITIAL_LOAD_COUNTER = new AtomicInteger();
+    private static final long INITIAL_LOAD_DELAY_HOURS = 1L;
+
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final List<CollectableGameInstance<T>> gameInstances = new ArrayList<>();
     private final Map<Long, Boolean> scheduledGuilds = new HashMap<>();
@@ -38,6 +42,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     private String name;
     @Getter
     private final String displayName;
+    private final long initialLoadDelay;
 
     private boolean hasDoneInitialLoad = false;
 
@@ -45,6 +50,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         this.registry = registry;
         this.name = name;
         this.displayName = displayName;
+        this.initialLoadDelay = INITIAL_LOAD_COUNTER.getAndIncrement() * INITIAL_LOAD_DELAY_HOURS;
     }
 
     @Override
@@ -145,8 +151,15 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
 
         if (!hasDoneInitialLoad) {
             scheduledGuilds.put(guild.getIdLong(), true);
-            scheduleCollectable(event, guild);
-            scheduledGuilds.put(guild.getIdLong(), false);
+            executor.schedule(() -> {
+                try {
+                    scheduleCollectable(event, guild);
+                } catch (Exception exception) {
+                    Constants.LOGGER.error("Error scheduling initial collectable in guild {}", guild.getIdLong(), exception);
+                } finally {
+                    scheduledGuilds.put(guild.getIdLong(), false);
+                }
+            }, initialLoadDelay, TimeUnit.HOURS);
 
             hasDoneInitialLoad = true;
             return;
