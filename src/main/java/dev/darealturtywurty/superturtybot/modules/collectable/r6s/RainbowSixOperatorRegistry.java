@@ -352,6 +352,7 @@ public class RainbowSixOperatorRegistry {
             .emoji("nomad")
             .question("True or False: Nomad's Airjab can be used to destroy defender gadgets.")
             .answerNo()
+            .note("Here, we are referring to the airjab's explosion itself damaging gadgets, not any side effects.")
             .rarity(CollectableRarity.UNCOMMON));
 
     public static final RainbowSixOperatorCollectable KAID = register("kaid", RainbowSixOperatorCollectable.builder()

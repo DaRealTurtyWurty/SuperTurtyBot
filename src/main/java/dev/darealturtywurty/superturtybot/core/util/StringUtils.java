@@ -354,4 +354,8 @@ public final class StringUtils {
             return false;
         }
     }
+
+    public static String numberFormatExact(BigInteger balance, GuildData config) {
+        return (balance.signum() < 0 ? "-" : "") + config.getEconomyCurrency() + balance.abs();
+    }
 }

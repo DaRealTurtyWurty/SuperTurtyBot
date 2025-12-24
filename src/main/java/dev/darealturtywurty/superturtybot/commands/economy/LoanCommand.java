@@ -30,7 +30,7 @@ public class LoanCommand extends EconomyCommand {
                         .addOptions(new OptionData(OptionType.STRING, "amount", "The amount of money to request as a loan", true)),
                 new SubcommandData("pay", "Pay back a loan you have taken out from the bank.")
                         .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to pay back", true, true),
-                                new OptionData(OptionType.STRING, "amount", "The amount of money to pay back", true)),
+                                new OptionData(OptionType.STRING, "amount", "The amount of money to pay back")),
                 new SubcommandData("list", "List all of the loans you have taken out from the bank.")
                         .addOptions(new OptionData(OptionType.BOOLEAN, "paid", "List only loans which are paid/not paid", false)),
                 new SubcommandData("info", "Get information about a loan you have taken out from the bank.")
@@ -129,8 +129,10 @@ public class LoanCommand extends EconomyCommand {
                     return;
                 }
 
-                BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
-                if (amount == null) return;
+                BigInteger amount = event.getOption("amount", account.getBank(), StringUtils.getAsBigInteger(event));
+                if (amount == null)
+                    return;
+
                 if (amount.compareTo(BigInteger.valueOf(200)) < 0) {
                     event.getHook().editOriginalFormat("❌ You must pay back at least %s200!", config.getEconomyCurrency()).queue();
                     return;
