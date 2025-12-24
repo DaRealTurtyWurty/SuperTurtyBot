@@ -10,38 +10,43 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
-import oshi.util.tuples.Quintet;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class RewardCommand extends EconomyCommand {
-    private static final List<Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>>> REWARDS = List.of(
-            new Quintet<>("daily", 1000L, 2, Economy::getNextDaily, account -> account.setNextDaily(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))),
-            new Quintet<>("weekly", 10000L, 5, Economy::getNextWeekly, account -> account.setNextWeekly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7))),
-            new Quintet<>("monthly", 50000L, 10, Economy::getNextMonthly, account -> account.setNextMonthly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(31))),
-            new Quintet<>("yearly", 100000L, 20, Economy::getNextYearly, account -> account.setNextYearly(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(365)))
+    private static final List<RewardDefinition> REWARDS = List.of(
+            new RewardDefinition("daily", 1000L, 2, TimeUnit.DAYS.toMillis(1),
+                    Economy::getNextDaily, Economy::setNextDaily),
+            new RewardDefinition("weekly", 10000L, 5, TimeUnit.DAYS.toMillis(7),
+                    Economy::getNextWeekly, Economy::setNextWeekly),
+            new RewardDefinition("monthly", 50000L, 10, TimeUnit.DAYS.toMillis(31),
+                    Economy::getNextMonthly, Economy::setNextMonthly),
+            new RewardDefinition("yearly", 100000L, 20, TimeUnit.DAYS.toMillis(365),
+                    Economy::getNextYearly, Economy::setNextYearly)
     );
 
     @Override
     public List<SubcommandData> createSubcommandData() {
-        return new ArrayList<>(REWARDS.stream().map(quintet ->
-                new SubcommandData(quintet.getA(), "Claim your " + quintet.getA() + " reward!")).toList()) {{
+        return new ArrayList<>(REWARDS.stream().map(reward ->
+                new SubcommandData(reward.name(), "Claim your " + reward.name() + " reward!")).toList()) {{
             add(new SubcommandData("claimall", "Claim all available rewards at once!"));
         }};
     }
 
     @Override
     public String getDescription() {
-        List<String> rewardNames = REWARDS.stream().map(Quintet::getA).toList();
-        StringBuilder builder = new StringBuilder();
+        List<String> rewardNames = REWARDS.stream().map(RewardDefinition::name).toList();
+        var builder = new StringBuilder();
         for (int i = 0; i < rewardNames.size(); i++) {
             builder.append(rewardNames.get(i));
-            if (i == rewardNames.size() - 1) continue;
+            if (i == rewardNames.size() - 1)
+                continue;
+
             if (i == rewardNames.size() - 2) {
                 builder.append(", and ");
             } else {
@@ -73,8 +78,8 @@ public class RewardCommand extends EconomyCommand {
 
         if (subcommand.equals("claimall")) {
             List<String> results = new ArrayList<>();
-            for (Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>> quintet : REWARDS) {
-                results.add(handleReward(event, account, config, quintet));
+            for (RewardDefinition reward : REWARDS) {
+                results.add(handleReward(event, account, config, reward));
             }
 
             boolean anyClaimed = results.stream().anyMatch(line -> line.startsWith("✅"));
@@ -87,33 +92,31 @@ public class RewardCommand extends EconomyCommand {
             return;
         }
 
-        Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>> rewardQuintet = REWARDS.stream()
-                .filter(quintet -> quintet.getA().equals(subcommand)).findFirst().orElse(null);
-        if (rewardQuintet == null) {
+        RewardDefinition rewardDefinition = REWARDS.stream()
+                .filter(reward -> reward.name().equals(subcommand)).findFirst().orElse(null);
+        if (rewardDefinition == null) {
             event.getHook().editOriginal("❌ That is not a valid reward!").queue();
             return;
         }
 
-        String message = handleReward(event, account, config, rewardQuintet);
+        String message = handleReward(event, account, config, rewardDefinition);
         event.getHook().editOriginal(message).queue();
     }
 
     private String handleReward(SlashCommandInteractionEvent event,
                                 Economy account,
                                 GuildData config,
-                                Quintet<String, Long, Integer, Function<Economy, Long>, Consumer<Economy>> rewardInfo) {
+                                RewardDefinition rewardInfo) {
+        final String name = rewardInfo.name();
+        long rewardAmount = rewardInfo.baseAmount();
+        final long nextAllowedTime = rewardInfo.nextAllowedTimeGetter().apply(account);
 
-        final String name = rewardInfo.getA();
-        long rewardAmount = rewardInfo.getB();
-        final long nextAllowedTime = rewardInfo.getD().apply(account);
-
-        if (nextAllowedTime > System.currentTimeMillis()) {
+        if (nextAllowedTime > System.currentTimeMillis())
             return "⏱️ You can next claim your %s reward %s."
                     .formatted(name, TimeFormat.RELATIVE.format(nextAllowedTime));
-        }
 
         if (account.getJob() != null) {
-            rewardAmount = EconomyManager.getPayAmount(account) * rewardInfo.getC();
+            rewardAmount = EconomyManager.getPayAmount(account) * rewardInfo.jobMultiplier();
         }
 
         Member member = event.getMember();
@@ -123,11 +126,24 @@ public class RewardCommand extends EconomyCommand {
 
         BigInteger rewardBigInteger = BigInteger.valueOf(rewardAmount);
         EconomyManager.addMoney(account, rewardBigInteger, true);
-        rewardInfo.getE().accept(account);
+        long cooldownMillis = rewardInfo.cooldownMillis();
+        if (account.getRewardBoostUntil() > System.currentTimeMillis()) {
+            cooldownMillis = Math.max(TimeUnit.HOURS.toMillis(6), Math.round(cooldownMillis * 0.75f));
+        }
+
+        rewardInfo.nextAllowedTimeSetter().accept(account, System.currentTimeMillis() + cooldownMillis);
         account.addTransaction(rewardBigInteger, MoneyTransaction.REWARD);
         EconomyManager.updateAccount(account);
 
         return "✅ You claimed your %s reward of %s!"
                 .formatted(name, StringUtils.numberFormat(rewardBigInteger, config));
+    }
+
+    private record RewardDefinition(String name,
+                                    long baseAmount,
+                                    int jobMultiplier,
+                                    long cooldownMillis,
+                                    Function<Economy, Long> nextAllowedTimeGetter,
+                                    BiConsumer<Economy, Long> nextAllowedTimeSetter) {
     }
 }

@@ -27,6 +27,7 @@ public class Economy {
     private long nextCrime;
     private long nextHeist;
     private long nextCrash;
+    private long nextDonate;
 
     private long nextDaily;
     private long nextWeekly;
@@ -34,6 +35,10 @@ public class Economy {
     private long nextYearly;
 
     private long nextLoan;
+
+    private long workBoostUntil;
+    private long crimeBoostUntil;
+    private long rewardBoostUntil;
 
     private Job job;
     private int jobLevel;
@@ -138,12 +143,12 @@ public class Economy {
     @AllArgsConstructor
     @ToString
     public enum Job {
-        PROGRAMMER(100, 2, 0.45f, 450),
-        YOUTUBER(300, 5, 0.1f, 1350),
-        MUSICIAN(50, 20, 0.2f, 900),
-        ARTIST(50, 20, 0.15f, 675),
-        DOCTOR(350, 1.125f, 0.25f, 1350),
-        MATHEMATICIAN(150, 1.4f, 0.35f, 225);
+        PROGRAMMER(150, 2, 0.45f, 600),
+        YOUTUBER(90, 5, 0.1f, 900),
+        MUSICIAN(15, 20, 0.2f, 600),
+        ARTIST(15, 20, 0.15f, 600),
+        DOCTOR(400, 1.125f, 0.25f, 900),
+        MATHEMATICIAN(160, 1.4f, 0.35f, 450);
 
         private final long salary;
         private final float promotionMultiplier;

@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
-import com.google.common.collect.Lists;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
@@ -16,7 +15,11 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -39,6 +42,7 @@ public class LeaderboardCommand extends CoreCommand {
     private static final Color SILVER_COLOR = Color.decode("#e7e7e7");
     private static final Color BRONZE_COLOR = Color.decode("#cd7f32");
     private static final int START_X = 80, START_Y = 568, PART_SIZE = 140, SPACING = 40;
+    private static final int PAGE_SIZE = 10;
     private static final String DISCORD_ICON_URL = "https://discord.com/assets/1f0bfc0865d324c2587920a7d80c609b.png";
 
     private static final Font FONT;
@@ -127,9 +131,8 @@ public class LeaderboardCommand extends CoreCommand {
                         .filter(profile -> guild.isMember(UserSnowflake.fromId(profile.getUser())))
                         .toList();
 
-                final List<Levelling> top10 = Lists.partition(sorted, 10).getFirst();
                 try {
-                    createAndSend(event, constructLevelLeaderboard(guild, top10));
+                    sendLeaderboardPage(event, guild, "levels", sorted, 0);
                 } catch (final IOException | NullPointerException | URISyntaxException exception) {
                     event.getHook()
                             .sendMessage("❌ There was an error while creating the leaderboard! Please try again later.")
@@ -153,9 +156,8 @@ public class LeaderboardCommand extends CoreCommand {
                         .filter(account -> guild.isMember(UserSnowflake.fromId(account.getUser())))
                         .toList();
 
-                final List<Economy> top10 = Lists.partition(sorted, 10).getFirst();
                 try {
-                    createAndSend(event, constructEconomyLeaderboard(guild, top10));
+                    sendLeaderboardPage(event, guild, "economy", sorted, 0);
                 } catch (final IOException | NullPointerException | URISyntaxException exception) {
                     event.getHook()
                             .sendMessage("❌ There was an error while creating the leaderboard! Please try again later.")
@@ -171,15 +173,74 @@ public class LeaderboardCommand extends CoreCommand {
         }
     }
 
-    private static void createAndSend(SlashCommandInteractionEvent event, BufferedImage bufferedImage) {
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        if (!event.isFromGuild())
+            return;
+
+        String id = event.getComponentId();
+        if (!id.startsWith("leaderboard-"))
+            return;
+
+        String[] parts = id.split("-");
+        if (parts.length < 6)
+            return;
+
+        String type = parts[1];
+        long guildId = Long.parseLong(parts[2]);
+        long userId = Long.parseLong(parts[3]);
+        int page = Integer.parseInt(parts[4].replace("page", ""));
+        String action = parts[5];
+
+        if (event.getGuild() == null || event.getGuild().getIdLong() != guildId) {
+            event.deferEdit().queue();
+            return;
+        }
+
+        if (event.getUser().getIdLong() != userId) {
+            event.deferEdit().queue();
+            return;
+        }
+
+        int newPage = page;
+        if ("prev".equals(action)) {
+            newPage--;
+        } else if ("next".equals(action)) {
+            newPage++;
+        } else {
+            event.deferEdit().queue();
+            return;
+        }
+
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            event.deferEdit().queue();
+            return;
+        }
+
+        event.deferEdit().queue();
+
         try {
-            final var bao = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage, "png", bao);
-            event.getHook()
-                    .sendFiles(FileUpload.fromData(bao.toByteArray(), "leaderboard.png"))
-                    .mentionRepliedUser(false)
-                    .queue();
-        } catch (final IOException | NullPointerException exception) {
+            if ("levels".equals(type)) {
+                final List<Levelling> profiles = Database.getDatabase().levelling
+                        .find(Filters.eq("guild", guild.getIdLong()))
+                        .into(new ArrayList<>());
+                final List<Levelling> sorted = profiles.stream()
+                        .sorted(Comparator.comparing(Levelling::getXp).reversed())
+                        .filter(profile -> guild.isMember(UserSnowflake.fromId(profile.getUser())))
+                        .toList();
+                updateLeaderboardPage(event, guild, "levels", sorted, newPage);
+            } else if ("economy".equals(type)) {
+                final List<Economy> accounts = Database.getDatabase().economy
+                        .find(Filters.eq("guild", guild.getIdLong()))
+                        .into(new ArrayList<>());
+                final List<Economy> sorted = accounts.stream()
+                        .sorted(Comparator.comparing(EconomyManager::getBalance).reversed())
+                        .filter(account -> guild.isMember(UserSnowflake.fromId(account.getUser())))
+                        .toList();
+                updateLeaderboardPage(event, guild, "economy", sorted, newPage);
+            }
+        } catch (final IOException | NullPointerException | URISyntaxException exception) {
             event.getHook()
                     .sendMessage("❌ There was an error while creating the leaderboard! Please try again later.")
                     .mentionRepliedUser(false)
@@ -188,7 +249,59 @@ public class LeaderboardCommand extends CoreCommand {
         }
     }
 
-    public static BufferedImage constructLevelLeaderboard(Guild guild, List<Levelling> profiles) throws IOException, NullPointerException, URISyntaxException {
+    private static void sendLeaderboardPage(SlashCommandInteractionEvent event, Guild guild, String type, List<?> entries, int page)
+            throws IOException, URISyntaxException {
+        int totalPages = getTotalPages(entries.size());
+        if (page < 0 || page >= totalPages)
+            page = 0;
+
+        BufferedImage image = buildLeaderboardImage(guild, type, entries, page);
+        FileUpload upload = buildFileUpload(image);
+        if (totalPages > 1) {
+            ActionRow row = createLeaderboardButtons(type, guild.getIdLong(), event.getUser().getIdLong(), page, totalPages);
+            event.getHook()
+                    .sendFiles(upload)
+                    .setComponents(row)
+                    .mentionRepliedUser(false)
+                    .queue();
+        } else {
+            event.getHook()
+                    .sendFiles(upload)
+                    .mentionRepliedUser(false)
+                    .queue();
+        }
+    }
+
+    private static void updateLeaderboardPage(ButtonInteractionEvent event, Guild guild, String type, List<?> entries, int page)
+            throws IOException, URISyntaxException {
+        int totalPages = getTotalPages(entries.size());
+        if (page < 0 || page >= totalPages) {
+            return;
+        }
+
+        BufferedImage image = buildLeaderboardImage(guild, type, entries, page);
+        FileUpload upload = buildFileUpload(image);
+        if (totalPages > 1) {
+            ActionRow row = createLeaderboardButtons(type, guild.getIdLong(), event.getUser().getIdLong(), page, totalPages);
+            event.getMessage().editMessageComponents(row).queue();
+        } else {
+            event.getMessage().editMessageComponents().queue();
+        }
+
+        event.getChannel().asGuildMessageChannel().editMessageAttachmentsById(event.getMessageIdLong(), upload).queue();
+    }
+
+    private static FileUpload buildFileUpload(BufferedImage bufferedImage) throws IOException {
+        try {
+            final var bao = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "png", bao);
+            return FileUpload.fromData(bao.toByteArray(), "leaderboard.png");
+        } catch (final NullPointerException exception) {
+            throw new IOException("Unable to process leaderboard image", exception);
+        }
+    }
+
+    public static BufferedImage constructLevelLeaderboard(Guild guild, List<Levelling> profiles, int rankOffset) throws IOException, NullPointerException, URISyntaxException {
         Pair<BufferedImage, Graphics2D> imageWithGraphics = constructTemplate();
         BufferedImage buffer = imageWithGraphics.getLeft();
         Graphics2D graphics = imageWithGraphics.getRight();
@@ -212,14 +325,14 @@ public class LeaderboardCommand extends CoreCommand {
             maxLevelWidth = Math.max(maxLevelWidth, formattedLevel.length());
         }
 
-        for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
+        for (int indexedRank = 0; indexedRank < PAGE_SIZE; indexedRank++) {
             if (indexedRank >= profiles.size()) {
                 break;
             }
 
             final Levelling profile = profiles.get(indexedRank);
             final long userId = profile.getUser();
-            drawUser(guild, graphics, metrics, indexedRank, userId);
+            drawUser(guild, graphics, metrics, indexedRank, indexedRank + rankOffset + 1, userId);
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
@@ -248,7 +361,7 @@ public class LeaderboardCommand extends CoreCommand {
         return buffer;
     }
 
-    public static BufferedImage constructEconomyLeaderboard(Guild guild, List<Economy> accounts) throws IOException, NullPointerException, URISyntaxException {
+    public static BufferedImage constructEconomyLeaderboard(Guild guild, List<Economy> accounts, int rankOffset) throws IOException, NullPointerException, URISyntaxException {
         Pair<BufferedImage, Graphics2D> imageWithGraphics = constructTemplate();
         BufferedImage buffer = imageWithGraphics.getLeft();
         Graphics2D graphics = imageWithGraphics.getRight();
@@ -270,7 +383,7 @@ public class LeaderboardCommand extends CoreCommand {
             maxBalanceWidth = Math.max(maxBalanceWidth, formattedBalance.length());
         }
 
-        for (int indexedRank = 0; indexedRank < 10; indexedRank++) {
+        for (int indexedRank = 0; indexedRank < PAGE_SIZE; indexedRank++) {
             if (indexedRank >= accounts.size()) {
                 break;
             }
@@ -279,7 +392,7 @@ public class LeaderboardCommand extends CoreCommand {
             final long userId = account.getUser();
             final BigInteger balance = EconomyManager.getBalance(account);
             String username = getUsername(guild, userId);
-            drawUser(guild, graphics, metrics, indexedRank, userId);
+            drawUser(guild, graphics, metrics, indexedRank, indexedRank + rankOffset + 1, userId);
 
             Font font = FONT;
             FontMetrics metrics1 = graphics.getFontMetrics(font);
@@ -310,9 +423,7 @@ public class LeaderboardCommand extends CoreCommand {
         return user == null ? "Unknown" : user.getEffectiveName();
     }
 
-    private static void drawUser(Guild guild, Graphics2D graphics, FontMetrics metrics, int indexedRank, long userId) throws IOException, URISyntaxException {
-        final int rank = indexedRank + 1;
-
+    private static void drawUser(Guild guild, Graphics2D graphics, FontMetrics metrics, int indexedRank, int rank, long userId) throws IOException, URISyntaxException {
         final Member member = guild.getMemberById(userId);
         User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
         InputStream avatarStream;
@@ -363,6 +474,47 @@ public class LeaderboardCommand extends CoreCommand {
             graphics.setColor(Color.WHITE);
         }
         // endregion
+    }
+
+    private static int getTotalPages(int totalEntries) {
+        return Math.max(1, (int) Math.ceil(totalEntries / (double) PAGE_SIZE));
+    }
+
+    private static ActionRow createLeaderboardButtons(String type, long guildId, long userId, int page, int totalPages) {
+        Button prev = Button.primary(
+                "leaderboard-" + type + "-" + guildId + "-" + userId + "-page" + page + "-prev",
+                Emoji.fromUnicode("◀"));
+        Button next = Button.primary(
+                "leaderboard-" + type + "-" + guildId + "-" + userId + "-page" + page + "-next",
+                Emoji.fromUnicode("▶"));
+
+        if (page <= 0) {
+            prev = prev.asDisabled();
+        }
+        if (page >= totalPages - 1) {
+            next = next.asDisabled();
+        }
+
+        return ActionRow.of(prev, next);
+    }
+
+    private static BufferedImage buildLeaderboardImage(Guild guild, String type, List<?> entries, int page)
+            throws IOException, URISyntaxException {
+        int startIndex = page * PAGE_SIZE;
+        int endIndex = Math.min(entries.size(), startIndex + PAGE_SIZE);
+        int rankOffset = startIndex;
+
+        if ("levels".equals(type)) {
+            List<Levelling> pageEntries = ((List<Levelling>) entries).subList(startIndex, endIndex);
+            return constructLevelLeaderboard(guild, pageEntries, rankOffset);
+        }
+
+        if ("economy".equals(type)) {
+            List<Economy> pageEntries = ((List<Economy>) entries).subList(startIndex, endIndex);
+            return constructEconomyLeaderboard(guild, pageEntries, rankOffset);
+        }
+
+        throw new IOException("Unknown leaderboard type: " + type);
     }
 
     private static Pair<BufferedImage, Graphics2D> constructTemplate() throws IOException {

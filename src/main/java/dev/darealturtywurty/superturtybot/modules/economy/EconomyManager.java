@@ -42,6 +42,23 @@ public class EconomyManager {
         return account.getWallet().add(account.getBank());
     }
 
+    public static boolean removeBalance(Economy account, BigInteger amount) {
+        if (amount.signum() <= 0) return true;
+        if (getBalance(account).compareTo(amount) < 0) return false;
+
+        BigInteger fromBank = amount.min(account.getBank());
+        if (fromBank.signum() > 0) {
+            removeMoney(account, fromBank, true);
+        }
+
+        BigInteger fromWallet = amount.subtract(fromBank);
+        if (fromWallet.signum() > 0) {
+            removeMoney(account, fromWallet, false);
+        }
+
+        return true;
+    }
+
     public static BigInteger addMoney(Economy account, BigInteger amount, boolean bank) {
         if (bank) {
             account.addBank(amount);
@@ -200,7 +217,12 @@ public class EconomyManager {
         long earned = Math.max(10, amount);
 
         if (!Environment.INSTANCE.isDevelopment()) {
-            account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
+            int cooldownSeconds = account.getJob().getWorkCooldownSeconds();
+            if (account.getWorkBoostUntil() > System.currentTimeMillis()) {
+                cooldownSeconds = Math.max(30, Math.round(cooldownSeconds * 0.75f));
+            }
+
+            account.setNextWork(System.currentTimeMillis() + (cooldownSeconds * 1000L));
         }
 
         BigInteger earnedBigInteger = BigInteger.valueOf(earned);
@@ -281,7 +303,12 @@ public class EconomyManager {
         EconomyManager.addMoney(account, amountBigInteger);
         account.addTransaction(amountBigInteger, MoneyTransaction.WORK);
         if (!Environment.INSTANCE.isDevelopment()) {
-            account.setNextWork(System.currentTimeMillis() + 3600000L);
+            long cooldownMillis = TimeUnit.HOURS.toMillis(1);
+            if (account.getWorkBoostUntil() > System.currentTimeMillis()) {
+                cooldownMillis = Math.max(TimeUnit.MINUTES.toMillis(15), Math.round(cooldownMillis * 0.75f));
+            }
+
+            account.setNextWork(System.currentTimeMillis() + cooldownMillis);
         }
 
         EconomyManager.updateAccount(account);
@@ -335,7 +362,7 @@ public class EconomyManager {
         long millisPerCurrency = TimeUnit.DAYS.toMillis(1) / 100_000;
         BigInteger millisFromAmount = amount.multiply(BigInteger.valueOf(millisPerCurrency));
         long upperLimit = millisFromAmount.min(BigInteger.valueOf(maxMillis)).longValueExact();
-        return Math.min(minMillis, upperLimit);
+        return Math.max(minMillis, upperLimit);
     }
 
     public static BigDecimal getInterestRate(BigInteger amount) {
@@ -369,7 +396,7 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
 
-        if (ThreadLocalRandom.current().nextInt(3) == 0) {
+        if (ThreadLocalRandom.current().nextInt(10) == 0) {
             account.setCrimeLevel(account.getCrimeLevel() + 1);
         }
 

@@ -423,7 +423,9 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new CrashCommand());
         commands.add(new LoanCommand());
         commands.add(new DonateCommand());
-        // commands.add(new PropertyCommand());
+        commands.add(new PropertyCommand());
+        commands.add(new BoostCommand());
+        commands.add(new EconomyResetCommand());
         commands.add(new HeistCommand());
 
         return commands;

@@ -139,7 +139,12 @@ public class CrimeCommand extends EconomyCommand {
             return;
         }
 
-        account.setNextCrime(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5));
+        long crimeCooldownMillis = TimeUnit.MINUTES.toMillis(10);
+        if (account.getCrimeBoostUntil() > System.currentTimeMillis()) {
+            crimeCooldownMillis = Math.max(TimeUnit.MINUTES.toMillis(3), Math.round(crimeCooldownMillis * 0.75f));
+        }
+
+        account.setNextCrime(System.currentTimeMillis() + crimeCooldownMillis);
 
         var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -203,20 +208,21 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public BigInteger getMinAmountForLevel(int level) {
-            return BigDecimal.valueOf(this.minBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
+            return BigDecimal.valueOf(this.minBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
         }
 
         public BigInteger getMaxAmountForLevel(int level) {
-            return BigDecimal.valueOf(this.maxBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
+            return BigDecimal.valueOf(this.maxBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
         }
 
         public BigInteger getRandomAmountForLevel(int level) {
-            return BigDecimal.valueOf(getRandomBaseAmount()).multiply(BigDecimal.valueOf(Math.pow(1.05, level))).toBigInteger();
+            return BigDecimal.valueOf(getRandomBaseAmount()).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
         }
 
         public float getChanceForLevel(int level) {
-            float chanceAddition = level / (1000.0F / MAX_LEVEL - ordinal());
-            return Math.min(1.0F, this.successChance + Math.min((0.95F - this.successChance), chanceAddition));
+            float maxChance = Math.min(0.75F, this.successChance + 0.25F);
+            float chance = this.successChance + (level * 0.0025F);
+            return Math.min(maxChance, chance);
         }
 
         public boolean hasSuccess(int level) {
@@ -225,9 +231,8 @@ public class CrimeCommand extends EconomyCommand {
 
         public static @Nullable CrimeCommand.CrimeType byName(String name) {
             for (CrimeType level : values()) {
-                if (level.name().equalsIgnoreCase(name)) {
+                if (level.name().equalsIgnoreCase(name))
                     return level;
-                }
             }
 
             return null;

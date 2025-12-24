@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules.economy;
 
+import dev.darealturtywurty.superturtybot.registry.Registerable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Property {
+public class Property implements Registerable {
     private String name;
     private long owner;
     private String description;
@@ -21,6 +22,8 @@ public class Property {
     private Rent rent;
     private Loan mortgage;
     private long buyDate;
+    private long renter;
+    private long rentEndsAt;
 
     private List<Long> previousOwners;
     private BigInteger estateTax;
@@ -37,6 +40,8 @@ public class Property {
         this.estateTax = builder.estateTax;
         this.upgradeLevel = builder.upgradeLevel;
         this.mortgage = builder.mortgage;
+        this.renter = builder.renter;
+        this.rentEndsAt = builder.rentEndsAt;
 
         this.buyDate = System.currentTimeMillis();
     }
@@ -65,6 +70,25 @@ public class Property {
         return this.owner != -1;
     }
 
+    @Override
+    public Registerable setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public boolean hasRenter() {
+        return this.renter != -1;
+    }
+
+    public boolean isRentActive() {
+        return hasRenter() && this.rentEndsAt > System.currentTimeMillis();
+    }
+
+    public void clearRenter() {
+        this.renter = -1;
+        this.rentEndsAt = 0L;
+    }
+
     public BigInteger calculateCurrentWorth() {
         BigInteger worth = this.originalPrice;
         if (this.upgradeLevel > 0) {
@@ -73,7 +97,10 @@ public class Property {
             }
         }
 
-        worth = worth.multiply(BigInteger.valueOf((long) (this.buyDate - System.currentTimeMillis() / 1000f / 60f / 60f / 24f)));
+        long daysOwned = Math.max(0, (System.currentTimeMillis() - this.buyDate) / 86_400_000L);
+        if (daysOwned > 0) {
+            worth = worth.add(this.originalPrice.multiply(BigInteger.valueOf(daysOwned)).divide(BigInteger.valueOf(1000)));
+        }
 
         if (this.mortgage != null && !this.mortgage.isPaidOff()) {
             worth = worth.subtract(this.mortgage.calculateAmountLeftToPay());
@@ -98,6 +125,8 @@ public class Property {
         private Rent rent;
         private Loan mortgage;
         private int upgradeLevel = 0;
+        private long renter = -1;
+        private long rentEndsAt = 0L;
 
         public Builder(String name, String description, BigInteger price, BigInteger estateTax) {
             this.name = name;
@@ -133,6 +162,16 @@ public class Property {
 
         public Builder upgradeLevel(int upgradeLevel) {
             this.upgradeLevel = upgradeLevel;
+            return this;
+        }
+
+        public Builder renter(long renter) {
+            this.renter = renter;
+            return this;
+        }
+
+        public Builder rentEndsAt(long rentEndsAt) {
+            this.rentEndsAt = rentEndsAt;
             return this;
         }
 

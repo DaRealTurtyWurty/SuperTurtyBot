@@ -125,12 +125,37 @@ public class RobCommand extends EconomyCommand {
                             .build())
                     .queue();
         } else {
-            int crimeLevel = account.getCrimeLevel();
+            int crimeLevel = Math.max(1, account.getCrimeLevel());
             BigInteger bank = account.getBank();
-            BigInteger bankFine = bank.multiply(BigInteger.valueOf(crimeLevel)).divide(BigInteger.valueOf(100));
-            BigInteger fineAmount = MathUtils.getRandomBigInteger(BigInteger.valueOf(1000), bankFine);
+            BigInteger available = account.getWallet().add(bank);
+            BigInteger fineAmount = BigInteger.ZERO;
 
-            EconomyManager.removeMoney(account, fineAmount, false);
+            if (available.signum() > 0) {
+                BigInteger maxFine = bank.multiply(BigInteger.valueOf(crimeLevel)).divide(BigInteger.valueOf(100));
+                if (maxFine.compareTo(available) > 0) {
+                    maxFine = available;
+                }
+
+                BigInteger minFine = BigInteger.valueOf(1000);
+                if (maxFine.compareTo(minFine) < 0) {
+                    minFine = BigInteger.ONE;
+                }
+
+                fineAmount = maxFine.compareTo(minFine) <= 0
+                        ? maxFine
+                        : MathUtils.getRandomBigInteger(minFine, maxFine.add(BigInteger.ONE));
+            }
+
+            BigInteger fromBank = fineAmount.min(bank);
+            if (fromBank.signum() > 0) {
+                EconomyManager.removeMoney(account, fromBank, true);
+            }
+
+            BigInteger fromWallet = fineAmount.subtract(fromBank);
+            if (fromWallet.signum() > 0) {
+                EconomyManager.removeMoney(account, fromWallet, false);
+            }
+
             account.addTransaction(fineAmount.negate(), MoneyTransaction.ROB);
 
             EconomyManager.addMoney(robAccount, fineAmount, false);

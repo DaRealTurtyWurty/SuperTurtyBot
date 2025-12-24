@@ -61,26 +61,26 @@ public class SlotsCommand extends EconomyCommand {
         EMOJIS.addEntry("💎", 1);
         EMOJIS.addEntry("🎲", 25);
 
-        WINNING_FORMATS.put("🍎🍎🍎", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(50)));
-        WINNING_FORMATS.put("🍊🍊🍊", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(100)));
-        WINNING_FORMATS.put("🍐🍐🍐", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(200)));
-        WINNING_FORMATS.put("🍋🍋🍋", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(250)));
-        WINNING_FORMATS.put("🍉🍉🍉", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(500)));
-        WINNING_FORMATS.put("🍇🍇🍇", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(750)));
-        WINNING_FORMATS.put("🍓🍓🍓", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1000)));
-        WINNING_FORMATS.put("🍒🍒🍒", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1250)));
-        WINNING_FORMATS.put("🍑🍑🍑", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1500)));
-        WINNING_FORMATS.put("🍍🍍🍍", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1750)));
-        WINNING_FORMATS.put("🥝🥝🥝", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(2000)));
-        WINNING_FORMATS.put("🍆🍆🍆", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(2500)));
-        WINNING_FORMATS.put("🥔🥔🥔", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(5000)));
-        WINNING_FORMATS.put("🧅🧅🧅", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(9000)));
-        WINNING_FORMATS.put("🥜🥜🥜", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(10000)));
-        WINNING_FORMATS.put("🌰🌰🌰", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(15000)));
-        WINNING_FORMATS.put("🍄🍄🍄", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(20000)));
+        WINNING_FORMATS.put("🍎🍎🍎", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(16)));
+        WINNING_FORMATS.put("🍊🍊🍊", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(33)));
+        WINNING_FORMATS.put("🍐🍐🍐", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(66)));
+        WINNING_FORMATS.put("🍋🍋🍋", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(83)));
+        WINNING_FORMATS.put("🍉🍉🍉", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(166)));
+        WINNING_FORMATS.put("🍇🍇🍇", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(250)));
+        WINNING_FORMATS.put("🍓🍓🍓", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(333)));
+        WINNING_FORMATS.put("🍒🍒🍒", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(416)));
+        WINNING_FORMATS.put("🍑🍑🍑", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(500)));
+        WINNING_FORMATS.put("🍍🍍🍍", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(583)));
+        WINNING_FORMATS.put("🥝🥝🥝", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(666)));
+        WINNING_FORMATS.put("🍆🍆🍆", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(833)));
+        WINNING_FORMATS.put("🥔🥔🥔", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1666)));
+        WINNING_FORMATS.put("🧅🧅🧅", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(3000)));
+        WINNING_FORMATS.put("🥜🥜🥜", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(3333)));
+        WINNING_FORMATS.put("🌰🌰🌰", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(5000)));
+        WINNING_FORMATS.put("🍄🍄🍄", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(6666)));
 
-        WINNING_FORMATS.put("⭐⭐⭐", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(100000)));
-        WINNING_FORMATS.put("💎💎💎", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(1000000)));
+        WINNING_FORMATS.put("⭐⭐⭐", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(33333)));
+        WINNING_FORMATS.put("💎💎💎", new Outcome(Outcome.OutcomeType.WIN, BigInteger.valueOf(333333)));
         WINNING_FORMATS.put("🎲", new Outcome(Outcome.OutcomeType.FREE_SPIN, BigInteger.ZERO));
     }
 
@@ -129,9 +129,7 @@ public class SlotsCommand extends EconomyCommand {
         embed.setTimestamp(Instant.now());
         embed.setFooter(member.getEffectiveName() + "'s Slots", member.getEffectiveAvatarUrl());
 
-        embed.addField("Slots",
-                outcome.getEmojis()[0] + " | " + outcome.getEmojis()[1] + " | " + outcome.getEmojis()[2],
-                false);
+        embed.addField("Slots", outcome.getEmojiDisplay(), false);
 
         embed.addField("Outcome", WordUtils.capitalize(
                         outcome.getType()
@@ -170,6 +168,8 @@ public class SlotsCommand extends EconomyCommand {
             }
         }
 
+        EconomyManager.removeMoney(account, betAmount);
+
         List<Outcome> outcomes = spin(betAmount, false);
         Outcome outcome = outcomes.getFirst();
         var embed = createNormalEmbed(outcome, member, config);
@@ -186,12 +186,14 @@ public class SlotsCommand extends EconomyCommand {
             }
         });
 
-        EconomyManager.addMoney(account, outcome.getAmount());
-        account.addTransaction(outcome.getAmount(), MoneyTransaction.SLOTS);
-        if (outcome.getAmount().signum() > 0) {
-            EconomyManager.betWin(account, outcome.getAmount());
-        } else {
-            EconomyManager.betLoss(account, outcome.getAmount().negate());
+        BigInteger basePayout = outcome.getAmount();
+        BigInteger baseNet = basePayout.subtract(betAmount);
+        EconomyManager.addMoney(account, basePayout);
+        account.addTransaction(baseNet, MoneyTransaction.SLOTS);
+        if (baseNet.signum() > 0) {
+            EconomyManager.betWin(account, baseNet);
+        } else if (baseNet.signum() < 0) {
+            EconomyManager.betLoss(account, baseNet.negate());
         }
 
         if (outcomes.size() > 1) {
@@ -207,10 +209,11 @@ public class SlotsCommand extends EconomyCommand {
                     }
                 });
 
-                EconomyManager.addMoney(account, freeSpinOutcome.getAmount());
-                if (freeSpinOutcome.getAmount().signum() > 0) {
-                    account.addTransaction(freeSpinOutcome.getAmount(), MoneyTransaction.SLOTS);
-                    EconomyManager.betWin(account, freeSpinOutcome.getAmount());
+                BigInteger freeSpinPayout = freeSpinOutcome.getAmount();
+                EconomyManager.addMoney(account, freeSpinPayout);
+                if (freeSpinPayout.signum() > 0) {
+                    account.addTransaction(freeSpinPayout, MoneyTransaction.SLOTS);
+                    EconomyManager.betWin(account, freeSpinPayout);
                 }
             }
         }
@@ -299,7 +302,7 @@ public class SlotsCommand extends EconomyCommand {
 
     private static Outcome fetchOutcome(WeightedRandomBag<String>.Entry entry1, WeightedRandomBag<String>.Entry entry2, WeightedRandomBag<String>.Entry entry3, BigInteger betAmount) {
         if (!Objects.equals(entry1, entry2) || !Objects.equals(entry2, entry3)) {
-            return new Outcome(Outcome.OutcomeType.LOSS, betAmount.negate());
+            return new Outcome(Outcome.OutcomeType.LOSS, BigInteger.ZERO);
         }
         BigInteger winnings;
         String fullString = entry1.getObject() + entry2.getObject() + entry3.getObject();
@@ -312,7 +315,7 @@ public class SlotsCommand extends EconomyCommand {
             if (outcome.getType() == Outcome.OutcomeType.WIN) {
                 return new Outcome(Outcome.OutcomeType.WIN, winnings.multiply(betAmount));
             } else if (outcome.getType() == Outcome.OutcomeType.FREE_SPIN) {
-                return new Outcome(Outcome.OutcomeType.FREE_SPIN, betAmount.add(betAmount));
+                return new Outcome(Outcome.OutcomeType.FREE_SPIN, betAmount);
             }
         }
 
@@ -333,6 +336,10 @@ public class SlotsCommand extends EconomyCommand {
 
         public void setEmoji(int index, String emoji) {
             this.emojis[index] = emoji;
+        }
+
+        public String getEmojiDisplay() {
+            return emojis[0] + " | " + emojis[1] + " | " + emojis[2];
         }
 
         @Getter

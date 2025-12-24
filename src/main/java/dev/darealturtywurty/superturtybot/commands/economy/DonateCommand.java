@@ -12,9 +12,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DonateCommand extends EconomyCommand {
     @Override
@@ -42,7 +44,6 @@ public class DonateCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-
         Member member = event.getOption("user", OptionMapping::getAsMember);
         if (member == null) {
             event.getHook().editOriginal("❌ You must provide a valid user in this server!").queue();
@@ -70,6 +71,12 @@ public class DonateCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if (account.getNextDonate() > System.currentTimeMillis()) {
+            event.getHook().editOriginal("❌ You can donate again %s!"
+                    .formatted(TimeFormat.RELATIVE.format(account.getNextDonate()))).queue();
+            return;
+        }
+
         if (account.getBank().compareTo(amount) < 0) {
             event.getHook().editOriginal("❌ You are missing %s!"
                     .formatted(StringUtils.numberFormat(amount.subtract(account.getBank()), config))).queue();
@@ -78,6 +85,7 @@ public class DonateCommand extends EconomyCommand {
 
         Economy otherAccount = EconomyManager.getOrCreateAccount(guild, user);
 
+        account.setNextDonate(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
         EconomyManager.removeMoney(account, amount, true);
         account.addTransaction(amount.negate(), MoneyTransaction.DONATE, otherAccount.getUser());
 

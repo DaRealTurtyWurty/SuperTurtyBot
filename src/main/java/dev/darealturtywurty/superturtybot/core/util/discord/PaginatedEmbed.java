@@ -356,6 +356,8 @@ public class PaginatedEmbed extends ListenerAdapter {
     }
 
     public static class ContentsBuilder {
+        private static final int FIELD_NAME_MAX = 256;
+        private static final int FIELD_VALUE_MAX = 1024;
         private final List<Consumer<EmbedBuilder>> contents;
 
         public ContentsBuilder(List<Consumer<EmbedBuilder>> contents) {
@@ -372,7 +374,9 @@ public class PaginatedEmbed extends ListenerAdapter {
         }
 
         public ContentsBuilder field(String name, String value, boolean inline) {
-            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(name, value, inline)));
+            String safeName = sanitizeFieldName(name);
+            String safeValue = sanitizeFieldValue(value);
+            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(safeName, safeValue, inline)));
             return this;
         }
 
@@ -381,7 +385,7 @@ public class PaginatedEmbed extends ListenerAdapter {
         }
 
         public ContentsBuilder field(String name, boolean inline) {
-            return field(name, "", inline);
+            return field(name, ZERO_WIDTH_SPACE, inline);
         }
 
         public ContentsBuilder field(String name) {
@@ -391,6 +395,30 @@ public class PaginatedEmbed extends ListenerAdapter {
         public ContentsBuilder field(boolean inline) {
             this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(ZERO_WIDTH_SPACE, ZERO_WIDTH_SPACE, inline)));
             return this;
+        }
+
+        private static String sanitizeFieldName(String name) {
+            if (name == null || name.isBlank()) {
+                return ZERO_WIDTH_SPACE;
+            }
+
+            if (name.length() > FIELD_NAME_MAX) {
+                return name.substring(0, FIELD_NAME_MAX - 3) + "...";
+            }
+
+            return name;
+        }
+
+        private static String sanitizeFieldValue(String value) {
+            if (value == null || value.isBlank()) {
+                return ZERO_WIDTH_SPACE;
+            }
+
+            if (value.length() > FIELD_VALUE_MAX) {
+                return value.substring(0, FIELD_VALUE_MAX - 3) + "...";
+            }
+
+            return value;
         }
 
         public List<Consumer<EmbedBuilder>> build() {

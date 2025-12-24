@@ -23,6 +23,9 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
     public static final byte SET_MONEY = 15;
     public static final byte CREATE_ACCOUNT = 16;
     public static final byte HEIST_SETUP = 17;
+    public static final byte PROPERTY = 18;
+    public static final byte BOOST = 19;
+    public static final byte RENT = 20;
 
     public static String getTypeName(byte typeId) {
         return switch (typeId) {
@@ -44,6 +47,9 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
             case SET_MONEY -> "Set Money";
             case CREATE_ACCOUNT -> "Create Account";
             case HEIST_SETUP -> "Heist Setup";
+            case PROPERTY -> "Property";
+            case BOOST -> "Boost";
+            case RENT -> "Rent";
             default -> "Unknown";
         };
     }
