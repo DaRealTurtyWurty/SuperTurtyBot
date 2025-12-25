@@ -266,7 +266,6 @@ public class EconomyManager {
 
         account.setJob(found);
         account.setJobLevel(0);
-        account.setNextWork(System.currentTimeMillis() + (account.getJob().getWorkCooldownSeconds() * 1000L));
         updateAccount(account);
 
         return true;

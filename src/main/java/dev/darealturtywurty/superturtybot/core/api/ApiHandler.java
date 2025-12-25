@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.commands.economy.JobCommand;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
 import dev.darealturtywurty.superturtybot.core.api.pojo.*;
 import dev.darealturtywurty.superturtybot.core.api.request.*;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -850,7 +850,7 @@ public class ApiHandler {
         }
     }
 
-    public static Either<JobCommand.Code, HttpStatus> findCode() {
+    public static Either<CodePromotionMinigame.Code, HttpStatus> findCode() {
         try (Response response = makeRequest("code/guesser?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
@@ -869,7 +869,7 @@ public class ApiHandler {
             String language = languageObj.get("name").getAsString();
             String extension = languageObj.get("extension").getAsString();
 
-            return Either.left(new JobCommand.Code(code, new JobCommand.Code.Language(language, extension)));
+            return Either.left(new CodePromotionMinigame.Code(code, new CodePromotionMinigame.Code.Language(language, extension)));
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);

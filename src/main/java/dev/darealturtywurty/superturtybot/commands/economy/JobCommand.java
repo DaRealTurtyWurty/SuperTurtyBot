@@ -2,15 +2,14 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.MathPromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.PromotionMinigame;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
-import dev.darealturtywurty.superturtybot.core.util.function.Either;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
-import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -19,36 +18,31 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class JobCommand extends EconomyCommand {
     private static final List<String> RESPONSES;
+    private static final PromotionMinigame CODE_PROMOTION = new CodePromotionMinigame();
+    private static final PromotionMinigame MATH_PROMOTION = new MathPromotionMinigame();
 
     static {
         JsonObject json;
@@ -215,7 +209,11 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                startMathChallenge(event, account); // TODO: Minigame depending on job
+                if (account.getJob() == Economy.Job.PROGRAMMER) {
+                    CODE_PROMOTION.start(event, account);
+                } else {
+                    MATH_PROMOTION.start(event, account);
+                }
             }
             case "info" -> {
                 var embed = new EmbedBuilder()
@@ -251,159 +249,5 @@ public class JobCommand extends EconomyCommand {
         return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
                 .replace("{user}", user.getAsMention())
                 .replace("{amount}", config.getEconomyCurrency() + amount);
-    }
-
-    private static void startCodeGuesser(SlashCommandInteractionEvent event, Economy account) {
-        var code = Code.findCode();
-        event.getHook()
-                .editOriginal("✅ You have started the promotion minigame! You have 10 seconds to guess the programming language.")
-                .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                .queue(channel -> {
-                    channel.addThreadMember(event.getUser()).queue();
-                    channel.sendMessageFormat(
-                                    "Guess the programming language of the following code to get promoted to the next job level!\n\n```\n%s```",
-                                    code.code().substring(0, MathUtils.clamp(code.code().length(), 0, 1900)))
-                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                                    .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                            && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                            && e.getMessage().getContentRaw().equalsIgnoreCase(code.language().name()))
-                                    .timeout(10, TimeUnit.SECONDS)
-                                    .timeoutAction(() -> {
-                                        channel.sendMessage("❌ You took too long to answer!")
-                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    })
-                                    .success(messageEvent -> {
-                                        channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                                                        account.getJobLevel() + 1)
-                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        account.setJobLevel(account.getJobLevel() + 1);
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    }).build());
-                });
-    }
-
-    private static void startMathChallenge(SlashCommandInteractionEvent event, Economy account) {
-        var challenge = MathChallenge.generateMathChallenge();
-        int time = challenge.numberOfOperations() * 10;
-        event.getHook()
-                .editOriginalFormat("✅ You have started the promotion minigame! You have %d seconds to answer the question!", time)
-                .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                .queue(channel -> {
-                    channel.addThreadMember(event.getUser()).queue();
-
-                    channel.sendMessage("Solve the following math problem to get promoted to the next job level!")
-                            .addFiles(createMathChallengeImageUpload(challenge.question()))
-                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                                    .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                            && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                            && StringUtils.isNumber(e.getMessage().getContentRaw()))
-                                    .timeout(time, TimeUnit.SECONDS)
-                                    .timeoutAction(() -> {
-                                        channel.sendMessage("❌ You took too long to answer!")
-                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    })
-                                    .success(messageEvent -> {
-                                        int answer = Integer.parseInt(messageEvent.getMessage().getContentRaw());
-                                        if (answer == challenge.result()) {
-                                            channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                                                            account.getJobLevel() + 1)
-                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                            account.setJobLevel(account.getJobLevel() + 1);
-                                        } else {
-                                            channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
-                                                            challenge.result())
-                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        }
-
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    }).build());
-                });
-    }
-
-    private static BufferedImage createMathChallengeImage(String question) {
-        Font font = new Font("Arial", Font.PLAIN, 20);
-        FontMetrics metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
-        int width = metrics.stringWidth(question + " = ") + 5;
-        int height = metrics.getHeight() + 5;
-
-        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        var graphics = image.createGraphics();
-        graphics.setColor(Color.WHITE);
-        graphics.fillRect(0, 0, width, height);
-        graphics.setFont(font);
-        graphics.setColor(Color.BLACK);
-        graphics.drawString(question + " = ", 5, height - 5);
-        graphics.dispose();
-
-        return image;
-    }
-
-    private static FileUpload createMathChallengeImageUpload(String question) {
-        BufferedImage image = createMathChallengeImage(question);
-        var stream = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(image, "png", stream);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not write image!", exception);
-        }
-
-        return FileUpload.fromData(stream.toByteArray(), "math_challenge.png");
-    }
-
-    public record Code(String code, Language language) {
-        public record Language(String name, String extension) {
-        }
-
-        public static Code findCode() throws IllegalStateException {
-            Either<Code, HttpStatus> response = ApiHandler.findCode();
-            if (response.isLeft())
-                return response.getLeft();
-
-            throw new IllegalStateException("Could not find code! Status code: " + response.getRight().getCode());
-        }
-    }
-
-    public record MathChallenge(String question, int result, int numberOfOperations) {
-        private static final char[] OPERATORS = {'+', '-'};
-        private static final Random RANDOM = new Random();
-        private static final Context CONTEXT = Context.newBuilder("js").allowAllAccess(true).build();
-
-        public static MathChallenge generateMathChallenge() {
-            String equation = generateRandomEquation();
-            int result = evaluateEquationWithGraalVM(equation);
-            return new MathChallenge(equation, result, equation.split(" ").length / 2);
-        }
-
-        public static String generateRandomEquation() {
-            int numberOfOperations = RANDOM.nextInt(5) + 1; // Between 2 and 6 operations
-            var equation = new StringBuilder(generateRandomOperand() + " ");
-
-            for (int i = 0; i < numberOfOperations; i++) {
-                char operator = generateRandomOperator();
-                int operand = generateRandomOperand();
-                equation.append(operator).append(" ").append(operand).append(" ");
-            }
-
-            return equation.toString().trim();
-        }
-
-        private static char generateRandomOperator() {
-            return OPERATORS[RANDOM.nextInt(OPERATORS.length)];
-        }
-
-        private static int generateRandomOperand() {
-            return RANDOM.nextInt(100) + 1; // Between 1 and 100
-        }
-
-        public static int evaluateEquationWithGraalVM(String equation) {
-            Value value = CONTEXT.eval("js", equation);
-            return value.asInt();
-        }
     }
 }
