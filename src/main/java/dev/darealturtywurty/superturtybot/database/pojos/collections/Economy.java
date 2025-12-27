@@ -143,12 +143,12 @@ public class Economy {
     @AllArgsConstructor
     @ToString
     public enum Job {
-        PROGRAMMER(150, 2, 0.45f, 600),
-        YOUTUBER(90, 5, 0.1f, 900),
-        MUSICIAN(15, 20, 0.2f, 600),
-        ARTIST(15, 20, 0.15f, 600),
-        DOCTOR(400, 1.125f, 0.25f, 900),
-        MATHEMATICIAN(160, 1.4f, 0.35f, 450);
+        PROGRAMMER(300, 2, 0.45f, 360),
+        YOUTUBER(225, 5, 0.1f, 540),
+        MUSICIAN(45, 20, 0.2f, 360),
+        ARTIST(40, 20, 0.15f, 360),
+        DOCTOR(900, 1.125f, 0.25f, 540),
+        MATHEMATICIAN(350, 1.4f, 0.35f, 270);
 
         private final long salary;
         private final float promotionMultiplier;

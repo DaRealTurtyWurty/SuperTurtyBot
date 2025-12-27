@@ -29,4 +29,4 @@ input/
 output/
 serverIcons.json
 versions/
-snippets.db
+*.db

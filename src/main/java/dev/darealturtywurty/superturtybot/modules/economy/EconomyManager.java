@@ -253,8 +253,14 @@ public class EconomyManager {
     public static long getPayAmount(Economy account) {
         long salary = account.getJob().getSalary();
         int jobLevel = account.getJobLevel();
-        float promotionMultiplier = account.getJob().getPromotionMultiplier();
+        float promotionMultiplier = getEffectivePromotionMultiplier(account);
         return Math.round(salary * (jobLevel + 1) * promotionMultiplier);
+    }
+
+    public static float getEffectivePromotionMultiplier(Economy account) {
+        float baseMultiplier = account.getJob().getPromotionMultiplier();
+        int jobLevel = account.getJobLevel();
+        return baseMultiplier * (1.0f + (jobLevel * 0.05f));
     }
 
     public static boolean registerJob(Economy account, String job) {
@@ -287,8 +293,9 @@ public class EconomyManager {
         builder.addField("Job", WordUtils.capitalize(account.getJob().name().toLowerCase()), false);
         builder.addField("Level", String.valueOf(account.getJobLevel()), false);
         builder.addField("Salary", String.format("$%d", Math.max(10, getPayAmount(account))), false);
-        builder.addField("Promotion Multiplier", String.format("x%.2f", account.getJob().getPromotionMultiplier()),
-                false);
+        builder.addField("Promotion Multiplier", String.format("x%.2f (base x%.2f)",
+                getEffectivePromotionMultiplier(account),
+                account.getJob().getPromotionMultiplier()), false);
         builder.addField("Work Cooldown", String.format("%d seconds", account.getJob().getWorkCooldownSeconds()),
                 false);
         builder.addField("Next Work", TimeFormat.RELATIVE.format(account.getNextWork()), false);
@@ -300,14 +307,14 @@ public class EconomyManager {
         if (account.getNextWork() > System.currentTimeMillis())
             return 0;
 
-        final long amount = ThreadLocalRandom.current().nextInt(1000);
+        final long amount = ThreadLocalRandom.current().nextLong(500, 2501);
         BigInteger amountBigInteger = BigInteger.valueOf(amount);
         EconomyManager.addMoney(account, amountBigInteger);
         account.addTransaction(amountBigInteger, MoneyTransaction.WORK);
         if (!Environment.INSTANCE.isDevelopment()) {
-            long cooldownMillis = TimeUnit.HOURS.toMillis(1);
+            long cooldownMillis = TimeUnit.MINUTES.toMillis(30);
             if (account.getWorkBoostUntil() > System.currentTimeMillis()) {
-                cooldownMillis = Math.max(TimeUnit.MINUTES.toMillis(15), Math.round(cooldownMillis * 0.75f));
+                cooldownMillis = Math.max(TimeUnit.MINUTES.toMillis(10), Math.round(cooldownMillis * 0.75f));
             }
 
             account.setNextWork(System.currentTimeMillis() + cooldownMillis);

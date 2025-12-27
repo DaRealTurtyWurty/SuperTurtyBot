@@ -232,7 +232,7 @@ public class JobCommand extends EconomyCommand {
                             """
                                     **Salary**: %s
                                     **Promotion Chance**: %d%%
-                                    **Promotion Multiplier**: %sx
+                                    **Base Promotion Multiplier**: %sx
                                     **Work Cooldown**: %s
                                     """.formatted(StringUtils.numberFormat(BigInteger.valueOf(job.getSalary()), config),
                                     Math.round(job.getPromotionChance() * 100),
