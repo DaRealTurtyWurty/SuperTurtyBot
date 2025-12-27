@@ -33,7 +33,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
         CompletableFuture
                 .supplyAsync(() -> Code.findCode(attempt -> event.getHook()
                         .editOriginalFormat("🔎 Finding a code snippet for your promotion... (try %d/%d)",
-                                attempt, Code.maxLocalAttempts())
+                                attempt, MAX_LOCAL_SNIPPET_ATTEMPTS)
                         .queue()))
                 .whenComplete((code, throwable) -> {
                     if (throwable != null) {
@@ -433,10 +433,6 @@ public class CodePromotionMinigame implements PromotionMinigame {
                 return null;
 
             return values[ThreadLocalRandom.current().nextInt(values.length)];
-        }
-
-        private static int maxLocalAttempts() {
-            return MAX_LOCAL_SNIPPET_ATTEMPTS;
         }
     }
 }

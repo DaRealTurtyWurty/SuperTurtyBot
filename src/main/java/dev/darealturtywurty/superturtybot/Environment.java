@@ -109,6 +109,42 @@ public final class Environment {
         return getString("YOUTUBE_API_KEY");
     }
 
+    public Optional<String> youtubeVideosApiUrl() {
+        return getString("YOUTUBE_VIDEOS_API_URL");
+    }
+
+    public Optional<Integer> youtubePromotionRandomVideoCount() {
+        return getInteger("YOUTUBE_PROMOTION_RANDOM_VIDEO_COUNT");
+    }
+
+    public Optional<Integer> youtubePromotionMaxFetchAttempts() {
+        return getInteger("YOUTUBE_PROMOTION_MAX_FETCH_ATTEMPTS");
+    }
+
+    public Optional<Integer> youtubePromotionAnswerTimeoutSeconds() {
+        return getInteger("YOUTUBE_PROMOTION_ANSWER_TIMEOUT_SECONDS");
+    }
+
+    public Optional<Integer> youtubePromotionCacheTtlHours() {
+        return getInteger("YOUTUBE_PROMOTION_CACHE_TTL_HOURS");
+    }
+
+    public Optional<Integer> youtubePromotionMinVideoAgeHours() {
+        return getInteger("YOUTUBE_PROMOTION_MIN_VIDEO_AGE_HOURS");
+    }
+
+    public Optional<Long> youtubePromotionMinViewDiff() {
+        return getLong("YOUTUBE_PROMOTION_MIN_VIEW_DIFF");
+    }
+
+    public Optional<Double> youtubePromotionMinViewDiffRatio() {
+        return getDouble("YOUTUBE_PROMOTION_MIN_VIEW_DIFF_RATIO");
+    }
+
+    public Optional<Boolean> youtubePromotionFilterShorts() {
+        return getBoolean("YOUTUBE_PROMOTION_FILTER_SHORTS");
+    }
+
     public Optional<String> geniusClientSecret() {
         return getString("GENIUS_CLIENT_SECRET");
     }
@@ -167,6 +203,17 @@ public final class Environment {
         } catch (final NumberFormatException exception) {
             return Optional.empty();
         }
+    }
+
+    public Optional<Boolean> getBoolean(String key) {
+        return getString(key).flatMap(value -> {
+            String normalized = value.trim().toLowerCase(Locale.ROOT);
+            if (normalized.equals("true") || normalized.equals("1") || normalized.equals("yes"))
+                return Optional.of(true);
+            if (normalized.equals("false") || normalized.equals("0") || normalized.equals("no"))
+                return Optional.of(false);
+            return Optional.empty();
+        });
     }
 
     public Optional<Float> getFloat(String key) {

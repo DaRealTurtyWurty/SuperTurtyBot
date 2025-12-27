@@ -207,6 +207,9 @@ public class EconomyManager {
     }
 
     public static boolean isOnWorkCooldown(Economy account) {
+        if(Environment.INSTANCE.isDevelopment())
+            return false;
+
         return account.getNextWork() >= System.currentTimeMillis();
     }
 

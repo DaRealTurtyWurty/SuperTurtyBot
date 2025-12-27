@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.MathPromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.PromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.YoutubePromotionMinigame;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
@@ -43,6 +44,7 @@ public class JobCommand extends EconomyCommand {
     private static final List<String> RESPONSES;
     private static final PromotionMinigame CODE_PROMOTION = new CodePromotionMinigame();
     private static final PromotionMinigame MATH_PROMOTION = new MathPromotionMinigame();
+    private static final PromotionMinigame YOUTUBE_PROMOTION = new YoutubePromotionMinigame();
 
     static {
         JsonObject json;
@@ -211,6 +213,8 @@ public class JobCommand extends EconomyCommand {
 
                 if (account.getJob() == Economy.Job.PROGRAMMER) {
                     CODE_PROMOTION.start(event, account);
+                } else if (account.getJob() == Economy.Job.YOUTUBER) {
+                    YOUTUBE_PROMOTION.start(event, account);
                 } else {
                     MATH_PROMOTION.start(event, account);
                 }
