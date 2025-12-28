@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.economy.promotion;
+package dev.darealturtywurty.superturtybot.commands.economy.promotion.youtube;
 
 import java.nio.file.Path;
 import java.sql.*;
