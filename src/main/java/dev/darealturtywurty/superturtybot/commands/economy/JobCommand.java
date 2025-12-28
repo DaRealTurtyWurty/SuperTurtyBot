@@ -186,6 +186,7 @@ public class JobCommand extends EconomyCommand {
                                         return;
                                     }
                                     EconomyManager.quitJob(account);
+                                    message.editMessage("✅ You have quit your job!").setComponents().queue();
                                 })
                                 .build());
             }
