@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.ArtistPromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.MathPromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.PromotionMinigame;
@@ -45,6 +46,7 @@ public class JobCommand extends EconomyCommand {
     private static final PromotionMinigame CODE_PROMOTION = new CodePromotionMinigame();
     private static final PromotionMinigame MATH_PROMOTION = new MathPromotionMinigame();
     private static final PromotionMinigame YOUTUBE_PROMOTION = new YoutubePromotionMinigame();
+    private static final PromotionMinigame ARTIST_PROMOTION = new ArtistPromotionMinigame();
 
     static {
         JsonObject json;
@@ -215,6 +217,8 @@ public class JobCommand extends EconomyCommand {
                     CODE_PROMOTION.start(event, account);
                 } else if (account.getJob() == Economy.Job.YOUTUBER) {
                     YOUTUBE_PROMOTION.start(event, account);
+                } else if (account.getJob() == Economy.Job.ARTIST) {
+                    ARTIST_PROMOTION.start(event, account);
                 } else {
                     MATH_PROMOTION.start(event, account);
                 }
