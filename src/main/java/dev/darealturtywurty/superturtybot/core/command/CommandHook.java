@@ -25,6 +25,7 @@ import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftComma
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.modules.ArtistNsfwCache;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
@@ -105,6 +106,8 @@ public class CommandHook extends ListenerAdapter {
         if (!BirthdayManager.isRunning()) {
             BirthdayManager.start(jda);
         }
+
+        ArtistNsfwCache.initialize();
 
         Guild devGuild = jda.getGuildById(1096109606452867243L);
         if (devGuild != null) {

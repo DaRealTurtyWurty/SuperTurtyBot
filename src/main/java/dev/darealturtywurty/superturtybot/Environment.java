@@ -145,6 +145,10 @@ public final class Environment {
         return getBoolean("YOUTUBE_PROMOTION_FILTER_SHORTS");
     }
 
+    public Optional<Integer> artistNsfwThreads() {
+        return getInteger("ARTIST_NSFW_THREADS");
+    }
+
     public Optional<String> geniusClientSecret() {
         return getString("GENIUS_CLIENT_SECRET");
     }

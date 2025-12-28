@@ -52,4 +52,12 @@ public class UserConfigRegistry {
                     .valueFromConfig(config -> config.getTaxMessageType().name())
                     .enumAutoComplete(UserConfig.TaxMessageType.values())
                     .build());
+
+    public static final UserConfigOption ARTIST_NSFW_FILTER_OPT_IN = USER_CONFIG_OPTIONS.register(
+            "artist_nsfw_filter_opt_in",
+            new UserConfigOption.Builder()
+                    .dataType(UserConfigOption.DataType.BOOLEAN)
+                    .serializer((config, value) -> config.setArtistNsfwFilterOptIn(Boolean.parseBoolean(value)))
+                    .valueFromConfig(UserConfig::isArtistNsfwFilterOptIn)
+                    .build());
 }

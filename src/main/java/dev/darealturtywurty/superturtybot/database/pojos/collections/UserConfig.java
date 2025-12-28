@@ -23,6 +23,7 @@ public class UserConfig {
     private String leaderboardColor = toHex(Color.PINK);
     private LevelUpMessageType levelUpMessageType = LevelUpMessageType.EMBED;
     private TaxMessageType taxMessageType = TaxMessageType.ON;
+    private boolean artistNsfwFilterOptIn = false;
 
     public UserConfig(long userId) {
         this.user = userId;

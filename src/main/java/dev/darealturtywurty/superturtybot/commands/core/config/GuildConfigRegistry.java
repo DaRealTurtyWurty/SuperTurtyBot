@@ -237,6 +237,11 @@ public class GuildConfigRegistry {
                         (config, value) -> config.setShouldSendStartupMessage(Boolean.parseBoolean(value))).valueFromConfig(
                         GuildData::isShouldSendStartupMessage).build());
 
+        GUILD_CONFIG_OPTIONS.register(
+                "artist_nsfw_filter_enabled", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
+                        (config, value) -> config.setArtistNsfwFilterEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isArtistNsfwFilterEnabled).build());
+
         GUILD_CONFIG_OPTIONS.register("economy_currency",
                 new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setEconomyCurrency)
                         .valueFromConfig(GuildData::getEconomyCurrency).build());

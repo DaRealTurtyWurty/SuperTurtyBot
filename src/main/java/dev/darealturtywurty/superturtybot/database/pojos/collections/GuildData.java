@@ -137,6 +137,7 @@ public class GuildData {
     private long patronRole;
     private boolean shouldSendStartupMessage;
     private boolean shouldSendChangelog;
+    private boolean artistNsfwFilterEnabled;
     private float warningXpPercentage;
     private float warningEconomyPercentage;
     private boolean announceBirthdays;
@@ -249,6 +250,7 @@ public class GuildData {
         this.patronRole = 0L;
         this.shouldSendStartupMessage = true;
         this.shouldSendChangelog = true;
+        this.artistNsfwFilterEnabled = true;
         this.chatRevivalEnabled = false;
         this.chatRevivalTime = 24;
         this.chatRevivalChannel = 0L;

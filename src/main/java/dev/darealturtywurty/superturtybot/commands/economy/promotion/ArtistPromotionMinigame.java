@@ -1,8 +1,13 @@
 package dev.darealturtywurty.superturtybot.commands.economy.promotion;
 
 import dev.darealturtywurty.superturtybot.TurtyBot;
+import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.ArtistNsfwCache;
+import com.mongodb.client.model.Filters;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -14,6 +19,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -33,9 +39,10 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
             return;
         }
 
-        ArtistChallenge challenge = createChallenge();
-        if (challenge == null) {
-            event.getHook().editOriginal("❌ Could not start the artist promotion minigame right now.").queue();
+        boolean useNsfwFilter = shouldUseNsfwFilter(event);
+        ArtistChallengeResult result = createChallenge(useNsfwFilter);
+        if (result.errorMessage() != null) {
+            event.getHook().editOriginal(result.errorMessage()).queue();
             return;
         }
 
@@ -44,17 +51,19 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
                 .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
                 .queue(channel -> {
                     channel.addThreadMember(event.getUser()).queue();
-                    sendChallenge(channel, event, account, challenge);
+                    sendChallenge(channel, event, account, result.challenge(), useNsfwFilter);
                 });
     }
 
     private void sendChallenge(ThreadChannel channel, SlashCommandInteractionEvent event, Economy account,
-                               ArtistChallenge challenge) {
-        String warning = "⚠️ Potential NSFW warning. Image is spoilered.";
+                               ArtistChallenge challenge, boolean useNsfwFilter) {
         String prompt = event.getUser().getAsMention()
-                + " Is this image AI or real? Reply with `ai` or `real`.\n" + warning;
+                + " Is this image AI or real? Reply with `ai` or `real`.";
+        if (useNsfwFilter) {
+            prompt += "\n⚠️ Potential NSFW warning. Image is spoilered.";
+        }
 
-        try (FileUpload upload = buildUpload(challenge.imagePath())) {
+        try (FileUpload upload = buildUpload(challenge.imagePath(), useNsfwFilter)) {
             channel.sendMessage(prompt)
                     .addFiles(upload)
                     .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
@@ -112,13 +121,20 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
         channel.getManager().setArchived(true).setLocked(true).queue();
     }
 
-    private static ArtistChallenge createChallenge() {
+    private static ArtistChallengeResult createChallenge(boolean useNsfwFilter) {
         boolean isAi = ThreadLocalRandom.current().nextBoolean();
-        Path image = pickRandomImage(isAi);
-        if (image == null)
-            return null;
+        Optional<Path> image = useNsfwFilter
+                ? ArtistNsfwCache.pickRandomSafeImage(isAi)
+                : Optional.ofNullable(pickRandomImage(isAi));
 
-        return new ArtistChallenge(isAi, image);
+        if (image.isEmpty()) {
+            String error = useNsfwFilter
+                    ? "❌ NSFW filter is enabled but no filtered images are available yet."
+                    : "❌ Could not find artist images.";
+            return new ArtistChallengeResult(null, error);
+        }
+
+        return new ArtistChallengeResult(new ArtistChallenge(isAi, image.get()), null);
     }
 
     private static Path pickRandomImage(boolean isAi) {
@@ -153,9 +169,12 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
         return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png");
     }
 
-    private static FileUpload buildUpload(Path imagePath) throws IOException {
+    private static FileUpload buildUpload(Path imagePath, boolean spoiler) throws IOException {
         String extension = getExtension(imagePath.getFileName().toString());
         String randomName = generateRandomBase64Name(18) + extension;
+        if (!spoiler)
+            return FileUpload.fromData(imagePath.toFile(), randomName);
+
         String spoilerName = randomName.startsWith("SPOILER_") ? randomName : "SPOILER_" + randomName;
         return FileUpload.fromData(imagePath.toFile(), spoilerName);
     }
@@ -190,6 +209,23 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
 
     private static String formatAnswer(boolean isAi) {
         return isAi ? "AI" : "real";
+    }
+
+    private static boolean shouldUseNsfwFilter(SlashCommandInteractionEvent event) {
+        if (event.getGuild() == null)
+            return false;
+
+        GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
+        if (!config.isArtistNsfwFilterEnabled())
+            return false;
+
+        UserConfig userConfig = Database.getDatabase().userConfig
+                .find(Filters.eq("user", event.getUser().getIdLong()))
+                .first();
+        return userConfig != null && userConfig.isArtistNsfwFilterOptIn();
+    }
+
+    private record ArtistChallengeResult(ArtistChallenge challenge, String errorMessage) {
     }
 
     private record ArtistChallenge(boolean isAi, Path imagePath) {
