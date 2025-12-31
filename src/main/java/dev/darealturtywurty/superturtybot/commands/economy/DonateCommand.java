@@ -44,6 +44,11 @@ public class DonateCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
+        if (!config.isDonateEnabled()) {
+            event.getHook().editOriginal("❌ Donate is not enabled in this server!").queue();
+            return;
+        }
+
         Member member = event.getOption("user", OptionMapping::getAsMember);
         if (member == null) {
             event.getHook().editOriginal("❌ You must provide a valid user in this server!").queue();

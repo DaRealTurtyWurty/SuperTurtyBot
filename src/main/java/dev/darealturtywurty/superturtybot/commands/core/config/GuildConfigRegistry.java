@@ -251,6 +251,11 @@ public class GuildConfigRegistry {
                                 (config, value) -> config.setEconomyEnabled(Boolean.parseBoolean(value)))
                         .valueFromConfig(GuildData::isEconomyEnabled).build());
 
+        GUILD_CONFIG_OPTIONS.register("donate_enabled",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
+                                (config, value) -> config.setDonateEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isDonateEnabled).build());
+
         GUILD_CONFIG_OPTIONS.register("can_add_playlists",
                 new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                                 (config, value) -> config.setCanAddPlaylists(Boolean.parseBoolean(value)))

@@ -80,6 +80,7 @@ public class GuildData {
     // Economy
     private String economyCurrency;
     private boolean economyEnabled;
+    private boolean donateEnabled;
     private BigInteger defaultEconomyBalance;
     private float incomeTax;
     private Map<String, Long> endOfDayIncomeTax;
@@ -199,6 +200,7 @@ public class GuildData {
         // Economy
         this.economyCurrency = "$";
         this.economyEnabled = true;
+        this.donateEnabled = false;
         this.defaultEconomyBalance = BigInteger.valueOf(200);
         this.incomeTax = 0.1F;
         this.endOfDayIncomeTax = new HashMap<>();
