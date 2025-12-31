@@ -6,68 +6,6 @@ import java.time.Instant;
 import java.util.*;
 
 public record VideoCacheRepository(Path databasePath) {
-    public List<YoutubeVideo> loadCandidates(YoutubeApiClient apiClient, int randomCount, int maxAttempts,
-                                             long cacheTtlMs) {
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
-            ensureTables(connection);
-            VideoIdSource source = resolveVideoIdSource(connection);
-            String quoteString = resolveQuoteString(connection);
-            long now = System.currentTimeMillis();
-            long cacheCutoff = now - cacheTtlMs;
-
-            pruneCache(connection, cacheCutoff);
-            Map<String, YoutubeVideo> candidates = new HashMap<>();
-            for (YoutubeVideo video : loadCachedVideos(connection, cacheCutoff)) {
-                candidates.putIfAbsent(video.id(), video);
-            }
-
-            for (int attempt = 0; attempt < maxAttempts; attempt++) {
-                List<String> randomIds = fetchRandomVideoIds(connection, source, quoteString, randomCount);
-                if (randomIds.isEmpty())
-                    break;
-
-                YoutubeApiClient.VideoFetchResult result = apiClient.fetchVideos(randomIds);
-                if (!result.missingIds().isEmpty())
-                    markDeadVideoIds(connection, result.missingIds(), now);
-
-                cacheVideos(connection, result.videos(), now);
-                for (YoutubeVideo video : result.videos()) {
-                    candidates.putIfAbsent(video.id(), video);
-                }
-            }
-
-            return new ArrayList<>(candidates.values());
-        } catch (Exception exception) {
-            throw new IllegalStateException("Failed to load YouTube videos.", exception);
-        }
-    }
-
-    public void removeFromCache(List<String> videoIds) {
-        if (videoIds == null || videoIds.isEmpty())
-            return;
-
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
-            StringBuilder placeholders = new StringBuilder();
-            for (int i = 0; i < videoIds.size(); i++) {
-                if (i > 0) {
-                    placeholders.append(',');
-                }
-
-                placeholders.append('?');
-            }
-
-            String sql = "DELETE FROM recent_video_cache WHERE video_id IN (" + placeholders + ")";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                for (int i = 0; i < videoIds.size(); i++) {
-                    statement.setString(i + 1, videoIds.get(i));
-                }
-                statement.executeUpdate();
-            }
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to clear used videos from cache.", exception);
-        }
-    }
-
     private static void ensureTables(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "CREATE TABLE IF NOT EXISTS dead_video_ids (video_id TEXT PRIMARY KEY, added_at INTEGER NOT NULL)")) {
@@ -228,6 +166,68 @@ public record VideoCacheRepository(Path databasePath) {
             return value;
 
         return quoteString + value.replace(quoteString, quoteString + quoteString) + quoteString;
+    }
+
+    public List<YoutubeVideo> loadCandidates(YoutubeApiClient apiClient, int randomCount, int maxAttempts,
+                                             long cacheTtlMs) {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
+            ensureTables(connection);
+            VideoIdSource source = resolveVideoIdSource(connection);
+            String quoteString = resolveQuoteString(connection);
+            long now = System.currentTimeMillis();
+            long cacheCutoff = now - cacheTtlMs;
+
+            pruneCache(connection, cacheCutoff);
+            Map<String, YoutubeVideo> candidates = new HashMap<>();
+            for (YoutubeVideo video : loadCachedVideos(connection, cacheCutoff)) {
+                candidates.putIfAbsent(video.id(), video);
+            }
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                List<String> randomIds = fetchRandomVideoIds(connection, source, quoteString, randomCount);
+                if (randomIds.isEmpty())
+                    break;
+
+                YoutubeApiClient.VideoFetchResult result = apiClient.fetchVideos(randomIds);
+                if (!result.missingIds().isEmpty())
+                    markDeadVideoIds(connection, result.missingIds(), now);
+
+                cacheVideos(connection, result.videos(), now);
+                for (YoutubeVideo video : result.videos()) {
+                    candidates.putIfAbsent(video.id(), video);
+                }
+            }
+
+            return new ArrayList<>(candidates.values());
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to load YouTube videos.", exception);
+        }
+    }
+
+    public void removeFromCache(List<String> videoIds) {
+        if (videoIds == null || videoIds.isEmpty())
+            return;
+
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
+            StringBuilder placeholders = new StringBuilder();
+            for (int i = 0; i < videoIds.size(); i++) {
+                if (i > 0) {
+                    placeholders.append(',');
+                }
+
+                placeholders.append('?');
+            }
+
+            String sql = "DELETE FROM recent_video_cache WHERE video_id IN (" + placeholders + ")";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                for (int i = 0; i < videoIds.size(); i++) {
+                    statement.setString(i + 1, videoIds.get(i));
+                }
+                statement.executeUpdate();
+            }
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to clear used videos from cache.", exception);
+        }
     }
 
     private record VideoIdSource(String table, String column) {

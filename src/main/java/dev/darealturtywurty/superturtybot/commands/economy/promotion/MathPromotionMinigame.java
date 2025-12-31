@@ -11,10 +11,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,6 +19,36 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class MathPromotionMinigame implements PromotionMinigame {
+    private static BufferedImage createMathChallengeImage(String question) {
+        Font font = new Font("Arial", Font.PLAIN, 20);
+        FontMetrics metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
+        int width = metrics.stringWidth(question + " = ") + 5;
+        int height = metrics.getHeight() + 5;
+
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, width, height);
+        graphics.setFont(font);
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(question + " = ", 5, height - 5);
+        graphics.dispose();
+
+        return image;
+    }
+
+    private static FileUpload createMathChallengeImageUpload(String question) {
+        BufferedImage image = createMathChallengeImage(question);
+        var stream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(image, "png", stream);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not write image!", exception);
+        }
+
+        return FileUpload.fromData(stream.toByteArray(), "math_challenge.png");
+    }
+
     @Override
     public void start(SlashCommandInteractionEvent event, Economy account) {
         var challenge = MathChallenge.generateMathChallenge();
@@ -62,36 +89,6 @@ public class MathPromotionMinigame implements PromotionMinigame {
                                         EconomyManager.updateAccount(account);
                                     }).build());
                 });
-    }
-
-    private static BufferedImage createMathChallengeImage(String question) {
-        Font font = new Font("Arial", Font.PLAIN, 20);
-        FontMetrics metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
-        int width = metrics.stringWidth(question + " = ") + 5;
-        int height = metrics.getHeight() + 5;
-
-        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = image.createGraphics();
-        graphics.setColor(Color.WHITE);
-        graphics.fillRect(0, 0, width, height);
-        graphics.setFont(font);
-        graphics.setColor(Color.BLACK);
-        graphics.drawString(question + " = ", 5, height - 5);
-        graphics.dispose();
-
-        return image;
-    }
-
-    private static FileUpload createMathChallengeImageUpload(String question) {
-        BufferedImage image = createMathChallengeImage(question);
-        var stream = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(image, "png", stream);
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not write image!", exception);
-        }
-
-        return FileUpload.fromData(stream.toByteArray(), "math_challenge.png");
     }
 
     public record MathChallenge(String question, int result, int numberOfOperations) {

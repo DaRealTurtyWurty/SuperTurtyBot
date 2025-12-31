@@ -19,53 +19,6 @@ import java.util.Set;
 
 public record YoutubeApiClient(String apiKey, String videosApiUrl) {
 
-    public VideoFetchResult fetchVideos(List<String> videoIds) throws IOException {
-        HttpUrl url = HttpUrl.parse(videosApiUrl).newBuilder()
-                .addQueryParameter("part", "snippet,statistics,contentDetails")
-                .addQueryParameter("id", String.join(",", videoIds))
-                .addQueryParameter("key", apiKey)
-                .build();
-
-        Request request = new Request.Builder().url(url).get().build();
-        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if (!response.isSuccessful())
-                throw new IOException("Youtube API response was unsuccessful: " + response.code());
-
-            ResponseBody body = response.body();
-            if (body == null)
-                throw new IOException("Youtube API response body was empty.");
-
-            JsonObject json = Constants.GSON.fromJson(body.string(), JsonObject.class);
-            JsonArray items = json.getAsJsonArray("items");
-            if (items == null || items.isEmpty())
-                return new VideoFetchResult(List.of(), new HashSet<>(videoIds));
-
-            List<YoutubeVideo> videos = new ArrayList<>();
-            Set<String> foundIds = new HashSet<>();
-            for (JsonElement element : items) {
-                JsonObject item = element.getAsJsonObject();
-                String id = getAsString(item, "id");
-                if (id == null || id.isBlank())
-                    continue;
-                foundIds.add(id);
-
-                JsonObject snippet = item.getAsJsonObject("snippet");
-                JsonObject statistics = item.getAsJsonObject("statistics");
-                JsonObject contentDetails = item.getAsJsonObject("contentDetails");
-                if (snippet == null || statistics == null)
-                    continue;
-
-                YoutubeVideo video = parseVideo(id, snippet, statistics, contentDetails);
-                if (video != null)
-                    videos.add(video);
-            }
-
-            Set<String> missing = new HashSet<>(videoIds);
-            missing.removeAll(foundIds);
-            return new VideoFetchResult(videos, missing);
-        }
-    }
-
     private static YoutubeVideo parseVideo(String id, JsonObject snippet, JsonObject statistics,
                                            JsonObject contentDetails) {
         String title = getAsString(snippet, "title");
@@ -137,6 +90,53 @@ public record YoutubeApiClient(String apiKey, String videosApiUrl) {
             return object.get(key).getAsLong();
         } catch (Exception exception) {
             return 0L;
+        }
+    }
+
+    public VideoFetchResult fetchVideos(List<String> videoIds) throws IOException {
+        HttpUrl url = HttpUrl.parse(videosApiUrl).newBuilder()
+                .addQueryParameter("part", "snippet,statistics,contentDetails")
+                .addQueryParameter("id", String.join(",", videoIds))
+                .addQueryParameter("key", apiKey)
+                .build();
+
+        Request request = new Request.Builder().url(url).get().build();
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+            if (!response.isSuccessful())
+                throw new IOException("Youtube API response was unsuccessful: " + response.code());
+
+            ResponseBody body = response.body();
+            if (body == null)
+                throw new IOException("Youtube API response body was empty.");
+
+            JsonObject json = Constants.GSON.fromJson(body.string(), JsonObject.class);
+            JsonArray items = json.getAsJsonArray("items");
+            if (items == null || items.isEmpty())
+                return new VideoFetchResult(List.of(), new HashSet<>(videoIds));
+
+            List<YoutubeVideo> videos = new ArrayList<>();
+            Set<String> foundIds = new HashSet<>();
+            for (JsonElement element : items) {
+                JsonObject item = element.getAsJsonObject();
+                String id = getAsString(item, "id");
+                if (id == null || id.isBlank())
+                    continue;
+                foundIds.add(id);
+
+                JsonObject snippet = item.getAsJsonObject("snippet");
+                JsonObject statistics = item.getAsJsonObject("statistics");
+                JsonObject contentDetails = item.getAsJsonObject("contentDetails");
+                if (snippet == null || statistics == null)
+                    continue;
+
+                YoutubeVideo video = parseVideo(id, snippet, statistics, contentDetails);
+                if (video != null)
+                    videos.add(video);
+            }
+
+            Set<String> missing = new HashSet<>(videoIds);
+            missing.removeAll(foundIds);
+            return new VideoFetchResult(videos, missing);
         }
     }
 

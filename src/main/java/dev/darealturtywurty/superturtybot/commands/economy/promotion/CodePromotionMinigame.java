@@ -84,61 +84,6 @@ public class CodePromotionMinigame implements PromotionMinigame {
     }
 
     public record Code(String code, Language language) {
-        public record Language(String name, String extension) {
-        }
-
-        private record SnippetRow(String snippet, String language, String repoFileName, String githubRepoUrl,
-                                  String commitHash, int startingLineNumber) {
-        }
-
-        private enum AllowedLanguage {
-            BASH("Bash", "bash"),
-            C("C", "c"),
-            CPP("C++", "c++", "cpp", "cxx"),
-            GO("Go", "go", "golang"),
-            HTML("HTML", "html", "htm"),
-            JSON("JSON", "json"),
-            JAVA("Java", "java"),
-            JAVASCRIPT("JavaScript", "javascript", "js", "node", "nodejs"),
-            JUPYTER("Jupyter", "jupyter", "ipynb"),
-            POWERSHELL("PowerShell", "powershell", "pwsh", "ps"),
-            PYTHON("Python", "python", "py"),
-            RUBY("Ruby", "ruby", "rb"),
-            RUST("Rust", "rust", "rs"),
-            SHELL("Shell", "shell", "sh"),
-            YAML("YAML", "yaml", "yml");
-
-            private final String displayName;
-            private final Set<String> aliases;
-
-            AllowedLanguage(String displayName, String... aliases) {
-                this.displayName = displayName;
-                this.aliases = new HashSet<>();
-                for (String alias : aliases) {
-                    this.aliases.add(alias.toLowerCase(Locale.ROOT));
-                }
-            }
-
-            private boolean matches(String value) {
-                if (value == null || value.isBlank())
-                    return false;
-
-                return aliases.contains(value.toLowerCase(Locale.ROOT));
-            }
-
-            private static Optional<AllowedLanguage> fromValue(String value) {
-                if (value == null)
-                    return Optional.empty();
-
-                for (AllowedLanguage language : values()) {
-                    if (language.matches(value))
-                        return Optional.of(language);
-                }
-
-                return Optional.empty();
-            }
-        }
-
         public static Code findCode() throws IllegalStateException {
             return findCode(null);
         }
@@ -433,6 +378,61 @@ public class CodePromotionMinigame implements PromotionMinigame {
                 return null;
 
             return values[ThreadLocalRandom.current().nextInt(values.length)];
+        }
+
+        private enum AllowedLanguage {
+            BASH("Bash", "bash"),
+            C("C", "c"),
+            CPP("C++", "c++", "cpp", "cxx"),
+            GO("Go", "go", "golang"),
+            HTML("HTML", "html", "htm"),
+            JSON("JSON", "json"),
+            JAVA("Java", "java"),
+            JAVASCRIPT("JavaScript", "javascript", "js", "node", "nodejs"),
+            JUPYTER("Jupyter", "jupyter", "ipynb"),
+            POWERSHELL("PowerShell", "powershell", "pwsh", "ps"),
+            PYTHON("Python", "python", "py"),
+            RUBY("Ruby", "ruby", "rb"),
+            RUST("Rust", "rust", "rs"),
+            SHELL("Shell", "shell", "sh"),
+            YAML("YAML", "yaml", "yml");
+
+            private final String displayName;
+            private final Set<String> aliases;
+
+            AllowedLanguage(String displayName, String... aliases) {
+                this.displayName = displayName;
+                this.aliases = new HashSet<>();
+                for (String alias : aliases) {
+                    this.aliases.add(alias.toLowerCase(Locale.ROOT));
+                }
+            }
+
+            private static Optional<AllowedLanguage> fromValue(String value) {
+                if (value == null)
+                    return Optional.empty();
+
+                for (AllowedLanguage language : values()) {
+                    if (language.matches(value))
+                        return Optional.of(language);
+                }
+
+                return Optional.empty();
+            }
+
+            private boolean matches(String value) {
+                if (value == null || value.isBlank())
+                    return false;
+
+                return aliases.contains(value.toLowerCase(Locale.ROOT));
+            }
+        }
+
+        public record Language(String name, String extension) {
+        }
+
+        private record SnippetRow(String snippet, String language, String repoFileName, String githubRepoUrl,
+                                  String commitHash, int startingLineNumber) {
         }
     }
 }

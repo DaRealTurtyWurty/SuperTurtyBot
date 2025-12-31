@@ -20,6 +20,41 @@ import java.util.concurrent.TimeUnit;
 public class YoutubePromotionMinigame implements PromotionMinigame {
     private static final Path VIDEO_DB_PATH = Path.of("video_ids.db");
 
+    private static int parseChoice(String input) {
+        if (input == null)
+            return 0;
+
+        String normalized = input.trim().toLowerCase(Locale.ROOT);
+        if (normalized.equals("1") || normalized.equals("a"))
+            return 1;
+
+        if (normalized.equals("2") || normalized.equals("b"))
+            return 2;
+
+        return 0;
+    }
+
+    private static String buildVideoUrl(YoutubeVideo video) {
+        return "https://www.youtube.com/watch?v=" + video.id();
+    }
+
+    private static int determineCorrectIndex(VideoPair pair) {
+        if (pair.first().viewCount() > pair.second().viewCount())
+            return 1;
+
+        if (pair.second().viewCount() > pair.first().viewCount())
+            return 2;
+
+        return pair.first().likeCount() >= pair.second().likeCount() ? 1 : 2;
+    }
+
+    private static VideoPair maybeSwap(VideoPair pair) {
+        if (ThreadLocalRandom.current().nextBoolean())
+            return new VideoPair(pair.second(), pair.first());
+
+        return pair;
+    }
+
     @Override
     public void start(SlashCommandInteractionEvent event, Economy account) {
         if (Environment.INSTANCE.youtubeApiKey().isEmpty()) {
@@ -120,41 +155,6 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
         VideoPair pair = selector.pickPair(candidates)
                 .orElseThrow(() -> new IllegalStateException("Not enough videos available."));
         repository.removeFromCache(List.of(pair.first().id(), pair.second().id()));
-        return pair;
-    }
-
-    private static int parseChoice(String input) {
-        if (input == null)
-            return 0;
-
-        String normalized = input.trim().toLowerCase(Locale.ROOT);
-        if (normalized.equals("1") || normalized.equals("a"))
-            return 1;
-
-        if (normalized.equals("2") || normalized.equals("b"))
-            return 2;
-
-        return 0;
-    }
-
-    private static String buildVideoUrl(YoutubeVideo video) {
-        return "https://www.youtube.com/watch?v=" + video.id();
-    }
-
-    private static int determineCorrectIndex(VideoPair pair) {
-        if (pair.first().viewCount() > pair.second().viewCount())
-            return 1;
-
-        if (pair.second().viewCount() > pair.first().viewCount())
-            return 2;
-
-        return pair.first().likeCount() >= pair.second().likeCount() ? 1 : 2;
-    }
-
-    private static VideoPair maybeSwap(VideoPair pair) {
-        if (ThreadLocalRandom.current().nextBoolean())
-            return new VideoPair(pair.second(), pair.first());
-
         return pair;
     }
 }
