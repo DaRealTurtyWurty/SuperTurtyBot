@@ -405,7 +405,7 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
 
-        if (ThreadLocalRandom.current().nextInt(10) == 0) {
+        if (ThreadLocalRandom.current().nextInt(8) == 0) {
             account.setCrimeLevel(account.getCrimeLevel() + 1);
         }
 
@@ -427,9 +427,14 @@ public class EconomyManager {
      * Handles the payout and level increase of a heist
      *
      * @param account The user's economy account
-     * @return A pair containing the amount earned and whether the user leveled up
+     * @return Details about the heist payout, level ups, and rare wipes
      */
-    public static Pair<Long, Boolean> heistCompleted(Economy account, long timeTaken) {
+    public static HeistResult heistCompleted(Economy account, long timeTaken) {
+        if (ThreadLocalRandom.current().nextInt(100_000) == 0) {
+            resetAccount(account);
+            return new HeistResult(0L, false, true);
+        }
+
         long payout = determineHeistPayout(account);
         long earned = payout * 10_000L / timeTaken + determineHeistSetupCost(account);
         BigInteger earnedBigInteger = BigInteger.valueOf(earned);
@@ -440,9 +445,46 @@ public class EconomyManager {
 
         if (ThreadLocalRandom.current().nextInt(4) == 0) {
             account.setHeistLevel(account.getHeistLevel() + 1);
-            return Pair.of(earned, true);
+            return new HeistResult(earned, true, false);
         }
 
-        return Pair.of(earned, false);
+        return new HeistResult(earned, false, false);
+    }
+
+    private static void resetAccount(Economy account) {
+        account.setWallet(BigInteger.ZERO);
+        account.setBank(BigInteger.ZERO);
+        account.setNextRob(0L);
+        account.setNextWork(0L);
+        account.setNextCrime(0L);
+        account.setNextHeist(0L);
+        account.setNextCrash(0L);
+        account.setNextDonate(0L);
+        account.setNextDaily(0L);
+        account.setNextWeekly(0L);
+        account.setNextMonthly(0L);
+        account.setNextYearly(0L);
+        account.setNextLoan(0L);
+        account.setWorkBoostUntil(0L);
+        account.setCrimeBoostUntil(0L);
+        account.setRewardBoostUntil(0L);
+        account.setJob(null);
+        account.setJobLevel(0);
+        account.setReadyForPromotion(false);
+        account.setTotalBetLoss(BigInteger.ZERO);
+        account.setTotalBetWin(BigInteger.ZERO);
+        account.setCrimeLevel(0);
+        account.setHeistLevel(0);
+        account.setTotalHeists(0);
+        account.setTotalCrimes(0L);
+        account.setTotalSuccessfulCrimes(0L);
+        account.setTotalCaughtCrimes(0L);
+        account.setShopItems(new ArrayList<>());
+        account.setLoans(new ArrayList<>());
+        account.setProperties(new ArrayList<>());
+        account.setTransactions(new ArrayList<>());
+    }
+
+    public record HeistResult(long earned, boolean leveledUp, boolean accountWiped) {
     }
 }

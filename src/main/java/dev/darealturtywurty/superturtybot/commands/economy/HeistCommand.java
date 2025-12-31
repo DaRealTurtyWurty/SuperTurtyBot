@@ -19,9 +19,9 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -89,6 +89,14 @@ public class HeistCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        int crimeLevel = Math.max(1, account.getCrimeLevel());
+        if (crimeLevel < 5 || crimeLevel % 5 != 0) {
+            event.getHook().editOriginalFormat(
+                    "❌ You can only start a heist every 5 crime levels. Your current crime level is %d.",
+                    crimeLevel).queue();
+            return;
+        }
+
         if (account.getNextHeist() > System.currentTimeMillis()) {
             event.getHook().editOriginalFormat("❌ You can start another heist %s!",
                     TimeFormat.RELATIVE.format(account.getNextHeist())).queue();
@@ -121,59 +129,65 @@ public class HeistCommand extends EconomyCommand {
                         event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
                         event.getMessageIdLong() == message.getIdLong() &&
                         event.getComponentId().startsWith("heist:"))
-                .success(event -> {
-                    event.deferEdit().queue();
+                .success(event ->
+                        handleInitialButtonPressed(guild, member, message, config, account, event));
+    }
 
-                    if (event.getComponentId().equals("heist:no")) {
-                        message.editMessage("❌ Heist setup has been cancelled!").setComponents().queue();
-                        return;
-                    }
+    private static void handleInitialButtonPressed(Guild guild, Member member, Message message, GuildData config, Economy account, ButtonInteractionEvent event) {
+        event.deferEdit().queue();
 
-                    BigInteger balance = EconomyManager.getBalance(account);
-                    BigInteger setupCost = BigInteger.valueOf(EconomyManager.determineHeistSetupCost(account));
-                    if (balance.compareTo(setupCost) < 0) {
-                        message.editMessageFormat("❌ You need another %s to start a heist!",
-                                StringUtils.numberFormat(setupCost.subtract(balance), config)
-                        ).setComponents().queue();
-                        return;
-                    }
+        if (event.getComponentId().equals("heist:no")) {
+            message.editMessage("❌ Heist setup has been cancelled!").setComponents().queue();
+            return;
+        }
 
-                    EconomyManager.removeMoney(account, setupCost, true);
-                    account.addTransaction(setupCost.negate(), MoneyTransaction.HEIST_SETUP);
+        BigInteger balance = EconomyManager.getBalance(account);
+        BigInteger setupCost = BigInteger.valueOf(EconomyManager.determineHeistSetupCost(account));
+        if (balance.compareTo(setupCost) < 0) {
+            message.editMessageFormat("❌ You need another %s to start a heist!",
+                    StringUtils.numberFormat(setupCost.subtract(balance), config)
+            ).setComponents().queue();
+            return;
+        }
 
-                    if (!Environment.INSTANCE.isDevelopment()) {
-                        account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
-                    }
+        EconomyManager.removeMoney(account, setupCost, true);
+        account.addTransaction(setupCost.negate(), MoneyTransaction.HEIST_SETUP);
 
-                    EconomyManager.updateAccount(account);
+        if (!Environment.INSTANCE.isDevelopment()) {
+            account.setNextHeist(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
+        }
 
-                    message.editMessage("✅ Heist started!")
-                            .setComponents()
-                            .flatMap(msg -> msg.createThreadChannel(Objects.requireNonNull(event.getMember()).getEffectiveName() + "'s Heist"))
-                            .queue(thread -> {
-                                Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
-                                List<Integer> positions = new ArrayList<>();
-                                List<Quadrant> quadrants = new ArrayList<>();
-                                BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
-                                try (FileUpload upload = createUpload(matcher)) {
-                                    thread.sendMessageFormat("🔍 **Fingerprint Matcher** %s", event.getUser().getAsMention())
-                                            .setFiles(upload)
-                                            .setComponents(createHeistButtons(null))
-                                            .queue(msg -> {
-                                                var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
-                                                        msg.getIdLong(), fingerprint, positions);
-                                                heist.getQuadrants().addAll(quadrants);
-                                                createHeistWaiter(guild, thread, member, msg, heist, config, account).build();
+        EconomyManager.updateAccount(account);
 
-                                                msg.replyFormat("Remember, there are 4 matching quadrants!\n\nThe heist ends %s.",
-                                                                TimeFormat.RELATIVE.format(heist.startTime + TimeUnit.MINUTES.toMillis(1)))
-                                                        .queue();
-                                            });
-                                } catch (IOException exception) {
-                                    Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
-                                }
-                            });
-                });
+        message.editMessage("✅ Heist started!")
+                .setComponents()
+                .flatMap(msg -> msg.createThreadChannel(Objects.requireNonNull(event.getMember()).getEffectiveName() + "'s Heist"))
+                .queue(thread ->
+                        startGame(guild, member, config, account, event, thread));
+    }
+
+    private static void startGame(Guild guild, Member member, GuildData config, Economy account, ButtonInteractionEvent event, ThreadChannel thread) {
+        Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
+        List<Integer> positions = new ArrayList<>();
+        List<Quadrant> quadrants = new ArrayList<>();
+        BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
+        try (FileUpload upload = createUpload(matcher)) {
+            thread.sendMessageFormat("🔍 **Fingerprint Matcher** %s", event.getUser().getAsMention())
+                    .setFiles(upload)
+                    .setComponents(createHeistButtons(null))
+                    .queue(msg -> {
+                        var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
+                                msg.getIdLong(), fingerprint, positions);
+                        heist.getQuadrants().addAll(quadrants);
+                        registerHeistWaiters(guild, thread, member, msg, heist, config, account);
+
+                        msg.replyFormat("Use the buttons or type the quadrant numbers (e.g., `1 3 5 7`) to choose.\n\nRemember, there are 4 matching quadrants! The heist ends %s.",
+                                        TimeFormat.RELATIVE.format(heist.startTime + TimeUnit.MINUTES.toMillis(1)))
+                                .queue();
+                    });
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
+        }
     }
 
     private static FileUpload createUpload(BufferedImage image) {
@@ -222,69 +236,163 @@ public class HeistCommand extends EconomyCommand {
         );
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createHeistWaiter(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account) {
+    private static void registerHeistWaiters(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account) {
+        long waiterToken = heist.incrementWaiterToken();
+        createHeistWaiter(guild, thread, member, message, heist, config, account, waiterToken).build();
+        createHeistMessageWaiter(guild, thread, member, message, heist, config, account, waiterToken).build();
+    }
+
+    private static EventWaiter.Builder<ButtonInteractionEvent> createHeistWaiter(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account, long waiterToken) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
                 .condition(event -> event.isFromGuild() &&
                         Objects.requireNonNull(event.getGuild()).getIdLong() == guild.getIdLong() &&
                         Objects.requireNonNull(event.getMember()).getIdLong() == member.getIdLong() &&
                         event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
                         event.getMessageIdLong() == message.getIdLong() &&
-                        event.getComponentId().startsWith("heist:"))
+                        event.getComponentId().startsWith("heist:") &&
+                        heist.getWaiterToken() == waiterToken)
                 .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> message.editMessage("❌ Heist has timed out!")
-                        .queue(ignored -> close(thread)))
-                .failure(() -> message.editMessage("❌ An error occurred while processing the heist!")
-                        .queue(ignored -> close(thread)))
-                .success(event -> {
-                    event.deferEdit().queue();
-
-                    if (event.getComponentId().equals("heist:confirm")) {
-                        if (heist.isHeistComplete()) {
-                            Pair<Long, Boolean> heistResult = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
-                            EconomyManager.updateAccount(account);
-                            thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
-                                            StringUtils.numberFormat(BigInteger.valueOf(heistResult.getLeft()), config),
-                                            heistResult.getRight() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
-                                    .queue(ignored -> close(thread));
-                        } else {
-                            event.getHook().editOriginal("❌ Failed to complete the heist!")
-                                    .setComponents(createHeistButtons(heist).stream()
-                                            .map(row -> ActionRow.of(row.getComponents().stream()
-                                                    .filter(Button.class::isInstance)
-                                                    .map(Button.class::cast)
-                                                    .map(Button::asDisabled)
-                                                    .toList()))
-                                            .toList())
-                                    .queue(ignored -> thread.sendMessage("❌ **Heist failed!**")
-                                            .queue(ignored_ -> close(thread)));
-                        }
-
+                .timeoutAction(() -> {
+                    if (heist.getWaiterToken() != waiterToken)
                         return;
-                    }
 
-                    int quadrant = Integer.parseInt(event.getComponentId().split(":")[1]);
-                    if (quadrant < 1 || quadrant > 8) {
-                        event.getHook().editOriginal("❌ Invalid quadrant!").queue();
+                    message.editMessage("❌ Heist has timed out!")
+                            .queue(ignored -> close(thread));
+                })
+                .failure(() -> {
+                    if (heist.getWaiterToken() != waiterToken)
                         return;
-                    }
 
-                    if (event.getComponent().getStyle() == ButtonStyle.SUCCESS) {
-                        heist.deselectQuadrant(quadrant - 1);
-                    } else {
-                        heist.selectQuadrant(quadrant - 1);
-                    }
+                    message.editMessage("❌ An error occurred while processing the heist!")
+                            .queue(ignored -> close(thread));
+                })
+                .success(event ->
+                        onHeistButtonPressed(guild, thread, member, message, heist, config, account, event));
+    }
 
-                    try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
-                        event.getHook().editOriginalFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
-                                .setFiles(upload)
-                                .setComponents(createHeistButtons(heist))
-                                .queue(ignored -> createHeistWaiter(guild, thread, member, message, heist, config, account).build());
-                    } catch (IOException exception) {
-                        Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
-                        thread.sendMessage("❌ **An error occurred while processing the heist!**").queue(
-                                ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
-                    }
-                });
+    private static EventWaiter.Builder<MessageReceivedEvent> createHeistMessageWaiter(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account, long waiterToken) {
+        return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                .condition(event -> event.isFromGuild() &&
+                        event.isFromThread() &&
+                        Objects.requireNonNull(event.getGuild()).getIdLong() == guild.getIdLong() &&
+                        Objects.requireNonNull(event.getMember()).getIdLong() == member.getIdLong() &&
+                        event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
+                        heist.getWaiterToken() == waiterToken &&
+                        event.getMessage().getContentRaw().matches(".*[1-8].*"))
+                .timeout(1, TimeUnit.MINUTES)
+                .timeoutAction(() -> {
+                    if (heist.getWaiterToken() != waiterToken)
+                        return;
+
+                    message.editMessage("❌ Heist has timed out!")
+                            .queue(ignored -> close(thread));
+                })
+                .failure(() -> {
+                    if (heist.getWaiterToken() != waiterToken)
+                        return;
+
+                    message.editMessage("❌ An error occurred while processing the heist!")
+                            .queue(ignored -> close(thread));
+                })
+                .success(event ->
+                        onHeistMessageReceived(guild, thread, member, message, heist, config, account, waiterToken, event));
+    }
+
+    private static void onHeistButtonPressed(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account, ButtonInteractionEvent event) {
+        event.deferEdit().queue();
+
+        if (event.getComponentId().equals("heist:confirm")) {
+            heist.incrementWaiterToken();
+
+            if (heist.isHeistComplete()) {
+                EconomyManager.HeistResult heistResult = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
+                EconomyManager.updateAccount(account);
+                if (heistResult.accountWiped()) {
+                    thread.sendMessage("💥 **Disaster!** A freak raid wiped your entire account to 0.").queue(ignored -> close(thread));
+                } else {
+                    thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
+                                    StringUtils.numberFormat(BigInteger.valueOf(heistResult.earned()), config),
+                                    heistResult.leveledUp() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
+                            .queue(ignored -> close(thread));
+                }
+            } else {
+                event.getHook().editOriginal("❌ Failed to complete the heist!")
+                        .setComponents(createHeistButtons(heist).stream()
+                                .map(row -> ActionRow.of(row.getComponents().stream()
+                                        .filter(Button.class::isInstance)
+                                        .map(Button.class::cast)
+                                        .map(Button::asDisabled)
+                                        .toList()))
+                                .toList())
+                        .queue(ignored -> thread.sendMessage("❌ **Heist failed!**")
+                                .queue(ignored_ -> close(thread)));
+            }
+
+            return;
+        }
+
+        int quadrant = Integer.parseInt(event.getComponentId().split(":")[1]);
+        if (quadrant < 1 || quadrant > 8) {
+            event.getHook().editOriginal("❌ Invalid quadrant!").queue();
+            registerHeistWaiters(guild, thread, member, message, heist, config, account);
+            return;
+        }
+
+        if (event.getComponent().getStyle() == ButtonStyle.SUCCESS) {
+            heist.deselectQuadrant(quadrant - 1);
+        } else {
+            heist.selectQuadrant(quadrant - 1);
+        }
+
+        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
+            event.getHook().editOriginalFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
+                    .setFiles(upload)
+                    .setComponents(createHeistButtons(heist))
+                    .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
+            heist.incrementWaiterToken();
+            thread.sendMessage("❌ **An error occurred while processing the heist!**").queue(
+                    ignored -> close(thread));
+        }
+    }
+
+    private static void onHeistMessageReceived(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account, long waiterToken, MessageReceivedEvent event) {
+        if (heist.getWaiterToken() != waiterToken)
+            return;
+
+        QuadrantParseResult parseResult = parseQuadrantInput(event.getMessage().getContentRaw());
+        if (parseResult.quadrants().isEmpty()) {
+            if (parseResult.invalidDigits()) {
+                thread.sendMessage("❌ Please use numbers between 1 and 8 to choose quadrants.")
+                        .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
+                return;
+            }
+
+            registerHeistWaiters(guild, thread, member, message, heist, config, account);
+            return;
+        }
+
+        if (parseResult.invalidDigits()) {
+            thread.sendMessage("❌ Only numbers between 1 and 8 are valid quadrants.")
+                    .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
+            return;
+        }
+
+        heist.getSelectedQuadrants().clear();
+        parseResult.quadrants().forEach(quadrant -> heist.selectQuadrant(quadrant - 1));
+
+        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
+            message.editMessageFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
+                    .setFiles(upload)
+                    .setComponents(createHeistButtons(heist))
+                    .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
+            heist.incrementWaiterToken();
+            thread.sendMessage("❌ **An error occurred while processing the heist!**").queue(
+                    ignored -> close(thread));
+        }
     }
 
     private static void close(ThreadChannel thread) {
@@ -382,6 +490,25 @@ public class HeistCommand extends EconomyCommand {
         return image;
     }
 
+    private static QuadrantParseResult parseQuadrantInput(String input) {
+        String digits = input.replaceAll("\\D", "");
+        if (digits.isEmpty())
+            return new QuadrantParseResult(Collections.emptySet(), false);
+
+        Set<Integer> quadrants = new LinkedHashSet<>();
+        boolean invalidDigits = false;
+        for (char digit : digits.toCharArray()) {
+            int value = Character.digit(digit, 10);
+            if (value >= 1 && value <= 8) {
+                quadrants.add(value);
+            } else {
+                invalidDigits = true;
+            }
+        }
+
+        return new QuadrantParseResult(quadrants, invalidDigits);
+    }
+
     public record Fingerprint(URL path, URL topLeft, URL topRight, URL bottomLeft, URL bottomRight, int printIndex,
                               int fingerIndex) {
         public URL pickRandomNoDupe(List<URL> current) {
@@ -437,6 +564,7 @@ public class HeistCommand extends EconomyCommand {
         private final Set<Integer> fingerprintPositions = new HashSet<>();
         private final Set<Integer> selectedQuadrants = new HashSet<>();
         private final List<Quadrant> quadrants = new ArrayList<>();
+        private long waiterToken;
 
         public Heist(long guildId, long userId, long channelId, long messageId, Fingerprint fingerprint, Collection<Integer> positions) {
             this.guildId = guildId;
@@ -446,6 +574,10 @@ public class HeistCommand extends EconomyCommand {
             this.startTime = System.currentTimeMillis();
             this.fingerprint = fingerprint;
             this.fingerprintPositions.addAll(positions);
+        }
+
+        public long incrementWaiterToken() {
+            return ++this.waiterToken;
         }
 
         public void selectQuadrant(int quadrant) {
@@ -464,5 +596,8 @@ public class HeistCommand extends EconomyCommand {
             return this.fingerprintPositions.size() == this.selectedQuadrants.size() &&
                     this.fingerprintPositions.containsAll(this.selectedQuadrants);
         }
+    }
+
+    private record QuadrantParseResult(Set<Integer> quadrants, boolean invalidDigits) {
     }
 }
