@@ -99,9 +99,21 @@ public class RobCommand extends EconomyCommand {
             return;
         }
 
+        final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
+        if (account.isImprisoned() && !robAccount.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot rob users that are not also in prison! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+
+            return;
+        } else if (!account.isImprisoned() && robAccount.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You cannot rob a user who is currently imprisoned! They will be released %s.",
+                    TimeFormat.RELATIVE.format(robAccount.getImprisonedUntil())).queue();
+
+            return;
+        }
+
         account.setNextRob(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
 
-        final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
         if (robAccount.getWallet().signum() <= 0) {
             event.getHook().editOriginal("❌ Better luck next time, this user's wallet is empty!").queue();
             EconomyManager.updateAccount(account);

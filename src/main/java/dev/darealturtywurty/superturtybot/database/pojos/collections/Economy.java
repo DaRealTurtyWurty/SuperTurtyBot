@@ -40,6 +40,8 @@ public class Economy {
     private long crimeBoostUntil;
     private long rewardBoostUntil;
 
+    private long imprisonedUntil;
+
     private Job job;
     private int jobLevel;
     private boolean readyForPromotion;
@@ -137,6 +139,10 @@ public class Economy {
 
     public void removeWallet(BigInteger amount) {
         this.wallet = this.wallet.subtract(amount);
+    }
+
+    public boolean isImprisoned() {
+        return System.currentTimeMillis() < this.imprisonedUntil;
     }
 
     @Getter

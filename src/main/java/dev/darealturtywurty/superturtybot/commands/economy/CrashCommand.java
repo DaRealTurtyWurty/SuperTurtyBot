@@ -71,6 +71,12 @@ public class CrashCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         if (amount.compareTo(account.getWallet()) > 0) {
             event.getHook().editOriginal("❌ You cannot bet more than you have in your wallet!").queue();
             return;

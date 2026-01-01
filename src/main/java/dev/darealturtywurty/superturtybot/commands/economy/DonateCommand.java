@@ -76,6 +76,12 @@ public class DonateCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if (account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot donate money! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         if (account.getNextDonate() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can donate again %s!"
                     .formatted(TimeFormat.RELATIVE.format(account.getNextDonate()))).queue();

@@ -84,6 +84,11 @@ public class LoanCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot request a loan! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
 
         switch (subcommand) {
             case "request" -> {

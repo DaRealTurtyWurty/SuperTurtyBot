@@ -77,6 +77,12 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
         }
 
         Economy account = optAccount.get();
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot view your transaction history! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         if (account.getTransactions().size() < 2) {
             event.getHook().sendMessage("❌ That user has no transactions!").mentionRepliedUser(false).queue();
             return;

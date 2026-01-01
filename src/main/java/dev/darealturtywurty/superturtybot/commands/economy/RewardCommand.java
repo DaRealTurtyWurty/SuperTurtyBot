@@ -70,6 +70,12 @@ public class RewardCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access your rewards! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         final String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.getHook().editOriginal("❌ You need to specify a reward to claim!").queue();

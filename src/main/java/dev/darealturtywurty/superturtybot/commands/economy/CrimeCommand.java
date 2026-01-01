@@ -100,6 +100,12 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot commit crimes! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         int crimeLevel = event.getOption("level", account.getCrimeLevel(), OptionMapping::getAsInt);
 
         if (subcommand.equalsIgnoreCase("profile")) {
@@ -153,16 +159,38 @@ public class CrimeCommand extends EconomyCommand {
         if (level.hasSuccess(account.getCrimeLevel())) {
             BigInteger amount = EconomyManager.successfulCrime(account, level);
             int newCrimeLevel = account.getCrimeLevel();
-            embed.setDescription(getSuccess(config, event.getUser(), amount) +
-                    (crimeLevel != newCrimeLevel ? "\n\n✅ You are now a level %d criminal!".formatted(newCrimeLevel) : ""));
+            boolean promoted = crimeLevel != newCrimeLevel;
+
+            var content = new StringBuilder(getSuccess(config, event.getUser(), amount));
+            if (promoted) {
+                content.append("\n\n✅ You have been promoted, by %d level%s. You are now a %d level criminal!"
+                        .formatted(newCrimeLevel - crimeLevel, newCrimeLevel - crimeLevel == 1 ? "" : "s", newCrimeLevel));
+            }
+
+            embed.setDescription(content.toString());
             embed.setColor(0x00AA00);
         } else {
             int prevJobLevel = account.getJobLevel();
             BigInteger amount = EconomyManager.caughtCrime(account, level);
             int newJobLevel = account.getJobLevel();
-            embed.setDescription(getFail(config, event.getUser(), amount) +
-                    (prevJobLevel != newJobLevel ? "\n\n❌ You have been demoted, by %d level%s, to level %d in your current job."
-                            .formatted(prevJobLevel - newJobLevel, prevJobLevel - newJobLevel == 1 ? "" : "s", newJobLevel) : ""));
+            boolean demoted = prevJobLevel != newJobLevel;
+
+            var content = new StringBuilder(getFail(config, event.getUser(), amount));
+            if (demoted) {
+                content.append("\n\n❌ You have been demoted, by %d level%s, to level %d in your current job."
+                        .formatted(prevJobLevel - newJobLevel, prevJobLevel - newJobLevel == 1 ? "" : "s", newJobLevel));
+            }
+
+            // 5% chance to be imprisoned
+            boolean imprisoned = ThreadLocalRandom.current().nextFloat() <= 0.05f;
+            if (imprisoned) {
+                long imprisonDurationMillis = TimeUnit.MINUTES.toMillis(ThreadLocalRandom.current().nextLong(5, 200));
+                account.setImprisonedUntil(System.currentTimeMillis() + imprisonDurationMillis);
+                content.append("\n\n🚨 You have been been imprisoned! You will be released %s."
+                        .formatted(TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
+            }
+
+            embed.setDescription(content.toString());
             embed.setColor(0xAA0000);
         }
 
@@ -196,8 +224,6 @@ public class CrimeCommand extends EconomyCommand {
         ADVANCED(0.125F, 25_000, 50_000),
         EXPERT(0.05F, 50_000, 250_000),
         MASTER(0.01F, 250_000, 1_000_000);
-
-        public static final int MAX_LEVEL = values().length;
 
         private final float successChance;
         private final long minBaseAmount;

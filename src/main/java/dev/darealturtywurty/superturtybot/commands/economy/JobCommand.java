@@ -109,6 +109,11 @@ public class JobCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot interact with your job! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
 
         switch (subcommand) {
             case "work" -> {

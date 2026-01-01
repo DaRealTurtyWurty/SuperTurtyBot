@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -36,8 +37,18 @@ public class WithdrawCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if (account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot withdraw money! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         BigInteger amount = event.getOption("amount", BigInteger.ZERO.max(account.getWallet().negate()), StringUtils.getAsBigInteger(event));
-        if (amount == null) return;
+        if (amount == null) {
+            event.getHook().editOriginalFormat("❌ The amount provided is not a valid number!").queue();
+            return;
+        }
+
         if (amount.signum() <= 0) {
             event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
             return;

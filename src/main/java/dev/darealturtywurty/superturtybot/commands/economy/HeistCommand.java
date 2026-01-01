@@ -90,6 +90,12 @@ public class HeistCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot commit crimes! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
+
         int crimeLevel = Math.max(1, account.getCrimeLevel());
         if (crimeLevel < 5 || crimeLevel % 5 != 0) {
             event.getHook().editOriginalFormat(

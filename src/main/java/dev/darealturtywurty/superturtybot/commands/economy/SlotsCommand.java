@@ -22,14 +22,15 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
 import java.awt.*;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -113,7 +114,11 @@ public class SlotsCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         BigInteger amount = event.getOption("bet-amount", StringUtils.getAsBigInteger(event));
-        if (amount == null) return;
+        if (amount == null) {
+            event.getHook().editOriginal("❌ Invalid bet amount! Please enter a valid number.").queue();
+            return;
+        }
+
         if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
@@ -159,6 +164,12 @@ public class SlotsCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, member.getUser());
+        if (account.isImprisoned()) {
+            editText.accept("❌ You are currently imprisoned and cannot gamble! You will be released %s.".formatted(
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
+            return;
+        }
+
         if (account.getWallet().compareTo(betAmount) < 0) {
             betAmount = account.getWallet();
 

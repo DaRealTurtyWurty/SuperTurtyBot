@@ -8,8 +8,10 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.awt.*;
 import java.math.BigInteger;
@@ -46,8 +48,13 @@ public class BalanceCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
+        if(account.isImprisoned()) {
+            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access your balance! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            return;
+        }
 
-        boolean detailed = event.getOption("detailed") != null && event.getOption("detailed").getAsBoolean();
+        boolean detailed = event.getOption("detailed", false, OptionMapping::getAsBoolean);
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
