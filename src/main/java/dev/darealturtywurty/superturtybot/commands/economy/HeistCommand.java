@@ -180,6 +180,7 @@ public class HeistCommand extends EconomyCommand {
         int totalStages = determineHeistStages(account.getHeistLevel());
         int gridColumns = determineHeistGridColumns(account.getHeistLevel());
         int gridRows = 4;
+        long stageDurationMillis = determineHeistStageDurationMillis(account.getHeistLevel());
         HeistStage stage = generateHeistStage(gridColumns, gridRows);
         try (FileUpload upload = createUpload(stage.matcher())) {
             thread.sendMessageFormat("🔍 **Fingerprint Matcher** (Stage 1/%d) %s", totalStages, event.getUser().getAsMention())
@@ -187,7 +188,7 @@ public class HeistCommand extends EconomyCommand {
                     .setComponents(createHeistButtons(null, gridColumns, gridRows))
                     .queue(msg -> {
                         var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
-                                msg.getIdLong(), totalStages, gridColumns, gridRows);
+                                msg.getIdLong(), totalStages, gridColumns, gridRows, stageDurationMillis);
                         heist.setStageData(stage.fingerprint(), stage.positions(), stage.quadrants());
                         registerHeistWaiters(guild, thread, member, msg, heist, config, account);
 
@@ -197,7 +198,7 @@ public class HeistCommand extends EconomyCommand {
                         msg.replyFormat("%s%n%nRemember, there are 4 matching quadrants! Stage 1/%d ends %s.",
                                         inputHint,
                                         totalStages,
-                                        TimeFormat.RELATIVE.format(heist.getStageStartTime() + TimeUnit.MINUTES.toMillis(1)))
+                                        TimeFormat.RELATIVE.format(heist.getStageStartTime() + heist.getStageDurationMillis()))
                                 .queue();
                     });
         } catch (IOException exception) {
@@ -266,7 +267,7 @@ public class HeistCommand extends EconomyCommand {
                         event.getMessageIdLong() == message.getIdLong() &&
                         event.getComponentId().startsWith("heist:") &&
                         heist.getWaiterToken() == waiterToken)
-                .timeout(1, TimeUnit.MINUTES)
+                .timeout(heist.getStageDurationMillis(), TimeUnit.MILLISECONDS)
                 .timeoutAction(() -> {
                     if (heist.getWaiterToken() != waiterToken)
                         return;
@@ -294,7 +295,7 @@ public class HeistCommand extends EconomyCommand {
                         event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
                         heist.getWaiterToken() == waiterToken &&
                         event.getMessage().getContentRaw().matches(".*\\d.*"))
-                .timeout(1, TimeUnit.MINUTES)
+                .timeout(heist.getStageDurationMillis(), TimeUnit.MILLISECONDS)
                 .timeoutAction(() -> {
                     if (heist.getWaiterToken() != waiterToken)
                         return;
@@ -344,7 +345,7 @@ public class HeistCommand extends EconomyCommand {
                                     thread.sendMessageFormat("Stage %d/%d ends %s.",
                                                     heist.getCurrentStage(),
                                                     heist.getTotalStages(),
-                                                    TimeFormat.RELATIVE.format(heist.getStageStartTime() + TimeUnit.MINUTES.toMillis(1)))
+                                                    TimeFormat.RELATIVE.format(heist.getStageStartTime() + heist.getStageDurationMillis()))
                                             .queue(ignoredMessage -> registerHeistWaiters(guild, thread, member, newMessage, heist, config, account));
                                 });
                     } catch (IOException exception) {
@@ -467,6 +468,11 @@ public class HeistCommand extends EconomyCommand {
         if (heistLevel > 75) stages++;
         if (heistLevel > 100) stages++;
         return Math.min(stages, 6);
+    }
+
+    private static long determineHeistStageDurationMillis(int heistLevel) {
+        int stages = determineHeistStages(heistLevel);
+        return TimeUnit.MINUTES.toMillis(1) + TimeUnit.SECONDS.toMillis(10L * (stages - 1));
     }
 
     private static int determineHeistGridColumns(int heistLevel) {
@@ -658,6 +664,7 @@ public class HeistCommand extends EconomyCommand {
         private final int totalStages;
         private final int gridColumns;
         private final int gridRows;
+        private final long stageDurationMillis;
         private final Set<Integer> fingerprintPositions = new HashSet<>();
         private final Set<Integer> selectedQuadrants = new HashSet<>();
         private final List<Quadrant> quadrants = new ArrayList<>();
@@ -668,7 +675,8 @@ public class HeistCommand extends EconomyCommand {
         private int completedStages;
         private long waiterToken;
 
-        public Heist(long guildId, long userId, long channelId, long messageId, int totalStages, int gridColumns, int gridRows) {
+        public Heist(long guildId, long userId, long channelId, long messageId, int totalStages, int gridColumns, int gridRows,
+                     long stageDurationMillis) {
             this.guildId = guildId;
             this.userId = userId;
             this.channelId = channelId;
@@ -677,6 +685,7 @@ public class HeistCommand extends EconomyCommand {
             this.totalStages = totalStages;
             this.gridColumns = gridColumns;
             this.gridRows = gridRows;
+            this.stageDurationMillis = stageDurationMillis;
             this.currentStage = 1;
             this.stageStartTime = this.startTime;
         }
