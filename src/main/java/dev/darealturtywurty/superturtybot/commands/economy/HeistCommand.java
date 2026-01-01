@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
@@ -307,14 +308,10 @@ public class HeistCommand extends EconomyCommand {
             if (heist.isHeistComplete()) {
                 EconomyManager.HeistResult heistResult = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
                 EconomyManager.updateAccount(account);
-                if (heistResult.accountWiped()) {
-                    thread.sendMessage("💥 **Disaster!** A freak raid wiped your entire account to 0.").queue(ignored -> close(thread));
-                } else {
-                    thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
-                                    StringUtils.numberFormat(BigInteger.valueOf(heistResult.earned()), config),
-                                    heistResult.leveledUp() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
-                            .queue(ignored -> close(thread));
-                }
+                thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
+                                StringUtils.numberFormat(BigInteger.valueOf(heistResult.earned()), config),
+                                heistResult.leveledUp() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
+                        .queue(ignored -> close(thread));
             } else {
                 event.getHook().editOriginal("❌ Failed to complete the heist!")
                         .setComponents(createHeistButtons(heist).stream()
@@ -324,8 +321,17 @@ public class HeistCommand extends EconomyCommand {
                                         .map(Button::asDisabled)
                                         .toList()))
                                 .toList())
-                        .queue(ignored -> thread.sendMessage("❌ **Heist failed!**")
-                                .queue(ignored_ -> close(thread)));
+                        .queue(ignored -> {
+                            boolean accountWiped = EconomyManager.heistFailed(account);
+                            if (accountWiped) {
+                                EconomyManager.updateAccount(account);
+                                thread.sendMessage("💥 **Disaster!** A freak raid wiped your entire account to 0. You're clearly having an unlucky day, this was only a 0.001% chance 😭!")
+                                        .queue(ignored_ -> close(thread));
+                            } else {
+                                thread.sendMessage("❌ **Heist failed!**")
+                                        .queue(ignored_ -> close(thread));
+                            }
+                        });
             }
 
             return;

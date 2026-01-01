@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.utils.TimeFormat;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 
 import java.math.BigDecimal;
@@ -43,8 +42,11 @@ public class EconomyManager {
     }
 
     public static boolean removeBalance(Economy account, BigInteger amount) {
-        if (amount.signum() <= 0) return true;
-        if (getBalance(account).compareTo(amount) < 0) return false;
+        if (amount.signum() <= 0)
+            return true;
+
+        if (getBalance(account).compareTo(amount) < 0)
+            return false;
 
         BigInteger fromBank = amount.min(account.getBank());
         if (fromBank.signum() > 0) {
@@ -207,7 +209,7 @@ public class EconomyManager {
     }
 
     public static boolean isOnWorkCooldown(Economy account) {
-        if(Environment.INSTANCE.isDevelopment())
+        if (Environment.INSTANCE.isDevelopment())
             return false;
 
         return account.getNextWork() >= System.currentTimeMillis();
@@ -423,18 +425,7 @@ public class EconomyManager {
         return ThreadLocalRandom.current().nextLong(200_000, 500_000) * heistLevel * heistLevel;
     }
 
-    /**
-     * Handles the payout and level increase of a heist
-     *
-     * @param account The user's economy account
-     * @return Details about the heist payout, level ups, and rare wipes
-     */
     public static HeistResult heistCompleted(Economy account, long timeTaken) {
-        if (ThreadLocalRandom.current().nextInt(100_000) == 0) {
-            resetAccount(account);
-            return new HeistResult(0L, false, true);
-        }
-
         long payout = determineHeistPayout(account);
         long earned = payout * 10_000L / timeTaken + determineHeistSetupCost(account);
         BigInteger earnedBigInteger = BigInteger.valueOf(earned);
@@ -445,10 +436,19 @@ public class EconomyManager {
 
         if (ThreadLocalRandom.current().nextInt(4) == 0) {
             account.setHeistLevel(account.getHeistLevel() + 1);
-            return new HeistResult(earned, true, false);
+            return new HeistResult(earned, true);
         }
 
-        return new HeistResult(earned, false, false);
+        return new HeistResult(earned, false);
+    }
+
+    public static boolean heistFailed(Economy account) {
+        if (ThreadLocalRandom.current().nextInt(100_000) == 0) {
+            resetAccount(account);
+            return true;
+        }
+
+        return false;
     }
 
     private static void resetAccount(Economy account) {
@@ -485,6 +485,6 @@ public class EconomyManager {
         account.setTransactions(new ArrayList<>());
     }
 
-    public record HeistResult(long earned, boolean leveledUp, boolean accountWiped) {
+    public record HeistResult(long earned, boolean leveledUp) {
     }
 }
