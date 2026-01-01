@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
@@ -139,7 +140,7 @@ public class CrimeCommand extends EconomyCommand {
             return;
         }
 
-        if (account.getNextCrime() > System.currentTimeMillis()) {
+        if (account.getNextCrime() > System.currentTimeMillis() && !Environment.INSTANCE.isDevelopment()) {
             event.getHook().editOriginalFormat("❌ You can commit a crime again %s!",
                     TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
             return;
@@ -184,7 +185,7 @@ public class CrimeCommand extends EconomyCommand {
             // 5% chance to be imprisoned
             boolean imprisoned = ThreadLocalRandom.current().nextFloat() <= 0.05f;
             if (imprisoned) {
-                long imprisonDurationMillis = TimeUnit.MINUTES.toMillis(ThreadLocalRandom.current().nextLong(5, 200));
+                long imprisonDurationMillis = TimeUnit.MINUTES.toMillis(ThreadLocalRandom.current().nextLong(5, 60));
                 account.setImprisonedUntil(System.currentTimeMillis() + imprisonDurationMillis);
                 content.append("\n\n🚨 You have been been imprisoned! You will be released %s."
                         .formatted(TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
