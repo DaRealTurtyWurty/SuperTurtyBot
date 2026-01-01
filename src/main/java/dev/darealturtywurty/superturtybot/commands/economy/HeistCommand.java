@@ -97,10 +97,11 @@ public class HeistCommand extends EconomyCommand {
         }
 
         int crimeLevel = Math.max(1, account.getCrimeLevel());
-        if (crimeLevel < 5 || crimeLevel % 5 != 0) {
+        long totalHeists = account.getTotalHeists();
+        if (totalHeists >= crimeLevel) {
             event.getHook().editOriginalFormat(
-                    "❌ You can only start a heist every 5 crime levels. Your current crime level is %d.",
-                    crimeLevel).queue();
+                    "❌ You have already completed %d/%d heists for your current crime level.",
+                    totalHeists, crimeLevel).queue();
             return;
         }
 
@@ -174,22 +175,21 @@ public class HeistCommand extends EconomyCommand {
     }
 
     private static void startGame(Guild guild, Member member, GuildData config, Economy account, ButtonInteractionEvent event, ThreadChannel thread) {
-        Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
-        List<Integer> positions = new ArrayList<>();
-        List<Quadrant> quadrants = new ArrayList<>();
-        BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
-        try (FileUpload upload = createUpload(matcher)) {
-            thread.sendMessageFormat("🔍 **Fingerprint Matcher** %s", event.getUser().getAsMention())
+        int totalStages = determineHeistStages(account.getHeistLevel());
+        HeistStage stage = generateHeistStage();
+        try (FileUpload upload = createUpload(stage.matcher())) {
+            thread.sendMessageFormat("🔍 **Fingerprint Matcher** (Stage 1/%d) %s", totalStages, event.getUser().getAsMention())
                     .setFiles(upload)
                     .setComponents(createHeistButtons(null))
                     .queue(msg -> {
                         var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
-                                msg.getIdLong(), fingerprint, positions);
-                        heist.getQuadrants().addAll(quadrants);
+                                msg.getIdLong(), totalStages);
+                        heist.setStageData(stage.fingerprint(), stage.positions(), stage.quadrants());
                         registerHeistWaiters(guild, thread, member, msg, heist, config, account);
 
-                        msg.replyFormat("Use the buttons or type the quadrant numbers (e.g., `1 3 5 7`) to choose.\n\nRemember, there are 4 matching quadrants! The heist ends %s.",
-                                        TimeFormat.RELATIVE.format(heist.startTime + TimeUnit.MINUTES.toMillis(1)))
+                        msg.replyFormat("Use the buttons or type the quadrant numbers (e.g., `1 3 5 7`) to choose.\n\nRemember, there are 4 matching quadrants! Stage 1/%d ends %s.",
+                                        totalStages,
+                                        TimeFormat.RELATIVE.format(heist.getStageStartTime() + TimeUnit.MINUTES.toMillis(1)))
                                 .queue();
                     });
         } catch (IOException exception) {
@@ -312,7 +312,43 @@ public class HeistCommand extends EconomyCommand {
             heist.incrementWaiterToken();
 
             if (heist.isHeistComplete()) {
-                EconomyManager.HeistResult heistResult = EconomyManager.heistCompleted(account, System.currentTimeMillis() - heist.startTime);
+                heist.completeCurrentStage();
+                if (heist.hasNextStage()) {
+                    heist.advanceStage();
+                    HeistStage stage = generateHeistStage();
+                    heist.setStageData(stage.fingerprint(), stage.positions(), stage.quadrants());
+                    heist.startStage();
+                    message.editMessage(message.getContentRaw())
+                            .setComponents(createHeistButtons(heist).stream()
+                                    .map(row -> ActionRow.of(row.getComponents().stream()
+                                            .filter(Button.class::isInstance)
+                                            .map(Button.class::cast)
+                                            .map(Button::asDisabled)
+                                            .toList()))
+                                    .toList())
+                            .queue();
+                    try (FileUpload upload = createUpload(stage.matcher())) {
+                        thread.sendMessageFormat("🔍 **Fingerprint Matcher** (Stage %d/%d) %s",
+                                        heist.getCurrentStage(), heist.getTotalStages(), member.getAsMention())
+                                .setFiles(upload)
+                                .setComponents(createHeistButtons(heist))
+                                .queue(newMessage -> {
+                                    thread.sendMessageFormat("Stage %d/%d ends %s.",
+                                                    heist.getCurrentStage(),
+                                                    heist.getTotalStages(),
+                                                    TimeFormat.RELATIVE.format(heist.getStageStartTime() + TimeUnit.MINUTES.toMillis(1)))
+                                            .queue(ignoredMessage -> registerHeistWaiters(guild, thread, member, newMessage, heist, config, account));
+                                });
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error("Failed to send fingerprint matcher!", exception);
+                        heist.incrementWaiterToken();
+                        thread.sendMessage("❌ **An error occurred while processing the heist!**").queue(
+                                ignored -> close(thread));
+                    }
+                    return;
+                }
+
+                EconomyManager.HeistResult heistResult = EconomyManager.heistCompleted(account, heist.getAverageStageTime());
                 EconomyManager.updateAccount(account);
                 thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
                                 StringUtils.numberFormat(BigInteger.valueOf(heistResult.earned()), config),
@@ -409,6 +445,24 @@ public class HeistCommand extends EconomyCommand {
 
     private static void close(ThreadChannel thread) {
         thread.getManager().setArchived(true).setLocked(true).queue();
+    }
+
+    private static int determineHeistStages(int heistLevel) {
+        int stages = 1;
+        if (heistLevel > 10) stages++;
+        if (heistLevel > 25) stages++;
+        if (heistLevel > 50) stages++;
+        if (heistLevel > 75) stages++;
+        if (heistLevel > 100) stages++;
+        return Math.min(stages, 6);
+    }
+
+    private static HeistStage generateHeistStage() {
+        Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
+        List<Integer> positions = new ArrayList<>();
+        List<Quadrant> quadrants = new ArrayList<>();
+        BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
+        return new HeistStage(fingerprint, positions, quadrants, matcher);
     }
 
     // Fingerprints are 448x478
@@ -572,20 +626,63 @@ public class HeistCommand extends EconomyCommand {
     public static class Heist {
         private final long guildId, userId, channelId, messageId;
         private final long startTime;
-        private final Fingerprint fingerprint;
+        private final int totalStages;
         private final Set<Integer> fingerprintPositions = new HashSet<>();
         private final Set<Integer> selectedQuadrants = new HashSet<>();
         private final List<Quadrant> quadrants = new ArrayList<>();
+        private Fingerprint fingerprint;
+        private int currentStage;
+        private long stageStartTime;
+        private long totalStageTime;
+        private int completedStages;
         private long waiterToken;
 
-        public Heist(long guildId, long userId, long channelId, long messageId, Fingerprint fingerprint, Collection<Integer> positions) {
+        public Heist(long guildId, long userId, long channelId, long messageId, int totalStages) {
             this.guildId = guildId;
             this.userId = userId;
             this.channelId = channelId;
             this.messageId = messageId;
             this.startTime = System.currentTimeMillis();
+            this.totalStages = totalStages;
+            this.currentStage = 1;
+            this.stageStartTime = this.startTime;
+        }
+
+        public void setStageData(Fingerprint fingerprint, Collection<Integer> positions, Collection<Quadrant> quadrants) {
             this.fingerprint = fingerprint;
+            this.fingerprintPositions.clear();
             this.fingerprintPositions.addAll(positions);
+            this.selectedQuadrants.clear();
+            this.quadrants.clear();
+            this.quadrants.addAll(quadrants);
+        }
+
+        public boolean hasNextStage() {
+            return this.currentStage < this.totalStages;
+        }
+
+        public void advanceStage() {
+            if (hasNextStage()) {
+                this.currentStage++;
+            }
+        }
+
+        public void startStage() {
+            this.stageStartTime = System.currentTimeMillis();
+        }
+
+        public void completeCurrentStage() {
+            long duration = System.currentTimeMillis() - this.stageStartTime;
+            this.totalStageTime += duration;
+            this.completedStages++;
+        }
+
+        public long getAverageStageTime() {
+            if (this.completedStages == 0) {
+                return 0L;
+            }
+
+            return this.totalStageTime / this.completedStages;
         }
 
         public long incrementWaiterToken() {
@@ -611,5 +708,9 @@ public class HeistCommand extends EconomyCommand {
     }
 
     private record QuadrantParseResult(Set<Integer> quadrants, boolean invalidDigits) {
+    }
+
+    private record HeistStage(Fingerprint fingerprint, List<Integer> positions, List<Quadrant> quadrants,
+                              BufferedImage matcher) {
     }
 }
