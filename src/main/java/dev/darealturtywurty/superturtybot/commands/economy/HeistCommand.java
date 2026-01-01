@@ -37,6 +37,8 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HeistCommand extends EconomyCommand {
     private static final List<Fingerprint> FINGERPRINTS = new ArrayList<>();
@@ -176,18 +178,24 @@ public class HeistCommand extends EconomyCommand {
 
     private static void startGame(Guild guild, Member member, GuildData config, Economy account, ButtonInteractionEvent event, ThreadChannel thread) {
         int totalStages = determineHeistStages(account.getHeistLevel());
-        HeistStage stage = generateHeistStage();
+        int gridColumns = determineHeistGridColumns(account.getHeistLevel());
+        int gridRows = 4;
+        HeistStage stage = generateHeistStage(gridColumns, gridRows);
         try (FileUpload upload = createUpload(stage.matcher())) {
             thread.sendMessageFormat("🔍 **Fingerprint Matcher** (Stage 1/%d) %s", totalStages, event.getUser().getAsMention())
                     .setFiles(upload)
-                    .setComponents(createHeistButtons(null))
+                    .setComponents(createHeistButtons(null, gridColumns, gridRows))
                     .queue(msg -> {
                         var heist = new Heist(guild.getIdLong(), event.getUser().getIdLong(), thread.getIdLong(),
-                                msg.getIdLong(), totalStages);
+                                msg.getIdLong(), totalStages, gridColumns, gridRows);
                         heist.setStageData(stage.fingerprint(), stage.positions(), stage.quadrants());
                         registerHeistWaiters(guild, thread, member, msg, heist, config, account);
 
-                        msg.replyFormat("Use the buttons or type the quadrant numbers (e.g., `1 3 5 7`) to choose.\n\nRemember, there are 4 matching quadrants! Stage 1/%d ends %s.",
+                        String inputHint = gridColumns > 5
+                                ? "Type the quadrant numbers (e.g., `1 3 5 7`) to choose."
+                                : "Use the buttons or type the quadrant numbers (e.g., `1 3 5 7`) to choose.";
+                        msg.replyFormat("%s%n%nRemember, there are 4 matching quadrants! Stage 1/%d ends %s.",
+                                        inputHint,
                                         totalStages,
                                         TimeFormat.RELATIVE.format(heist.getStageStartTime() + TimeUnit.MINUTES.toMillis(1)))
                                 .queue();
@@ -210,37 +218,37 @@ public class HeistCommand extends EconomyCommand {
 
     private static List<ActionRow> createHeistButtons(@Nullable Heist heist) {
         if (heist == null) {
-            List<Button> buttons = new ArrayList<>();
-            for (int index = 1; index <= 8; index++) {
-                buttons.add(Button.primary("heist:" + index, String.valueOf(index)));
-            }
-
-            return List.of(
-                    ActionRow.of(buttons.subList(0, 2)),
-                    ActionRow.of(buttons.subList(2, 4)),
-                    ActionRow.of(buttons.subList(4, 6)),
-                    ActionRow.of(buttons.subList(6, 8)),
-                    ActionRow.of(Button.success("heist:confirm", "Confirm"))
-            );
+            return createHeistButtons(null, 2, 4);
         }
 
+        return createHeistButtons(heist, heist.getGridColumns(), heist.getGridRows());
+    }
+
+    private static List<ActionRow> createHeistButtons(@Nullable Heist heist, int gridColumns, int gridRows) {
+        if (gridColumns > 5) {
+            return List.of(ActionRow.of(Button.success("heist:confirm", "Confirm")));
+        }
+
+        int totalTiles = gridColumns * gridRows;
         List<Button> buttons = new ArrayList<>();
-        for (int index = 1; index <= 8; index++) {
+        for (int index = 1; index <= totalTiles; index++) {
             var button = Button.primary("heist:" + index, String.valueOf(index));
-            if (heist.isQuadrantSelected(index - 1)) {
+            if (heist != null && heist.isQuadrantSelected(index - 1)) {
                 button = button.withStyle(ButtonStyle.SUCCESS);
             }
 
             buttons.add(button);
         }
 
-        return List.of(
-                ActionRow.of(buttons.subList(0, 2)),
-                ActionRow.of(buttons.subList(2, 4)),
-                ActionRow.of(buttons.subList(4, 6)),
-                ActionRow.of(buttons.subList(6, 8)),
-                ActionRow.of(Button.success("heist:confirm", "Confirm"))
-        );
+        List<ActionRow> rows = new ArrayList<>();
+        for (int row = 0; row < gridRows; row++) {
+            int start = row * gridColumns;
+            int end = start + gridColumns;
+            rows.add(ActionRow.of(buttons.subList(start, end)));
+        }
+
+        rows.add(ActionRow.of(Button.success("heist:confirm", "Confirm")));
+        return rows;
     }
 
     private static void registerHeistWaiters(Guild guild, ThreadChannel thread, Member member, Message message, Heist heist, GuildData config, Economy account) {
@@ -285,7 +293,7 @@ public class HeistCommand extends EconomyCommand {
                         Objects.requireNonNull(event.getMember()).getIdLong() == member.getIdLong() &&
                         event.getChannel().getIdLong() == message.getChannel().getIdLong() &&
                         heist.getWaiterToken() == waiterToken &&
-                        event.getMessage().getContentRaw().matches(".*[1-8].*"))
+                        event.getMessage().getContentRaw().matches(".*\\d.*"))
                 .timeout(1, TimeUnit.MINUTES)
                 .timeoutAction(() -> {
                     if (heist.getWaiterToken() != waiterToken)
@@ -315,7 +323,7 @@ public class HeistCommand extends EconomyCommand {
                 heist.completeCurrentStage();
                 if (heist.hasNextStage()) {
                     heist.advanceStage();
-                    HeistStage stage = generateHeistStage();
+                    HeistStage stage = generateHeistStage(heist.getGridColumns(), heist.getGridRows());
                     heist.setStageData(stage.fingerprint(), stage.positions(), stage.quadrants());
                     heist.startStage();
                     message.editMessage(message.getContentRaw())
@@ -380,7 +388,7 @@ public class HeistCommand extends EconomyCommand {
         }
 
         int quadrant = Integer.parseInt(event.getComponentId().split(":")[1]);
-        if (quadrant < 1 || quadrant > 8) {
+        if (quadrant < 1 || quadrant > heist.getTotalTiles()) {
             event.getHook().editOriginal("❌ Invalid quadrant!").queue();
             registerHeistWaiters(guild, thread, member, message, heist, config, account);
             return;
@@ -392,7 +400,8 @@ public class HeistCommand extends EconomyCommand {
             heist.selectQuadrant(quadrant - 1);
         }
 
-        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
+        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants(),
+                heist.getGridColumns(), heist.getGridRows()))) {
             event.getHook().editOriginalFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
                     .setFiles(upload)
                     .setComponents(createHeistButtons(heist))
@@ -409,10 +418,11 @@ public class HeistCommand extends EconomyCommand {
         if (heist.getWaiterToken() != waiterToken)
             return;
 
-        QuadrantParseResult parseResult = parseQuadrantInput(event.getMessage().getContentRaw());
+        QuadrantParseResult parseResult = parseQuadrantInput(event.getMessage().getContentRaw(), heist.getTotalTiles());
         if (parseResult.quadrants().isEmpty()) {
             if (parseResult.invalidDigits()) {
-                thread.sendMessage("❌ Please use numbers between 1 and 8 to choose quadrants.")
+                thread.sendMessageFormat("❌ Please use numbers between 1 and %d to choose quadrants.",
+                                heist.getTotalTiles())
                         .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
                 return;
             }
@@ -422,7 +432,8 @@ public class HeistCommand extends EconomyCommand {
         }
 
         if (parseResult.invalidDigits()) {
-            thread.sendMessage("❌ Only numbers between 1 and 8 are valid quadrants.")
+            thread.sendMessageFormat("❌ Only numbers between 1 and %d are valid quadrants.",
+                            heist.getTotalTiles())
                     .queue(ignored -> registerHeistWaiters(guild, thread, member, message, heist, config, account));
             return;
         }
@@ -430,7 +441,8 @@ public class HeistCommand extends EconomyCommand {
         heist.getSelectedQuadrants().clear();
         parseResult.quadrants().forEach(quadrant -> heist.selectQuadrant(quadrant - 1));
 
-        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants()))) {
+        try (FileUpload upload = createUpload(createFingerprintMatcher(heist.fingerprint, heist, new ArrayList<>(), heist.getQuadrants(),
+                heist.getGridColumns(), heist.getGridRows()))) {
             message.editMessageFormat("🔍 **Fingerprint Matcher** %s", member.getAsMention())
                     .setFiles(upload)
                     .setComponents(createHeistButtons(heist))
@@ -457,27 +469,46 @@ public class HeistCommand extends EconomyCommand {
         return Math.min(stages, 6);
     }
 
-    private static HeistStage generateHeistStage() {
+    private static int determineHeistGridColumns(int heistLevel) {
+        int columns = 2;
+        if (heistLevel > 10) columns++;
+        if (heistLevel > 25) columns++;
+        if (heistLevel > 50) columns++;
+        if (heistLevel > 75) columns++;
+        if (heistLevel > 100) columns++;
+        return Math.min(columns, 6);
+    }
+
+    private static HeistStage generateHeistStage(int gridColumns, int gridRows) {
         Fingerprint fingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
         List<Integer> positions = new ArrayList<>();
         List<Quadrant> quadrants = new ArrayList<>();
-        BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants);
+        BufferedImage matcher = createFingerprintMatcher(fingerprint, null, positions, quadrants, gridColumns, gridRows);
         return new HeistStage(fingerprint, positions, quadrants, matcher);
     }
 
     // Fingerprints are 448x478
-    private static BufferedImage createFingerprintMatcher(Fingerprint fingerprint, @Nullable Heist heist, List<Integer> outPositions, List<Quadrant> inOutQuadrants) {
-        var image = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_ARGB);
+    private static BufferedImage createFingerprintMatcher(Fingerprint fingerprint, @Nullable Heist heist, List<Integer> outPositions,
+                                                          List<Quadrant> inOutQuadrants, int gridColumns, int gridRows) {
+        int tileSize = 250;
+        int targetSize = 500;
+        int gridWidth = gridColumns * tileSize;
+        int gridHeight = gridRows * tileSize;
+        int imageWidth = gridWidth + targetSize;
+        int imageHeight = Math.max(gridHeight, targetSize);
+        int targetX = gridWidth;
+        int targetY = (imageHeight - targetSize) / 2;
+        var image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D graphics = image.createGraphics();
         graphics.setColor(Color.BLACK);
-        graphics.fillRect(0, 0, 1000, 1000);
+        graphics.fillRect(0, 0, imageWidth, imageHeight);
 
         // Draw target fingerprint on the right
         URL targetUrl = fingerprint.path();
         try (InputStream targetStream = targetUrl.openStream()) {
             BufferedImage target = ImageIO.read(targetStream);
-            graphics.drawImage(target, 500, 250, 500, 500, null);
+            graphics.drawImage(target, targetX, targetY, targetSize, targetSize, null);
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read target image!", exception);
         }
@@ -485,6 +516,7 @@ public class HeistCommand extends EconomyCommand {
         if (inOutQuadrants.isEmpty()) {
             // Must include at least 3 matching quadrants
             List<URL> quadrants = new ArrayList<>();
+            int totalTiles = gridColumns * gridRows;
 
             // pick 4 random quadrants from the fingerprint
             int printIndex = fingerprint.printIndex();
@@ -497,7 +529,7 @@ public class HeistCommand extends EconomyCommand {
                 inOutQuadrants.add(quadrant);
             }
 
-            while (quadrants.size() < 8) {
+            while (quadrants.size() < totalTiles) {
                 // pick a random quadrant from a random fingerprint
                 Fingerprint randomFingerprint = FINGERPRINTS.get(ThreadLocalRandom.current().nextInt(FINGERPRINTS.size()));
                 if (randomFingerprint.printIndex() == printIndex && randomFingerprint.fingerIndex() == fingerIndex)
@@ -524,8 +556,8 @@ public class HeistCommand extends EconomyCommand {
             }
         }
 
-        // 2x4 grid
-        for (int i = 0; i < 8; i++) {
+        // Grid of quadrants
+        for (int i = 0; i < gridColumns * gridRows; i++) {
             Quadrant quadrant = inOutQuadrants.get(i);
             URL quadrantUrl = quadrant.getUrl();
             if (quadrantUrl == null) {
@@ -535,7 +567,7 @@ public class HeistCommand extends EconomyCommand {
 
             try (InputStream quadrantStream = quadrantUrl.openStream()) {
                 BufferedImage quadrantImg = ImageIO.read(quadrantStream);
-                graphics.drawImage(quadrantImg, i % 2 * 250, i / 2 * 250, 250, 250, null);
+                graphics.drawImage(quadrantImg, i % gridColumns * tileSize, i / gridColumns * tileSize, tileSize, tileSize, null);
             } catch (IOException exception) {
                 Constants.LOGGER.error("Failed to read quadrant image!", exception);
             }
@@ -545,9 +577,9 @@ public class HeistCommand extends EconomyCommand {
         if (heist != null) {
             graphics.setColor(Color.GREEN);
             graphics.setStroke(new BasicStroke(10));
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < gridColumns * gridRows; i++) {
                 if (heist.isQuadrantSelected(i)) {
-                    graphics.drawRect(i % 2 * 250, i / 2 * 250, 250, 250);
+                    graphics.drawRect(i % gridColumns * tileSize, i / gridColumns * tileSize, tileSize, tileSize);
                 }
             }
         }
@@ -556,16 +588,13 @@ public class HeistCommand extends EconomyCommand {
         return image;
     }
 
-    private static QuadrantParseResult parseQuadrantInput(String input) {
-        String digits = input.replaceAll("\\D", "");
-        if (digits.isEmpty())
-            return new QuadrantParseResult(Collections.emptySet(), false);
-
+    private static QuadrantParseResult parseQuadrantInput(String input, int maxQuadrant) {
+        Matcher matcher = Pattern.compile("\\d+").matcher(input);
         Set<Integer> quadrants = new LinkedHashSet<>();
         boolean invalidDigits = false;
-        for (char digit : digits.toCharArray()) {
-            int value = Character.digit(digit, 10);
-            if (value >= 1 && value <= 8) {
+        while (matcher.find()) {
+            int value = Integer.parseInt(matcher.group());
+            if (value >= 1 && value <= maxQuadrant) {
                 quadrants.add(value);
             } else {
                 invalidDigits = true;
@@ -627,6 +656,8 @@ public class HeistCommand extends EconomyCommand {
         private final long guildId, userId, channelId, messageId;
         private final long startTime;
         private final int totalStages;
+        private final int gridColumns;
+        private final int gridRows;
         private final Set<Integer> fingerprintPositions = new HashSet<>();
         private final Set<Integer> selectedQuadrants = new HashSet<>();
         private final List<Quadrant> quadrants = new ArrayList<>();
@@ -637,13 +668,15 @@ public class HeistCommand extends EconomyCommand {
         private int completedStages;
         private long waiterToken;
 
-        public Heist(long guildId, long userId, long channelId, long messageId, int totalStages) {
+        public Heist(long guildId, long userId, long channelId, long messageId, int totalStages, int gridColumns, int gridRows) {
             this.guildId = guildId;
             this.userId = userId;
             this.channelId = channelId;
             this.messageId = messageId;
             this.startTime = System.currentTimeMillis();
             this.totalStages = totalStages;
+            this.gridColumns = gridColumns;
+            this.gridRows = gridRows;
             this.currentStage = 1;
             this.stageStartTime = this.startTime;
         }
@@ -683,6 +716,10 @@ public class HeistCommand extends EconomyCommand {
             }
 
             return this.totalStageTime / this.completedStages;
+        }
+
+        public int getTotalTiles() {
+            return this.gridColumns * this.gridRows;
         }
 
         public long incrementWaiterToken() {
