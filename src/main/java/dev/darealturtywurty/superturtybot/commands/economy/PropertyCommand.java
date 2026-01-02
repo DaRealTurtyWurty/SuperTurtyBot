@@ -552,7 +552,7 @@ public class PropertyCommand extends EconomyCommand {
         if (property.getRent() == null) {
             property.setRent(new Rent(BigInteger.valueOf(amount)));
         } else {
-            property.getRent().setRent(BigInteger.valueOf(amount));
+            property.getRent().updateRent(BigInteger.valueOf(amount));
         }
 
         EconomyManager.updateAccount(account);

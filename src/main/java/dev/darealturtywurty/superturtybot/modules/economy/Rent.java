@@ -23,7 +23,7 @@ public class Rent {
         this.currentRent = baseRent;
     }
 
-    public void setRent(BigInteger amount) {
+    public void updateRent(BigInteger amount) {
         this.previousRents.add(this.currentRent);
         this.currentRent = amount;
     }
