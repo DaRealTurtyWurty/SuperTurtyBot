@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.time.Instant;
@@ -23,11 +24,16 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
     public EconomyTransactionHistoryCommand() {
         super("economy", "Shows the economy transaction history of a user.");
         addOption(OptionType.USER, "user", "The user to get the transaction history of.");
+        addOption(new OptionData(OptionType.STRING, "direction", "Filter transactions by direction (incoming/outgoing/both).")
+                .addChoice("Both", "both")
+                .addChoice("Incoming", "incoming")
+                .addChoice("Outgoing", "outgoing"));
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
+        String direction = event.getOption("direction", "both", OptionMapping::getAsString);
         Guild guild = event.getGuild();
         if (guild == null) {
             reply(event, "❌ This command can only be used in servers!", false, true);
@@ -57,8 +63,20 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
         GuildData config = GuildData.getOrCreateGuildData(guild);
         List<MoneyTransaction> transactions = account.getTransactions()
                 .stream()
+                .filter(transaction -> {
+                    return switch (direction.toLowerCase()) {
+                        case "incoming" -> transaction.amount().signum() > 0;
+                        case "outgoing" -> transaction.amount().signum() < 0;
+                        default -> true;
+                    };
+                })
                 .sorted(Comparator.comparingLong(MoneyTransaction::timestamp))
                 .toList();
+
+        if (transactions.isEmpty()) {
+            event.getHook().sendMessage("❌ That user has no transactions for that filter!").mentionRepliedUser(false).queue();
+            return;
+        }
 
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (int index = 0; index < transactions.size(); index++) {
