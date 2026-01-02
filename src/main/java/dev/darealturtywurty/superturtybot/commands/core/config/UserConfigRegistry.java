@@ -2,13 +2,9 @@ package dev.darealturtywurty.superturtybot.commands.core.config;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
 import dev.darealturtywurty.superturtybot.registry.Registry;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class UserConfigRegistry {
     public static final Registry<UserConfigOption> USER_CONFIG_OPTIONS = new Registry<>();

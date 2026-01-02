@@ -1,8 +1,8 @@
 package dev.darealturtywurty.superturtybot.commands.util;
 
+import com.google.common.net.UrlEscapers;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import com.google.common.net.UrlEscapers;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;

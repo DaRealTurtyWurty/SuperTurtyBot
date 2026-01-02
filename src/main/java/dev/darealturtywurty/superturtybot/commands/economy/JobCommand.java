@@ -2,11 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.economy;
 
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.commands.economy.promotion.ArtistPromotionMinigame;
-import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
-import dev.darealturtywurty.superturtybot.commands.economy.promotion.MathPromotionMinigame;
-import dev.darealturtywurty.superturtybot.commands.economy.promotion.PromotionMinigame;
-import dev.darealturtywurty.superturtybot.commands.economy.promotion.YoutubePromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.*;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;

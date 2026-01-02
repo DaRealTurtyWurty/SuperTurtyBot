@@ -3,7 +3,6 @@ package dev.darealturtywurty.superturtybot.core.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 

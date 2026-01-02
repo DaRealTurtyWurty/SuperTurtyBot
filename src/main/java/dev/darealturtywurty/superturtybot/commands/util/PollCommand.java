@@ -13,8 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 public class PollCommand extends CoreCommand {
     private static final Map<Integer, String> NUMBER_EMOTE_MAP = new HashMap<>();

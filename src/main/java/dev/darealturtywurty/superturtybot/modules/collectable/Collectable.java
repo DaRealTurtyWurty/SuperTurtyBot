@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.modules.collectable;
 
 import dev.darealturtywurty.superturtybot.registry.Registerable;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

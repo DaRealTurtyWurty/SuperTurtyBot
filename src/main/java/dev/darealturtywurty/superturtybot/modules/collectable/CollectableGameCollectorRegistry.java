@@ -2,10 +2,10 @@ package dev.darealturtywurty.superturtybot.modules.collectable;
 
 import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectable;
 import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
-import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorCollectable;
-import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobCollectable;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
+import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorCollectable;
+import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 
 public class CollectableGameCollectorRegistry {

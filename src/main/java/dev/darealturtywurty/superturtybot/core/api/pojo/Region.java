@@ -1,6 +1,6 @@
 package dev.darealturtywurty.superturtybot.core.api.pojo;
 
-import lombok.*;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;

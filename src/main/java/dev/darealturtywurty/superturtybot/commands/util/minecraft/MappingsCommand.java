@@ -4,10 +4,6 @@ import dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.comma
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.commands.TranslateCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
-
-import java.util.List;
 
 public class MappingsCommand extends CoreCommand {
     public MappingsCommand() {

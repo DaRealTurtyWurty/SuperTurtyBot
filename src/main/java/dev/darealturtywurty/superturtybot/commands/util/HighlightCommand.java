@@ -22,8 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 public class HighlightCommand extends CoreCommand {
     public HighlightCommand() {

@@ -13,9 +13,6 @@ import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;

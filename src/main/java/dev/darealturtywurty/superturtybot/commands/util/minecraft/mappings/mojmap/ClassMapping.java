@@ -2,7 +2,9 @@ package dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.mojm
 
 import lombok.Getter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class ClassMapping {

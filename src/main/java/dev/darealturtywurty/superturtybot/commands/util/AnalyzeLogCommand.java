@@ -9,8 +9,8 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 public class AnalyzeLogCommand extends CoreCommand {
     public AnalyzeLogCommand() {
