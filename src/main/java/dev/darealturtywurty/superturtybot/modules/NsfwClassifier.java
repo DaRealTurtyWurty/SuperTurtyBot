@@ -7,8 +7,7 @@ import ai.onnxruntime.OrtSession;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 
 import javax.imageio.ImageIO;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -17,20 +16,9 @@ import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class NsfwClassifier implements AutoCloseable {
+public record NsfwClassifier(OrtEnvironment environment, OrtSession session, String inputName,
+                             Config config) implements AutoCloseable {
     private static final AtomicBoolean LOGGED_SHAPE_ERROR = new AtomicBoolean(false);
-
-    private final OrtEnvironment environment;
-    private final OrtSession session;
-    private final String inputName;
-    private final Config config;
-
-    private NsfwClassifier(OrtEnvironment environment, OrtSession session, String inputName, Config config) {
-        this.environment = environment;
-        this.session = session;
-        this.inputName = inputName;
-        this.config = config;
-    }
 
     public static NsfwClassifier create(Path modelPath, Config config) throws OrtException {
         OrtEnvironment environment = OrtEnvironment.getEnvironment();

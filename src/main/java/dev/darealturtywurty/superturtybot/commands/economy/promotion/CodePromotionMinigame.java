@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +25,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
     private static final int MAX_LOCAL_SNIPPET_ATTEMPTS = 12;
     private static final int MIN_NON_WHITESPACE_CHARS = 80;
     private static final double MAX_COMMENT_RATIO = 0.6;
+    private static volatile Path snippetsDbPath = Path.of("data/snippets.db");
 
     @Override
     public void start(SlashCommandInteractionEvent event, Economy account) {
@@ -104,7 +104,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
         }
 
         private static Optional<Code> findLocalCode(Consumer<Integer> onAttempt) {
-            Path databasePath = Paths.get("snippets.db");
+            Path databasePath = snippetsDbPath;
             if (!Files.exists(databasePath))
                 return Optional.empty();
 
@@ -434,5 +434,12 @@ public class CodePromotionMinigame implements PromotionMinigame {
         private record SnippetRow(String snippet, String language, String repoFileName, String githubRepoUrl,
                                   String commitHash, int startingLineNumber) {
         }
+    }
+
+    public static void setSnippetsDbPath(Path path) {
+        if (path == null)
+            return;
+
+        snippetsDbPath = path;
     }
 }

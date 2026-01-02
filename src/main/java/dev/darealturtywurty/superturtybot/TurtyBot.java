@@ -2,6 +2,9 @@ package dev.darealturtywurty.superturtybot;
 
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestionManager;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.ArtistPromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
+import dev.darealturtywurty.superturtybot.commands.economy.promotion.YoutubePromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
 import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
 import dev.darealturtywurty.superturtybot.core.ConsoleTee;
@@ -95,6 +98,21 @@ public class TurtyBot {
                 .setDefault(Path.of("./latest.log"))
                 .help("The path to the log file.");
 
+        parser.addArgument("-datasetRoot", "--datasetRoot")
+                .type(new PathArgumentType())
+                .setDefault(Path.of("./data/RealAIImages"))
+                .help("The path to the RealAIImages dataset directory.");
+
+        parser.addArgument("-snippetsDb", "--snippetsDb")
+                .type(new PathArgumentType())
+                .setDefault(Path.of("./data/snippets.db"))
+                .help("The path to the code snippets database file.");
+
+        parser.addArgument("-videoIdsDb", "--videoIdsDb")
+                .type(new PathArgumentType())
+                .setDefault(Path.of("./data/video_ids.db"))
+                .help("The path to the YouTube video IDs database file.");
+
         var ctl = ConsoleTee.toFile(parser.parseArgsOrFail(args).get("logFile"), false);
         ShutdownHooks.register(ctl::close);
 
@@ -121,6 +139,17 @@ public class TurtyBot {
 
         Path serverIconsPath = namespace.get("serverIcons");
         ServerIconManager.setIconsPath(serverIconsPath);
+
+        Path datasetRoot = namespace.get("datasetRoot");
+        ArtistNsfwCache.setDatasetRoot(datasetRoot);
+        ArtistNsfwClassifier.setDatasetRoot(datasetRoot);
+        ArtistPromotionMinigame.setDatasetRoot(datasetRoot);
+
+        Path snippetsDbPath = namespace.get("snippetsDb");
+        CodePromotionMinigame.setSnippetsDbPath(snippetsDbPath);
+
+        Path videoIdsDbPath = namespace.get("videoIdsDb");
+        YoutubePromotionMinigame.setVideoDbPath(videoIdsDbPath);
 
         DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
 

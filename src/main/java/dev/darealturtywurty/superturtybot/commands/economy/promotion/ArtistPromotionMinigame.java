@@ -26,11 +26,7 @@ import java.util.stream.Stream;
 
 public class ArtistPromotionMinigame implements PromotionMinigame {
     private static final int ANSWER_TIMEOUT_SECONDS = 10;
-    private static final Path DATASET_ROOT = Path.of("Real_AI_SD_LD_Dataset");
-    private static final List<Path> DATASET_SPLITS = List.of(
-            DATASET_ROOT.resolve("train"),
-            DATASET_ROOT.resolve("test")
-    );
+    private static volatile Path datasetRoot = Path.of("data/RealAIImages");
 
     private static void endPromotion(Economy account) {
         account.setReadyForPromotion(false);
@@ -58,7 +54,7 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
     }
 
     private static Path pickRandomImage(boolean isAi) {
-        try (Stream<Path> stream = DATASET_SPLITS.stream().flatMap(root -> {
+        try (Stream<Path> stream = datasetSplits().stream().flatMap(root -> {
             try {
                 return Files.walk(root);
             } catch (IOException exception) {
@@ -113,6 +109,20 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
         return fileName.substring(index);
     }
 
+    public static void setDatasetRoot(Path root) {
+        if (root == null)
+            return;
+
+        datasetRoot = root;
+    }
+
+    private static List<Path> datasetSplits() {
+        return List.of(
+                datasetRoot.resolve("train"),
+                datasetRoot.resolve("test")
+        );
+    }
+
     private static Boolean parseAnswer(String input) {
         if (input == null)
             return null;
@@ -147,7 +157,7 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
 
     @Override
     public void start(SlashCommandInteractionEvent event, Economy account) {
-        if (DATASET_SPLITS.stream().anyMatch(Files::notExists)) {
+        if (datasetSplits().stream().anyMatch(Files::notExists)) {
             event.getHook().editOriginal("❌ Artist dataset not found.").queue();
             return;
         }

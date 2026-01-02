@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class YoutubePromotionMinigame implements PromotionMinigame {
-    private static final Path VIDEO_DB_PATH = Path.of("video_ids.db");
+    private static volatile Path videoDbPath = Path.of("data/video_ids.db");
 
     private static int parseChoice(String input) {
         if (input == null)
@@ -62,7 +62,7 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
             return;
         }
 
-        if (Files.notExists(VIDEO_DB_PATH)) {
+        if (Files.notExists(videoDbPath)) {
             event.getHook().editOriginal("❌ Video ID database not found.").queue();
             return;
         }
@@ -146,7 +146,7 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
         String apiKey = Environment.INSTANCE.youtubeApiKey()
                 .orElseThrow(() -> new IllegalStateException("Youtube API key is not set!"));
         var apiClient = new YoutubeApiClient(apiKey, config.videosApiUrl());
-        var repository = new VideoCacheRepository(VIDEO_DB_PATH);
+        var repository = new VideoCacheRepository(videoDbPath);
         var selector = new VideoPairSelector(config.minVideoAgeMs(), config.filterShorts(),
                 config.minViewDiff(), config.minViewDiffRatio());
 
@@ -156,5 +156,12 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
                 .orElseThrow(() -> new IllegalStateException("Not enough videos available."));
         repository.removeFromCache(List.of(pair.first().id(), pair.second().id()));
         return pair;
+    }
+
+    public static void setVideoDbPath(Path path) {
+        if (path == null)
+            return;
+
+        videoDbPath = path;
     }
 }

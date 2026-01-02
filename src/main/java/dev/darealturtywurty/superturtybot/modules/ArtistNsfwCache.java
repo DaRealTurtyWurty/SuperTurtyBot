@@ -30,12 +30,7 @@ import java.util.stream.Stream;
 public final class ArtistNsfwCache {
     private static final int CACHE_VERSION = 1;
     private static final double SAFE_THRESHOLD = 0.2;
-    private static final Path DATASET_ROOT = Path.of("Real_AI_SD_LD_Dataset");
-    private static final List<Path> DATASET_SPLITS = List.of(
-            DATASET_ROOT.resolve("train"),
-            DATASET_ROOT.resolve("test")
-    );
-    private static final Path CACHE_PATH = DATASET_ROOT.resolve("nsfw_cache.json");
+    private static volatile Path datasetRoot = Path.of("data/RealAIImages");
     private static ExecutorService executor;
     private static final AtomicReference<CacheState> STATE = new AtomicReference<>(CacheState.empty());
 
@@ -67,7 +62,14 @@ public final class ArtistNsfwCache {
     }
 
     public static boolean datasetAvailable() {
-        return DATASET_SPLITS.stream().allMatch(Files::exists);
+        return datasetSplits().stream().allMatch(Files::exists);
+    }
+
+    public static void setDatasetRoot(Path root) {
+        if (root == null)
+            return;
+
+        datasetRoot = root;
     }
 
     private static void refreshCache() {
@@ -81,7 +83,7 @@ public final class ArtistNsfwCache {
                 .collect(Collectors.toMap(CacheEntry::relativePath, Function.identity(), (first, second) -> first));
 
         List<CacheEntry> refreshedEntries = new ArrayList<>();
-        for (Path root : DATASET_SPLITS) {
+        for (Path root : datasetSplits()) {
             try (Stream<Path> stream = Files.walk(root)) {
                 stream.filter(Files::isRegularFile)
                         .filter(ArtistNsfwCache::isSupportedImage)
@@ -136,7 +138,7 @@ public final class ArtistNsfwCache {
             for (int index : indices) {
                 completion.submit(() -> {
                     CacheEntry entry = entries.get(index);
-                    OptionalDouble score = classifier.predictScore(DATASET_ROOT.resolve(entry.relativePath()));
+                    OptionalDouble score = classifier.predictScore(datasetRoot.resolve(entry.relativePath()));
                     return new ScoreResult(index, entry, score.isEmpty() ? null : score.getAsDouble());
                 });
             }
@@ -187,7 +189,7 @@ public final class ArtistNsfwCache {
     }
 
     private static CacheEntry buildEntry(Map<String, CacheEntry> existingEntries, Path path) {
-        String relativePath = DATASET_ROOT.relativize(path).toString();
+        String relativePath = datasetRoot.relativize(path).toString();
         long lastModified = getLastModified(path);
         boolean isAi = isAiPath(path);
 
@@ -215,7 +217,7 @@ public final class ArtistNsfwCache {
             if (score == null || score > SAFE_THRESHOLD)
                 continue;
 
-            Path resolved = DATASET_ROOT.resolve(entry.relativePath());
+            Path resolved = datasetRoot.resolve(entry.relativePath());
             if (entry.isAi()) {
                 safeAi.add(resolved);
             } else {
@@ -227,10 +229,10 @@ public final class ArtistNsfwCache {
     }
 
     private static CachePayload loadCache() {
-        if (Files.notExists(CACHE_PATH))
+        if (Files.notExists(cachePath()))
             return CachePayload.empty();
 
-        try (BufferedReader reader = Files.newBufferedReader(CACHE_PATH)) {
+        try (BufferedReader reader = Files.newBufferedReader(cachePath())) {
             CachePayload payload = Constants.GSON.fromJson(reader, CachePayload.class);
             if (payload == null)
                 return CachePayload.empty();
@@ -244,11 +246,22 @@ public final class ArtistNsfwCache {
     }
 
     private static void saveCache(CachePayload payload) {
-        try (BufferedWriter writer = Files.newBufferedWriter(CACHE_PATH)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(cachePath())) {
             Constants.GSON.toJson(payload, writer);
         } catch (IOException exception) {
             Constants.LOGGER.warn("Failed to save artist NSFW cache.", exception);
         }
+    }
+
+    private static List<Path> datasetSplits() {
+        return List.of(
+                datasetRoot.resolve("train"),
+                datasetRoot.resolve("test")
+        );
+    }
+
+    private static Path cachePath() {
+        return datasetRoot.resolve("nsfw_cache.json");
     }
 
     private static boolean isAiPath(Path path) {
