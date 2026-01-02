@@ -24,6 +24,9 @@ public class Property implements Registerable {
     private long buyDate;
     private long renter;
     private long rentEndsAt;
+    private String renterName;
+    private List<RenterOffer> renterOffers = new ArrayList<>();
+    private long nextBestRenterAt;
 
     private List<Long> previousOwners;
     private BigInteger estateTax;
@@ -42,6 +45,9 @@ public class Property implements Registerable {
         this.mortgage = builder.mortgage;
         this.renter = builder.renter;
         this.rentEndsAt = builder.rentEndsAt;
+        this.renterName = builder.renterName;
+        this.renterOffers = builder.renterOffers;
+        this.nextBestRenterAt = builder.nextBestRenterAt;
 
         this.buyDate = System.currentTimeMillis();
     }
@@ -87,6 +93,10 @@ public class Property implements Registerable {
     public void clearRenter() {
         this.renter = -1;
         this.rentEndsAt = 0L;
+        this.renterName = null;
+        if (this.renterOffers != null) {
+            this.renterOffers.clear();
+        }
     }
 
     public BigInteger calculateCurrentWorth() {
@@ -127,6 +137,9 @@ public class Property implements Registerable {
         private int upgradeLevel = 0;
         private long renter = -1;
         private long rentEndsAt = 0L;
+        private String renterName;
+        private List<RenterOffer> renterOffers = new ArrayList<>();
+        private long nextBestRenterAt = 0L;
 
         public Builder(String name, String description, BigInteger price, BigInteger estateTax) {
             this.name = name;
@@ -172,6 +185,21 @@ public class Property implements Registerable {
 
         public Builder rentEndsAt(long rentEndsAt) {
             this.rentEndsAt = rentEndsAt;
+            return this;
+        }
+
+        public Builder renterName(String renterName) {
+            this.renterName = renterName;
+            return this;
+        }
+
+        public Builder renterOffer(RenterOffer offer) {
+            this.renterOffers.add(offer);
+            return this;
+        }
+
+        public Builder nextBestRenterAt(long nextBestRenterAt) {
+            this.nextBestRenterAt = nextBestRenterAt;
             return this;
         }
 
