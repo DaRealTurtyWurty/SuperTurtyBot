@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -115,15 +116,21 @@ public class CrimeCommand extends EconomyCommand {
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
             embed.setDescription("Crime Level: %d%nHere are the chances, earnings and losses for each crime level:".formatted(crimeLevel));
+            float promotionChance = EconomyManager.getCrimePromotionChance();
+            String promotionChanceDisplay = String.format(Locale.ROOT, "%.1f", promotionChance * 100);
             for (var level : CrimeType.values()) {
                 float chance = level.getChanceForLevel(crimeLevel);
+                float combinedPromotionChance = chance * promotionChance;
+                String combinedPromotionDisplay = String.format(Locale.ROOT, "%.1f", combinedPromotionChance * 100);
                 BigInteger minAmount = level.getMinAmountForLevel(crimeLevel);
                 BigInteger maxAmount = level.getMaxAmountForLevel(crimeLevel);
 
                 BigInteger minLoss = minAmount.divide(BigInteger.TWO);
                 BigInteger maxLoss = maxAmount.divide(BigInteger.TWO);
-                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nEarnings: %s-%s\nLosses: %s-%s".formatted(
+                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nPromotion (on success): %s%% (%s%% total)\nEarnings: %s-%s\nLosses: %s-%s".formatted(
                         (int) (chance * 100),
+                        promotionChanceDisplay,
+                        combinedPromotionDisplay,
                         StringUtils.numberFormat(minAmount, config),
                         StringUtils.numberFormat(maxAmount, config),
                         StringUtils.numberFormat(minLoss, config),

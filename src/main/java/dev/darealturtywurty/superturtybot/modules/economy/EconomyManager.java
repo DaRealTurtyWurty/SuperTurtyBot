@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 public class EconomyManager {
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
+    private static final int CRIME_PROMOTION_DENOMINATOR = 4;
 
     public static boolean isRunning() {
         return IS_RUNNING.get();
@@ -407,11 +408,15 @@ public class EconomyManager {
         account.setTotalCrimes(account.getTotalCrimes() + 1);
         account.setTotalSuccessfulCrimes(account.getTotalSuccessfulCrimes() + 1);
 
-        if (ThreadLocalRandom.current().nextInt(8) == 0) {
+        if (ThreadLocalRandom.current().nextInt(CRIME_PROMOTION_DENOMINATOR) == 0) {
             account.setCrimeLevel(account.getCrimeLevel() + 1);
         }
 
         return amount;
+    }
+
+    public static float getCrimePromotionChance() {
+        return 1.0F / CRIME_PROMOTION_DENOMINATOR;
     }
 
     // Should exponentially increase the cost and payout of a heist based on the user's account

@@ -47,7 +47,8 @@ public class PropertyRegistry {
     }
 
     public static Property createForOwner(Property template, long ownerId) {
-        if (template == null) return null;
+        if (template == null)
+            return null;
 
         Property.Builder builder = new Property.Builder(
                 template.getName(),
