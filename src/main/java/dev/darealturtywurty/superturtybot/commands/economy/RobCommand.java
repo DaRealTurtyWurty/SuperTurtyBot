@@ -33,6 +33,37 @@ import java.util.concurrent.TimeUnit;
 
 public class RobCommand extends EconomyCommand {
     private static final Responses RESPONSES;
+    private static final List<String> SELF_ROB_MESSAGES = List.of(
+            "❌ Nice try, {user}. Stealing from yourself is just a withdrawal.",
+            "❌ {user}, you can't rob yourself. That's called \"spending.\"",
+            "❌ {user}, please don't turn this into a solo heist. It won't end well.",
+            "❌ {user}, robbing yourself is peak chaos, but still a no.",
+            "❌ {user}, you are both the robber and the robbed. Pick a side.",
+            "❌ {user}, mirror heists are not a thing.",
+            "❌ {user}, try someone else's pockets, not your own.",
+            "❌ {user}, self-robbery is just negative budgeting.",
+            "❌ {user}, you can't mug yourself and call it a win.",
+            "❌ {user}, the vault is you. That is not a robbery.",
+            "❌ {user}, stop it. Go bother someone richer.",
+            "❌ {user}, your wallet called. It wants a restraining order.",
+            "❌ {user}, you cannot pickpocket your own pants.",
+            "❌ {user}, this is not how to farm crime stats.",
+            "❌ {user}, you just attempted a zero-sum heist.",
+            "❌ {user}, how are you both victim and suspect?",
+            "❌ {user}, even the police are confused by this one.",
+            "❌ {user}, self-checkout is not robbery.",
+            "❌ {user}, crime tip: you need a target that is not you.",
+            "❌ {user}, you tried to rob yourself and still missed.",
+            "❌ {user}, this is why we can't have nice crimes.",
+            "❌ {user}, you just attempted a refund, not a robbery.",
+            "❌ {user}, if you split the loot, you still end up broke.",
+            "❌ {user}, look away from the mirror and pick a real target.",
+            "❌ {user}, you are trying to rob the most guarded person: you.",
+            "❌ {user}, your own account has an unbeatable defense: you.",
+            "❌ {user}, I admire the ambition, not the logic.",
+            "❌ {user}, this is a robbery, not a magic trick.",
+            "❌ {user}, stop trying to speedrun shame."
+    );
 
     static {
         JsonObject json;
@@ -89,6 +120,13 @@ public class RobCommand extends EconomyCommand {
         }
 
         final User user = Objects.requireNonNull(event.getOption("user")).getAsUser();
+        if (user.getIdLong() == event.getUser().getIdLong()) {
+            String message = SELF_ROB_MESSAGES.get(ThreadLocalRandom.current().nextInt(SELF_ROB_MESSAGES.size()))
+                    .replace("{user}", user.getAsMention());
+            event.getHook().editOriginal(message).queue();
+            return;
+        }
+
         if (!guild.isMember(user)) {
             event.getHook().editOriginal("❌ The user to rob must be in this server!").queue();
             return;
