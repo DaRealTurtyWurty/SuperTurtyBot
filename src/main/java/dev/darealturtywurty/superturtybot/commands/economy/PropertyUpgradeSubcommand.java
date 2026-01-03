@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import java.math.BigInteger;
+import java.util.List;
 
 public class PropertyUpgradeSubcommand extends PropertySubcommand {
     public PropertyUpgradeSubcommand() {
@@ -33,13 +34,14 @@ public class PropertyUpgradeSubcommand extends PropertySubcommand {
             return;
         }
 
-        if (property.getUpgradePrices() == null || property.getUpgradePrices().isEmpty()
-                || property.getUpgradeLevel() >= property.getUpgradePrices().size()) {
+        List<BigInteger> upgradePrices = property.getUpgradePrices();
+        int upgradeLevel = property.getUpgradeLevel();
+        if (upgradePrices == null || upgradePrices.isEmpty() || upgradeLevel < 0 || upgradeLevel >= upgradePrices.size()) {
             PropertyCommand.hookReply(event, "❌ This property cannot be upgraded further!");
             return;
         }
 
-        BigInteger upgradeCost = property.getUpgradePrice();
+        BigInteger upgradeCost = upgradePrices.get(upgradeLevel);
         if (!EconomyManager.removeBalance(account, upgradeCost)) {
             PropertyCommand.hookReply(event, "❌ You need another %s to upgrade this property!"
                     .formatted(StringUtils.numberFormat(upgradeCost.subtract(EconomyManager.getBalance(account)), config)));
