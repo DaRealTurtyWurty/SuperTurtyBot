@@ -79,69 +79,81 @@ public class YouTubeListener {
                 Constants.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException exception) {
-                        throw new IllegalStateException("Failed response from channel '" + channelId + "'", exception);
+                        Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception);
                     }
 
                     @Override
                     public void onResponse(@NotNull Call call, @NotNull Response response) {
-                        if (!response.isSuccessful())
-                            throw new IllegalStateException("Failed response from channel '" + channelId + "'");
+                        try (ResponseBody body = response.body()) {
+                            if (!response.isSuccessful()) {
+                                Constants.LOGGER.error("Failed response from channel '{}' (status {})", channelId,
+                                        response.code());
+                                return;
+                            }
 
-                        ResponseBody body = response.body();
-                        if (body == null)
-                            throw new IllegalStateException("Failed response from channel '" + channelId + "'");
+                            if (body == null) {
+                                Constants.LOGGER.error("Failed response from channel '{}' (empty body)", channelId);
+                                return;
+                            }
 
-                        List<Video> videos = parseVideos(body.byteStream());
-                        if (videos.isEmpty())
-                            return;
+                            List<Video> videos = parseVideos(body.byteStream());
+                            if (videos.isEmpty())
+                                return;
 
-                        Map<YoutubeNotifier, Guild> notifierGuildMap = new HashMap<>();
+                            Map<YoutubeNotifier, Guild> notifierGuildMap = new HashMap<>();
 
-                        for (YoutubeNotifier found : notifiers) {
-                            final Guild guild = jda.getGuildById(found.getGuild());
-                            for (Video video : videos) {
-                                if (!found.getStoredVideos().contains(video.videoId()) && guild != null) {
-                                    notifierGuildMap.put(found, guild);
+                            for (YoutubeNotifier found : notifiers) {
+                                final Guild guild = jda.getGuildById(found.getGuild());
+                                for (Video video : videos) {
+                                    if (!found.getStoredVideos().contains(video.videoId()) && guild != null) {
+                                        notifierGuildMap.put(found, guild);
+                                    }
                                 }
                             }
-                        }
 
-                        for (Map.Entry<YoutubeNotifier, Guild> notifierEntry : notifierGuildMap.entrySet()) {
-                            YoutubeNotifier notifier = notifierEntry.getKey();
-                            Guild guild = notifierEntry.getValue();
+                            for (Map.Entry<YoutubeNotifier, Guild> notifierEntry : notifierGuildMap.entrySet()) {
+                                YoutubeNotifier notifier = notifierEntry.getKey();
+                                Guild guild = notifierEntry.getValue();
 
-                            final long videoChannel = notifier.getChannel();
-                            final TextChannel channel = guild.getTextChannelById(videoChannel);
-                            if (channel == null || !channel.canTalk()) {
-                                notifier.setChannel(0L);
-                                final Bson filter = getFilter(guild.getIdLong());
-                                Database.getDatabase().youtubeNotifier.updateOne(
-                                        Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                        Updates.set("channel", 0L));
-                                continue;
-                            }
-
-                            for (Video video : videos) {
-                                if (!notifier.getStoredVideos().contains(video.videoId())) {
-                                    notifier.getStoredVideos().add(video.videoId());
-
+                                final long videoChannel = notifier.getChannel();
+                                final TextChannel channel = guild.getTextChannelById(videoChannel);
+                                if (channel == null || !channel.canTalk()) {
+                                    notifier.setChannel(0L);
                                     final Bson filter = getFilter(guild.getIdLong());
                                     Database.getDatabase().youtubeNotifier.updateOne(
                                             Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                            Updates.set("storedVideos", notifier.getStoredVideos()));
+                                            Updates.set("channel", 0L));
+                                    continue;
+                                }
 
-                                    var embed = new EmbedBuilder()
-                                            .setTitle(video.title(), video.url())
-                                            .setDescription(video.description())
-                                            .setImage(video.thumbnailUrl())
-                                            .addField("Channel", "[" + video.channel().name() + "](" + video.channel().url() + ")", true)
-                                            .addField("Published At", video.publishedAt().toString(), true)
-                                            .setFooter("YouTube Video ID: " + video.videoId())
-                                            .setTimestamp(Instant.now());
-                                    channel.sendMessage(notifier.getMention()).setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
-                                            .setEmbeds(embed.build()).queue();
+                                for (Video video : videos) {
+                                    if (!notifier.getStoredVideos().contains(video.videoId())) {
+                                        notifier.getStoredVideos().add(video.videoId());
+
+                                        final Bson filter = getFilter(guild.getIdLong());
+                                        Database.getDatabase().youtubeNotifier.updateOne(
+                                                Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
+                                                Updates.set("storedVideos", notifier.getStoredVideos()));
+
+                                        var embed = new EmbedBuilder()
+                                                .setTitle(video.title(), video.url())
+                                                .setDescription(video.description())
+                                                .setImage(video.thumbnailUrl())
+                                                .addField("Channel",
+                                                        "[" + video.channel().name() + "](" + video.channel().url() + ")",
+                                                        true)
+                                                .addField("Published At", video.publishedAt().toString(), true)
+                                                .setFooter("YouTube Video ID: " + video.videoId())
+                                                .setTimestamp(Instant.now());
+                                        channel.sendMessage(notifier.getMention())
+                                                .setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
+                                                .setEmbeds(embed.build()).queue();
+                                    }
                                 }
                             }
+                        } catch (final Exception exception) {
+                            Constants.LOGGER.error("Failed to process YouTube notifier response for '{}'", channelId,
+                                    exception);
                         }
                     }
                 });

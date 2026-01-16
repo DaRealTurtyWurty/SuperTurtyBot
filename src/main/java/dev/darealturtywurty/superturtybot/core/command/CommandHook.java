@@ -33,6 +33,7 @@ import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.Minecraf
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -89,19 +90,14 @@ public class CommandHook extends ListenerAdapter {
             SteamListener.runExecutor(jda);
         }
 
-        // TODO: When this is fully implemented, uncomment this
-//        if (!RedditListener.isInitialized()) {
-//            RedditListener.initialize(jda);
-//        }
+        if (!RedditListener.isInitialized()) {
+            RedditListener.initialize(jda);
+        }
 
         if (!EconomyManager.isRunning()) {
             EconomyManager.start(jda);
         }
 
-        // TODO: Fix this mf
-//        if (!TwitterListener.isInitialized()) {
-//            TwitterListener.initialize(jda);
-//        }
 
         if (!BirthdayManager.isRunning()) {
             BirthdayManager.start(jda);

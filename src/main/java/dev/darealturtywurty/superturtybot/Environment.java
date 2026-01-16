@@ -85,22 +85,6 @@ public final class Environment {
         return getString("TWITCH_OAUTH_TOKEN");
     }
     
-    public Optional<String> twitterApiKey() {
-        return getString("TWITTER_API_KEY");
-    }
-
-    public Optional<String> twitterAPIKeySecret() {
-        return getString("TWITTER_API_KEY_SECRET");
-    }
-    
-    public Optional<String> twitterAppId() {
-        return getString("TWITTER_APP_ID");
-    }
-
-    public Optional<String> twitterBearerToken() {
-        return getString("TWITTER_BEARER_TOKEN");
-    }
-
     public Optional<String> urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
     }

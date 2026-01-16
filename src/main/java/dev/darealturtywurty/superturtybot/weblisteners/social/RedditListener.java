@@ -39,10 +39,14 @@ public class RedditListener {
         EXECUTOR.scheduleAtFixedRate(() -> {
             try {
                 List<RedditNotifier> notifiers = Database.getDatabase().redditNotifier.find().into(new ArrayList<>());
+                if (notifiers.isEmpty())
+                    return;
 
                 Map<String, List<RedditNotifier>> notifiersBySubreddit = new HashMap<>();
                 for (RedditNotifier redditNotifier : notifiers) {
                     String subreddit = redditNotifier.getSubreddit();
+                    if (subreddit == null || subreddit.isBlank())
+                        continue;
                     notifiersBySubreddit.computeIfAbsent(subreddit, key -> new ArrayList<>()).add(redditNotifier);
                 }
 
@@ -52,61 +56,68 @@ public class RedditListener {
                     Stream<Item> items = READER.read("https://www.reddit.com/r/" + subreddit + "/new/.rss");
 
                     items.forEach(item -> {
-                        final String link = item.getLink().orElse("");
-                        String mediaUrl = findMediaUrl(item.getDescription().orElse("")).orElse("");
-                        String title = item.getTitle().orElse("");
-                        String author = item.getAuthor().orElse("");
-                        Instant time = new DateTime().toInstant(item.getPubDate().orElse(""));
-                        String guid = item.getGuid().orElse("");
+                        try {
+                            final String link = item.getLink().orElse("");
+                            String mediaUrl = findMediaUrl(item.getDescription().orElse("")).orElse("");
+                            String title = item.getTitle().orElse("");
+                            String author = item.getAuthor().orElse("");
+                            Instant time = new DateTime().toInstant(item.getPubDate().orElse(""));
+                            String guid = item.getGuid().orElse("");
 
-                        if (SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).contains(guid))
-                            return;
+                            if (SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).contains(guid))
+                                return;
 
-                        if (mediaUrl.endsWith(".jpg") || mediaUrl.endsWith("jpeg") || mediaUrl.endsWith(".png") || mediaUrl.endsWith(".gif")) {
-                            var embed = new EmbedBuilder()
-                                    .setTitle(title, link)
-                                    .setAuthor(author)
-                                    .setTimestamp(time)
-                                    .setColor(0xFF4500)
-                                    .setImage(mediaUrl)
-                                    .build();
+                            if (mediaUrl.endsWith(".jpg") || mediaUrl.endsWith("jpeg") || mediaUrl.endsWith(".png")
+                                    || mediaUrl.endsWith(".gif")) {
+                                var embed = new EmbedBuilder()
+                                        .setTitle(title, link)
+                                        .setAuthor(author)
+                                        .setTimestamp(time)
+                                        .setColor(0xFF4500)
+                                        .setImage(mediaUrl)
+                                        .build();
 
-                            for (RedditNotifier redditNotifier : subredditNotifiers) {
-                                Guild guild = jda.getGuildById(redditNotifier.getGuild());
-                                if (guild == null)
-                                    continue;
+                                for (RedditNotifier redditNotifier : subredditNotifiers) {
+                                    Guild guild = jda.getGuildById(redditNotifier.getGuild());
+                                    if (guild == null)
+                                        continue;
 
-                                TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
-                                if (channel == null)
-                                    continue;
+                                    TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
+                                    if (channel == null || !channel.canTalk())
+                                        continue;
 
-                                channel.sendMessageEmbeds(embed).setContent(redditNotifier.getMention()).queue();
+                                    channel.sendMessageEmbeds(embed).setContent(redditNotifier.getMention()).queue();
+                                }
+                            } else {
+                                for (RedditNotifier redditNotifier : subredditNotifiers) {
+                                    Guild guild = jda.getGuildById(redditNotifier.getGuild());
+                                    if (guild == null)
+                                        continue;
+
+                                    TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
+                                    if (channel == null || !channel.canTalk())
+                                        continue;
+
+                                    channel.sendMessage(
+                                            String.format("%s [%s](<%s>) by %s at %s\n%s",
+                                                    redditNotifier.getMention(), title, link, author, time, mediaUrl)
+                                    ).queue();
+                                }
                             }
-                        } else {
-                            for (RedditNotifier redditNotifier : subredditNotifiers) {
-                                Guild guild = jda.getGuildById(redditNotifier.getGuild());
-                                if (guild == null)
-                                    continue;
 
-                                TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
-                                if (channel == null)
-                                    continue;
+                            SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).add(guid);
 
-                                channel.sendMessage(
-                                        String.format("%s [%s](<%s>) by %s at %s\n%s",
-                                                redditNotifier.getMention(), title, link, author, time, mediaUrl)
-                                ).queue();
-                            }
+                            if (SUBREDDIT_CACHE_MAP.get(subreddit).size() > 30)
+                                SUBREDDIT_CACHE_MAP.get(subreddit).removeFirst();
+                        } catch (final Exception exception) {
+                            Constants.LOGGER.error("Failed to process Reddit item for r/{}", subreddit, exception);
                         }
-
-                        SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).add(guid);
-
-                        if (SUBREDDIT_CACHE_MAP.get(subreddit).size() > 30)
-                            SUBREDDIT_CACHE_MAP.get(subreddit).removeFirst();
                     });
                 }
             } catch (final IOException exception) {
                 Constants.LOGGER.error("Failed to read RSS feed!", exception);
+            } catch (final Exception exception) {
+                Constants.LOGGER.error("Reddit listener task failed", exception);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }

@@ -61,50 +61,61 @@ public class SteamListener {
             return;
 
         EXECUTOR.scheduleAtFixedRate(() -> {
-            final Map<Integer, List<SteamNotifier>> appGuildMap = new HashMap<>();
-            Database.getDatabase().steamNotifier.find().forEach(notifier -> {
-                final int appId = notifier.getAppId();
-                List<SteamNotifier> notifiers;
-                if (!appGuildMap.containsKey(appId)) {
-                    notifiers = new ArrayList<>();
-                    appGuildMap.put(appId, notifiers);
-                } else {
-                    notifiers = appGuildMap.get(appId);
-                }
-
-                notifiers.add(notifier);
-            });
-
-            for (final Entry<Integer, List<SteamNotifier>> entry : appGuildMap.entrySet()) {
-                final int appId = entry.getKey();
-
-                final List<SteamNotifier> notifiers = entry.getValue();
-                if (notifiers.isEmpty()) {
-                    continue;
-                }
-
-                final GetNewsForAppRequest request = SteamWebApiRequestFactory.createGetNewsForAppRequest(appId, 1,
-                        MessageEmbed.DESCRIPTION_MAX_LENGTH);
-                try {
-                    final GetNewsForApp newses = CLIENT.processRequest(request);
-                    final Newsitem current = newses.getAppnews().getNewsitems().getFirst();
-                    current.getAdditionalProperties().clear();
-                    for (final SteamNotifier steamNotifier : notifiers) {
-                        final Newsitem original = steamNotifier.getPreviousData();
-                        if (current.equals(original)) continue;
-                        if (original != null) {
-                            final EmbedBuilder changes = getFormattedChanges(original, current);
-                            sendUpdate(jda, steamNotifier, original, current, changes);
-                        }
-                        steamNotifier.setPreviousData(current);
-                        Database.getDatabase().steamNotifier.updateOne(
-                                Filters.and(Filters.eq("guild", steamNotifier.getGuild()),
-                                        Filters.eq("channel", steamNotifier.getChannel()), Filters.eq("appId", appId)),
-                                Updates.set("previousData", steamNotifier.getPreviousData()));
+            try {
+                final Map<Integer, List<SteamNotifier>> appGuildMap = new HashMap<>();
+                Database.getDatabase().steamNotifier.find().forEach(notifier -> {
+                    final int appId = notifier.getAppId();
+                    List<SteamNotifier> notifiers;
+                    if (!appGuildMap.containsKey(appId)) {
+                        notifiers = new ArrayList<>();
+                        appGuildMap.put(appId, notifiers);
+                    } else {
+                        notifiers = appGuildMap.get(appId);
                     }
-                } catch (final SteamApiException exception) {
-                    Constants.LOGGER.error("Failed to get news for app!", exception);
+
+                    notifiers.add(notifier);
+                });
+
+                for (final Entry<Integer, List<SteamNotifier>> entry : appGuildMap.entrySet()) {
+                    final int appId = entry.getKey();
+
+                    final List<SteamNotifier> notifiers = entry.getValue();
+                    if (notifiers.isEmpty()) {
+                        continue;
+                    }
+
+                    final GetNewsForAppRequest request = SteamWebApiRequestFactory.createGetNewsForAppRequest(appId, 1,
+                            MessageEmbed.DESCRIPTION_MAX_LENGTH);
+                    try {
+                        final GetNewsForApp newses = CLIENT.processRequest(request);
+                        if (newses.getAppnews() == null || newses.getAppnews().getNewsitems().isEmpty())
+                            continue;
+
+                        final Newsitem current = newses.getAppnews().getNewsitems().getFirst();
+                        current.getAdditionalProperties().clear();
+                        for (final SteamNotifier steamNotifier : notifiers) {
+                            final Newsitem original = steamNotifier.getPreviousData();
+                            if (current.equals(original))
+                                continue;
+                            if (original != null) {
+                                final EmbedBuilder changes = getFormattedChanges(original, current);
+                                sendUpdate(jda, steamNotifier, original, current, changes);
+                            }
+                            steamNotifier.setPreviousData(current);
+                            Database.getDatabase().steamNotifier.updateOne(
+                                    Filters.and(Filters.eq("guild", steamNotifier.getGuild()),
+                                            Filters.eq("channel", steamNotifier.getChannel()),
+                                            Filters.eq("appId", appId)),
+                                    Updates.set("previousData", steamNotifier.getPreviousData()));
+                        }
+                    } catch (final SteamApiException exception) {
+                        Constants.LOGGER.error("Failed to get news for app {}", appId, exception);
+                    } catch (final Exception exception) {
+                        Constants.LOGGER.error("Unexpected error processing app {}", appId, exception);
+                    }
                 }
+            } catch (final Exception exception) {
+                Constants.LOGGER.error("Steam listener task failed", exception);
             }
         }, 0, 30, TimeUnit.MINUTES);
     }
@@ -194,7 +205,7 @@ public class SteamListener {
 
         final TextChannel channel = guild.getTextChannelById(notifier.getChannel());
         if (channel == null) {
-            Database.getDatabase().steamNotifier.deleteMany(Filters.eq("channel", notifier.getGuild()));
+            Database.getDatabase().steamNotifier.deleteMany(Filters.eq("channel", notifier.getChannel()));
             return;
         }
         

@@ -25,8 +25,6 @@ public class TwitchListener {
         if (IS_INITIALIZED.get())
             return;
 
-        IS_INITIALIZED.set(true);
-
         Environment.INSTANCE.twitchOAuthToken().ifPresentOrElse(token -> {
             twitchClient = TwitchClientBuilder.builder().withDefaultEventHandler(ReactorEventHandler.class)
                     .withDefaultAuthToken(new OAuth2Credential("twitch", token))
@@ -34,6 +32,7 @@ public class TwitchListener {
                     .build();
 
             twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> handleGoLive(jda, event));
+            IS_INITIALIZED.set(true);
         }, () -> Constants.LOGGER.error("Twitch OAuth Token has not been set!"));
     }
 
@@ -42,15 +41,26 @@ public class TwitchListener {
     }
     
     public static boolean subscribeChannel(String channel) {
-        if (Database.getDatabase().twitchNotifier.countDocuments(Filters.eq("channel", channel)) == 0) {
-            TwitchListener.twitchClient.getClientHelper().enableStreamEventListener(channel);
-            return true;
+        if (twitchClient == null) {
+            Constants.LOGGER.warn("Twitch listener has not been initialized, cannot subscribe to {}.", channel);
+            return false;
         }
 
-        return false;
+        long subscriptionCount = Database.getDatabase().twitchNotifier.countDocuments(Filters.eq("channel", channel));
+        if (subscriptionCount <= 0)
+            return false;
+
+        if (subscriptionCount == 1) {
+            TwitchListener.twitchClient.getClientHelper().enableStreamEventListener(channel);
+        }
+
+        return true;
     }
 
     public static void unsubscribe(String channel) {
+        if (twitchClient == null)
+            return;
+
         if (Database.getDatabase().twitchNotifier.countDocuments(Filters.eq("channel", channel)) == 0) {
             TwitchListener.twitchClient.getClientHelper().disableStreamEventListener(channel);
         }
