@@ -1,13 +1,18 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -28,6 +33,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -40,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class YouTubeListener {
     private static final String TOPIC_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s";
+    private static final int MAX_IDS_PER_REQUEST = 50;
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     private static final DocumentBuilderFactory DOCUMENT_FACTORY = DocumentBuilderFactory.newInstance();
@@ -100,6 +107,8 @@ public class YouTubeListener {
                             if (videos.isEmpty())
                                 return;
 
+                            Map<String, VideoDetails> videoDetailsMap = fetchVideoDetails(videos);
+
                             Map<YoutubeNotifier, Guild> notifierGuildMap = new HashMap<>();
 
                             for (YoutubeNotifier found : notifiers) {
@@ -135,6 +144,8 @@ public class YouTubeListener {
                                                 Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
                                                 Updates.set("storedVideos", notifier.getStoredVideos()));
 
+                                        VideoDetails details = videoDetailsMap.getOrDefault(video.videoId(),
+                                                VideoDetails.unknown());
                                         var embed = new EmbedBuilder()
                                                 .setTitle(video.title(), video.url())
                                                 .setDescription(video.description())
@@ -142,10 +153,12 @@ public class YouTubeListener {
                                                 .addField("Channel",
                                                         "[" + video.channel().name() + "](" + video.channel().url() + ")",
                                                         true)
-                                                .addField("Published At", video.publishedAt().toString(), true)
+                                                .addField("Type", details.type().label(), true)
+                                                .addField("Published At", formatDiscordTimestamp(video.publishedAt()), true)
                                                 .setFooter("YouTube Video ID: " + video.videoId())
                                                 .setTimestamp(Instant.now());
-                                        channel.sendMessage(notifier.getMention())
+                                        String message = buildNotificationMessage(notifier.getMention(), video, details);
+                                        channel.sendMessage(message)
                                                 .setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
                                                 .setEmbeds(embed.build()).queue();
                                     }
@@ -299,6 +312,135 @@ public class YouTubeListener {
         return Optional.empty();
     }
 
+    private static Map<String, VideoDetails> fetchVideoDetails(List<Video> videos) {
+        Optional<String> apiKey = Environment.INSTANCE.youtubeApiKey();
+        if (apiKey.isEmpty())
+            return Collections.emptyMap();
+
+        List<String> ids = videos.stream().map(Video::videoId).filter(id -> !id.isBlank()).distinct().toList();
+        if (ids.isEmpty())
+            return Collections.emptyMap();
+
+        Map<String, VideoDetails> results = new HashMap<>();
+        String apiUrl = Environment.INSTANCE.youtubeVideosApiUrl()
+                .orElse("https://www.googleapis.com/youtube/v3/videos");
+
+        for (int i = 0; i < ids.size(); i += MAX_IDS_PER_REQUEST) {
+            List<String> chunk = ids.subList(i, Math.min(i + MAX_IDS_PER_REQUEST, ids.size()));
+            HttpUrl url = HttpUrl.parse(apiUrl);
+            if (url == null) {
+                Constants.LOGGER.error("Invalid YouTube videos API URL: {}", apiUrl);
+                return results;
+            }
+
+            url = url.newBuilder()
+                    .addQueryParameter("part", "contentDetails,snippet,liveStreamingDetails")
+                    .addQueryParameter("id", String.join(",", chunk))
+                    .addQueryParameter("key", apiKey.get())
+                    .build();
+
+            Request request = new Request.Builder().url(url).build();
+            try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    Constants.LOGGER.error("YouTube video lookup failed (status {})", response.code());
+                    continue;
+                }
+
+                ResponseBody body = response.body();
+                if (body == null) {
+                    Constants.LOGGER.error("YouTube video lookup returned an empty body");
+                    continue;
+                }
+
+                JsonObject json = Constants.GSON.fromJson(body.string(), JsonObject.class);
+                JsonArray items = json == null ? null : json.getAsJsonArray("items");
+                if (items == null)
+                    continue;
+
+                for (JsonElement element : items) {
+                    JsonObject item = element.getAsJsonObject();
+                    if (item == null)
+                        continue;
+
+                    String id = item.has("id") ? item.get("id").getAsString() : "";
+                    JsonObject snippet = item.has("snippet") ? item.getAsJsonObject("snippet") : null;
+                    JsonObject contentDetails = item.has("contentDetails") ? item.getAsJsonObject("contentDetails") : null;
+                    JsonObject liveStreamingDetails = item.has("liveStreamingDetails")
+                            ? item.getAsJsonObject("liveStreamingDetails")
+                            : null;
+
+                    String liveContent = snippet != null && snippet.has("liveBroadcastContent")
+                            ? snippet.get("liveBroadcastContent").getAsString()
+                            : "";
+                    String duration = contentDetails != null && contentDetails.has("duration")
+                            ? contentDetails.get("duration").getAsString()
+                            : "";
+                    String scheduledStartTime = liveStreamingDetails != null && liveStreamingDetails.has("scheduledStartTime")
+                            ? liveStreamingDetails.get("scheduledStartTime").getAsString()
+                            : "";
+
+                    if (!id.isBlank()) {
+                        results.put(id, determineDetails(liveContent, duration, scheduledStartTime));
+                    }
+                }
+            } catch (final Exception exception) {
+                Constants.LOGGER.error("Failed to query YouTube video details", exception);
+            }
+        }
+
+        return results;
+    }
+
+    private static VideoDetails determineDetails(String liveBroadcastContent, String duration, String scheduledStart) {
+        VideoStatus status = "upcoming".equalsIgnoreCase(liveBroadcastContent)
+                ? VideoStatus.SCHEDULED
+                : VideoStatus.UPLOADED;
+
+        Instant scheduledAt = null;
+        if (status == VideoStatus.SCHEDULED && scheduledStart != null && !scheduledStart.isBlank()) {
+            try {
+                scheduledAt = OffsetDateTime.parse(scheduledStart).toInstant();
+            } catch (final Exception exception) {
+                Constants.LOGGER.error("Failed to parse scheduled start time: {}", scheduledStart, exception);
+            }
+        }
+
+        if ("live".equalsIgnoreCase(liveBroadcastContent) || "upcoming".equalsIgnoreCase(liveBroadcastContent))
+            return new VideoDetails(VideoType.STREAM, status, scheduledAt);
+
+        if (duration == null || duration.isBlank())
+            return new VideoDetails(VideoType.UNKNOWN, status, scheduledAt);
+
+        try {
+            Duration parsed = Duration.parse(duration);
+            return new VideoDetails(parsed.getSeconds() <= 60 ? VideoType.SHORT : VideoType.VIDEO, status, scheduledAt);
+        } catch (final Exception exception) {
+            return new VideoDetails(VideoType.UNKNOWN, status, scheduledAt);
+        }
+    }
+
+    private static String buildNotificationMessage(String mention, Video video, VideoDetails details) {
+        String channelName = video.channel().name();
+        if (channelName == null || channelName.isBlank())
+            channelName = "Unknown channel";
+
+        String verb = details.status() == VideoStatus.SCHEDULED ? "scheduled" : "uploaded";
+        String typeLabel = details.type() == VideoType.UNKNOWN
+                ? "video"
+                : details.type().label().toLowerCase(Locale.ROOT);
+        String scheduledSuffix = "";
+        if (details.status() == VideoStatus.SCHEDULED && details.scheduledAt() != null) {
+            long epoch = details.scheduledAt().getEpochSecond();
+            scheduledSuffix = " for <t:" + epoch + ":F>";
+        }
+
+        return String.format("%s %s has %s a new %s%s!", mention, channelName, verb, typeLabel, scheduledSuffix);
+    }
+
+    private static String formatDiscordTimestamp(LocalDateTime time) {
+        return TimeFormat.DATE_TIME_SHORT.format(time.toInstant(ZoneOffset.UTC));
+    }
+
     private record Video(String id, String videoId, String title, String url, Channel channel,
                          LocalDateTime publishedAt, LocalDateTime updatedAt, String thumbnailUrl, String description,
                          MediaStatistics mediaStatistics) {
@@ -306,6 +448,34 @@ public class YouTubeListener {
         }
 
         private record MediaStatistics(int likes, int views) {
+        }
+    }
+
+    private enum VideoType {
+        STREAM("Stream"),
+        SHORT("Short"),
+        VIDEO("Video"),
+        UNKNOWN("Unknown");
+
+        private final String label;
+
+        VideoType(String label) {
+            this.label = label;
+        }
+
+        public String label() {
+            return this.label;
+        }
+    }
+
+    private enum VideoStatus {
+        SCHEDULED,
+        UPLOADED
+    }
+
+    private record VideoDetails(VideoType type, VideoStatus status, Instant scheduledAt) {
+        private static VideoDetails unknown() {
+            return new VideoDetails(VideoType.UNKNOWN, VideoStatus.UPLOADED, null);
         }
     }
 }
