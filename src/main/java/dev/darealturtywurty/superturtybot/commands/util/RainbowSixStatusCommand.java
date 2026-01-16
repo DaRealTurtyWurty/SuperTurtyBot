@@ -2,29 +2,28 @@ package dev.darealturtywurty.superturtybot.commands.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.javalin.http.ContentType;
+import lombok.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.awt.*;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class RainbowSixStatusCommand extends CoreCommand {
-    private static final String R6_STATUS_URL = "https://game-status-api.ubisoft.com/v1/instances?appIds=e3d5ea9e-50bd-43b7-88bf-39794f4e3d40,fb4cc4c9-2063-461d-a1e8-84a7d36525fc,4008612d-3baf-49e4-957a-33066726a7bc";
+    private static final String R6_STATUS_URL = "https://public-ubiservices.ubi.com/v1/applications/gameStatuses?applicationIds=e3d5ea9e-50bd-43b7-88bf-39794f4e3d40,fb4cc4c9-2063-461d-a1e8-84a7d36525fc,4008612d-3baf-49e4-957a-33066726a7bc,6e3c99c9-6c3f-43f4-b4f6-f1a3143f2764,76f580d5-7f50-47cc-bbc1-152d000bfe59";
 
     public RainbowSixStatusCommand() {
         super(new Types(true, false, false, false));
@@ -59,55 +58,85 @@ public class RainbowSixStatusCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        Request request = new Request.Builder().url(R6_STATUS_URL).get().build();
-        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if(!response.isSuccessful()) throw new IOException("Unexpected code " + response.code());
+        HttpUrl url = HttpUrl.parse(R6_STATUS_URL);
+        if (url == null) {
+            event.getHook().sendMessage("❌ An error occurred while building the request URL!").queue();
+            return;
+        }
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Ubi-AppId", "39baebad-39e5-4552-8c25-2c9b919064e2")
+                .addHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType())
+                .build();
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response.code());
 
             ResponseBody body = response.body();
-            if(body == null) throw new IOException("Response body is null!");
+            if (body == null) throw new IOException("Response body is null!");
 
             String bodyString = body.string();
-            JsonArray array = Constants.GSON.fromJson(bodyString, JsonArray.class);
-            List<GameInstance> instances = new ArrayList<>();
-            for (JsonElement element : array) {
-                instances.add(Constants.GSON.fromJson(element, GameInstance.class));
+            JsonArray gameStatusesJson = Constants.GSON.fromJson(bodyString, JsonObject.class)
+                    .getAsJsonArray("gameStatuses");
+            List<GameStatus> statuses = new ArrayList<>();
+            for (JsonElement status : gameStatusesJson) {
+                statuses.add(Constants.GSON.fromJson(status, GameStatus.class));
             }
 
             var embed = new EmbedBuilder();
             embed.setTitle("Rainbow Six Siege Status");
-            embed.setColor(new Color(0xff930b));
             embed.setTimestamp(Instant.now());
             embed.setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
-            embed.setThumbnail("https://pbs.twimg.com/media/FFjdfYeXIAMkL8e?format=jpg&name=large");
 
             var description = new StringBuilder("The status of Rainbow Six Siege servers.\n\n");
 
-            for (GameInstance instance : instances) {
-                String status = switch (instance.getStatus().toLowerCase(Locale.ROOT)) {
-                    case "online" -> "🟢 Online";
-                    case "degraded" -> "🟠 Degraded";
-                    case "maintenance" -> "🟡 Maintenance";
-                    case "offline" -> "🔴 Offline";
-                    default -> "🔵 Unknown";
-                };
+            StatusType worstStatus = StatusType.ONLINE;
+            for (GameStatus status : statuses) {
+                PlatformType platformType = PlatformType.fromId(status.getPlatformType());
+                if (platformType == null)
+                    continue;
 
-                List<String> features = instance.getImpactedFeatures();
-                String impactedFeatures = (features == null || features.isEmpty() ?
-                                "None" :
-                                "* " + String.join("\n* ", features)
-                        );
+                StatusType statusType = StatusType.fromStatus(status.getStatus());
+                if (statusType == null) {
+                    if(status.isMaintenance()) {
+                        statusType = StatusType.MAINTENANCE;
+                    } else {
+                        continue;
+                    }
+                }
 
-                String name = instance.getName()
-                        .replace("Rainbow Six Siege - ", "")
-                        .replace("XBOXONE", "Xbox One")
-                        .replace("PS4", "PlayStation 4");
+                if (statusType.ordinal() > worstStatus.ordinal()) {
+                    worstStatus = statusType;
+                }
 
-                description.append("**").append(name).append("**\n");
-                description.append("Status: ").append(status).append("\n");
-                description.append("Impacted Features: \n").append(impactedFeatures).append("\n\n");
+                description.append("**")
+                        .append(platformType.getDisplayName())
+                        .append("**: ")
+                        .append(statusType.getEmoji())
+                        .append(" ")
+                        .append(statusType.getDisplayName())
+                        .append("\n");
+
+                if (status.getImpactedFeatures().length > 0) {
+                    description.append("_Impacted Features: ");
+                    for (int i = 0; i < status.getImpactedFeatures().length; i++) {
+                        description.append(status.getImpactedFeatures()[i]);
+                        if (i < status.getImpactedFeatures().length - 1) {
+                            description.append(", ");
+                        }
+                    }
+
+                    description.append("_\n");
+                }
             }
 
             embed.setDescription(description);
+            embed.setColor(switch (worstStatus) {
+                case ONLINE -> 0x00DD00;
+                case DEGRADED -> 0xEEDD00;
+                case MAINTENANCE -> 0xFFA500;
+                case OFFLINE -> 0xDD0000;
+            });
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         } catch (IOException exception) {
@@ -119,15 +148,56 @@ public class RainbowSixStatusCommand extends CoreCommand {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class GameInstance {
-        private String AppID;
-        private String MDM;
-        private String SpaceID;
-        private String Category;
-        private String Name;
-        private String Platform;
-        private String Status;
-        private boolean Maintenance;
-        private List<String> ImpactedFeatures;
+    public static class GameStatus {
+        private String applicationId;
+        private String spaceId;
+        private String name;
+        private String platformType;
+        private String status;
+        private boolean isMaintenance;
+        private String[] impactedFeatures;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum PlatformType {
+        PC("PC", "PC"),
+        PS4("ORBIS", "PS4"),
+        PS5("PS5", "PS5"),
+        XBOX_SERIES_XS("XboxScarlett", "Xbox Series X|S"),
+        XBOX_ONE("DURANGO", "Xbox One");
+
+        private final String id;
+        private final String displayName;
+
+        public static PlatformType fromId(String id) {
+            for (PlatformType type : values()) {
+                if (type.id.equalsIgnoreCase(id))
+                    return type;
+            }
+
+            return null;
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public enum StatusType {
+        ONLINE("🟢", "Online"),
+        DEGRADED("🟠", "Degraded Performance"),
+        MAINTENANCE("🟣", "Maintenance"),
+        OFFLINE("🔴", "Offline");
+
+        private final String emoji;
+        private final String displayName;
+
+        public static StatusType fromStatus(String status) {
+            for (StatusType type : values()) {
+                if (type.name().equalsIgnoreCase(status))
+                    return type;
+            }
+
+            return null;
+        }
     }
 }
