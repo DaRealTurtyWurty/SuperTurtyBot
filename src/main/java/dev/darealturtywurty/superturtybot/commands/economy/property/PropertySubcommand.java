@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.economy;
+package dev.darealturtywurty.superturtybot.commands.economy.property;
 
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;

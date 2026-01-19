@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.economy;
+package dev.darealturtywurty.superturtybot.commands.economy.property;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;

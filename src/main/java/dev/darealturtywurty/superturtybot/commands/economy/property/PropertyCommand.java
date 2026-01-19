@@ -1,5 +1,6 @@
-package dev.darealturtywurty.superturtybot.commands.economy;
+package dev.darealturtywurty.superturtybot.commands.economy.property;
 
+import dev.darealturtywurty.superturtybot.commands.economy.EconomyCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;

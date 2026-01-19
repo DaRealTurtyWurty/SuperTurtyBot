@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.commands.economy;
+package dev.darealturtywurty.superturtybot.commands.economy.property;
 
 import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
