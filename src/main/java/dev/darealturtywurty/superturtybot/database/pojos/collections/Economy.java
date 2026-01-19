@@ -28,6 +28,7 @@ public class Economy {
     private long nextHeist;
     private long nextCrash;
     private long nextDonate;
+    private long nextBlackjack;
 
     private long nextDaily;
     private long nextWeekly;

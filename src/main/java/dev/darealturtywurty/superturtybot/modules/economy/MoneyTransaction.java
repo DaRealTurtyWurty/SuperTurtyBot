@@ -26,6 +26,7 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
     public static final byte PROPERTY = 18;
     public static final byte BOOST = 19;
     public static final byte RENT = 20;
+    public static final byte BLACKJACK = 21;
 
     public static String getTypeName(byte typeId) {
         return switch (typeId) {
