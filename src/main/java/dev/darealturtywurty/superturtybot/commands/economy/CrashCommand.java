@@ -63,15 +63,19 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
-        BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
-        if (amount == null) return;
+        BigInteger amount = event.getOption("amount", null, StringUtils.getAsBigInteger(event));
+        if (amount == null) {
+            event.getHook().editOriginal("❌ Invalid amount specified!").queue();
+            return;
+        }
+
         if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You must bet at least %s1!".formatted(config.getEconomyCurrency())).queue();
             return;
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
+        if (account.isImprisoned()) {
             event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
                     TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
             return;
