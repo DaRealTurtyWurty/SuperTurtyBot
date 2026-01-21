@@ -146,6 +146,11 @@ public class WordleCommand extends CoreCommand {
             return;
         }
 
+        if (event.isFromGuild() && event.getChannelType().isThread()) {
+            reply(event, "❌ This command cannot be used in a thread!", false, true);
+            return;
+        }
+
         event.deferReply().queue(hook -> {
         }, error -> {
         });

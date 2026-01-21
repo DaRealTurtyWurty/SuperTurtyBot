@@ -209,7 +209,7 @@ public class ScamDomainDetector {
                         webSocket.request(1);
                         consecutiveWebSocketFailures.set(0);
                         startPing(webSocket);
-                        Constants.LOGGER.info("Connected to scam-domain websocket feed.");
+                        // Constants.LOGGER.info("Connected to scam-domain websocket feed.");
                     }
 
                     @Override
@@ -241,7 +241,7 @@ public class ScamDomainDetector {
                         cancelPing();
                         if (statusCode == 1000) {
                             Constants.LOGGER.info("Scam-domain websocket closed normally: {} - {}", statusCode, reason);
-                        } else {
+                        } else if(statusCode != 1006) {
                             Constants.LOGGER.warn("Scam-domain websocket closed unexpectedly: {} - {}", statusCode, reason);
                         }
                         scheduleReconnect();

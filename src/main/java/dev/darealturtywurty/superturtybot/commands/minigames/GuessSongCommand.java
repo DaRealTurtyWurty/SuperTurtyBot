@@ -45,6 +45,11 @@ public class GuessSongCommand extends SubcommandCommand {
             return;
         }
 
+        if (event.getChannelType().isThread()) {
+            reply(event, "❌ This command cannot be used in a thread!", false, true);
+            return;
+        }
+
         if (event.getChannelType() != ChannelType.TEXT) {
             reply(event, "❌ You must be in a text channel to use this command!", false, true);
             return;

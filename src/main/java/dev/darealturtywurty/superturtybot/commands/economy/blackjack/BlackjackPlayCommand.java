@@ -31,6 +31,11 @@ public class BlackjackPlayCommand extends BlackjackSubcommand {
 
     @Override
     protected void execute(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
+        if (event.getChannelType().isThread()) {
+            event.getHook().editOriginal("❌ This command cannot be used in a thread!").queue();
+            return;
+        }
+
         BigInteger amount = event.getOption("bet", StringUtils.getAsBigInteger(event));
         if (amount == null) {
             event.getHook().editOriginal("❌ Invalid bet amount specified!").queue();

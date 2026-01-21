@@ -68,6 +68,11 @@ public class HeistStartSubcommand extends HeistSubcommand {
 
     @Override
     protected void execute(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
+        if (event.getChannelType().isThread()) {
+            event.getHook().editOriginal("❌ This command cannot be used in a thread!").queue();
+            return;
+        }
+
         if (account.isImprisoned()) {
             event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot commit crimes! You will be released %s.",
                     TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();

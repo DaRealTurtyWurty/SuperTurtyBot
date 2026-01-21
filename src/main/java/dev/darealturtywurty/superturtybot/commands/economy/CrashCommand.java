@@ -63,6 +63,11 @@ public class CrashCommand extends EconomyCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
+        if (event.getChannelType().isThread()) {
+            event.getHook().editOriginal("❌ This command cannot be used in a thread!").queue();
+            return;
+        }
+
         BigInteger amount = event.getOption("amount", null, StringUtils.getAsBigInteger(event));
         if (amount == null) {
             event.getHook().editOriginal("❌ Invalid amount specified!").queue();

@@ -40,6 +40,11 @@ public class GeoGuesserCommand extends SubcommandCommand {
             return;
         }
 
+        if (event.getChannelType().isThread()) {
+            reply(event, "❌ This command cannot be used in a thread!", false, true);
+            return;
+        }
+
         // Check if the user is already playing a game
         for (Game game : GAMES) {
             if (game.getUserId() == event.getUser().getIdLong()) {
