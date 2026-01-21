@@ -59,7 +59,7 @@ public class BlackjackPlayCommand extends BlackjackSubcommand {
                 return;
             }
 
-            account.setNextBlackjack(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
+            account.setNextBlackjack(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10));
         }
 
         EconomyManager.removeMoney(account, amount, false);
