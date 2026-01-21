@@ -97,7 +97,7 @@ public class CrashCommand extends EconomyCommand {
             return;
         }
 
-        account.setNextCrash(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(30));
+        account.setNextCrash(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(20));
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
