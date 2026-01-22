@@ -27,6 +27,7 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
     public static final byte BOOST = 19;
     public static final byte RENT = 20;
     public static final byte BLACKJACK = 21;
+    public static final byte POKER = 22;
 
     public static String getTypeName(byte typeId) {
         return switch (typeId) {
@@ -51,6 +52,7 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
             case PROPERTY -> "Property";
             case BOOST -> "Boost";
             case RENT -> "Rent";
+            case POKER -> "Poker";
             default -> "Unknown";
         };
     }

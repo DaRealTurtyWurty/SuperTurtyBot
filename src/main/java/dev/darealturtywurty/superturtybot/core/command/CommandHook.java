@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestComman
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.economy.blackjack.BlackjackCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.property.PropertyCommand;
+import dev.darealturtywurty.superturtybot.commands.economy.poker.PokerCommand;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
@@ -404,7 +405,6 @@ public class CommandHook extends ListenerAdapter {
 //        commands.add(new RussianRouletteCommand());
 //        commands.add(new WordScrambleCommand());
 //        commands.add(new BattleshipCommand());
-//        commands.add(new PokerCommand());
 //        commands.add(new UnoCommand());
 //        commands.add(new LudoCommand());
 //        commands.add(new MonopolyCommand());
@@ -428,6 +428,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new EconomyResetCommand());
         commands.add(new HeistCommand());
         commands.add(new BlackjackCommand());
+        commands.add(new PokerCommand());
 
         return commands;
     }
