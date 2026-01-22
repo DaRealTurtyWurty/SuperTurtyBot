@@ -29,7 +29,8 @@ public class BlackjackCommand extends EconomyCommand {
         addSubcommands(
                 new BlackjackPlayCommand(),
                 new BlackjackHitCommand(),
-                new BlackjackStandCommand()
+                new BlackjackStandCommand(),
+                new BlackjackHowToPlayCommand()
         );
     }
 

@@ -22,7 +22,8 @@ public class PokerCommand extends EconomyCommand {
                 new PokerPlayCommand(),
                 new PokerCheckCommand(),
                 new PokerBetCommand(),
-                new PokerFoldCommand()
+                new PokerFoldCommand(),
+                new PokerHowToPlayCommand()
         );
     }
 
