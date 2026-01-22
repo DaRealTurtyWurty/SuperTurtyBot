@@ -52,6 +52,7 @@ public record MoneyTransaction(long timestamp, BigInteger amount, byte type, @Nu
             case PROPERTY -> "Property";
             case BOOST -> "Boost";
             case RENT -> "Rent";
+            case BLACKJACK -> "Blackjack";
             case POKER -> "Poker";
             default -> "Unknown";
         };

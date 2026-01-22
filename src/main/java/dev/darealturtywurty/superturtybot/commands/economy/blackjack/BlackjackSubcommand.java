@@ -53,6 +53,11 @@ abstract class BlackjackSubcommand extends SubcommandCommand {
 
         BigInteger net = payout.subtract(bet);
         account.addTransaction(net, MoneyTransaction.BLACKJACK);
+        if (net.signum() > 0) {
+            EconomyManager.betWin(account, net);
+        } else if (net.signum() < 0) {
+            EconomyManager.betLoss(account, net.negate());
+        }
         EconomyManager.updateAccount(account);
     }
 }
