@@ -94,6 +94,23 @@ public class EconomyManager {
         return getAccount(guild, user).orElseGet(() -> createAccount(guild, user));
     }
 
+    public static Economy getOrCreateAccount(Guild guild, long userId) {
+        Optional<Economy> existing = Optional.ofNullable(Database.getDatabase().economy.find(
+                Filters.and(
+                        Filters.eq("guild", guild.getIdLong()),
+                        Filters.eq("user", userId)
+                )).first());
+        if (existing.isPresent())
+            return existing.get();
+
+        GuildData config = GuildData.getOrCreateGuildData(guild);
+        final var economy = new Economy(guild.getIdLong(), userId);
+        economy.setBank(config.getDefaultEconomyBalance());
+        economy.addTransaction(config.getDefaultEconomyBalance(), MoneyTransaction.CREATE_ACCOUNT);
+        Database.getDatabase().economy.insertOne(economy);
+        return economy;
+    }
+
     public static BigInteger removeMoney(Economy account, BigInteger amount) {
         return removeMoney(account, amount, false);
     }
