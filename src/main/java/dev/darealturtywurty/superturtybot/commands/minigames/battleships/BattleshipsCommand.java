@@ -10,13 +10,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
+import reactor.function.Function4;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,7 +31,8 @@ public class BattleshipsCommand extends CoreCommand {
                 new BattleshipsPlayCommand(),
                 new BattleshipsPlaceCommand(),
                 new BattleshipsAttackCommand(),
-                new BattleshipsRevealCommand()
+                new BattleshipsRevealCommand(),
+                new BattleshipsPowerUpCommand()
         );
     }
 
@@ -46,10 +43,16 @@ public class BattleshipsCommand extends CoreCommand {
 
             if (game.isReady()) {
                 channel.sendMessage("🚢 Both players have placed all their ships! Let the battle begin!\nIt's " +
-                        (game.isPlayer1(game.getCurrentTurn()) ? "<@" + game.getPlayer1Id() + ">" : "<@" + game.getPlayer2Id() + ">") +
+                        (game.isPlayer1(game.getCurrentTurn()) ? "<@" + game.player1.getUserId() + ">" : "<@" + game.player2.getUserId() + ">") +
                         "'s turn to attack! Use the `/battleships attack` command to make your move.").queue();
             }
         }
+    }
+
+    public static String[] buildNames(SlashCommandInteractionEvent event, Game game) {
+        String player1 = BattleshipsSubcommand.resolveDisplayName(event, game.player1.getUserId(), "Player 1");
+        String player2 = BattleshipsSubcommand.resolveDisplayName(event, game.player2.getUserId(), "Player 2");
+        return new String[]{player1, player2};
     }
 
     @Override
@@ -94,7 +97,8 @@ public class BattleshipsCommand extends CoreCommand {
         String value = focused.getValue().toLowerCase(Locale.ROOT);
 
         switch (focused.getName()) {
-            case OPTION_ORIENTATION -> event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
+            case OPTION_ORIENTATION ->
+                    event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
             case OPTION_SHIP_TYPE -> {
                 List<String> ships = new ArrayList<>();
                 if (!event.isFromGuild() || event.getGuild() == null) {
@@ -220,29 +224,94 @@ public class BattleshipsCommand extends CoreCommand {
                 .findFirst();
     }
 
+    public static class Player {
+        @Getter
+        private final long userId;
+        @Getter
+        private final Set<PowerUp> powerUps = new HashSet<>();
+        private final AtomicBoolean isReady = new AtomicBoolean(false);
+        private final Battleship[] ships = new Battleship[ShipType.values().length];
+        private final boolean[] board = new boolean[BOARD_SIZE * BOARD_SIZE];
+        private final boolean[] scanned = new boolean[BOARD_SIZE * BOARD_SIZE];
+
+        public Player(long userId) {
+            this.userId = userId;
+        }
+
+        public boolean isReady() {
+            return this.isReady.get();
+        }
+
+        public boolean hasPlacedAllShips() {
+            for (Battleship ship : this.ships) {
+                if (ship == null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public void markHit(int x, int y) {
+            this.board[(y * BOARD_SIZE) + x] = true;
+        }
+
+        public void markScanned(int x, int y) {
+            this.scanned[(y * BOARD_SIZE) + x] = true;
+        }
+
+        public void markRepaired(int x, int y) {
+            this.board[(y * BOARD_SIZE) + x] = false;
+        }
+
+        public void repairShip(Battleship ship, int x, int y) {
+            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+            for (int[] position : positions) {
+                if (position[0] == x && position[1] == y) {
+                    ship.repair();
+                    markRepaired(x, y);
+                    break;
+                }
+            }
+        }
+
+        public boolean isHit(int x, int y) {
+            return this.board[(y * BOARD_SIZE) + x];
+        }
+
+        public boolean isScanned(int x, int y) {
+            return this.scanned[(y * BOARD_SIZE) + x];
+        }
+
+        public boolean canPlaceShip(ShipType type) {
+            for (Battleship ship : this.ships) {
+                if (ship != null && ship.getType() == type)
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
     public static class Game {
         @Getter
-        private final long guildId, channelId, threadId, player1Id, player2Id;
+        private final long guildId, channelId, threadId;
         @Getter
         private final boolean isPvP;
-
-        private final Battleship[] player1Ships = new Battleship[ShipType.values().length];
-        private final Battleship[] player2Ships = new Battleship[ShipType.values().length];
-
-        private final boolean[] player1Board = new boolean[BOARD_SIZE * BOARD_SIZE];
-        private final boolean[] player2Board = new boolean[BOARD_SIZE * BOARD_SIZE];
-
+        @Getter
+        private final Player player1, player2;
         private final AtomicLong currentTurn;
-        private final AtomicBoolean isPlayer1Ready = new AtomicBoolean(false);
-        private final AtomicBoolean isPlayer2Ready = new AtomicBoolean(false);
 
-        public Game(long guildId, long channelId, long threadId, long player1Id, long player2Id, boolean isPvP) {
+        @Getter
+        private final boolean powerUpsEnabled;
+
+        public Game(long guildId, long channelId, long threadId, long player1Id, long player2Id, boolean isPvP, boolean powerUpsEnabled) {
             this.guildId = guildId;
             this.channelId = channelId;
             this.threadId = threadId;
-            this.player1Id = player1Id;
-            this.player2Id = player2Id;
+            this.player1 = new Player(player1Id);
+            this.player2 = new Player(player2Id);
             this.isPvP = isPvP;
+            this.powerUpsEnabled = powerUpsEnabled;
 
             this.currentTurn = new AtomicLong(player1Id);
         }
@@ -252,21 +321,11 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public boolean hasPlacedAllShips(long userId) {
-            if (userId == this.player1Id) {
-                for (Battleship ship : this.player1Ships) {
-                    if (ship == null)
-                        return false;
-                }
+            if (userId == this.player1.getUserId())
+                return this.player1.hasPlacedAllShips();
 
-                return true;
-            } else if (userId == this.player2Id) {
-                for (Battleship ship : this.player2Ships) {
-                    if (ship == null)
-                        return false;
-                }
-
-                return true;
-            }
+            if (userId == this.player2.getUserId())
+                return this.player2.hasPlacedAllShips();
 
             return false;
         }
@@ -276,18 +335,20 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public void endTurn() {
-            this.currentTurn.set(this.currentTurn.get() == this.player1Id ? this.player2Id : this.player1Id);
+            this.currentTurn.set(this.currentTurn.get() == this.player1.getUserId()
+                    ? this.player2.getUserId()
+                    : this.player1.getUserId());
         }
 
         public boolean isReady() {
-            return this.isPlayer1Ready.get() && this.isPlayer2Ready.get();
+            return this.player1.isReady() && this.player2.isReady();
         }
 
         public synchronized void setReady(long userId, boolean ready) {
-            if (userId == this.player1Id) {
-                this.isPlayer1Ready.set(ready);
-            } else if (userId == this.player2Id) {
-                this.isPlayer2Ready.set(ready);
+            if (userId == this.player1.getUserId()) {
+                this.player1.isReady.set(ready);
+            } else if (userId == this.player2.getUserId()) {
+                this.player2.isReady.set(ready);
             }
         }
 
@@ -296,25 +357,25 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public void markHit(long userId, int x, int y) {
-            if (userId == this.player1Id) {
-                this.player2Board[index(x, y)] = true;
+            if (userId == this.player1.getUserId()) {
+                this.player2.markHit(x, y);
             } else {
-                this.player1Board[index(x, y)] = true;
+                this.player1.markHit(x, y);
             }
         }
 
         public boolean wasHit(long userId, int x, int y) {
-            return userId == this.player1Id
-                    ? this.player2Board[index(x, y)]
-                    : this.player1Board[index(x, y)];
+            return userId == this.player1.getUserId()
+                    ? this.player2.isHit(x, y)
+                    : this.player1.isHit(x, y);
         }
 
         public boolean isPlayer1(long userId) {
-            return this.player1Id == userId;
+            return this.player1.getUserId() == userId;
         }
 
         public boolean isPlayer2(long userId) {
-            return this.player2Id == userId;
+            return this.player2.getUserId() == userId;
         }
 
         public boolean isPlayer(long userId) {
@@ -322,27 +383,17 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public long getOpponentId(long userId) {
-            return isPlayer1(userId) ? this.player2Id : this.player1Id;
+            return isPlayer1(userId) ? this.player2.getUserId() : this.player1.getUserId();
         }
 
         public Battleship[] getShips(long userId) {
-            if (userId == this.player1Id)
-                return Arrays.copyOf(this.player1Ships, this.player1Ships.length);
-
-            if (userId == this.player2Id)
-                return Arrays.copyOf(this.player2Ships, this.player2Ships.length);
-
-            return new Battleship[0];
+            return isPlayer1(userId) ? this.player1.ships : this.player2.ships;
         }
 
         public boolean canPlaceShip(long userId, ShipType type) {
-            Battleship[] ships = isPlayer1(userId) ? this.player1Ships : this.player2Ships;
-            for (Battleship ship : ships) {
-                if (ship != null && ship.getType() == type)
-                    return false;
-            }
-
-            return true;
+            return isPlayer1(userId)
+                    ? this.player1.canPlaceShip(type)
+                    : this.player2.canPlaceShip(type);
         }
 
         public PlacementResult canPlaceShipAt(long userId, ShipType type, Orientation orientation, int x, int y) {
@@ -355,7 +406,7 @@ public class BattleshipsCommand extends CoreCommand {
             if (!Battleship.isWithinBounds(x, y, type, orientation))
                 return PlacementResult.failure("That ship placement is out of bounds.");
 
-            Battleship[] ships = isPlayer1(userId) ? this.player1Ships : this.player2Ships;
+            Battleship[] ships = isPlayer1(userId) ? this.player1.ships : this.player2.ships;
             int[][] newPositions = Battleship.getPositions(type, orientation, x, y);
             for (Battleship ship : ships) {
                 if (ship == null)
@@ -378,7 +429,7 @@ public class BattleshipsCommand extends CoreCommand {
             if (!placementResult.success())
                 return placementResult;
 
-            Battleship[] ships = isPlayer1(userId) ? this.player1Ships : this.player2Ships;
+            Battleship[] ships = isPlayer1(userId) ? this.player1.ships : this.player2.ships;
             int insertIndex = -1;
             for (int index = 0; index < ships.length; index++) {
                 if (ships[index] == null) {
@@ -395,37 +446,7 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public synchronized AttackResult attack(long attackerId, int x, int y) {
-            AttackResult validation = isAttackValid(attackerId, x, y);
-            if (!validation.success())
-                return validation;
-
-            Battleship[] targetShips = isPlayer1(attackerId) ? this.player2Ships : this.player1Ships;
-            Battleship hitShip = findHitShip(targetShips, x, y);
-
-            markHit(attackerId, x, y);
-
-            boolean hit = hitShip != null;
-            boolean sunk = false;
-            ShipType sunkType = null;
-            if (hit) {
-                sunk = checkIfShipSunk(hitShip, attackerId);
-                if (sunk) {
-                    sunkType = hitShip.getType();
-                }
-            }
-
-            boolean gameOver = false;
-            if (hit) {
-                gameOver = isGameOver(targetShips);
-            }
-
-            long nextTurn = this.currentTurn.get();
-            if (!hit && !gameOver) {
-                endTurn();
-                nextTurn = this.currentTurn.get();
-            }
-
-            return new AttackResult(true, "Attack processed.", hit, sunk, sunkType, gameOver, nextTurn);
+            return attackInternal(attackerId, x, y, true);
         }
 
         private AttackResult isAttackValid(long attackerId, int x, int y) {
@@ -478,6 +499,128 @@ public class BattleshipsCommand extends CoreCommand {
 
             return true;
         }
+
+        public PowerUpResult usePowerUp(long userId, PowerUp powerUp, int x, int y) {
+            if (!powerUpsEnabled)
+                return PowerUpResult.failure("Power-ups are not enabled for this game.");
+
+            if (!isPlayer(userId))
+                return PowerUpResult.failure("You are not a player in this game.");
+
+            Set<PowerUp> powerUps = isPlayer1(userId)
+                    ? this.player1.powerUps
+                    : this.player2.powerUps;
+            if (!powerUps.contains(powerUp))
+                return PowerUpResult.failure("You do not have that power-up available.");
+
+            PowerUpResult result = powerUp.use(this, userId, x, y);
+            if (!result.success())
+                return result;
+
+            powerUps.remove(powerUp);
+            return result;
+        }
+
+        public boolean hasPowerUp(long userId, PowerUp powerUp) {
+            return isPlayer1(userId)
+                    ? this.player1.powerUps.contains(powerUp)
+                    : this.player2.powerUps.contains(powerUp);
+        }
+
+        public boolean hasScannedPosition(long userId, int scanX, int scanY) {
+            return isPlayer1(userId)
+                    ? this.player2.isScanned(scanX, scanY)
+                    : this.player1.isScanned(scanX, scanY);
+        }
+
+        public void markScannedPosition(long userId, int scanX, int scanY) {
+            if (isPlayer1(userId)) {
+                this.player2.markScanned(scanX, scanY);
+            } else {
+                this.player1.markScanned(scanX, scanY);
+            }
+        }
+
+        public void markRepaired(long userId, int x, int y) {
+            if (isPlayer1(userId)) {
+                this.player1.markRepaired(x, y);
+            } else if (isPlayer2(userId)) {
+                this.player2.markRepaired(x, y);
+            }
+        }
+
+        public PowerUp grantRandomPowerUp(long userId) {
+            PowerUp[] powerUps = PowerUp.values();
+            int owned = 0;
+            for (PowerUp powerUp : powerUps) {
+                if (hasPowerUp(userId, powerUp))
+                    owned++;
+            }
+            if (owned >= powerUps.length) {
+                return null;
+            }
+            PowerUp granted;
+            var random = new Random();
+            do {
+                granted = powerUps[random.nextInt(powerUps.length)];
+            } while (hasPowerUp(userId, granted));
+
+            if (isPlayer1(userId)) {
+                this.player1.powerUps.add(granted);
+            } else {
+                this.player2.powerUps.add(granted);
+            }
+
+            return granted;
+        }
+
+        public boolean isGameOver(long attackerId) {
+            Battleship[] targetShips = isPlayer1(attackerId) ? this.player2.ships : this.player1.ships;
+            return isGameOver(targetShips);
+        }
+
+        public synchronized AttackResult attackWithoutTurn(long attackerId, int x, int y) {
+            return attackInternal(attackerId, x, y, false);
+        }
+
+        private synchronized AttackResult attackInternal(long attackerId, int x, int y, boolean endTurnOnMiss) {
+            AttackResult validation = isAttackValid(attackerId, x, y);
+            if (!validation.success())
+                return validation;
+
+            Battleship[] targetShips = isPlayer1(attackerId) ? this.player2.ships : this.player1.ships;
+            Battleship hitShip = findHitShip(targetShips, x, y);
+            if (hitShip != null && hitShip.isHasShield()) {
+                hitShip.deactivateShield();
+                markScannedPosition(attackerId, x, y); // Mark as scanned to show that the ship has been hit (but not actually hit)
+                return new AttackResult(true, "Attack processed. The ship's shield absorbed the hit!", false, false, null, false, this.currentTurn.get());
+            }
+
+            markHit(attackerId, x, y);
+
+            boolean hit = hitShip != null;
+            boolean sunk = false;
+            ShipType sunkType = null;
+            if (hit) {
+                sunk = checkIfShipSunk(hitShip, attackerId);
+                if (sunk) {
+                    sunkType = hitShip.getType();
+                }
+            }
+
+            boolean gameOver = false;
+            if (hit) {
+                gameOver = isGameOver(targetShips);
+            }
+
+            long nextTurn = this.currentTurn.get();
+            if (!hit && endTurnOnMiss) {
+                endTurn();
+                nextTurn = this.currentTurn.get();
+            }
+
+            return new AttackResult(true, "Attack processed.", hit, sunk, sunkType, gameOver, nextTurn);
+        }
     }
 
     @Getter
@@ -487,6 +630,7 @@ public class BattleshipsCommand extends CoreCommand {
         private final int x, y;
 
         private boolean isSunk = false;
+        private boolean hasShield = false;
 
         public Battleship(ShipType type, Orientation orientation, int x, int y) {
             this.type = type;
@@ -515,6 +659,18 @@ public class BattleshipsCommand extends CoreCommand {
 
         public void sink() {
             this.isSunk = true;
+        }
+
+        public void repair() {
+            this.isSunk = false;
+        }
+
+        public void activateShield() {
+            this.hasShield = true;
+        }
+
+        public void deactivateShield() {
+            this.hasShield = false;
         }
     }
 
@@ -561,6 +717,109 @@ public class BattleshipsCommand extends CoreCommand {
                                boolean gameOver, long nextTurn) {
         public static AttackResult failure(String message) {
             return new AttackResult(false, message, false, false, null, false, 0L);
+        }
+    }
+
+    public record PowerUpResult(boolean success, String message) {
+        public static PowerUpResult failure(String message) {
+            return new PowerUpResult(false, message);
+        }
+
+        public static final PowerUpResult SUCCESS = new PowerUpResult(true, "Power-up used successfully.");
+    }
+
+    @Getter
+    public enum PowerUp {
+        SONAR_SCAN("Sonar Scan", true, BattleshipsCommand.PowerUp::useSonarScan),
+        AIRSTRIKE("Airstrike", true, BattleshipsCommand.PowerUp::useAirstrike),
+        REPAIR_SHIP("Repair Ship", false, BattleshipsCommand.PowerUp::useRepairShip),
+        SHIELD("Shield", false, BattleshipsCommand.PowerUp::useShield);
+
+        private final String displayName;
+        private final boolean shouldShowOtherPlayerPosition;
+        private final Function4<Game, Long, Integer, Integer, PowerUpResult> action;
+
+        PowerUp(String displayName, boolean shouldShowOtherPlayerPosition,
+                Function4<Game, Long, Integer, Integer, PowerUpResult> action) {
+            this.displayName = displayName;
+            this.shouldShowOtherPlayerPosition = shouldShowOtherPlayerPosition;
+            this.action = action;
+        }
+
+        private static PowerUpResult useSonarScan(Game game, long userId, int x, int y) {
+            int scanned = 0;
+            for (int scanX = x - 1; scanX <= x + 1; scanX++) {
+                for (int scanY = y - 1; scanY <= y + 1; scanY++) {
+                    if (scanX < 0 || scanX >= BOARD_SIZE || scanY < 0 || scanY >= BOARD_SIZE)
+                        continue;
+
+                    if (!game.hasScannedPosition(userId, scanX, scanY)) {
+                        game.markScannedPosition(userId, scanX, scanY);
+                        scanned++;
+                    }
+                }
+            }
+
+            return scanned == 0
+                    ? PowerUpResult.failure("All positions in the scan area have already been scanned.")
+                    : PowerUpResult.SUCCESS;
+        }
+
+        private static PowerUpResult useAirstrike(Game game, long userId, int x, int y) {
+            int hits = 0;
+            int attacked = 0;
+            for (int strikeX = x - 1; strikeX <= x + 1; strikeX++) {
+                for (int strikeY = y - 1; strikeY <= y + 1; strikeY++) {
+                    if (strikeX < 0 || strikeX >= BOARD_SIZE || strikeY < 0 || strikeY >= BOARD_SIZE)
+                        continue;
+
+                    if (!game.wasHit(userId, strikeX, strikeY)) {
+                        attacked++;
+                        AttackResult attackResult = game.attackWithoutTurn(userId, strikeX, strikeY);
+                        if (attackResult.success() && attackResult.hit()) {
+                            hits++;
+                        }
+                    }
+                }
+            }
+
+            return attacked == 0
+                    ? PowerUpResult.failure("All positions in the airstrike area have already been attacked.")
+                    : PowerUpResult.SUCCESS;
+        }
+
+        private static PowerUpResult useRepairShip(Game game, long userId, int x, int y) {
+            Battleship[] ships = game.getShips(userId);
+            for (Battleship ship : ships) {
+                if (ship == null)
+                    continue;
+
+                int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                for (int[] position : positions) {
+                    if (position[0] == x && position[1] == y) {
+                        if (!ship.isSunk())
+                            return PowerUpResult.failure("The ship at that position is not sunk.");
+
+                        ship.repair();
+                        int[][] repairPositions = Battleship.getPositions(
+                                ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                        for (int[] repairPosition : repairPositions) {
+                            game.markRepaired(userId, repairPosition[0], repairPosition[1]);
+                        }
+                        return PowerUpResult.SUCCESS;
+                    }
+                }
+            }
+
+            return PowerUpResult.failure("No ship found at the specified position.");
+        }
+
+        private static PowerUpResult useShield(Game game, long userId, int x, int y) {
+            return PowerUpResult.failure("Shield is not implemented yet.");
+        }
+
+        public PowerUpResult use(Game game, long userId, int x, int y) {
+            return this.action.apply(game, userId, x, y);
         }
     }
 }

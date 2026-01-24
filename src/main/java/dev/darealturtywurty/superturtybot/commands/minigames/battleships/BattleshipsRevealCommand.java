@@ -33,17 +33,11 @@ public class BattleshipsRevealCommand extends BattleshipsSubcommand {
         }
 
         try {
-            String[] names = buildNames(event, game);
+            String[] names = BattleshipsCommand.buildNames(event, game);
             FileUpload upload = BattleshipsImageRenderer.createUpload(game, names, user.getIdLong());
             replyBattleships(event, "✅ Here's your board with your ships revealed.").setFiles(upload).queue();
         } catch (IOException exception) {
             replyBattleships(event, "❌ An error occurred while generating the game board image.").queue();
         }
-    }
-
-    private static String[] buildNames(SlashCommandInteractionEvent event, BattleshipsCommand.Game game) {
-        String player1 = resolveDisplayName(event, game.getPlayer1Id(), "Player 1");
-        String player2 = resolveDisplayName(event, game.getPlayer2Id(), "Player 2");
-        return new String[]{player1, player2};
     }
 }

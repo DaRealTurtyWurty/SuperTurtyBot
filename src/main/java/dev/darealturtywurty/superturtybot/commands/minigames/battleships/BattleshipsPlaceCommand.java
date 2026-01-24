@@ -61,7 +61,7 @@ public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
         if (!normalizedGridPosition.matches("^[A-J](10|[1-9])$")) {
             var highlight = tryParseGridPosition(normalizedGridPosition);
             if (highlight != null) {
-                String[] names = buildNames(event, game);
+                String[] names = BattleshipsCommand.buildNames(event, game);
                 try {
                     FileUpload upload = BattleshipsImageRenderer.createUploadWithHighlights(
                             game, names, user.getIdLong(), List.of(highlight), new Color(255, 120, 120, 160));
@@ -119,7 +119,7 @@ public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
                     || "That ship overlaps with one of your other ships.".equals(placementResult.message())) {
                 List<Point> highlights = buildPlacementHighlights(type, orient, x, y);
                 try {
-                    String[] names = buildNames(event, game);
+                    String[] names = BattleshipsCommand.buildNames(event, game);
                     FileUpload upload = BattleshipsImageRenderer.createUploadWithHighlights(
                             game, names, user.getIdLong(), highlights, new Color(255, 120, 120, 160));
                     replyBattleships(event, "❌ " + placementResult.message()).setFiles(upload).queue();
@@ -134,7 +134,7 @@ public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
         }
 
         try {
-            String[] names = buildNames(event, game);
+            String[] names = BattleshipsCommand.buildNames(event, game);
             FileUpload upload = BattleshipsImageRenderer.createUpload(game, names, user.getIdLong());
             replyBattleships(event, "✅ Successfully placed your `%s` at %s facing %s.".formatted(
                     type.name().toLowerCase(Locale.ROOT),
@@ -187,11 +187,5 @@ public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
         }
 
         return points;
-    }
-
-    private static String[] buildNames(SlashCommandInteractionEvent event, BattleshipsCommand.Game game) {
-        String player1 = resolveDisplayName(event, game.getPlayer1Id(), "Player 1");
-        String player2 = resolveDisplayName(event, game.getPlayer2Id(), "Player 2");
-        return new String[]{player1, player2};
     }
 }

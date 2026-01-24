@@ -29,6 +29,7 @@ public final class BattleshipsImageRenderer {
     private static final Color SHADOW_COLOR = new Color(0, 0, 0, 110);
     private static final Color HIT_COLOR = new Color(0xE84A4A);
     private static final Color MISS_COLOR = new Color(0xF5F5F5);
+    private static final Color SCANNED_SHIP_COLOR = new Color(0xF4A63A);
     private static final Font LABEL_FONT = new Font("Serif", Font.BOLD, 78);
     private static final Font AXIS_FONT = new Font("Serif", Font.BOLD, 32);
 
@@ -39,15 +40,15 @@ public final class BattleshipsImageRenderer {
     }
 
     public static FileUpload createUploadBothPlayers(BattleshipsCommand.Game game) throws IOException {
-        return createUpload(game, new String[0], game.getPlayer1Id(), game.getPlayer2Id());
+        return createUpload(game, new String[0], game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
     }
 
     public static FileUpload createUpload(BattleshipsCommand.Game game) throws IOException {
-        return createUpload(game, new String[0], new long[0]);
+        return createUpload(game, new String[0]);
     }
 
     public static FileUpload createUpload(BattleshipsCommand.Game game, long viewerId) throws IOException {
-        return createUpload(game, new String[0], new long[]{viewerId});
+        return createUpload(game, new String[0], viewerId);
     }
 
     public static FileUpload createUpload(BattleshipsCommand.Game game, long... viewerIds) throws IOException {
@@ -61,11 +62,6 @@ public final class BattleshipsImageRenderer {
         return FileUpload.fromData(baos.toByteArray(), "battleships.png");
     }
 
-    public static FileUpload createUploadWithHighlights(BattleshipsCommand.Game game, long viewerId,
-                                                        List<Point> highlights, Color highlightColor) throws IOException {
-        return createUploadWithHighlights(game, new String[0], viewerId, highlights, highlightColor);
-    }
-
     public static FileUpload createUploadWithHighlights(BattleshipsCommand.Game game, String[] playerNames, long viewerId,
                                                         List<Point> highlights, Color highlightColor) throws IOException {
         BufferedImage image = createImage(game, playerNames, new long[]{viewerId}, viewerId, highlights, highlightColor);
@@ -77,8 +73,8 @@ public final class BattleshipsImageRenderer {
     private static BufferedImage createImage(BattleshipsCommand.Game game, String[] playerNames, long[] viewerIds,
                                              long highlightOwnerId,
                                              List<Point> highlights, Color highlightColor) {
-        boolean showPlayer1Ships = hasViewer(viewerIds, game.getPlayer1Id());
-        boolean showPlayer2Ships = hasViewer(viewerIds, game.getPlayer2Id());
+        boolean showPlayer1Ships = hasViewer(viewerIds, game.getPlayer1().getUserId());
+        boolean showPlayer2Ships = hasViewer(viewerIds, game.getPlayer2().getUserId());
 
         Graphics2D measure = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
         measure.setFont(LABEL_FONT);
@@ -113,10 +109,10 @@ public final class BattleshipsImageRenderer {
         String player1Label = resolveLabel(playerNames, 0, "Player 1");
         String player2Label = resolveLabel(playerNames, 1, "Player 2");
 
-        drawBoard(graphics, game, game.getPlayer1Id(), player1Label, board1X, boardY, leftAxisWidth, topAxisHeight,
-                labelHeight, showPlayer1Ships, highlightOwnerId == game.getPlayer1Id() ? highlights : null, highlightColor);
-        drawBoard(graphics, game, game.getPlayer2Id(), player2Label, board2X, boardY, leftAxisWidth, topAxisHeight,
-                labelHeight, showPlayer2Ships, highlightOwnerId == game.getPlayer2Id() ? highlights : null, highlightColor);
+        drawBoard(graphics, game, game.getPlayer1().getUserId(), player1Label, board1X, boardY, leftAxisWidth, topAxisHeight,
+                labelHeight, showPlayer1Ships, highlightOwnerId == game.getPlayer1().getUserId() ? highlights : null, highlightColor);
+        drawBoard(graphics, game, game.getPlayer2().getUserId(), player2Label, board2X, boardY, leftAxisWidth, topAxisHeight,
+                labelHeight, showPlayer2Ships, highlightOwnerId == game.getPlayer2().getUserId() ? highlights : null, highlightColor);
 
         graphics.dispose();
         return image;
@@ -172,12 +168,7 @@ public final class BattleshipsImageRenderer {
                     gridX, gridY);
         }
 
-        if (showShips) {
-            drawShips(graphics, ships, gridX, gridY, false);
-        } else {
-            drawShips(graphics, ships, gridX, gridY, true);
-        }
-
+        drawShips(graphics, ships, gridX, gridY, !showShips);
         drawGrid(graphics, gridX, gridY, gridSize);
 
         long attackerId = game.getOpponentId(ownerId);
@@ -305,18 +296,23 @@ public final class BattleshipsImageRenderer {
         int markerSize = (int) (CELL_SIZE * 0.55f);
         for (int x = 0; x < BattleshipsCommand.BOARD_SIZE; x++) {
             for (int y = 0; y < BattleshipsCommand.BOARD_SIZE; y++) {
-                if (!game.wasHit(attackerId, x, y))
-                    continue;
-
-                boolean hit = occupied[x][y];
                 int drawX = gridX + x * CELL_SIZE + (CELL_SIZE - markerSize) / 2;
                 int drawY = gridY + y * CELL_SIZE + (CELL_SIZE - markerSize) / 2;
 
-                BufferedImage marker = getMarkerSprite(hit ? "hit" : "miss", markerSize);
-                if (marker != null) {
-                    graphics.drawImage(marker, drawX, drawY, null);
-                } else {
-                    graphics.setColor(hit ? HIT_COLOR : MISS_COLOR);
+                if (game.wasHit(attackerId, x, y)) {
+                    boolean hit = occupied[x][y];
+                    BufferedImage marker = getMarkerSprite(hit ? "hit" : "miss", markerSize);
+                    if (marker != null) {
+                        graphics.drawImage(marker, drawX, drawY, null);
+                    } else {
+                        graphics.setColor(hit ? HIT_COLOR : MISS_COLOR);
+                        graphics.fillOval(drawX, drawY, markerSize, markerSize);
+                        graphics.setColor(new Color(0, 0, 0, 90));
+                        graphics.setStroke(new BasicStroke(3f));
+                        graphics.drawOval(drawX, drawY, markerSize, markerSize);
+                    }
+                } else if (game.hasScannedPosition(attackerId, x, y)) {
+                    graphics.setColor(occupied[x][y] ? SCANNED_SHIP_COLOR : MISS_COLOR);
                     graphics.fillOval(drawX, drawY, markerSize, markerSize);
                     graphics.setColor(new Color(0, 0, 0, 90));
                     graphics.setStroke(new BasicStroke(3f));

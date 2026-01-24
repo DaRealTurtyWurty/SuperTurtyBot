@@ -16,6 +16,7 @@ public class BattleshipsPlayCommand extends BattleshipsSubcommand {
     public BattleshipsPlayCommand() {
         super("play", "Start a game of battleships against another player or the AI", false);
         addOption(OptionType.USER, "opponent", "The user you want to play against", true);
+        addOption(OptionType.BOOLEAN, "enable-powerups", "Whether to enable power-ups for this game", false);
     }
 
     @Override
@@ -45,20 +46,19 @@ public class BattleshipsPlayCommand extends BattleshipsSubcommand {
             return;
         }
 
+        boolean enablePowerUps = event.getOption("enable-powerups", false, OptionMapping::getAsBoolean);
+
         replyBattleships(event, "✅ Starting a game of Battleships between " + user.getAsMention() + " and " + opponent.getAsMention() + "!").queue(message -> {
             message.createThreadChannel("Battleships: " + user.getName() + " vs " + opponent.getName())
                     .queue(threadChannel -> {
                         var game = new BattleshipsCommand.Game(guild.getIdLong(),
                                 event.getChannel().getIdLong(), threadChannel.getIdLong(),
-                                user.getIdLong(), opponent.getIdLong(), true);
+                                user.getIdLong(), opponent.getIdLong(), true, enablePowerUps);
                         BattleshipsCommand.GAMES.put(threadChannel.getIdLong(), game);
 
                         threadChannel.sendMessage("Game started between " + user.getAsMention() + " and " + opponent.getAsMention() + "!").queue();
                         try {
-                            String[] names = {
-                                    resolveDisplayName(event, user.getIdLong(), "Player 1"),
-                                    resolveDisplayName(event, opponent.getIdLong(), "Player 2")
-                            };
+                            String[] names = BattleshipsCommand.buildNames(event, game);
                             FileUpload upload = BattleshipsImageRenderer.createUpload(game, names);
                             threadChannel.sendMessage("Here is the initial game board. Please use the `/battleships place` command to place your ships.").addFiles(upload).queue();
                         } catch (IOException exception) {

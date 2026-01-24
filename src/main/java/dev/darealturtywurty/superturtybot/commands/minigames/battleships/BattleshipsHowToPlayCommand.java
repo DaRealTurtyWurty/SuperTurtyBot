@@ -18,6 +18,7 @@ public class BattleshipsHowToPlayCommand extends BattleshipsSubcommand {
                 - `/battleships place <grid-position> <orientation> <ship-type>`: place a ship
                 - `/battleships attack <grid-position>`: fire at a grid position
                 - `/battleships reveal`: show your board with your ships (ephemeral)
+                - `/battleships power-up <power-up-type> <grid-position>`: use a power-up
 
                 **Rules**
                 - Each player places 5 ships: carrier (5), battleship (4), destroyer (3), submarine (3), patrol boat (2).

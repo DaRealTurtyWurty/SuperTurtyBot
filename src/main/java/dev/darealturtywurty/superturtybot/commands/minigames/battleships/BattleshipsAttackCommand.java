@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class BattleshipsAttackCommand extends BattleshipsSubcommand {
@@ -72,7 +73,7 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
             return;
         }
 
-        StringBuilder response = new StringBuilder();
+        var response = new StringBuilder();
         if (attackResult.hit()) {
             response.append("💥 ").append(user.getAsMention())
                     .append(" hit a ship at ").append(normalizedGridPosition).append('!');
@@ -80,6 +81,13 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
                 response.append(" They sunk a ")
                         .append(attackResult.sunkType().name().toLowerCase(Locale.ROOT).replace('_', ' '))
                         .append('!');
+                if(game.isPowerUpsEnabled()) {
+                    BattleshipsCommand.PowerUp powerUp = game.grantRandomPowerUp(user.getIdLong());
+                    if (powerUp != null) {
+                        response.append(" ").append(user.getAsMention())
+                                .append(" received a power-up: **").append(powerUp.getDisplayName()).append("**!");
+                    }
+                }
             }
         } else {
             response.append("🌊 ").append(user.getAsMention())
@@ -91,29 +99,24 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
             BattleshipsCommand.GAMES.remove(game.getThreadId(), game);
             event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
             try {
-                String[] names = buildNames(event, game);
+                String[] names = BattleshipsCommand.buildNames(event, game);
                 FileUpload upload = BattleshipsImageRenderer.createUpload(
-                        game, names, game.getPlayer1Id(), game.getPlayer2Id());
+                        game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
                 replyBattleships(event, response.toString()).setFiles(upload).queue();
             } catch (Exception exception) {
                 replyBattleships(event, response.toString()).queue();
             }
+
             return;
         }
 
         response.append("\nIt's now <@").append(attackResult.nextTurn()).append(">'s turn to attack.");
         try {
-            String[] names = buildNames(event, game);
+            String[] names = BattleshipsCommand.buildNames(event, game);
             FileUpload upload = BattleshipsImageRenderer.createUpload(game, names);
             replyBattleships(event, response.toString()).setFiles(upload).queue();
         } catch (Exception exception) {
             replyBattleships(event, response.toString()).queue();
         }
-    }
-
-    private static String[] buildNames(SlashCommandInteractionEvent event, BattleshipsCommand.Game game) {
-        String player1 = resolveDisplayName(event, game.getPlayer1Id(), "Player 1");
-        String player2 = resolveDisplayName(event, game.getPlayer2Id(), "Player 2");
-        return new String[]{player1, player2};
     }
 }
