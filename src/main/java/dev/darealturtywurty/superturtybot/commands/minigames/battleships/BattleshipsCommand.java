@@ -18,10 +18,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class BattleshipsCommand extends CoreCommand {
     public static final Map<Long, Game> GAMES = new ConcurrentHashMap<>();
     public static final int BOARD_SIZE = 10;
+    public static final String OPTION_ORIENTATION = "orientation";
+    public static final String OPTION_SHIP_TYPE = "ship-type";
+    public static final String OPTION_GRID_POSITION = "grid-position";
 
     public BattleshipsCommand() {
         super(new Types(true, false, false, false));
@@ -89,8 +94,8 @@ public class BattleshipsCommand extends CoreCommand {
         String value = focused.getValue().toLowerCase(Locale.ROOT);
 
         switch (focused.getName()) {
-            case "orientation" -> event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
-            case "ship-type" -> {
+            case OPTION_ORIENTATION -> event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
+            case OPTION_SHIP_TYPE -> {
                 List<String> ships = new ArrayList<>();
                 if (!event.isFromGuild() || event.getGuild() == null) {
                     for (ShipType type : ShipType.values()) {
@@ -109,7 +114,7 @@ public class BattleshipsCommand extends CoreCommand {
                 }
                 event.replyChoiceStrings(filterSuggestions(ships, value)).queue();
             }
-            case "grid-position" -> {
+            case OPTION_GRID_POSITION -> {
                 if (!event.isFromGuild() || event.getGuild() == null) {
                     event.replyChoices().queue();
                     return;
@@ -122,8 +127,8 @@ public class BattleshipsCommand extends CoreCommand {
                     return;
                 }
 
-                ShipType type = parseShipType(event.getOption("ship-type", null, OptionMapping::getAsString));
-                Orientation orientation = parseOrientation(event.getOption("orientation", null, OptionMapping::getAsString));
+                ShipType type = parseShipType(event.getOption(OPTION_SHIP_TYPE, null, OptionMapping::getAsString));
+                Orientation orientation = parseOrientation(event.getOption(OPTION_ORIENTATION, null, OptionMapping::getAsString));
 
                 List<ShipType> candidateTypes = new ArrayList<>();
                 if (type != null) {
@@ -227,9 +232,9 @@ public class BattleshipsCommand extends CoreCommand {
         private final boolean[] player1Board = new boolean[BOARD_SIZE * BOARD_SIZE];
         private final boolean[] player2Board = new boolean[BOARD_SIZE * BOARD_SIZE];
 
-        @Getter
-        private long currentTurn;
-        private boolean isPlayer1Ready = false, isPlayer2Ready = false;
+        private final AtomicLong currentTurn;
+        private final AtomicBoolean isPlayer1Ready = new AtomicBoolean(false);
+        private final AtomicBoolean isPlayer2Ready = new AtomicBoolean(false);
 
         public Game(long guildId, long channelId, long threadId, long player1Id, long player2Id, boolean isPvP) {
             this.guildId = guildId;
@@ -239,7 +244,11 @@ public class BattleshipsCommand extends CoreCommand {
             this.player2Id = player2Id;
             this.isPvP = isPvP;
 
-            this.currentTurn = player1Id;
+            this.currentTurn = new AtomicLong(player1Id);
+        }
+
+        public long getCurrentTurn() {
+            return this.currentTurn.get();
         }
 
         public boolean hasPlacedAllShips(long userId) {
@@ -263,32 +272,22 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public boolean isTurn(long userId) {
-            return this.currentTurn == userId;
+            return this.currentTurn.get() == userId;
         }
 
         public void endTurn() {
-            this.currentTurn = this.currentTurn == this.player1Id ? this.player2Id : this.player1Id;
+            this.currentTurn.set(this.currentTurn.get() == this.player1Id ? this.player2Id : this.player1Id);
         }
 
         public boolean isReady() {
-            return this.isPlayer1Ready && this.isPlayer2Ready;
+            return this.isPlayer1Ready.get() && this.isPlayer2Ready.get();
         }
 
-        public void setReady(long userId, boolean ready) {
+        public synchronized void setReady(long userId, boolean ready) {
             if (userId == this.player1Id) {
-                this.isPlayer1Ready = ready;
+                this.isPlayer1Ready.set(ready);
             } else if (userId == this.player2Id) {
-                this.isPlayer2Ready = ready;
-            }
-        }
-
-        public void setShips(long userId, Battleship[] ships) {
-            if (userId == this.player1Id) {
-                System.arraycopy(ships, 0, this.player1Ships, 0, ShipType.values().length);
-                this.isPlayer1Ready = false;
-            } else if (userId == this.player2Id) {
-                System.arraycopy(ships, 0, this.player2Ships, 0, ShipType.values().length);
-                this.isPlayer2Ready = false;
+                this.isPlayer2Ready.set(ready);
             }
         }
 
@@ -374,7 +373,7 @@ public class BattleshipsCommand extends CoreCommand {
             return PlacementResult.SUCCESS;
         }
 
-        public PlacementResult placeShip(long userId, ShipType type, Orientation orientation, int x, int y) {
+        public synchronized PlacementResult placeShip(long userId, ShipType type, Orientation orientation, int x, int y) {
             PlacementResult placementResult = canPlaceShipAt(userId, type, orientation, x, y);
             if (!placementResult.success())
                 return placementResult;
@@ -395,7 +394,41 @@ public class BattleshipsCommand extends CoreCommand {
             return PlacementResult.SUCCESS;
         }
 
-        public AttackResult attack(long attackerId, int x, int y) {
+        public synchronized AttackResult attack(long attackerId, int x, int y) {
+            AttackResult validation = isAttackValid(attackerId, x, y);
+            if (!validation.success())
+                return validation;
+
+            Battleship[] targetShips = isPlayer1(attackerId) ? this.player2Ships : this.player1Ships;
+            Battleship hitShip = findHitShip(targetShips, x, y);
+
+            markHit(attackerId, x, y);
+
+            boolean hit = hitShip != null;
+            boolean sunk = false;
+            ShipType sunkType = null;
+            if (hit) {
+                sunk = checkIfShipSunk(hitShip, attackerId);
+                if (sunk) {
+                    sunkType = hitShip.getType();
+                }
+            }
+
+            boolean gameOver = false;
+            if (hit) {
+                gameOver = isGameOver(targetShips);
+            }
+
+            long nextTurn = this.currentTurn.get();
+            if (!hit && !gameOver) {
+                endTurn();
+                nextTurn = this.currentTurn.get();
+            }
+
+            return new AttackResult(true, "Attack processed.", hit, sunk, sunkType, gameOver, nextTurn);
+        }
+
+        private AttackResult isAttackValid(long attackerId, int x, int y) {
             if (!isPlayer(attackerId))
                 return AttackResult.failure("You are not a player in this game.");
 
@@ -405,66 +438,45 @@ public class BattleshipsCommand extends CoreCommand {
             if (wasHit(attackerId, x, y))
                 return AttackResult.failure("You have already attacked that position.");
 
-            Battleship[] targetShips = isPlayer1(attackerId) ? this.player2Ships : this.player1Ships;
-            Battleship hitShip = null;
+            return new AttackResult(true, "", false, false, null, false, 0L);
+        }
+
+        private Battleship findHitShip(Battleship[] targetShips, int x, int y) {
             for (Battleship ship : targetShips) {
                 if (ship == null)
                     continue;
 
                 int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
                 for (int[] position : positions) {
-                    if (position[0] == x && position[1] == y) {
-                        hitShip = ship;
-                        break;
-                    }
-                }
-
-                if (hitShip != null)
-                    break;
-            }
-
-            markHit(attackerId, x, y);
-
-            boolean hit = hitShip != null;
-            boolean sunk = false;
-            ShipType sunkType = null;
-            if (hitShip != null) {
-                boolean allHit = true;
-                int[][] positions = Battleship.getPositions(hitShip.getType(), hitShip.getOrientation(), hitShip.getX(), hitShip.getY());
-                for (int[] position : positions) {
-                    if (!wasHit(attackerId, position[0], position[1])) {
-                        allHit = false;
-                        break;
-                    }
-                }
-
-                if (allHit) {
-                    hitShip.sink();
-                    sunk = true;
-                    sunkType = hitShip.getType();
+                    if (position[0] == x && position[1] == y)
+                        return ship;
                 }
             }
 
-            boolean gameOver = false;
-            if (hit) {
-                boolean allSunk = true;
-                for (Battleship ship : targetShips) {
-                    if (ship != null && !ship.isSunk()) {
-                        allSunk = false;
-                        break;
-                    }
-                }
+            return null;
+        }
 
-                gameOver = allSunk;
+        private boolean checkIfShipSunk(Battleship ship, long attackerId) {
+            if (ship.isSunk())
+                return true;
+
+            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+            for (int[] position : positions) {
+                if (!wasHit(attackerId, position[0], position[1]))
+                    return false;
             }
 
-            long nextTurn = attackerId;
-            if (!hit && !gameOver) {
-                endTurn();
-                nextTurn = this.currentTurn;
+            ship.sink();
+            return true;
+        }
+
+        private boolean isGameOver(Battleship[] targetShips) {
+            for (Battleship ship : targetShips) {
+                if (ship != null && !ship.isSunk())
+                    return false;
             }
 
-            return new AttackResult(true, "Attack processed.", hit, sunk, sunkType, gameOver, nextTurn);
+            return true;
         }
     }
 

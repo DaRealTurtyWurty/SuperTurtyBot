@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class BattleshipsAttackCommand extends BattleshipsSubcommand {
     public BattleshipsAttackCommand() {
         super("attack", "Attack a position on your opponent's board", false);
-        addOption(OptionType.STRING, "grid-position", "The grid position to attack (e.g., A5)", true);
+        addOption(OptionType.STRING, BattleshipsCommand.OPTION_GRID_POSITION, "The grid position to attack (e.g., A5)", true);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
             return;
         }
 
-        String gridPosition = event.getOption("grid-position", null, OptionMapping::getAsString);
+        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null, OptionMapping::getAsString);
         if (gridPosition == null || gridPosition.isBlank()) {
             replyBattleships(event, "❌ You must specify a valid grid position to attack.").queue();
             return;

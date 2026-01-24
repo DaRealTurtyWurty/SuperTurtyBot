@@ -18,9 +18,9 @@ import java.util.StringJoiner;
 public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
     public BattleshipsPlaceCommand() {
         super("place", "Place your ships on the battleships board", true);
-        addOption(OptionType.STRING, "grid-position", "The grid position to place your ship (e.g., A5)", true, true);
-        addOption(OptionType.STRING, "orientation", "The orientation of the ship (horizontal or vertical)", true, true);
-        addOption(OptionType.STRING, "ship-type", "The type of ship to place (e.g., destroyer, submarine)", true, true);
+        addOption(OptionType.STRING, BattleshipsCommand.OPTION_GRID_POSITION, "The grid position to place your ship (e.g., A5)", true, true);
+        addOption(OptionType.STRING, BattleshipsCommand.OPTION_ORIENTATION, "The orientation of the ship (horizontal or vertical)", true, true);
+        addOption(OptionType.STRING, BattleshipsCommand.OPTION_SHIP_TYPE, "The type of ship to place (e.g., destroyer, submarine)", true, true);
     }
 
     @Override
@@ -48,9 +48,9 @@ public class BattleshipsPlaceCommand extends BattleshipsSubcommand {
             return;
         }
 
-        String gridPosition = event.getOption("grid-position", null, OptionMapping::getAsString);
-        String orientation = event.getOption("orientation", null, OptionMapping::getAsString);
-        String shipType = event.getOption("ship-type", null, OptionMapping::getAsString);
+        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null, OptionMapping::getAsString);
+        String orientation = event.getOption(BattleshipsCommand.OPTION_ORIENTATION, null, OptionMapping::getAsString);
+        String shipType = event.getOption(BattleshipsCommand.OPTION_SHIP_TYPE, null, OptionMapping::getAsString);
 
         if (gridPosition == null || gridPosition.isBlank()) {
             replyBattleships(event, "❌ You must specify a valid grid position to place your ship.").queue();
