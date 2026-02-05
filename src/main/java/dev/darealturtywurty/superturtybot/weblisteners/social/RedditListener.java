@@ -29,6 +29,7 @@ public class RedditListener {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final Map<String, List<String>> SUBREDDIT_CACHE_MAP = new HashMap<>();
+    private static final Map<String, Long> SUBREDDIT_BACKOFF_UNTIL = new HashMap<>();
 
     public static void initialize(JDA jda) {
         if (isInitialized())
@@ -53,7 +54,27 @@ public class RedditListener {
                 for (Map.Entry<String, List<RedditNotifier>> entry : notifiersBySubreddit.entrySet()) {
                     String subreddit = entry.getKey();
                     List<RedditNotifier> subredditNotifiers = entry.getValue();
-                    Stream<Item> items = READER.read("https://www.reddit.com/r/" + subreddit + "/new/.rss");
+
+                    long now = System.currentTimeMillis();
+                    long backoffUntil = SUBREDDIT_BACKOFF_UNTIL.getOrDefault(subreddit, 0L);
+                    if (now < backoffUntil)
+                        continue;
+
+                    Stream<Item> items;
+                    try {
+                        items = READER.read("https://www.reddit.com/r/" + subreddit + "/new/.rss");
+                    } catch (final IOException exception) {
+                        Integer status = extractHttpStatus(exception);
+                        if (status != null && status >= 500 && status < 600) {
+                            SUBREDDIT_BACKOFF_UNTIL.put(subreddit, now + TimeUnit.MINUTES.toMillis(5));
+                            Constants.LOGGER.warn("Reddit RSS feed returned HTTP {} for r/{}. Backing off for 5 minutes.",
+                                    status, subreddit);
+                            continue;
+                        }
+
+                        Constants.LOGGER.error("Failed to read RSS feed for r/{}", subreddit, exception);
+                        continue;
+                    }
 
                     items.forEach(item -> {
                         try {
@@ -114,8 +135,6 @@ public class RedditListener {
                         }
                     });
                 }
-            } catch (final IOException exception) {
-                Constants.LOGGER.error("Failed to read RSS feed!", exception);
             } catch (final Exception exception) {
                 Constants.LOGGER.error("Reddit listener task failed", exception);
             }
@@ -136,6 +155,39 @@ public class RedditListener {
             return Optional.empty();
 
         return Optional.of(link);
+    }
+
+    private static Integer extractHttpStatus(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                int idx = message.indexOf("HTTP status code:");
+                if (idx >= 0) {
+                    String tail = message.substring(idx + "HTTP status code:".length()).trim();
+                    var digits = new StringBuilder();
+                    for (int i = 0; i < tail.length(); i++) {
+                        char c = tail.charAt(i);
+                        if (Character.isDigit(c)) {
+                            digits.append(c);
+                        } else if (!digits.isEmpty())
+                            break;
+                    }
+
+                    if (!digits.isEmpty()) {
+                        try {
+                            return Integer.parseInt(digits.toString());
+                        } catch (NumberFormatException ignored) {
+                            return null;
+                        }
+                    }
+                }
+            }
+
+            current = current.getCause();
+        }
+
+        return null;
     }
 
     public static boolean isInitialized() {

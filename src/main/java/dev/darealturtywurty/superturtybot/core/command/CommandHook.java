@@ -409,7 +409,6 @@ public class CommandHook extends ListenerAdapter {
 //        commands.add(new WordScrambleCommand());
 //        commands.add(new UnoCommand());
 //        commands.add(new LudoCommand());
-//        commands.add(new MonopolyCommand());
 
         // Economy
         commands.add(new BalanceCommand());
