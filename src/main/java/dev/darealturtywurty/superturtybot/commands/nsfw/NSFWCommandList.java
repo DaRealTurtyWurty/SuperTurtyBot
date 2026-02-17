@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.commands.nsfw;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import dev.darealturtywurty.superturtybot.commands.music.manager.AudioManager;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
@@ -1030,31 +1029,6 @@ public class NSFWCommandList {
             } catch (final JsonSyntaxException exception) {
                 event.hook().editOriginal("Hentai yaoi is unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
-            }
-        });
-
-        map.put("loli", event -> {
-            final String[] GIFS = {"https://media.giphy.com/media/jmSjPi6soIoQCFwaXJ/giphy.gif", "https://media.giphy.com/media/7zSO56YSB0DhNvBUWt/giphy.gif", "https://media.giphy.com/media/3o6wNPIj7WBQcJCReE/giphy.gif", "https://media.giphy.com/media/kxevHLcRrMbtC1SXa8/giphy.gif", "https://media.giphy.com/media/3dkPQ9JnxxQnVVMdOl/giphy.gif", "https://media.giphy.com/media/3osBLaQjYdcuVYpgXu/giphy.gif", "https://media.giphy.com/media/3oFzmnMZAOzN5XLh5K/giphy.gif", "https://media.giphy.com/media/l1IBiRf6RDmlnhguQ/giphy.gif"};
-
-            final String FBI_AUDIO = "src/main/resources/audio/fbi_open_up.mp3";
-
-            final var embed = new EmbedBuilder();
-            embed.setTitle("You are under arrest!");
-            embed.setDescription(event.user().getAsMention() + ", you have been spotted looking for loli!");
-            embed.setImage(GIFS[ThreadLocalRandom.current().nextInt(GIFS.length)]);
-            embed.setTimestamp(Instant.now());
-            event.hook().editOriginalEmbeds(embed.build()).setFiles().setComponents().mentionRepliedUser(false).queue();
-
-            if (event.hook().getInteraction().isFromGuild() && Objects.requireNonNull(
-                            Objects.requireNonNull(event.hook().getInteraction().getMember()).getVoiceState())
-                    .inAudioChannel()) {
-                try {
-                    AudioManager.play(event.hook().getInteraction().getGuild(),
-                            event.hook().getInteraction().getMember().getVoiceState().getChannel(),
-                            Path.of(FBI_AUDIO).toUri().toURL());
-                } catch (MalformedURLException exception) {
-                    Constants.LOGGER.info("Failed to load file: '{}'", FBI_AUDIO);
-                }
             }
         });
 

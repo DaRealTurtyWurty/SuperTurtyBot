@@ -45,7 +45,6 @@ public class Database {
     public final MongoCollection<Quote> quotes;
     public final MongoCollection<UserEmbeds> userEmbeds;
     public final MongoCollection<Reminder> reminders;
-    public final MongoCollection<SavedSongs> savedSongs;
     public final MongoCollection<WordleProfile> wordleProfiles;
     public final MongoCollection<Economy> economy;
     public final MongoCollection<ChatReviver> chatRevivers;
@@ -74,7 +73,6 @@ public class Database {
         this.quotes = mongoDatabase.getCollection("quotes", Quote.class);
         this.userEmbeds = mongoDatabase.getCollection("userEmbeds", UserEmbeds.class);
         this.reminders = mongoDatabase.getCollection("reminders", Reminder.class);
-        this.savedSongs = mongoDatabase.getCollection("savedSongs", SavedSongs.class);
         this.wordleProfiles = mongoDatabase.getCollection("wordleProfiles", WordleProfile.class);
         this.economy = mongoDatabase.getCollection("economy", Economy.class);
         this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
@@ -128,7 +126,6 @@ public class Database {
             db.quotes.createIndex(guildUser);
             db.userEmbeds.createIndex(userIndex);
             db.reminders.createIndex(guildUser);
-            db.savedSongs.createIndex(userIndex);
             db.wordleProfiles.createIndex(userIndex);
             db.economy.createIndex(guildUser);
             db.chatRevivers.createIndex(guildIndex);

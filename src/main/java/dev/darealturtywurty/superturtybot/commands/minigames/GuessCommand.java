@@ -13,8 +13,7 @@ public class GuessCommand extends CoreCommand {
 
         addSubcommands(new GeoGuesserCommand(),
                 new GuessCombinedFlagsCommand(),
-                new GuessRegionBorderCommand(),
-                new GuessSongCommand());
+                new GuessRegionBorderCommand());
     }
 
     @Override

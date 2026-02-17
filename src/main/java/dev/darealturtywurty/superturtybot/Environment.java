@@ -15,7 +15,8 @@ public final class Environment {
     public static final Environment INSTANCE = new Environment();
     private Dotenv env;
 
-    private Environment() {}
+    private Environment() {
+    }
 
     public Optional<String> activity() {
         return getString("ACTIVITY");
@@ -57,10 +58,6 @@ public final class Environment {
         return getString("PEXELS_KEY");
     }
 
-    public Optional<String> r6StatsKey() {
-        return getString("R6_STATS_KEY");
-    }
-
     public Optional<String> redditClientId() {
         return getString("REDDIT_CLIENT_ID");
     }
@@ -68,15 +65,7 @@ public final class Environment {
     public Optional<String> redditClientSecret() {
         return getString("REDDIT_CLIENT_SECRET");
     }
-    
-    public Optional<String> spotifyID() {
-        return getString("SPOTIFY_CLIENT_ID");
-    }
 
-    public Optional<String> spotifySecret() {
-        return getString("SPOTIFY_CLIENT_SECRET");
-    }
-    
     public Optional<String> steamKey() {
         return getString("STEAM_KEY");
     }
@@ -84,7 +73,7 @@ public final class Environment {
     public Optional<String> twitchOAuthToken() {
         return getString("TWITCH_OAUTH_TOKEN");
     }
-    
+
     public Optional<String> urbanDictionaryKey() {
         return getString("URBAN_DICTIONARY_KEY");
     }
@@ -133,19 +122,7 @@ public final class Environment {
         return getInteger("ARTIST_NSFW_THREADS");
     }
 
-    public Optional<String> geniusClientSecret() {
-        return getString("GENIUS_CLIENT_SECRET");
-    }
-
-    public Optional<String> geniusClientID() {
-        return getString("GENIUS_CLIENT_ID");
-    }
-
-    public Optional<String> geniusAccessToken() {
-        return getString("GENIUS_ACCESS_TOKEN");
-    }
-
-    public Optional<String> nasaApiKey(){
+    public Optional<String> nasaApiKey() {
         return getString("NASA_API_KEY");
     }
 
@@ -173,19 +150,7 @@ public final class Environment {
         return getString("OPENAI_ORGANIZATION_ID");
     }
 
-    public Optional<String> poToken() {
-        return getString("PO_TOKEN");
-    }
-
-    public Optional<String> poVisitorData() {
-        return getString("PO_VISITOR_DATA");
-    }
-
-    public Optional<String> googleOauthRefreshToken() {
-        return getString("GOOGLE_OAUTH_REFRESH_TOKEN");
-    }
-
-    public Optional<Double> getDouble(String key){
+    public Optional<Double> getDouble(String key) {
         try {
             return getString(key).map(Double::parseDouble);
         } catch (final NumberFormatException exception) {

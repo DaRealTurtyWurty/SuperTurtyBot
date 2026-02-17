@@ -1,12 +1,10 @@
 package dev.darealturtywurty.superturtybot;
 
-import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestionManager;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.ArtistPromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.CodePromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.economy.promotion.YoutubePromotionMinigame;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
-import dev.darealturtywurty.superturtybot.commands.music.manager.listener.MusicListener;
 import dev.darealturtywurty.superturtybot.core.ConsoleTee;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
@@ -179,7 +177,6 @@ public class TurtyBot {
         builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));
 
         builder.setAutoReconnect(true);
-        builder.setAudioSendFactory(new NativeAudioSendFactory());
 
         // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
@@ -230,9 +227,6 @@ public class TurtyBot {
 
         // Add the logging manager so that the bot can log messages to a discord channel
         builder.addEventListeners(LoggingManager.INSTANCE);
-
-        // Add the music manager so that we can leave voice channels when the bot is idle
-        builder.addEventListeners(MusicListener.INSTANCE);
 
         // Add the chat reviver so that we can revive chats
         builder.addEventListeners(ChatRevivalManager.INSTANCE);

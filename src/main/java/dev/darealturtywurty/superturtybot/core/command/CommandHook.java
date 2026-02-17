@@ -20,7 +20,6 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarn
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
-import dev.darealturtywurty.superturtybot.commands.music.*;
 import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
@@ -333,30 +332,6 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new NSFWCommand());
         commands.add(new GuessSexPositionCommand());
         commands.add(new NSFWSmashOrPassCommand());
-
-        // Music
-        commands.add(new JoinCommand());
-        commands.add(new LeaveCommand());
-        commands.add(new PlayCommand());
-        commands.add(new NowPlayingCommand());
-        commands.add(new QueueCommand());
-        commands.add(new RemoveCommand());
-        commands.add(new SkipCommand());
-        commands.add(new PauseCommand());
-        commands.add(new ResumeCommand());
-        commands.add(new VolumeCommand());
-        commands.add(new ShuffleCommand());
-        commands.add(new ClearCommand());
-        commands.add(new SearchCommand());
-        commands.add(new LyricsCommand());
-        commands.add(new RemoveDuplicatesCommand());
-        commands.add(new LeaveCleanupCommand());
-        commands.add(new LoopCommand());
-        commands.add(new MusicRestartCommand());
-        commands.add(new SeekCommand());
-        commands.add(new MoveCommand());
-        commands.add(new VoteSkipCommand());
-        commands.add(new SaveSongCommand());
 
         // Image
         commands.add(new HttpCatCommand());

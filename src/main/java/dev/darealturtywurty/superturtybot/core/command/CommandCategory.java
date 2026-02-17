@@ -11,7 +11,6 @@ public interface CommandCategory {
     CommandCategory FUN = create("Fun", "😂");
     CommandCategory MODERATION = create("Moderation", "⚖");
     CommandCategory NSFW = create("NSFW", "🥵", true);
-    CommandCategory MUSIC = create("Music", "🎶");
     CommandCategory LEVELLING = create("Levelling", "🔝");
     CommandCategory MINIGAMES = create("Minigames", "🎮");
     CommandCategory ECONOMY = create("Economy", "💰");
