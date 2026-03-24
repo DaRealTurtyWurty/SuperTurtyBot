@@ -6,7 +6,7 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -73,8 +73,8 @@ dependencies {
     implementation group: 'org.graalvm.js', name: 'js-language', version: '24.1.1'
     implementation group: 'org.graalvm.python', name: 'python-language', version: '24.1.1'
 
-    annotationProcessor group: "org.projectlombok", name: "lombok", version: '1.18.36'
-    compileOnly group: "org.projectlombok", name: "lombok", version: '1.18.36'
+    annotationProcessor group: "org.projectlombok", name: "lombok", version: '1.18.44'
+    compileOnly group: "org.projectlombok", name: "lombok", version: '1.18.44'
 }
 
 application {
