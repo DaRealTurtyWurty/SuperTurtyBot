@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -11,7 +12,9 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -25,16 +28,18 @@ public final class NewsScraperUtils {
     }
 
     public static Document fetchDocument(String url, String referer, String logPrefix) throws IOException {
+        byte[] responseBytes = fetchBytes(url, referer, logPrefix);
+        if (responseBytes == null)
+            return null;
+
+        return Jsoup.parse(new String(responseBytes), url);
+    }
+
+    public static byte[] fetchBytes(String url, String referer, String logPrefix) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .get()
-                .header("User-Agent", USER_AGENT)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-                .header("Accept-Language", "en-US,en;q=0.9")
-                .header("Cache-Control", "no-cache")
-                .header("Pragma", "no-cache")
-                .header("Referer", referer)
-                .header("Upgrade-Insecure-Requests", "1")
+                .headers(defaultHeaders(referer))
                 .build();
 
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
@@ -47,8 +52,20 @@ public final class NewsScraperUtils {
             if (body == null)
                 return null;
 
-            return Jsoup.parse(body.string(), url);
+            return body.bytes();
         }
+    }
+
+    private static Headers defaultHeaders(String referer) {
+        return new Headers.Builder()
+                .add("User-Agent", USER_AGENT)
+                .add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,application/rss+xml,text/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                .add("Accept-Language", "en-US,en;q=0.9")
+                .add("Cache-Control", "no-cache")
+                .add("Pragma", "no-cache")
+                .add("Referer", referer)
+                .add("Upgrade-Insecure-Requests", "1")
+                .build();
     }
 
     public static String extractArticleTitle(Document document) {
@@ -246,12 +263,12 @@ public final class NewsScraperUtils {
         }
 
         try {
-            return java.time.OffsetDateTime.parse(value).toInstant();
+            return OffsetDateTime.parse(value).toInstant();
         } catch (DateTimeParseException ignored) {
         }
 
         try {
-            return java.time.ZonedDateTime.parse(value).toInstant();
+            return ZonedDateTime.parse(value).toInstant();
         } catch (DateTimeParseException ignored) {
         }
 

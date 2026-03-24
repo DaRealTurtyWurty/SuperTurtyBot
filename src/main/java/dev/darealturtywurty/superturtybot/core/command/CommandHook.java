@@ -44,6 +44,8 @@ import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.game.RocketLeagueListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.game.SiegeListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.SteamStoreListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.SteamUpcomingListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.game.ValorantListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -98,6 +100,14 @@ public class CommandHook extends ListenerAdapter {
 
         if (!SteamListener.isRunning()) {
             SteamListener.runExecutor(jda);
+        }
+
+        if (!SteamStoreListener.isInitialized()) {
+            SteamStoreListener.initialize(jda);
+        }
+
+        if (!SteamUpcomingListener.isInitialized()) {
+            SteamUpcomingListener.initialize(jda);
         }
 
         if (!RedditListener.isInitialized()) {
