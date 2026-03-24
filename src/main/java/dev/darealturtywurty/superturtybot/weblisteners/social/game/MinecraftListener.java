@@ -1,4 +1,4 @@
-package dev.darealturtywurty.superturtybot.weblisteners.social;
+package dev.darealturtywurty.superturtybot.weblisteners.social.game;
 
 import com.apptasticsoftware.rssreader.DateTime;
 import com.mongodb.client.model.Filters;

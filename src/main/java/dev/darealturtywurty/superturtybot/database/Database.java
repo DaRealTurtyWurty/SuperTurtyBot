@@ -44,6 +44,8 @@ public class Database {
     public final MongoCollection<MinecraftNotifier> minecraftNotifier;
     public final MongoCollection<SiegeNotifier> siegeNotifier;
     public final MongoCollection<RocketLeagueNotifier> rocketLeagueNotifier;
+    public final MongoCollection<LeagueNotifier> leagueNotifier;
+    public final MongoCollection<ValorantNotifier> valorantNotifier;
     public final MongoCollection<Report> reports;
     public final MongoCollection<Quote> quotes;
     public final MongoCollection<UserEmbeds> userEmbeds;
@@ -75,6 +77,8 @@ public class Database {
         this.minecraftNotifier = mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class);
         this.siegeNotifier = mongoDatabase.getCollection("siegeNotifier", SiegeNotifier.class);
         this.rocketLeagueNotifier = mongoDatabase.getCollection("rocketLeagueNotifier", RocketLeagueNotifier.class);
+        this.leagueNotifier = mongoDatabase.getCollection("leagueNotifier", LeagueNotifier.class);
+        this.valorantNotifier = mongoDatabase.getCollection("valorantNotifier", ValorantNotifier.class);
         this.reports = mongoDatabase.getCollection("reports", Report.class);
         this.quotes = mongoDatabase.getCollection("quotes", Quote.class);
         this.userEmbeds = mongoDatabase.getCollection("userEmbeds", UserEmbeds.class);
@@ -131,6 +135,8 @@ public class Database {
             db.minecraftNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.siegeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.rocketLeagueNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
+            db.leagueNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
+            db.valorantNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.reports.createIndex(guildIndex);
             db.quotes.createIndex(guildUser);
             db.userEmbeds.createIndex(userIndex);

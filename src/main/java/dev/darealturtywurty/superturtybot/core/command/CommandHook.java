@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.core.command;
 import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
+import dev.darealturtywurty.superturtybot.commands.core.notifier.NotifierCommand;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.economy.blackjack.BlackjackCommand;
@@ -37,12 +38,14 @@ import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.Minecraf
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
-import dev.darealturtywurty.superturtybot.weblisteners.social.MinecraftListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.game.MinecraftListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.game.LeagueListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
-import dev.darealturtywurty.superturtybot.weblisteners.social.RocketLeagueListener;
-import dev.darealturtywurty.superturtybot.weblisteners.social.SiegeListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.game.RocketLeagueListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.game.SiegeListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.game.ValorantListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -111,6 +114,14 @@ public class CommandHook extends ListenerAdapter {
 
         if (!RocketLeagueListener.isInitialized()) {
             RocketLeagueListener.initialize(jda);
+        }
+
+        if (!LeagueListener.isInitialized()) {
+            LeagueListener.initialize(jda);
+        }
+
+        if (!ValorantListener.isInitialized()) {
+            ValorantListener.initialize(jda);
         }
 
         if (!EconomyManager.isRunning()) {
