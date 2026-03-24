@@ -14,6 +14,10 @@ repositories {
     mavenCentral()
 
     maven {
+        url "https://repository.jboss.org/nexus/content/groups/public-jboss/"
+    }
+
+    maven {
         url "https://jitpack.io"
     }
 }
@@ -43,7 +47,7 @@ dependencies {
 
     implementation group: "com.vdurmont", name: "emoji-java", version: "5.1.1"
     implementation group: "org.jsoup", name: "jsoup", version: '1.18.3'
-    implementation group: "com.github.mattbdean", name: "JRAW", version: "v1.1.0"
+    implementation group: "net.dean.jraw", name: "JRAW", version: "1.1.0"
     implementation group: "com.github.scribejava", name: "scribejava-apis", version: "8.3.3"
     implementation group: "com.github.LowLevelSubmarine", name: "GeniusLyricsAPI", version: "1.0.3"
     implementation group: 'com.github.oshi', name: 'oshi-core', version: '6.6.5'

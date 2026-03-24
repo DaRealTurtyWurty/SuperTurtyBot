@@ -37,7 +37,10 @@ import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.Minecraf
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.weblisteners.social.MinecraftListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.RedditListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.RocketLeagueListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.SiegeListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.SteamListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 import dev.darealturtywurty.superturtybot.weblisteners.social.YouTubeListener;
@@ -96,6 +99,18 @@ public class CommandHook extends ListenerAdapter {
 
         if (!RedditListener.isInitialized()) {
             RedditListener.initialize(jda);
+        }
+
+        if (!MinecraftListener.isInitialized()) {
+            MinecraftListener.initialize(jda);
+        }
+
+        if (!SiegeListener.isInitialized()) {
+            SiegeListener.initialize(jda);
+        }
+
+        if (!RocketLeagueListener.isInitialized()) {
+            RocketLeagueListener.initialize(jda);
         }
 
         if (!EconomyManager.isRunning()) {

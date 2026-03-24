@@ -4,7 +4,10 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.MinecraftNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.RedditNotifier;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.RocketLeagueNotifier;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.SiegeNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SteamNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.TwitchNotifier;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.YoutubeNotifier;
@@ -55,6 +58,24 @@ public class NotifierCommand extends CoreCommand {
             new SubcommandData("reddit", "Listens for new posts on a subreddit.").addOptions(
                     List.of(new OptionData(OptionType.STRING, "subreddit", "The subreddit to listen to", true),
                             new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
+                            new OptionData(OptionType.MENTIONABLE, "who_to_ping",
+                                    "Who should be pinged when a notification happens", true),
+                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
+                                    false))),
+            new SubcommandData("minecraft", "Listens for Minecraft release and snapshot articles.").addOptions(
+                    List.of(new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
+                            new OptionData(OptionType.MENTIONABLE, "who_to_ping",
+                                    "Who should be pinged when a notification happens", true),
+                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
+                                    false))),
+            new SubcommandData("siege", "Listens for Rainbow Six Siege patch notes and designer's notes.").addOptions(
+                    List.of(new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
+                            new OptionData(OptionType.MENTIONABLE, "who_to_ping",
+                                    "Who should be pinged when a notification happens", true),
+                            new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
+                                    false))),
+            new SubcommandData("rocketleague", "Listens for Rocket League patch notes.").addOptions(
+                    List.of(new OptionData(OptionType.CHANNEL, "discord_channel", "The channel to send notifications to", true),
                             new OptionData(OptionType.MENTIONABLE, "who_to_ping",
                                     "Who should be pinged when a notification happens", true),
                             new OptionData(OptionType.BOOLEAN, "unsubscribe", "Whether to unsubscribe this notifier",
@@ -307,6 +328,130 @@ public class NotifierCommand extends CoreCommand {
                         .insertOne(new RedditNotifier(event.getGuild().getIdLong(), subreddit, discordChannel, mention));
 
                 reply(event, "✅ I have successfully set up a notifier for this subreddit in <#" + discordChannel + ">!");
+                break;
+            }
+            case "minecraft": {
+                final Bson findFilter = Filters.eq("guild", event.getGuild().getIdLong());
+
+                final boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
+                if (unsubscribe) {
+                    if (Database.getDatabase().minecraftNotifier.deleteOne(findFilter).getDeletedCount() != 0) {
+                        reply(event, "✅ I have successfully unsubscribed the Minecraft notifier!");
+                    } else {
+                        reply(event, "❌ You do not have a Minecraft notifier configured!", false, true);
+                    }
+
+                    return;
+                }
+
+                final boolean exists = Database.getDatabase().minecraftNotifier.find(findFilter).first() != null;
+                if (exists) {
+                    reply(event, "❌ You already have a Minecraft notifier configured!", false, true);
+                    return;
+                }
+
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
+
+                Database.getDatabase().minecraftNotifier
+                        .insertOne(new MinecraftNotifier(event.getGuild().getIdLong(), discordChannel, mention));
+
+                reply(event, "✅ I have successfully set up a Minecraft notifier in <#" + discordChannel + ">!");
+                break;
+            }
+            case "siege": {
+                final Bson findFilter = Filters.eq("guild", event.getGuild().getIdLong());
+
+                final boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
+                if (unsubscribe) {
+                    if (Database.getDatabase().siegeNotifier.deleteOne(findFilter).getDeletedCount() != 0) {
+                        reply(event, "✅ I have successfully unsubscribed the Rainbow Six Siege notifier!");
+                    } else {
+                        reply(event, "❌ You do not have a Rainbow Six Siege notifier configured!", false, true);
+                    }
+
+                    return;
+                }
+
+                final boolean exists = Database.getDatabase().siegeNotifier.find(findFilter).first() != null;
+                if (exists) {
+                    reply(event, "❌ You already have a Rainbow Six Siege notifier configured!", false, true);
+                    return;
+                }
+
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
+
+                Database.getDatabase().siegeNotifier
+                        .insertOne(new SiegeNotifier(event.getGuild().getIdLong(), discordChannel, mention));
+
+                reply(event,
+                        "✅ I have successfully set up a Rainbow Six Siege notifier in <#" + discordChannel + ">!");
+                break;
+            }
+            case "rocketleague": {
+                final Bson findFilter = Filters.eq("guild", event.getGuild().getIdLong());
+
+                final boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
+                if (unsubscribe) {
+                    if (Database.getDatabase().rocketLeagueNotifier.deleteOne(findFilter).getDeletedCount() != 0) {
+                        reply(event, "✅ I have successfully unsubscribed the Rocket League notifier!");
+                    } else {
+                        reply(event, "❌ You do not have a Rocket League notifier configured!", false, true);
+                    }
+
+                    return;
+                }
+
+                final boolean exists = Database.getDatabase().rocketLeagueNotifier.find(findFilter).first() != null;
+                if (exists) {
+                    reply(event, "❌ You already have a Rocket League notifier configured!", false, true);
+                    return;
+                }
+
+                GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
+                if (rawChannel == null) {
+                    reply(event, "❌ You must provide a Discord channel!", false, true);
+                    return;
+                }
+
+                IMentionable rawMention = event.getOption("who_to_ping", OptionMapping::getAsMentionable);
+                if (rawMention == null) {
+                    reply(event, "❌ You must provide someone to ping!", false, true);
+                    return;
+                }
+
+                final long discordChannel = rawChannel.getIdLong();
+                final String mention = rawMention.getAsMention();
+
+                Database.getDatabase().rocketLeagueNotifier
+                        .insertOne(new RocketLeagueNotifier(event.getGuild().getIdLong(), discordChannel, mention));
+
+                reply(event, "✅ I have successfully set up a Rocket League notifier in <#" + discordChannel + ">!");
                 break;
             }
             case null:

@@ -41,6 +41,9 @@ public class Database {
     public final MongoCollection<TwitchNotifier> twitchNotifier;
     public final MongoCollection<SteamNotifier> steamNotifier;
     public final MongoCollection<RedditNotifier> redditNotifier;
+    public final MongoCollection<MinecraftNotifier> minecraftNotifier;
+    public final MongoCollection<SiegeNotifier> siegeNotifier;
+    public final MongoCollection<RocketLeagueNotifier> rocketLeagueNotifier;
     public final MongoCollection<Report> reports;
     public final MongoCollection<Quote> quotes;
     public final MongoCollection<UserEmbeds> userEmbeds;
@@ -69,6 +72,9 @@ public class Database {
         this.twitchNotifier = mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = mongoDatabase.getCollection("steamNotifier", SteamNotifier.class);
         this.redditNotifier = mongoDatabase.getCollection("redditNotifier", RedditNotifier.class);
+        this.minecraftNotifier = mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class);
+        this.siegeNotifier = mongoDatabase.getCollection("siegeNotifier", SiegeNotifier.class);
+        this.rocketLeagueNotifier = mongoDatabase.getCollection("rocketLeagueNotifier", RocketLeagueNotifier.class);
         this.reports = mongoDatabase.getCollection("reports", Report.class);
         this.quotes = mongoDatabase.getCollection("quotes", Quote.class);
         this.userEmbeds = mongoDatabase.getCollection("userEmbeds", UserEmbeds.class);
@@ -122,6 +128,9 @@ public class Database {
             db.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
             db.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
             db.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
+            db.minecraftNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
+            db.siegeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
+            db.rocketLeagueNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.reports.createIndex(guildIndex);
             db.quotes.createIndex(guildUser);
             db.userEmbeds.createIndex(userIndex);
