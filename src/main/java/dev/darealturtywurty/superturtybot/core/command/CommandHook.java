@@ -33,6 +33,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.ArtistNsfwCache;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
+import dev.darealturtywurty.superturtybot.modules.ReminderManager;
 import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
@@ -141,6 +142,10 @@ public class CommandHook extends ListenerAdapter {
 
         if (!BirthdayManager.isRunning()) {
             BirthdayManager.start(jda);
+        }
+
+        if (!ReminderManager.isRunning()) {
+            ReminderManager.start(jda);
         }
 
         ArtistNsfwCache.initialize();
@@ -334,7 +339,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new LatestCommand());
         commands.add(new AnalyzeLogCommand());
         commands.add(new EmbedCommand());
-        commands.add(new ReminderCommand());
+        commands.add(new RemindMeCommand());
         commands.add(new RainbowSixStatusCommand());
         commands.add(new WeatherCommand());
         commands.add(new SteamCommand());
