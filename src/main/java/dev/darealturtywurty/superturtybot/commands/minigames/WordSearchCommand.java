@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +32,9 @@ import java.util.concurrent.TimeUnit;
 public class WordSearchCommand extends CoreCommand {
     private static final List<Game> GAMES = new ArrayList<>();
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 50);
+    private static final int CELL_SIZE = 70;
+    private static final int GRID_ORIGIN_X = 25;
+    private static final int GRID_ORIGIN_Y = 125;
 
     public WordSearchCommand() {
         super(new Types(true, false, false, false));
@@ -152,53 +156,29 @@ public class WordSearchCommand extends CoreCommand {
     }
 
     private static void circleWord(Graphics2D graphics, Game game, String word) {
-        FontMetrics metrics = graphics.getFontMetrics();
         List<Pair<Integer, Integer>> locations = game.getWordLocations().get(word);
         if (locations == null)
             return;
 
-        graphics.setStroke(new BasicStroke(5));
+        Graphics2D copy = (Graphics2D) graphics.create();
+        copy.setStroke(new BasicStroke(5));
         Pair<Integer, Integer> first = locations.getFirst();
         Pair<Integer, Integer> last = locations.getLast();
-        Direction dir = Direction.fromCoordinates(first, last);
 
-        switch (dir) {
-            case RIGHT, DOWN: {
-                int x = 50 + (first.getRight() * 70) - metrics.charWidth(word.charAt(0)) / 2;
-                int y = 150 + (first.getLeft() * 70) - (int) (metrics.getHeight() / 2f) + metrics.getAscent() / 2;
-                int width = 50 + (last.getRight() * 70) + metrics.charWidth(word.charAt(word.length() - 1)) - x;
-                int height = 150 + (last.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
-                graphics.drawRoundRect(x, y, width, height, 10, 10);
-                break;
-            }
-            case LEFT, UP: {
-                int x = 50 + (last.getRight() * 70) - metrics.charWidth(word.charAt(word.length() - 1)) / 2;
-                int y = 150 + (last.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 75 + (first.getRight() * 70) + metrics.charWidth(word.charAt(0)) - x;
-                int height = 150 + (first.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
-                graphics.drawRoundRect(x, y, width, height, 10, 10);
-                break;
-            }
-            // TODO: Figure out how to draw a diagonal rectangle
-            case UP_RIGHT, DOWN_LEFT: {
-                graphics.rotate(Math.toRadians(45), 0, 0);
-                int x = 50 + (first.getRight() * 70) - metrics.charWidth(word.charAt(0)) / 2;
-                int y = 150 + (first.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 50 + (last.getRight() * 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
-                int height = 150 + (last.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
-                graphics.drawRoundRect(x, y, width, height, 10, 10);
-                graphics.rotate(Math.toRadians(-45), 0, 0);
-            }
-            case UP_LEFT, DOWN_RIGHT: {
-                graphics.rotate(Math.toRadians(-45), 0, 0);
-                int x = 50 + (first.getRight() * 70) - metrics.charWidth(word.charAt(0)) / 2;
-                int y = 150 + (first.getLeft() * 70) - (int) (metrics.getHeight() / 2.5f);
-                int width = 50 + (last.getRight() * 70) + (int) (metrics.charWidth(word.charAt(word.length() - 1)) * 2.5f) - x;
-                int height = 150 + (last.getLeft() * 70) + (int) (metrics.getHeight() * 0.75f) - y;
-                graphics.drawRoundRect(x, y, width, height, 10, 10);
-                graphics.rotate(Math.toRadians(45), 0, 0);
-            }
-        }
+        double firstCenterX = GRID_ORIGIN_X + CELL_SIZE / 2.0 + (first.getRight() * CELL_SIZE);
+        double firstCenterY = GRID_ORIGIN_Y + CELL_SIZE / 2.0 + (first.getLeft() * CELL_SIZE);
+        double lastCenterX = GRID_ORIGIN_X + CELL_SIZE / 2.0 + (last.getRight() * CELL_SIZE);
+        double lastCenterY = GRID_ORIGIN_Y + CELL_SIZE / 2.0 + (last.getLeft() * CELL_SIZE);
+
+        double angle = Math.atan2(lastCenterY - firstCenterY, lastCenterX - firstCenterX);
+        double length = Point.distance(firstCenterX, firstCenterY, lastCenterX, lastCenterY) + 40;
+        double midX = (firstCenterX + lastCenterX) / 2.0;
+        double midY = (firstCenterY + lastCenterY) / 2.0;
+
+        copy.translate(midX, midY);
+        copy.rotate(angle);
+        copy.draw(new RoundRectangle2D.Double(-length / 2.0, -22, length, 44, 20, 20));
+        copy.dispose();
     }
 
     private static Optional<FileUpload> createUpload(Game game) {

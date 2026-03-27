@@ -6,7 +6,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.concurrent.TimeUnit;
 
-// TODO: add how to use
 public class GuessCommand extends CoreCommand {
     public GuessCommand() {
         super(new Types(true, false, false, false));
@@ -39,6 +38,13 @@ public class GuessCommand extends CoreCommand {
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 15L);
+    }
+
+    @Override
+    public String getHowToUse() {
+        return "/guess geoguesser\n"
+                + "/guess combinedflags [number] [include-territories] [exclude-countries]\n"
+                + "/guess border [exclude-islands] [exclude-mainland] [exclude-countries] [include-territories]";
     }
 
     @Override

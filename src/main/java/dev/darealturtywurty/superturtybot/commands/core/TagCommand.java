@@ -12,9 +12,11 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserEmbeds;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -147,6 +149,12 @@ public class TagCommand extends CoreCommand {
             return;
         }
 
+        if (!canCreateTag(event.getMember())) {
+            event.deferReply(true).setContent("❌ You must have Manage Server to create tags!")
+                    .mentionRepliedUser(false).queue();
+            return;
+        }
+
         final ModalMapping nameMapping = event.getValues().stream()
                 .filter(mapping -> mapping.getCustomId().endsWith("-name_input")).findFirst().orElse(null);
         final ModalMapping contentMapping = event.getValues().stream()
@@ -173,6 +181,12 @@ public class TagCommand extends CoreCommand {
     protected void runMessageCtx(MessageContextInteractionEvent event) {
         if (!event.isFromGuild()) {
             event.deferReply(true).setContent("❌ You must be in a server to use this command!")
+                    .mentionRepliedUser(false).queue();
+            return;
+        }
+
+        if (!canCreateTag(event.getMember())) {
+            event.deferReply(true).setContent("❌ You must have Manage Server to create tags!")
                     .mentionRepliedUser(false).queue();
             return;
         }
@@ -246,7 +260,11 @@ public class TagCommand extends CoreCommand {
                     return;
                 }
 
-                // TODO: Check user permission
+                if (!canCreateTag(event.getMember())) {
+                    reply(event, "❌ You must have Manage Server to create tags!", false, true);
+                    return;
+                }
+
                 if (embedOption == null || !embedOption.getAsBoolean()) {
                     final String content = event.getOption("content", "", OptionMapping::getAsString);
                     if (content.isBlank()) {
@@ -383,6 +401,10 @@ public class TagCommand extends CoreCommand {
                 embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No tags were found!").mentionRepliedUser(false).queue());
             }
         }
+    }
+
+    private static boolean canCreateTag(Member member) {
+        return member != null && (member.isOwner() || member.hasPermission(Permission.MANAGE_SERVER));
     }
 
     private static void sendData(SlashCommandInteractionEvent event, String data) {

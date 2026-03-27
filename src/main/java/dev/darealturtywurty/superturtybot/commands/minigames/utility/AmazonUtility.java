@@ -12,7 +12,6 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.util.Optional;
 
-@SuppressWarnings("DataFlowIssue") // TODO: Fix instead of suppressing
 public class AmazonUtility {
     private static final String RANDOM_UPC_URL = "https://www.upcdatabase.com/random_item.asp";
     private static final String AMAZON_CATALOG_SEARCH_URL = "https://sellingpartnerapi-na.amazon.com/catalog/2022-04-01/items?keywords=%s&marketplaceIds=EN&pageSize=1";
@@ -38,26 +37,29 @@ public class AmazonUtility {
 
             Optional<String> upcE = Optional.empty();
             if (dataTable.child(nextIndex).child(0).text().equalsIgnoreCase("UPC-E")) {
-                upcE = Optional.of(dataTable.child(nextIndex++).selectFirst("img").attr("alt"));
+                upcE = Optional.of(readImageAlt(dataTable.child(nextIndex)));
+                nextIndex++;
             }
 
             Optional<String> upcA = Optional.empty();
             if (dataTable.child(nextIndex).child(0).text().equalsIgnoreCase("UPC-A")) {
-                upcA = Optional.of(dataTable.child(nextIndex++).selectFirst("img").attr("alt"));
+                upcA = Optional.of(readImageAlt(dataTable.child(nextIndex)));
+                nextIndex++;
             }
 
             Optional<String> ucc13 = Optional.empty();
             if (dataTable.child(nextIndex).child(0).text().equalsIgnoreCase("EAN/UCC-13")) {
-                ucc13 = Optional.of(dataTable.child(nextIndex++).selectFirst("img").attr("alt"));
+                ucc13 = Optional.of(readImageAlt(dataTable.child(nextIndex)));
+                nextIndex++;
             }
 
             String productTitle = dataTable.child(nextIndex++).child(2).text();
 
             var details = new StringBuilder();
             Element detailsElem;
-            while (!(detailsElem = dataTable.child(nextIndex)).selectFirst("td").text()
+            while (!(detailsElem = dataTable.child(nextIndex)).child(0).text()
                     .equalsIgnoreCase("Issuing Country")) {
-                details.append(detailsElem.selectFirst("td").text()).append(":")
+                details.append(detailsElem.child(0).text()).append(":")
                         .append(detailsElem.select("td").get(2).text()).append("\n");
                 nextIndex++;
             }
@@ -115,5 +117,17 @@ public class AmazonUtility {
                                  String productTitle, Optional<String> details, String issuingCountry,
                                  String lastModifiedDate, Optional<String> lastModifiedBy, int pendingRequests) {
 
+    }
+
+    private static String readImageAlt(Element row) {
+        Element image = row.selectFirst("img");
+        if (image == null)
+            throw new IllegalStateException("Unable to parse UPC image!");
+
+        String alt = image.attr("alt");
+        if (alt == null || alt.isBlank())
+            throw new IllegalStateException("Unable to parse UPC image!");
+
+        return alt;
     }
 }

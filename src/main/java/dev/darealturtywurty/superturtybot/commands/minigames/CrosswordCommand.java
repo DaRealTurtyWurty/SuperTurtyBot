@@ -26,7 +26,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class CrosswordCommand extends CoreCommand {
@@ -264,45 +263,88 @@ public class CrosswordCommand extends CoreCommand {
         private void fillBoard() {
             List<String> sorted = this.words.stream().sorted(Comparator.comparingInt(String::length).reversed()).toList();
             String first = sorted.getFirst();
-            while (first.length() >= this.board.length)
+            while (first.length() > this.board.length)
                 expandBoard();
 
-            int x = RANDOM.nextInt(this.board.length - first.length());
-            int y = RANDOM.nextInt(this.board.length - first.length());
+            int x = RANDOM.nextInt(this.board.length - first.length() + 1);
+            int y = RANDOM.nextInt(this.board.length - first.length() + 1);
             boolean horizontal = RANDOM.nextBoolean();
             forcePlaceWord(first, x, y, horizontal);
 
-            List<String> failed = new CopyOnWriteArrayList<>();
+            List<String> failed = new ArrayList<>();
             for (int i = 1; i < sorted.size(); i++) {
                 String word = sorted.get(i);
-                Pair<Integer, Integer> location = findValidLocation(word);
-                if (location == null) {
+                Placement placement = findValidLocation(word);
+                if (placement == null) {
                     failed.add(word);
                     continue;
                 }
 
-                forcePlaceWord(word, location.getLeft(), location.getRight(), RANDOM.nextBoolean());
+                forcePlaceWord(word, placement.x(), placement.y(), placement.horizontal());
             }
 
             while (!failed.isEmpty()) {
-                for (String word : failed) {
-                    Pair<Integer, Integer> location = findValidLocation(word);
-                    if (location == null) {
+                boolean placedAny = false;
+                Iterator<String> iterator = failed.iterator();
+                while (iterator.hasNext()) {
+                    String word = iterator.next();
+                    Placement placement = findValidLocation(word);
+                    if (placement == null)
                         continue;
-                    }
 
-                    failed.remove(word);
-                    forcePlaceWord(word, location.getLeft(), location.getRight(), RANDOM.nextBoolean());
+                    iterator.remove();
+                    forcePlaceWord(word, placement.x(), placement.y(), placement.horizontal());
+                    placedAny = true;
                 }
+
+                if (!placedAny)
+                    expandBoard();
             }
         }
 
-        private Pair<Integer, Integer> findValidLocation(String word) {
+        private Placement findValidLocation(String word) {
+            List<Placement> intersections = new ArrayList<>();
             for (Map.Entry<String, List<Pair<Integer, Integer>>> entry : wordLocations.entrySet()) {
-                // TODO: Implement this
+                String placedWord = entry.getKey();
+                List<Pair<Integer, Integer>> placedLocations = entry.getValue();
+                boolean placedHorizontal = isHorizontal(placedLocations);
+
+                for (int placedIndex = 0; placedIndex < placedWord.length(); placedIndex++) {
+                    char placedChar = placedWord.charAt(placedIndex);
+                    Pair<Integer, Integer> intersection = placedLocations.get(placedIndex);
+
+                    for (int wordIndex = 0; wordIndex < word.length(); wordIndex++) {
+                        if (word.charAt(wordIndex) != placedChar)
+                            continue;
+
+                        boolean horizontal = !placedHorizontal;
+                        int startX = horizontal ? intersection.getLeft() - wordIndex : intersection.getLeft();
+                        int startY = horizontal ? intersection.getRight() : intersection.getRight() - wordIndex;
+                        if (isValidPlacement(word, startX, startY, horizontal, true)) {
+                            intersections.add(new Placement(startX, startY, horizontal));
+                        }
+                    }
+                }
             }
 
-            return null;  // No valid intersection found
+            if (!intersections.isEmpty())
+                return intersections.get(RANDOM.nextInt(intersections.size()));
+
+            List<Placement> fallbacks = new ArrayList<>();
+            for (boolean horizontal : List.of(Boolean.TRUE, Boolean.FALSE)) {
+                for (int boardX = 0; boardX < this.board.length; boardX++) {
+                    for (int boardY = 0; boardY < this.board[boardX].length; boardY++) {
+                        if (isValidPlacement(word, boardX, boardY, horizontal, false)) {
+                            fallbacks.add(new Placement(boardX, boardY, horizontal));
+                        }
+                    }
+                }
+            }
+
+            if (fallbacks.isEmpty())
+                return null;
+
+            return fallbacks.get(RANDOM.nextInt(fallbacks.size()));
         }
 
         private void forcePlaceWord(String word, int x, int y, boolean horizontal) {
@@ -334,8 +376,57 @@ public class CrosswordCommand extends CoreCommand {
             this.wordLocations.put(word, locations);
         }
 
-        private boolean isValidIntersection(String word, int x, int y, boolean horizontal) {
-            return false;
+        private boolean isValidPlacement(String word, int x, int y, boolean horizontal, boolean requireIntersection) {
+            if (x < 0 || y < 0)
+                return false;
+
+            int endX = horizontal ? x + word.length() - 1 : x;
+            int endY = horizontal ? y : y + word.length() - 1;
+            if (isOutsideBounds(x, y) || isOutsideBounds(endX, endY))
+                return false;
+
+            if (horizontal) {
+                if (!isCellClearOrOutside(x - 1, y) || !isCellClearOrOutside(endX + 1, y))
+                    return false;
+            } else if (!isCellClearOrOutside(x, y - 1) || !isCellClearOrOutside(x, endY + 1)) {
+                return false;
+            }
+
+            boolean intersects = false;
+            for (int i = 0; i < word.length(); i++) {
+                int boardX = horizontal ? x + i : x;
+                int boardY = horizontal ? y : y + i;
+                char existing = this.board[boardX][boardY];
+                char current = word.charAt(i);
+
+                if (existing != '\u0000' && existing != current)
+                    return false;
+
+                if (existing == current) {
+                    intersects = true;
+                    continue;
+                }
+
+                if (horizontal) {
+                    if (!isCellClearOrOutside(boardX, boardY - 1) || !isCellClearOrOutside(boardX, boardY + 1))
+                        return false;
+                } else if (!isCellClearOrOutside(boardX - 1, boardY) || !isCellClearOrOutside(boardX + 1, boardY)) {
+                    return false;
+                }
+            }
+
+            return !requireIntersection || intersects || this.wordLocations.isEmpty();
+        }
+
+        private boolean isCellClearOrOutside(int x, int y) {
+            return isOutsideBounds(x, y) || isEmpty(x, y);
+        }
+
+        private static boolean isHorizontal(List<Pair<Integer, Integer>> locations) {
+            if (locations.size() < 2)
+                return true;
+
+            return locations.getFirst().getRight().equals(locations.get(1).getRight());
         }
 
         private void expandBoard() {
@@ -356,6 +447,9 @@ public class CrosswordCommand extends CoreCommand {
 
         public char get(int x, int y) {
             return this.board[x][y];
+        }
+
+        private record Placement(int x, int y, boolean horizontal) {
         }
     }
 }
