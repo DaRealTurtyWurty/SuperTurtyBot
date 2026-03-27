@@ -20,6 +20,7 @@ import dev.darealturtywurty.superturtybot.core.util.object.CoupledPair;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
+import dev.darealturtywurty.superturtybot.modules.WordleReminderManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
@@ -35,15 +36,27 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -56,6 +69,8 @@ public class WordleCommand extends CoreCommand {
 
     private static final RandomWordRequestData REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
     private static final Path WORDLE_FILE = Path.of("./wordle.json");
+    private static final ZoneOffset WORDLE_TIME_ZONE = ZoneOffset.UTC;
+    private static final long WORDLE_REMINDER_DELAY = TimeUnit.HOURS.toMillis(24);
 
     private static final Map<Long, List<Game>> GUILD_GAMES = new HashMap<>();
     private static final Map<Long, Game> PRIVATE_GAMES = new HashMap<>();
@@ -97,7 +112,7 @@ public class WordleCommand extends CoreCommand {
 
             loadTodayWords();
             DailyTaskScheduler.addTask(new DailyTask(() -> {
-                fetchAndStoreWords();
+                fetchAndStoreWords(1L);
                 RATE_LIMITS.clear();
             }, 0, 0));
 
@@ -296,8 +311,9 @@ public class WordleCommand extends CoreCommand {
             long channelId = message.getChannel().getIdLong();
             long messageId = message.getIdLong();
             long userId = event.getUser().getIdLong();
+            long reminderChannelId = event.getChannel().getIdLong();
 
-            var game = new Game(word, guildId, channelId, messageId, userId);
+            var game = new Game(word, guildId, channelId, messageId, userId, reminderChannelId);
             if (guildId != null) {
                 GUILD_GAMES.computeIfAbsent(channelId, id -> new ArrayList<>()).add(game);
             } else {
@@ -390,7 +406,12 @@ public class WordleCommand extends CoreCommand {
             profile.getStreaks().add(streakData);
         }
 
+        long now = System.currentTimeMillis();
         streakData.setHasPlayedToday(true);
+        streakData.setLastPlayedAt(now);
+        streakData.setReminderAt(now + WORDLE_REMINDER_DELAY);
+        streakData.setReminderSent(false);
+        streakData.setReminderChannelId(game.getReminderChannelId());
         if (won) {
             streakData.setStreak(streakData.getStreak() + 1);
             if (streakData.getStreak() > streakData.getBestStreak()) {
@@ -401,6 +422,7 @@ public class WordleCommand extends CoreCommand {
         }
 
         Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", game.getUserId()), profile);
+        WordleReminderManager.scheduleReminder(game.getUserId(), guild, streakData.getReminderAt());
     }
 
     private static void endGame(@NotNull Guild guild, @NotNull Game game) {
@@ -514,8 +536,8 @@ public class WordleCommand extends CoreCommand {
     }
 
 
-    private static void fetchAndStoreWords() {
-        resetDaily();
+    private static void fetchAndStoreWords(long daysElapsed) {
+        resetDaily(daysElapsed);
         fetchWordForGlobal();
 
         List<Long> guildIds = new ArrayList<>(GUILD_WORDS.keySet());
@@ -530,6 +552,7 @@ public class WordleCommand extends CoreCommand {
     private static void writeToFile() {
         try {
             var json = new JsonObject();
+            json.addProperty("date", getCurrentWordleDate().toString());
             json.addProperty("global", GLOBAL_WORD.get());
 
             var guildWords = new JsonObject();
@@ -596,27 +619,53 @@ public class WordleCommand extends CoreCommand {
                 Files.createDirectories(WORDLE_FILE.getParent());
                 Files.createFile(WORDLE_FILE);
 
-                fetchAndStoreWords();
+                fetchAndStoreWords(0L);
                 return;
             }
 
             String json = Files.readString(WORDLE_FILE);
-            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
-
-            String globalWord;
-            if (object.has("global")) {
-                globalWord = object.get("global").getAsString();
-                GLOBAL_WORD.set(globalWord);
-            } else {
-                fetchWordForGlobal();
+            if (json.isBlank()) {
+                fetchAndStoreWords(0L);
+                return;
             }
 
+            JsonObject object = Constants.GSON.fromJson(json, JsonObject.class);
+            if (object == null) {
+                fetchAndStoreWords(0L);
+                return;
+            }
+
+            LocalDate currentDate = getCurrentWordleDate();
+            LocalDate cachedDate = getCachedWordleDate(object);
+            if (cachedDate == null || !cachedDate.equals(currentDate)) {
+                long daysElapsed = cachedDate == null || cachedDate.isAfter(currentDate)
+                        ? 0L
+                        : ChronoUnit.DAYS.between(cachedDate, currentDate);
+                fetchAndStoreWords(daysElapsed);
+                return;
+            }
+
+            boolean shouldWrite = !object.has("date");
+            if (object.has("global")) {
+                GLOBAL_WORD.set(object.get("global").getAsString());
+            } else {
+                fetchWordForGlobal();
+                shouldWrite = true;
+            }
+
+            GUILD_WORDS.clear();
             if (object.has("guild_words")) {
                 JsonObject guildWords = object.getAsJsonObject("guild_words");
                 for (Map.Entry<String, JsonElement> entry : guildWords.entrySet()) {
                     String word = entry.getValue().getAsString();
                     GUILD_WORDS.put(Long.parseLong(entry.getKey()), word);
                 }
+            } else {
+                shouldWrite = true;
+            }
+
+            if (shouldWrite) {
+                writeToFile();
             }
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to load today's words!", exception);
@@ -631,14 +680,47 @@ public class WordleCommand extends CoreCommand {
                 || !ApiHandler.isWord(word).converge(Boolean::booleanValue, httpStatus -> false);
     }
 
-    private static void resetDaily() {
+    private static LocalDate getCurrentWordleDate() {
+        return LocalDate.now(WORDLE_TIME_ZONE);
+    }
+
+    private static @Nullable LocalDate getCachedWordleDate(JsonObject object) throws IOException {
+        if (object.has("date")) {
+            try {
+                return LocalDate.parse(object.get("date").getAsString());
+            } catch (DateTimeParseException exception) {
+                Constants.LOGGER.warn("Failed to parse cached Wordle date, falling back to the file timestamp.", exception);
+            }
+        }
+
+        if (Files.exists(WORDLE_FILE)) {
+            return Files.getLastModifiedTime(WORDLE_FILE)
+                    .toInstant()
+                    .atOffset(WORDLE_TIME_ZONE)
+                    .toLocalDate();
+        }
+
+        return null;
+    }
+
+    private static void resetDaily(long daysElapsed) {
+        if (daysElapsed <= 0L)
+            return;
+
         List<WordleProfile> profiles = Database.getDatabase().wordleProfiles.find().into(new ArrayList<>());
         for (WordleProfile profile : profiles) {
             for (WordleStreakData streak : profile.getStreaks()) {
-                if (streak.isHasPlayedToday())
+                if (daysElapsed >= 2L) {
                     streak.setHasPlayedToday(false);
-                else
                     streak.setStreak(0);
+                    continue;
+                }
+
+                if (streak.isHasPlayedToday()) {
+                    streak.setHasPlayedToday(false);
+                } else {
+                    streak.setStreak(0);
+                }
             }
 
             Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", profile.getUser()), profile);
@@ -656,8 +738,9 @@ public class WordleCommand extends CoreCommand {
         private final long channelId;
         private final long messageId;
         private final long userId;
+        private final long reminderChannelId;
 
-        public Game(String word, @Nullable Long guildId, long channelId, long messageId, long userId) {
+        public Game(String word, @Nullable Long guildId, long channelId, long messageId, long userId, long reminderChannelId) {
             this.word = word;
             this.tries = 6;
 
@@ -665,6 +748,7 @@ public class WordleCommand extends CoreCommand {
             this.channelId = channelId;
             this.messageId = messageId;
             this.userId = userId;
+            this.reminderChannelId = reminderChannelId;
         }
 
         public boolean isLost() {

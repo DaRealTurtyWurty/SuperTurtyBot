@@ -12,4 +12,8 @@ public class WordleStreakData {
     private int streak;
     private int bestStreak;
     private boolean hasPlayedToday;
+    private long lastPlayedAt;
+    private long reminderAt;
+    private boolean reminderSent;
+    private long reminderChannelId;
 }

@@ -36,6 +36,7 @@ import dev.darealturtywurty.superturtybot.modules.ArtistNsfwCache;
 import dev.darealturtywurty.superturtybot.modules.BirthdayManager;
 import dev.darealturtywurty.superturtybot.modules.ChangelogFetcher;
 import dev.darealturtywurty.superturtybot.modules.ReminderManager;
+import dev.darealturtywurty.superturtybot.modules.WordleReminderManager;
 import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
@@ -148,6 +149,10 @@ public class CommandHook extends ListenerAdapter {
 
         if (!ReminderManager.isRunning()) {
             ReminderManager.start(jda);
+        }
+
+        if (!WordleReminderManager.isRunning()) {
+            WordleReminderManager.start(jda);
         }
 
         ArtistNsfwCache.initialize();
