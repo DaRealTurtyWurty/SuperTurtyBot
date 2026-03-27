@@ -1,11 +1,15 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
+import com.mongodb.MongoWriteException;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
 import com.apptasticsoftware.rssreader.DateTime;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.RedditNotifier;
+import dev.darealturtywurty.superturtybot.database.pojos.collections.RedditPostCache;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -23,12 +27,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-// TODO: Move cache into the database
 public class RedditListener {
     private static final RssReader READER = new RssReader();
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final Map<String, List<String>> SUBREDDIT_CACHE_MAP = new HashMap<>();
     private static final Map<String, Long> SUBREDDIT_BACKOFF_UNTIL = new HashMap<>();
 
     public static void initialize(JDA jda) {
@@ -54,6 +56,7 @@ public class RedditListener {
                 for (Map.Entry<String, List<RedditNotifier>> entry : notifiersBySubreddit.entrySet()) {
                     String subreddit = entry.getKey();
                     List<RedditNotifier> subredditNotifiers = entry.getValue();
+                    pruneSubredditCache(subreddit);
 
                     long now = System.currentTimeMillis();
                     long backoffUntil = SUBREDDIT_BACKOFF_UNTIL.getOrDefault(subreddit, 0L);
@@ -84,8 +87,12 @@ public class RedditListener {
                             String author = item.getAuthor().orElse("");
                             Instant time = new DateTime().toInstant(item.getPubDate().orElse(""));
                             String guid = item.getGuid().orElse("");
+                            if (guid.isBlank())
+                                guid = link;
+                            if (guid.isBlank())
+                                return;
 
-                            if (SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).contains(guid))
+                            if (!markAsSeen(subreddit, guid))
                                 return;
 
                             if (mediaUrl.endsWith(".jpg") || mediaUrl.endsWith("jpeg") || mediaUrl.endsWith(".png")
@@ -125,11 +132,6 @@ public class RedditListener {
                                     ).queue();
                                 }
                             }
-
-                            SUBREDDIT_CACHE_MAP.computeIfAbsent(subreddit, key -> new ArrayList<>()).add(guid);
-
-                            if (SUBREDDIT_CACHE_MAP.get(subreddit).size() > 30)
-                                SUBREDDIT_CACHE_MAP.get(subreddit).removeFirst();
                         } catch (final Exception exception) {
                             Constants.LOGGER.error("Failed to process Reddit item for r/{}", subreddit, exception);
                         }
@@ -192,5 +194,40 @@ public class RedditListener {
 
     public static boolean isInitialized() {
         return IS_INITIALIZED.get();
+    }
+
+    private static boolean markAsSeen(String subreddit, String guid) {
+        try {
+            Database.getDatabase().redditPostCache.insertOne(new RedditPostCache(
+                    subreddit,
+                    guid,
+                    System.currentTimeMillis()));
+            return true;
+        } catch (MongoWriteException exception) {
+            if (exception.getError() != null && exception.getError().getCode() == 11000)
+                return false;
+
+            throw exception;
+        }
+    }
+
+    private static void pruneSubredditCache(String subreddit) {
+        List<RedditPostCache> cachedPosts = Database.getDatabase().redditPostCache.find(Filters.eq("subreddit", subreddit))
+                .sort(Sorts.descending("createdAt"))
+                .into(new ArrayList<>());
+        if (cachedPosts.size() <= 30)
+            return;
+
+        List<String> staleGuids = cachedPosts.stream()
+                .skip(30)
+                .map(RedditPostCache::getGuid)
+                .filter(guid -> guid != null && !guid.isBlank())
+                .toList();
+        if (staleGuids.isEmpty())
+            return;
+
+        Database.getDatabase().redditPostCache.deleteMany(Filters.and(
+                Filters.eq("subreddit", subreddit),
+                Filters.in("guid", staleGuids)));
     }
 }

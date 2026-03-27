@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
@@ -43,6 +44,7 @@ public class Database {
     public final MongoCollection<SteamStoreNotifier> steamStoreNotifier;
     public final MongoCollection<SteamUpcomingNotifier> steamUpcomingNotifier;
     public final MongoCollection<RedditNotifier> redditNotifier;
+    public final MongoCollection<RedditPostCache> redditPostCache;
     public final MongoCollection<MinecraftNotifier> minecraftNotifier;
     public final MongoCollection<SiegeNotifier> siegeNotifier;
     public final MongoCollection<RocketLeagueNotifier> rocketLeagueNotifier;
@@ -78,6 +80,7 @@ public class Database {
         this.steamStoreNotifier = mongoDatabase.getCollection("steamStoreNotifier", SteamStoreNotifier.class);
         this.steamUpcomingNotifier = mongoDatabase.getCollection("steamUpcomingNotifier", SteamUpcomingNotifier.class);
         this.redditNotifier = mongoDatabase.getCollection("redditNotifier", RedditNotifier.class);
+        this.redditPostCache = mongoDatabase.getCollection("redditPostCache", RedditPostCache.class);
         this.minecraftNotifier = mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class);
         this.siegeNotifier = mongoDatabase.getCollection("siegeNotifier", SiegeNotifier.class);
         this.rocketLeagueNotifier = mongoDatabase.getCollection("rocketLeagueNotifier", RocketLeagueNotifier.class);
@@ -138,6 +141,11 @@ public class Database {
             db.steamStoreNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.steamUpcomingNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
+            db.redditPostCache.createIndex(Indexes.compoundIndex(
+                    Indexes.descending("subreddit"),
+                    Indexes.descending("guid")),
+                    new IndexOptions().unique(true));
+            db.redditPostCache.createIndex(Indexes.descending("createdAt"));
             db.minecraftNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.siegeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.rocketLeagueNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));

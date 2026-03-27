@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,22 +49,27 @@ public class ChatRevivalManager extends ListenerAdapter {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         GUILD_EXECUTOR_MAP.put(guild.getIdLong(), executor);
 
-        ChatReviver chatReviver = getChatReviver(guild);
+        GuildData config = GuildData.getOrCreateGuildData(guild);
         executor.scheduleAtFixedRate(
                 () -> {
-                    // TODO: Have it configurable for which revivers to run but for now, we will pick a random one
+                    ChatReviver chatReviver = getChatReviver(guild);
+                    EnumSet<ChatRevivalType> enabledTypes = ChatRevivalType.fromStorage(
+                            GuildData.getOrCreateGuildData(guild).getChatRevivalTypes());
+                    if (enabledTypes.isEmpty())
+                        return;
 
-                    int random = ThreadLocalRandom.current().nextInt(0, 3);
-                    if (random == 0) {
+                    int random = ThreadLocalRandom.current().nextInt(enabledTypes.size());
+                    ChatRevivalType selected = enabledTypes.stream().skip(random).findFirst().orElse(ChatRevivalType.TOPIC);
+                    if (selected == ChatRevivalType.DRAWING) {
                         drawingChatRevival(guild, chatReviver);
-                    } else if (random == 1) {
+                    } else if (selected == ChatRevivalType.TOPIC) {
                         topicChatRevival(guild, chatReviver);
                     } else {
                         wyrChatRevival(guild, chatReviver);
                     }
                 },
-                0,
-                chatReviver.nextRunTime(),
+                getChatReviver(guild).nextRunTime(config.getChatRevivalTime()),
+                TimeUnit.HOURS.toMillis(Math.max(1L, config.getChatRevivalTime())),
                 TimeUnit.MILLISECONDS
         );
 
@@ -165,7 +171,8 @@ public class ChatRevivalManager extends ListenerAdapter {
         if (!textChannel.canTalk())
             return;
 
-        String wyr = WouldYouRatherCommand.getRandomQuestion(textChannel.isNSFW(), true); // TODO: configurable nsfw
+        boolean allowNsfw = config.isChatRevivalAllowNsfw() && textChannel.isNSFW();
+        String wyr = WouldYouRatherCommand.getRandomQuestion(allowNsfw, allowNsfw);
         chatReviver.setLastRunTime(System.currentTimeMillis());
         Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 

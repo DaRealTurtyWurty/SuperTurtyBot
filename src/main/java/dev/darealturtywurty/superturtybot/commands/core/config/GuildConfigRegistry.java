@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.core.config;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import dev.darealturtywurty.superturtybot.modules.ChatRevivalType;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigOption.DataType;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.registry.Registry;
@@ -339,6 +340,34 @@ public class GuildConfigRegistry {
                         .serializer((config, value) -> config.setChatRevivalTime(Integer.parseInt(value)))
                         .valueFromConfig(GuildData::getChatRevivalTime)
                         .validator((event, value) -> Integer.parseInt(value) > 0).build());
+
+        GUILD_CONFIG_OPTIONS.register("chat_revival_types",
+                new GuildConfigOption.Builder().dataType(DataType.STRING)
+                        .serializer(GuildData::setChatRevivalTypes)
+                        .valueFromConfig(GuildData::getChatRevivalTypes)
+                        .validator((event, value) -> ChatRevivalType.isValidStorage(value)).build());
+
+        GUILD_CONFIG_OPTIONS.register("chat_revival_allow_nsfw",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                        .serializer((config, value) -> config.setChatRevivalAllowNsfw(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isChatRevivalAllowNsfw).build());
+
+        GUILD_CONFIG_OPTIONS.register("submission_manager_roles",
+                new GuildConfigOption.Builder().dataType(DataType.STRING)
+                        .serializer(GuildData::setSubmissionManagerRoles)
+                        .valueFromConfig(GuildData::getSubmissionManagerRoles)
+                        .validator((event, value) -> {
+                            final String[] roles = value.split("[ ;]");
+                            for (final String roleStr : roles) {
+                                if (roleStr.isBlank())
+                                    continue;
+
+                                if (!Validators.ROLE_VALIDATOR.test(event, roleStr))
+                                    return false;
+                            }
+
+                            return true;
+                        }).build());
 
         GUILD_CONFIG_OPTIONS.register("warning_xp_percentage",
                 new GuildConfigOption.Builder().dataType(DataType.FLOAT)

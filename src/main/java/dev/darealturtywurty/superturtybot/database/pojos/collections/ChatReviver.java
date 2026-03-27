@@ -1,6 +1,5 @@
 package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
-import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +20,12 @@ public class ChatReviver {
         this(guild, 0L, new ArrayList<>());
     }
 
-    public long nextRunTime() {
-        return MathUtils.clamp(
-                Math.abs(this.lastRunTime - System.currentTimeMillis()),
-                0,
-                TimeUnit.DAYS.toMillis(1));
+    public long nextRunTime(int hoursBetweenRuns) {
+        long intervalMillis = TimeUnit.HOURS.toMillis(Math.max(1L, hoursBetweenRuns));
+        if (this.lastRunTime <= 0L)
+            return intervalMillis;
+
+        long nextRunAt = this.lastRunTime + intervalMillis;
+        return Math.max(0L, nextRunAt - System.currentTimeMillis());
     }
 }

@@ -124,6 +124,11 @@ public class GuildData {
     private boolean chatRevivalEnabled;
     private int chatRevivalTime;
     private long chatRevivalChannel;
+    private String chatRevivalTypes;
+    private boolean chatRevivalAllowNsfw;
+
+    // Submission
+    private String submissionManagerRoles;
 
     // AI
     private boolean aiEnabled;
@@ -256,6 +261,9 @@ public class GuildData {
         this.chatRevivalEnabled = false;
         this.chatRevivalTime = 24;
         this.chatRevivalChannel = 0L;
+        this.chatRevivalTypes = "drawing;topic;would_you_rather";
+        this.chatRevivalAllowNsfw = false;
+        this.submissionManagerRoles = "";
         this.warningXpPercentage = 0F;
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;
@@ -315,6 +323,9 @@ public class GuildData {
     }
 
     public static List<Long> getLongs(String str) {
+        if (str == null || str.isBlank())
+            return List.of();
+
         return Stream.of(str.split("[ ;]")).map(Longs::tryParse).filter(Objects::nonNull).toList();
     }
 }
