@@ -97,9 +97,10 @@ public class SteamStoreListener {
         if (title.isBlank() || link.isBlank())
             return Optional.empty();
 
-        String articleId = item.getGuid()
+        String articleId = normalizeArticleId(link);
+        String legacyArticleId = item.getGuid()
                 .filter(value -> !value.isBlank())
-                .orElse(link);
+                .orElse(articleId);
         String contentHtml = item.getContent().or(item::getDescription).orElse("");
         Instant publishedAt = parseTimestamp(item);
 
@@ -114,7 +115,7 @@ public class SteamStoreListener {
         String imageUrl = resolveImageUrl(articleDocument, contentHtml);
         String youtubeUrl = extractYouTubeUrl(contentHtml, articleDocument).orElse("");
 
-        return Optional.of(new SteamStoreArticle(articleId, title, link, description, imageUrl, publishedAt, youtubeUrl));
+        return Optional.of(new SteamStoreArticle(articleId, legacyArticleId, title, link, description, imageUrl, publishedAt, youtubeUrl));
     }
 
     private static Instant parseTimestamp(Item item) {
@@ -295,8 +296,13 @@ public class SteamStoreListener {
         }
 
         if (storedArticleIds.isEmpty()) {
-            SteamStoreArticle latestArticle = articles.getFirst();
-            sendUpdate(channel, notifier, latestArticle);
+            storedArticleIds.addAll(articles.stream().map(SteamStoreArticle::id).limit(STORED_ARTICLE_LIMIT).toList());
+            persistStoredArticles(notifier);
+            return;
+        }
+
+        if (isLegacyCacheMismatch(storedArticleIds, articles)) {
+            storedArticleIds.clear();
             storedArticleIds.addAll(articles.stream().map(SteamStoreArticle::id).limit(STORED_ARTICLE_LIMIT).toList());
             persistStoredArticles(notifier);
             return;
@@ -305,7 +311,7 @@ public class SteamStoreListener {
         boolean changed = false;
         for (int index = articles.size() - 1; index >= 0; index--) {
             SteamStoreArticle article = articles.get(index);
-            if (storedArticleIds.contains(article.id()))
+            if (matchesStoredArticleId(storedArticleIds, article))
                 continue;
 
             sendUpdate(channel, notifier, article);
@@ -323,8 +329,30 @@ public class SteamStoreListener {
 
     private static void persistStoredArticles(SteamStoreNotifier notifier) {
         Database.getDatabase().steamStoreNotifier.updateOne(
-                Filters.eq("guild", notifier.getGuild()),
+                Filters.and(
+                        Filters.eq("guild", notifier.getGuild()),
+                        Filters.eq("channel", notifier.getChannel())),
                 Updates.set("storedArticleIds", notifier.getStoredArticleIds()));
+    }
+
+    private static boolean isLegacyCacheMismatch(List<String> storedArticleIds, List<SteamStoreArticle> articles) {
+        if (storedArticleIds.isEmpty() || articles.isEmpty())
+            return false;
+
+        for (SteamStoreArticle article : articles) {
+            if (matchesStoredArticleId(storedArticleIds, article))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static boolean matchesStoredArticleId(List<String> storedArticleIds, SteamStoreArticle article) {
+        return storedArticleIds.contains(article.id()) || storedArticleIds.contains(article.legacyId());
+    }
+
+    private static String normalizeArticleId(String url) {
+        return url == null ? "" : url.trim();
     }
 
     private static void sendUpdate(TextChannel channel, SteamStoreNotifier notifier, SteamStoreArticle article) {
@@ -343,9 +371,9 @@ public class SteamStoreListener {
         if (!article.youtubeUrl().isBlank())
             embed.addField("Trailer", article.youtubeUrl(), false);
 
-        String content = notifier.getMention();
+        String content = notifier.getMention() + " New Steam sale or fest: **" + article.title() + "**.";
         if (!article.youtubeUrl().isBlank())
-            content += "\n" + article.youtubeUrl();
+            content += "\nTrailer: " + article.youtubeUrl();
 
         channel.sendMessageEmbeds(embed.build())
                 .setContent(content)
@@ -356,7 +384,7 @@ public class SteamStoreListener {
         return IS_INITIALIZED.get();
     }
 
-    private record SteamStoreArticle(String id, String title, String url, String description, String imageUrl,
+    private record SteamStoreArticle(String id, String legacyId, String title, String url, String description, String imageUrl,
                                      Instant publishedAt, String youtubeUrl) {
     }
 }

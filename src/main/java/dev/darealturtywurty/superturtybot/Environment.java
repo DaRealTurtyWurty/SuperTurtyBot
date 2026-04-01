@@ -66,6 +66,22 @@ public final class Environment {
         return getString("REDDIT_CLIENT_SECRET");
     }
 
+    public Optional<String> redditPassword() {
+        return getString("REDDIT_PASSWORD");
+    }
+
+    public Optional<String> redditRedirectUrl() {
+        return getString("REDDIT_REDIRECT_URL");
+    }
+
+    public Optional<String> redditRefreshToken() {
+        return getString("REDDIT_REFRESH_TOKEN");
+    }
+
+    public Optional<String> redditUsername() {
+        return getString("REDDIT_USERNAME");
+    }
+
     public Optional<String> steamKey() {
         return getString("STEAM_KEY");
     }

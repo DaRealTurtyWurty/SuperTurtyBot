@@ -14,9 +14,10 @@ public class MinecraftNotifier {
     private long guild;
     private long channel;
     private String mention;
+    private long createdAt;
     private List<String> storedArticles;
 
     public MinecraftNotifier(long guild, long channel, String mention) {
-        this(guild, channel, mention, new ArrayList<>());
+        this(guild, channel, mention, System.currentTimeMillis(), new ArrayList<>());
     }
 }

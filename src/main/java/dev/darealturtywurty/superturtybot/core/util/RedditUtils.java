@@ -13,8 +13,12 @@ import net.dean.jraw.RedditClient;
 import net.dean.jraw.http.NetworkException;
 import net.dean.jraw.http.OkHttpNetworkAdapter;
 import net.dean.jraw.http.UserAgent;
+import net.dean.jraw.models.OAuthData;
+import net.dean.jraw.models.Submission;
+import net.dean.jraw.models.SubredditSort;
 import net.dean.jraw.models.SubmissionPreview;
 import net.dean.jraw.oauth.Credentials;
+import net.dean.jraw.oauth.NoopTokenStore;
 import net.dean.jraw.oauth.OAuthHelper;
 import net.dean.jraw.references.SubredditReference;
 import net.dean.jraw.tree.RootCommentNode;
@@ -37,20 +41,12 @@ public final class RedditUtils {
 
     static {
         if (Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
-            final var oAuthCreds = Credentials.userless(Environment.INSTANCE.redditClientId().get(),
-                    Environment.INSTANCE.redditClientSecret().get(), UUID.randomUUID());
             final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
-
-            var builder = new OkHttpClient.Builder();
-            if(Environment.INSTANCE.redditProxyHost().isPresent() && Environment.INSTANCE.redditProxyPort().isPresent()){
-                var proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(Environment.INSTANCE.redditProxyHost().get(), Environment.INSTANCE.redditProxyPort().get()));
-                builder.proxy(proxy);
+            final OkHttpNetworkAdapter adapter = new OkHttpNetworkAdapter(userAgent, createHttpClient());
+            REDDIT = createRedditClient(adapter);
+            if (REDDIT != null) {
+                REDDIT.setLogHttp(true);
             }
-
-            builder.connectTimeout(30, TimeUnit.SECONDS);
-            OkHttpClient client = builder.build();
-            REDDIT = OAuthHelper.automatic(new OkHttpNetworkAdapter(userAgent, client), oAuthCreds);
-            REDDIT.setLogHttp(true);
         }
     }
 
@@ -148,41 +144,102 @@ public final class RedditUtils {
         if (subreddits.length < 1) return null;
 
         final SubredditReference subreddit = getRandomSubreddit(subreddits);
-        RootCommentNode post = findValidPost(subreddit, subreddits);
-        int attempts = 0;
-        while (post == null) {
-            post = findValidPost(subreddit, subreddits);
-            if (attempts++ > 10) return null;
-        }
+        final RootCommentNode post = findValidPost(subreddit, subreddits);
+        if (post == null) return null;
 
         return constructEmbed(requireMedia, post);
     }
 
     @Nullable
     public static RootCommentNode findValidPost(SubredditReference subreddit, String... subreddits) {
-        RootCommentNode post = null;
-        int attempts = 0;
-        while (post == null) {
-            post = getRandomPost(subreddit);
+        final LinkedHashSet<String> candidates = new LinkedHashSet<>();
+        candidates.add(subreddit.getSubreddit());
 
-            if (attempts % 5 == 0 && attempts != 0 && post == null) {
-                subreddit = getRandomSubreddit(subreddits);
-            } else if (attempts >= 15 && post == null) return null;
+        final List<String> remaining = new ArrayList<>(Arrays.asList(subreddits));
+        Collections.shuffle(remaining);
+        candidates.addAll(remaining);
 
-            attempts++;
+        for (final String candidate : candidates) {
+            final RootCommentNode post = getRandomPost(getSubreddit(candidate));
+            if (post != null) {
+                return post;
+            }
         }
 
-        return post;
+        return null;
     }
 
     @Nullable
     public static RootCommentNode getRandomPost(SubredditReference subreddit) {
         try {
-            return subreddit.randomSubmission();
+            final Submission submission = getRandomSubmission(subreddit);
+            return submission == null ? null : submission.toReference(REDDIT).comments();
         } catch (NetworkException | JsonDataException | ApiException exception) {
             Constants.LOGGER.error("Failed to get random post!", exception);
             return null;
         }
+    }
+
+    @Nullable
+    public static Submission getRandomSubmission(SubredditReference subreddit) {
+        final List<Submission> posts = subreddit.posts()
+                .sorting(SubredditSort.HOT)
+                .limit(50)
+                .build()
+                .accumulateMerged(1);
+
+        if (posts.isEmpty()) {
+            Constants.LOGGER.warn("Reddit returned no hot posts for r/{}", subreddit.getSubreddit());
+            return null;
+        }
+
+        return posts.get(ThreadLocalRandom.current().nextInt(posts.size()));
+    }
+
+    @Nullable
+    private static RedditClient createRedditClient(OkHttpNetworkAdapter adapter) {
+        final String clientId = Environment.INSTANCE.redditClientId().get();
+        final String clientSecret = Environment.INSTANCE.redditClientSecret().get();
+        final Optional<String> username = Environment.INSTANCE.redditUsername();
+        final Optional<String> refreshToken = Environment.INSTANCE.redditRefreshToken();
+        final Optional<String> password = Environment.INSTANCE.redditPassword();
+
+        if (username.isPresent() && refreshToken.isPresent()) {
+            Constants.LOGGER.info("Using Reddit refresh token authentication for user '{}'.", username.get());
+            final Credentials credentials = Credentials.webapp(clientId, clientSecret,
+                    Environment.INSTANCE.redditRedirectUrl().orElse("http://localhost"));
+            final OAuthData initialOAuthData = OAuthData.create("", List.of(), refreshToken.get(), new Date(0));
+            return new RedditClient(adapter, initialOAuthData, credentials, new NoopTokenStore(), username.get());
+        }
+
+        if (username.isPresent() && password.isPresent()) {
+            Constants.LOGGER.info("Using Reddit script authentication for user '{}'.", username.get());
+            final Credentials credentials = Credentials.script(username.get(), password.get(), clientId, clientSecret);
+            return OAuthHelper.automatic(adapter, credentials);
+        }
+
+        if (username.isPresent() || refreshToken.isPresent() || password.isPresent()) {
+            Constants.LOGGER.warn(
+                    "Incomplete Reddit authenticated configuration provided. Falling back to userless authentication.");
+        }
+
+        Constants.LOGGER.info("Using Reddit userless authentication.");
+        final Credentials credentials = Credentials.userless(clientId, clientSecret, UUID.randomUUID());
+        return OAuthHelper.automatic(adapter, credentials);
+    }
+
+    @NotNull
+    private static OkHttpClient createHttpClient() {
+        final var builder = new OkHttpClient.Builder();
+        if (Environment.INSTANCE.redditProxyHost().isPresent() && Environment.INSTANCE.redditProxyPort().isPresent()) {
+            final var proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
+                    Environment.INSTANCE.redditProxyHost().get(),
+                    Environment.INSTANCE.redditProxyPort().get()));
+            builder.proxy(proxy);
+        }
+
+        builder.connectTimeout(30, TimeUnit.SECONDS);
+        return builder.build();
     }
 
     @NotNull

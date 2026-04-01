@@ -216,7 +216,7 @@ public class SteamListener {
         changed.setColor(Color.BLUE);
         changed.setThumbnail(thumbnailURL);
         changed.setDescription("🟩 -> Added\n🟨 -> Modified\n🟥 -> Removed");
-        channel.sendMessage(notifier.getMention() + " **" + name + "** has just been updated on **Steam**!")
+        channel.sendMessage(notifier.getMention() + " Steam news update: **" + name + "**.")
             .addEmbeds(changed.build()).queue();
     }
 }

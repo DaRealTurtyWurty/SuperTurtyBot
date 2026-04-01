@@ -12,7 +12,6 @@ public class NotifierCommand extends CoreCommand {
                 new TwitchNotifierSubcommand(),
                 new SteamNotifierSubcommand(),
                 new SteamStoreNotifierSubcommand(),
-                new SteamUpcomingNotifierSubcommand(),
                 new RedditNotifierSubcommand(),
                 new MinecraftNotifierSubcommand(),
                 new SiegeNotifierSubcommand(),

@@ -22,6 +22,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -291,6 +292,65 @@ public class ApiHandler {
             JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
             List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
             return Either.left(words);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<List<String>, HttpStatus> getCommonWords(RandomWordRequestData requestData) {
+        StringBuilder path = new StringBuilder("words/common/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
+        requestData.getLength().ifPresent(length ->
+                path.append("&length=").append(length));
+
+        requestData.getMinLength().ifPresent(minLength ->
+                path.append("&minLength=").append(minLength));
+
+        requestData.getMaxLength().ifPresent(maxLength ->
+                path.append("&maxLength=").append(maxLength));
+
+        requestData.getStartsWith().ifPresent(startsWith ->
+                path.append("&startsWith=").append(startsWith));
+
+        requestData.getAmount().ifPresent(amount ->
+                path.append("&amount=").append(amount));
+
+        try (Response response = makeRequest(path.toString())) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
+            return Either.left(words);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public static Either<WordDefinition, HttpStatus> getWordDefinition(String word) {
+        try (Response response = makeRequest("words/definition?apiKey=%s&word=%s"
+                .formatted(Environment.INSTANCE.turtyApiKey().get(), URLEncoder.encode(word, StandardCharsets.UTF_8)))) {
+            if (response.code() != HttpStatus.OK.getCode())
+                return Either.right(HttpStatus.forStatus(response.code()));
+
+            ResponseBody body = response.body();
+            if (body == null)
+                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+            String json = body.string();
+            if (json.isBlank())
+                return Either.right(HttpStatus.NOT_FOUND);
+
+            return Either.left(Constants.GSON.fromJson(json, WordDefinition.class));
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);

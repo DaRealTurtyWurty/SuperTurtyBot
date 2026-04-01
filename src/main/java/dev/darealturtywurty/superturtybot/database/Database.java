@@ -42,7 +42,6 @@ public class Database {
     public final MongoCollection<TwitchNotifier> twitchNotifier;
     public final MongoCollection<SteamNotifier> steamNotifier;
     public final MongoCollection<SteamStoreNotifier> steamStoreNotifier;
-    public final MongoCollection<SteamUpcomingNotifier> steamUpcomingNotifier;
     public final MongoCollection<RedditNotifier> redditNotifier;
     public final MongoCollection<RedditPostCache> redditPostCache;
     public final MongoCollection<MinecraftNotifier> minecraftNotifier;
@@ -78,7 +77,6 @@ public class Database {
         this.twitchNotifier = mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = mongoDatabase.getCollection("steamNotifier", SteamNotifier.class);
         this.steamStoreNotifier = mongoDatabase.getCollection("steamStoreNotifier", SteamStoreNotifier.class);
-        this.steamUpcomingNotifier = mongoDatabase.getCollection("steamUpcomingNotifier", SteamUpcomingNotifier.class);
         this.redditNotifier = mongoDatabase.getCollection("redditNotifier", RedditNotifier.class);
         this.redditPostCache = mongoDatabase.getCollection("redditPostCache", RedditPostCache.class);
         this.minecraftNotifier = mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class);
@@ -139,7 +137,6 @@ public class Database {
             db.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
             db.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
             db.steamStoreNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
-            db.steamUpcomingNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
             db.redditPostCache.createIndex(Indexes.compoundIndex(
                     Indexes.descending("subreddit"),

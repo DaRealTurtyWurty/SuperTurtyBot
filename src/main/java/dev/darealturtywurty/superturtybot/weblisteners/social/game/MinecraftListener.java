@@ -251,10 +251,17 @@ public class MinecraftListener {
             notifier.setStoredArticles(storedArticles);
         }
 
-        // Seed new subscriptions from the current feed and announce the latest matching article once.
         if (storedArticles.isEmpty()) {
-            MinecraftArticle latestArticle = articles.get(0);
-            sendUpdate(channel, notifier, latestArticle);
+            if (notifier.getCreatedAt() > 0L) {
+                for (int index = articles.size() - 1; index >= 0; index--) {
+                    MinecraftArticle article = articles.get(index);
+                    if (article.publishedAt().toEpochMilli() < notifier.getCreatedAt())
+                        continue;
+
+                    sendUpdate(channel, notifier, article);
+                }
+            }
+
             storedArticles.addAll(articles.stream()
                     .map(MinecraftArticle::id)
                     .limit(STORED_ARTICLE_LIMIT)

@@ -493,7 +493,7 @@ public class WordSearchCommand extends CoreCommand {
         private boolean canFitWord(String word, int row, int column, Direction dir) {
             switch (dir) {
                 case UP -> {
-                    if (row - word.length() < 0)
+                    if (row - (word.length() - 1) < 0)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -505,7 +505,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case RIGHT -> {
-                    if (column + word.length() >= this.size)
+                    if (column + (word.length() - 1) >= this.size)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -517,7 +517,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case DOWN -> {
-                    if (row + word.length() >= this.size)
+                    if (row + (word.length() - 1) >= this.size)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -529,7 +529,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case LEFT -> {
-                    if (column - word.length() < 0)
+                    if (column - (word.length() - 1) < 0)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -541,7 +541,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case UP_RIGHT -> {
-                    if (row - word.length() < 0 || column + word.length() >= this.size)
+                    if (row - (word.length() - 1) < 0 || column + (word.length() - 1) >= this.size)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -553,7 +553,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case DOWN_RIGHT -> {
-                    if (row + word.length() >= this.size || column + word.length() >= this.size)
+                    if (row + (word.length() - 1) >= this.size || column + (word.length() - 1) >= this.size)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -565,7 +565,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case DOWN_LEFT -> {
-                    if (row + word.length() >= this.size || column - word.length() < 0)
+                    if (row + (word.length() - 1) >= this.size || column - (word.length() - 1) < 0)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -577,7 +577,7 @@ public class WordSearchCommand extends CoreCommand {
                     }
                 }
                 case UP_LEFT -> {
-                    if (row - word.length() < 0 || column - word.length() < 0)
+                    if (row - (word.length() - 1) < 0 || column - (word.length() - 1) < 0)
                         return false;
 
                     for (int i = 0; i < word.length(); i++) {
@@ -597,9 +597,10 @@ public class WordSearchCommand extends CoreCommand {
             if (this.guessedWords.contains(word))
                 return false;
 
+            this.guessedWords.add(word);
+
             if (this.words.contains(word)) {
                 this.foundWords.add(word);
-                this.guessedWords.add(word);
                 return true;
             }
 
