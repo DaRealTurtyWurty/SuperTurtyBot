@@ -12,6 +12,7 @@ import dev.darealturtywurty.superturtybot.registry.Registry;
 import lombok.Getter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReference;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -32,6 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CollectableGameCollector<T extends Collectable> extends ListenerAdapter implements Registerable {
     private static final AtomicInteger INITIAL_LOAD_COUNTER = new AtomicInteger();
     private static final long INITIAL_LOAD_DELAY_HOURS = 1L;
+    private static final long COLLECTABLE_EXPIRY_MINUTES = 30L;
+    private static final long DUPLICATE_REPLY_DELETE_DELAY_SECONDS = 5L;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final List<CollectableGameInstance<T>> gameInstances = new ArrayList<>();
@@ -113,7 +116,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             UserCollectables.Collectables userCollectablesOfType = userCollectables.getCollectables(collectable.getCollectionType());
             if (userCollectablesOfType.hasCollectable(collectable)) {
                 message.reply("❌ You have already collected " + collectable.getEmoji() + " `" + collectable.getRichName() + "`!").mentionRepliedUser(true)
-                        .queue(message1 -> message1.delete().queueAfter(5, TimeUnit.SECONDS));
+                        .queue(message1 -> message1.delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS));
+                event.getMessage().delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS, success -> {}, failure -> {});
                 return;
             }
 
@@ -200,9 +204,22 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         }
 
         event.getChannel().sendMessageEmbeds(embed.build()).queue(message ->
-                gameInstances.add(new CollectableGameInstance<>(
-                        guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(),
-                        collectable)));
+        {
+            CollectableGameInstance<T> instance = new CollectableGameInstance<>(
+                    guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(),
+                    collectable);
+            gameInstances.add(instance);
+
+            executor.schedule(() -> expireCollectable(instance, message),
+                    COLLECTABLE_EXPIRY_MINUTES, TimeUnit.MINUTES);
+        });
+    }
+
+    private void expireCollectable(CollectableGameInstance<T> instance, Message message) {
+        if (!gameInstances.remove(instance))
+            return;
+
+        message.delete().queue(success -> {}, failure -> {});
     }
 }
 

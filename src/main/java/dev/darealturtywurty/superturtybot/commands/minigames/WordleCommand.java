@@ -67,7 +67,7 @@ public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
-    private static final RandomWordRequestData REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
+    private static final RandomWordRequestData COMMON_WORD_REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
     private static final Path WORDLE_FILE = Path.of("./wordle.json");
     private static final ZoneOffset WORDLE_TIME_ZONE = ZoneOffset.UTC;
     private static final long WORDLE_REMINDER_DELAY = TimeUnit.HOURS.toMillis(24);
@@ -599,7 +599,7 @@ public class WordleCommand extends CoreCommand {
     }
 
     private static Optional<String> fetchWord() {
-        Either<List<String>, HttpStatus> words = ApiHandler.getWords(REQUEST_DATA);
+        Either<List<String>, HttpStatus> words = ApiHandler.getCommonWords(COMMON_WORD_REQUEST_DATA);
         if (words.isLeft()) {
             List<String> wordList = words.getLeft();
             if (wordList.isEmpty()) {

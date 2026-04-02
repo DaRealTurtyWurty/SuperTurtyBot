@@ -399,7 +399,7 @@ public class CrosswordCommand extends CoreCommand {
         }
 
         reply(event, "✅ Creating a crossword...");
-        event.getHook().editOriginal("✅ Crossword created.").queue(message -> {
+        event.getHook().retrieveOriginal().queue(message -> {
             try {
                 var game = new Game(guild.getIdLong(), event.getUser().getIdLong(), event.getChannel().getIdLong());
                 GAMES.add(game);
@@ -417,12 +417,18 @@ public class CrosswordCommand extends CoreCommand {
 
                     thread.sendMessage("✍️ Fill clues with `x=word`, where `x` is the clue number. Use `clear x` to empty a clue. Any guess that fits the current crossings is written into the board, and completion is only confirmed at the end.")
                             .setFiles(upload.get())
-                            .queue(ignored -> createEventWaiter(game, thread).build());
+                            .queue(ignored -> {
+                                event.getHook().editOriginal("✅ Crossword created. Check the thread for the puzzle.").queue();
+                                createEventWaiter(game, thread).build();
+                            });
+                }, error -> {
+                    GAMES.remove(game);
+                    Constants.LOGGER.error("Failed to create crossword thread", error);
+                    event.getHook().editOriginal("❌ Failed to create the crossword thread. Please try again.").queue();
                 });
             } catch (IllegalStateException exception) {
                 Constants.LOGGER.error("Failed to create crossword", exception);
-                message.editMessage("❌ Failed to create a playable crossword. Please try again.")
-                        .queue(ignored -> message.delete().queueAfter(10, TimeUnit.SECONDS));
+                event.getHook().editOriginal("❌ Failed to create a playable crossword. Please try again.").queue();
                 RATE_LIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
             }
         });

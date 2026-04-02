@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -47,9 +48,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class YouTubeListener {
     private static final String TOPIC_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=%s";
     private static final int MAX_IDS_PER_REQUEST = 50;
+    private static final Duration FAILURE_LOG_COOLDOWN = Duration.ofHours(1);
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     private static final DocumentBuilderFactory DOCUMENT_FACTORY = DocumentBuilderFactory.newInstance();
+    private static final Map<String, Instant> RECENT_FAILURE_LOGS = new ConcurrentHashMap<>();
 
     private static final AtomicBoolean IS_RUNNING = new AtomicBoolean(false);
 
@@ -86,20 +89,25 @@ public class YouTubeListener {
                 Constants.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException exception) {
-                        Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception);
+                        logFetchFailure(channelId, "request:" + exception.getClass().getName(),
+                                () -> Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception));
                     }
 
                     @Override
                     public void onResponse(@NotNull Call call, @NotNull Response response) {
                         try (ResponseBody body = response.body()) {
                             if (!response.isSuccessful()) {
-                                Constants.LOGGER.error("Failed response from channel '{}' (status {})", channelId,
-                                        response.code());
+                                logFetchFailure(channelId, "status:" + response.code(),
+                                        () -> Constants.LOGGER.error("Failed response from channel '{}' (status {})",
+                                                channelId, response.code()));
                                 return;
                             }
 
+                            clearFailureState(channelId);
+
                             if (body == null) {
-                                Constants.LOGGER.error("Failed response from channel '{}' (empty body)", channelId);
+                                logFetchFailure(channelId, "empty-body",
+                                        () -> Constants.LOGGER.error("Failed response from channel '{}' (empty body)", channelId));
                                 return;
                             }
 
@@ -172,6 +180,21 @@ public class YouTubeListener {
                 });
             }
         }, 0, 1, TimeUnit.MINUTES);
+    }
+
+    private static void logFetchFailure(String channelId, String reason, Runnable logger) {
+        String key = channelId + "|" + reason;
+        Instant now = Instant.now();
+        Instant lastLogged = RECENT_FAILURE_LOGS.get(key);
+        if (lastLogged != null && Duration.between(lastLogged, now).compareTo(FAILURE_LOG_COOLDOWN) < 0)
+            return;
+
+        RECENT_FAILURE_LOGS.put(key, now);
+        logger.run();
+    }
+
+    private static void clearFailureState(String channelId) {
+        RECENT_FAILURE_LOGS.keySet().removeIf(key -> key.startsWith(channelId + "|"));
     }
 
     private static Bson getFilter(long guildId) {

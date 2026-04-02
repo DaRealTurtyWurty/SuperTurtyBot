@@ -28,10 +28,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class ApiHandler {
     private static final String BASE_URL = "https://api.turtywurty.dev/";
+    private static final Map<String, Long> WORD_ENDPOINT_NEXT_REQUEST_AT = new ConcurrentHashMap<>();
+    private static final long WORD_ENDPOINT_MIN_INTERVAL_MILLIS = 225L;
+    private static final int WORD_RATE_LIMIT_RETRY_ATTEMPTS = 3;
+    private static final long WORD_RATE_LIMIT_BACKOFF_MILLIS = 1_100L;
 
     static {
         Environment.INSTANCE.turtyApiKey().ifPresentOrElse(key -> {
@@ -231,29 +237,22 @@ public class ApiHandler {
 
     public static Either<List<String>, HttpStatus> getWords(WordRequest requestData) {
         StringBuilder path = new StringBuilder("words?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
-        requestData.getLength().ifPresent(length ->
-                path.append("&length=").append(length));
+        appendWordRequestParams(path, requestData);
 
-        requestData.getStartsWith().ifPresent(startsWith ->
-                path.append("&startsWith=").append(startsWith));
+        try (Response response = makeWordRequest(path.toString())) {
+            return respondWithWordList(response);
+        } catch (IOException exception) {
+            Constants.LOGGER.error("Something went wrong making this request", exception);
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-        requestData.getAmount().ifPresent(amount ->
-                path.append("&amount=").append(amount));
+    public static Either<List<String>, HttpStatus> getCommonWords(WordRequest requestData) {
+        StringBuilder path = new StringBuilder("words/common?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
+        appendWordRequestParams(path, requestData);
 
-        try (Response response = makeRequest(path.toString())) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            String json = body.string();
-            if (json.isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
-            return Either.left(words);
+        try (Response response = makeWordRequest(path.toString())) {
+            return respondWithWordList(response);
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -262,36 +261,10 @@ public class ApiHandler {
 
     public static Either<List<String>, HttpStatus> getWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
-        requestData.getLength().ifPresent(length ->
-                path.append("&length=").append(length));
+        appendRandomWordRequestParams(path, requestData);
 
-        requestData.getMinLength().ifPresent(minLength ->
-                path.append("&minLength=").append(minLength));
-
-        requestData.getMaxLength().ifPresent(maxLength ->
-                path.append("&maxLength=").append(maxLength));
-
-        requestData.getStartsWith().ifPresent(startsWith ->
-                path.append("&startsWith=").append(startsWith));
-
-        requestData.getAmount().ifPresent(amount ->
-                path.append("&amount=").append(amount));
-
-        try (Response response = makeRequest(path.toString())) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            String json = body.string();
-            if (json.isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
-            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
-            return Either.left(words);
+        try (Response response = makeWordRequest(path.toString())) {
+            return respondWithWordList(response);
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -300,36 +273,10 @@ public class ApiHandler {
 
     public static Either<List<String>, HttpStatus> getCommonWords(RandomWordRequestData requestData) {
         StringBuilder path = new StringBuilder("words/common/random?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()));
-        requestData.getLength().ifPresent(length ->
-                path.append("&length=").append(length));
+        appendRandomWordRequestParams(path, requestData);
 
-        requestData.getMinLength().ifPresent(minLength ->
-                path.append("&minLength=").append(minLength));
-
-        requestData.getMaxLength().ifPresent(maxLength ->
-                path.append("&maxLength=").append(maxLength));
-
-        requestData.getStartsWith().ifPresent(startsWith ->
-                path.append("&startsWith=").append(startsWith));
-
-        requestData.getAmount().ifPresent(amount ->
-                path.append("&amount=").append(amount));
-
-        try (Response response = makeRequest(path.toString())) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            String json = body.string();
-            if (json.isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
-            JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
-            List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
-            return Either.left(words);
+        try (Response response = makeWordRequest(path.toString())) {
+            return respondWithWordList(response);
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -337,8 +284,8 @@ public class ApiHandler {
     }
 
     public static Either<WordDefinition, HttpStatus> getWordDefinition(String word) {
-        try (Response response = makeRequest("words/definition?apiKey=%s&word=%s"
-                .formatted(Environment.INSTANCE.turtyApiKey().get(), URLEncoder.encode(word, StandardCharsets.UTF_8)))) {
+        try (Response response = makeWordRequest("words/definition?apiKey=%s&word=%s"
+                .formatted(Environment.INSTANCE.turtyApiKey().get(), encodeQueryParam(word)))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -358,7 +305,8 @@ public class ApiHandler {
     }
 
     public static Either<Boolean, HttpStatus> isWord(String word) {
-        try (Response response = makeRequest("words/validate?apiKey=%s&word=%s".formatted(Environment.INSTANCE.turtyApiKey().get(), word))) {
+        try (Response response = makeWordRequest("words/validate?apiKey=%s&word=%s"
+                .formatted(Environment.INSTANCE.turtyApiKey().get(), encodeQueryParam(word)))) {
             if (response.code() != HttpStatus.OK.getCode())
                 return Either.right(HttpStatus.forStatus(response.code()));
 
@@ -376,6 +324,111 @@ public class ApiHandler {
         } catch (IOException exception) {
             Constants.LOGGER.error("Something went wrong making this request", exception);
             return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private static void appendWordRequestParams(StringBuilder path, WordRequest requestData) {
+        requestData.getLength().ifPresent(length -> path.append("&length=").append(length));
+        requestData.getStartsWith().ifPresent(startsWith -> path.append("&startsWith=").append(encodeQueryParam(startsWith)));
+        requestData.getAmount().ifPresent(amount -> path.append("&amount=").append(amount));
+    }
+
+    private static void appendRandomWordRequestParams(StringBuilder path, RandomWordRequestData requestData) {
+        requestData.getLength().ifPresent(length -> path.append("&length=").append(length));
+        requestData.getMinLength().ifPresent(minLength -> path.append("&minLength=").append(minLength));
+        requestData.getMaxLength().ifPresent(maxLength -> path.append("&maxLength=").append(maxLength));
+        requestData.getStartsWith().ifPresent(startsWith -> path.append("&startsWith=").append(encodeQueryParam(startsWith)));
+        requestData.getAmount().ifPresent(amount -> path.append("&amount=").append(amount));
+    }
+
+    private static Either<List<String>, HttpStatus> respondWithWordList(Response response) throws IOException {
+        if (response.code() != HttpStatus.OK.getCode())
+            return Either.right(HttpStatus.forStatus(response.code()));
+
+        ResponseBody body = response.body();
+        if (body == null)
+            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        String json = body.string();
+        if (json.isBlank())
+            return Either.right(HttpStatus.NOT_FOUND);
+
+        JsonArray array = Constants.GSON.fromJson(json, JsonArray.class);
+        List<String> words = array.asList().stream().map(JsonElement::getAsString).toList();
+        return Either.left(words);
+    }
+
+    private static String encodeQueryParam(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private static Response makeWordRequest(String path) throws IOException {
+        String endpointKey = getEndpointKey(path);
+        IOException lastException = null;
+
+        for (int attempt = 0; attempt <= WORD_RATE_LIMIT_RETRY_ATTEMPTS; attempt++) {
+            waitForWordEndpointWindow(endpointKey);
+
+            try {
+                Response response = makeRequest(path);
+                if (response.code() != HttpStatus.TOO_MANY_REQUESTS.getCode())
+                    return response;
+
+                response.close();
+
+                if (attempt == WORD_RATE_LIMIT_RETRY_ATTEMPTS)
+                    return makeRequest(path);
+
+                backoffWordEndpoint(endpointKey, attempt + 1);
+            } catch (IOException exception) {
+                lastException = exception;
+                if (attempt == WORD_RATE_LIMIT_RETRY_ATTEMPTS)
+                    throw exception;
+
+                backoffWordEndpoint(endpointKey, attempt + 1);
+            }
+        }
+
+        if (lastException != null)
+            throw lastException;
+
+        throw new IOException("Failed to make word request!");
+    }
+
+    private static void waitForWordEndpointWindow(String endpointKey) {
+        synchronized (WORD_ENDPOINT_NEXT_REQUEST_AT) {
+            long now = System.currentTimeMillis();
+            long nextAllowedAt = WORD_ENDPOINT_NEXT_REQUEST_AT.getOrDefault(endpointKey, 0L);
+            long waitMillis = Math.max(0L, nextAllowedAt - now);
+            if (waitMillis > 0L) {
+                sleep(waitMillis);
+                now = System.currentTimeMillis();
+            }
+
+            WORD_ENDPOINT_NEXT_REQUEST_AT.put(endpointKey, now + WORD_ENDPOINT_MIN_INTERVAL_MILLIS);
+        }
+    }
+
+    private static void backoffWordEndpoint(String endpointKey, int attempt) {
+        long backoffMillis = WORD_RATE_LIMIT_BACKOFF_MILLIS * attempt;
+        synchronized (WORD_ENDPOINT_NEXT_REQUEST_AT) {
+            long nextAllowedAt = System.currentTimeMillis() + backoffMillis;
+            WORD_ENDPOINT_NEXT_REQUEST_AT.merge(endpointKey, nextAllowedAt, Math::max);
+        }
+
+        sleep(backoffMillis);
+    }
+
+    private static String getEndpointKey(String path) {
+        int queryIndex = path.indexOf('?');
+        return queryIndex == -1 ? path : path.substring(0, queryIndex);
+    }
+
+    private static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
         }
     }
 

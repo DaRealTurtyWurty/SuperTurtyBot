@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +47,10 @@ public final class ReminderManager {
 
         List<Reminder> reminders = Database.getDatabase().reminders.find().sort(Sorts.ascending("time")).into(new ArrayList<>());
         for (Reminder reminder : reminders) {
-            if (!isValid(reminder))
+            if (!isValid(reminder)) {
+                deleteReminderRecord(reminder);
                 continue;
+            }
 
             scheduleReminder(reminder);
         }
@@ -69,7 +72,7 @@ public final class ReminderManager {
     public static boolean deleteReminder(long userId, String reminderId) {
         Reminder reminder = Database.getDatabase().reminders.find(Filters.and(
                 Filters.eq("user", userId),
-                Filters.eq("id", reminderId.toUpperCase(Locale.ROOT)))).first();
+                Filters.eq("id", normalizeReminderId(reminderId)))).first();
         if (reminder == null)
             return false;
 
@@ -112,22 +115,34 @@ public final class ReminderManager {
         if (reminder == null)
             return;
 
-        User user = jda.getUserById(reminder.getUser());
-        if (user == null) {
+        if (!isValid(reminder)) {
             deleteReminderRecord(reminderId);
             return;
         }
 
-        MessageChannel destination = findGuildDestination(reminder);
-        if (destination != null) {
-            sendReminder(destination, reminder, () -> sendDirectMessage(user, reminder));
+        if (jda == null) {
+            deleteReminderRecord(reminderId);
             return;
         }
 
-        sendDirectMessage(user, reminder);
+        Reminder finalReminder = reminder;
+        jda.retrieveUserById(reminder.getUser()).queue(
+                user -> {
+                    MessageChannel destination = findGuildDestination(finalReminder);
+                    if (destination != null) {
+                        sendReminder(destination, finalReminder, () -> sendDirectMessage(user, finalReminder));
+                        return;
+                    }
+
+                    sendDirectMessage(user, finalReminder);
+                },
+                failure -> {
+                    Constants.LOGGER.warn("Failed to retrieve user {} for reminder {}", finalReminder.getUser(), finalReminder.getId(), failure);
+                    deleteReminderRecord(finalReminder.getId());
+                });
     }
 
-    private static MessageChannel findGuildDestination(Reminder reminder) {
+    private static @Nullable MessageChannel findGuildDestination(Reminder reminder) {
         if (reminder.getGuild() == 0L || reminder.getChannel() == 0L)
             return null;
 
@@ -176,6 +191,17 @@ public final class ReminderManager {
         Database.getDatabase().reminders.deleteOne(Filters.eq("id", reminderId));
     }
 
+    private static void deleteReminderRecord(Reminder reminder) {
+        if (reminder == null)
+            return;
+
+        unschedule(reminder.getId());
+        Database.getDatabase().reminders.deleteOne(Filters.and(
+                Filters.eq("user", reminder.getUser()),
+                Filters.eq("time", reminder.getTime()),
+                Filters.eq("createdAt", reminder.getCreatedAt())));
+    }
+
     private static void unschedule(String reminderId) {
         if (reminderId == null || reminderId.isBlank())
             return;
@@ -194,5 +220,13 @@ public final class ReminderManager {
         }
 
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase(Locale.ROOT);
+    }
+
+    private static @Nullable String normalizeReminderId(String reminderId) {
+        if (reminderId == null)
+            return null;
+
+        String normalizedId = reminderId.trim().toUpperCase(Locale.ROOT);
+        return normalizedId.isBlank() ? null : normalizedId;
     }
 }

@@ -109,8 +109,8 @@ public class RemindMeCommand extends CoreCommand {
         if (subcommand.equalsIgnoreCase("delete") && focusedName.equals("id")) {
             List<Command.Choice> choices = ReminderManager.getRemindersForUser(event.getUser().getIdLong()).stream()
                     .filter(reminder -> focusedValue.isBlank()
-                            || reminder.getId().toLowerCase(Locale.ROOT).contains(focusedValue)
-                            || reminder.getReminder().toLowerCase(Locale.ROOT).contains(focusedValue))
+                            || safeLower(reminder.getId()).contains(focusedValue)
+                            || safeLower(reminder.getReminder()).contains(focusedValue))
                     .limit(25)
                     .map(reminder -> new Command.Choice(formatReminderChoice(reminder), reminder.getId()))
                     .toList();
@@ -233,7 +233,9 @@ public class RemindMeCommand extends CoreCommand {
     }
 
     private static String formatReminderChoice(Reminder reminder) {
-        String label = "[%s] %s".formatted(reminder.getId(), summarizeReminder(reminder.getReminder()));
+        String label = "[%s] %s".formatted(
+                reminder.getId() == null ? "UNKNOWN" : reminder.getId(),
+                summarizeReminder(reminder.getReminder()));
         if (label.length() <= 100)
             return label;
 
@@ -241,11 +243,18 @@ public class RemindMeCommand extends CoreCommand {
     }
 
     private static String summarizeReminder(String text) {
+        if (text == null || text.isBlank())
+            return "(empty reminder)";
+
         String normalized = text.replace('\n', ' ').trim();
         if (normalized.length() <= 80)
             return normalized;
 
         return normalized.substring(0, 77) + "...";
+    }
+
+    private static String safeLower(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 
     private static long parseDurationMillis(String input) {
