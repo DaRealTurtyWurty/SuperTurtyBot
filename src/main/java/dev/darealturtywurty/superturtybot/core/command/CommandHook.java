@@ -26,6 +26,7 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
+import dev.darealturtywurty.superturtybot.commands.util.remindme.RemindMeCommand;
 import dev.darealturtywurty.superturtybot.modules.submission.SubmissionCommand;
 import dev.darealturtywurty.superturtybot.modules.submission.SubmitCommand;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;

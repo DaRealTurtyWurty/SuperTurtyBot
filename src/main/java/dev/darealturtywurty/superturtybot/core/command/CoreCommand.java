@@ -53,7 +53,12 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(GenericCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
-        event.deferReply().addEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+        if (event.isAcknowledged()) {
+            event.getHook().sendMessageEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+            return;
+        }
+
+        event.replyEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
     }
 
     public static void reply(GenericCommandInteractionEvent event, String message) {
@@ -65,7 +70,12 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     public static void reply(GenericCommandInteractionEvent event, String message, boolean mention, boolean ephemeral) {
-        event.deferReply().setContent(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+        if (event.isAcknowledged()) {
+            event.getHook().sendMessage(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+            return;
+        }
+
+        event.reply(message).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
     }
 
     public static void reply(IReplyCallback event, String message, boolean mention) {

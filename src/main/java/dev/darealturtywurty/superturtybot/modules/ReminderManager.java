@@ -6,20 +6,21 @@ import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Reminder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
+import net.dv8tion.jda.api.utils.TimeFormat;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.awt.*;
+import java.time.Instant;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -57,27 +58,45 @@ public final class ReminderManager {
     }
 
     public static Reminder createReminder(long guildId, long userId, long channelId, String reminderText, long time) {
-        Reminder reminder = new Reminder(generateReminderId(), guildId, userId, reminderText, channelId, time, System.currentTimeMillis());
+        var reminder = new Reminder(generateReminderId(guildId, userId), guildId, userId, reminderText, channelId, time, System.currentTimeMillis());
         Database.getDatabase().reminders.insertOne(reminder);
         scheduleReminder(reminder);
         return reminder;
     }
 
     public static List<Reminder> getRemindersForUser(long userId) {
-        return Database.getDatabase().reminders.find(Filters.eq("user", userId))
+        List<Reminder> reminders = Database.getDatabase().reminders.find(Filters.eq("user", userId))
                 .sort(Sorts.ascending("time"))
                 .into(new ArrayList<>());
+
+        reminders.removeIf(reminder -> {
+            if (isValid(reminder))
+                return false;
+
+            deleteReminderRecord(reminder);
+            return true;
+        });
+
+        reminders.forEach(ReminderManager::scheduleReminder);
+        return reminders;
     }
 
-    public static boolean deleteReminder(long userId, String reminderId) {
+    public static boolean deleteReminder(long guildId, long userId, String reminderId) {
         Reminder reminder = Database.getDatabase().reminders.find(Filters.and(
+                Filters.eq("guild", guildId),
                 Filters.eq("user", userId),
-                Filters.eq("id", normalizeReminderId(reminderId)))).first();
+                Filters.eq("_id", normalizeReminderId(reminderId)))).first();
         if (reminder == null)
             return false;
 
         unschedule(reminder.getId());
-        Database.getDatabase().reminders.deleteOne(Filters.eq("id", reminder.getId()));
+        Database.getDatabase().reminders.deleteOne(
+                Filters.and(
+                        Filters.eq("guild", guildId),
+                        Filters.eq("user", userId),
+                        Filters.eq("_id", reminder.getId())
+                )
+        );
         return true;
     }
 
@@ -98,47 +117,62 @@ public final class ReminderManager {
     }
 
     private static void scheduleReminder(Reminder reminder) {
-        if (jda == null)
+        if (jda == null || reminder == null || !isValid(reminder))
             return;
 
         unschedule(reminder.getId());
 
         long delayMillis = Math.max(0L, reminder.getTime() - System.currentTimeMillis());
-        ScheduledFuture<?> future = SCHEDULER.schedule(() -> fireReminder(reminder.getId()), delayMillis, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = SCHEDULER.schedule(() -> {
+            try {
+                fireReminder(reminder.getGuild(), reminder.getUser(), reminder.getId());
+            } catch (Exception exception) {
+                Constants.LOGGER.error("Failed to fire reminder {}", reminder.getId(), exception);
+            }
+        }, delayMillis, TimeUnit.MILLISECONDS);
         SCHEDULED_REMINDERS.put(reminder.getId(), future);
     }
 
-    private static void fireReminder(String reminderId) {
+    private static void fireReminder(long guildId, long userId, String reminderId) {
         SCHEDULED_REMINDERS.remove(reminderId);
 
-        Reminder reminder = Database.getDatabase().reminders.find(Filters.eq("id", reminderId)).first();
+        Reminder reminder = Database.getDatabase().reminders.find(
+                Filters.and(
+                        Filters.eq("guild", guildId),
+                        Filters.eq("user", userId),
+                        Filters.eq("_id", reminderId))
+        ).first();
         if (reminder == null)
             return;
 
         if (!isValid(reminder)) {
-            deleteReminderRecord(reminderId);
+            deleteReminderRecord(reminder.getGuild(), reminder.getUser(), reminderId);
+            return;
+        }
+
+        if (reminder.getTime() > System.currentTimeMillis()) {
+            scheduleReminder(reminder);
             return;
         }
 
         if (jda == null) {
-            deleteReminderRecord(reminderId);
+            scheduleReminder(reminder);
             return;
         }
 
-        Reminder finalReminder = reminder;
         jda.retrieveUserById(reminder.getUser()).queue(
                 user -> {
-                    MessageChannel destination = findGuildDestination(finalReminder);
+                    MessageChannel destination = findGuildDestination(reminder);
                     if (destination != null) {
-                        sendReminder(destination, finalReminder, () -> sendDirectMessage(user, finalReminder));
+                        sendReminder(destination, reminder, () -> sendDirectMessage(reminder.getGuild(), user, reminder));
                         return;
                     }
 
-                    sendDirectMessage(user, finalReminder);
+                    sendDirectMessage(reminder.getGuild(), user, reminder);
                 },
                 failure -> {
-                    Constants.LOGGER.warn("Failed to retrieve user {} for reminder {}", finalReminder.getUser(), finalReminder.getId(), failure);
-                    deleteReminderRecord(finalReminder.getId());
+                    Constants.LOGGER.warn("Failed to retrieve user {} for reminder {}", reminder.getUser(), reminder.getId(), failure);
+                    deleteReminderRecord(reminder.getGuild(), reminder.getUser(), reminder.getId());
                 });
     }
 
@@ -154,41 +188,68 @@ public final class ReminderManager {
         if (channel != null)
             return channel;
 
-        ThreadChannel thread = guild.getThreadChannelById(reminder.getChannel());
-        return thread;
+        return guild.getThreadChannelById(reminder.getChannel());
     }
 
     private static void sendReminder(MessageChannel channel, Reminder reminder, Runnable fallback) {
         channel.sendMessage(formatReminderMessage(reminder))
+                .addEmbeds(createReminderEmbed(reminder, false))
                 .setAllowedMentions(List.of(Message.MentionType.USER))
                 .queue(
-                        success -> deleteReminderRecord(reminder.getId()),
-                        failure -> fallback.run());
+                        success -> deleteReminderRecord(reminder.getGuild(), reminder.getUser(), reminder.getId()),
+                        _ -> fallback.run());
     }
 
-    private static void sendDirectMessage(User user, Reminder reminder) {
+    private static void sendDirectMessage(long guildId, User user, Reminder reminder) {
         user.openPrivateChannel().queue(
-                channel -> channel.sendMessage(formatReminderMessage(reminder))
-                        .setAllowedMentions(List.of(Message.MentionType.USER))
+                channel -> channel.sendMessageEmbeds(createReminderEmbed(reminder, true))
                         .queue(
-                                success -> deleteReminderRecord(reminder.getId()),
+                                success -> deleteReminderRecord(guildId, user.getIdLong(), reminder.getId()),
                                 failure -> {
                                     Constants.LOGGER.warn("Failed to send reminder {} to user {}", reminder.getId(), reminder.getUser(), failure);
-                                    deleteReminderRecord(reminder.getId());
+                                    deleteReminderRecord(guildId, user.getIdLong(), reminder.getId());
                                 }),
                 failure -> {
                     Constants.LOGGER.warn("Failed to open DM for reminder {} and user {}", reminder.getId(), reminder.getUser(), failure);
-                    deleteReminderRecord(reminder.getId());
+                    deleteReminderRecord(guildId, user.getIdLong(), reminder.getId());
                 });
     }
 
     private static String formatReminderMessage(Reminder reminder) {
-        return "⏰ <@%d> reminder: %s".formatted(reminder.getUser(), reminder.getReminder());
+        return "<@%d>".formatted(reminder.getUser());
     }
 
-    private static void deleteReminderRecord(String reminderId) {
+    private static MessageEmbed createReminderEmbed(Reminder reminder, boolean directMessage) {
+        String description = reminder.getReminder().trim();
+        if (description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+            description = description.substring(0, MessageEmbed.DESCRIPTION_MAX_LENGTH - 3) + "...";
+        }
+
+        var embed = new EmbedBuilder()
+                .setTitle("\u23F0 Reminder")
+                .setDescription(description)
+                .addField("Reminder ID", '`' + reminder.getId() + '`', true)
+                .addField("Created", TimeFormat.RELATIVE.format(reminder.getCreatedAt()), true)
+                .addField("Delivery", directMessage ? "Direct Message" : "This channel", true)
+                .setColor(new Color(0xF0B232))
+                .setTimestamp(Instant.ofEpochMilli(reminder.getTime()));
+
+        if (directMessage && reminder.getGuild() != 0L && jda != null) {
+            Guild guild = jda.getGuildById(reminder.getGuild());
+            if (guild != null) {
+                embed.addField("Server", guild.getName(), true);
+            }
+        }
+
+        return embed.build();
+    }
+
+    private static void deleteReminderRecord(long guildId, long userId, String reminderId) {
         unschedule(reminderId);
-        Database.getDatabase().reminders.deleteOne(Filters.eq("id", reminderId));
+        Database.getDatabase().reminders.deleteOne(Filters.and(
+                Filters.eq("guild", guildId),
+                Filters.eq("user", userId),
+                Filters.eq("_id", reminderId)));
     }
 
     private static void deleteReminderRecord(Reminder reminder) {
@@ -207,14 +268,20 @@ public final class ReminderManager {
             return;
 
         ScheduledFuture<?> future = SCHEDULED_REMINDERS.remove(reminderId);
-        if (future != null)
+        if (future != null) {
             future.cancel(false);
+        }
     }
 
-    private static String generateReminderId() {
+    private static String generateReminderId(long guildId, long userId) {
         for (int attempts = 0; attempts < 10; attempts++) {
             String candidate = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase(Locale.ROOT);
-            Reminder existing = Database.getDatabase().reminders.find(Filters.eq("id", candidate)).first();
+            Reminder existing = Database.getDatabase().reminders.find(
+                    Filters.and(
+                            Filters.eq("guild", guildId),
+                            Filters.eq("user", userId),
+                            Filters.eq("_id", candidate))
+            ).first();
             if (existing == null)
                 return candidate;
         }

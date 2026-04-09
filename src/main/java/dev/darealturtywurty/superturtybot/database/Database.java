@@ -153,8 +153,6 @@ public class Database {
             db.userEmbeds.createIndex(userIndex);
             db.reminders.createIndex(guildUser);
             db.reminders.createIndex(userIndex);
-            db.reminders.createIndex(Indexes.descending("id"));
-            db.reminders.createIndex(Indexes.descending("time"));
             db.wordleProfiles.createIndex(userIndex);
             db.economy.createIndex(guildUser);
             db.chatRevivers.createIndex(guildIndex);
