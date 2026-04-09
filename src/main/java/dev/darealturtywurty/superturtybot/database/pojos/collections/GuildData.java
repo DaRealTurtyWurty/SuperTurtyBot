@@ -127,10 +127,11 @@ public class GuildData {
     private String chatRevivalTypes;
     private boolean chatRevivalAllowNsfw;
 
-    // Submission
-    private String submissionManagerRoles;
+    // Modmail
     private String modmailModeratorRoles;
     private String modmailTicketCreatedMessage;
+
+    // Sticky Roles
     private boolean stickyRolesEnabled;
 
     // AI
@@ -266,7 +267,6 @@ public class GuildData {
         this.chatRevivalChannel = 0L;
         this.chatRevivalTypes = "drawing;topic;would_you_rather";
         this.chatRevivalAllowNsfw = false;
-        this.submissionManagerRoles = "";
         this.modmailModeratorRoles = "";
         this.modmailTicketCreatedMessage = "";
         this.stickyRolesEnabled = false;

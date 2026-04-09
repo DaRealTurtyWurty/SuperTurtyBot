@@ -57,7 +57,6 @@ public class Database {
     public final MongoCollection<Economy> economy;
     public final MongoCollection<ChatReviver> chatRevivers;
     public final MongoCollection<Birthday> birthdays;
-    public final MongoCollection<SubmissionCategory> submissionCategories;
     public final MongoCollection<UserCollectables> userCollectables;
     public final MongoCollection<TwoThousandFortyEightProfile> twoThousandFortyEight;
     public final MongoCollection<StickyMessage> stickyMessages;
@@ -97,7 +96,6 @@ public class Database {
         this.economy = mongoDatabase.getCollection("economy", Economy.class);
         this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = mongoDatabase.getCollection("birthdays", Birthday.class);
-        this.submissionCategories = mongoDatabase.getCollection("submissionCategories", SubmissionCategory.class);
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
         this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
         this.stickyMessages = mongoDatabase.getCollection("stickyMessages", StickyMessage.class);
@@ -167,7 +165,6 @@ public class Database {
             db.economy.createIndex(guildUser);
             db.chatRevivers.createIndex(guildIndex);
             db.birthdays.createIndex(userIndex);
-            db.submissionCategories.createIndex(guildIndex);
             db.userCollectables.createIndex(userIndex);
             db.twoThousandFortyEight.createIndex(userIndex);
             db.stickyMessages.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));

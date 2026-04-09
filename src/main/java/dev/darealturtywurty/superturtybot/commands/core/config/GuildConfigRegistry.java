@@ -2,9 +2,9 @@ package dev.darealturtywurty.superturtybot.commands.core.config;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import dev.darealturtywurty.superturtybot.modules.ChatRevivalType;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigOption.DataType;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.modules.ChatRevivalType;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import net.dv8tion.jda.api.entities.Message.MentionType;
 import net.dv8tion.jda.api.entities.Role;
@@ -240,7 +240,7 @@ public class GuildConfigRegistry {
 
         GUILD_CONFIG_OPTIONS.register(
                 "artist_nsfw_filter_enabled", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
-                        (config, value) -> config.setArtistNsfwFilterEnabled(Boolean.parseBoolean(value)))
+                                (config, value) -> config.setArtistNsfwFilterEnabled(Boolean.parseBoolean(value)))
                         .valueFromConfig(GuildData::isArtistNsfwFilterEnabled).build());
 
         GUILD_CONFIG_OPTIONS.register("economy_currency",
@@ -351,23 +351,6 @@ public class GuildConfigRegistry {
                 new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
                         .serializer((config, value) -> config.setChatRevivalAllowNsfw(Boolean.parseBoolean(value)))
                         .valueFromConfig(GuildData::isChatRevivalAllowNsfw).build());
-
-        GUILD_CONFIG_OPTIONS.register("submission_manager_roles",
-                new GuildConfigOption.Builder().dataType(DataType.STRING)
-                        .serializer(GuildData::setSubmissionManagerRoles)
-                        .valueFromConfig(GuildData::getSubmissionManagerRoles)
-                        .validator((event, value) -> {
-                            final String[] roles = value.split("[ ;]");
-                            for (final String roleStr : roles) {
-                                if (roleStr.isBlank())
-                                    continue;
-
-                                if (!Validators.ROLE_VALIDATOR.test(event, roleStr))
-                                    return false;
-                            }
-
-                            return true;
-                        }).build());
 
         GUILD_CONFIG_OPTIONS.register("modmail_moderator_roles",
                 new GuildConfigOption.Builder().dataType(DataType.STRING)
