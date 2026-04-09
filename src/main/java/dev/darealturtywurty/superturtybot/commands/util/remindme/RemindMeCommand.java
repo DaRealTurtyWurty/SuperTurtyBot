@@ -61,6 +61,11 @@ public class RemindMeCommand extends CoreCommand {
     }
 
     @Override
+    public boolean isServerOnly() {
+        return true;
+    }
+
+    @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
         super.onCommandAutoCompleteInteraction(event);
         if (!event.getName().equalsIgnoreCase(getName()))
