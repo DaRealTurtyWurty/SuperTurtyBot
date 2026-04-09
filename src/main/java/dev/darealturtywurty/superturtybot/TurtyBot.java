@@ -228,6 +228,9 @@ public class TurtyBot {
         // Add the logging manager so that the bot can log messages to a discord channel
         builder.addEventListeners(LoggingManager.INSTANCE);
 
+        // Add the sticky message manager so support channels can keep helper messages pinned to the bottom
+        builder.addEventListeners(StickyMessageManager.INSTANCE);
+
         // Add the chat reviver so that we can revive chats
         builder.addEventListeners(ChatRevivalManager.INSTANCE);
 

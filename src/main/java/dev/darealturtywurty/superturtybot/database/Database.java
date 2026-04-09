@@ -60,6 +60,7 @@ public class Database {
     public final MongoCollection<SubmissionCategory> submissionCategories;
     public final MongoCollection<UserCollectables> userCollectables;
     public final MongoCollection<TwoThousandFortyEightProfile> twoThousandFortyEight;
+    public final MongoCollection<StickyMessage> stickyMessages;
 
     private Database(MongoClient client) {
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
@@ -95,6 +96,7 @@ public class Database {
         this.submissionCategories = mongoDatabase.getCollection("submissionCategories", SubmissionCategory.class);
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
         this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
+        this.stickyMessages = mongoDatabase.getCollection("stickyMessages", StickyMessage.class);
 
         ShutdownHooks.register(client::close);
     }
@@ -160,6 +162,7 @@ public class Database {
             db.submissionCategories.createIndex(guildIndex);
             db.userCollectables.createIndex(userIndex);
             db.twoThousandFortyEight.createIndex(userIndex);
+            db.stickyMessages.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));
 
             return null;
         });
