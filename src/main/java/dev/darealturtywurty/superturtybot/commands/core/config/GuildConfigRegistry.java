@@ -369,6 +369,32 @@ public class GuildConfigRegistry {
                             return true;
                         }).build());
 
+        GUILD_CONFIG_OPTIONS.register("modmail_moderator_roles",
+                new GuildConfigOption.Builder().dataType(DataType.STRING)
+                        .serializer(GuildData::setModmailModeratorRoles)
+                        .valueFromConfig(GuildData::getModmailModeratorRoles)
+                        .validator((event, value) -> {
+                            final String[] roles = value.split("[ ;]");
+                            for (final String roleStr : roles) {
+                                if (roleStr.isBlank())
+                                    continue;
+
+                                if (!Validators.ROLE_VALIDATOR.test(event, roleStr))
+                                    return false;
+                            }
+
+                            return true;
+                        }).build());
+
+        GUILD_CONFIG_OPTIONS.register("modmail_ticket_created_message",
+                new GuildConfigOption.Builder().dataType(DataType.STRING)
+                        .serializer(GuildData::setModmailTicketCreatedMessage)
+                        .valueFromConfig(GuildData::getModmailTicketCreatedMessage)
+                        .validator((event, value) -> value.length() <= 2000
+                                && !value.contains("@everyone")
+                                && !value.contains("@here"))
+                        .build());
+
         GUILD_CONFIG_OPTIONS.register("warning_xp_percentage",
                 new GuildConfigOption.Builder().dataType(DataType.FLOAT)
                         .serializer((config, value) -> config.setWarningXpPercentage(Float.parseFloat(value)))

@@ -129,6 +129,8 @@ public class GuildData {
 
     // Submission
     private String submissionManagerRoles;
+    private String modmailModeratorRoles;
+    private String modmailTicketCreatedMessage;
 
     // AI
     private boolean aiEnabled;
@@ -264,6 +266,8 @@ public class GuildData {
         this.chatRevivalTypes = "drawing;topic;would_you_rather";
         this.chatRevivalAllowNsfw = false;
         this.submissionManagerRoles = "";
+        this.modmailModeratorRoles = "";
+        this.modmailTicketCreatedMessage = "";
         this.warningXpPercentage = 0F;
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;

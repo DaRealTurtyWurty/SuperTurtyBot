@@ -61,6 +61,9 @@ public class Database {
     public final MongoCollection<UserCollectables> userCollectables;
     public final MongoCollection<TwoThousandFortyEightProfile> twoThousandFortyEight;
     public final MongoCollection<StickyMessage> stickyMessages;
+    public final MongoCollection<ModmailTicket> modmailTickets;
+    public final MongoCollection<ModmailBlockedUser> modmailBlockedUsers;
+    public final MongoCollection<ModmailTranscriptChunk> modmailTranscriptChunks;
 
     private Database(MongoClient client) {
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
@@ -97,6 +100,9 @@ public class Database {
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
         this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
         this.stickyMessages = mongoDatabase.getCollection("stickyMessages", StickyMessage.class);
+        this.modmailTickets = mongoDatabase.getCollection("modmailTickets", ModmailTicket.class);
+        this.modmailBlockedUsers = mongoDatabase.getCollection("modmailBlockedUsers", ModmailBlockedUser.class);
+        this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks", ModmailTranscriptChunk.class);
 
         ShutdownHooks.register(client::close);
     }
@@ -163,6 +169,13 @@ public class Database {
             db.userCollectables.createIndex(userIndex);
             db.twoThousandFortyEight.createIndex(userIndex);
             db.stickyMessages.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));
+            db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));
+            db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("open")));
+            db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("ticketNumber")));
+            db.modmailBlockedUsers.createIndex(guildUser, new IndexOptions().unique(true));
+            db.modmailTranscriptChunks.createIndex(
+                    Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("chunkIndex")),
+                    new IndexOptions().unique(true));
 
             return null;
         });

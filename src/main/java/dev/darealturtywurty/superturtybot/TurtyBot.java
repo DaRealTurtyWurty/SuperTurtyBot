@@ -14,6 +14,7 @@ import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.modules.*;
+import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
@@ -221,6 +222,9 @@ public class TurtyBot {
 
         // Add the thread manager so that the bot can create threads automatically and also add moderators to threads
         builder.addEventListeners(ThreadManager.INSTANCE);
+
+        // Add the modmail manager so that ticket services can share a dedicated module entrypoint
+        builder.addEventListeners(ModmailManager.INSTANCE);
 
         // Add the gist manager so that the bot can create gists for text files upon user adding reaction
         builder.addEventListeners(GistManager.INSTANCE);

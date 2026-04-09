@@ -370,6 +370,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new SlowmodeCommand());
         commands.add(new AutoModCommand());
         commands.add(new StickyCommand());
+        commands.add(new ModmailCommand());
         commands.add(new RegisterCountingCommand());
         commands.add(new ReportCommand());
         commands.add(new ReportsCommand());
