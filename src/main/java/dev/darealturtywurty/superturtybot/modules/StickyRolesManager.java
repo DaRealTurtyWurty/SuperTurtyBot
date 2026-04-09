@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.modules;
 
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
+import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -20,13 +21,28 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class StickyRolesManager extends ListenerAdapter {
     public static final StickyRolesManager INSTANCE = new StickyRolesManager();
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor();
+    private static final long CLEANUP_INTERVAL_DAYS = 7L;
+    private static final long STICKY_ROLE_RETENTION_MONTHS = 6L;
 
     private StickyRolesManager() {
+        SCHEDULER.scheduleAtFixedRate(
+                StickyRolesManager::cleanupExpiredStickyRoles,
+                0,
+                CLEANUP_INTERVAL_DAYS,
+                TimeUnit.DAYS
+        );
+        ShutdownHooks.register(SCHEDULER::shutdown);
     }
 
     @Override
@@ -177,6 +193,15 @@ public final class StickyRolesManager extends ListenerAdapter {
                 Filters.eq("guild", guildId),
                 Filters.eq("user", userId)
         ));
+    }
+
+    private static void cleanupExpiredStickyRoles() {
+        long cutoff = Instant.now().minus(STICKY_ROLE_RETENTION_MONTHS, ChronoUnit.MONTHS).toEpochMilli();
+        long deleted = Database.getDatabase().stickyRoles.deleteMany(Filters.lte("savedAt", cutoff)).getDeletedCount();
+        if (deleted > 0) {
+            Constants.LOGGER.info("Deleted {} expired sticky role entries older than {} months.",
+                    deleted, STICKY_ROLE_RETENTION_MONTHS);
+        }
     }
 
     private static boolean isLikelyDeletedAccount(User user) {
