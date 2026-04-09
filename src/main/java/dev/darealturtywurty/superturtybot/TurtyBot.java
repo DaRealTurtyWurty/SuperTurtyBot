@@ -247,6 +247,9 @@ public class TurtyBot {
         // Add welcome manager so that we can welcome new members and say goodbye to leaving members
         builder.addEventListeners(WelcomeManager.INSTANCE);
 
+        // Add sticky roles manager so members can regain configured roles when they rejoin
+        builder.addEventListeners(StickyRolesManager.INSTANCE);
+
         // Add AI message responder so that we can respond to messages using AI
         builder.addEventListeners(AIMessageResponder.INSTANCE);
 

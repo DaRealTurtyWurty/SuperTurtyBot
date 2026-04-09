@@ -395,6 +395,12 @@ public class GuildConfigRegistry {
                                 && !value.contains("@here"))
                         .build());
 
+        GUILD_CONFIG_OPTIONS.register("sticky_roles_enabled",
+                new GuildConfigOption.Builder().dataType(DataType.BOOLEAN)
+                        .serializer((config, value) -> config.setStickyRolesEnabled(Boolean.parseBoolean(value)))
+                        .valueFromConfig(GuildData::isStickyRolesEnabled)
+                        .build());
+
         GUILD_CONFIG_OPTIONS.register("warning_xp_percentage",
                 new GuildConfigOption.Builder().dataType(DataType.FLOAT)
                         .serializer((config, value) -> config.setWarningXpPercentage(Float.parseFloat(value)))

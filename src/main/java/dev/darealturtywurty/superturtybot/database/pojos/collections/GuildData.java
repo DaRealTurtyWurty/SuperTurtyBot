@@ -131,6 +131,7 @@ public class GuildData {
     private String submissionManagerRoles;
     private String modmailModeratorRoles;
     private String modmailTicketCreatedMessage;
+    private boolean stickyRolesEnabled;
 
     // AI
     private boolean aiEnabled;
@@ -268,6 +269,7 @@ public class GuildData {
         this.submissionManagerRoles = "";
         this.modmailModeratorRoles = "";
         this.modmailTicketCreatedMessage = "";
+        this.stickyRolesEnabled = false;
         this.warningXpPercentage = 0F;
         this.warningEconomyPercentage = 0F;
         this.announceBirthdays = true;
