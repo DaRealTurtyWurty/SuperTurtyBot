@@ -30,10 +30,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public final class StickyRolesManager extends ListenerAdapter {
-    public static final StickyRolesManager INSTANCE = new StickyRolesManager();
     private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor();
     private static final long CLEANUP_INTERVAL_DAYS = 7L;
     private static final long STICKY_ROLE_RETENTION_MONTHS = 6L;
+    public static final StickyRolesManager INSTANCE = new StickyRolesManager();
 
     private StickyRolesManager() {
         SCHEDULER.scheduleAtFixedRate(

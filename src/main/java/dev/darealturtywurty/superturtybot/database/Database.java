@@ -173,7 +173,7 @@ public class Database {
             db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("ticketNumber")));
             db.modmailBlockedUsers.createIndex(guildUser, new IndexOptions().unique(true));
             db.modmailTranscriptChunks.createIndex(
-                    Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("chunkIndex")),
+                    Indexes.compoundIndex(guildIndex, Indexes.descending("ticketChannel"), Indexes.descending("chunkIndex")),
                     new IndexOptions().unique(true));
             db.stickyRoles.createIndex(guildUser, new IndexOptions().unique(true));
 
