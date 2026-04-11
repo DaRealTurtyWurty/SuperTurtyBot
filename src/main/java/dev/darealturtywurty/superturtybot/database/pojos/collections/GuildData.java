@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 
 import com.google.common.primitives.Longs;
 import com.mongodb.client.model.Filters;
-import dev.darealturtywurty.superturtybot.commands.core.config.CommandPermission;
 import dev.darealturtywurty.superturtybot.database.Database;
 import lombok.Data;
 import net.dv8tion.jda.api.entities.Guild;
@@ -114,11 +113,6 @@ public class GuildData {
 
     // Counting
     private int maxCountingSuccession;
-
-    // Music
-    private boolean canAddPlaylists;
-    private List<CommandPermission> musicPermissions;
-    private int maxSongsPerUser;
 
     // Chat Revival
     private boolean chatRevivalEnabled;
@@ -243,10 +237,6 @@ public class GuildData {
 
         // Counting
         this.maxCountingSuccession = 3;
-
-        // Music
-        this.canAddPlaylists = true;
-        this.musicPermissions = new ArrayList<>();
 
         // AI
         this.aiEnabled = false;

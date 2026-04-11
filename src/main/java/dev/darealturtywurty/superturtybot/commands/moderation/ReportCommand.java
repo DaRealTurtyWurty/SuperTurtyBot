@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
-import dev.darealturtywurty.superturtybot.database.pojos.collections.Report;
 import dev.darealturtywurty.superturtybot.modules.ReportManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -12,7 +11,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ReportCommand extends CoreCommand {
@@ -82,15 +80,19 @@ public class ReportCommand extends CoreCommand {
         }
 
         String reason = event.getOption("reason", "No reason provided", OptionMapping::getAsString);
-        Optional<Report> report = ReportManager.reportUser(event.getGuild(), user, reporter, reason);
-        report.ifPresentOrElse(
-                ignored -> reply(event,
-                        "✅ Successfully reported " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "`"),
-                () -> reply(event,
-                        "❌ Failed to report " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "1",
-                        false,
-                        true)
-        );
+        try {
+            ReportManager.reportUser(event.getGuild(), user, reporter, reason);
+            reply(event,
+                    "✅ Successfully reported " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "`",
+                    false,
+                    true);
+        } catch (RuntimeException exception) {
+            reply(event,
+                    "❌ Failed to report " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720)
+                            + "`: " + exception.getMessage(),
+                    false,
+                    true);
+        }
     }
 
     @Override
