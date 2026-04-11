@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.commands.moderation.ticket;
 
 import dev.darealturtywurty.superturtybot.database.pojos.collections.ModmailTicket;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -45,16 +46,33 @@ public class ModmailCloseSubcommand extends ModmailSubcommand {
                                 failure -> ModmailManager.deleteTicketChannel(member.getGuild(), result.ticket())
                         ))
                 .exceptionally(throwable -> {
+                    Constants.LOGGER.error("Failed to close modmail ticket in guild {} channel {}",
+                            event.getGuild().getId(),
+                            event.getChannel().getId(),
+                            throwable);
                     event.getHook().editOriginal(resolveError(throwable)).queue();
                     return null;
                 });
     }
 
     private static String resolveError(Throwable throwable) {
-        Throwable cause = throwable.getCause() == null ? throwable : throwable.getCause();
+        Throwable cause = unwrap(throwable);
         if (cause instanceof ModmailManager.ModmailException)
             return cause.getMessage();
 
+        String message = cause.getMessage();
+        if (message != null && !message.isBlank())
+            return "❌ Failed to close the ticket: " + message;
+
         return "❌ Failed to close the ticket.";
+    }
+
+    private static Throwable unwrap(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+
+        return current;
     }
 }
