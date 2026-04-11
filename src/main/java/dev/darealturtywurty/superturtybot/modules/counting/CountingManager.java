@@ -135,6 +135,8 @@ public class CountingManager extends ListenerAdapter {
 
             profile.setCurrentCount(profile.getCurrentCount() + 1);
             updates.add(Updates.set("currentCount", profile.getCurrentCount()));
+            profile.setHighestCount(Math.max(profile.getHighestCount(), profile.getCurrentCount()));
+            updates.add(Updates.set("highestCount", profile.getHighestCount()));
 
             if (mode == CountingMode.MATHS) {
                 final Pair<MathOperation, Float> maths = MathHandler.getNextNumber(currentNext);
@@ -232,6 +234,9 @@ public class CountingManager extends ListenerAdapter {
         final List<UserData> users = profile.getUsers();
         users.forEach(u -> u.setCurrentCountSuccession(0));
         updates.add(Updates.set("users", users));
+
+        profile.setHighestCount(Math.max(profile.getHighestCount(), profile.getCurrentCount()));
+        updates.add(Updates.set("highestCount", profile.getHighestCount()));
 
         profile.setCurrentCount(0);
         updates.add(Updates.set("currentCount", profile.getCurrentCount()));
