@@ -119,7 +119,7 @@ public class HelpCommand extends CoreCommand {
         embed.setDescription("""
                 Welcome to TurtyBot.
 
-                I contain a wide diversity of features ranging from music to moderation to minigames.
+                I contain a wide diversity of features ranging from economy to moderation to minigames.
 
                 You can view my list of commands using `/commands`!""");
         return embed;
