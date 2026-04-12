@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -648,7 +649,7 @@ public class HigherLowerCommand extends CoreCommand {
         }
     }
 
-    private void createGameThread(SlashCommandInteractionEvent event, net.dv8tion.jda.api.entities.Message parentMessage,
+    private void createGameThread(SlashCommandInteractionEvent event, Message parentMessage,
                                   Region region0, Region region1, String type) {
         parentMessage.reply("Use the buttons below to play the game!")
                 .setComponents(ActionRow.of(
@@ -672,7 +673,7 @@ public class HigherLowerCommand extends CoreCommand {
                 });
     }
 
-    private void createGameThread(SlashCommandInteractionEvent event, net.dv8tion.jda.api.entities.Message parentMessage,
+    private void createGameThread(SlashCommandInteractionEvent event, Message parentMessage,
                                   String word0, String word1, float frequency0, float frequency1) {
         parentMessage.reply("Use the buttons below to play the game!")
                 .setComponents(ActionRow.of(

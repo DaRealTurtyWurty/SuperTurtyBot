@@ -5,6 +5,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 @Getter
@@ -64,7 +67,12 @@ public class CountryCollectable extends Collectable {
         }
 
         public Builder answer(String answer) {
-            this.answer.segment(answer, false, true);
+            addNormalizedAnswerVariants(false, true, answer);
+            return this;
+        }
+
+        public Builder answerAny(String... answers) {
+            addNormalizedAnswerVariants(false, true, answers);
             return this;
         }
 
@@ -74,25 +82,17 @@ public class CountryCollectable extends Collectable {
         }
 
         public Builder answerExact(String answer, boolean caseSensitive) {
-            this.answer.segment(answer, caseSensitive, false);
+            addNormalizedAnswerVariants(caseSensitive, false, answer);
+            return this;
+        }
+
+        public Builder answerExactAny(String... answers) {
+            addNormalizedAnswerVariants(false, false, answers);
             return this;
         }
 
         public Builder answerExact(String answer) {
             return answerExact(answer, false);
-        }
-
-        public Builder answerYesOrNo(boolean yes) {
-            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah", yes ? "true" : "false");
-            return this;
-        }
-
-        public Builder answerYes() {
-            return answerYesOrNo(true);
-        }
-
-        public Builder answerNo() {
-            return answerYesOrNo(false);
         }
 
         public Answer.Builder<Builder> answer() {
@@ -130,6 +130,59 @@ public class CountryCollectable extends Collectable {
                 note = null;
 
             return new CountryCollectable(name, emoji, question, answer, rarity, note);
+        }
+
+        private void addNormalizedAnswerVariants(boolean caseSensitive, boolean contains, String... answers) {
+            List<String> variants = new ArrayList<>();
+            for (String answer : answers) {
+                if (answer == null || answer.isBlank()) {
+                    continue;
+                }
+
+                String trimmed = answer.trim();
+                addVariant(variants, trimmed);
+
+                String normalized = normalizeAnswer(trimmed);
+                addVariant(variants, normalized);
+
+                String noSpaces = normalized.replace(" ", "");
+                addVariant(variants, noSpaces);
+            }
+
+            if (variants.isEmpty()) {
+                throw new IllegalArgumentException("Answer must be set!");
+            }
+
+            if (variants.size() == 1) {
+                this.answer.segment(variants.getFirst(), caseSensitive, contains);
+                return;
+            }
+
+            this.answer.or(variants.toArray(String[]::new));
+        }
+
+        private void addVariant(List<String> variants, String variant) {
+            if (variant == null || variant.isBlank() || variants.contains(variant)) {
+                return;
+            }
+
+            variants.add(variant);
+        }
+
+        private String normalizeAnswer(String answer) {
+            String normalized = Normalizer.normalize(answer, Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}+", "")
+                    .replace('’', '\'')
+                    .replace('`', '\'')
+                    .replace('‘', '\'')
+                    .replace('“', '"')
+                    .replace('”', '"')
+                    .replaceAll("[^\\p{Alnum}\\s]", " ")
+                    .replaceAll("\\s+", " ")
+                    .trim()
+                    .toLowerCase(Locale.ROOT);
+
+            return normalized.isEmpty() ? answer : normalized;
         }
     }
 }

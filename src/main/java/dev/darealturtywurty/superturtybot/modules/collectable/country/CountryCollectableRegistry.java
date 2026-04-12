@@ -161,7 +161,7 @@ public class CountryCollectableRegistry {
             .name("Benin")
             .emoji("flag_bj")
             .question("What is the capital of Benin?")
-            .answer("porto-novo")
+            .answerAny("porto-novo", "cotonou")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -177,7 +177,7 @@ public class CountryCollectableRegistry {
             .name("Bolivia")
             .emoji("flag_bo")
             .question("What is the capital of Bolivia?")
-            .answer("sucre")
+            .answerAny("sucre", "la paz")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -270,7 +270,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable CENTRAL_AFRICAN_REPUBLIC = register("central_african_republic", CountryCollectable.builder()
-            .name("the Central African Republic")
+            .name("Central African Republic")
             .emoji("flag_cf")
             .question("What is the capital of the Central African Republic?")
             .answer("bangui")
@@ -310,7 +310,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable COMOROS = register("comoros", CountryCollectable.builder()
-            .name("the Comoros")
+            .name("Comoros")
             .emoji("flag_km")
             .question("What is the capital of the Comoros?")
             .answer("moroni")
@@ -318,7 +318,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable CONGO = register("congo", CountryCollectable.builder()
-            .name("the Republic of the Congo")
+            .name("Republic of the Congo")
             .emoji("flag_cg")
             .question("What is the capital of the Republic of the Congo?")
             .answer("brazzaville")
@@ -326,7 +326,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable DEMOCRATIC_REPUBLIC_OF_THE_CONGO = register("democratic_republic_of_the_congo", CountryCollectable.builder()
-            .name("the Democratic Republic of the Congo")
+            .name("Democratic Republic of the Congo")
             .emoji("flag_cd")
             .question("What is the capital of the Democratic Republic of the Congo?")
             .answer("kinshasa")
@@ -342,9 +342,9 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable COTE_DIVOIRE = register("cote_divoire", CountryCollectable.builder()
-            .name("C�te d'Ivoire")
+            .name("Côte d'Ivoire")
             .emoji("flag_ci")
-            .question("What is the capital of C�te d'Ivoire?")
+            .question("What is the capital of Côte d'Ivoire?")
             .answer("yamoussoukro")
             .rarity(CollectableRarity.COMMON)
     );
@@ -406,7 +406,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable DOMINICAN_REPUBLIC = register("dominican_republic", CountryCollectable.builder()
-            .name("the Dominican Republic")
+            .name("Dominican Republic")
             .emoji("flag_do")
             .question("What is the capital of the Dominican Republic?")
             .answer("santo domingo")
@@ -465,7 +465,7 @@ public class CountryCollectableRegistry {
             .name("Eswatini")
             .emoji("flag_sz")
             .question("What is the capital of Eswatini?")
-            .answer("mbabane")
+            .answerAny("mbabane", "lobamba")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -838,7 +838,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable MALDIVES = register("maldives", CountryCollectable.builder()
-            .name("the Maldives")
+            .name("Maldives")
             .emoji("flag_mv")
             .question("What is the capital of the Maldives?")
             .answer("male")
@@ -862,7 +862,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable MARSHALL_ISLANDS = register("marshall_islands", CountryCollectable.builder()
-            .name("the Marshall Islands")
+            .name("Marshall Islands")
             .emoji("flag_mh")
             .question("What is the capital of the Marshall Islands?")
             .answer("majuro")
@@ -894,7 +894,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable MICRONESIA = register("micronesia", CountryCollectable.builder()
-            .name("the Federated States of Micronesia")
+            .name("Federated States of Micronesia")
             .emoji("flag_fm")
             .question("What is the capital of the Federated States of Micronesia?")
             .answer("palikir")
@@ -982,7 +982,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable NETHERLANDS = register("netherlands", CountryCollectable.builder()
-            .name("the Netherlands")
+            .name("Netherlands")
             .emoji("flag_nl")
             .question("What is the capital of the Netherlands?")
             .answer("amsterdam")
@@ -1110,7 +1110,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable PHILIPPINES = register("philippines", CountryCollectable.builder()
-            .name("the Philippines")
+            .name("Philippines")
             .emoji("flag_ph")
             .question("What is the capital of the Philippines?")
             .answer("manila")
@@ -1206,9 +1206,9 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable SAO_TOME_AND_PRINCIPE = register("sao_tome_and_principe", CountryCollectable.builder()
-            .name("S�o Tom� and Pr�ncipe")
+            .name("São Tomé and Príncipe")
             .emoji("flag_st")
-            .question("What is the capital of S�o Tom� and Pr�ncipe?")
+            .question("What is the capital of São Tomé and Príncipe?")
             .answer("sao tome")
             .rarity(CollectableRarity.COMMON)
     );
@@ -1238,7 +1238,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable SEYCHELLES = register("seychelles", CountryCollectable.builder()
-            .name("the Seychelles")
+            .name("Seychelles")
             .emoji("flag_sc")
             .question("What is the capital of the Seychelles?")
             .answer("victoria")
@@ -1278,7 +1278,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable SOLOMON_ISLANDS = register("solomon_islands", CountryCollectable.builder()
-            .name("the Solomon Islands")
+            .name("Solomon Islands")
             .emoji("flag_sb")
             .question("What is the capital of the Solomon Islands?")
             .answer("honiara")
@@ -1297,7 +1297,7 @@ public class CountryCollectableRegistry {
             .name("South Africa")
             .emoji("flag_za")
             .question("What is the capital of South Africa?")
-            .answer("pretoria")
+            .answerAny("pretoria", "cape town", "bloemfontein", "tshwane", "mangaung")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -1329,7 +1329,7 @@ public class CountryCollectableRegistry {
             .name("Sri Lanka")
             .emoji("flag_lk")
             .question("What is the capital of Sri Lanka?")
-            .answer("sri jayawardenepura kotte")
+            .answerAny("sri jayawardenepura kotte", "colombo")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -1393,7 +1393,7 @@ public class CountryCollectableRegistry {
             .name("Tanzania")
             .emoji("flag_tz")
             .question("What is the capital of Tanzania?")
-            .answer("dodoma")
+            .answerAny("dodoma", "dar es salaam")
             .rarity(CollectableRarity.COMMON)
     );
 
@@ -1486,7 +1486,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable UNITED_ARAB_EMIRATES = register("united_arab_emirates", CountryCollectable.builder()
-            .name("the United Arab Emirates")
+            .name("United Arab Emirates")
             .emoji("flag_ae")
             .question("What is the capital of the United Arab Emirates?")
             .answer("abu dhabi")
@@ -1494,7 +1494,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable UNITED_KINGDOM = register("united_kingdom", CountryCollectable.builder()
-            .name("the United Kingdom")
+            .name("United Kingdom")
             .emoji("flag_gb")
             .question("What is the capital of the United Kingdom?")
             .answer("london")
@@ -1502,7 +1502,7 @@ public class CountryCollectableRegistry {
     );
 
     public static final CountryCollectable UNITED_STATES = register("united_states", CountryCollectable.builder()
-            .name("the United States")
+            .name("United States")
             .emoji("flag_us")
             .question("What is the capital of the United States?")
             .answer("washington")

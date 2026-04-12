@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #020617;
+  --foreground: #e2e8f0;
+  --panel: rgba(15, 23, 42, 0.82);
+  --panel-strong: rgba(15, 23, 42, 0.94);
+  --border: rgba(71, 85, 105, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #020617;
+    --foreground: #e2e8f0;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 30%),
+    linear-gradient(180deg, #020617 0%, #030712 100%);
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-manrope), sans-serif;
+}
+
+.dashboard-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.45) rgba(15, 23, 42, 0.88);
+}
+
+.dashboard-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.45), rgba(59, 130, 246, 0.35));
+  border: 2px solid rgba(15, 23, 42, 0.88);
+  border-radius: 999px;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.65), rgba(59, 130, 246, 0.55));
+}
+
+code,
+pre,
+textarea,
+input {
+  font-family: var(--font-ibm-plex-mono), monospace;
+}
+
+.dashboard-number-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.dashboard-number-input::-webkit-outer-spin-button,
+.dashboard-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}

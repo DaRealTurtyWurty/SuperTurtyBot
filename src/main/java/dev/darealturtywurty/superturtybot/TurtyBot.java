@@ -12,6 +12,7 @@ import dev.darealturtywurty.superturtybot.core.logback.DiscordLogbackAppender;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.EmojiReader;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
+import dev.darealturtywurty.superturtybot.dashboard.DashboardServer;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
@@ -167,6 +168,8 @@ public class TurtyBot {
 
         loadRegistrars();
         Constants.LOGGER.info("Loaded registries!");
+
+        DashboardServer.startIfEnabled(TurtyBot.jda);
     }
 
     public static JDA getJDA() {

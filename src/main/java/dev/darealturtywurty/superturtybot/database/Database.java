@@ -64,6 +64,7 @@ public class Database {
     public final MongoCollection<ModmailBlockedUser> modmailBlockedUsers;
     public final MongoCollection<ModmailTranscriptChunk> modmailTranscriptChunks;
     public final MongoCollection<StickyRoles> stickyRoles;
+    public final MongoCollection<DashboardSession> dashboardSessions;
 
     private Database(MongoClient client) {
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
@@ -103,6 +104,7 @@ public class Database {
         this.modmailBlockedUsers = mongoDatabase.getCollection("modmailBlockedUsers", ModmailBlockedUser.class);
         this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks", ModmailTranscriptChunk.class);
         this.stickyRoles = mongoDatabase.getCollection("stickyRoles", StickyRoles.class);
+        this.dashboardSessions = mongoDatabase.getCollection("dashboardSessions", DashboardSession.class);
 
         ShutdownHooks.register(client::close);
     }
@@ -176,6 +178,8 @@ public class Database {
                     Indexes.compoundIndex(guildIndex, Indexes.descending("ticketChannel"), Indexes.descending("chunkIndex")),
                     new IndexOptions().unique(true));
             db.stickyRoles.createIndex(guildUser, new IndexOptions().unique(true));
+            db.dashboardSessions.createIndex(Indexes.descending("sessionId"), new IndexOptions().unique(true));
+            db.dashboardSessions.createIndex(Indexes.descending("expiresAt"), new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
 
             return null;
         });

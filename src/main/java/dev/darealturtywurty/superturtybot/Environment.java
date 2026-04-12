@@ -34,6 +34,30 @@ public final class Environment {
         return getString("DEFAULT_PREFIX");
     }
 
+    public Optional<String> dashboardAllowedOrigins() {
+        return getString("DASHBOARD_ALLOWED_ORIGINS");
+    }
+
+    public Optional<String> dashboardApiKey() {
+        return getString("DASHBOARD_API_KEY");
+    }
+
+    public Optional<Boolean> dashboardEnabled() {
+        return getBoolean("DASHBOARD_ENABLED");
+    }
+
+    public Optional<String> dashboardHost() {
+        return getString("DASHBOARD_HOST");
+    }
+
+    public Optional<Integer> dashboardPort() {
+        return getInteger("DASHBOARD_PORT");
+    }
+
+    public Optional<String> dashboardPublicUrl() {
+        return getString("DASHBOARD_PUBLIC_URL");
+    }
+
     public Optional<String> githubOAuthToken() {
         return getString("GITHUB_OAUTH_TOKEN");
     }

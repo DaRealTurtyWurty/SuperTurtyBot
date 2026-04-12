@@ -76,7 +76,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         GuildData data = GuildData.getOrCreateGuildData(guild);
 
         long collectorChannel = data.getCollectorChannel();
-        if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong())
+        if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong() || !data.isCollectableTypeEnabled(getName()))
             return;
 
         List<Long> messageTimes = guildMessageMap.computeIfAbsent(guild.getIdLong(), k -> new ArrayList<>());
@@ -134,8 +134,18 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         });
     }
 
-    public T getRandomWeightedCollectable() {
+    public T getRandomWeightedCollectable(GuildData data) {
         List<T> collectables = new ArrayList<>(this.registry.getRegistry().values());
+        if (data != null) {
+            collectables.removeIf(collectable ->
+                    !data.isCollectableTypeEnabled(getName())
+                            || data.getDisabledCollectables(getName()).contains(collectable.getName()));
+        }
+
+        if (collectables.isEmpty()) {
+            return null;
+        }
+
         WeightedRandomBag<T> bag = new WeightedRandomBag<>();
 
         for (T collectable : collectables) {
@@ -191,7 +201,12 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     }
 
     private void scheduleCollectable(MessageReceivedEvent event, Guild guild) {
-        T collectable = getRandomWeightedCollectable();
+        GuildData data = GuildData.getOrCreateGuildData(guild);
+        T collectable = getRandomWeightedCollectable(data);
+        if (collectable == null) {
+            Constants.LOGGER.warn("No enabled collectables available for guild {} collection {}", guild.getIdLong(), getName());
+            return;
+        }
         var embed = new EmbedBuilder()
                 .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
                 .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")

@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
     public BattleshipsPowerUpCommand() {
@@ -104,7 +105,7 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
         if (game.isGameOver(user.getIdLong())) {
             response += "\n🏆 " + user.getAsMention() + " wins! Game over.";
             BattleshipsCommand.GAMES.remove(game.getThreadId(), game);
-            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, java.util.concurrent.TimeUnit.SECONDS);
+            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
             try {
                 FileUpload upload = BattleshipsImageRenderer.createUpload(
                         game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());

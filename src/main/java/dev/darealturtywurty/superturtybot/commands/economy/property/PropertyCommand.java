@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.economy.property;
 
+import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.economy.EconomyCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
@@ -130,7 +131,7 @@ public class PropertyCommand extends EconomyCommand {
             return null;
 
         List<Economy> accounts = Database.getDatabase().economy
-                .find(com.mongodb.client.model.Filters.eq("guild", guildId))
+                .find(Filters.eq("guild", guildId))
                 .into(new ArrayList<>());
         for (Economy economy : accounts) {
             for (Property property : economy.getProperties()) {

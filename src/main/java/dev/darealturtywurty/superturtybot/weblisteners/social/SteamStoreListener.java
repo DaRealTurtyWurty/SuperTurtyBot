@@ -17,9 +17,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +82,7 @@ public class SteamStoreListener {
             if (bytes == null)
                 return List.of();
 
-            return READER.read(new java.io.ByteArrayInputStream(bytes))
+            return READER.read(new ByteArrayInputStream(bytes))
                     .map(SteamStoreListener::toArticle)
                     .flatMap(Optional::stream)
                     .filter(article -> matchesTitle(article.title()))
@@ -245,7 +247,7 @@ public class SteamStoreListener {
                         if (!parameter.substring(0, separator).equals("v"))
                             continue;
 
-                        String videoId = URLDecoder.decode(parameter.substring(separator + 1), java.nio.charset.StandardCharsets.UTF_8);
+                        String videoId = URLDecoder.decode(parameter.substring(separator + 1), StandardCharsets.UTF_8);
                         return videoId.isBlank() ? "" : "https://www.youtube.com/watch?v=" + videoId;
                     }
                 }

@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * possibly erred or missing values. In this usage, {@link Optional#isEmpty} is replaced with
  * {@link Either#getLeft} which, unlike {@link Optional#isEmpty}, can contain useful information,
  * like a descriptive error message. {@link Either#getRight} takes the place of
- * {@link java.util.Optional#get}
+ * {@link Optional#get}
  * <p>
  * -
  * <p>
@@ -34,7 +34,7 @@ import java.util.function.Supplier;
  * While inspired by the (first) solution presented in this <a
  * href="https://stackoverflow.com/a/26164155/501113">StackOverflow Answer</a>, this updated
  * version {@link Either} is internally implemented via a pair of {@link Optional}s, each of which
- * explicitly reject null values by throwing a {@link java.lang.NullPointerException} from both
+ * explicitly reject null values by throwing a {@link NullPointerException} from both
  * factory methods, {@link Either#left} and {@link Either#right}.
  **/
 public final class Either<L, R> {
@@ -135,7 +135,7 @@ public final class Either<L, R> {
 
     /**
      * If defined (which can be detected with {@link Either#isLeft}), returns the value for the left
-     * side of {@link Either}, or else throws an {@link java.util.NoSuchElementException}
+     * side of {@link Either}, or else throws an {@link NoSuchElementException}
      *
      * @return value of type L for the left, if the left side of this Either is defined
      */
@@ -145,7 +145,7 @@ public final class Either<L, R> {
 
     /**
      * If defined (which can be detected with {@link Either#isRight}), returns the value for the
-     * left side of {@link Either}, or else throws an {@link java.util.NoSuchElementException}
+     * left side of {@link Either}, or else throws an {@link NoSuchElementException}
      *
      * @return value of type R for the left, if the right side of this Either is defined
      */

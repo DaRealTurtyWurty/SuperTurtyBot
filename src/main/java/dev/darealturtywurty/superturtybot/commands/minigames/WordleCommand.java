@@ -151,7 +151,7 @@ public class WordleCommand extends CoreCommand {
 
     @Override
     public Pair<TimeUnit, Long> getRatelimit() {
-        return Pair.of(TimeUnit.DAYS, 1L);
+        return Pair.of(TimeUnit.MINUTES, 1L);
     }
 
     protected void runSlash(SlashCommandInteractionEvent event) {
@@ -166,8 +166,8 @@ public class WordleCommand extends CoreCommand {
             return;
         }
 
-        event.deferReply().queue(hook -> {
-        }, error -> {
+        event.deferReply().queue(_ -> {
+        }, _ -> {
         });
 
         if (!event.isFromGuild()) {

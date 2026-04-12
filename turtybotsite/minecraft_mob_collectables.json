@@ -1,0 +1,590 @@
+[
+  {
+    "name": "piglin",
+    "emojiId": "1274449946292260886",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "ray_tracing",
+    "emojiId": "1274449956811571272",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "nerd_creeper",
+    "emojiId": "1274447589131030549",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "guardian",
+    "emojiId": "1274447574513881219",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "strider",
+    "emojiId": "1274449972481232978",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "zombie",
+    "emojiId": "1274449988612657214",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "mooshroom",
+    "emojiId": "1274447587461693552",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "husk",
+    "emojiId": "1274447578305400914",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "elder_guardian",
+    "emojiId": "1274447564485431317",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "phantom",
+    "emojiId": "1274447630990053487",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "slime",
+    "emojiId": "1274449964466180176",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "ocelot",
+    "emojiId": "1274447591056080978",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "camel",
+    "emojiId": "1274447553617854599",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "drowned",
+    "emojiId": "1274447563528999018",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "polar_bear",
+    "emojiId": "1274449951971082331",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "cave_spider",
+    "emojiId": "1274447555689713756",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "iron_golem",
+    "emojiId": "1274447580201226311",
+    "category": "NEUTRAL",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "giant",
+    "emojiId": "1274449988612657214",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "vindicator",
+    "emojiId": "1274449980253278310",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "axolotl",
+    "emojiId": "1274449948548530189",
+    "category": "PASSIVE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "poisonous_potato_zombie",
+    "emojiId": "1274449951107190864",
+    "category": "JOKE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "mule",
+    "emojiId": "1274447588174860432",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "llama",
+    "emojiId": "1274447581967286456",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "magma_cube",
+    "emojiId": "1274447583875698688",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "plaguewhale_slab",
+    "emojiId": "1274449949983248487",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "trader_llama",
+    "emojiId": "1274449975060725793",
+    "category": "NEUTRAL",
+    "rarity": "RARE"
+  },
+  {
+    "name": "goat",
+    "emojiId": "1274447573490339994",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "armadillo",
+    "emojiId": "1274447547070545991",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "horse",
+    "emojiId": "1274447576434872463",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "batato",
+    "emojiId": "1274447549050392576",
+    "category": "JOKE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "love_golem",
+    "emojiId": "1274447582608887923",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "ravager",
+    "emojiId": "1274449956060794911",
+    "category": "HOSTILE",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "allay",
+    "emojiId": "1274447545829032103",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "wandering_trader",
+    "emojiId": "1274449981281013862",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "witch",
+    "emojiId": "1274449983344476251",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "parrot",
+    "emojiId": "1274447626263072820",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "sniffer",
+    "emojiId": "1274449966391365774",
+    "category": "PASSIVE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "smiling_creeper",
+    "emojiId": "1274449964935680063",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "cow",
+    "emojiId": "1274447558936100986",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "npc",
+    "emojiId": "1274447589823090690",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "ghast",
+    "emojiId": "1274447571695435868",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "ender_dragon",
+    "emojiId": "1274447565408047235",
+    "category": "BOSS",
+    "rarity": "MYTHICAL"
+  },
+  {
+    "name": "breeze",
+    "emojiId": "1274447552816742491",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "frog",
+    "emojiId": "1274447570852118700",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "bogged",
+    "emojiId": "1274447551906578502",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "cod",
+    "emojiId": "1274447557929472000",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "redstone_bug",
+    "emojiId": "1274449957578866824",
+    "category": "JOKE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "pillager",
+    "emojiId": "1274449947936165899",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "rabbit",
+    "emojiId": "1274449955129528475",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "pink_wither",
+    "emojiId": "1274447570025971786",
+    "category": "JOKE",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "panda",
+    "emojiId": "1274447615819386910",
+    "category": "NEUTRAL",
+    "rarity": "RARE"
+  },
+  {
+    "name": "bat",
+    "emojiId": "1274447547829846110",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "zombified_piglin",
+    "emojiId": "1274449992668549162",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "wither",
+    "emojiId": "1274449984204308591",
+    "category": "BOSS",
+    "rarity": "MYTHICAL"
+  },
+  {
+    "name": "villager",
+    "emojiId": "1274449979460554823",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "salmon",
+    "emojiId": "1274449958535430165",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "blaze",
+    "emojiId": "1274447551050940509",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "mega_spud",
+    "emojiId": "1274447585620394126",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "donkey",
+    "emojiId": "1274447562161651836",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "cat",
+    "emojiId": "1274447554637070478",
+    "category": "PASSIVE",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "creeper",
+    "emojiId": "1274447559833944067",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "agent",
+    "emojiId": "1274447545195696128",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "glow_squid",
+    "emojiId": "1274447572546617527",
+    "category": "PASSIVE",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "spider",
+    "emojiId": "1274449968395976768",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "endermite",
+    "emojiId": "1274447567194951803",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "evoker",
+    "emojiId": "1274447568151117824",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "fox",
+    "emojiId": "1274447568755232840",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "dolphin",
+    "emojiId": "1274447561763323904",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "tropical_fish",
+    "emojiId": "1274449976373674115",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "pig",
+    "emojiId": "1274447655707086981",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "pufferfish",
+    "emojiId": "1274449953955123242",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "hoglin",
+    "emojiId": "1274447575126376460",
+    "category": "HOSTILE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "zombie_villager",
+    "emojiId": "1274449991120715897",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "wolf",
+    "emojiId": "1274449986511306784",
+    "category": "NEUTRAL",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "skeleton_horse",
+    "emojiId": "1274449963547496480",
+    "category": "PASSIVE",
+    "rarity": "MYTHICAL"
+  },
+  {
+    "name": "tadpole",
+    "emojiId": "1274449973324283927",
+    "category": "PASSIVE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "diamond_chicken",
+    "emojiId": "1274447560777404570",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "chicken",
+    "emojiId": "1274447557027823750",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "enderman",
+    "emojiId": "1274447566284521602",
+    "category": "NEUTRAL",
+    "rarity": "RARE"
+  },
+  {
+    "name": "silverfish",
+    "emojiId": "1274449961370652796",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "illusioner",
+    "emojiId": "1274447579274543115",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "vex",
+    "emojiId": "1274449978508709959",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "the_killer_bunny",
+    "emojiId": "1274447580956463125",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "stray",
+    "emojiId": "1274449971281793198",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "piglin_brute",
+    "emojiId": "1274449947189575680",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "moon_cow",
+    "emojiId": "1274447586572369991",
+    "category": "JOKE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "zombie_horse",
+    "emojiId": "1274449989636194325",
+    "category": "UNUSED",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "turtle",
+    "emojiId": "1274449977090899981",
+    "category": "PASSIVE",
+    "rarity": "LEGENDARY"
+  },
+  {
+    "name": "sheep",
+    "emojiId": "1274449959545999472",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "toxifin_slab",
+    "emojiId": "1274449974226059316",
+    "category": "JOKE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "skeleton",
+    "emojiId": "1274449962683600896",
+    "category": "HOSTILE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "shulker",
+    "emojiId": "1274449960657616949",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "squid",
+    "emojiId": "1274449969637752842",
+    "category": "PASSIVE",
+    "rarity": "COMMON"
+  },
+  {
+    "name": "warden",
+    "emojiId": "1274449982375727207",
+    "category": "HOSTILE",
+    "rarity": "MYTHICAL"
+  },
+  {
+    "name": "wither_skeleton",
+    "emojiId": "1274449985022460061",
+    "category": "HOSTILE",
+    "rarity": "UNCOMMON"
+  },
+  {
+    "name": "snow_golem",
+    "emojiId": "1274449967632748565",
+    "category": "PASSIVE",
+    "rarity": "RARE"
+  },
+  {
+    "name": "zoglin",
+    "emojiId": "1274449987261956169",
+    "category": "HOSTILE",
+    "rarity": "EPIC"
+  },
+  {
+    "name": "bee",
+    "emojiId": "1274447549981392897",
+    "category": "NEUTRAL",
+    "rarity": "UNCOMMON"
+  }
+]

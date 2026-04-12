@@ -33,6 +33,7 @@ import net.dv8tion.jda.api.events.sticker.update.GenericGuildStickerUpdateEvent;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Data
@@ -147,6 +148,9 @@ public class GuildData {
     private boolean announceBirthdays;
     private List<Long> enabledBirthdayUsers;
     private boolean isCollectingEnabled;
+    private boolean collectableTypesRestricted;
+    private String collectableTypes;
+    private Map<String, String> disabledCollectablesByType;
     private boolean shouldAnnounceJoins;
     private boolean shouldAnnounceLeaves;
     private boolean imageSpamAutoBanEnabled;
@@ -265,6 +269,9 @@ public class GuildData {
         this.announceBirthdays = true;
         this.enabledBirthdayUsers = new ArrayList<>();
         this.isCollectingEnabled = true;
+        this.collectableTypesRestricted = false;
+        this.collectableTypes = "";
+        this.disabledCollectablesByType = new HashMap<>();
         this.shouldAnnounceJoins = true;
         this.shouldAnnounceLeaves = false;
         this.imageSpamAutoBanEnabled = false;
@@ -323,5 +330,69 @@ public class GuildData {
             return List.of();
 
         return Stream.of(str.split("[ ;]")).map(Longs::tryParse).filter(Objects::nonNull).toList();
+    }
+
+    public List<String> getCollectableTypesList() {
+        return splitDelimitedList(this.collectableTypes);
+    }
+
+    public void setCollectableTypesList(Collection<String> types) {
+        this.collectableTypes = joinDelimitedList(types);
+    }
+
+    public List<String> getDisabledCollectables(String type) {
+        if (type == null || type.isBlank()) {
+            return List.of();
+        }
+
+        if (this.disabledCollectablesByType == null) {
+            return List.of();
+        }
+
+        return splitDelimitedList(this.disabledCollectablesByType.getOrDefault(type, ""));
+    }
+
+    public void setDisabledCollectables(String type, Collection<String> collectables) {
+        if (type == null || type.isBlank()) {
+            return;
+        }
+
+        if (this.disabledCollectablesByType == null) {
+            this.disabledCollectablesByType = new HashMap<>();
+        }
+
+        this.disabledCollectablesByType.put(type, joinDelimitedList(collectables));
+    }
+
+    public boolean isCollectableTypeEnabled(String type) {
+        if (!this.collectableTypesRestricted) {
+            return true;
+        }
+
+        return getCollectableTypesList().contains(type);
+    }
+
+    private static List<String> splitDelimitedList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+
+        return Arrays.stream(value.split("[;,]"))
+                .map(String::trim)
+                .filter(entry -> !entry.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private static String joinDelimitedList(Collection<String> values) {
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
+
+        return values.stream()
+                .map(value -> value == null ? "" : value.trim())
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .collect(Collectors.joining(";"));
     }
 }
