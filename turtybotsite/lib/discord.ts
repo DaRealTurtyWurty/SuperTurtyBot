@@ -24,14 +24,6 @@ interface DiscordGuildResponse {
     permissions: string;
 }
 
-interface DiscordGuildChannelResponse {
-    id: string;
-    name: string;
-    type: number;
-    parent_id: string | null;
-    position: number;
-}
-
 function getRequiredEnv(name: string) {
     const value = process.env[name];
     if (!value) {
@@ -84,33 +76,6 @@ export async function exchangeCodeForAccessToken(code: string, origin: string) {
     };
 }
 
-export async function refreshDiscordAccessToken(refreshToken: string, origin: string) {
-    const response = await fetch(`${DISCORD_API_BASE}/oauth2/token`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-            client_id: getRequiredEnv("DISCORD_CLIENT_ID"),
-            client_secret: getRequiredEnv("DISCORD_CLIENT_SECRET"),
-            grant_type: "refresh_token",
-            refresh_token: refreshToken,
-            redirect_uri: getRedirectUri(origin)
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`Discord token refresh failed with status ${response.status}`);
-    }
-
-    const payload = await response.json() as DiscordTokenResponse;
-    return {
-        accessToken: payload.access_token,
-        refreshToken: payload.refresh_token ?? refreshToken,
-        expiresAtMs: Date.now() + Math.max(0, (payload.expires_in ?? 0) * 1000)
-    };
-}
-
 async function fetchDiscordResource<T>(path: string, accessToken: string) {
     const response = await fetch(`${DISCORD_API_BASE}${path}`, {
         headers: {
@@ -148,10 +113,6 @@ export async function fetchManageableDiscordGuilds(accessToken: string) {
             permissions: guild.permissions
         }))
         .sort((left, right) => left.name.localeCompare(right.name));
-}
-
-export async function fetchDiscordGuildChannels(accessToken: string, guildId: string) {
-    return fetchDiscordResource<DiscordGuildChannelResponse[]>(`/guilds/${guildId}/channels`, accessToken);
 }
 
 export function isManageableGuild(owner: boolean, permissions: string) {

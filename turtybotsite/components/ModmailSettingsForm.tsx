@@ -68,6 +68,7 @@ export default function ModmailSettingsForm({guildId, initialSettings}: ModmailS
     return <form onSubmit={onSubmit} className="space-y-5">
         <section className="border border-slate-800/80 bg-slate-950/60 p-5">
             <GuildRoleSelect
+                id="moderator-roles"
                 guildId={guildId}
                 value=""
                 onChange={() => {}}
@@ -79,7 +80,7 @@ export default function ModmailSettingsForm({guildId, initialSettings}: ModmailS
             />
         </section>
 
-        <label className="block border border-slate-800/80 bg-slate-950/60 p-5">
+        <label id="ticket-created-message" className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <p className="text-sm font-semibold text-white">Ticket Created Message</p>
             <p className="mt-1 text-sm text-slate-400">Optional extra message sent when a ticket is opened.</p>
             <textarea

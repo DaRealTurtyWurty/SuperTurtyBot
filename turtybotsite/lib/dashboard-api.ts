@@ -410,6 +410,27 @@ export interface DashboardModmailSettings {
     ticketCreatedMessage: string;
 }
 
+export interface DashboardStickyMessageInfo {
+    channelId: string;
+    channelName: string;
+    connected: boolean;
+    content: string;
+    hasEmbed: boolean;
+    ownerDisplayName: string;
+    ownerId: string;
+    postedMessage: number;
+    updatedAt: number;
+}
+
+export interface DashboardStickyMessagesResponse {
+    stickyMessages: DashboardStickyMessageInfo[];
+}
+
+export interface DashboardStickyMessageRequest {
+    channelId: string;
+    content: string;
+}
+
 export interface DashboardModmailTicketSummary {
     ticketNumber: number;
     userId: string;
@@ -852,6 +873,12 @@ export async function fetchDashboardModmailSettings(guildId: string) {
     });
 }
 
+export async function fetchDashboardStickyMessages(guildId: string) {
+    return dashboardFetch<DashboardStickyMessagesResponse>(`/api/guilds/${guildId}/sticky-messages`, {
+        method: "GET"
+    });
+}
+
 export async function fetchDashboardModmailTickets(guildId: string, status: string = "all") {
     const searchParams = new URLSearchParams({status});
     return dashboardFetch<DashboardModmailTicketsResponse>(`/api/guilds/${guildId}/modmail/tickets?${searchParams.toString()}`, {
@@ -1073,6 +1100,19 @@ export async function updateDashboardModmailSettings(guildId: string, settings: 
     return dashboardFetch<DashboardModmailSettings>(`/api/guilds/${guildId}/config/modmail`, {
         method: "PUT",
         body: JSON.stringify(settings)
+    });
+}
+
+export async function upsertDashboardStickyMessage(guildId: string, payload: DashboardStickyMessageRequest) {
+    return dashboardFetch<DashboardStickyMessagesResponse>(`/api/guilds/${guildId}/sticky-messages`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
+}
+
+export async function deleteDashboardStickyMessage(guildId: string, channelId: string) {
+    return dashboardFetch<DashboardStickyMessagesResponse>(`/api/guilds/${guildId}/sticky-messages/${encodeURIComponent(channelId)}`, {
+        method: "DELETE"
     });
 }
 

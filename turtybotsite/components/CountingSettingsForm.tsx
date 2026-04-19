@@ -22,11 +22,13 @@ function formatCountingModeLabel(mode: string) {
 }
 
 function CountingModeSelect({
+    id,
     value,
     onChange,
     options,
     disabled
 }: {
+    id?: string;
     value: string;
     onChange: (value: string) => void;
     options: DashboardCountingModeInfo[];
@@ -52,7 +54,7 @@ function CountingModeSelect({
         };
     }, [isOpen]);
 
-    return <div ref={containerRef} className="relative">
+    return <div id={id} ref={containerRef} className="relative scroll-mt-24">
         <button
             type="button"
             onClick={() => setIsOpen(current => !current)}
@@ -264,7 +266,7 @@ export default function CountingSettingsForm({guildId, initialSettings}: Countin
     }
 
     return <div className="space-y-6">
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <section id="maximum-succession" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex flex-col gap-4 md:flex-row md:items-end">
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-white">Maximum Succession</p>
@@ -292,49 +294,61 @@ export default function CountingSettingsForm({guildId, initialSettings}: Countin
             </div>
         </section>
 
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end">
-                <div className="min-w-0 flex-1">
+        <section id="add-counting-channel" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
+            <div className="space-y-5">
+                <div className="space-y-2">
                     <p className="text-sm font-semibold text-white">Add Counting Channel</p>
-                    <p className="mt-1 text-sm text-slate-400">Pick a text channel and counting mode. Selecting an existing channel updates its mode.</p>
-                    <div className="mt-4">
-                        <GuildChannelSelect
-                            guildId={guildId}
-                            value={selectedChannelId}
-                            onChange={setSelectedChannelId}
-                            disabled={pendingChannelId !== null || isAdding || isSavingSuccession}
-                            label="Channel"
-                            description="Only text channels that the dashboard user can access are shown."
-                            placeholder="Select a channel"
-                        />
+                    <p className="text-sm text-slate-400">Pick a text channel and counting mode. Selecting an existing channel updates its mode.</p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 md:items-start">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">Channel</p>
+                        <p className="mt-1 text-sm text-slate-400">Only text channels that the dashboard user can access are shown.</p>
+                        <div className="mt-4">
+                            <GuildChannelSelect
+                                id="counting-channel"
+                                guildId={guildId}
+                                value={selectedChannelId}
+                                onChange={setSelectedChannelId}
+                                disabled={pendingChannelId !== null || isAdding || isSavingSuccession}
+                                label="Channel"
+                                placeholder="Select a channel"
+                                embedded
+                            />
+                        </div>
+                        <p className="mt-2 text-xs text-slate-500">Use this to choose which text channel counts numbers.</p>
+                    </div>
+
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white">Mode</p>
+                        <p className="mt-1 text-sm text-slate-400">Choose how counting should progress.</p>
+                        <div className="mt-4">
+                            <CountingModeSelect
+                                id="counting-mode"
+                                value={selectedMode}
+                                onChange={setSelectedMode}
+                                options={modeOptions}
+                                disabled={pendingChannelId !== null || isAdding || isSavingSuccession}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="min-w-0 md:w-72">
-                    <p className="text-sm font-semibold text-white">Mode</p>
-                    <p className="mt-1 text-sm text-slate-400">Choose how counting should progress.</p>
-                    <div className="mt-4">
-                        <CountingModeSelect
-                            value={selectedMode}
-                            onChange={setSelectedMode}
-                            options={modeOptions}
-                            disabled={pendingChannelId !== null || isAdding || isSavingSuccession}
-                        />
-                    </div>
+                <div className="md:col-span-2 md:flex md:justify-end">
+                    <button
+                        type="button"
+                        onClick={() => void handleAddChannel()}
+                        disabled={!selectedChannelId || pendingChannelId !== null || isAdding || isSavingSuccession}
+                        className="border border-sky-400 bg-sky-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {isAdding && pendingChannelId === selectedChannelId ? "Saving..." : "Save Channel"}
+                    </button>
                 </div>
-
-                <button
-                    type="button"
-                    onClick={() => void handleAddChannel()}
-                    disabled={!selectedChannelId || pendingChannelId !== null || isAdding || isSavingSuccession}
-                    className="border border-sky-400 bg-sky-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {isAdding && pendingChannelId === selectedChannelId ? "Saving..." : "Save Channel"}
-                </button>
             </div>
         </section>
 
-        <section className="space-y-3">
+        <section id="registered-channels" className="space-y-3 scroll-mt-24">
             <div>
                 <p className="text-sm font-semibold text-white">Registered Channels</p>
                 <p className="mt-1 text-sm text-slate-400">These channels are currently registered for counting.</p>
@@ -364,6 +378,7 @@ export default function CountingSettingsForm({guildId, initialSettings}: Countin
                                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Mode</p>
                                     <div className="mt-2">
                                         <CountingModeSelect
+                                            id={`counting-mode-${channel.channelId}`}
                                             value={channel.mode}
                                             onChange={mode => void handleModeChange(channel.channelId, mode)}
                                             options={modeOptions}

@@ -10,6 +10,7 @@ export interface DashboardGuildRoleOption {
 }
 
 interface GuildRoleSelectProps {
+    id?: string;
     guildId: string;
     value?: string;
     onChange?: (value: string) => void;
@@ -88,6 +89,7 @@ function formatSummary(
 }
 
 export default function GuildRoleSelect({
+    id,
     guildId,
     value = "",
     onChange,
@@ -102,7 +104,9 @@ export default function GuildRoleSelect({
 }: GuildRoleSelectProps) {
     const {roles, isLoading, error} = useGuildRoles(guildId);
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
     const excludedSet = useMemo(() => new Set(excludedRoleIds), [excludedRoleIds]);
 
     const selectedIds = multiple ? values : value ? [value] : [];
@@ -111,6 +115,15 @@ export default function GuildRoleSelect({
         [roles, selectedIds]
     );
     const summary = formatSummary(selectedRoles, placeholder, multiple);
+    const filteredRoles = useMemo(() => {
+        const normalizedQuery = searchQuery.trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            return roles;
+        }
+
+        return roles.filter(role => role.name.toLowerCase().includes(normalizedQuery));
+    }, [roles, searchQuery]);
 
     useEffect(() => {
         function onDocumentClick(event: MouseEvent) {
@@ -128,6 +141,13 @@ export default function GuildRoleSelect({
         };
     }, [isOpen]);
 
+    useEffect(() => {
+        if (isOpen) {
+            setSearchQuery("");
+            queueMicrotask(() => searchInputRef.current?.focus());
+        }
+    }, [isOpen]);
+
     function toggleRole(roleId: string) {
         if (multiple) {
             const nextValues = values.includes(roleId)
@@ -141,7 +161,7 @@ export default function GuildRoleSelect({
         setIsOpen(false);
     }
 
-    return <div ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5">
+    return <div id={id} ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <p className="text-sm font-semibold text-white">{label}</p>
         {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
 
@@ -180,8 +200,18 @@ export default function GuildRoleSelect({
 
             {isOpen && !isLoading && roles.length > 0 ? (
                 <div className="dashboard-scrollbar absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto border border-slate-700 bg-slate-900 shadow-2xl">
+                    <div className="border-b border-slate-800 p-2">
+                        <input
+                            ref={searchInputRef}
+                            value={searchQuery}
+                            onChange={event => setSearchQuery(event.target.value)}
+                            placeholder="Search role"
+                            className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                        />
+                    </div>
+
                     <div className="p-3">
-                        {roles.map(role => {
+                        {filteredRoles.map(role => {
                             const isSelected = selectedIds.includes(role.id);
                             const isAllowed = !excludedSet.has(role.id) || isSelected;
 
@@ -222,6 +252,8 @@ export default function GuildRoleSelect({
                                 ) : null}
                             </button>;
                         })}
+
+                        {filteredRoles.length === 0 ? <p className="px-3 py-2 text-sm text-slate-400">No roles match search.</p> : null}
                     </div>
                 </div>
             ) : null}

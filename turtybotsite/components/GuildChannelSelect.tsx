@@ -22,6 +22,7 @@ export interface DashboardGuildChannelOption {
 }
 
 interface GuildChannelSelectProps {
+    id?: string;
     guildId: string;
     value: string;
     onChange: (value: string) => void;
@@ -33,6 +34,7 @@ interface GuildChannelSelectProps {
     multiple?: boolean;
     values?: string[];
     onValuesChange?: (values: string[]) => void;
+    embedded?: boolean;
 }
 
 interface ChannelGroup {
@@ -177,6 +179,7 @@ export function useGuildChannels(guildId: string) {
 }
 
 export default function GuildChannelSelect({
+    id,
     guildId,
     value,
     onChange,
@@ -187,17 +190,43 @@ export default function GuildChannelSelect({
     placeholder = "Select a channel",
     multiple = false,
     values = [],
-    onValuesChange
+    onValuesChange,
+    embedded = false
 }: GuildChannelSelectProps) {
     const {channels, isLoading, error} = useGuildChannels(guildId);
     const groups = useMemo(() => createChannelGroups(channels), [channels]);
     const allowedTypes = useMemo(() => new Set(allowTypes), [allowTypes]);
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
 
     const selectedIds = multiple ? values : value ? [value] : [];
     const selectedChannels = channels.filter(channel => selectedIds.includes(channel.id));
     const summary = getSummaryState(selectedChannels, placeholder, multiple);
+    const filteredGroups = useMemo(() => {
+        const normalizedQuery = searchQuery.trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            return groups;
+        }
+
+        return groups.flatMap(group => {
+            const groupMatches = group.label.toLowerCase().includes(normalizedQuery);
+            const matchingChannels = groupMatches
+                ? group.channels
+                : group.channels.filter(channel => formatChannelLabel(channel).toLowerCase().includes(normalizedQuery));
+
+            if (matchingChannels.length === 0) {
+                return [];
+            }
+
+            return [{
+                ...group,
+                channels: matchingChannels
+            }];
+        });
+    }, [groups, searchQuery]);
 
     useEffect(() => {
         function onDocumentClick(event: MouseEvent) {
@@ -215,6 +244,13 @@ export default function GuildChannelSelect({
         };
     }, [isOpen]);
 
+    useEffect(() => {
+        if (isOpen) {
+            setSearchQuery("");
+            queueMicrotask(() => searchInputRef.current?.focus());
+        }
+    }, [isOpen]);
+
     function toggleValue(channelId: string) {
         if (multiple) {
             const nextValues = values.includes(channelId)
@@ -228,11 +264,17 @@ export default function GuildChannelSelect({
         setIsOpen(false);
     }
 
-    return <div ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5">
-        <p className="text-sm font-semibold text-white">{label}</p>
-        {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
+    return <div
+        id={id}
+        ref={containerRef}
+        className={`${embedded ? "block" : "block border border-slate-800/80 bg-slate-950/60 p-5"} scroll-mt-24`}
+    >
+        {!embedded ? <div>
+            <p className="text-sm font-semibold text-white">{label}</p>
+            {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
+        </div> : null}
 
-        <div className="relative mt-4">
+        <div className={`relative ${embedded ? "mt-3" : "mt-4"}`}>
             <button
                 type="button"
                 onClick={() => setIsOpen(current => !current)}
@@ -260,8 +302,18 @@ export default function GuildChannelSelect({
             </button>
 
             {isOpen && !isLoading ? <div className="dashboard-scrollbar absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto border border-slate-700 bg-slate-900 shadow-2xl">
+                <div className="border-b border-slate-800 p-2">
+                    <input
+                        ref={searchInputRef}
+                        value={searchQuery}
+                        onChange={event => setSearchQuery(event.target.value)}
+                        placeholder="Search channel"
+                        className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                    />
+                </div>
+
                 <div className="space-y-4 p-3">
-                {groups.map(group => <div key={group.label} className="space-y-1">
+                {filteredGroups.map(group => <div key={group.label} className="space-y-1">
                     <div className="flex items-center gap-2 px-2 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                         <ChannelTypeIcon type="category" />
                         <span>{group.label}</span>
@@ -304,11 +356,15 @@ export default function GuildChannelSelect({
                         })}
                     </div>
                 </div>)}
+
+                {filteredGroups.length === 0 ? <p className="px-3 py-2 text-sm text-slate-400">No channels match search.</p> : null}
                 </div>
             </div> : null}
         </div>
 
-        {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
-        {!error && !isLoading ? <p className="mt-3 text-xs text-slate-500">Only supported channel types can be selected. Other channels are shown for context.</p> : null}
+        {!embedded ? <>
+            {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
+            {!error && !isLoading ? <p className="mt-3 text-xs text-slate-500">Only supported channel types can be selected. Other channels are shown for context.</p> : null}
+        </> : null}
     </div>;
 }

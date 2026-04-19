@@ -146,7 +146,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-levelling" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Levelling</p>
@@ -161,10 +161,11 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="level-cooldown" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Level Cooldown</p>
                 <p className="mt-1 text-sm text-slate-400">Cooldown in milliseconds between XP gains.</p>
                 <DashboardNumberInput
+                    id="level-cooldown-input"
                     min={1}
                     value={settings.levelCooldown}
                     onChange={value => updateNumber("levelCooldown", value)}
@@ -175,9 +176,10 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="minimum-xp" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Minimum XP</p>
                 <DashboardNumberInput
+                    id="minimum-xp-input"
                     min={1}
                     max={99}
                     value={settings.minXp}
@@ -187,9 +189,10 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 />
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="maximum-xp" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Maximum XP</p>
                 <DashboardNumberInput
+                    id="maximum-xp-input"
                     min={1}
                     max={99}
                     value={settings.maxXp}
@@ -199,10 +202,11 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 />
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="item-chance" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Item Chance</p>
                 <p className="mt-1 text-sm text-slate-400">Chance for levelling item drops as a percentage.</p>
                 <DashboardNumberInput
+                    id="item-chance-input"
                     min={0}
                     max={100}
                     value={settings.levellingItemChance}
@@ -214,6 +218,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
         </div>
 
         <GuildChannelSelect
+            id="disabled-levelling-channels"
             guildId={guildId}
             value=""
             onChange={() => {}}
@@ -226,6 +231,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
         />
 
         <LevellingRoleMappingsEditor
+            id="level-roles"
             guildId={guildId}
             value={settings.levelRoleMappings}
             onChange={updateLevelRoleMappings}
@@ -233,7 +239,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="disable-level-up-messages" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Disable Level-Up Messages</p>
@@ -249,7 +255,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="use-dedicated-level-up-channel" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Use Dedicated Level-Up Channel</p>
@@ -268,6 +274,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
 
         <div className="grid gap-4 md:grid-cols-2">
             <GuildChannelSelect
+                id="level-up-message-channel"
                 guildId={guildId}
                 value={settings.levelUpMessageChannelId}
                 onChange={value => updateText("levelUpMessageChannelId", value)}
@@ -278,7 +285,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
             />
 
             <div className="grid gap-4">
-                <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+                <label id="embed-level-up-messages" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="text-sm font-semibold text-white">Embed Level-Up Messages</p>
@@ -294,7 +301,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                     </div>
                 </label>
 
-                <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+                <label id="allow-level-depletion" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="text-sm font-semibold text-white">Allow Level Depletion</p>
@@ -315,6 +322,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
         <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
                 <GuildChannelSelect
+                    id="xp-boosted-channels"
                     guildId={guildId}
                     value=""
                     onChange={() => {}}
@@ -327,10 +335,11 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 />
             </div>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="xp-boost-percentage" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">XP Boost Percentage</p>
                 <p className="mt-1 text-sm text-slate-400">Applied once for each matching boosted channel, role, and optional server boost.</p>
                 <DashboardNumberInput
+                    id="xp-boost-percentage-input"
                     min={0}
                     max={1000}
                     value={settings.xpBoostPercentage}
@@ -343,6 +352,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
 
         <div className="grid gap-4 md:grid-cols-2">
             <GuildRoleSelect
+                id="xp-boosted-roles"
                 guildId={guildId}
                 value=""
                 onChange={() => {}}
@@ -354,7 +364,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
                 description="Members with any of these roles receive the configured XP boost."
             />
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="count-server-boosters" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Count Server Boosters</p>

@@ -62,7 +62,7 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
     }
 
     return <form onSubmit={onSubmit} className="space-y-5">
-        <label className="block border border-slate-800/80 bg-slate-950/60 p-5">
+        <label id="moderators-join-threads" className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <p className="text-sm font-semibold text-white">Moderators Join Threads</p>
@@ -80,6 +80,7 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
         </label>
 
         <GuildChannelSelect
+            id="auto-thread-channels"
             guildId={guildId}
             value=""
             onChange={() => undefined}

@@ -9,6 +9,7 @@ interface DashboardPresetSelectOption {
 }
 
 interface DashboardPresetSelectProps {
+    id?: string;
     label: string;
     description?: string;
     value: string;
@@ -26,6 +27,7 @@ function getSummaryLabel(value: string, options: DashboardPresetSelectOption[]) 
 }
 
 export default function DashboardPresetSelect({
+    id,
     label,
     description,
     value,
@@ -38,8 +40,19 @@ export default function DashboardPresetSelect({
     allowCustom = true
 }: DashboardPresetSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
     const summary = useMemo(() => getSummaryLabel(value, options), [options, value]);
+    const filteredOptions = useMemo(() => {
+        const normalizedQuery = searchQuery.trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            return options;
+        }
+
+        return options.filter(option => option.label.toLowerCase().includes(normalizedQuery));
+    }, [options, searchQuery]);
 
     useEffect(() => {
         function onDocumentClick(event: MouseEvent) {
@@ -57,7 +70,14 @@ export default function DashboardPresetSelect({
         };
     }, [isOpen]);
 
-    return <div ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5">
+    useEffect(() => {
+        if (isOpen) {
+            setSearchQuery("");
+            queueMicrotask(() => searchInputRef.current?.focus());
+        }
+    }, [isOpen]);
+
+    return <div id={id} ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <p className="text-sm font-semibold text-white">{label}</p>
         {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
 
@@ -75,8 +95,18 @@ export default function DashboardPresetSelect({
             </button>
 
             {isOpen ? <div className="dashboard-scrollbar absolute left-0 right-0 top-full z-30 mt-1 max-h-96 overflow-y-auto border border-slate-700 bg-slate-900 shadow-2xl">
+                <div className="border-b border-slate-800 p-2">
+                    <input
+                        ref={searchInputRef}
+                        value={searchQuery}
+                        onChange={event => setSearchQuery(event.target.value)}
+                        placeholder="Search option"
+                        className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                    />
+                </div>
+
                 <div className="p-2">
-                    {options.map(option => {
+                    {filteredOptions.map(option => {
                         const isSelected = option.value === value;
 
                         return <button
@@ -96,6 +126,8 @@ export default function DashboardPresetSelect({
                             {isSelected ? <span className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-300">Selected</span> : null}
                         </button>;
                     })}
+
+                    {filteredOptions.length === 0 ? <p className="px-3 py-2 text-sm text-slate-400">No options match search.</p> : null}
 
                     {allowCustom ? <button
                         type="button"

@@ -168,15 +168,6 @@ export function clearDiscordTokenCookies(response: NextResponse) {
     }
 }
 
-export async function getDiscordTokenCookieValues() {
-    const cookieStore = await cookies();
-    return {
-        accessToken: cookieStore.get(DISCORD_ACCESS_TOKEN_COOKIE_NAME)?.value ?? null,
-        refreshToken: cookieStore.get(DISCORD_REFRESH_TOKEN_COOKIE_NAME)?.value ?? null,
-        expiresAtMs: Number.parseInt(cookieStore.get(DISCORD_TOKEN_EXPIRES_AT_COOKIE_NAME)?.value ?? "", 10) || 0
-    };
-}
-
 export async function destroyCurrentSession(response: NextResponse) {
     const cookieStore = await cookies();
     const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;

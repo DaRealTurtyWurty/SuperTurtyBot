@@ -58,6 +58,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildRoleSelect
+            id="patron-role"
             guildId={guildId}
             value={settings.patronRoleId ?? ""}
             onChange={updatePatronRole}
@@ -67,7 +68,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
         />
 
         <div className="grid gap-4 lg:grid-cols-3">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="create-gists" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Create Gists</p>
@@ -82,7 +83,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="startup-message" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Startup Message</p>
@@ -97,7 +98,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="send-changelog" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Send Changelog</p>
@@ -112,7 +113,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="sticky-roles" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Sticky Roles</p>

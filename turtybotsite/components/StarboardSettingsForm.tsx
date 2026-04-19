@@ -91,7 +91,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-starboard" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Starboard</p>
@@ -107,6 +107,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
             </label>
 
             <GuildChannelSelect
+                id="starboard-channel"
                 guildId={guildId}
                 value={settings.starboardChannelId}
                 onChange={value => updateText("starboardChannelId", value)}
@@ -118,7 +119,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="minimum-stars" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Minimum Stars</p>
                 <p className="mt-1 text-sm text-slate-400">How many stars a message needs before it is featured.</p>
                 <DashboardNumberInput
@@ -130,7 +131,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
                 />
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="star-emoji" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Star Emoji</p>
                 <p className="mt-1 text-sm text-slate-400">Unicode or custom Discord emoji.</p>
                 <input
@@ -144,6 +145,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
         </div>
 
         <GuildChannelSelect
+            id="showcase-channels"
             guildId={guildId}
             value=""
             onChange={() => {}}
@@ -156,7 +158,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="count-bot-stars" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Count Bot Stars</p>
@@ -172,7 +174,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="media-only" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Media Only</p>

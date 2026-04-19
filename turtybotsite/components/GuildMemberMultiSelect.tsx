@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from "react";
 import type {DashboardGuildMemberInfo} from "@/lib/dashboard-api";
 
 interface GuildMemberMultiSelectProps {
+    id?: string;
     guildId: string;
     values: string[];
     onValuesChange: (values: string[]) => void;
@@ -91,6 +92,7 @@ function extractSnowflakes(value: string) {
 }
 
 export default function GuildMemberMultiSelect({
+    id,
     guildId,
     values,
     onValuesChange,
@@ -277,7 +279,7 @@ export default function GuildMemberMultiSelect({
         setIsOpen(false);
     }
 
-    return <div ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5">
+    return <div id={id} ref={containerRef} className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <p className="text-sm font-semibold text-white">{label}</p>
         {description ? <p className="mt-1 text-sm text-slate-400">{description}</p> : null}
 

@@ -1,6 +1,7 @@
 import type {ReactNode} from "react";
 import Link from "next/link";
 import {redirect} from "next/navigation";
+import DashboardCommandPalette from "@/components/DashboardCommandPalette";
 import GuildDashboardSidebar from "@/components/GuildDashboardSidebar";
 import {requireCurrentSession} from "@/lib/auth";
 import {fetchDashboardGuildConfig, isDashboardApiError} from "@/lib/dashboard-api";
@@ -42,11 +43,14 @@ export default async function GuildDashboardLayout({
                     className="border border-slate-700 px-4 py-2 font-medium transition hover:border-slate-500 hover:bg-slate-800">
                     Back To Dashboard
                 </Link>
-                <a
-                    href="/api/auth/logout"
-                    className="border border-sky-400 bg-sky-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-sky-300">
-                    Sign Out
-                </a>
+                <div className="flex flex-wrap items-center gap-3">
+                    <DashboardCommandPalette guildId={guildId} />
+                    <a
+                        href="/api/auth/logout"
+                        className="border border-sky-400 bg-sky-400 px-4 py-2 font-medium text-slate-950 transition hover:bg-sky-300">
+                        Sign Out
+                    </a>
+                </div>
             </div>
 
             <header className="border border-slate-800/80 bg-slate-900/75 p-8">
@@ -66,7 +70,7 @@ export default async function GuildDashboardLayout({
                 </div>
             </header>
 
-            <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+            <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
                 <GuildDashboardSidebar guildId={guildId} />
                 <section className="border border-slate-800/80 bg-slate-900/75 p-6 md:p-8">
                     {children}

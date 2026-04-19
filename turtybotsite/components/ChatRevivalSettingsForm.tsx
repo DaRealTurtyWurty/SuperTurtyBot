@@ -95,7 +95,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-chat-revival" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Chat Revival</p>
@@ -111,6 +111,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
             </label>
 
             <GuildChannelSelect
+                id="chat-revival-channel"
                 guildId={guildId}
                 value={settings.chatRevivalChannelId}
                 onChange={updateChannel}
@@ -122,7 +123,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="interval-hours" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Interval Hours</p>
                 <p className="mt-1 text-sm text-slate-400">How often the revival prompt should run.</p>
                 <DashboardNumberInput
@@ -134,7 +135,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
                 />
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="allow-nsfw-wyr" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Allow NSFW WYR</p>
@@ -151,7 +152,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
             </label>
         </div>
 
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <section id="prompt-types" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <h3 className="text-lg font-semibold text-white">Prompt Types</h3>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
                 {CHAT_REVIVAL_OPTIONS.map(option => <label key={option.value} className="flex items-center justify-between gap-4 border border-slate-800/80 bg-slate-950/50 px-4 py-3">

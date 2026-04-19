@@ -25,7 +25,6 @@ export default async function DashboardPage() {
     }));
     const connectedGuildCount = guildCards.filter(card => card.snapshot?.guild.connected).length;
     const configuredGuildCount = guildCards.filter(card => card.snapshot?.persisted).length;
-    const starboardEnabledCount = guildCards.filter(card => readBoolean(card.snapshot?.config, "starboard_enabled")).length;
 
     return <main className="min-h-screen bg-slate-950 text-slate-100">
         <div className="flex min-h-screen w-full flex-col gap-6 px-5 py-6 xl:px-8">
@@ -40,11 +39,12 @@ export default async function DashboardPage() {
                         {(session.user.globalName ?? session.user.username).charAt(0).toUpperCase()}
                     </div>}
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">Dashboard</p>
+                        <h1 className="mt-1 text-3xl font-bold tracking-tight">
                             Welcome, {session.user.globalName ?? session.user.username}
                         </h1>
                         <p className="text-sm text-slate-400">
-                            Select a guild to view its current TurtyBot configuration.
+                            Pick a guild, check its status, and jump into the right settings page.
                         </p>
                     </div>
                 </div>
@@ -62,7 +62,13 @@ export default async function DashboardPage() {
                 </div>
             </header>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <section className="space-y-4">
+                <div>
+                    <h2 className="text-xl font-bold text-white">At a glance</h2>
+                    <p className="mt-1 text-sm text-slate-400">Quick numbers for the guilds you can manage.</p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div className="border border-slate-800/80 bg-slate-900/75 p-5">
                     <p className="text-sm text-slate-500">Manageable guilds</p>
                     <p className="mt-3 text-3xl font-bold">{guildCards.length}</p>
@@ -75,9 +81,6 @@ export default async function DashboardPage() {
                     <p className="text-sm text-slate-500">Saved configs</p>
                     <p className="mt-3 text-3xl font-bold">{configuredGuildCount}</p>
                 </div>
-                <div className="border border-slate-800/80 bg-slate-900/75 p-5">
-                    <p className="text-sm text-slate-500">Starboards enabled</p>
-                    <p className="mt-3 text-3xl font-bold">{starboardEnabledCount}</p>
                 </div>
             </section>
 
@@ -97,7 +100,8 @@ export default async function DashboardPage() {
                                 : "No saved guild config yet";
 
                     const cardContent = <>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-4">
                             {guildIconUrl ? <img
                                 src={guildIconUrl}
                                 alt={guild.name}
@@ -110,21 +114,29 @@ export default async function DashboardPage() {
                                 <h2 className="text-xl font-semibold">{guild.name}</h2>
                                 <p className="text-sm text-slate-400">{description}</p>
                             </div>
+                            </div>
+                            <span className={`border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                                isConnected
+                                    ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+                                    : "border-amber-400/30 bg-amber-400/10 text-amber-200"
+                            }`}>
+                                {isConnected ? "Connected" : "Offline"}
+                            </span>
                         </div>
 
                         {!snapshot ? <div className="mt-6 border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                             The dashboard API is unavailable, so this server cannot be opened right now.
                         </div> : !isConnected ? <div className="mt-6 border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                             Invite TurtyBot to this server before opening its dashboard.
-                        </div> : <div className="mt-6 space-y-2 text-sm text-slate-300">
-                            <p>Starboard: {formatStatus(readBoolean(config, "starboard_enabled"))}</p>
-                            <p>Levelling: {formatStatus(readBoolean(config, "levelling_enabled"))}</p>
-                            <p>Economy: {formatStatus(readBoolean(config, "economy_enabled"))}</p>
-                            <p>AI: {formatStatus(readBoolean(config, "ai_enabled"))}</p>
-                            <p>Chat Revival: {formatStatus(readBoolean(config, "chat_revival_enabled"))}</p>
-                            <p>Threads: {formatStatus(readBoolean(config, "should_moderators_join_threads"))}</p>
-                            <p>Misc: {formatStatus(readBoolean(config, "should_create_gists"))}</p>
-                            <p>NSFW: {formatStatus(readBoolean(config, "artist_nsfw_filter_enabled"))}</p>
+                        </div> : <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200">
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Starboard {formatStatus(readBoolean(config, "starboard_enabled"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Levelling {formatStatus(readBoolean(config, "levelling_enabled"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Economy {formatStatus(readBoolean(config, "economy_enabled"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">AI {formatStatus(readBoolean(config, "ai_enabled"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Chat Revival {formatStatus(readBoolean(config, "chat_revival_enabled"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Threads {formatStatus(readBoolean(config, "should_moderators_join_threads"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">Misc {formatStatus(readBoolean(config, "should_create_gists"))}</span>
+                            <span className="border border-slate-700 bg-slate-950/80 px-2.5 py-1">NSFW {formatStatus(readBoolean(config, "artist_nsfw_filter_enabled"))}</span>
                         </div>}
                     </>;
 

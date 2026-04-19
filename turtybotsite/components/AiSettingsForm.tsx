@@ -79,7 +79,7 @@ export default function AiSettingsForm({guildId, initialSettings}: AiSettingsFor
     }
 
     return <form onSubmit={onSubmit} className="space-y-5">
-        <label className="block border border-slate-800/80 bg-slate-950/60 p-5">
+        <label id="enable-ai" className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <p className="text-sm font-semibold text-white">Enable AI</p>
@@ -96,6 +96,7 @@ export default function AiSettingsForm({guildId, initialSettings}: AiSettingsFor
 
         <div className="grid gap-4 md:grid-cols-2">
             <GuildChannelSelect
+                id="channel-whitelist"
                 guildId={guildId}
                 value=""
                 onChange={() => {}}
@@ -108,6 +109,7 @@ export default function AiSettingsForm({guildId, initialSettings}: AiSettingsFor
             />
 
             <GuildMemberMultiSelect
+                id="user-blacklist"
                 guildId={guildId}
                 values={settings.aiUserBlacklist}
                 onValuesChange={updateUserBlacklist}

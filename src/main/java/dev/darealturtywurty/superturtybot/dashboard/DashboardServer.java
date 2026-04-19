@@ -14,6 +14,7 @@ import dev.darealturtywurty.superturtybot.dashboard.service.modmail.ModmailSetti
 import dev.darealturtywurty.superturtybot.dashboard.service.modmail.tickets.ModmailTicketsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.quotes.QuotesDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.tags.TagsDashboardService;
+import dev.darealturtywurty.superturtybot.dashboard.service.sticky_messages.StickyMessagesService;
 import dev.darealturtywurty.superturtybot.dashboard.service.notifiers.NotifiersService;
 import dev.darealturtywurty.superturtybot.dashboard.service.reports.ReportsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.session.DashboardSessionService;
@@ -100,6 +101,7 @@ public final class DashboardServer {
         var modmailTicketsService = new ModmailTicketsService(this.jda);
         var notifiersService = new NotifiersService(this.jda);
         var reportsService = new ReportsService(this.jda);
+        var stickyMessagesService = new StickyMessagesService(this.jda);
 
         this.app = Javalin.create(config -> {
             config.showJavalinBanner = false;
@@ -139,7 +141,8 @@ public final class DashboardServer {
                 modmailSettingsService,
                 modmailTicketsService,
                 notifiersService,
-                reportsService
+                reportsService,
+                stickyMessagesService
         ).register(this.app);
         this.app.start(this.config.host(), this.config.port());
 

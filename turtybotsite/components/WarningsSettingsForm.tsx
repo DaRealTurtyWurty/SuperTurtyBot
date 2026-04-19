@@ -231,7 +231,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
 
     return <div className="space-y-6">
         <form onSubmit={onSubmit} className="space-y-5">
-            <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <section id="moderator-only" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Moderator Only</p>
@@ -246,7 +246,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="border border-slate-800/80 bg-slate-950/50 p-4">
+                    <label id="xp-loss-percentage" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                         <p className="text-sm font-semibold text-white">XP Loss Percentage</p>
                         <p className="mt-1 text-sm text-slate-400">
                             How much XP to remove when a warning is added. Use <code className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
@@ -261,7 +261,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                         />
                     </label>
 
-                    <label className="border border-slate-800/80 bg-slate-950/50 p-4">
+                    <label id="economy-loss-percentage" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                         <p className="text-sm font-semibold text-white">Economy Loss Percentage</p>
                         <p className="mt-1 text-sm text-slate-400">
                             How much money to remove when a warning is added. Use <code className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
@@ -296,7 +296,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
             </div>
         </form>
 
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <section id="recent-warnings" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <p className="text-sm font-semibold text-white">Recent Warnings</p>

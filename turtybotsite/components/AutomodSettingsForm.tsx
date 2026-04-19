@@ -96,8 +96,9 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
                 />
             </div>
 
-            <div className="mt-4">
+            <div id="blocked-channels" className="mt-4 scroll-mt-24">
                 <GuildChannelSelect
+                    id="blocked-channels-select"
                     guildId={guildId}
                     value=""
                     onChange={() => {}}
@@ -112,7 +113,7 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
         </section>
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="scam-detection" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Scam Detection</p>
@@ -127,7 +128,7 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="image-spam-autoban" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Image Spam AutoBan</p>
@@ -143,14 +144,14 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
             </label>
         </div>
 
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <section id="image-spam-thresholds" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div>
                 <p className="text-sm font-semibold text-white">Image Spam Thresholds</p>
                 <p className="mt-1 text-sm text-slate-400">These values control how aggressively image spam is detected.</p>
             </div>
 
             <div className="mt-4 grid gap-4 xl:grid-cols-3">
-                <label className="border border-slate-800/80 bg-slate-950/50 p-4">
+                <label id="window-seconds" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                     <p className="text-sm font-semibold text-white">Window Seconds</p>
                     <p className="mt-1 text-sm text-slate-400">How long the rolling window lasts.</p>
                     <DashboardNumberInput
@@ -162,7 +163,7 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
                     />
                 </label>
 
-                <label className="border border-slate-800/80 bg-slate-950/50 p-4">
+                <label id="minimum-images" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                     <p className="text-sm font-semibold text-white">Minimum Images</p>
                     <p className="mt-1 text-sm text-slate-400">How many images qualify as spam.</p>
                     <DashboardNumberInput
@@ -174,7 +175,7 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
                     />
                 </label>
 
-                <label className="border border-slate-800/80 bg-slate-950/50 p-4">
+                <label id="new-member-threshold-hours" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                     <p className="text-sm font-semibold text-white">New Member Threshold Hours</p>
                     <p className="mt-1 text-sm text-slate-400">Only members newer than this age are checked.</p>
                     <DashboardNumberInput

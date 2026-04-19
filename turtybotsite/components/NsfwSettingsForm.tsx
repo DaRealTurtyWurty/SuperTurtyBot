@@ -63,6 +63,7 @@ export default function NsfwSettingsForm({guildId, initialSettings}: NsfwSetting
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="nsfw-channels"
             guildId={guildId}
             value=""
             onChange={() => undefined}
@@ -75,7 +76,7 @@ export default function NsfwSettingsForm({guildId, initialSettings}: NsfwSetting
             placeholder="Select channels"
         />
 
-        <label className="block border border-slate-800/80 bg-slate-950/60 p-5">
+        <label id="artist-nsfw-filter" className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <p className="text-sm font-semibold text-white">Artist NSFW Filter</p>

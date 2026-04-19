@@ -65,6 +65,7 @@ export function serializeLevellingRoleMappings(rows: LevellingRoleMappingRow[]) 
 }
 
 interface LevellingRoleMappingsEditorProps {
+    id?: string;
     guildId: string;
     disabled?: boolean;
     value: LevellingRoleMappingRow[];
@@ -72,6 +73,7 @@ interface LevellingRoleMappingsEditorProps {
 }
 
 export default function LevellingRoleMappingsEditor({
+    id,
     guildId,
     disabled,
     value,
@@ -95,7 +97,7 @@ export default function LevellingRoleMappingsEditor({
         onChange(next.length > 0 ? next : [createLevellingRoleMappingRow()]);
     }
 
-    return <div className="border border-slate-800/80 bg-slate-950/60 p-5">
+    return <div id={id} className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <div className="flex items-start justify-between gap-4">
             <div>
                 <p className="text-sm font-semibold text-white">Level Roles</p>
@@ -121,6 +123,7 @@ export default function LevellingRoleMappingsEditor({
                     <label className="block border border-slate-800/80 bg-slate-900/70 px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Level</p>
                         <DashboardNumberInput
+                            id={`level-role-level-${row.id}`}
                             min={1}
                             value={row.level}
                             onChange={value => updateRow(index, {level: value})}
@@ -131,6 +134,7 @@ export default function LevellingRoleMappingsEditor({
                     </label>
 
                     <GuildRoleSelect
+                        id={`level-role-role-${row.id}`}
                         guildId={guildId}
                         value={row.roleId}
                         onChange={roleId => updateRow(index, {roleId})}

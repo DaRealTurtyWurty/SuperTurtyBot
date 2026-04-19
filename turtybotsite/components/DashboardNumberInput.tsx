@@ -3,6 +3,7 @@
 import {FaChevronDown, FaChevronUp} from "react-icons/fa6";
 
 interface DashboardNumberInputProps {
+    id?: string;
     value: string | number;
     onChange: (value: string) => void;
     disabled?: boolean;
@@ -49,6 +50,7 @@ function formatNumber(value: number, precision: number) {
 }
 
 export default function DashboardNumberInput({
+    id,
     value,
     onChange,
     disabled,
@@ -72,8 +74,9 @@ export default function DashboardNumberInput({
         onChange(formatNumber(clampedUnits / scale, precision));
     }
 
-    return <div className={`relative mt-4 h-12 ${className}`}>
+    return <div id={id} className={`relative mt-4 h-12 ${className}`}>
         <input
+            id={id}
             type="number"
             min={min}
             max={max}

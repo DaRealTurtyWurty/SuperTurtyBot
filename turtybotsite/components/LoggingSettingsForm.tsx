@@ -21,6 +21,15 @@ interface LoggingToggleGroup {
     items: LoggingToggleDefinition[];
 }
 
+function toFragment(value: string) {
+    const withoutLogPrefix = value.replace(/^log([A-Z])/, "$1");
+    return withoutLogPrefix
+        .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+        .replace(/[\s_]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+}
+
 const TOGGLE_GROUPS: LoggingToggleGroup[] = [
     {
         title: "Server",
@@ -136,6 +145,7 @@ export default function LoggingSettingsForm({guildId, initialSettings}: LoggingS
     return <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid gap-4 lg:grid-cols-2">
             <GuildChannelSelect
+                id="logging-channel"
                 guildId={guildId}
                 value={settings.loggingChannelId}
                 onChange={updateChannel}
@@ -145,6 +155,7 @@ export default function LoggingSettingsForm({guildId, initialSettings}: LoggingS
             />
 
             <GuildChannelSelect
+                id="moderation-logging-channel"
                 guildId={guildId}
                 value={settings.modLoggingChannelId}
                 onChange={updateModChannel}
@@ -155,10 +166,10 @@ export default function LoggingSettingsForm({guildId, initialSettings}: LoggingS
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
-            {TOGGLE_GROUPS.map(group => <section key={group.title} className="border border-slate-800/80 bg-slate-950/60 p-5">
+            {TOGGLE_GROUPS.map(group => <section key={group.title} id={toFragment(group.title)} className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <h3 className="text-lg font-semibold text-white">{group.title}</h3>
                 <div className="mt-4 space-y-3">
-                    {group.items.map(item => <label key={item.key} className="flex items-center justify-between gap-4 border border-slate-800/80 bg-slate-950/50 px-4 py-3">
+                    {group.items.map(item => <label key={item.key} id={toFragment(item.key)} className="flex items-center justify-between gap-4 border border-slate-800/80 bg-slate-950/50 px-4 py-3 scroll-mt-24">
                         <div>
                             <p className="text-sm font-semibold text-white">{item.label}</p>
                             <p className="mt-1 text-sm text-slate-400">{item.description}</p>

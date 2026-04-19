@@ -55,6 +55,7 @@ export default function OptInChannelsSettingsForm({guildId, initialSettings}: Op
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="opt-in-channels"
             guildId={guildId}
             value=""
             onChange={() => undefined}
@@ -67,7 +68,7 @@ export default function OptInChannelsSettingsForm({guildId, initialSettings}: Op
             placeholder="Select channels"
         />
 
-        <div className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <div id="selected-channels" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Selected channels</p>
             <p className="mt-2 text-2xl font-bold text-white">{settings.optInChannelIds.length}</p>
             <p className="mt-2 text-sm text-slate-400">

@@ -67,6 +67,7 @@ export default function BirthdaySettingsForm({guildId, initialSettings}: Birthda
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="birthday-channel"
             guildId={guildId}
             value={settings.birthdayChannelId}
             onChange={updateChannel}
@@ -75,7 +76,7 @@ export default function BirthdaySettingsForm({guildId, initialSettings}: Birthda
             placeholder="Select a channel"
         />
 
-        <label className="block w-full border border-slate-800/80 bg-slate-950/60 p-5">
+        <label id="announce-birthdays" className="block w-full border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-white">Announce Birthdays</p>

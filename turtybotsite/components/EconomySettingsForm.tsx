@@ -99,7 +99,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-economy" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Economy</p>
@@ -114,7 +114,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-donations" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Donations</p>
@@ -134,6 +134,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
         <div className="grid gap-4 md:grid-cols-3">
             <div>
                 <DashboardPresetSelect
+                    id="currency"
                     label="Currency"
                     description="Short symbol or label shown in economy responses."
                     value={settings.currencyMode}
@@ -146,7 +147,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
                 />
             </div>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="default-balance" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Default Balance</p>
                 <p className="mt-1 text-sm text-slate-400">Starting balance for new economy accounts.</p>
                 <DashboardNumberInput
@@ -158,7 +159,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
                 />
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="income-tax" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Income Tax</p>
                 <p className="mt-1 text-sm text-slate-400">Decimal between 0 and 1. For example, 0.1 means 10%.</p>
                 <DashboardNumberInput

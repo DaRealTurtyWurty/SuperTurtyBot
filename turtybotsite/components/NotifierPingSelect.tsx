@@ -35,11 +35,13 @@ function buildMentionPreview(roleIds: string[], memberIds: string[]) {
 }
 
 export default function NotifierPingSelect({
+    id,
     guildId,
     value,
     onChange,
     disabled
 }: {
+    id?: string;
     guildId: string;
     value: string;
     onChange: (value: string) => void;
@@ -65,7 +67,7 @@ export default function NotifierPingSelect({
         onChange(buildMentionPreview(parsed.roleIds, memberIds));
     }
 
-    return <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+    return <section id={id} className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <div className="space-y-2">
             <h3 className="text-sm font-semibold text-white">Who to ping</h3>
             <p className="text-sm text-slate-400">Pick any mix of roles and users. The resolved mention string is shown below.</p>

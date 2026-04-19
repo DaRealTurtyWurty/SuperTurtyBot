@@ -124,6 +124,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="collector-channel"
             guildId={guildId}
             value={settings.collectorChannelId}
             onChange={updateChannel}
@@ -133,7 +134,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="enable-collectables" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Enable Collectables</p>
@@ -148,7 +149,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="restrict-collection-types" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Restrict Collection Types</p>
@@ -164,7 +165,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
             </label>
         </div>
 
-        {settings.collectableTypesRestricted ? <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        {settings.collectableTypesRestricted ? <section id="enabled-collections" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <h3 className="text-lg font-semibold text-white">Enabled Collections</h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {settings.collections.map(collection => <label key={collection.type} className="flex items-center justify-between gap-4 border border-slate-800/80 bg-slate-950/50 px-4 py-3">
@@ -179,7 +180,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
             </div>
         </section> : null}
 
-        {selectedCollection ? <section className="space-y-4">
+        {selectedCollection ? <section id={selectedCollection.type.replace(/_/g, "-")} className="space-y-4 scroll-mt-24">
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-semibold text-white">{selectedCollection.displayName}</h3>
@@ -235,6 +236,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
 
                     return <article
                         key={collection.type}
+                        id={collection.type.replace(/_/g, "-")}
                         className={`border border-slate-800/80 bg-slate-950/60 p-5 ${enabled ? "" : "opacity-75"}`}
                     >
                         <div className="flex items-start justify-between gap-4">

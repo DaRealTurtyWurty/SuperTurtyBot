@@ -1,17 +1,19 @@
 import type {ReactNode} from "react";
 
 export default function NotifierSectionCard({
+    id,
     title,
     description,
     count,
     children
 }: {
+    id?: string;
     title: string;
     description: string;
     count: number;
     children: ReactNode;
 }) {
-    return <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+    return <section id={id} className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
         <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h3 className="text-xl font-semibold text-white">{title}</h3>

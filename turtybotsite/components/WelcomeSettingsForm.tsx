@@ -68,6 +68,7 @@ export default function WelcomeSettingsForm({guildId, initialSettings}: WelcomeS
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="welcome-channel"
             guildId={guildId}
             value={settings.welcomeChannelId}
             onChange={updateChannel}
@@ -77,7 +78,7 @@ export default function WelcomeSettingsForm({guildId, initialSettings}: WelcomeS
         />
 
         <div className="grid gap-4 md:grid-cols-2">
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="announce-joins" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Announce Joins</p>
@@ -92,7 +93,7 @@ export default function WelcomeSettingsForm({guildId, initialSettings}: WelcomeS
                 </div>
             </label>
 
-            <label className="border border-slate-800/80 bg-slate-950/60 p-5">
+            <label id="announce-leaves" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-4">
                     <div>
                         <p className="text-sm font-semibold text-white">Announce Leaves</p>

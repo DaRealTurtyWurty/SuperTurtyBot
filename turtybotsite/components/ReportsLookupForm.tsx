@@ -19,7 +19,7 @@ export default function ReportsLookupForm({guildId}: {guildId: string}) {
     }
 
     return <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block">
+        <label id="user-id" className="block scroll-mt-24">
             <span className="text-sm font-semibold text-white">User ID</span>
             <input
                 type="text"

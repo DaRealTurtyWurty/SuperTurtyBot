@@ -56,6 +56,7 @@ export default async function NotifiersPage({
 
                 return <NotifierSectionCard
                     key={section.key}
+                    id={section.key}
                     title={sectionMeta.label}
                     description={sectionMeta.description}
                     count={section.count}

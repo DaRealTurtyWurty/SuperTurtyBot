@@ -59,6 +59,7 @@ export default function SuggestionsSettingsForm({guildId, initialSettings}: Sugg
 
     return <form onSubmit={onSubmit} className="space-y-5">
         <GuildChannelSelect
+            id="suggestions-channel"
             guildId={guildId}
             value={settings.suggestionsChannelId}
             onChange={updateChannel}

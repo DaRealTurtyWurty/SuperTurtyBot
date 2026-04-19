@@ -53,6 +53,8 @@ import dev.darealturtywurty.superturtybot.dashboard.service.misc.MiscSettingsSer
 import dev.darealturtywurty.superturtybot.dashboard.service.quotes.QuotesDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.tags.DashboardTagCreateRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.tags.TagsDashboardService;
+import dev.darealturtywurty.superturtybot.dashboard.service.sticky_messages.StickyMessagesRequest;
+import dev.darealturtywurty.superturtybot.dashboard.service.sticky_messages.StickyMessagesService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
@@ -97,6 +99,7 @@ public final class DashboardRoutes {
     private final ModmailTicketsService modmailTicketsService;
     private final NotifiersService notifiersService;
     private final ReportsService reportsService;
+    private final StickyMessagesService stickyMessagesService;
 
     public DashboardRoutes(
             DashboardConfig config,
@@ -128,7 +131,8 @@ public final class DashboardRoutes {
             ModmailSettingsService modmailSettingsService,
             ModmailTicketsService modmailTicketsService,
             NotifiersService notifiersService,
-            ReportsService reportsService
+            ReportsService reportsService,
+            StickyMessagesService stickyMessagesService
     ) {
         this.config = config;
         this.jda = jda;
@@ -160,6 +164,7 @@ public final class DashboardRoutes {
         this.modmailTicketsService = modmailTicketsService;
         this.notifiersService = notifiersService;
         this.reportsService = reportsService;
+        this.stickyMessagesService = stickyMessagesService;
     }
 
     public void register(Javalin app) {
@@ -260,6 +265,9 @@ public final class DashboardRoutes {
                 ctx.queryParam("status")
         )));
         app.get("/api/guilds/{guildId}/modmail/tickets/{ticketNumber}", this::getModmailTicket);
+        app.get("/api/guilds/{guildId}/sticky-messages", ctx -> ctx.json(this.stickyMessagesService.getSettings(parseGuildId(ctx))));
+        app.put("/api/guilds/{guildId}/sticky-messages", this::upsertStickyMessage);
+        app.delete("/api/guilds/{guildId}/sticky-messages/{channelId}", this::deleteStickyMessage);
         app.get("/api/guilds/{guildId}/counting", ctx -> ctx.json(this.countingSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/counting", this::upsertCountingChannel);
         app.delete("/api/guilds/{guildId}/counting/{channelId}", this::deleteCountingChannel);
@@ -512,6 +520,18 @@ public final class DashboardRoutes {
         long guildId = parseGuildId(ctx);
         long ticketNumber = parseLongValue(ctx.pathParam("ticketNumber"), "invalid_ticket_number");
         ctx.json(this.modmailTicketsService.getTicket(guildId, ticketNumber));
+    }
+
+    private void upsertStickyMessage(Context ctx) {
+        long guildId = parseGuildId(ctx);
+        StickyMessagesRequest request = ctx.bodyAsClass(StickyMessagesRequest.class);
+        ctx.json(this.stickyMessagesService.upsertSticky(guildId, request));
+    }
+
+    private void deleteStickyMessage(Context ctx) {
+        long guildId = parseGuildId(ctx);
+        long channelId = parseSnowflakeId(ctx, "channelId", "invalid_sticky_channel");
+        ctx.json(this.stickyMessagesService.deleteSticky(guildId, channelId));
     }
 
     private void upsertCountingChannel(Context ctx) {

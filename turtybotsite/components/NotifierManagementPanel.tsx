@@ -150,7 +150,7 @@ export default function NotifierManagementPanel({
     }
 
     return <div className="space-y-6">
-        <section className="border border-slate-800/80 bg-slate-950/60 p-5">
+        <section id="add-notifier" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="space-y-2">
                 <h3 className="text-xl font-semibold text-white">Add notifier</h3>
                 {editingEntry ? <p className="text-sm font-medium text-sky-200">Editing existing {typeInfo.label.toLowerCase()} notifier.</p> : null}
@@ -171,6 +171,7 @@ export default function NotifierManagementPanel({
                     </label> : null}
 
                 <GuildChannelSelect
+                    id="discord-channel"
                     guildId={guildId}
                     value={channelId}
                     onChange={setChannelId}
@@ -180,6 +181,7 @@ export default function NotifierManagementPanel({
                 />
 
                 <NotifierPingSelect
+                    id="who-to-ping"
                     guildId={guildId}
                     value={mention}
                     onChange={setMention}
@@ -208,7 +210,7 @@ export default function NotifierManagementPanel({
             </form>
         </section>
 
-        <section className="space-y-3">
+        <section id="current-notifiers" className="space-y-3 scroll-mt-24">
             <div className="flex items-end justify-between gap-3">
                 <div>
                     <h3 className="text-xl font-semibold text-white">Current notifiers</h3>
