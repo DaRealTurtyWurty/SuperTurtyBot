@@ -42,6 +42,8 @@ interface DiscordMdastNode {
     data?: {
         kind?: "user" | "role" | "channel";
         raw?: string;
+        id?: string;
+        label?: string;
     };
     children?: DiscordMdastNode[];
 }
@@ -54,6 +56,7 @@ interface DiscordHastNode {
     type?: string;
     tagName?: string;
     value?: string;
+    properties?: Record<string, unknown>;
     children?: DiscordHastNode[];
 }
 
@@ -268,7 +271,8 @@ function transformDiscordNodes(node: DiscordHastNode, lookups: MentionLookups) {
 }
 
 function remarkDiscordSyntax(lookups: MentionLookups) {
-    return (tree: DiscordMdastParent) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (tree: any) => {
         visit(tree, "text", (node: DiscordMdastNode, index: number | undefined, parent: DiscordMdastParent | undefined) => {
             if (index == null || !parent || typeof node.value !== "string") {
                 return;
