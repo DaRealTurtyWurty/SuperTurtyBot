@@ -5,10 +5,11 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.weblisteners.social.NewsScraperUtils;
+import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDeliverySupport;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -63,7 +64,7 @@ public abstract class AbstractScrapedGameListener<N> {
         }
     }
 
-    private List<ScrapedArticle> readRelevantArticles() {
+    protected List<ScrapedArticle> readRelevantArticles() {
         try {
             Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName());
             if (document == null)
@@ -72,26 +73,32 @@ public abstract class AbstractScrapedGameListener<N> {
             List<ScrapedArticle> articles = new ArrayList<>();
             Set<String> seenUrls = new HashSet<>();
             for (Element link : document.select(linkSelector())) {
-                String url = resolveUrl(link);
-                if (url.isBlank() || url.equals(newsUrl()) || !seenUrls.add(url))
-                    continue;
+                try {
+                    String url = resolveUrl(link);
+                    if (url.isBlank() || url.equals(newsUrl()) || !seenUrls.add(url))
+                        continue;
 
-                Element context = NewsScraperUtils.findContext(link);
-                String listingTitle = resolveListingTitle(link, context);
-                if (listingTitle.isBlank() || !matchesTitle(listingTitle))
-                    continue;
+                    Element context = NewsScraperUtils.findContext(link);
+                    String listingTitle = resolveListingTitle(link, context);
+                    if (listingTitle.isBlank() || !matchesTitle(listingTitle))
+                        continue;
 
-                Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName());
-                String title = resolveArticleTitle(articleDocument, listingTitle);
-                if (title.isBlank() || !matchesTitle(title))
-                    continue;
+                    Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName());
+                    if (articleDocument == null) continue;
+                    
+                    String title = resolveArticleTitle(articleDocument, listingTitle);
+                    if (title.isBlank() || !matchesTitle(title))
+                        continue;
 
-                String description = resolveDescription(articleDocument, link, context, title, listingTitle);
-                String imageUrl = resolveImageUrl(articleDocument, link, context, title, listingTitle);
-                Instant publishedAt = resolvePublishedAt(articleDocument, link, context, title, listingTitle);
+                    String description = resolveDescription(articleDocument, link, context, title, listingTitle);
+                    String imageUrl = resolveImageUrl(articleDocument, link, context, title, listingTitle);
+                    Instant publishedAt = resolvePublishedAt(articleDocument, link, context, title, listingTitle);
 
-                String id = resolveArticleId(url, link, context, title, listingTitle);
-                articles.add(new ScrapedArticle(id, title, url, imageUrl, publishedAt, description));
+                    String id = resolveArticleId(url, link, context, title, listingTitle);
+                    articles.add(new ScrapedArticle(id, title, url, imageUrl, publishedAt, description));
+                } catch (Exception e) {
+                    Constants.LOGGER.warn("Failed to process an article link for {}: {}", sourceName(), e.getMessage());
+                }
             }
 
             return articles;
@@ -108,14 +115,11 @@ public abstract class AbstractScrapedGameListener<N> {
             return;
         }
 
-        TextChannel channel = guild.getTextChannelById(channelId(notifier));
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, channelId(notifier),
+                sourceName());
         if (channel == null) {
-            notifierCollection().deleteMany(Filters.eq("channel", channelId(notifier)));
             return;
         }
-
-        if (!channel.canTalk())
-            return;
 
         List<String> storedArticleIds = storedArticleIds(notifier);
         if (storedArticleIds == null) {
@@ -125,9 +129,21 @@ public abstract class AbstractScrapedGameListener<N> {
 
         if (storedArticleIds.isEmpty()) {
             ScrapedArticle latestArticle = articles.getFirst();
-            sendUpdate(channel, notifier, latestArticle);
-            storedArticleIds.addAll(articles.stream().map(ScrapedArticle::id).limit(STORED_ARTICLE_LIMIT).toList());
-            persistStoredArticles(notifier);
+            if (sendUpdate(channel, notifier, latestArticle)) {
+                storedArticleIds.addAll(articles.stream().map(ScrapedArticle::id).limit(STORED_ARTICLE_LIMIT).toList());
+                persistStoredArticles(notifier);
+                return;
+            }
+
+            List<String> remainingArticleIds = articles.stream()
+                    .map(ScrapedArticle::id)
+                    .filter(id -> !id.equals(latestArticle.id()))
+                    .limit(STORED_ARTICLE_LIMIT)
+                    .toList();
+            if (!remainingArticleIds.isEmpty()) {
+                storedArticleIds.addAll(remainingArticleIds);
+                persistStoredArticles(notifier);
+            }
             return;
         }
 
@@ -137,7 +153,9 @@ public abstract class AbstractScrapedGameListener<N> {
             if (storedArticleIds.contains(article.id()))
                 continue;
 
-            sendUpdate(channel, notifier, article);
+            if (!sendUpdate(channel, notifier, article))
+                continue;
+
             storedArticleIds.add(article.id());
             while (storedArticleIds.size() > STORED_ARTICLE_LIMIT) {
                 storedArticleIds.removeFirst();
@@ -152,11 +170,11 @@ public abstract class AbstractScrapedGameListener<N> {
 
     private void persistStoredArticles(N notifier) {
         notifierCollection().updateOne(
-                Filters.eq("guild", guildId(notifier)),
+                Filters.and(Filters.eq("guild", guildId(notifier)), Filters.eq("channel", channelId(notifier))),
                 Updates.set(storedArticleFieldName(), storedArticleIds(notifier)));
     }
 
-    private void sendUpdate(TextChannel channel, N notifier, ScrapedArticle article) {
+    private boolean sendUpdate(StandardGuildMessageChannel channel, N notifier, ScrapedArticle article) {
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle(article.title(), article.url())
                 .setDescription(NewsScraperUtils.truncate(article.description(), 4096, defaultDescription()))
@@ -170,9 +188,11 @@ public abstract class AbstractScrapedGameListener<N> {
 
         customizeEmbed(embed, article);
 
-        channel.sendMessageEmbeds(embed.build())
-                .setContent(mention(notifier))
-                .queue();
+        return NotifierDeliverySupport.sendAndWait(
+                channel.sendMessageEmbeds(embed.build())
+                        .setContent(mention(notifier)),
+                sourceName(),
+                channel);
     }
 
     protected String resolveUrl(Element link) {

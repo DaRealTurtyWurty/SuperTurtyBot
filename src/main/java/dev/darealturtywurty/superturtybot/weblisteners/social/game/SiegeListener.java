@@ -1,6 +1,9 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social.game;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mongodb.client.MongoCollection;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.SiegeNotifier;
 import dev.darealturtywurty.superturtybot.weblisteners.social.NewsScraperUtils;
@@ -12,9 +15,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -91,55 +95,85 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
     }
 
     @Override
+    protected List<ScrapedArticle> readRelevantArticles() {
+        try {
+            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName());
+            if (document == null)
+                return List.of();
+
+            String html = document.html();
+            int startIndex = html.indexOf("window.__INITIAL_STATE__ = {");
+            if (startIndex == -1) return List.of();
+            
+            startIndex += 27;
+            int endIndex = html.indexOf("};</script>", startIndex);
+            if (endIndex == -1) return List.of();
+            
+            String jsonString = html.substring(startIndex, endIndex + 1);
+            JsonElement root = Constants.GSON.fromJson(jsonString, JsonElement.class);
+            
+            List<ScrapedArticle> articles = new ArrayList<>();
+            collectSiegeArticles(root, articles);
+            return articles;
+        } catch (Exception exception) {
+            Constants.LOGGER.error("Failed to scrape {} news page", sourceName(), exception);
+            return List.of();
+        }
+    }
+
+    private void collectSiegeArticles(JsonElement element, List<ScrapedArticle> articles) {
+        if (element == null || element.isJsonNull()) return;
+        if (element.isJsonArray()) {
+            for (JsonElement child : element.getAsJsonArray()) {
+                collectSiegeArticles(child, articles);
+            }
+            return;
+        }
+        if (!element.isJsonObject()) return;
+        
+        JsonObject object = element.getAsJsonObject();
+        if (object.has("id") && object.has("title") && object.has("date")) {
+            String title = object.get("title").getAsString();
+            if (matchesTitle(title)) {
+                String id = object.get("id").getAsString();
+                String dateStr = object.get("date").getAsString();
+                Instant publishedAt = parseDate(dateStr);
+                if (publishedAt == null) publishedAt = Instant.now();
+                
+                String abstractText = object.has("abstract") ? object.get("abstract").getAsString() : defaultDescription();
+                String url = newsUrl();
+                if (object.has("button") && object.getAsJsonObject("button").has("buttonUrl")) {
+                    url = "https://www.ubisoft.com/en-us/game/rainbow-six/siege/news-updates" + object.getAsJsonObject("button").get("buttonUrl").getAsString();
+                }
+                
+                String imageUrl = "";
+                if (object.has("thumbnail") && object.getAsJsonObject("thumbnail").has("url")) {
+                    imageUrl = object.getAsJsonObject("thumbnail").get("url").getAsString();
+                }
+                
+                articles.add(new ScrapedArticle(id, title, url, imageUrl, publishedAt, abstractText));
+            }
+        }
+        
+        for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
+            collectSiegeArticles(entry.getValue(), articles);
+        }
+    }
+
+    @Override
     protected String resolveUrl(Element link) {
-        String url = link.absUrl("href").trim();
-        if (!url.isBlank())
-            return url;
-
-        String href = link.attr("href").trim();
-        if (href.startsWith("/"))
-            return "https://www.ubisoft.com" + href;
-
-        if (href.startsWith("http://") || href.startsWith("https://"))
-            return href;
-
         return "";
     }
 
     @Override
     protected String resolveListingTitle(Element link, Element context) {
-        String title = NewsScraperUtils.extractHeadingText(link);
-        if (!title.isBlank())
-            return title;
-
-        title = NewsScraperUtils.extractHeadingText(context);
-        if (!title.isBlank())
-            return title;
-
-        return cleanTitle(link.text());
+        return "";
     }
 
     @Override
     protected boolean matchesTitle(String title) {
         String normalized = title.toLowerCase(Locale.ROOT);
         return normalized.contains("patch notes") || normalized.contains("designer");
-    }
-
-    @Override
-    protected Instant resolvePublishedAt(Document articleDocument, Element link, Element context, String title,
-                                         String listingTitle) {
-        String value = NewsScraperUtils.extractMetaPublishedTime(articleDocument);
-        if (!value.isBlank()) {
-            Instant parsed = NewsScraperUtils.parseFlexibleInstant(value);
-            if (parsed != null)
-                return parsed;
-        }
-
-        Instant listingDate = parseDate(extractDate(context));
-        if (listingDate != null)
-            return listingDate;
-
-        return super.resolvePublishedAt(articleDocument, link, context, title, listingTitle);
     }
 
     @Override
@@ -157,45 +191,19 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
         return "New Rainbow Six Siege patch or designer notes article detected.";
     }
 
-    private String cleanTitle(String fullText) {
-        if (fullText == null || fullText.isBlank())
-            return "";
-
-        String cleaned = fullText
-                .replace("Read More Arrow RightBlack arrow pointing right", "")
-                .replace("Read More", "")
-                .trim();
-
-        Matcher matcher = DATE_PATTERN.matcher(cleaned);
-        if (matcher.find()) {
-            cleaned = cleaned.substring(matcher.end()).trim();
-        }
-
-        int summaryIndex = cleaned.toLowerCase(Locale.ROOT).indexOf(" see ");
-        if (summaryIndex > 0)
-            cleaned = cleaned.substring(0, summaryIndex).trim();
-
-        return cleaned;
-    }
-
-    private String extractDate(Element context) {
-        if (context == null)
-            return "";
-
-        Matcher matcher = DATE_PATTERN.matcher(context.text());
-        if (matcher.find())
-            return matcher.group();
-
-        return "";
-    }
-
     private Instant parseDate(String value) {
         if (value == null || value.isBlank())
             return null;
 
         try {
+            if (value.contains("GMT")) {
+                int gmtIndex = value.indexOf("GMT");
+                String toParse = value.substring(0, gmtIndex + 8).trim();
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.ENGLISH);
+                return java.time.ZonedDateTime.parse(toParse, dtf).toInstant();
+            }
             return LocalDate.parse(value, DATE_FORMATTER).atStartOfDay().toInstant(ZoneOffset.UTC);
-        } catch (DateTimeParseException ignored) {
+        } catch (Exception ignored) {
             return null;
         }
     }

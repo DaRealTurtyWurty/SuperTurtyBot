@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -282,14 +282,11 @@ public class SteamStoreListener {
             return;
         }
 
-        TextChannel channel = guild.getTextChannelById(notifier.getChannel());
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
+                "Steam store");
         if (channel == null) {
-            Database.getDatabase().steamStoreNotifier.deleteMany(Filters.eq("channel", notifier.getChannel()));
             return;
         }
-
-        if (!channel.canTalk())
-            return;
 
         List<String> storedArticleIds = notifier.getStoredArticleIds();
         if (storedArticleIds == null) {
@@ -316,7 +313,9 @@ public class SteamStoreListener {
             if (matchesStoredArticleId(storedArticleIds, article))
                 continue;
 
-            sendUpdate(channel, notifier, article);
+            if (!sendUpdate(channel, notifier, article))
+                continue;
+
             storedArticleIds.add(article.id());
             while (storedArticleIds.size() > STORED_ARTICLE_LIMIT) {
                 storedArticleIds.removeFirst();
@@ -357,7 +356,8 @@ public class SteamStoreListener {
         return url == null ? "" : url.trim();
     }
 
-    private static void sendUpdate(TextChannel channel, SteamStoreNotifier notifier, SteamStoreArticle article) {
+    private static boolean sendUpdate(StandardGuildMessageChannel channel, SteamStoreNotifier notifier,
+                                      SteamStoreArticle article) {
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle(article.title(), article.url())
                 .setDescription(NewsScraperUtils.truncate(
@@ -377,9 +377,11 @@ public class SteamStoreListener {
         if (!article.youtubeUrl().isBlank())
             content += "\nTrailer: " + article.youtubeUrl();
 
-        channel.sendMessageEmbeds(embed.build())
-                .setContent(content)
-                .queue();
+        return NotifierDeliverySupport.sendAndWait(
+                channel.sendMessageEmbeds(embed.build())
+                        .setContent(content),
+                "Steam store",
+                channel);
     }
 
     public static boolean isInitialized() {

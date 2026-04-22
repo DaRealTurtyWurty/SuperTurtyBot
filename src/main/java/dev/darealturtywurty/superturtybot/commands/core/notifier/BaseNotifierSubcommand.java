@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.unions.GuildChannelUnion;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -33,9 +34,29 @@ public abstract class BaseNotifierSubcommand extends SubcommandCommand {
     }
 
     protected static ChannelMentionContext requireChannelAndMention(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            reply(event, "❌ You must be in a server to use this command!", false, true);
+            return null;
+        }
+
         GuildChannelUnion rawChannel = event.getOption("discord_channel", OptionMapping::getAsChannel);
         if (rawChannel == null) {
             reply(event, "❌ You must provide a Discord channel!", false, true);
+            return null;
+        }
+
+        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class,
+                rawChannel.getIdLong());
+        if (channel == null) {
+            reply(event, "❌ You must choose a text or announcement channel!", false, true);
+            return null;
+        }
+
+        if (!channel.canTalk() || !guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
+            reply(event,
+                    "❌ I need permission to send messages and embeds in that channel before this notifier can work.",
+                    false, true);
             return null;
         }
 
@@ -45,7 +66,7 @@ public abstract class BaseNotifierSubcommand extends SubcommandCommand {
             return null;
         }
 
-        return new ChannelMentionContext(rawChannel.getIdLong(), rawMention.getAsMention());
+        return new ChannelMentionContext(channel.getIdLong(), rawMention.getAsMention());
     }
 
     protected static OptionData discordChannelOption() {

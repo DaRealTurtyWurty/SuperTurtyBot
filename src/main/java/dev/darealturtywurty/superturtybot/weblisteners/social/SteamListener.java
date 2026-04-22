@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 
 import java.awt.*;
 import java.io.IOException;
@@ -99,7 +99,8 @@ public class SteamListener {
                                 continue;
                             if (original != null) {
                                 final EmbedBuilder changes = getFormattedChanges(original, current);
-                                sendUpdate(jda, steamNotifier, original, current, changes);
+                                if (!sendUpdate(jda, steamNotifier, original, current, changes))
+                                    continue;
                             }
                             steamNotifier.setPreviousData(current);
                             Database.getDatabase().steamNotifier.updateOne(
@@ -195,19 +196,18 @@ public class SteamListener {
         }
     }
 
-    private static void sendUpdate(JDA jda, SteamNotifier notifier, Newsitem original, Newsitem current,
+    private static boolean sendUpdate(JDA jda, SteamNotifier notifier, Newsitem original, Newsitem current,
         EmbedBuilder changed) {
         final Guild guild = jda.getGuildById(notifier.getGuild());
         if (guild == null) {
             Database.getDatabase().steamNotifier.deleteMany(Filters.eq("guild", notifier.getGuild()));
-            return;
+            return false;
         }
 
-        final TextChannel channel = guild.getTextChannelById(notifier.getChannel());
-        if (channel == null) {
-            Database.getDatabase().steamNotifier.deleteMany(Filters.eq("channel", notifier.getChannel()));
-            return;
-        }
+        final StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
+                "Steam");
+        if (channel == null)
+            return false;
         
         final String name = getGameName(notifier.getAppId()).orElse("undefined");
         final String thumbnailURL = getGameBanner(notifier.getAppId()).orElse(null);
@@ -216,7 +216,10 @@ public class SteamListener {
         changed.setColor(Color.BLUE);
         changed.setThumbnail(thumbnailURL);
         changed.setDescription("🟩 -> Added\n🟨 -> Modified\n🟥 -> Removed");
-        channel.sendMessage(notifier.getMention() + " Steam news update: **" + name + "**.")
-            .addEmbeds(changed.build()).queue();
+        return NotifierDeliverySupport.sendAndWait(
+                channel.sendMessage(notifier.getMention() + " Steam news update: **" + name + "**.")
+                        .addEmbeds(changed.build()),
+                "Steam",
+                channel);
     }
 }

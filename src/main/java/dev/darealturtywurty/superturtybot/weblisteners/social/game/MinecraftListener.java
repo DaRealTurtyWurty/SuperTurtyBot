@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDeliverySupport;
 
 public class MinecraftListener {
     private static final String FEED_URL = "https://net-secondary.web.minecraft-services.net/api/v1.0/en-us/search?page=1&pageSize=24&sortType=Recent&category=News&newsOnly=true&geography=GB&filter%5Bsubscription%5D=Minecraft%3A+Java";
@@ -232,18 +235,14 @@ public class MinecraftListener {
     private static void handleNotifier(JDA jda, MinecraftNotifier notifier, List<MinecraftArticle> articles) {
         Guild guild = jda.getGuildById(notifier.getGuild());
         if (guild == null) {
-            Database.getDatabase().minecraftNotifier.deleteMany(Filters.eq("guild", notifier.getGuild()));
             return;
         }
 
-        TextChannel channel = guild.getTextChannelById(notifier.getChannel());
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
+                "Minecraft");
         if (channel == null) {
-            Database.getDatabase().minecraftNotifier.deleteMany(Filters.eq("channel", notifier.getChannel()));
             return;
         }
-
-        if (!channel.canTalk())
-            return;
 
         List<String> storedArticles = notifier.getStoredArticles();
         if (storedArticles == null) {
@@ -252,21 +251,27 @@ public class MinecraftListener {
         }
 
         if (storedArticles.isEmpty()) {
+            var failedRecentArticles = new HashSet<String>();
             if (notifier.getCreatedAt() > 0L) {
                 for (int index = articles.size() - 1; index >= 0; index--) {
                     MinecraftArticle article = articles.get(index);
                     if (article.publishedAt().toEpochMilli() < notifier.getCreatedAt())
                         continue;
 
-                    sendUpdate(channel, notifier, article);
+                    if (!sendUpdate(channel, notifier, article)) {
+                        failedRecentArticles.add(article.id());
+                    }
                 }
             }
 
             storedArticles.addAll(articles.stream()
+                    .filter(article -> !failedRecentArticles.contains(article.id()))
                     .map(MinecraftArticle::id)
                     .limit(STORED_ARTICLE_LIMIT)
                     .toList());
-            persistStoredArticles(notifier);
+            if (!storedArticles.isEmpty()) {
+                persistStoredArticles(notifier);
+            }
             return;
         }
 
@@ -276,7 +281,9 @@ public class MinecraftListener {
             if (storedArticles.contains(article.id()))
                 continue;
 
-            sendUpdate(channel, notifier, article);
+            if (!sendUpdate(channel, notifier, article))
+                continue;
+
             storedArticles.add(article.id());
             trimStoredArticles(storedArticles);
             changed = true;
@@ -288,7 +295,7 @@ public class MinecraftListener {
 
     private static void persistStoredArticles(MinecraftNotifier notifier) {
         Database.getDatabase().minecraftNotifier.updateOne(
-                Filters.eq("guild", notifier.getGuild()),
+                Filters.and(Filters.eq("guild", notifier.getGuild()), Filters.eq("channel", notifier.getChannel())),
                 Updates.set("storedArticles", notifier.getStoredArticles()));
     }
 
@@ -298,7 +305,8 @@ public class MinecraftListener {
         }
     }
 
-    private static void sendUpdate(TextChannel channel, MinecraftNotifier notifier, MinecraftArticle article) {
+    private static boolean sendUpdate(StandardGuildMessageChannel channel, MinecraftNotifier notifier,
+                                      MinecraftArticle article) {
         String versionLabel = extractVersionLabel(article);
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("New Minecraft Version: " + versionLabel, article.link().isBlank() ? null : article.link())
@@ -308,9 +316,11 @@ public class MinecraftListener {
                 .setTimestamp(article.publishedAt())
                 .setFooter("Minecraft.net");
 
-        channel.sendMessageEmbeds(embed.build())
-                .setContent(notifier.getMention())
-                .queue();
+        return NotifierDeliverySupport.sendAndWait(
+                channel.sendMessageEmbeds(embed.build())
+                        .setContent(notifier.getMention()),
+                "Minecraft",
+                channel);
     }
 
     private static String truncate(String value, int maxLength) {

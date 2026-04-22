@@ -8,8 +8,9 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
 
 import java.time.Instant;
@@ -36,9 +37,10 @@ public final class NotifiersService {
     }
 
     public DashboardNotifiersResponse addNotifier(long guildId, String type, DashboardNotifierMutationRequest request) {
-        requireGuild(guildId);
+        Guild guild = requireGuild(guildId);
         String normalizedType = normalizeType(type);
         String mention = requireMention(request.getMention());
+        validateDeliveryChannel(guild, request);
 
         switch (normalizedType) {
             case "youtube" -> {
@@ -96,9 +98,10 @@ public final class NotifiersService {
     }
 
     public DashboardNotifiersResponse updateNotifier(long guildId, String type, DashboardNotifierMutationRequest request) {
-        requireGuild(guildId);
+        Guild guild = requireGuild(guildId);
         String normalizedType = normalizeType(type);
         String mention = requireMention(request.getMention());
+        validateDeliveryChannel(guild, request);
 
         switch (normalizedType) {
             case "youtube" -> updateMultiNotifier(guildId, request, mention, "youtube");
@@ -346,6 +349,20 @@ public final class NotifiersService {
         }
 
         return request.getDiscordChannelId();
+    }
+
+    private void validateDeliveryChannel(Guild guild, DashboardNotifierMutationRequest request) {
+        long channelId = requireDiscordChannel(request);
+        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class, channelId);
+        if (channel == null) {
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "dashboard_notifier_invalid_channel",
+                    "The selected channel must be a text or announcement channel.");
+        }
+
+        if (!channel.canTalk() || !guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "dashboard_notifier_missing_channel_permissions",
+                    "TurtyBot must be able to send messages and embeds in that channel before the notifier can be saved.");
+        }
     }
 
     private String requireMention(String mention) {
@@ -679,7 +696,7 @@ public final class NotifiersService {
             return null;
         }
 
-        TextChannel channel = guild.getTextChannelById(channelId);
+        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class, channelId);
         return channel == null ? null : channel.getName();
     }
 
