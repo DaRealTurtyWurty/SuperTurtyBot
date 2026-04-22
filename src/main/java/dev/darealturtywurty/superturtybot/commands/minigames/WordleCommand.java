@@ -8,7 +8,7 @@ import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
-import dev.darealturtywurty.superturtybot.core.api.request.RandomWordRequestData;
+import dev.darealturtywurty.superturtybot.core.api.request.WordRequest;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
@@ -36,11 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,13 +47,10 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -67,7 +60,7 @@ public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
-    private static final RandomWordRequestData COMMON_WORD_REQUEST_DATA = new RandomWordRequestData.Builder().length(5).amount(1).build();
+    private static final WordRequest COMMON_WORD_REQUEST_DATA = new WordRequest.Builder().length(5).amount(2000).build();
     private static final Path WORDLE_FILE = Path.of("./wordle.json");
     private static final ZoneOffset WORDLE_TIME_ZONE = ZoneOffset.UTC;
     private static final long WORDLE_REMINDER_DELAY = TimeUnit.HOURS.toMillis(24);
@@ -606,7 +599,7 @@ public class WordleCommand extends CoreCommand {
                 return Optional.empty();
             }
 
-            return Optional.of(wordList.getFirst());
+            return Optional.of(wordList.get(ThreadLocalRandom.current().nextInt(wordList.size())));
         }
 
         Constants.LOGGER.warn("Failed to fetch word from API! Status: {}", words.getRight());

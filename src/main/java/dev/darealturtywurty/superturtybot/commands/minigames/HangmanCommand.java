@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -390,7 +391,7 @@ public class HangmanCommand extends CoreCommand {
     public static class Game {
         private static final RandomWordRequestData RANDOM_WORD_REQUEST_DATA =
                 new RandomWordRequestData.Builder()
-                        .amount(1)
+                        .amount(1000)
                         .minLength(4)
                         .maxLength(10)
                         .build();
@@ -429,7 +430,7 @@ public class HangmanCommand extends CoreCommand {
         }
 
         public static Either<Game, HttpStatus> create(long guildId, long channelId, long userId) {
-            Either<List<String>, HttpStatus> response = ApiHandler.getWords(RANDOM_WORD_REQUEST_DATA);
+            Either<List<String>, HttpStatus> response = ApiHandler.getCommonWords(RANDOM_WORD_REQUEST_DATA);
             if (response.isRight())
                 return Either.right(response.getRight());
 
@@ -437,7 +438,7 @@ public class HangmanCommand extends CoreCommand {
             if (words.isEmpty())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            return Either.left(new Game(guildId, channelId, userId, words.getFirst().toLowerCase(Locale.ROOT)));
+            return Either.left(new Game(guildId, channelId, userId, words.get(ThreadLocalRandom.current().nextInt(words.size())).toLowerCase(Locale.ROOT)));
         }
     }
 }
