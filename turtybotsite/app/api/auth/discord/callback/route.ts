@@ -1,9 +1,9 @@
 import {NextRequest, NextResponse} from "next/server";
 import {clearOAuthStateCookie, createAuthenticatedSession, setDiscordTokenCookies, setSessionCookie} from "@/lib/auth";
-import {exchangeCodeForAccessToken, fetchDiscordUser, fetchManageableDiscordGuilds} from "@/lib/discord";
+import {createPublicUrl, exchangeCodeForAccessToken, fetchDiscordUser, fetchManageableDiscordGuilds, getPublicOrigin} from "@/lib/discord";
 
 function redirectWithError(request: NextRequest, code: string) {
-    const url = new URL("/", request.url);
+    const url = createPublicUrl("/", request.nextUrl.origin);
     url.searchParams.set("error", code);
     return NextResponse.redirect(url);
 }
@@ -27,14 +27,15 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const token = await exchangeCodeForAccessToken(code, request.nextUrl.origin);
+        const publicOrigin = getPublicOrigin(request.nextUrl.origin);
+        const token = await exchangeCodeForAccessToken(code, publicOrigin);
         const [user, guilds] = await Promise.all([
             fetchDiscordUser(token.accessToken),
             fetchManageableDiscordGuilds(token.accessToken)
         ]);
 
         const session = await createAuthenticatedSession(user, guilds);
-        const response = NextResponse.redirect(new URL("/dashboard", request.url));
+        const response = NextResponse.redirect(createPublicUrl("/dashboard", publicOrigin));
         clearOAuthStateCookie(response);
         setSessionCookie(response, session.sessionId, session.expiresAt);
         setDiscordTokenCookies(response, token.accessToken, token.refreshToken, token.expiresAtMs);

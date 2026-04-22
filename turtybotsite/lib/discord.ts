@@ -37,6 +37,23 @@ function getRedirectUri(origin: string) {
     return process.env.DISCORD_REDIRECT_URI ?? `${origin}/api/auth/discord/callback`;
 }
 
+export function getPublicOrigin(origin: string) {
+    const redirectUri = process.env.DISCORD_REDIRECT_URI?.trim();
+    if (redirectUri) {
+        try {
+            return new URL(redirectUri).origin;
+        } catch {
+            // Fall back to the request origin if DISCORD_REDIRECT_URI is malformed.
+        }
+    }
+
+    return origin;
+}
+
+export function createPublicUrl(pathname: string, origin: string) {
+    return new URL(pathname, getPublicOrigin(origin));
+}
+
 export function buildDiscordAuthorizationUrl(state: string, origin: string) {
     const params = new URLSearchParams({
         client_id: getRequiredEnv("DISCORD_CLIENT_ID"),
