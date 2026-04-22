@@ -91,7 +91,10 @@ public class ImageSpamAutoBanManager {
 
         final String reason = "Automatic ban: multi-channel image spam detected";
         guild.ban(member, 0, TimeUnit.DAYS).reason(reason).queue(
-                success -> logImageSpamBan(guild, member, reason),
+                success -> {
+                    TempBanManager.clearTempBan(guild.getIdLong(), member.getIdLong());
+                    logImageSpamBan(guild, member, reason);
+                },
                 error -> Constants.LOGGER.warn("Failed to auto-ban {} in {} for image spam", member.getIdLong(), guild.getIdLong(), error));
     }
 

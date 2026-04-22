@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.modules.TempBanManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
@@ -79,6 +80,7 @@ public class UnbanCommand extends CoreCommand {
                     }, error -> {
                     }));
                 event.getGuild().unban(user).queue(success -> {
+                    TempBanManager.clearTempBan(event.getGuild().getIdLong(), user.getIdLong());
                     reply(event, "Successfully unbanned " + user.getAsMention() + "!", false);
                     final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                     if (Boolean.TRUE.equals(logging.getKey())) {

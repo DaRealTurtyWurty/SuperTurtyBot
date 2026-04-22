@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.moderation;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.modules.TempBanManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -103,6 +104,7 @@ public class BanCommand extends CoreCommand {
                     }));
                 
                 event.getGuild().ban(user, deleteDays, TimeUnit.DAYS).reason(finalReason).queue(success -> {
+                    TempBanManager.clearTempBan(event.getGuild().getIdLong(), user.getIdLong());
                     reply(event, "Successfully banned " + user.getAsMention() + "!", false);
                     final Pair<Boolean, TextChannel> logging = canLog(event.getGuild());
                     if (Boolean.TRUE.equals(logging.getKey())) {

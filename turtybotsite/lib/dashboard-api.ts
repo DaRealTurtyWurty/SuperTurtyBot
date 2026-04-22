@@ -132,8 +132,18 @@ export interface DashboardOptInChannelsSettings {
 
 export interface DashboardWarningsSettings {
     warningsModeratorOnly: boolean;
+    warningExpiryDays: number;
     warningXpPercentage: number;
     warningEconomyPercentage: number;
+    sanctions: DashboardWarningSanction[];
+}
+
+export interface DashboardWarningSanction {
+    id: string;
+    type: "timeout" | "kick" | "tempban" | "ban";
+    warningCount: number;
+    durationMinutes: number;
+    deleteMessageDays: number;
 }
 
 export interface DashboardWarningRecord {
@@ -146,6 +156,8 @@ export interface DashboardWarningRecord {
     warnerAvatarUrl: string | null;
     reason: string;
     warnedAt: number;
+    expiresAt: number;
+    active: boolean;
 }
 
 export interface DashboardWarningUserSummary {

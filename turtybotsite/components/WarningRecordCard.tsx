@@ -10,6 +10,22 @@ function formatTimestamp(value: number) {
     return new Date(value).toLocaleString();
 }
 
+function formatExpiryStatus(warning: DashboardWarningRecord) {
+    if (warning.active) {
+        if (!warning.expiresAt) {
+            return "Active forever";
+        }
+
+        return `Active until ${formatTimestamp(warning.expiresAt)}`;
+    }
+
+    if (!warning.expiresAt) {
+        return "Expired";
+    }
+
+    return `Expired ${formatTimestamp(warning.expiresAt)}`;
+}
+
 function WarningAvatar({name, avatarUrl}: {name: string; avatarUrl: string | null}) {
     const fallback = name.trim().charAt(0).toUpperCase() || "?";
 
@@ -53,6 +69,9 @@ export default function WarningRecordCard({
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                             {warning.userId} · Warned by {warning.warnerDisplayName} ({warning.warnerId}) · {formatTimestamp(warning.warnedAt)}
+                        </p>
+                        <p className={`mt-2 text-xs font-semibold uppercase tracking-[0.16em] ${warning.active ? "text-amber-300" : "text-slate-500"}`}>
+                            {formatExpiryStatus(warning)}
                         </p>
                     </div>
                     <Link

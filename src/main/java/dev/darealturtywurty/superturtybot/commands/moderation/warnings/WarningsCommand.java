@@ -21,7 +21,6 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -86,7 +85,7 @@ public class WarningsCommand extends CoreCommand {
             return;
         }
 
-        final Set<Warning> warns = WarnManager.getWarns(guild, user);
+        final List<Warning> warns = WarnManager.getWarningsSorted(guild, user);
         if (warns.isEmpty()) {
             reply(event, "❌ This user has no warns!", false, true);
             return;
@@ -94,34 +93,38 @@ public class WarningsCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        final List<Warning> sortedWarns = warns.stream().sorted(Comparator.comparing(Warning::getWarnedAt)).toList();
+        final int activeWarns = WarnManager.getActiveWarnCount(guild, user);
 
         CompletableFuture<?> completed = new CompletableFuture<>();
         var contents = new PaginatedEmbed.ContentsBuilder();
-        for (int index = 0; index < sortedWarns.size(); index++) {
-            Warning warning = sortedWarns.get(index);
+        for (int index = 0; index < warns.size(); index++) {
+            Warning warning = warns.get(index);
+            boolean active = WarnManager.isWarningActive(guild, warning);
+            String expiryLabel = active ? "Active" : "Expired";
 
             int finalIndex = index;
             event.getJDA().retrieveUserById(warning.getWarner()).queue(warner -> {
-                contents.field("Warn #" + finalIndex, "Reason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                contents.field("Warn #" + finalIndex, "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                        expiryLabel,
                         warning.getReason(),
                         warning.getUuid(),
                         warner.getAsMention(),
                         TimeFormat.RELATIVE.format(warning.getWarnedAt()))
                 );
 
-                if (finalIndex == sortedWarns.size() - 1) {
+                if (finalIndex == warns.size() - 1) {
                     completed.complete(null);
                 }
             }, error -> {
-                contents.field("Warn #" + finalIndex, "Reason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                contents.field("Warn #" + finalIndex, "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                        expiryLabel,
                         warning.getReason(),
                         warning.getUuid(),
                         "Unknown",
                         TimeFormat.RELATIVE.format(warning.getWarnedAt()))
                 );
 
-                if (finalIndex == sortedWarns.size() - 1) {
+                if (finalIndex == warns.size() - 1) {
                     completed.complete(null);
                 }
             });
@@ -130,7 +133,7 @@ public class WarningsCommand extends CoreCommand {
         completed.thenRun(() -> {
             PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
                     .title(user.getName() + "'s warnings!")
-                    .description("This user has " + warns.size() + " warns!")
+                    .description("This user has " + activeWarns + " active warning(s) and " + warns.size() + " total warning(s).")
                     .color(Color.BLUE)
                     .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
                     .timestamp(Instant.now())

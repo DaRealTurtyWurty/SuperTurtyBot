@@ -9,6 +9,8 @@ public record DashboardWarningRecord(
         String warnerDisplayName,
         String warnerAvatarUrl,
         String reason,
-        long warnedAt
+        long warnedAt,
+        long expiresAt,
+        boolean active
 ) {
 }

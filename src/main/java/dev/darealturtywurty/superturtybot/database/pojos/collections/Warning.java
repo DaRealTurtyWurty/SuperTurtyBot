@@ -12,13 +12,14 @@ import java.util.UUID;
 public class Warning {
     private long guild;
     private long user;
-    
+
     private String reason;
     private long warner;
     private long warnedAt;
+    private long expiresAt;
     private String uuid;
-    
+
     public Warning(long guildId, long userId, String reason, long warnerId) {
-        this(guildId, userId, reason, warnerId, System.currentTimeMillis(), UUID.randomUUID().toString());
+        this(guildId, userId, reason, warnerId, System.currentTimeMillis(), 0L, UUID.randomUUID().toString());
     }
 }

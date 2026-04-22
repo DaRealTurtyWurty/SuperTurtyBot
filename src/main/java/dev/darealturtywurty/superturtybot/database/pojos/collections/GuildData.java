@@ -4,6 +4,7 @@ import com.google.common.primitives.Longs;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.VoiceChannelNotifier;
+import dev.darealturtywurty.superturtybot.database.pojos.warnings.WarningSanctionConfig;
 import lombok.Data;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
@@ -140,6 +141,8 @@ public class GuildData {
     private String autoThreadChannels;
     private boolean shouldCreateGists;
     private boolean warningsModeratorOnly;
+    private int warningExpiryDays;
+    private List<WarningSanctionConfig> warningSanctions;
     private long patronRole;
     private boolean shouldSendStartupMessage;
     private boolean shouldSendChangelog;
@@ -254,6 +257,8 @@ public class GuildData {
         this.autoThreadChannels = "";
         this.shouldCreateGists = true;
         this.warningsModeratorOnly = false;
+        this.warningExpiryDays = 0;
+        this.warningSanctions = createDefaultWarningSanctions();
         this.patronRole = 0L;
         this.shouldSendStartupMessage = true;
         this.shouldSendChangelog = true;
@@ -369,6 +374,26 @@ public class GuildData {
             return true;
 
         return getCollectableTypesList().contains(type);
+    }
+
+    public List<WarningSanctionConfig> getEffectiveWarningSanctions() {
+        if (this.warningSanctions == null || this.warningSanctions.isEmpty()) {
+            this.warningSanctions = createDefaultWarningSanctions();
+        }
+
+        return this.warningSanctions;
+    }
+
+    public static List<WarningSanctionConfig> createDefaultWarningSanctions() {
+        return new ArrayList<>(List.of(
+                new WarningSanctionConfig("timeout-1", "timeout", 1, 120L, 0),
+                new WarningSanctionConfig("timeout-2", "timeout", 2, 240L, 0),
+                new WarningSanctionConfig("timeout-3", "timeout", 3, 360L, 0),
+                new WarningSanctionConfig("kick-3", "kick", 3, 0L, 0),
+                new WarningSanctionConfig("timeout-4", "timeout", 4, 480L, 0),
+                new WarningSanctionConfig("timeout-5", "timeout", 5, 600L, 0),
+                new WarningSanctionConfig("ban-5", "ban", 5, 0L, 0)
+        ));
     }
 
     private static List<String> splitDelimitedList(String value) {

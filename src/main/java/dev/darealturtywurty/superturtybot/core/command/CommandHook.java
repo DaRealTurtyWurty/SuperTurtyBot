@@ -133,6 +133,10 @@ public class CommandHook extends ListenerAdapter {
             ReminderManager.start(jda);
         }
 
+        if (!TempBanManager.isRunning()) {
+            TempBanManager.start(jda);
+        }
+
         if (!WordleReminderManager.isRunning()) {
             WordleReminderManager.start(jda);
         }
@@ -342,6 +346,7 @@ public class CommandHook extends ListenerAdapter {
 
         // Moderation
         commands.add(new BanCommand());
+        commands.add(new TempBanCommand());
         commands.add(new UnbanCommand());
         commands.add(new TimeoutCommand());
         commands.add(new RemoveTimeoutCommand());

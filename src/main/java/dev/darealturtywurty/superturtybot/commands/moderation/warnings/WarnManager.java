@@ -2,7 +2,6 @@ package dev.darealturtywurty.superturtybot.commands.moderation.warnings;
 
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.commands.levelling.LevellingManager;
-import dev.darealturtywurty.superturtybot.commands.moderation.BanCommand;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
@@ -14,8 +13,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import org.apache.commons.math3.util.Pair;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,8 +20,9 @@ import org.jetbrains.annotations.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.time.Duration;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +70,7 @@ public class WarnManager {
         }
 
         final var warn = new Warning(guild.getIdLong(), toWarn.getIdLong(), reason, warner.getIdLong(), time,
-                UUID.randomUUID().toString());
+                getWarningExpiresAt(config, time), UUID.randomUUID().toString());
         Database.getDatabase().warnings.insertOne(warn);
 
         Member toWarnMember = guild.getMember(toWarn);
@@ -87,16 +85,17 @@ public class WarnManager {
         if(!selfMember.hasPermission(Permission.MANAGE_ROLES, Permission.BAN_MEMBERS, Permission.KICK_MEMBERS))
             return warn;
 
-        addSanctions(guild, toWarn, warner.getUser());
+        WarningSanctions.applyForWarningCount(guild, toWarn, warner.getUser(), getActiveWarnCount(guild, toWarn));
 
         return warn;
     }
 
     public static @NotNull Set<Warning> clearWarnings(@NotNull Guild guild, @NotNull User user, @NotNull User clearer) {
         final Set<Warning> warns = getWarns(guild, user);
+        final int activeWarnings = countActiveWarnings(guild, warns);
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", user.getIdLong()));
         Database.getDatabase().warnings.deleteMany(filter);
-        clearSanctions(warns, guild, user, clearer);
+        WarningSanctions.syncAfterWarningCountChange(guild, user, clearer, activeWarnings, 0);
         return warns;
     }
 
@@ -109,119 +108,69 @@ public class WarnManager {
 
     public static @Nullable Warning removeWarn(@NotNull User toRemoveWarn, @NotNull Guild guild, @NotNull String uuid,
                                                @NotNull User remover) {
+        int previousWarnings = getActiveWarnCount(guild, toRemoveWarn);
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
                 Filters.eq("user", toRemoveWarn.getIdLong()), Filters.eq("uuid", uuid));
 
         final Warning removed = Database.getDatabase().warnings.findOneAndDelete(filter);
-        removeSanctions(guild, toRemoveWarn, remover);
+        if (removed != null) {
+            int currentWarnings = getActiveWarnCount(guild, toRemoveWarn);
+            WarningSanctions.syncAfterWarningCountChange(guild, toRemoveWarn, remover, previousWarnings, currentWarnings);
+        }
+
         return removed;
     }
 
-    // TODO: Don't hardcode (will require the web dashboard to be created first)
-    protected static void addSanctions(Guild guild, User user, User warner) {
-        final Set<Warning> warnings = getWarns(guild, user);
-        if (user.getIdLong() != guild.getSelfMember().getIdLong()) {
-            guild.timeoutFor(user, Duration.ofHours(warnings.size() * 2L))
-                    .queue(ignored -> {}, ignored -> {});
-            user.openPrivateChannel().queue(channel ->
-                    channel.sendMessage("You have been put on timeout for " + warnings.size() * 2 + " hours in `" + guild.getName() + "`!")
-                            .queue(ignored -> {}, ignored -> {}),
-                    ignored -> {});
-        }
-
-        final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-        if (Boolean.TRUE.equals(logging.getKey())) {
-            BanCommand.log(logging.getValue(), warner.getAsMention() + " has timed-out " + user.getAsMention() + "!",
-                    false);
-        }
-
-        if (warnings.size() == 3) {
-            final String kickReason = "Reached 3 warnings!";
-            user.openPrivateChannel().queue(channel ->
-                    channel.sendMessage("You have been kicked from `" + guild.getName() + "` for reason: `" + kickReason + "`!")
-                            .queue(ignored -> {}, ignored -> {}));
-            guild.kick(user).reason(kickReason).queue(ignored -> {}, ignored -> {});
-            if (Boolean.TRUE.equals(logging.getKey())) {
-                BanCommand.log(logging.getValue(),
-                        warner.getAsMention() + " has kicked " + user.getAsMention() + " for reason: `" + kickReason + "`!",
-                        false);
-            }
-        } else if (warnings.size() >= 5) {
-            final String banReason = "Reached 5 warnings!";
-            user.openPrivateChannel().queue(channel ->
-                    channel.sendMessage("You have been banned from `" + guild.getName() + "` for reason: `" + banReason + "`!")
-                            .queue(ignored -> {}, ignored -> {}));
-            guild.ban(user, 0, TimeUnit.DAYS).reason(banReason).queue(ignored -> {}, ignored -> {});
-            if (Boolean.TRUE.equals(logging.getKey())) {
-                BanCommand.log(logging.getValue(),
-                        warner.getAsMention() + " has banned " + user.getAsMention() + " for reason: `" + banReason + "`!",
-                        false);
-            }
-        }
+    public static int getActiveWarnCount(@NotNull Guild guild, @NotNull User user) {
+        return countActiveWarnings(guild, getWarns(guild, user));
     }
 
-    protected static void clearSanctions(Set<Warning> warns, Guild guild, User user, User clearer) {
-        if (warns.size() >= 5) {
-            guild.unban(user).queue(success -> {
-                user.openPrivateChannel()
-                    .queue(channel ->
-                            channel.sendMessage("You have been unbanned from `" + guild.getName() + "`!")
-                                    .queue(ignored -> {}, ignored -> {}),
-                            ignored -> {});
-                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-                if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(),
-                            clearer.getAsMention() + " has unbanned " + user.getAsMention() + "!", true);
-                }
-            }, ignored -> {});
-
-        } else {
-            guild.removeTimeout(user).queue(success -> {
-                user.openPrivateChannel()
-                    .queue(channel ->
-                            channel.sendMessage("Your timeout on `" + guild.getName() + "` has been removed!")
-                                    .queue(ignored -> {}, ignored -> {}),
-                            ignored -> {});
-                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-                if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(),
-                            clearer.getAsMention() + " has removed the time-out from " + user.getAsMention() + "!",
-                            true);
-                }
-            }, ignored -> {});
-        }
+    public static List<Warning> getWarningsSorted(@NotNull Guild guild, @NotNull User user) {
+        return getWarns(guild, user).stream()
+                .sorted(Comparator.comparingLong(Warning::getWarnedAt))
+                .toList();
     }
 
-    protected static void removeSanctions(Guild guild, User user, User remover) {
-        final Set<Warning> warnings = getWarns(guild, user);
-        if (warnings.size() == 4) {
-            guild.unban(user).queue(success -> {
-                user.openPrivateChannel()
-                    .queue(channel ->
-                            channel.sendMessage("You have been unbanned from `" + guild.getName() + "`!")
-                                    .queue(ignored -> {}, ignored -> {}),
-                            ignored -> {});
-                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-                if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(),
-                            remover.getAsMention() + " has unbanned " + user.getAsMention() + "!", true);
-                }
-            }, ignored -> {});
+    public static boolean isWarningActive(@NotNull Guild guild, @NotNull Warning warning) {
+        return isWarningActive(GuildData.getOrCreateGuildData(guild), warning, System.currentTimeMillis());
+    }
 
-        } else if (warnings.size() == 3 || warnings.size() == 1 || warnings.isEmpty()) {
-            guild.removeTimeout(user).queue(success -> {
-                user.openPrivateChannel()
-                    .queue(channel ->
-                            channel.sendMessage("Your timeout on `" + guild.getName() + "` has been removed!")
-                                    .queue(ignored -> {}, ignored -> {}),
-                            ignored -> {});
-                final Pair<Boolean, TextChannel> logging = BanCommand.canLog(guild);
-                if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(),
-                            remover.getAsMention() + " has removed the time-out from " + user.getAsMention() + "!",
-                            true);
-                }
-            }, ignored -> {});
+    public static boolean isWarningActive(@NotNull GuildData config, @NotNull Warning warning, long now) {
+        long expiresAt = getWarningExpiresAt(config, warning);
+        return expiresAt <= 0 || expiresAt > now;
+    }
+
+    public static long getWarningExpiresAt(@NotNull Guild guild, @NotNull Warning warning) {
+        return getWarningExpiresAt(GuildData.getOrCreateGuildData(guild), warning);
+    }
+
+    public static long getWarningExpiresAt(@NotNull GuildData config, @NotNull Warning warning) {
+        if (warning.getExpiresAt() > 0) {
+            return warning.getExpiresAt();
         }
+
+        return getWarningExpiresAt(config, warning.getWarnedAt());
+    }
+
+    private static int countActiveWarnings(@NotNull Guild guild, @NotNull Set<Warning> warnings) {
+        GuildData config = GuildData.getOrCreateGuildData(guild);
+        long now = System.currentTimeMillis();
+        int count = 0;
+        for (Warning warning : warnings) {
+            if (isWarningActive(config, warning, now)) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static long getWarningExpiresAt(@NotNull GuildData config, long warnedAt) {
+        int expiryDays = Math.max(0, config.getWarningExpiryDays());
+        if (expiryDays == 0) {
+            return 0L;
+        }
+
+        return warnedAt + TimeUnit.DAYS.toMillis(expiryDays);
     }
 }
