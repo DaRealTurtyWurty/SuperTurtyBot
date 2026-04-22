@@ -8,7 +8,7 @@ public record DashboardStickyMessageInfo(
         boolean hasEmbed,
         String ownerDisplayName,
         String ownerId,
-        long postedMessage,
+        String postedMessage,
         long updatedAt
 ) {
 }

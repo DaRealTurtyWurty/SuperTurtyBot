@@ -64,7 +64,7 @@ export default function NotifierManagementPanel({
         return {
             originalTarget: editingEntry?.targetValue ?? null,
             target: typeInfo?.requiresTarget ? target.trim() : null,
-            discordChannelId: channelId ? Number(channelId) : null,
+            discordChannelId: channelId.trim() || null,
             mention: mention.trim() || null
         };
     }
@@ -177,6 +177,7 @@ export default function NotifierManagementPanel({
                     onChange={setChannelId}
                     label="Discord channel"
                     description="Where notifications should be posted."
+                    allowTypes={["text", "announcement"]}
                     placeholder="Select a Discord channel"
                 />
 

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class DashboardNotifierMutationRequest {
     private String originalTarget;
     private String target;
-    private Long discordChannelId;
+    private String discordChannelId;
     private String mention;
 }

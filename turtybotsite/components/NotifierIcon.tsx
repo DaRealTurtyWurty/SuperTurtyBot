@@ -23,12 +23,13 @@ export default function NotifierIcon({
 }) {
     const src = ICON_PATHS[icon];
 
-    return <Image
-        src={src}
-        alt=""
-        aria-hidden="true"
-        width={16}
-        height={16}
-        className={`${className} object-contain`}
-    />;
+    return <span className={`relative inline-block shrink-0 overflow-hidden rounded-[4px] ${className}`} aria-hidden="true">
+        <Image
+            src={src}
+            alt=""
+            fill
+            sizes="32px"
+            className="object-contain"
+        />
+    </span>;
 }

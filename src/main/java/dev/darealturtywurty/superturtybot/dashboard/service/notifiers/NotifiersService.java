@@ -343,12 +343,23 @@ public final class NotifiersService {
     }
 
     private long requireDiscordChannel(DashboardNotifierMutationRequest request) {
-        if (request.getDiscordChannelId() == null || request.getDiscordChannelId() <= 0L) {
+        String discordChannelId = request.getDiscordChannelId();
+        if (discordChannelId == null || discordChannelId.isBlank()) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "dashboard_notifier_missing_channel",
                     "A Discord channel is required for this notifier.");
         }
 
-        return request.getDiscordChannelId();
+        try {
+            long parsed = Long.parseLong(discordChannelId.trim());
+            if (parsed <= 0L) {
+                throw new NumberFormatException("Channel ID must be positive.");
+            }
+
+            return parsed;
+        } catch (NumberFormatException exception) {
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "dashboard_notifier_invalid_channel",
+                    "The selected channel ID was invalid.");
+        }
     }
 
     private void validateDeliveryChannel(Guild guild, DashboardNotifierMutationRequest request) {

@@ -90,7 +90,7 @@ public final class StickyMessagesService {
                 sticky.hasEmbed(),
                 owner == null ? "Unknown User" : owner.getEffectiveName(),
                 Long.toString(sticky.getOwner()),
-                sticky.getPostedMessage(),
+                Long.toString(sticky.getPostedMessage()),
                 sticky.getUpdatedAt()
         );
     }

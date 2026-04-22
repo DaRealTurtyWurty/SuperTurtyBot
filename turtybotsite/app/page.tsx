@@ -51,6 +51,17 @@ export default async function Home({
                             automod, starboard, levelling, counting, sticky messages, and notifier management.
                         </p>
                     </div>
+                    <div>
+                        <a
+                            href="https://turtywurty.dev/projects/turtybot"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900"
+                        >
+                            Learn More About TurtyBot
+                            <FaArrowRight className="h-3.5 w-3.5" />
+                        </a>
+                    </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">

@@ -32,6 +32,6 @@ export interface DashboardNotifiersResponse {
 export interface DashboardNotifierMutationRequest {
     originalTarget?: string | null;
     target: string | null;
-    discordChannelId: number | null;
+    discordChannelId: string | null;
     mention: string | null;
 }

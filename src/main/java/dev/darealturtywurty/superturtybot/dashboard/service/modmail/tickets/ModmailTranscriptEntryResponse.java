@@ -3,8 +3,8 @@ package dev.darealturtywurty.superturtybot.dashboard.service.modmail.tickets;
 import java.util.List;
 
 public record ModmailTranscriptEntryResponse(
-        long messageId,
-        long authorId,
+        String messageId,
+        String authorId,
         String authorTag,
         String authorAvatarUrl,
         boolean bot,

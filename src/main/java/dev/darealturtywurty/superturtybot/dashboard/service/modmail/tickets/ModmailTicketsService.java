@@ -107,18 +107,18 @@ public final class ModmailTicketsService {
 
         return new ModmailTicketSummaryResponse(
                 ticket.getTicketNumber(),
-                ticket.getUser(),
+                Long.toString(ticket.getUser()),
                 userDisplayName,
                 resolveAvatarUrl(guild, ticket.getUser()),
-                ticket.getChannel(),
+                Long.toString(ticket.getChannel()),
                 channelName,
-                ticket.getCategory(),
+                Long.toString(ticket.getCategory()),
                 categoryName,
                 ticket.isOpen(),
                 ticket.getSource(),
                 ticket.getOpenedAt(),
                 ticket.getClosedAt(),
-                ticket.getClosedBy(),
+                Long.toString(ticket.getClosedBy()),
                 closedByName,
                 ticket.getCloseReason(),
                 ticket.getTranscriptChunkCount(),
@@ -128,8 +128,8 @@ public final class ModmailTicketsService {
 
     private ModmailTranscriptEntryResponse toTranscriptEntry(Guild guild, ModmailTranscriptEntry entry) {
         return new ModmailTranscriptEntryResponse(
-                entry.getMessageId(),
-                entry.getAuthorId(),
+                Long.toString(entry.getMessageId()),
+                Long.toString(entry.getAuthorId()),
                 entry.getAuthorTag(),
                 resolveAvatarUrl(guild, entry.getAuthorId()),
                 entry.isBot(),
