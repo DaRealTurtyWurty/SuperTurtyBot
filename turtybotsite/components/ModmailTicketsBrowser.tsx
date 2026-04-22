@@ -1,7 +1,7 @@
 "use client";
 
+import React, {isValidElement, useEffect, useMemo, useState, useTransition} from "react";
 import type {ComponentPropsWithoutRef, ReactNode} from "react";
-import {isValidElement, useEffect, useMemo, useState, useTransition} from "react";
 import Image from "next/image";
 import {Remark} from "react-remark";
 import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
@@ -57,7 +57,7 @@ interface DiscordHastNode {
     children?: DiscordHastNode[];
 }
 
-type HtmlProps<Tag extends keyof JSX.IntrinsicElements> = ComponentPropsWithoutRef<Tag>;
+type HtmlProps<Tag extends keyof React.JSX.IntrinsicElements> = ComponentPropsWithoutRef<Tag>;
 
 function formatTimestamp(value: number) {
     if (!value) {
