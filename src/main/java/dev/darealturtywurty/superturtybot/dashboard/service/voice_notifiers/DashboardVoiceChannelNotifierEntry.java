@@ -11,6 +11,7 @@ public record DashboardVoiceChannelNotifierEntry(
         String message,
         boolean enabled,
         boolean announcePerJoin,
+        boolean notifyLeaves,
         long cooldownMs
 ) {
 }

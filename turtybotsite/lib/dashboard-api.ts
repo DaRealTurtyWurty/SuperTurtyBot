@@ -249,6 +249,7 @@ export interface DashboardVoiceChannelNotifierEntry {
     message: string;
     enabled: boolean;
     announcePerJoin: boolean;
+    notifyLeaves: boolean;
     cooldownMs: number;
 }
 
@@ -265,6 +266,7 @@ export interface DashboardVoiceChannelNotifierUpsertRequest {
     message: string;
     enabled: boolean;
     announcePerJoin: boolean;
+    notifyLeaves: boolean;
     cooldownMs: number;
 }
 

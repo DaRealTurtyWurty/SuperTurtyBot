@@ -76,6 +76,7 @@ public class VoiceChannelNotifierDashboardService {
                 message,
                 request.enabled(),
                 request.announcePerJoin(),
+                request.notifyLeaves(),
                 request.cooldownMs()
         );
 
@@ -126,6 +127,7 @@ public class VoiceChannelNotifierDashboardService {
                 notifier.getMessage(),
                 notifier.isEnabled(),
                 notifier.isAnnouncePerJoin(),
+                notifier.isNotifyLeaves(),
                 notifier.getCooldownMs()
         );
     }

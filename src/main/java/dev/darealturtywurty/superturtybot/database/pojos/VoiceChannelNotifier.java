@@ -26,23 +26,20 @@ public class VoiceChannelNotifier {
     private String message;
     private boolean enabled;
     private boolean announcePerJoin;
+    private boolean notifyLeaves;
     private long cooldownMs;
 
-    public void sendNotification(Member member, AudioChannelUnion channelJoined) {
-        sendNotification(member, channelJoined, _ -> {
+    public void sendNotification(Member member, AudioChannelUnion channel, boolean left) {
+        sendNotification(member, (AudioChannel) channel, left, _ -> {
         });
     }
 
-    public void sendNotification(Member member, AudioChannel channelJoined) {
-        sendNotification(member, channelJoined, _ -> {
+    public void sendNotification(Member member, AudioChannel channel, boolean left) {
+        sendNotification(member, channel, left, _ -> {
         });
     }
 
-    public void sendNotification(Member member, AudioChannelUnion channelJoined, Consumer<Message> afterSend) {
-        sendNotification(member, (AudioChannel) channelJoined, afterSend);
-    }
-
-    public void sendNotification(Member member, AudioChannel channelJoined, Consumer<Message> afterSend) {
+    public void sendNotification(Member member, AudioChannel channel, boolean left, Consumer<Message> afterSend) {
         Guild guild = member.getGuild();
         TextChannel textChannel = guild.getTextChannelById(sendToChannelId);
         if (textChannel == null)
@@ -53,22 +50,25 @@ public class VoiceChannelNotifier {
                 .reduce((a, b) -> a + " " + b)
                 .orElse("");
 
+        String action = left ? "left" : "joined";
         String finalMessage = message.replace("{user}", member.getAsMention())
-                .replace("{channel}", channelJoined.getAsMention())
-                .replace("{mentions}", mentionRolesString);
+                .replace("{channel}", channel.getAsMention())
+                .replace("{mentions}", mentionRolesString)
+                .replace("{action}", action);
 
         long usersInChannel = guild.getVoiceStates().stream()
                 .filter(voiceState -> voiceState.inAudioChannel()
                         && voiceState.getChannel() != null
-                        && voiceState.getChannel().getIdLong() == channelJoined.getIdLong())
+                        && voiceState.getChannel().getIdLong() == channel.getIdLong())
                 .count();
 
         var embed = new EmbedBuilder()
                 .setTitle("Voice Channel Notification")
                 .addField("User", member.getEffectiveName(), true)
-                .addField("Channel", channelJoined.getAsMention(), true)
-                .addField("Users in Channel", usersInChannel + " / " + channelJoined.getUserLimit(), true)
-                .setColor(0x00FF00)
+                .addField("Channel", channel.getAsMention(), true)
+                .addField("Action", action.toUpperCase(), true)
+                .addField("Users in Channel", usersInChannel + " / " + channel.getUserLimit(), true)
+                .setColor(left ? 0xFF0000 : 0x00FF00)
                 .setTimestamp(Instant.now())
                 .build();
         textChannel.sendMessageEmbeds(embed)

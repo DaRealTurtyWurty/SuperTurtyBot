@@ -21,10 +21,11 @@ interface FormState {
     message: string;
     enabled: boolean;
     announcePerJoin: boolean;
+    notifyLeaves: boolean;
     cooldownSeconds: string;
 }
 
-const DEFAULT_MESSAGE = "{mentions} {user} joined {channel}";
+const DEFAULT_MESSAGE = "{mentions} {user} {action} {channel}";
 
 function createEmptyForm(): FormState {
     return {
@@ -34,6 +35,7 @@ function createEmptyForm(): FormState {
         message: DEFAULT_MESSAGE,
         enabled: true,
         announcePerJoin: false,
+        notifyLeaves: false,
         cooldownSeconds: "0"
     };
 }
@@ -46,6 +48,7 @@ function createFormFromEntry(entry: DashboardVoiceChannelNotifierEntry): FormSta
         message: entry.message,
         enabled: entry.enabled,
         announcePerJoin: entry.announcePerJoin,
+        notifyLeaves: entry.notifyLeaves,
         cooldownSeconds: Math.floor(entry.cooldownMs / 1000).toString()
     };
 }
@@ -147,6 +150,7 @@ export default function VoiceChannelNotifierSettingsForm({
                     message: form.message,
                     enabled: form.enabled,
                     announcePerJoin: form.announcePerJoin,
+                    notifyLeaves: form.notifyLeaves,
                     cooldownMs: cooldownSeconds * 1000
                 })
             });
@@ -199,7 +203,8 @@ export default function VoiceChannelNotifierSettingsForm({
                     <p className="mt-1 text-sm text-slate-400">
                         Supported placeholders: <code className="font-mono text-slate-300">{"{user}"}</code>,{" "}
                         <code className="font-mono text-slate-300">{"{channel}"}</code>,{" "}
-                        <code className="font-mono text-slate-300">{"{mentions}"}</code>.
+                        <code className="font-mono text-slate-300">{"{mentions}"}</code>,{" "}
+                        <code className="font-mono text-slate-300">{"{action}"}</code>.
                     </p>
                 </div>
 
@@ -291,6 +296,22 @@ export default function VoiceChannelNotifierSettingsForm({
                             />
                         </div>
                     </label>
+
+                    <label id="voice-notifier-notify-leaves" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-semibold text-white">Notify Leaves</p>
+                                <p className="mt-1 text-sm text-slate-400">When enabled, notifications will also be sent when someone leaves the channel.</p>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={form.notifyLeaves}
+                                onChange={event => setField("notifyLeaves", event.target.checked)}
+                                disabled={isPending}
+                                className="h-5 w-5 accent-sky-400"
+                            />
+                        </div>
+                    </label>
                 </div>
 
                 <label id="voice-notifier-cooldown" className="block scroll-mt-24">
@@ -357,6 +378,9 @@ export default function VoiceChannelNotifierSettingsForm({
                                 <span className="border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300">
                                     {entry.announcePerJoin ? "Per Join" : "Single Join"}
                                 </span>
+                                {entry.notifyLeaves ? <span className="border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                                    Notify Leaves
+                                </span> : null}
                             </div>
 
                             <div className="flex flex-wrap gap-4 text-xs text-slate-500">

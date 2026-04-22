@@ -89,7 +89,7 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
         if (member == null)
             return;
 
-        notifier.sendNotification(member, channel);
+        notifier.sendNotification(member, channel, false);
         trackedVoiceChannel.markUserNotified(trackedUser.userId(), trackedUser.joinedAt());
     }
 
@@ -139,7 +139,7 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
                                 });
 
                 if (notifier.getCooldownMs() <= 0L) {
-                    notifier.sendNotification(event.getMember(), channelJoined);
+                    notifier.sendNotification(event.getMember(), channelJoined, false);
                     trackedVoiceChannels.stream()
                             .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelJoined.getIdLong())
                             .findFirst()
@@ -156,6 +156,10 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
                         .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelLeft.getIdLong())
                         .findFirst()
                         .ifPresent(trackedVoiceChannel -> trackedVoiceChannel.untrackUser(event.getMember().getIdLong()));
+
+                if (notifier.isNotifyLeaves()) {
+                    notifier.sendNotification(event.getMember(), channelLeft, true);
+                }
             }
         }
     }
@@ -170,6 +174,7 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
                         .append("message", notifier.getMessage())
                         .append("enabled", notifier.isEnabled())
                         .append("announcePerJoin", notifier.isAnnouncePerJoin())
+                        .append("notifyLeaves", notifier.isNotifyLeaves())
                         .append("cooldownMs", notifier.getCooldownMs())));
 
         Database.getDatabase().guildData.updateOne(

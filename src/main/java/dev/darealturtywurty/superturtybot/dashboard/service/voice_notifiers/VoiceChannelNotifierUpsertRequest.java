@@ -10,6 +10,7 @@ public record VoiceChannelNotifierUpsertRequest(
         String message,
         boolean enabled,
         boolean announcePerJoin,
+        boolean notifyLeaves,
         long cooldownMs
 ) {
 }
