@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 
@@ -30,16 +31,15 @@ public class VoiceChannelNotifier {
     private long cooldownMs;
 
     public void sendNotification(Member member, AudioChannelUnion channel, boolean left) {
-        sendNotification(member, (AudioChannel) channel, left, _ -> {
-        });
+        sendNotification(member, channel.asVoiceChannel(), left);
     }
 
-    public void sendNotification(Member member, AudioChannel channel, boolean left) {
+    public void sendNotification(Member member, VoiceChannel channel, boolean left) {
         sendNotification(member, channel, left, _ -> {
         });
     }
 
-    public void sendNotification(Member member, AudioChannel channel, boolean left, Consumer<Message> afterSend) {
+    public void sendNotification(Member member, VoiceChannel channel, boolean left, Consumer<Message> afterSend) {
         Guild guild = member.getGuild();
         TextChannel textChannel = guild.getTextChannelById(sendToChannelId);
         if (textChannel == null)

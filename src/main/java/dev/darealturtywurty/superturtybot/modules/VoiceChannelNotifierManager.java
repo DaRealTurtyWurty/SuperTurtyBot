@@ -84,7 +84,7 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
     }
 
     private void notifyUser(Guild guild, TrackedVoiceChannel trackedVoiceChannel, TrackedUser trackedUser,
-                            AudioChannel channel, VoiceChannelNotifier notifier) {
+                            VoiceChannel channel, VoiceChannelNotifier notifier) {
         Member member = guild.getMemberById(trackedUser.userId());
         if (member == null)
             return;
