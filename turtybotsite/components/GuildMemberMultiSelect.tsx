@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {useEffect, useMemo, useRef, useState} from "react";
 import type {DashboardGuildMemberInfo} from "@/lib/dashboard-api";
 
@@ -58,9 +59,11 @@ function MemberAvatar({member}: {member: DashboardGuildMemberInfo}) {
     const fallback = member.displayName.trim().slice(0, 1).toUpperCase() || "?";
 
     if (member.avatarUrl) {
-        return <img
+        return <Image
             src={member.avatarUrl}
             alt=""
+            width={32}
+            height={32}
             className="h-8 w-8 shrink-0 rounded-full object-cover"
         />;
     }
@@ -122,6 +125,10 @@ export default function GuildMemberMultiSelect({
     }), [memberCache, values]);
     const selectedSet = useMemo(() => new Set(values), [values]);
     const normalizedQuery = useMemo(() => normalizeSnowflake(query), [query]);
+    const missingIds = useMemo(
+        () => values.filter(id => !memberCache[id] && !unresolvedIds.includes(id)),
+        [memberCache, unresolvedIds, values]
+    );
 
     useEffect(() => {
         onResolvedValuesChange?.(selectedMembers);
@@ -197,7 +204,6 @@ export default function GuildMemberMultiSelect({
 
     useEffect(() => {
         let isCancelled = false;
-        const missingIds = values.filter(id => !memberCache[id] && !unresolvedIds.includes(id));
 
         if (missingIds.length === 0) {
             return;
@@ -242,7 +248,7 @@ export default function GuildMemberMultiSelect({
         return () => {
             isCancelled = true;
         };
-    }, [guildId, unresolvedIds, values]);
+    }, [guildId, missingIds]);
 
     function toggleValue(memberId: string) {
         if (selectedSet.has(memberId)) {

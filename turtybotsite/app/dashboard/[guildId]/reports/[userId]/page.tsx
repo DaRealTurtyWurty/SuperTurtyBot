@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import ReportRecordCard from "@/components/ReportRecordCard";
 import {requireCurrentSession} from "@/lib/auth";
-import {fetchDashboardUserReports, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardUserReports} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function ReportsUserPage({
     params
@@ -15,13 +17,7 @@ export default async function ReportsUserPage({
         redirect("/dashboard");
     }
 
-    const history = await fetchDashboardUserReports(guildId, userId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const history = await fetchDashboardUserReports(guildId, userId).catch(handleDashboardPageError);
 
     if (!history) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">
@@ -47,9 +43,11 @@ export default async function ReportsUserPage({
 
         <section className="border border-slate-800/80 bg-slate-950/60 p-5">
             <div className="flex flex-wrap items-center gap-4">
-                {history.user.avatarUrl ? <img
+                {history.user.avatarUrl ? <Image
                     src={history.user.avatarUrl}
                     alt={history.user.displayName}
+                    width={64}
+                    height={64}
                     className="h-16 w-16 rounded-full border border-slate-700 object-cover"
                 /> : <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-xl font-semibold text-slate-200">
                     {history.user.displayName.trim().charAt(0).toUpperCase() || "?"}

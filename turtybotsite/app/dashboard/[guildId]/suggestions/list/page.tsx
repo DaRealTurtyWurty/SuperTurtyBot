@@ -2,10 +2,10 @@ import Link from "next/link";
 import SuggestionsDashboardPanel from "@/components/SuggestionsDashboardPanel";
 import {
     fetchDashboardSuggestions,
-    fetchDashboardSuggestionsSettings,
-    isDashboardApiError
+    fetchDashboardSuggestionsSettings
 } from "@/lib/dashboard-api";
 import {requireCurrentSession} from "@/lib/auth";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 function parsePage(value: string | string[] | undefined, fallback: number) {
     const raw = Array.isArray(value) ? value[0] : value;
@@ -30,20 +30,8 @@ export default async function SuggestionsListPage({
     const page = parsePage(query.page, 1);
     const pageSize = parsePage(query.pageSize, 10);
 
-    const settings = await fetchDashboardSuggestionsSettings(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
-    const suggestions = await fetchDashboardSuggestions(guildId, page, pageSize).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const settings = await fetchDashboardSuggestionsSettings(guildId).catch(handleDashboardPageError);
+    const suggestions = await fetchDashboardSuggestions(guildId, page, pageSize).catch(handleDashboardPageError);
 
     return <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">

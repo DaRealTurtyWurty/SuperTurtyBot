@@ -1,7 +1,8 @@
 import NotifierSectionCard from "@/components/NotifierSectionCard";
 import NotifierTypeCard from "@/components/NotifierTypeCard";
 import NotifierTypeNav from "@/components/NotifierTypeNav";
-import {fetchDashboardNotifiers, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardNotifiers} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 import {NOTIFIER_SECTIONS, NOTIFIER_TYPES} from "@/lib/notifiers";
 
 function countEntriesByType(data: Awaited<ReturnType<typeof fetchDashboardNotifiers>>, type: string) {
@@ -14,13 +15,7 @@ export default async function NotifiersPage({
     params: Promise<{ guildId: string }>;
 }) {
     const guildId = (await params).guildId;
-    const data = await fetchDashboardNotifiers(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const data = await fetchDashboardNotifiers(guildId).catch(handleDashboardPageError);
 
     if (!data) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

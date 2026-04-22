@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 import type {DashboardThreadSettings} from "@/lib/dashboard-api";
 
@@ -17,6 +18,7 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateChannels(autoThreadChannelIds: string[]) {
         setSettings(current => ({
@@ -57,6 +59,7 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
 
             const updated = await response.json() as DashboardThreadSettings;
             setSettings(updated);
+            markSaved(updated);
             setSuccess("Thread settings saved.");
         });
     }

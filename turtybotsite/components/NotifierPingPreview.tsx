@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {useEffect, useMemo, useState} from "react";
 import {useGuildRoles, type DashboardGuildRoleOption} from "@/components/GuildRoleSelect";
 
@@ -46,7 +47,7 @@ function RoleChip({role}: {role: DashboardGuildRoleOption}) {
 
 function MemberChip({member}: {member: DashboardGuildMemberInfo}) {
     return <span className="inline-flex items-center gap-2 border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-sm text-slate-100">
-        {member.avatarUrl ? <img src={member.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" /> : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold uppercase text-slate-200">{member.displayName.trim().slice(0, 1).toUpperCase() || "?"}</span>}
+        {member.avatarUrl ? <Image src={member.avatarUrl} alt="" width={24} height={24} className="h-6 w-6 rounded-full object-cover" /> : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold uppercase text-slate-200">{member.displayName.trim().slice(0, 1).toUpperCase() || "?"}</span>}
         <span className="font-medium">@{member.displayName}</span>
     </span>;
 }

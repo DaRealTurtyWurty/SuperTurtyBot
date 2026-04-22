@@ -1,5 +1,6 @@
 import WarningsSettingsForm from "@/components/WarningsSettingsForm";
-import {fetchDashboardWarnings, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardWarnings} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function WarningsPage({
     params
@@ -7,13 +8,7 @@ export default async function WarningsPage({
     params: Promise<{ guildId: string }>;
 }) {
     const guildId = (await params).guildId;
-    const data = await fetchDashboardWarnings(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const data = await fetchDashboardWarnings(guildId).catch(handleDashboardPageError);
 
     if (!data) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

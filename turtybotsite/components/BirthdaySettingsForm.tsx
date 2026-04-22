@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardBirthdaySettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 
@@ -18,6 +19,7 @@ export default function BirthdaySettingsForm({guildId, initialSettings}: Birthda
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateBoolean(value: boolean) {
         setSettings(current => ({
@@ -57,10 +59,12 @@ export default function BirthdaySettingsForm({guildId, initialSettings}: Birthda
             }
 
             const updated = await response.json() as DashboardBirthdaySettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 birthdayChannelId: updated.birthdayChannelId ?? ""
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Birthday settings saved.");
         });
     }

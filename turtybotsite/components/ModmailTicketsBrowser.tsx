@@ -1,6 +1,8 @@
 "use client";
 
-import {type ReactNode, useEffect, useMemo, useState, useTransition} from "react";
+import type {ComponentPropsWithoutRef, ReactNode} from "react";
+import {isValidElement, useEffect, useMemo, useState, useTransition} from "react";
+import Image from "next/image";
 import {Remark} from "react-remark";
 import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
 import {vscDarkPlus} from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -26,6 +28,36 @@ interface MentionLookups {
     roles: Record<string, string>;
     members: Record<string, string>;
 }
+
+interface DiscordMentionMatch {
+    kind: "user" | "role" | "channel";
+    index: number;
+    id: string;
+    raw: string;
+}
+
+interface DiscordMdastNode {
+    type: string;
+    value?: string;
+    data?: {
+        kind?: "user" | "role" | "channel";
+        raw?: string;
+    };
+    children?: DiscordMdastNode[];
+}
+
+interface DiscordMdastParent extends DiscordMdastNode {
+    children: DiscordMdastNode[];
+}
+
+interface DiscordHastNode {
+    type?: string;
+    tagName?: string;
+    value?: string;
+    children?: DiscordHastNode[];
+}
+
+type HtmlProps<Tag extends keyof JSX.IntrinsicElements> = ComponentPropsWithoutRef<Tag>;
 
 function formatTimestamp(value: number) {
     if (!value) {
@@ -97,8 +129,8 @@ function toPlainText(children: ReactNode): string {
         return children.map(child => toPlainText(child)).join("");
     }
 
-    if (children && typeof children === "object" && "props" in children) {
-        return toPlainText((children as any).props?.children);
+    if (isValidElement<{children?: ReactNode}>(children)) {
+        return toPlainText(children.props.children);
     }
 
     return "";
@@ -159,9 +191,11 @@ function TranscriptPreviewCard({preview}: {preview: DashboardModmailLinkPreview}
             rel="noreferrer"
             className="group block overflow-hidden border border-slate-700 bg-slate-950/70 transition hover:border-sky-400/40 hover:bg-slate-900/80"
         >
-            <img
+            <Image
                 src={preview.imageUrl}
                 alt={preview.title || label}
+                width={800}
+                height={420}
                 className="max-h-[420px] w-full object-contain"
                 loading="lazy"
             />
@@ -191,9 +225,11 @@ function TranscriptPreviewCard({preview}: {preview: DashboardModmailLinkPreview}
                 {preview.description ? <p className="mt-1 text-sm text-slate-300">{preview.description}</p> : null}
                 <p className="mt-2 truncate text-xs text-sky-300 group-hover:text-sky-200">{previewUrl}</p>
             </div>
-            {preview.imageUrl ? <img
+            {preview.imageUrl ? <Image
                 src={preview.imageUrl}
                 alt={preview.title || label}
+                width={160}
+                height={112}
                 className="h-28 w-full rounded-md border border-slate-700 object-cover md:h-full"
                 loading="lazy"
             /> : null}
@@ -202,12 +238,12 @@ function TranscriptPreviewCard({preview}: {preview: DashboardModmailLinkPreview}
 }
 
 function rehypeDiscordSyntax(lookups: MentionLookups) {
-    return (tree: any) => {
+    return (tree: DiscordHastNode) => {
         transformDiscordNodes(tree, lookups);
     };
 }
 
-function transformDiscordNodes(node: any, lookups: MentionLookups) {
+function transformDiscordNodes(node: DiscordHastNode, lookups: MentionLookups) {
     if (!node || !Array.isArray(node.children)) {
         return;
     }
@@ -216,7 +252,7 @@ function transformDiscordNodes(node: any, lookups: MentionLookups) {
         return;
     }
 
-    const nextChildren: any[] = [];
+    const nextChildren: DiscordHastNode[] = [];
 
     for (const child of node.children) {
         if (child?.type === "text" && typeof child.value === "string") {
@@ -232,8 +268,8 @@ function transformDiscordNodes(node: any, lookups: MentionLookups) {
 }
 
 function remarkDiscordSyntax(lookups: MentionLookups) {
-    return (tree: any) => {
-        visit(tree, "text", (node: any, index: number | null, parent: any) => {
+    return (tree: DiscordMdastParent) => {
+        visit(tree, "text", (node: DiscordMdastNode, index: number | undefined, parent: DiscordMdastParent | undefined) => {
             if (index == null || !parent || typeof node.value !== "string") {
                 return;
             }
@@ -243,7 +279,7 @@ function remarkDiscordSyntax(lookups: MentionLookups) {
                 return;
             }
 
-            const children: any[] = [];
+            const children: DiscordMdastNode[] = [];
             let cursor = 0;
 
             while (cursor < value.length) {
@@ -317,7 +353,7 @@ function buildMentionLabel(kind: "user" | "role" | "channel", id: string, lookup
 }
 
 function splitDiscordText(value: string, lookups: MentionLookups) {
-    const nodes: any[] = [];
+    const nodes: DiscordHastNode[] = [];
     let index = 0;
 
     while (index < value.length) {
@@ -377,7 +413,7 @@ function findNextMention(value: string, startIndex: number) {
         {kind: "channel" as const, pattern: /<#(\d+)>/g},
     ];
 
-    let best: {kind: "user" | "role" | "channel"; index: number; id: string; raw: string} | null = null;
+    let best: DiscordMentionMatch | null = null;
 
     for (const {kind, pattern} of mentionPatterns) {
         pattern.lastIndex = startIndex;
@@ -440,11 +476,11 @@ function TranscriptMarkdown({source, lookups}: {source: string; lookups: Mention
         rehypePlugins={[rehypeDiscordSyntax(lookups)]}
         remarkToRehypeOptions={{
             handlers: {
-                discordSpoiler: (h: any, node: any) => h(node, "span", {
+                discordSpoiler: (h: unknown, node: DiscordMdastNode) => (h as typeof mdastToHastAll extends (...args: infer _A) => infer _R ? (node: DiscordMdastNode, tagName: string, properties: object, children: unknown) => _R : never)(node, "span", {
                     className: ["discord-spoiler"],
                     title: "Spoiler",
-                }, mdastToHastAll(h, node)),
-                discordMention: (h: any, node: any) => h(node, "span", {
+                }, mdastToHastAll(h as never, node as never)),
+                discordMention: (h: unknown, node: DiscordMdastNode) => (h as typeof mdastToHastAll extends (...args: infer _A) => infer _R ? (node: DiscordMdastNode, tagName: string, properties: object, children: unknown) => _R : never)(node, "span", {
                     className: [
                         "inline-flex",
                         "items-center",
@@ -460,24 +496,24 @@ function TranscriptMarkdown({source, lookups}: {source: string; lookups: Mention
                                 : "bg-emerald-400/10 text-emerald-100",
                     ],
                     title: node.data?.raw,
-                }, mdastToHastAll(h, node)),
+                }, mdastToHastAll(h as never, node as never)),
             },
         }}
         rehypeReactOptions={{
             components: {
-                p: (props: any) => <p className="whitespace-pre-wrap text-sm text-slate-200" {...props} />,
-                a: (props: any) => <a className="text-sky-300 underline decoration-sky-400/30 underline-offset-2 hover:text-sky-200" target="_blank" rel="noreferrer" {...props} />,
-                strong: (props: any) => <strong className="font-semibold text-white" {...props} />,
-                em: (props: any) => <em className="italic text-slate-100" {...props} />,
-                del: (props: any) => <del {...props} />,
-                s: (props: any) => <s {...props} />,
-                blockquote: (props: any) => <blockquote className="border-l-4 border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-300" {...props} />,
-                pre: (props: any) => <div className="my-3">{props.children}</div>,
-                code: ({className, ...props}: {className?: string; children?: ReactNode}) => {
+                p: (props: HtmlProps<"p">) => <p className="whitespace-pre-wrap text-sm text-slate-200" {...props} />,
+                a: (props: HtmlProps<"a">) => <a className="text-sky-300 underline decoration-sky-400/30 underline-offset-2 hover:text-sky-200" target="_blank" rel="noreferrer" {...props} />,
+                strong: (props: HtmlProps<"strong">) => <strong className="font-semibold text-white" {...props} />,
+                em: (props: HtmlProps<"em">) => <em className="italic text-slate-100" {...props} />,
+                del: (props: HtmlProps<"del">) => <del {...props} />,
+                s: (props: HtmlProps<"s">) => <s {...props} />,
+                blockquote: (props: HtmlProps<"blockquote">) => <blockquote className="border-l-4 border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-300" {...props} />,
+                pre: (props: HtmlProps<"pre">) => <div className="my-3">{props.children}</div>,
+                code: ({className, children, ...props}: HtmlProps<"code">) => {
                     const isBlockCode = typeof className === "string" && className.includes("language-");
                     if (isBlockCode) {
                         const language = className.match(/language-([a-z0-9_-]+)/i)?.[1] || "text";
-                        const code = toPlainText(props.children);
+                        const code = toPlainText(children);
 
                         return <div className="overflow-hidden border border-slate-700 bg-slate-950/80">
                             <div className="border-b border-slate-700 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -506,28 +542,28 @@ function TranscriptMarkdown({source, lookups}: {source: string; lookups: Mention
                         </div>;
                     }
 
-                    return <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-[0.95em] text-sky-100" {...props} />;
+                    return <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-[0.95em] text-sky-100" {...props}>{children}</code>;
                 },
-                ul: (props: any) => <ul className="list-disc space-y-1 pl-5 text-sm text-slate-200" {...props} />,
-                ol: (props: any) => <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-200" {...props} />,
-                li: (props: any) => <li className="leading-6" {...props} />,
-                h1: (props: any) => <h1 className="text-2xl font-bold text-white" {...props} />,
-                h2: (props: any) => <h2 className="text-xl font-bold text-white" {...props} />,
-                h3: (props: any) => <h3 className="text-lg font-semibold text-white" {...props} />,
-                h4: (props: any) => <h4 className="text-base font-semibold text-white" {...props} />,
-                h5: (props: any) => <h5 className="text-sm font-semibold text-white" {...props} />,
-                h6: (props: any) => <h6 className="text-xs font-medium tracking-[0.12em] text-slate-400" {...props} />,
-                hr: (props: any) => <hr className="border-slate-800" {...props} />,
-                table: (props: any) => <div className="overflow-x-auto"><table className="min-w-full border-collapse text-sm text-slate-200" {...props} /></div>,
-                thead: (props: any) => <thead className="bg-slate-900 text-slate-300" {...props} />,
-                tbody: (props: any) => <tbody className="divide-y divide-slate-800" {...props} />,
-                tr: (props: any) => <tr className="border-b border-slate-800" {...props} />,
-                th: (props: any) => <th className="border border-slate-800 px-3 py-2 text-left font-semibold" {...props} />,
-                td: (props: any) => <td className="border border-slate-800 px-3 py-2 align-top" {...props} />,
-                span: (props: any) => {
-                    const className = Array.isArray(props?.className)
+                ul: (props: HtmlProps<"ul">) => <ul className="list-disc space-y-1 pl-5 text-sm text-slate-200" {...props} />,
+                ol: (props: HtmlProps<"ol">) => <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-200" {...props} />,
+                li: (props: HtmlProps<"li">) => <li className="leading-6" {...props} />,
+                h1: (props: HtmlProps<"h1">) => <h1 className="text-2xl font-bold text-white" {...props} />,
+                h2: (props: HtmlProps<"h2">) => <h2 className="text-xl font-bold text-white" {...props} />,
+                h3: (props: HtmlProps<"h3">) => <h3 className="text-lg font-semibold text-white" {...props} />,
+                h4: (props: HtmlProps<"h4">) => <h4 className="text-base font-semibold text-white" {...props} />,
+                h5: (props: HtmlProps<"h5">) => <h5 className="text-sm font-semibold text-white" {...props} />,
+                h6: (props: HtmlProps<"h6">) => <h6 className="text-xs font-medium tracking-[0.12em] text-slate-400" {...props} />,
+                hr: (props: HtmlProps<"hr">) => <hr className="border-slate-800" {...props} />,
+                table: (props: HtmlProps<"table">) => <div className="overflow-x-auto"><table className="min-w-full border-collapse text-sm text-slate-200" {...props} /></div>,
+                thead: (props: HtmlProps<"thead">) => <thead className="bg-slate-900 text-slate-300" {...props} />,
+                tbody: (props: HtmlProps<"tbody">) => <tbody className="divide-y divide-slate-800" {...props} />,
+                tr: (props: HtmlProps<"tr">) => <tr className="border-b border-slate-800" {...props} />,
+                th: (props: HtmlProps<"th">) => <th className="border border-slate-800 px-3 py-2 text-left font-semibold" {...props} />,
+                td: (props: HtmlProps<"td">) => <td className="border border-slate-800 px-3 py-2 align-top" {...props} />,
+                span: (props: HtmlProps<"span">) => {
+                    const className = Array.isArray(props.className)
                         ? props.className.join(" ")
-                        : typeof props?.className === "string"
+                        : typeof props.className === "string"
                             ? props.className
                             : "";
 
@@ -548,22 +584,22 @@ function TranscriptEntryCard({
     entry,
     lookups,
     hideContent,
-    previewUrls,
     attachmentUrls
 }: {
     entry: DashboardModmailTicketDetail["transcript"][number];
     lookups: MentionLookups;
     hideContent: boolean;
-    previewUrls: Set<string>;
     attachmentUrls: string[];
 }) {
     const [showRaw, setShowRaw] = useState(false);
 
     return <article className="border border-slate-800 bg-slate-900/70 p-4">
         <div className="flex flex-wrap items-center gap-3">
-            {entry.authorAvatarUrl ? <img
+            {entry.authorAvatarUrl ? <Image
                 src={entry.authorAvatarUrl}
                 alt={entry.authorTag || "Unknown User"}
+                width={40}
+                height={40}
                 className="h-10 w-10 shrink-0 rounded-full border border-slate-700 object-cover"
             /> : <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-xs font-semibold uppercase text-slate-300">
                 {(entry.authorTag || "U").slice(0, 2)}
@@ -829,9 +865,11 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
                         }`}
                     >
                         <div className="flex items-start gap-3">
-                            {ticket.userAvatarUrl ? <img
+                            {ticket.userAvatarUrl ? <Image
                                 src={ticket.userAvatarUrl}
                                 alt={ticket.userDisplayName}
+                                width={40}
+                                height={40}
                                 className="h-10 w-10 shrink-0 rounded-full border border-slate-700 object-cover"
                             /> : <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-xs font-semibold uppercase text-slate-300">
                                 {ticket.userDisplayName.slice(0, 2)}
@@ -909,7 +947,6 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
                                     entry={entry}
                                     lookups={mentionLookups}
                                     hideContent={shouldHideContent}
-                                    previewUrls={previewUrls}
                                     attachmentUrls={attachmentUrls}
                                 />;
                             })}

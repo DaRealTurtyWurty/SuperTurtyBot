@@ -1,10 +1,11 @@
 "use client";
 
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useMemo, useRef, useState} from "react";
 import type {ReactElement} from "react";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {FaMagnifyingGlass} from "react-icons/fa6";
+import {useDashboardNavigationGuard} from "@/components/DashboardNavigationGuard";
 import {NOTIFIER_TYPES} from "@/lib/notifiers";
 
 interface GuildDashboardSidebarProps {
@@ -90,7 +91,6 @@ function collectSearchMatches(items: SidebarItem[], guildId: string, query: stri
     function walk(item: SidebarItem) {
         const href = item.href?.(guildId) ?? null;
         const normalizedLabel = item.label.toLowerCase();
-        const exactLabel = normalizedLabel === query;
         const labelMatch = normalizedLabel.includes(query);
         const optionMatch = item.options?.find(option => getOptionLabel(option).toLowerCase().includes(query));
         const exactOption = item.options?.find(option => getOptionLabel(option).toLowerCase() === query);
@@ -211,6 +211,17 @@ const NAV_SECTIONS: SidebarSection[] = [
                             href: (guildId: string) => `/dashboard/${guildId}/notifiers/${type.type}`
                         }))
                     }
+                ]
+            },
+            {
+                label: "Voice Channel Notifiers",
+                href: (guildId: string) => `/dashboard/${guildId}/voice-channel-notifiers`,
+                options: [
+                    {label: "Voice Channel", fragment: "voice-notifier-voice-channel"},
+                    {label: "Destination Channel", fragment: "voice-notifier-send-to-channel"},
+                    {label: "Mention Roles", fragment: "voice-notifier-mention-roles"},
+                    {label: "Cooldown", fragment: "voice-notifier-cooldown"},
+                    {label: "Current Voice Channel Notifiers", fragment: "voice-notifier-list"}
                 ]
             },
             {
@@ -412,6 +423,7 @@ const NAV_SECTIONS: SidebarSection[] = [
 export default function GuildDashboardSidebar({guildId}: GuildDashboardSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+    const {confirmNavigation} = useDashboardNavigationGuard();
     const [searchQuery, setSearchQuery] = useState("");
     const lastNavigatedHrefRef = useRef<string | null>(null);
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -440,6 +452,10 @@ export default function GuildDashboardSidebar({guildId}: GuildDashboardSidebarPr
             return;
         }
 
+        if (!confirmNavigation()) {
+            return;
+        }
+
         lastNavigatedHrefRef.current = href;
         router.prefetch(href);
         window.location.assign(href);
@@ -448,6 +464,10 @@ export default function GuildDashboardSidebar({guildId}: GuildDashboardSidebarPr
     function openSearchResults() {
         const query = searchQuery.trim();
         if (!query) {
+            return;
+        }
+
+        if (!confirmNavigation()) {
             return;
         }
 

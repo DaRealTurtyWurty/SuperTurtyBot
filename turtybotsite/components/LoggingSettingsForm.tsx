@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardLoggingSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 
@@ -86,6 +87,7 @@ export default function LoggingSettingsForm({guildId, initialSettings}: LoggingS
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateToggle(key: keyof DashboardLoggingSettings, value: boolean) {
         setSettings(current => ({
@@ -133,11 +135,13 @@ export default function LoggingSettingsForm({guildId, initialSettings}: LoggingS
             }
 
             const updated = await response.json() as DashboardLoggingSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 loggingChannelId: updated.loggingChannelId ?? "",
                 modLoggingChannelId: updated.modLoggingChannelId ?? ""
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Logging settings saved.");
         });
     }

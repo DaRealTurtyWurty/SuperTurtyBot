@@ -1,5 +1,6 @@
 import QuotesDashboardPanel from "@/components/QuotesDashboardPanel";
-import {fetchDashboardQuotes, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardQuotes} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 function parsePage(value: string | string[] | undefined, fallback: number) {
     const raw = Array.isArray(value) ? value[0] : value;
@@ -23,13 +24,7 @@ export default async function QuotesPage({
     const page = parsePage(query.page, 1);
     const pageSize = parsePage(query.pageSize, 10);
 
-    const quotes = await fetchDashboardQuotes(guildId, page, pageSize).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const quotes = await fetchDashboardQuotes(guildId, page, pageSize).catch(handleDashboardPageError);
 
     if (!quotes) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

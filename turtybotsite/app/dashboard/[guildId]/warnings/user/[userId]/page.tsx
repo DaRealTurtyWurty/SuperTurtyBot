@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import {redirect} from "next/navigation";
 import WarningRecordCard from "@/components/WarningRecordCard";
 import {requireCurrentSession} from "@/lib/auth";
-import {fetchDashboardUserWarnings, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardUserWarnings} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function WarningHistoryPage({
     params
@@ -15,13 +17,7 @@ export default async function WarningHistoryPage({
         redirect("/dashboard");
     }
 
-    const history = await fetchDashboardUserWarnings(guildId, userId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const history = await fetchDashboardUserWarnings(guildId, userId).catch(handleDashboardPageError);
 
     if (!history) {
         return <section className="space-y-4">
@@ -68,9 +64,11 @@ export default async function WarningHistoryPage({
 
         <section className="border border-slate-800/80 bg-slate-950/60 p-5">
             <div className="flex flex-wrap items-center gap-4">
-                {history.user.avatarUrl ? <img
+                {history.user.avatarUrl ? <Image
                     src={history.user.avatarUrl}
                     alt={history.user.displayName}
+                    width={64}
+                    height={64}
                     className="h-16 w-16 rounded-full border border-slate-700 object-cover"
                 /> : <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-xl font-semibold text-slate-200">
                     {history.user.displayName.trim().charAt(0).toUpperCase() || "?"}

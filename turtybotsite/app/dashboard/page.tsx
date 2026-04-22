@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import {requireCurrentSession} from "@/lib/auth";
 import {fetchDashboardGuildConfig, type DashboardGuildConfigSnapshot} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 import {getDiscordAvatarUrl, getDiscordGuildIconUrl} from "@/lib/discord";
 
 function readBoolean(config: Record<string, unknown> | undefined, key: string) {
@@ -17,7 +19,7 @@ export default async function DashboardPage() {
     const avatarUrl = getDiscordAvatarUrl(session.user.id, session.user.avatar);
 
     const guildCards = await Promise.all(session.guilds.map(async guild => {
-        const snapshot = await fetchDashboardGuildConfig(guild.id).catch(() => null) as DashboardGuildConfigSnapshot | null;
+        const snapshot = await fetchDashboardGuildConfig(guild.id).catch(handleDashboardPageError) as DashboardGuildConfigSnapshot | null;
         return {
             guild,
             snapshot
@@ -30,9 +32,11 @@ export default async function DashboardPage() {
         <div className="flex min-h-screen w-full flex-col gap-6 px-5 py-6 xl:px-8">
             <header className="flex flex-col gap-4 border border-slate-800/80 bg-slate-900/75 p-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-4">
-                    {avatarUrl ? <img
+                    {avatarUrl ? <Image
                         src={avatarUrl}
                         alt={session.user.username}
+                        width={56}
+                        height={56}
                         className="h-14 w-14 border border-slate-700"
                     /> : <div
                         className="flex h-14 w-14 items-center justify-center border border-slate-700 bg-slate-800 text-lg font-bold text-sky-200">
@@ -102,9 +106,11 @@ export default async function DashboardPage() {
                     const cardContent = <>
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex items-center gap-4">
-                            {guildIconUrl ? <img
+                            {guildIconUrl ? <Image
                                 src={guildIconUrl}
                                 alt={guild.name}
+                                width={56}
+                                height={56}
                                 className="h-14 w-14 border border-slate-700"
                             /> : <div
                                 className="flex h-14 w-14 items-center justify-center border border-slate-700 bg-slate-800 text-lg font-bold text-sky-200">

@@ -3,6 +3,7 @@
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
 import Link from "next/link";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardCollectablesSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 import CollectableEmoji from "@/components/CollectableEmoji";
@@ -35,6 +36,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
     const selectedCollection = collectionType ? settings.collections.find(collection => collection.type === collectionType) ?? null : null;
     const visibleCollections = selectedCollection ? [selectedCollection] : settings.collections;
 
@@ -117,7 +119,9 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
             }
 
             const updated = await response.json() as DashboardCollectablesSettings;
-            setSettings(cloneSettings(updated));
+            const nextSettings = cloneSettings(updated);
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Collectables settings saved.");
         });
     }

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type {NotifierIconKey} from "@/lib/notifiers";
 
 const ICON_PATHS: Record<NotifierIconKey, string> = {
@@ -22,10 +23,12 @@ export default function NotifierIcon({
 }) {
     const src = ICON_PATHS[icon];
 
-    return <img
+    return <Image
         src={src}
         alt=""
         aria-hidden="true"
+        width={16}
+        height={16}
         className={`${className} object-contain`}
     />;
 }

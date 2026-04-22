@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardStarboardSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
@@ -20,6 +21,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     const isDisabled = !settings.starboardEnabled;
 
@@ -80,11 +82,13 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
             }
 
             const updated = await response.json() as DashboardStarboardSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 starboardChannelId: updated.starboardChannelId ?? "",
                 showcaseChannelIds: updated.showcaseChannelIds
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Starboard settings saved.");
         });
     }

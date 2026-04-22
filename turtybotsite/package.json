@@ -6,7 +6,7 @@
     "dev": "next dev -p 3003 --turbopack",
     "build": "next build",
     "start": "next start -p 3003",
-    "lint": "next lint"
+    "lint": "eslint app components lib --ext .ts,.tsx"
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.13.0",

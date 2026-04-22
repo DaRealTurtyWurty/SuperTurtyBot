@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardLevellingSettings} from "@/lib/dashboard-api";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
@@ -29,6 +30,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     const levellingDisabled = !settings.levellingEnabled;
     const levelUpChannelDisabled = levellingDisabled || !settings.hasLevelUpChannel;
@@ -132,14 +134,16 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
             }
 
             const updated = await response.json() as DashboardLevellingSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 levelUpMessageChannelId: updated.levelUpMessageChannelId ?? "",
                 disabledLevellingChannelIds: updated.disabledLevellingChannelIds,
                 levelRoleMappings: parseLevellingRoleMappings(updated.levelRoleMappings),
                 xpBoostedChannelIds: updated.xpBoostedChannelIds,
                 xpBoostedRoleIds: updated.xpBoostedRoleIds
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Levelling settings saved.");
         });
     }

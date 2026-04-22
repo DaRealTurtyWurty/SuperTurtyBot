@@ -2,7 +2,9 @@
 
 import type {FormEvent} from "react";
 import {useEffect, useRef, useState, useTransition} from "react";
+import Image from "next/image";
 import Link from "next/link";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
 import type {DashboardWarningRecord, DashboardWarningsResponse, DashboardWarningsSettings} from "@/lib/dashboard-api";
 
@@ -23,9 +25,11 @@ function WarningAvatar({name, avatarUrl}: {name: string; avatarUrl: string | nul
     const fallback = name.trim().charAt(0).toUpperCase() || "?";
 
     if (avatarUrl) {
-        return <img
+        return <Image
             src={avatarUrl}
             alt={name}
+            width={48}
+            height={48}
             className="h-12 w-12 rounded-full border border-slate-700 object-cover"
         />;
     }
@@ -110,6 +114,11 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
     const cancelRemovalButtonRef = useRef<HTMLButtonElement | null>(null);
     const confirmRemovalButtonRef = useRef<HTMLButtonElement | null>(null);
     const modalLastFocusedElementRef = useRef<HTMLElement | null>(null);
+    const {markSaved} = useDashboardUnsavedChanges({
+        settings,
+        warningEconomyPercentage,
+        warningXpPercentage
+    });
 
     function updateBoolean(value: boolean) {
         setSettings(current => ({
@@ -147,6 +156,11 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
             setWarnings(updated.warnings);
             setWarningXpPercentage(updated.settings.warningXpPercentage.toString());
             setWarningEconomyPercentage(updated.settings.warningEconomyPercentage.toString());
+            markSaved({
+                settings: updated.settings,
+                warningEconomyPercentage: updated.settings.warningEconomyPercentage.toString(),
+                warningXpPercentage: updated.settings.warningXpPercentage.toString()
+            });
             setSuccess("Warnings settings saved.");
         });
     }

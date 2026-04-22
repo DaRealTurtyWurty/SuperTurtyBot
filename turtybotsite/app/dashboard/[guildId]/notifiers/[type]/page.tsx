@@ -2,7 +2,8 @@ import {notFound} from "next/navigation";
 import NotifierManagementPanel from "@/components/NotifierManagementPanel";
 import NotifierIcon from "@/components/NotifierIcon";
 import NotifierTypeNav from "@/components/NotifierTypeNav";
-import {fetchDashboardNotifiers, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardNotifiers} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 import {getNotifierSectionDefinition, getNotifierTypeDefinition} from "@/lib/notifiers";
 
 export default async function NotifierTypePage({
@@ -16,13 +17,7 @@ export default async function NotifierTypePage({
         notFound();
     }
 
-    const data = await fetchDashboardNotifiers(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const data = await fetchDashboardNotifiers(guildId).catch(handleDashboardPageError);
 
     if (!data) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

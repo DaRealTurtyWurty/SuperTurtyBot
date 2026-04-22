@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardEconomySettings} from "@/lib/dashboard-api";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
 import DashboardPresetSelect from "@/components/DashboardPresetSelect";
@@ -34,6 +35,7 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     const economyDisabled = !settings.economyEnabled;
 
@@ -87,12 +89,14 @@ export default function EconomySettingsForm({guildId, initialSettings}: EconomyS
 
             const updated = await response.json() as DashboardEconomySettings;
             const nextCurrencyMode = getCurrencyMode(updated.economyCurrency);
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 currencyMode: nextCurrencyMode,
                 customCurrencyText: nextCurrencyMode === "__custom__" ? updated.economyCurrency : "",
                 incomeTaxText: updated.incomeTax.toString()
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Economy settings saved.");
         });
     }

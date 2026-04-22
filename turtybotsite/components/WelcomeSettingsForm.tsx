@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardWelcomeSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 
@@ -18,6 +19,7 @@ export default function WelcomeSettingsForm({guildId, initialSettings}: WelcomeS
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateBoolean(key: "shouldAnnounceJoins" | "shouldAnnounceLeaves", value: boolean) {
         setSettings(current => ({
@@ -58,10 +60,12 @@ export default function WelcomeSettingsForm({guildId, initialSettings}: WelcomeS
             }
 
             const updated = await response.json() as DashboardWelcomeSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 welcomeChannelId: updated.welcomeChannelId ?? ""
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Welcome settings saved.");
         });
     }

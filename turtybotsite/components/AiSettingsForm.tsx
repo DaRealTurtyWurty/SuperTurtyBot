@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardAiSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 import GuildMemberMultiSelect from "@/components/GuildMemberMultiSelect";
@@ -20,6 +21,7 @@ export default function AiSettingsForm({guildId, initialSettings}: AiSettingsFor
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     const aiDisabled = !settings.aiEnabled;
 
@@ -70,6 +72,11 @@ export default function AiSettingsForm({guildId, initialSettings}: AiSettingsFor
 
             const updated = await response.json() as DashboardAiSettings;
             setSettings({
+                ...updated,
+                aiChannelWhitelist: updated.aiChannelWhitelist,
+                aiUserBlacklist: updated.aiUserBlacklist
+            });
+            markSaved({
                 ...updated,
                 aiChannelWhitelist: updated.aiChannelWhitelist,
                 aiUserBlacklist: updated.aiUserBlacklist

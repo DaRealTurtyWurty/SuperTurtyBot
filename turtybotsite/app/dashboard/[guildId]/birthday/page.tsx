@@ -1,5 +1,6 @@
 import BirthdaySettingsForm from "@/components/BirthdaySettingsForm";
-import {fetchDashboardBirthdaySettings, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardBirthdaySettings} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function BirthdayPage({
     params
@@ -7,13 +8,7 @@ export default async function BirthdayPage({
     params: Promise<{ guildId: string }>;
 }) {
     const guildId = (await params).guildId;
-    const settings = await fetchDashboardBirthdaySettings(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const settings = await fetchDashboardBirthdaySettings(guildId).catch(handleDashboardPageError);
 
     if (!settings) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

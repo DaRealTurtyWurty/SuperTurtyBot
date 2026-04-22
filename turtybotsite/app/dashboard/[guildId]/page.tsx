@@ -17,9 +17,9 @@ import {
     fetchDashboardOptInChannelsSettings,
     fetchDashboardStickyMessages,
     fetchDashboardSuggestions,
-    fetchDashboardWarnings,
-    isDashboardApiError
+    fetchDashboardWarnings
 } from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 function readBoolean(config: Record<string, unknown> | undefined, key: string) {
     const value = config?.[key];
@@ -161,13 +161,7 @@ export default async function GuildOverviewPage({
         automod,
         modmailSettings
     ] = await Promise.all([
-        fetchDashboardGuildConfig(guildId).catch(error => {
-            if (isDashboardApiError(error)) {
-                return null;
-            }
-
-            throw error;
-        }),
+        fetchDashboardGuildConfig(guildId).catch(handleDashboardPageError),
         fetchDashboardNotifiers(guildId).catch(() => null),
         fetchDashboardWarnings(guildId).catch(() => null),
         fetchDashboardCountingSettings(guildId).catch(() => null),
@@ -187,8 +181,6 @@ export default async function GuildOverviewPage({
 
     const config = snapshot.config;
     const allWarnings = warnings?.warnings.length ?? 0;
-    const openTickets = modmailTickets?.tickets.filter(ticket => ticket.open).length ?? 0;
-    const totalTickets = modmailTickets?.tickets.length ?? 0;
     const notifierCount = notifiers?.totalCount ?? 0;
     const countingChannels = counting?.channels.length ?? 0;
     const stickyCount = stickyMessages?.stickyMessages.length ?? 0;
@@ -494,6 +486,13 @@ export default async function GuildOverviewPage({
                 >
                     <p className="text-sm font-semibold text-white">Open Sticky Messages</p>
                     <p className="mt-2 text-sm text-slate-400">Manage sticky text per channel and clean up old entries.</p>
+                </Link>
+                <Link
+                    href={`/dashboard/${guildId}/voice-channel-notifiers`}
+                    className="border border-slate-800/80 bg-slate-950/60 p-5 transition hover:border-slate-600 hover:bg-slate-900/70"
+                >
+                    <p className="text-sm font-semibold text-white">Open Voice Channel Notifiers</p>
+                    <p className="mt-2 text-sm text-slate-400">Configure delayed voice join announcements, role pings, and custom channel messages.</p>
                 </Link>
             </div>
         </section>

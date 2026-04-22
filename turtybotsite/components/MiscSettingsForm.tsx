@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardMiscSettings} from "@/lib/dashboard-api";
 import GuildRoleSelect from "@/components/GuildRoleSelect";
 
@@ -15,6 +16,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateBoolean(key: keyof DashboardMiscSettings, value: boolean) {
         setSettings(current => ({
@@ -52,6 +54,7 @@ export default function MiscSettingsForm({guildId, initialSettings}: MiscSetting
 
             const updated = await response.json() as DashboardMiscSettings;
             setSettings(updated);
+            markSaved(updated);
             setSuccess("Misc settings saved.");
         });
     }

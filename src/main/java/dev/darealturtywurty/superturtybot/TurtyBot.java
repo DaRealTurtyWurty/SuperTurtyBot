@@ -15,9 +15,9 @@ import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.dashboard.DashboardServer;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.modules.*;
-import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
+import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
@@ -258,6 +258,9 @@ public class TurtyBot {
 
         // Add the collectable game listeners so that we can handle collectable game events
         CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().values().forEach(builder::addEventListeners);
+
+        // Add the voice channel notifier manager so that we can handle voice channel notifications
+        builder.addEventListeners(VoiceChannelNotifierManager.INSTANCE);
 
         // Add the event waiter so that we can wait for events
         builder.addEventListeners(EVENT_WAITER);

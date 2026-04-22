@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SuggestionsSettingsForm from "@/components/SuggestionsSettingsForm";
-import {fetchDashboardSuggestionsSettings, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardSuggestionsSettings} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function SuggestionsPage({
     params
@@ -8,13 +9,7 @@ export default async function SuggestionsPage({
     params: Promise<{ guildId: string }>;
 }) {
     const guildId = (await params).guildId;
-    const settings = await fetchDashboardSuggestionsSettings(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const settings = await fetchDashboardSuggestionsSettings(guildId).catch(handleDashboardPageError);
 
     return <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">

@@ -10,6 +10,7 @@ import {
     type DashboardSessionGuildSummary,
     type DashboardSessionUserSummary
 } from "@/lib/dashboard-api";
+import {isDashboardOfflineError} from "@/lib/dashboard-offline";
 
 const SESSION_COOKIE_NAME = "turtybot_session";
 const OAUTH_STATE_COOKIE_NAME = "turtybot_oauth_state";
@@ -45,7 +46,17 @@ export async function getCurrentSession() {
 }
 
 export async function requireCurrentSession() {
-    const session = await getCurrentSession();
+    let session;
+    try {
+        session = await getCurrentSession();
+    } catch (error) {
+        if (isDashboardOfflineError(error)) {
+            redirect("/bot-offline");
+        }
+
+        throw error;
+    }
+
     if (!session) {
         redirect("/api/auth/discord/login");
     }

@@ -3,6 +3,7 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {createPortal} from "react-dom";
 import {FaMagnifyingGlass} from "react-icons/fa6";
+import {useDashboardNavigationGuard} from "@/components/DashboardNavigationGuard";
 import {searchDashboardEntries} from "@/lib/dashboard-search";
 
 interface DashboardCommandPaletteProps {
@@ -20,6 +21,7 @@ const COMMON_ACTIONS: CommandAction[] = [
     {label: "Search dashboard", href: "search", description: "Open the dashboard search page."},
     {label: "Sticky Messages", href: "sticky-messages", description: "Manage sticky messages."},
     {label: "Notifiers", href: "notifiers", description: "Manage notifier channels."},
+    {label: "Voice Channel Notifiers", href: "voice-channel-notifiers", description: "Manage voice channel announcement notifiers."},
     {label: "Counting", href: "counting", description: "Manage counting channels."},
     {label: "Logging", href: "logging", description: "Configure logging settings."},
     {label: "Levelling", href: "levelling", description: "Configure levelling and XP settings."},
@@ -27,6 +29,7 @@ const COMMON_ACTIONS: CommandAction[] = [
 ];
 
 export default function DashboardCommandPalette({guildId}: DashboardCommandPaletteProps) {
+    const {confirmNavigation} = useDashboardNavigationGuard();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [activeIndex, setActiveIndex] = useState(0);
@@ -86,6 +89,10 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
     }
 
     function navigate(href: string) {
+        if (!confirmNavigation()) {
+            return;
+        }
+
         window.location.assign(href);
     }
 
@@ -156,8 +163,12 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
                             type="button"
                             onMouseEnter={() => setActiveIndex(index)}
                             onClick={() => {
+                                if (!confirmNavigation()) {
+                                    return;
+                                }
+
                                 close();
-                                navigate(result.href);
+                                window.location.assign(result.href);
                             }}
                             className={`flex w-full items-start gap-3 border px-4 py-3 text-left transition ${
                                 index === activeIndex

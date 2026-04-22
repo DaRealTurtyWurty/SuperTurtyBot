@@ -51,6 +51,11 @@ export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
         terms: ["social notifiers", "game notifiers", "discord channel", "who to ping", "add notifier"]
     },
     {
+        label: "Voice Channel Notifiers",
+        href: guildId => `/dashboard/${guildId}/voice-channel-notifiers`,
+        terms: ["voice notifier", "voice channel alert", "announce per join", "voice cooldown", "destination channel"]
+    },
+    {
         label: "AI",
         href: guildId => `/dashboard/${guildId}/ai`,
         terms: ["enable ai", "channel whitelist", "user blacklist"]

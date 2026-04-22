@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
+import {redirect} from "next/navigation";
 import {getCurrentSession} from "@/lib/auth";
+import {isDashboardOfflineError} from "@/lib/dashboard-offline";
 import {getDiscordAvatarUrl} from "@/lib/discord";
 import {FaArrowRight, FaBell, FaHashtag, FaMessage, FaTriangleExclamation} from "react-icons/fa6";
 
@@ -21,7 +24,13 @@ export default async function Home({
 }: {
     searchParams?: Promise<{ error?: string }>;
 }) {
-    const session = await getCurrentSession();
+    const session = await getCurrentSession().catch(error => {
+        if (isDashboardOfflineError(error)) {
+            redirect("/bot-offline");
+        }
+
+        throw error;
+    });
     const error = getErrorMessage((await searchParams)?.error);
     const avatarUrl = session ? getDiscordAvatarUrl(session.user.id, session.user.avatar) : null;
 
@@ -75,9 +84,11 @@ export default async function Home({
             {session ? <section className="border border-slate-800/80 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/40">
                 <div className="flex flex-col gap-6">
                     <div className="flex items-center gap-4">
-                        {avatarUrl ? <img
+                        {avatarUrl ? <Image
                             src={avatarUrl}
                             alt={session.user.username}
+                            width={80}
+                            height={80}
                             className="h-20 w-20 border border-slate-700"
                         /> : <div
                             className="flex h-20 w-20 items-center justify-center border border-slate-700 bg-slate-800 text-2xl font-bold text-sky-200">

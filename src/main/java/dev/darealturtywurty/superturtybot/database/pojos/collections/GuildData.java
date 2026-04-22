@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.database.pojos.collections;
 import com.google.common.primitives.Longs;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.database.pojos.VoiceChannelNotifier;
 import lombok.Data;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.Event;
@@ -159,6 +160,7 @@ public class GuildData {
     private int imageSpamNewMemberThresholdHours;
     private boolean discordInviteGuardEnabled;
     private boolean scamDetectionEnabled;
+    private Map<String, VoiceChannelNotifier> voiceChannelNotifiers;
 
     public GuildData() {
         this(0L);
@@ -280,6 +282,7 @@ public class GuildData {
         this.imageSpamNewMemberThresholdHours = 48;
         this.discordInviteGuardEnabled = true;
         this.scamDetectionEnabled = true;
+        this.voiceChannelNotifiers = new HashMap<>();
     }
 
     public static GuildData getOrCreateGuildData(long guildId) {
@@ -341,21 +344,18 @@ public class GuildData {
     }
 
     public List<String> getDisabledCollectables(String type) {
-        if (type == null || type.isBlank()) {
+        if (type == null || type.isBlank())
             return List.of();
-        }
 
-        if (this.disabledCollectablesByType == null) {
+        if (this.disabledCollectablesByType == null)
             return List.of();
-        }
 
         return splitDelimitedList(this.disabledCollectablesByType.getOrDefault(type, ""));
     }
 
     public void setDisabledCollectables(String type, Collection<String> collectables) {
-        if (type == null || type.isBlank()) {
+        if (type == null || type.isBlank())
             return;
-        }
 
         if (this.disabledCollectablesByType == null) {
             this.disabledCollectablesByType = new HashMap<>();
@@ -365,17 +365,15 @@ public class GuildData {
     }
 
     public boolean isCollectableTypeEnabled(String type) {
-        if (!this.collectableTypesRestricted) {
+        if (!this.collectableTypesRestricted)
             return true;
-        }
 
         return getCollectableTypesList().contains(type);
     }
 
     private static List<String> splitDelimitedList(String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.isBlank())
             return List.of();
-        }
 
         return Arrays.stream(value.split("[;,]"))
                 .map(String::trim)
@@ -385,9 +383,8 @@ public class GuildData {
     }
 
     private static String joinDelimitedList(Collection<String> values) {
-        if (values == null || values.isEmpty()) {
+        if (values == null || values.isEmpty())
             return "";
-        }
 
         return values.stream()
                 .map(value -> value == null ? "" : value.trim())

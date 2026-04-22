@@ -108,8 +108,10 @@ export default function GuildRoleSelect({
     const containerRef = useRef<HTMLDivElement | null>(null);
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const excludedSet = useMemo(() => new Set(excludedRoleIds), [excludedRoleIds]);
-
-    const selectedIds = multiple ? values : value ? [value] : [];
+    const selectedIds = useMemo(
+        () => multiple ? values : value ? [value] : [],
+        [multiple, value, values]
+    );
     const selectedRoles = useMemo(
         () => roles.filter(role => selectedIds.includes(role.id)),
         [roles, selectedIds]

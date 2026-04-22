@@ -1,6 +1,7 @@
 "use client";
 
 import type {ChangeEvent} from "react";
+import Image from "next/image";
 import {useState, useTransition} from "react";
 import type {DashboardSuggestionsPageResponse} from "@/lib/dashboard-api";
 
@@ -70,9 +71,11 @@ function SuggestionMediaPreviewCard({preview}: {preview: NonNullable<DashboardSu
             rel="noreferrer"
             className="group block overflow-hidden border border-slate-700 bg-slate-950/70 transition hover:border-sky-400/40 hover:bg-slate-900/80"
         >
-            <img
+            <Image
                 src={preview.imageUrl}
                 alt={preview.title || label}
+                width={800}
+                height={420}
                 className="max-h-[420px] w-full object-contain"
                 loading="lazy"
             />
@@ -101,9 +104,11 @@ function SuggestionMediaPreviewCard({preview}: {preview: NonNullable<DashboardSu
                 {preview.description ? <p className="mt-1 text-sm text-slate-300">{preview.description}</p> : null}
                 <p className="mt-2 truncate text-xs text-sky-300 group-hover:text-sky-200">{previewUrl}</p>
             </div>
-            {preview.imageUrl ? <img
+            {preview.imageUrl ? <Image
                 src={preview.imageUrl}
                 alt={preview.title || label}
+                width={160}
+                height={112}
                 className="h-28 w-full rounded-md border border-slate-700 object-cover md:h-full"
                 loading="lazy"
             /> : null}

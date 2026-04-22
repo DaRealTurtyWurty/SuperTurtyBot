@@ -43,7 +43,7 @@ export default function CollectableEmoji({emoji, label}: { emoji: string; label:
                 .join("-");
 
             return <span className="inline-flex h-6 w-6 items-center justify-center align-middle">
-                <img
+                <Image
                     src={`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${codepoint}.svg`}
                     alt={label}
                     title={label}

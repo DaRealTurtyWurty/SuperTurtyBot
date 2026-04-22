@@ -3,34 +3,35 @@ package dev.darealturtywurty.superturtybot.dashboard;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.dashboard.http.DashboardRoutes;
-import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.ai.AiSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.chat_revival.ChatRevivalSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.counting.CountingSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.birthday.BirthdaySettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.chat_revival.ChatRevivalSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.collectables.CollectablesSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.opt_in.OptInChannelsSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.counting.CountingSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.discord.GuildSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.economy.EconomySettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.guild_config.GuildConfigCatalogService;
+import dev.darealturtywurty.superturtybot.dashboard.service.levelling.LevellingSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.logging.LoggingSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.misc.MiscSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.modmail.ModmailSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.modmail.tickets.ModmailTicketsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.quotes.QuotesDashboardService;
-import dev.darealturtywurty.superturtybot.dashboard.service.tags.TagsDashboardService;
-import dev.darealturtywurty.superturtybot.dashboard.service.sticky_messages.StickyMessagesService;
 import dev.darealturtywurty.superturtybot.dashboard.service.notifiers.NotifiersService;
+import dev.darealturtywurty.superturtybot.dashboard.service.nsfw.NsfwSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.opt_in.OptInChannelsSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.quotes.QuotesDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.reports.ReportsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.session.DashboardSessionService;
 import dev.darealturtywurty.superturtybot.dashboard.service.session.DashboardUserProfileService;
-import dev.darealturtywurty.superturtybot.dashboard.service.economy.EconomySettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.guild_config.GuildConfigCatalogService;
-import dev.darealturtywurty.superturtybot.dashboard.service.discord.GuildSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.starboard.StarboardSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.sticky_messages.StickyMessagesService;
 import dev.darealturtywurty.superturtybot.dashboard.service.suggestions.SuggestionsDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.suggestions.SuggestionsSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.misc.MiscSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.levelling.LevellingSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.logging.LoggingSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.nsfw.NsfwSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.tags.TagsDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.threads.ThreadSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.voice_notifiers.VoiceChannelNotifierDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.warnings.WarningsSettingsService;
-import dev.darealturtywurty.superturtybot.dashboard.service.starboard.StarboardSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.welcome.WelcomeSettingsService;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinGson;
@@ -102,6 +103,7 @@ public final class DashboardServer {
         var notifiersService = new NotifiersService(this.jda);
         var reportsService = new ReportsService(this.jda);
         var stickyMessagesService = new StickyMessagesService(this.jda);
+        var voiceChannelNotifierDashboardService = new VoiceChannelNotifierDashboardService(this.jda);
 
         this.app = Javalin.create(config -> {
             config.showJavalinBanner = false;
@@ -142,7 +144,8 @@ public final class DashboardServer {
                 modmailTicketsService,
                 notifiersService,
                 reportsService,
-                stickyMessagesService
+                stickyMessagesService,
+                voiceChannelNotifierDashboardService
         ).register(this.app);
         this.app.start(this.config.host(), this.config.port());
 

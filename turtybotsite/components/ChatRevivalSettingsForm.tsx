@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardChatRevivalSettings} from "@/lib/dashboard-api";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
@@ -25,6 +26,7 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     const revivalDisabled = !settings.chatRevivalEnabled;
 
@@ -85,10 +87,12 @@ export default function ChatRevivalSettingsForm({guildId, initialSettings}: Chat
             }
 
             const updated = await response.json() as DashboardChatRevivalSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 chatRevivalChannelId: updated.chatRevivalChannelId ?? ""
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Chat revival settings saved.");
         });
     }

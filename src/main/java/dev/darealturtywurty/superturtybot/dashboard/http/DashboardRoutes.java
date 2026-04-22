@@ -38,6 +38,8 @@ import dev.darealturtywurty.superturtybot.dashboard.service.nsfw.NsfwSettingsReq
 import dev.darealturtywurty.superturtybot.dashboard.service.nsfw.NsfwSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.threads.ThreadSettingsRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.threads.ThreadSettingsService;
+import dev.darealturtywurty.superturtybot.dashboard.service.voice_notifiers.VoiceChannelNotifierDashboardService;
+import dev.darealturtywurty.superturtybot.dashboard.service.voice_notifiers.VoiceChannelNotifierUpsertRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.warnings.WarningsSettingsRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.warnings.WarningsSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.starboard.StarboardSettingsRequest;
@@ -100,6 +102,7 @@ public final class DashboardRoutes {
     private final NotifiersService notifiersService;
     private final ReportsService reportsService;
     private final StickyMessagesService stickyMessagesService;
+    private final VoiceChannelNotifierDashboardService voiceChannelNotifierDashboardService;
 
     public DashboardRoutes(
             DashboardConfig config,
@@ -132,7 +135,8 @@ public final class DashboardRoutes {
             ModmailTicketsService modmailTicketsService,
             NotifiersService notifiersService,
             ReportsService reportsService,
-            StickyMessagesService stickyMessagesService
+            StickyMessagesService stickyMessagesService,
+            VoiceChannelNotifierDashboardService voiceChannelNotifierDashboardService
     ) {
         this.config = config;
         this.jda = jda;
@@ -165,6 +169,7 @@ public final class DashboardRoutes {
         this.notifiersService = notifiersService;
         this.reportsService = reportsService;
         this.stickyMessagesService = stickyMessagesService;
+        this.voiceChannelNotifierDashboardService = voiceChannelNotifierDashboardService;
     }
 
     public void register(Javalin app) {
@@ -271,6 +276,11 @@ public final class DashboardRoutes {
         app.get("/api/guilds/{guildId}/counting", ctx -> ctx.json(this.countingSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/counting", this::upsertCountingChannel);
         app.delete("/api/guilds/{guildId}/counting/{channelId}", this::deleteCountingChannel);
+        app.get("/api/guilds/{guildId}/voice-channel-notifiers", ctx ->
+                ctx.json(this.voiceChannelNotifierDashboardService.getSettings(parseGuildId(ctx))));
+        app.put("/api/guilds/{guildId}/voice-channel-notifiers", this::upsertVoiceChannelNotifier);
+        app.delete("/api/guilds/{guildId}/voice-channel-notifiers/{voiceChannelId}", this::deleteVoiceChannelNotifier);
+
         app.get("/api/users/{userId}/profile", ctx -> ctx.json(this.userProfileService.getUserProfile(parseSnowflakeId(ctx, "userId", "invalid_user_id"))));
         app.post("/api/sessions", this::createSession);
         app.get("/api/sessions/{sessionId}", this::getSession);
@@ -568,6 +578,18 @@ public final class DashboardRoutes {
         int page = parsePositiveIntQuery(ctx, "page", 1);
         int pageSize = parsePositiveIntQuery(ctx, "pageSize", 10);
         ctx.json(this.tagsDashboardService.createTag(guildId, request, page, pageSize));
+    }
+
+    private void upsertVoiceChannelNotifier(Context ctx) {
+        long guildId = parseGuildId(ctx);
+        VoiceChannelNotifierUpsertRequest request = ctx.bodyAsClass(VoiceChannelNotifierUpsertRequest.class);
+        ctx.json(this.voiceChannelNotifierDashboardService.upsertNotifier(guildId, request));
+    }
+
+    private void deleteVoiceChannelNotifier(Context ctx) {
+        long guildId = parseGuildId(ctx);
+        long voiceChannelId = parseSnowflakeId(ctx, "voiceChannelId", "invalid_voice_channel_id");
+        ctx.json(this.voiceChannelNotifierDashboardService.deleteNotifier(guildId, String.valueOf(voiceChannelId)));
     }
 
     private void getSession(Context ctx) {

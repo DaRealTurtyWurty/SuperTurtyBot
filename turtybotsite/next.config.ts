@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
                 protocol: 'https',
                 hostname: 'cdn.discordapp.com',
                 port: ''
+            },
+            {
+                protocol: 'https',
+                hostname: 'cdnjs.cloudflare.com',
+                port: ''
             }
         ]
     }

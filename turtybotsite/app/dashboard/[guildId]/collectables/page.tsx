@@ -1,5 +1,6 @@
 import CollectablesSettingsForm from "@/components/CollectablesSettingsForm";
-import {fetchDashboardCollectablesSettings, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardCollectablesSettings} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function CollectablesPage({
     params
@@ -7,13 +8,7 @@ export default async function CollectablesPage({
     params: Promise<{ guildId: string }>;
 }) {
     const guildId = (await params).guildId;
-    const settings = await fetchDashboardCollectablesSettings(guildId).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const settings = await fetchDashboardCollectablesSettings(guildId).catch(handleDashboardPageError);
 
     if (!settings) {
         return <div className="border border-red-500/30 bg-red-500/10 p-6 text-red-100">

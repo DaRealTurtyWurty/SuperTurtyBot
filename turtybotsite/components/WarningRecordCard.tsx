@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type {DashboardWarningRecord} from "@/lib/dashboard-api";
 
@@ -13,9 +14,11 @@ function WarningAvatar({name, avatarUrl}: {name: string; avatarUrl: string | nul
     const fallback = name.trim().charAt(0).toUpperCase() || "?";
 
     if (avatarUrl) {
-        return <img
+        return <Image
             src={avatarUrl}
             alt={name}
+            width={48}
+            height={48}
             className="h-12 w-12 rounded-full border border-slate-700 object-cover"
         />;
     }

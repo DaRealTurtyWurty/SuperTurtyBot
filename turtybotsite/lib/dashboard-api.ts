@@ -240,6 +240,34 @@ export interface DashboardBirthdaySettings {
     announceBirthdays: boolean;
 }
 
+export interface DashboardVoiceChannelNotifierEntry {
+    voiceChannelId: string;
+    voiceChannelName: string;
+    sendToChannelId: string;
+    sendToChannelName: string;
+    mentionRoleIds: string[];
+    message: string;
+    enabled: boolean;
+    announcePerJoin: boolean;
+    cooldownMs: number;
+}
+
+export interface DashboardVoiceChannelNotifierResponse {
+    guild: DashboardGuildInfo;
+    entries: DashboardVoiceChannelNotifierEntry[];
+}
+
+export interface DashboardVoiceChannelNotifierUpsertRequest {
+    originalVoiceChannelId?: string | null;
+    voiceChannelId: string;
+    sendToChannelId: string;
+    mentionRoleIds: string[];
+    message: string;
+    enabled: boolean;
+    announcePerJoin: boolean;
+    cooldownMs: number;
+}
+
 export interface DashboardCollectableItem {
     name: string;
     richName: string;
@@ -610,14 +638,23 @@ async function readErrorPayload(response: Response) {
 }
 
 async function dashboardFetch<T>(path: string, init?: RequestInit) {
-    const response = await fetch(createDashboardApiUrl(path), {
-        ...init,
-        headers: {
-            ...createDashboardHeaders(),
-            ...(init?.headers ?? {})
-        },
-        cache: "no-store"
-    });
+    let response: Response;
+    try {
+        response = await fetch(createDashboardApiUrl(path), {
+            ...init,
+            headers: {
+                ...createDashboardHeaders(),
+                ...(init?.headers ?? {})
+            },
+            cache: "no-store"
+        });
+    } catch {
+        throw new DashboardApiError(
+            "The bot is currently offline.",
+            503,
+            "dashboard_offline"
+        );
+    }
 
     if (!response.ok) {
         const payload = await readErrorPayload(response);
@@ -770,6 +807,12 @@ export async function fetchDashboardWelcomeSettings(guildId: string) {
 
 export async function fetchDashboardBirthdaySettings(guildId: string) {
     return dashboardFetch<DashboardBirthdaySettings>(`/api/guilds/${guildId}/config/birthday`, {
+        method: "GET"
+    });
+}
+
+export async function fetchDashboardVoiceChannelNotifiers(guildId: string) {
+    return dashboardFetch<DashboardVoiceChannelNotifierResponse>(`/api/guilds/${guildId}/voice-channel-notifiers`, {
         method: "GET"
     });
 }
@@ -975,6 +1018,19 @@ export async function updateDashboardBirthdaySettings(guildId: string, settings:
     return dashboardFetch<DashboardBirthdaySettings>(`/api/guilds/${guildId}/config/birthday`, {
         method: "PUT",
         body: JSON.stringify(settings)
+    });
+}
+
+export async function upsertDashboardVoiceChannelNotifier(guildId: string, payload: DashboardVoiceChannelNotifierUpsertRequest) {
+    return dashboardFetch<DashboardVoiceChannelNotifierResponse>(`/api/guilds/${guildId}/voice-channel-notifiers`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
+}
+
+export async function deleteDashboardVoiceChannelNotifier(guildId: string, voiceChannelId: string) {
+    return dashboardFetch<DashboardVoiceChannelNotifierResponse>(`/api/guilds/${guildId}/voice-channel-notifiers/${encodeURIComponent(voiceChannelId)}`, {
+        method: "DELETE"
     });
 }
 

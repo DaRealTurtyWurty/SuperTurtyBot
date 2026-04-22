@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardAutomodSettings} from "@/lib/dashboard-api";
 import DashboardNumberInput from "@/components/DashboardNumberInput";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
@@ -19,6 +20,7 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateBoolean(key: "inviteGuardEnabled" | "scamDetectionEnabled" | "imageSpamAutoBanEnabled", value: boolean) {
         setSettings(current => ({
@@ -70,10 +72,12 @@ export default function AutomodSettingsForm({guildId, initialSettings}: AutomodS
             }
 
             const updated = await response.json() as DashboardAutomodSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 inviteGuardWhitelistChannelIds: updated.inviteGuardWhitelistChannelIds
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Automod settings saved.");
         });
     }

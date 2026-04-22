@@ -2,7 +2,8 @@ import Link from "next/link";
 import {redirect} from "next/navigation";
 import WarningRecordCard from "@/components/WarningRecordCard";
 import {requireCurrentSession} from "@/lib/auth";
-import {fetchDashboardWarningDetail, isDashboardApiError} from "@/lib/dashboard-api";
+import {fetchDashboardWarningDetail} from "@/lib/dashboard-api";
+import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function WarningDetailPage({
     params
@@ -15,13 +16,7 @@ export default async function WarningDetailPage({
         redirect("/dashboard");
     }
 
-    const detail = await fetchDashboardWarningDetail(guildId, warningUuid).catch(error => {
-        if (isDashboardApiError(error)) {
-            return null;
-        }
-
-        throw error;
-    });
+    const detail = await fetchDashboardWarningDetail(guildId, warningUuid).catch(handleDashboardPageError);
 
     if (!detail) {
         return <section className="space-y-4">

@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
 import type {DashboardOptInChannelsSettings} from "@/lib/dashboard-api";
 
@@ -17,6 +18,7 @@ export default function OptInChannelsSettingsForm({guildId, initialSettings}: Op
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateChannels(optInChannelIds: string[]) {
         setSettings(current => ({
@@ -49,6 +51,7 @@ export default function OptInChannelsSettingsForm({guildId, initialSettings}: Op
 
             const updated = await response.json() as DashboardOptInChannelsSettings;
             setSettings(updated);
+            markSaved(updated);
             setSuccess("Opt-in channels saved.");
         });
     }

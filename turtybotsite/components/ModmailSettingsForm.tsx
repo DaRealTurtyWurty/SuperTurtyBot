@@ -2,6 +2,7 @@
 
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
+import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
 import type {DashboardModmailSettings} from "@/lib/dashboard-api";
 import GuildRoleSelect from "@/components/GuildRoleSelect";
 
@@ -18,6 +19,7 @@ export default function ModmailSettingsForm({guildId, initialSettings}: ModmailS
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const {markSaved} = useDashboardUnsavedChanges(settings);
 
     function updateRoles(values: string[]) {
         setSettings(current => ({
@@ -57,10 +59,12 @@ export default function ModmailSettingsForm({guildId, initialSettings}: ModmailS
             }
 
             const updated = await response.json() as DashboardModmailSettings;
-            setSettings({
+            const nextSettings = {
                 ...updated,
                 moderatorRoleIds: updated.moderatorRoleIds
-            });
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Modmail settings saved.");
         });
     }
