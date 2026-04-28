@@ -84,7 +84,6 @@ public abstract class AbstractScrapedGameListener<N> {
                         continue;
 
                     Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName());
-                    if (articleDocument == null) continue;
                     
                     String title = resolveArticleTitle(articleDocument, listingTitle);
                     if (title.isBlank() || !matchesTitle(title))
