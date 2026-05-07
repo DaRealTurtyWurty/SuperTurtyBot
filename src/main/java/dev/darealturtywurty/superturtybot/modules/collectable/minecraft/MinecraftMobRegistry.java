@@ -218,7 +218,7 @@ public class MinecraftMobRegistry {
             .name("Squid")
             .emoji("squid")
             .question("How many tentacles does a squid have?")
-            .answer(10)
+            .answer(8)
             .category(MinecraftMobCollectable.MobCategory.PASSIVE)
             .rarity(CollectableRarity.COMMON));
 
