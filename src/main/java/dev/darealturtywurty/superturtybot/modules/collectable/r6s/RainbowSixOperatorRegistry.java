@@ -558,9 +558,9 @@ public class RainbowSixOperatorRegistry {
     public static final RainbowSixOperatorCollectable TUBARAO = register("tubarao", RainbowSixOperatorCollectable.builder()
             .name("Tubarão")
             .emoji("tubarao")
-            .question("Zoto Canisters freeze all gadgets except for which attacker gadget?")
+            .question("What effect does Tubarão's Zoto Canister have on electronics?")
             .answer()
-                .or("Maverick's blowtorch", "Maverick blowtorch", "Maverick's torch", "Maverick torch", "Breaching torch", "Breaching blowtorch", "Tactical Breaching Torch")
+                .or("Disables electronics", "Freezes electronics", "Temporarily disables electronics"))
                 .finish()
             .rarity(CollectableRarity.EPIC));
 
@@ -607,6 +607,15 @@ public class RainbowSixOperatorRegistry {
             .question("What country is Denari from?")
             .answer("Switzerland")
             .rarity(CollectableRarity.LEGENDARY));
+
+    public static final RainbowSixOperatorCollectable SOLID_SNAKE = register("solid_snake", RainbowSixOperatorCollectable.builder()
+        .name("Solid Snake")
+        .emoji("solid_snake")
+        .question("Which legendary voice actor returned to voice Solid Snake in Rainbow Six Siege?")
+        .answer()
+            .or("David Hayter", "Hayter")
+            .finish()
+        .rarity(CollectableRarity.LEGENDARY));
 
     public static void load() {
         Constants.LOGGER.info("Loaded {} Rainbow Six Operator Collectables", RAINBOW_SIX_OPERATOR_REGISTRY.size());
