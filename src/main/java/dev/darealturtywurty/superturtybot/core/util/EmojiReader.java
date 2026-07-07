@@ -56,6 +56,6 @@ public class EmojiReader {
     }
 
     public static long getEmoji(String name) {
-        return getEmojis().get(name);
+        return getEmojis().getOrDefault(name, 0L);
     }
 }

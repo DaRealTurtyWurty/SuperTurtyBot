@@ -560,7 +560,7 @@ public class RainbowSixOperatorRegistry {
             .emoji("tubarao")
             .question("What effect does Tubarão's Zoto Canister have on electronics?")
             .answer()
-                .or("Disables electronics", "Freezes electronics", "Temporarily disables electronics"))
+                .or("Disables electronics", "Freezes electronics", "Temporarily disables electronics")
                 .finish()
             .rarity(CollectableRarity.EPIC));
 
