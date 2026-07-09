@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.commons.io.IOUtils;
@@ -176,7 +177,10 @@ public class ChatRevivalManager extends ListenerAdapter {
         chatReviver.setLastRunTime(System.currentTimeMillis());
         Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
-        textChannel.sendMessage("🤔 Would you rather:\n " + wyr + "\n Happy chatting! 🤔").queue();
+        textChannel.sendMessage("🤔 Would you rather:\n " + wyr + "\n Happy chatting! 🤔").queue(msg -> {
+            msg.addReaction(Emoji.fromUnicode("U+1F170")).queue();
+            msg.addReaction(Emoji.fromUnicode("U+1F171")).queue();
+        });
     }
 
     private static ChatReviver getChatReviver(Guild guild) {
