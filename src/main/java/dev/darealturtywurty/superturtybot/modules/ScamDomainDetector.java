@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
+import java.net.SocketException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -25,7 +26,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +55,8 @@ public class ScamDomainDetector {
         return thread;
     });
     private final AtomicInteger consecutiveWebSocketFailures = new AtomicInteger();
+    private final AtomicBoolean reconnectScheduled = new AtomicBoolean();
+    private final AtomicReference<WebSocket> activeWebSocket = new AtomicReference<>();
 
     private volatile long lastUpdatedEpochSecond = 0L;
     private volatile ScheduledFuture<?> pingTask;
@@ -206,6 +211,11 @@ public class ScamDomainDetector {
                 .buildAsync(URI.create(WEBSOCKET_URL), new WebSocket.Listener() {
                     @Override
                     public void onOpen(WebSocket webSocket) {
+                        final WebSocket previousWebSocket = activeWebSocket.getAndSet(webSocket);
+                        if (previousWebSocket != null && previousWebSocket != webSocket) {
+                            previousWebSocket.abort();
+                        }
+
                         webSocket.request(1);
                         consecutiveWebSocketFailures.set(0);
                         startPing(webSocket);
@@ -238,6 +248,9 @@ public class ScamDomainDetector {
 
                     @Override
                     public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+                        if (!activeWebSocket.compareAndSet(webSocket, null))
+                            return null;
+
                         cancelPing();
                         if (statusCode == 1000) {
                             Constants.LOGGER.info("Scam-domain websocket closed normally: {} - {}", statusCode, reason);
@@ -250,23 +263,51 @@ public class ScamDomainDetector {
 
                     @Override
                     public void onError(WebSocket webSocket, Throwable error) {
+                        if (!activeWebSocket.compareAndSet(webSocket, null))
+                            return;
+
                         cancelPing();
-                        Constants.LOGGER.error("Scam-domain websocket error!", error);
+                        logWebSocketFailure("Scam-domain websocket disconnected", error);
                         scheduleReconnect();
                     }
                 }).exceptionally(error -> {
-                    Constants.LOGGER.error("Failed to connect to scam-domain websocket feed!", error);
+                    logWebSocketFailure("Failed to connect to scam-domain websocket feed", error);
                     scheduleReconnect();
                     return null;
                 });
     }
 
     private void scheduleReconnect() {
+        if (!this.reconnectScheduled.compareAndSet(false, true))
+            return;
+
         final int attempt = this.consecutiveWebSocketFailures.incrementAndGet();
         final long exponentialDelaySeconds = WEBSOCKET_RECONNECT_BASE_DELAY.getSeconds()
                 * (1L << Math.min(attempt - 1, 6)); // cap exponent to avoid overflow
         final long delaySeconds = Math.min(exponentialDelaySeconds, WEBSOCKET_RECONNECT_MAX_DELAY.getSeconds());
-        this.scheduler.schedule(this::startWebSocket, delaySeconds, TimeUnit.SECONDS);
+        this.scheduler.schedule(() -> {
+            this.reconnectScheduled.set(false);
+            startWebSocket();
+        }, delaySeconds, TimeUnit.SECONDS);
+    }
+
+    private static void logWebSocketFailure(String message, Throwable error) {
+        final Throwable cause = unwrapCompletionException(error);
+        if (cause instanceof SocketException) {
+            Constants.LOGGER.warn("{}: {}. Reconnecting.", message, cause.getMessage());
+        } else {
+            Constants.LOGGER.error(message + ". Reconnecting.", cause);
+        }
+    }
+
+    private static Throwable unwrapCompletionException(Throwable error) {
+        Throwable cause = error;
+        while ((cause instanceof CompletionException || cause instanceof ExecutionException)
+                && cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+
+        return cause;
     }
 
     private void ensureCacheDirectory() {
@@ -317,9 +358,12 @@ public class ScamDomainDetector {
 
         this.pingTask = this.scheduler.scheduleAtFixedRate(() -> {
             webSocket.sendPing(ByteBuffer.wrap(new byte[]{1})).exceptionally(error -> {
-                Constants.LOGGER.debug("Failed to send scam-domain websocket ping, reconnecting.", error);
-                cancelPing();
-                scheduleReconnect();
+                if (activeWebSocket.compareAndSet(webSocket, null)) {
+                    Constants.LOGGER.debug("Failed to send scam-domain websocket ping, reconnecting.", error);
+                    cancelPing();
+                    webSocket.abort();
+                    scheduleReconnect();
+                }
                 return null;
             });
         }, WEBSOCKET_PING_INTERVAL.getSeconds(), WEBSOCKET_PING_INTERVAL.getSeconds(), TimeUnit.SECONDS);
@@ -328,7 +372,7 @@ public class ScamDomainDetector {
     private void cancelPing() {
         final ScheduledFuture<?> existing = this.pingTask;
         if (existing != null) {
-            existing.cancel(true);
+            existing.cancel(false);
         }
 
         this.pingTask = null;

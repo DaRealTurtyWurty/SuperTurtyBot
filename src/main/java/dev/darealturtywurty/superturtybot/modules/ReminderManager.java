@@ -15,6 +15,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -85,7 +87,7 @@ public final class ReminderManager {
         Reminder reminder = Database.getDatabase().reminders.find(Filters.and(
                 Filters.eq("guild", guildId),
                 Filters.eq("user", userId),
-                Filters.eq("_id", normalizeReminderId(reminderId)))).first();
+                reminderIdFilter(normalizeReminderId(reminderId)))).first();
         if (reminder == null)
             return false;
 
@@ -94,7 +96,7 @@ public final class ReminderManager {
                 Filters.and(
                         Filters.eq("guild", guildId),
                         Filters.eq("user", userId),
-                        Filters.eq("_id", reminder.getId())
+                        reminderIdFilter(reminder.getId())
                 )
         );
         return true;
@@ -140,7 +142,7 @@ public final class ReminderManager {
                 Filters.and(
                         Filters.eq("guild", guildId),
                         Filters.eq("user", userId),
-                        Filters.eq("_id", reminderId))
+                        reminderIdFilter(reminderId))
         ).first();
         if (reminder == null)
             return;
@@ -249,7 +251,7 @@ public final class ReminderManager {
         Database.getDatabase().reminders.deleteOne(Filters.and(
                 Filters.eq("guild", guildId),
                 Filters.eq("user", userId),
-                Filters.eq("_id", reminderId)));
+                reminderIdFilter(reminderId)));
     }
 
     private static void deleteReminderRecord(Reminder reminder) {
@@ -280,7 +282,7 @@ public final class ReminderManager {
                     Filters.and(
                             Filters.eq("guild", guildId),
                             Filters.eq("user", userId),
-                            Filters.eq("_id", candidate))
+                            reminderIdFilter(candidate))
             ).first();
             if (existing == null)
                 return candidate;
@@ -295,5 +297,13 @@ public final class ReminderManager {
 
         String normalizedId = reminderId.trim().toUpperCase(Locale.ROOT);
         return normalizedId.isBlank() ? null : normalizedId;
+    }
+
+    private static Bson reminderIdFilter(@Nullable String reminderId) {
+        if (reminderId != null && ObjectId.isValid(reminderId)) {
+            return Filters.in("_id", reminderId, new ObjectId(reminderId));
+        }
+
+        return Filters.eq("_id", reminderId);
     }
 }

@@ -77,7 +77,7 @@ public class TriviaCommand extends CoreCommand {
     }
 
     public record TriviaData(String selectMenuId, long guildId, long channelId, long messageId, long userId,
-                             TriviaQuestion question) {
+                             TriviaQuestion question, List<String> answers) {
     }
 
     @Override
@@ -213,8 +213,12 @@ public class TriviaCommand extends CoreCommand {
                         return;
                     }
 
-                    event.getHook().editOriginal("✅ Your trivia question is in " + thread.getAsMention() + ".")
-                            .queue();
+                    if (event.getChannel().getIdLong() == thread.getIdLong()) {
+                        event.getHook().deleteOriginal().queue();
+                    } else {
+                        event.getHook().editOriginal(
+                                "✅ Your trivia question is in " + thread.getAsMention() + ".").queue();
+                    }
                 });
             });
         });
@@ -289,7 +293,9 @@ public class TriviaCommand extends CoreCommand {
         List<String> answers = new ArrayList<>(question.incorrectAnswers);
         answers.add(question.correctAnswer);
         Collections.shuffle(answers);
-        answers.forEach(answer -> selectMenu.addOption(answer, answer));
+        for (int index = 0; index < answers.size(); index++) {
+            selectMenu.addOption(answers.get(index), Integer.toString(index));
+        }
 
         return thread.sendMessage(event.getUser().getAsMention() + " Here's your trivia question!")
                 .setEmbeds(new EmbedBuilder()
@@ -303,7 +309,8 @@ public class TriviaCommand extends CoreCommand {
                 .submit()
                 .thenApply(message -> {
                     CACHED_TRIVIA.add(new TriviaData(selectId, event.getGuild().getIdLong(),
-                            thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), question));
+                            thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), question,
+                            List.copyOf(answers)));
                     return message;
                 });
     }
@@ -327,7 +334,26 @@ public class TriviaCommand extends CoreCommand {
             return;
         }
 
-        String response = event.getValues().getFirst();
+        int selectedAnswer;
+        try {
+            selectedAnswer = Integer.parseInt(event.getValues().getFirst());
+        } catch (NumberFormatException exception) {
+            Constants.LOGGER.warn("Received an invalid answer value for trivia question {}",
+                    data.question().id(), exception);
+            event.getHook().editOriginalComponents().queue();
+            CACHED_TRIVIA.remove(data);
+            return;
+        }
+
+        if (selectedAnswer < 0 || selectedAnswer >= data.answers().size()) {
+            Constants.LOGGER.warn("Received out-of-range answer index {} for trivia question {}",
+                    selectedAnswer, data.question().id());
+            event.getHook().editOriginalComponents().queue();
+            CACHED_TRIVIA.remove(data);
+            return;
+        }
+
+        String response = data.answers().get(selectedAnswer);
         String correctAnswer = data.question().correctAnswer();
 
         if (correctAnswer.equals(response)) {

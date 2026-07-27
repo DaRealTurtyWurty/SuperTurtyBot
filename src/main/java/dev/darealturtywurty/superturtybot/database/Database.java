@@ -14,6 +14,7 @@ import dev.darealturtywurty.superturtybot.database.codecs.BigDecimalCodec;
 import dev.darealturtywurty.superturtybot.database.codecs.BigIntegerCodec;
 import dev.darealturtywurty.superturtybot.database.codecs.ColorCodec;
 import dev.darealturtywurty.superturtybot.database.codecs.NewsitemCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.ReminderCodec;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -196,7 +197,8 @@ public class Database {
                 new BigIntegerCodec(),
                 new BigDecimalCodec(),
                 new ColorCodec(),
-                new NewsitemCodec()
+                new NewsitemCodec(),
+                new ReminderCodec()
         );
 
         return CodecRegistries.fromRegistries(
