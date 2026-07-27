@@ -14,7 +14,10 @@ interface ThreadSettingsFormProps {
 const ALLOWED_CHANNEL_TYPES = ["text"];
 
 export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSettingsFormProps) {
-    const [settings, setSettings] = useState(initialSettings);
+    const [settings, setSettings] = useState({
+        ...initialSettings,
+        triviaChannelId: initialSettings.triviaChannelId ?? ""
+    });
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -34,6 +37,13 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
         }));
     }
 
+    function updateTriviaChannel(triviaChannelId: string) {
+        setSettings(current => ({
+            ...current,
+            triviaChannelId
+        }));
+    }
+
     function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setError(null);
@@ -47,7 +57,8 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
                 },
                 body: JSON.stringify({
                     shouldModeratorsJoinThreads: settings.shouldModeratorsJoinThreads,
-                    autoThreadChannelIds: settings.autoThreadChannelIds
+                    autoThreadChannelIds: settings.autoThreadChannelIds,
+                    triviaChannelId: settings.triviaChannelId.trim() || null
                 })
             });
 
@@ -58,8 +69,12 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
             }
 
             const updated = await response.json() as DashboardThreadSettings;
-            setSettings(updated);
-            markSaved(updated);
+            const nextSettings = {
+                ...updated,
+                triviaChannelId: updated.triviaChannelId ?? ""
+            };
+            setSettings(nextSettings);
+            markSaved(nextSettings);
             setSuccess("Thread settings saved.");
         });
     }
@@ -94,6 +109,17 @@ export default function ThreadSettingsForm({guildId, initialSettings}: ThreadSet
             label="Auto Thread Channels"
             description="New messages in these text channels create a thread automatically."
             placeholder="Select channels"
+        />
+
+        <GuildChannelSelect
+            id="trivia-anchor-channel"
+            guildId={guildId}
+            value={settings.triviaChannelId}
+            onChange={updateTriviaChannel}
+            allowTypes={ALLOWED_CHANNEL_TYPES}
+            label="Trivia Anchor Channel"
+            description="Each user's reusable trivia thread is created under this text channel."
+            placeholder="Use the server's default channel"
         />
 
         {error ? <p className="border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">

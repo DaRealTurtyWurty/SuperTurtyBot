@@ -68,7 +68,7 @@ export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
     {
         label: "Threads",
         href: guildId => `/dashboard/${guildId}/threads`,
-        terms: ["moderators join threads", "auto thread channels"]
+        terms: ["moderators join threads", "auto thread channels", "trivia anchor channel"]
     },
     {
         label: "Misc",

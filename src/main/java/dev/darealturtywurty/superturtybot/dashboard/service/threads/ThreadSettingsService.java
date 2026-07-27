@@ -27,22 +27,22 @@ public final class ThreadSettingsService {
 
     public ThreadSettingsResponse updateSettings(long guildId, ThreadSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
                     "TurtyBot is not currently connected to that guild.");
-        }
 
-        if (request == null) {
+        if (request == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_thread_settings",
                     "The thread settings payload was missing.");
-        }
 
         List<String> autoThreadChannelIds = normalizeSnowflakes(request.getAutoThreadChannelIds());
-        validateRequest(guild, autoThreadChannelIds);
+        long triviaChannelId = normalizeOptionalSnowflake(request.getTriviaChannelId());
+        validateRequest(guild, autoThreadChannelIds, triviaChannelId);
 
         GuildData guildData = GuildData.getOrCreateGuildData(guildId);
         guildData.setShouldModeratorsJoinThreads(request.isShouldModeratorsJoinThreads());
         guildData.setAutoThreadChannels(String.join(" ", autoThreadChannelIds));
+        guildData.setTriviaChannel(triviaChannelId);
 
         Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guildId), guildData);
         return toResponse(guildData);
@@ -51,37 +51,38 @@ public final class ThreadSettingsService {
     private static ThreadSettingsResponse toResponse(GuildData guildData) {
         return new ThreadSettingsResponse(
                 guildData.isShouldModeratorsJoinThreads(),
-                GuildData.getLongs(guildData.getAutoThreadChannels()).stream().map(String::valueOf).toList()
+                GuildData.getLongs(guildData.getAutoThreadChannels()).stream().map(String::valueOf).toList(),
+                guildData.getTriviaChannel() == 0L ? null : Long.toString(guildData.getTriviaChannel())
         );
     }
 
-    private static void validateRequest(Guild guild, List<String> autoThreadChannelIds) {
+    private static void validateRequest(Guild guild, List<String> autoThreadChannelIds, long triviaChannelId) {
         for (String channelId : autoThreadChannelIds) {
             TextChannel channel = guild.getTextChannelById(channelId);
-            if (channel == null) {
+            if (channel == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_auto_thread_channel",
                         "One or more auto-thread channels were not valid text channels in this guild.");
-            }
         }
+
+        if (triviaChannelId != 0L && guild.getTextChannelById(triviaChannelId) == null)
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_trivia_channel",
+                    "The trivia anchor was not a valid text channel in this guild.");
     }
 
     private static List<String> normalizeSnowflakes(List<String> values) {
-        if (values == null || values.isEmpty()) {
+        if (values == null || values.isEmpty())
             return List.of();
-        }
 
         List<String> normalized = new ArrayList<>();
         for (String value : values) {
             String trimmed = value == null ? "" : value.trim();
-            if (trimmed.isEmpty()) {
+            if (trimmed.isEmpty())
                 continue;
-            }
 
             try {
                 long parsed = Long.parseLong(trimmed);
-                if (parsed <= 0L) {
+                if (parsed <= 0L)
                     throw new NumberFormatException("Snowflake ID must be positive.");
-                }
 
                 normalized.add(Long.toString(parsed));
             } catch (NumberFormatException exception) {
@@ -91,5 +92,21 @@ public final class ThreadSettingsService {
         }
 
         return new ArrayList<>(new LinkedHashSet<>(normalized));
+    }
+
+    private static long normalizeOptionalSnowflake(String value) {
+        if (value == null || value.isBlank())
+            return 0L;
+
+        try {
+            long parsed = Long.parseLong(value.trim());
+            if (parsed <= 0L)
+                throw new NumberFormatException("Snowflake ID must be positive.");
+
+            return parsed;
+        } catch (NumberFormatException exception) {
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_trivia_channel",
+                    "The trivia anchor channel ID was invalid.");
+        }
     }
 }

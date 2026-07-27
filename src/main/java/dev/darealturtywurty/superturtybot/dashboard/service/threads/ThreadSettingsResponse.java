@@ -4,6 +4,7 @@ import java.util.List;
 
 public record ThreadSettingsResponse(
         boolean shouldModeratorsJoinThreads,
-        List<String> autoThreadChannelIds
+        List<String> autoThreadChannelIds,
+        String triviaChannelId
 ) {
 }

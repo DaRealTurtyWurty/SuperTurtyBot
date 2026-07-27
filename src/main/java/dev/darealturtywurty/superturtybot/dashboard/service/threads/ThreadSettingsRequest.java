@@ -11,4 +11,5 @@ import java.util.List;
 public class ThreadSettingsRequest {
     private boolean shouldModeratorsJoinThreads;
     private List<String> autoThreadChannelIds = new ArrayList<>();
+    private String triviaChannelId;
 }

@@ -427,6 +427,7 @@ export interface DashboardNsfwSettings {
 export interface DashboardThreadSettings {
     shouldModeratorsJoinThreads: boolean;
     autoThreadChannelIds: string[];
+    triviaChannelId: string | null;
 }
 
 export interface DashboardMiscSettings {

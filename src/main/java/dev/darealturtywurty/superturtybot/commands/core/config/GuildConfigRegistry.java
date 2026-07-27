@@ -182,6 +182,12 @@ public class GuildConfigRegistry {
                             return true;
                         }).build());
 
+        GUILD_CONFIG_OPTIONS.register("trivia_channel",
+                new GuildConfigOption.Builder().dataType(DataType.LONG)
+                        .serializer((config, value) -> config.setTriviaChannel(Long.parseLong(value)))
+                        .valueFromConfig(GuildData::getTriviaChannel)
+                        .validator(Validators.TEXT_CHANNEL_VALIDATOR).build());
+
         GUILD_CONFIG_OPTIONS.register("should_create_gists",
                 new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                                 (config, value) -> config.setShouldCreateGists(Boolean.parseBoolean(value)))

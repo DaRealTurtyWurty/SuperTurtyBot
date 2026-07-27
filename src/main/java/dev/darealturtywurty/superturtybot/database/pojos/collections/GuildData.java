@@ -50,6 +50,7 @@ public class GuildData {
     private long birthdayChannel;
     private long welcomeChannel;
     private long collectorChannel;
+    private long triviaChannel;
     private String discordInviteWhitelistChannels;
 
     // Showcases
@@ -180,6 +181,7 @@ public class GuildData {
         this.birthdayChannel = 0L;
         this.welcomeChannel = 0L;
         this.collectorChannel = 0L;
+        this.triviaChannel = 0L;
         this.discordInviteWhitelistChannels = "";
 
         // Showcases

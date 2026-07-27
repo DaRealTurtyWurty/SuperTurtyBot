@@ -249,7 +249,8 @@ const NAV_SECTIONS: SidebarSection[] = [
                 href: (guildId: string) => `/dashboard/${guildId}/threads`,
                 options: [
                     {label: "Moderators Join Threads", fragment: "moderators-join-threads"},
-                    {label: "Auto Thread Channels", fragment: "auto-thread-channels"}
+                    {label: "Auto Thread Channels", fragment: "auto-thread-channels"},
+                    {label: "Trivia Anchor Channel", fragment: "trivia-anchor-channel"}
                 ]
             },
             {

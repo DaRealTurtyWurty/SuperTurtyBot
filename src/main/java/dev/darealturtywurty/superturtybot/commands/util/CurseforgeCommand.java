@@ -42,13 +42,14 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class CurseforgeCommand extends CoreCommand {
-    private static CurseForgeAPI CURSE_FORGE_API;
-    private static final Map<String, Game> GAMES = new HashMap<>();
-    private static final Map<Game, Set<Category>> CATEGORIES = new HashMap<>();
+    private static volatile CurseForgeAPI CURSE_FORGE_API;
+    private static final Map<String, Game> GAMES = new ConcurrentHashMap<>();
+    private static final Map<Game, Set<Category>> CATEGORIES = new ConcurrentHashMap<>();
 
     static {
         new Thread(() -> Environment.INSTANCE.curseforgeKey().ifPresent(apiKey -> {
@@ -57,25 +58,41 @@ public class CurseforgeCommand extends CoreCommand {
                         .apiKey(apiKey)
                         .build();
             } catch (LoginException exception) {
-                throw new IllegalStateException("Failed to login to curseforge!", exception);
+                Constants.LOGGER.error("Failed to log in to CurseForge.", exception);
+                return;
             }
 
             RequestHelper helper = CURSE_FORGE_API.getHelper();
             try {
                 Response<List<Game>> games = helper.getGames();
-                for (Game game : games.get()) {
+                if (games.isEmpty()) {
+                    Constants.LOGGER.warn("CurseForge returned no games (status {}).", games.getStatusCode());
+                    return;
+                }
+
+                for (Game game : games.orElse(List.of())) {
                     GAMES.put(game.name().toUpperCase(Locale.ROOT), game);
                 }
             } catch (CurseForgeException exception) {
-                throw new IllegalStateException("Failed to get games from curseforge!", exception);
+                Constants.LOGGER.error("Failed to get games from CurseForge.", exception);
+                return;
             }
 
             for (Game game : GAMES.values()) {
                 CATEGORIES.computeIfAbsent(game, key -> {
                     try {
-                        return new HashSet<>(helper.getCategories(game.id()).get());
+                        Response<List<Category>> response = helper.getCategories(game.id());
+                        if (response.isEmpty()) {
+                            Constants.LOGGER.warn("CurseForge returned no categories for game {} (status {}).",
+                                    game.name(), response.getStatusCode());
+                            return Set.of();
+                        }
+
+                        return new HashSet<>(response.orElse(List.of()));
                     } catch (CurseForgeException exception) {
-                        throw new IllegalStateException("Failed to get categories from curseforge!", exception);
+                        Constants.LOGGER.warn("Failed to get CurseForge categories for game {}.", game.name(),
+                                exception);
+                        return Set.of();
                     }
                 });
             }
@@ -133,6 +150,11 @@ public class CurseforgeCommand extends CoreCommand {
             return;
         }
 
+        if (CURSE_FORGE_API == null || GAMES.isEmpty()) {
+            reply(event, "❌ CurseForge data is currently unavailable. Please try again later!", false, true);
+            return;
+        }
+
         String game = event.getOption("game", OptionMapping::getAsString);
         String search = event.getOption("search", OptionMapping::getAsString);
         String type = event.getOption("type", OptionMapping::getAsString);
@@ -165,20 +187,15 @@ public class CurseforgeCommand extends CoreCommand {
         // Check if category exists
         Category categoryObj = null;
         if (category != null) {
-            try {
-                categoryObj = CATEGORIES.get(gameObj)
-                        .stream()
-                        .filter(cat -> cat.name().equalsIgnoreCase(category))
-                        .findFirst()
-                        .orElse(null);
-            } catch (NoSuchElementException exception) {
-                reply(event, "❌ That category does not exist!", false, true);
-                return;
-            }
+            categoryObj = CATEGORIES.getOrDefault(gameObj, Set.of())
+                    .stream()
+                    .filter(cat -> cat.name().equalsIgnoreCase(category))
+                    .findFirst()
+                    .orElse(null);
         }
 
-        if (categoryObj == null && classId != -1) {
-            reply(event, "❌ That type does not exist!", false, true);
+        if (category != null && categoryObj == null) {
+            reply(event, "❌ That category does not exist!", false, true);
             return;
         }
 
