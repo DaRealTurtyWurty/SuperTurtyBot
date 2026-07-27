@@ -62,6 +62,10 @@ public final class Environment {
         return getString("GITHUB_OAUTH_TOKEN");
     }
 
+    public Optional<Boolean> gameNewsProxiesEnabled() {
+        return getBoolean("GAME_NEWS_PROXIES_ENABLED");
+    }
+
     public Optional<String> loggingWebhookId() {
         return getString("LOGGING_WEBHOOK_ID");
     }

@@ -66,7 +66,8 @@ public abstract class AbstractScrapedGameListener<N> {
 
     protected List<ScrapedArticle> readRelevantArticles() {
         try {
-            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName());
+            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
+                    request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
                 return List.of();
 
@@ -83,7 +84,8 @@ public abstract class AbstractScrapedGameListener<N> {
                     if (listingTitle.isBlank() || !matchesTitle(listingTitle))
                         continue;
 
-                    Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName());
+                    Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName(),
+                            request -> GameNewsProxyClient.execute(request, sourceName()));
                     
                     String title = resolveArticleTitle(articleDocument, listingTitle);
                     if (title.isBlank() || !matchesTitle(title))

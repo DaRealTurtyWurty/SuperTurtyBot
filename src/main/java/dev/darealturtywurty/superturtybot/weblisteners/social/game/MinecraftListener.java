@@ -104,7 +104,7 @@ public class MinecraftListener {
                 .header("User-Agent", "SuperTurtyBot/1.0")
                 .build();
 
-        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = GameNewsProxyClient.execute(request, "Minecraft")) {
             if (!response.isSuccessful()) {
                 Constants.LOGGER.error("Failed to read Minecraft news feed! Status code: {}", response.code());
                 return List.of();

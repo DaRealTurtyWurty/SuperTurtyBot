@@ -28,7 +28,13 @@ public final class NewsScraperUtils {
     }
 
     public static Document fetchDocument(String url, String referer, String logPrefix) throws IOException {
-        byte[] responseBytes = fetchBytes(url, referer, logPrefix);
+        return fetchDocument(url, referer, logPrefix,
+                request -> Constants.HTTP_CLIENT.newCall(request).execute());
+    }
+
+    public static Document fetchDocument(String url, String referer, String logPrefix,
+                                         RequestExecutor requestExecutor) throws IOException {
+        byte[] responseBytes = fetchBytes(url, referer, logPrefix, requestExecutor);
         if (responseBytes == null)
             return null;
 
@@ -36,13 +42,19 @@ public final class NewsScraperUtils {
     }
 
     public static byte[] fetchBytes(String url, String referer, String logPrefix) throws IOException {
+        return fetchBytes(url, referer, logPrefix,
+                request -> Constants.HTTP_CLIENT.newCall(request).execute());
+    }
+
+    public static byte[] fetchBytes(String url, String referer, String logPrefix,
+                                    RequestExecutor requestExecutor) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .headers(defaultHeaders(referer))
                 .build();
 
-        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = requestExecutor.execute(request)) {
             if (!response.isSuccessful()) {
                 Constants.LOGGER.error("Failed to fetch {} page {}. HTTP {}", logPrefix, url, response.code());
                 return null;
@@ -367,5 +379,10 @@ public final class NewsScraperUtils {
             return value;
 
         return value.substring(0, maxLength - 3) + "...";
+    }
+
+    @FunctionalInterface
+    public interface RequestExecutor {
+        Response execute(Request request) throws IOException;
     }
 }

@@ -97,7 +97,8 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
     @Override
     protected List<ScrapedArticle> readRelevantArticles() {
         try {
-            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName());
+            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
+                    request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
                 return List.of();
 
