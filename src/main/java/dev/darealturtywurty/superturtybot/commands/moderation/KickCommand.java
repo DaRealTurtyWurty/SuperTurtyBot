@@ -93,7 +93,7 @@ public class KickCommand extends CoreCommand {
                     }));
             
             event.getGuild().kick(member).reason(finalReason).queue(success -> {
-                reply(event, "Successfully kicked " + member.getAsMention() + "!", false);
+                reply(event, "✅ Successfully kicked " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
                     BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has kicked "
@@ -101,18 +101,18 @@ public class KickCommand extends CoreCommand {
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                    reply(event, "I do not have permission to kick " + member.getAsMention(), false, true);
+                    reply(event, "❌ I do not have permission to kick " + member.getAsMention(), false, true);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                    embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                    embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.red);
                     reply(event, embed, true);
                 }
             });
         } else {
-            reply(event, "You do not have permission to kick " + member.getAsMention(), false, true);
+            reply(event, "❌ You do not have permission to kick " + member.getAsMention(), false, true);
         }
     }
 }

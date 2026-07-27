@@ -794,10 +794,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai. Please report the following error to the bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai. Please report the following error to the bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai is unavailable right now. Please try again later!").setFiles()
+                event.hook().editOriginal("❌ Hentai is unavailable right now. Please try again later!").setFiles()
                         .setComponents().setEmbeds().queue();
             }
         });
@@ -817,10 +817,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai anal. Please report the following error to the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai anal. Please report the following error to the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai anal is unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai anal is unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -840,10 +840,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai boobjobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai boobjobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai boobjobs are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai boobjobs are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -863,10 +863,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai boobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai boobs. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai boobs are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai boobs are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -886,10 +886,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai foxes. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai foxes. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai foxes are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai foxes are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -909,10 +909,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai kemonomimi. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai kemonomimi. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai kemonomimi is unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai kemonomimi is unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -932,10 +932,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai midriff. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai midriff. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai midriff is unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai midriff is unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -955,10 +955,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai nekos. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai nekos. Please report the following error to " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai nekos are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai nekos are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -978,10 +978,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai tentacles. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai tentacles. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai tentacles are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai tentacles are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -1001,10 +1001,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai thighs. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai thighs. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai thighs are unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai thighs are unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -1024,10 +1024,10 @@ public class NSFWCommandList {
                         exception) + "```";
 
                 event.hook().editOriginal(
-                                "There was an issue retrieving hentai yaoi. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
+                                "❌ There was an issue retrieving hentai yaoi. Please report the following error to" + " " + "the " + "bot owner:\n" + strBuilder)
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final JsonSyntaxException exception) {
-                event.hook().editOriginal("Hentai yaoi is unavailable right now. Please try again later!")
+                event.hook().editOriginal("❌ Hentai yaoi is unavailable right now. Please try again later!")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -1072,7 +1072,7 @@ public class NSFWCommandList {
                 }
 
                 if (images.isEmpty()) {
-                    event.hook().editOriginal("No results found for `" + searchTerm + "`.").setFiles().setComponents()
+                    event.hook().editOriginal("❌ No results found for `" + searchTerm + "`.").setFiles().setComponents()
                             .setEmbeds().queue();
                     return;
                 }
@@ -1081,7 +1081,7 @@ public class NSFWCommandList {
                 final Document imagePage = Jsoup.connect("https://rule34.xxx/" + images.getFirst()).get();
                 final Element image = imagePage.selectFirst("img#image");
                 if (image == null) {
-                    event.hook().editOriginal("No results found for `" + searchTerm + "`.").setFiles().setComponents()
+                    event.hook().editOriginal("❌ No results found for `" + searchTerm + "`.").setFiles().setComponents()
                             .setEmbeds().queue();
                     return;
                 }
@@ -1089,11 +1089,11 @@ public class NSFWCommandList {
                 final String imageURL = image.attr("src");
                 event.hook().editOriginal(imageURL).queue();
             } catch (final IOException exception) {
-                event.hook().editOriginal("There was an issue accessing the rule34 database! Please try again later.")
+                event.hook().editOriginal("❌ There was an issue accessing the rule34 database! Please try again later.")
                         .setFiles().setComponents().setEmbeds().queue();
             } catch (final NullPointerException exception) {
                 event.hook().editOriginal(
-                                "I have not found any rule34 for '" + searchTerm.trim() + "'! This could however be a bug, feel free to try again.")
+                                "❌ I have not found any rule34 for '" + searchTerm.trim() + "'! This could however be a bug, feel free to try again.")
                         .setFiles().setComponents().setEmbeds().queue();
             }
         });
@@ -1115,7 +1115,7 @@ public class NSFWCommandList {
             String[] split = event.getButton().getCustomId().split("-");
             if (split.length != 5) {
                 event.getHook().editOriginal(
-                                "There has been an error processing the command you tried to run. Please try again!")
+                                "❌ There has been an error processing the command you tried to run. Please try again!")
                         .setFiles().setComponents().setEmbeds().queue();
                 return null;
             }
@@ -1130,7 +1130,7 @@ public class NSFWCommandList {
             }
 
             if (event.getUser().getIdLong() != userId) {
-                event.getHook().editOriginal("You do not have permission to regenerate this command!")
+                event.getHook().editOriginal("❌ You do not have permission to regenerate this command!")
                         .setFiles().setComponents().setEmbeds().queue();
                 return null;
             }

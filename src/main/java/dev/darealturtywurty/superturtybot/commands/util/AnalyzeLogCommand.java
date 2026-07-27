@@ -42,18 +42,18 @@ public class AnalyzeLogCommand extends CoreCommand {
         Message message = event.getTarget();
         List<Message.Attachment> attachments = message.getAttachments();
         if (attachments.isEmpty()) {
-            event.reply("This message does not contain a log!").setEphemeral(true).queue();
+            event.reply("❌ This message does not contain a log!").setEphemeral(true).queue();
             return;
         }
 
         if (attachments.size() > 1) {
-            event.reply("I can only analyze messages that contain 1 file!").setEphemeral(true).queue();
+            event.reply("❌ I can only analyze messages that contain 1 file!").setEphemeral(true).queue();
             return;
         }
 
         Message.Attachment attachment = attachments.getFirst();
         if (!attachment.getFileName().endsWith(".log")) {
-            event.reply("This file is not a log file!").setEphemeral(true).queue();
+            event.reply("❌ This file is not a log file!").setEphemeral(true).queue();
             return;
         }
 
@@ -69,14 +69,14 @@ public class AnalyzeLogCommand extends CoreCommand {
         }).join();
 
         if (content == null) {
-            event.getHook().editOriginal("An error occurred while reading the log file!").queue();
+            event.getHook().editOriginal("❌ An error occurred while reading the log file!").queue();
             return;
         }
 
         String[] lines = content.split("\n");
         Optional<EnvironmentInformation> information = findEnvironmentInformation(lines);
         if (information.isEmpty()) {
-            event.getHook().editOriginal("Could not parse environment information!").queue();
+            event.getHook().editOriginal("❌ Could not parse environment information!").queue();
             return;
         }
 
@@ -99,9 +99,9 @@ public class AnalyzeLogCommand extends CoreCommand {
                         ), false);
 
         if (possibleErrors.isEmpty()) {
-            embed.setDescription("No errors or warnings were found in this log file!");
+            embed.setDescription("✅ No errors or warnings were found in this log file!");
         } else {
-            embed.setDescription("Possible errors and warnings were found in this log file!");
+            embed.setDescription("❌ Possible errors and warnings were found in this log file!");
             embed.addField("Possible Errors and Warnings",
                     String.join("\n\n", possibleErrors.stream().map(error -> "**Problem**:%n%s%n**Possible Solution**:%n%s".formatted(
                             error.message(),

@@ -131,7 +131,7 @@ public class SuggestCommand extends CoreCommand {
     private void runAddSuggestion(SlashCommandInteractionEvent event, TextChannel suggestionChannel) {
         final String suggestionStr = event.getOption("suggestion", OptionMapping::getAsString);
         if (suggestionStr == null || suggestionStr.isBlank()) {
-            reply(event, "You must provide something to suggest!", false, true);
+            reply(event, "❌ You must provide something to suggest!", false, true);
             return;
         }
 

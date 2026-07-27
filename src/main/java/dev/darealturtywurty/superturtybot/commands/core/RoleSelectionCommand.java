@@ -163,7 +163,7 @@ public class RoleSelectionCommand extends CoreCommand {
             }
         }
 
-        event.deferReply(true).setContent("I have added/removed the selected roles!").mentionRepliedUser(false).queue();
+        event.deferReply(true).setContent("✅ I have added/removed the selected roles!").mentionRepliedUser(false).queue();
     }
 
     @Override

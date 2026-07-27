@@ -67,12 +67,12 @@ public class ClearWarningsCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            reply(event, "This command can only be used inside of a server!", false, true);
+            reply(event, "❌ This command can only be used inside of a server!", false, true);
             return;
         }
 
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            reply(event, "You require the `Ban Members` permission to use this command!", false, true);
+            reply(event, "❌ You require the `Ban Members` permission to use this command!", false, true);
             return;
         }
         
@@ -94,7 +94,7 @@ public class ClearWarningsCommand extends CoreCommand {
 
         final var embed = new EmbedBuilder();
         embed.setColor(Color.GREEN);
-        embed.setTitle(user.getEffectiveName() + "'s warns has been cleared!");
+        embed.setTitle("✅ " + user.getEffectiveName() + "'s warns has been cleared!");
         embed.setDescription("Warns Removed: " + warns.size() + "\nRemoved By: " + event.getMember().getAsMention()
             + "\nWith Reason: " + reason);
         reply(event, embed, false);

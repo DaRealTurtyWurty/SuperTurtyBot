@@ -72,7 +72,7 @@ public class WarningsCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            reply(event, "This command can only be used inside of a server!", false, true);
+            reply(event, "❌ This command can only be used inside of a server!", false, true);
             return;
         }
 

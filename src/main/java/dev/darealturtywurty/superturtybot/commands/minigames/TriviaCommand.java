@@ -131,7 +131,7 @@ public class TriviaCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null) {
-            reply(event, "This command can only be used in a guild!");
+            reply(event, "❌ This command can only be used in a guild!");
             return;
         }
 
@@ -141,7 +141,7 @@ public class TriviaCommand extends CoreCommand {
         }
 
         if (category != null && !this.categories.contains(category)) {
-            reply(event, "Invalid category! Please use one of the following: " + String.join(", ", this.categories));
+            reply(event, "❌ Invalid category! Please use one of the following: " + String.join(", ", this.categories));
             return;
         }
 
@@ -157,7 +157,7 @@ public class TriviaCommand extends CoreCommand {
 
         if (difficulty != null && !difficulty.equalsIgnoreCase("easy") && !difficulty.equalsIgnoreCase(
                 "medium") && !difficulty.equalsIgnoreCase("hard")) {
-            reply(event, "Invalid difficulty! Please use one of the following: easy, medium, hard");
+            reply(event, "❌ Invalid difficulty! Please use one of the following: easy, medium, hard");
             return;
         }
 

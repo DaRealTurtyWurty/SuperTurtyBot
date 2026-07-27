@@ -256,7 +256,7 @@ public class JobCommand extends EconomyCommand {
     }
 
     private static String getResponse(GuildData config, User user, long amount) {
-        return RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
+        return "✅ " + RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
                 .replace("{user}", user.getAsMention())
                 .replace("{amount}", config.getEconomyCurrency() + amount);
     }

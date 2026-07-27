@@ -94,7 +94,7 @@ public class RemoveTimeoutCommand extends CoreCommand {
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                    embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                    embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                     embed.setTimestamp(Instant.now());
                     embed.setColor(Color.red);
                     reply(event, embed, true);

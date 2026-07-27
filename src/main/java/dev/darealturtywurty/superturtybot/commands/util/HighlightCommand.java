@@ -236,7 +236,7 @@ public class HighlightCommand extends CoreCommand {
                 .thumbnail(event.getMember() == null ? event.getUser().getEffectiveAvatarUrl() : event.getMember().getEffectiveAvatarUrl())
                 .build(event.getJDA());
 
-        embed.send(event.getHook(), () -> event.getHook().sendMessage("No highlighters found!").queue());
+        embed.send(event.getHook(), () -> event.getHook().sendMessage("❌ No highlighters found!").queue());
     }
     
     private static void performHighlight(MessageReceivedEvent event, final String content,

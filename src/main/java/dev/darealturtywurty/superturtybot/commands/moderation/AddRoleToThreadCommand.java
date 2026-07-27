@@ -144,7 +144,7 @@ public class AddRoleToThreadCommand extends CoreCommand {
             for(String message : messages) {
                 threadChannel.sendMessageEmbeds(
                         new EmbedBuilder()
-                                .setDescription("Added " + role.getAsMention() + " to " + message)
+                                .setDescription("✅ Added " + role.getAsMention() + " to " + message)
                                 .build())
                         .queue(sentMessage ->
                                 sentMessage.editMessage(message).queue(ignored ->

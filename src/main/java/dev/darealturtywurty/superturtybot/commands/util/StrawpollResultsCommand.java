@@ -98,7 +98,7 @@ public class StrawpollResultsCommand extends CoreCommand {
             event.deferReply().setFiles(FileUpload.fromData(stream, "chart.png")).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException | IllegalStateException exception) {
             event.deferReply(true)
-                .setContent("There has been an error with this command. Please report the following to the bot owner:\n"
+                .setContent("❌ There has been an error with this command. Please report the following to the bot owner:\n"
                     + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception))
                 .mentionRepliedUser(true).queue();
             Constants.LOGGER.error("Error getting strawpoll results!", exception);

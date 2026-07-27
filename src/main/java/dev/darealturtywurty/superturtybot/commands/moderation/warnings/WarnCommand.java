@@ -69,12 +69,12 @@ public class WarnCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
-            reply(event, "This command can only be used inside of a server!", false, true);
+            reply(event, "❌ This command can only be used inside of a server!", false, true);
             return;
         }
 
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            reply(event, "You require the `Ban Members` permission to use this command!", false, true);
+            reply(event, "❌ You require the `Ban Members` permission to use this command!", false, true);
             return;
         }
 
@@ -92,7 +92,7 @@ public class WarnCommand extends CoreCommand {
 
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {
             final var embed = new EmbedBuilder();
-            embed.setTitle(user.getEffectiveName() + " has been warned!");
+            embed.setTitle("✅ " + user.getEffectiveName() + " has been warned!");
             embed.setFooter("Warned At: "
                 + TimeUtils.formatTime(Instant.ofEpochMilli(warn.getWarnedAt()).atOffset(ZoneOffset.UTC)));
             embed.setDescription(

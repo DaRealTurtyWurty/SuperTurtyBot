@@ -146,7 +146,7 @@ public class MinecraftCommand extends CoreCommand {
                     .queue(message -> createEventWaiter(event, message).build());
         } catch (final IllegalStateException exception) {
             Constants.LOGGER.error("Error getting skin for {}", username, exception);
-            event.getHook().sendMessage("This player does not exist!").queue();
+            event.getHook().sendMessage("❌ This player does not exist!").queue();
         }
     }
 

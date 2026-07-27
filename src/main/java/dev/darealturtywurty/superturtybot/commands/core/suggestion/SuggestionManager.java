@@ -140,7 +140,7 @@ public final class SuggestionManager extends ListenerAdapter {
     public static @Nullable TextChannel getSuggestionChannel(MessageReceivedEvent event) {
         final TextChannel channel = getSuggestionChannel(event.getGuild());
         if (channel == null) {
-            event.getMessage().reply("This server does not have suggestions enabled!").mentionRepliedUser(false)
+            event.getMessage().reply("❌ This server does not have suggestions enabled!").mentionRepliedUser(false)
                 .queue();
             return null;
         }
@@ -151,7 +151,7 @@ public final class SuggestionManager extends ListenerAdapter {
     public static @Nullable TextChannel getSuggestionChannel(SlashCommandInteractionEvent event) {
         final TextChannel channel = getSuggestionChannel(event.getGuild());
         if (channel == null) {
-            event.deferReply(true).setContent("This server does not have suggestions enabled!")
+            event.deferReply(true).setContent("❌ This server does not have suggestions enabled!")
                 .mentionRepliedUser(false).mentionRepliedUser(false).queue();
             return null;
         }

@@ -39,42 +39,42 @@ public class LatestCommand extends CoreCommand {
             CoupledPair<MinecraftVersion> versions = minecraftResponse.getLeft();
             embed.addField("Minecraft", "Release: " + versions.getLeft().version() + "\nSnapshot: " + versions.getRight().version(), false);
         } else {
-            embed.addField("Minecraft", "Failed to get latest Minecraft versions!", false);
+            embed.addField("Minecraft", "❌ Failed to get latest Minecraft versions!", false);
         }
 
         if (forgeResponse.isLeft()) {
             CoupledPair<ForgeVersion> versions = forgeResponse.getLeft();
             embed.addField("Forge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
-            embed.addField("Forge", "Failed to get latest Forge versions!", false);
+            embed.addField("Forge", "❌ Failed to get latest Forge versions!", false);
         }
 
         if (fabricResponse.isLeft()) {
             CoupledPair<FabricVersion> versions = fabricResponse.getLeft();
             embed.addField("Fabric", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
-            embed.addField("Fabric", "Failed to get latest Fabric versions!", false);
+            embed.addField("Fabric", "❌ Failed to get latest Fabric versions!", false);
         }
 
         if (quiltResponse.isLeft()) {
             CoupledPair<QuiltVersion> versions = quiltResponse.getLeft();
             embed.addField("Quilt", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
-            embed.addField("Quilt", "Failed to get latest Quilt versions!", false);
+            embed.addField("Quilt", "❌ Failed to get latest Quilt versions!", false);
         }
 
         if (neoforgeResponse.isLeft()) {
             CoupledPair<NeoforgeVersion> versions = neoforgeResponse.getLeft();
             embed.addField("NeoForge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
-            embed.addField("NeoForge", "Failed to get latest NeoForge versions!", false);
+            embed.addField("NeoForge", "❌ Failed to get latest NeoForge versions!", false);
         }
 
         if (parchmentResponse.isLeft()) {
             ParchmentVersion version = parchmentResponse.getLeft();
             embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
         } else {
-            embed.addField("Parchment", "Failed to get latest Parchment version!", false);
+            embed.addField("Parchment", "❌ Failed to get latest Parchment version!", false);
         }
         return embed;
     }

@@ -105,7 +105,7 @@ public class BanCommand extends CoreCommand {
                 
                 event.getGuild().ban(user, deleteDays, TimeUnit.DAYS).reason(finalReason).queue(success -> {
                     TempBanManager.clearTempBan(event.getGuild().getIdLong(), user.getIdLong());
-                    reply(event, "Successfully banned " + user.getAsMention() + "!", false);
+                    reply(event, "✅ Successfully banned " + user.getAsMention() + "!", false);
                     final Pair<Boolean, TextChannel> logging = canLog(event.getGuild());
                     if (Boolean.TRUE.equals(logging.getKey())) {
                         log(logging.getValue(), event.getMember().getAsMention() + " has banned " + user.getAsMention()
@@ -113,11 +113,11 @@ public class BanCommand extends CoreCommand {
                     }
                 }, error -> {
                     if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                        reply(event, "I do not have permission to ban " + user.getAsMention(), false, true);
+                        reply(event, "❌ I do not have permission to ban " + user.getAsMention(), false, true);
                     } else {
                         final var embed = new EmbedBuilder();
                         embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                        embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                         embed.setTimestamp(Instant.now());
                         embed.setColor(Color.red);
                         reply(event, embed, true, true);
@@ -127,7 +127,7 @@ public class BanCommand extends CoreCommand {
             }
         }
 
-        reply(event, "You do not have permission to ban " + user.getAsMention(), false, true);
+        reply(event, "❌ You do not have permission to ban " + user.getAsMention(), false, true);
     }
     
     public static Pair<Boolean, TextChannel> canLog(Guild guild) {

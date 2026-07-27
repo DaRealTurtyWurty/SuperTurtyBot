@@ -344,7 +344,7 @@ public class CommandListCommand extends CoreCommand {
 
         CommandCategory commandCategory = CommandCategory.byName(category.toUpperCase(Locale.ROOT));
         if (commandCategory == null) {
-            reply(event, "You must provide a valid category!", false, true);
+            reply(event, "❌ You must provide a valid category!", false, true);
             return;
         }
 

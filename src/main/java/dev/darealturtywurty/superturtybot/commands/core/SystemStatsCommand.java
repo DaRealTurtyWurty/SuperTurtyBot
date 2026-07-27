@@ -138,7 +138,7 @@ public class SystemStatsCommand extends CoreCommand {
             ImageIO.write(image, "jpeg", baos);
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to create stats image!", exception);
-            reply(event, "An error occurred while creating the stats image!", false, true);
+            reply(event, "❌ An error occurred while creating the stats image!", false, true);
             return;
         }
 

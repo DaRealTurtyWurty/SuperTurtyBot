@@ -81,7 +81,7 @@ public class PeriodicTableCommand extends CoreCommand {
 
             if (json.has("error")) {
                 final String error = json.get("error").getAsString();
-                event.reply(error).setEphemeral(true).mentionRepliedUser(false).queue();
+                event.reply("❌ " + error).setEphemeral(true).mentionRepliedUser(false).queue();
                 return;
             }
 

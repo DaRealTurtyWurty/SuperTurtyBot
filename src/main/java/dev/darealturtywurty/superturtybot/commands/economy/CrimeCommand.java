@@ -209,13 +209,13 @@ public class CrimeCommand extends EconomyCommand {
     }
 
     private static String getSuccess(GuildData config, User user, BigInteger amount) {
-        return RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
+        return "✅ " + RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
                 .replace("{user}", user.getAsMention())
                 .replace("{amount}", StringUtils.numberFormat(amount, config));
     }
 
     private static String getFail(GuildData config, User user, BigInteger amount) {
-        return RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
+        return "❌ " + RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
                 .replace("{user}", user.getAsMention())
                 .replace("{amount}", StringUtils.numberFormat(amount, config));
     }

@@ -66,7 +66,7 @@ public class SlowmodeCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getChannelType() != ChannelType.TEXT || event.getMember() == null) {
-            reply(event, "This command can only be used in channels that allow for slowmode!", false, true);
+            reply(event, "❌ This command can only be used in channels that allow for slowmode!", false, true);
             return;
         }
 
@@ -77,7 +77,7 @@ public class SlowmodeCommand extends CoreCommand {
 
         final int time = event.getOption("time", 5, OptionMapping::getAsInt);
         event.getChannel().asTextChannel().getManager().setSlowmode(time).queue();
-        reply(event, "I have changed this channel's slowmode cooldown to " + time + " seconds!", false);
+        reply(event, "✅ I have changed this channel's slowmode cooldown to " + time + " seconds!", false);
         final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
         if (Boolean.TRUE.equals(logging.getKey())) {
             BanCommand.logSlowmode(logging.getValue(),

@@ -45,7 +45,7 @@ public class ServerInfoCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final Guild guild = event.getGuild();
         if (!event.isFromGuild() || guild == null) {
-            reply(event, "This command can only be used inside a server!", false);
+            reply(event, "❌ This command can only be used inside a server!", false);
             return;
         }
 

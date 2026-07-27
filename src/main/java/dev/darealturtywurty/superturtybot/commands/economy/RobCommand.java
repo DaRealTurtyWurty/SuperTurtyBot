@@ -225,13 +225,13 @@ public class RobCommand extends EconomyCommand {
 
     public record Responses(List<String> success, List<String> fail) {
         public String getSuccess(GuildData config, User robber, User robbed, BigInteger amount) {
-            return success().get(ThreadLocalRandom.current().nextInt(success().size()))
+            return "✅ " + success().get(ThreadLocalRandom.current().nextInt(success().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", StringUtils.numberFormat(amount, config));
         }
 
         public String getFail(GuildData config, User robber, User robbed, BigInteger amount) {
-            return fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
+            return "❌ " + fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
                     .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
                     .replace("{amount}", StringUtils.numberFormat(amount, config));
         }

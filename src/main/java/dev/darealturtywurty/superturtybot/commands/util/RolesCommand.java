@@ -43,7 +43,7 @@ public class RolesCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null) {
-            reply(event, "You must be in a server to use this command!", false, true);
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
 

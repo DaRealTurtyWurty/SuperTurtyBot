@@ -82,7 +82,7 @@ public class CoinFlipCommand extends CoreCommand {
         } else {
             String choiceStr = choice.getAsString();
             if (!choiceStr.contains("head") && !choiceStr.contains("tail") && !choiceStr.contains("side")) {
-                reply(event, "You must supply either `heads` or `tails`!", false, true);
+                reply(event, "❌ You must supply either `heads` or `tails`!", false, true);
                 return;
             }
 

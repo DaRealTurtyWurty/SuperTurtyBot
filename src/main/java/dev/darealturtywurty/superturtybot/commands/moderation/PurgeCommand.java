@@ -106,7 +106,7 @@ public class PurgeCommand extends CoreCommand {
 
             CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
                 .thenAccept(action -> event.getMessageChannel().sendMessage(
-                    event.getMember().getAsMention() + " ✅ I have successfully purged " + msgs.size() + " messages!")
+                    "✅ " + event.getMember().getAsMention() + " I have successfully purged " + msgs.size() + " messages!")
                     .queue(success -> {
                         final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                         if (Boolean.TRUE.equals(logging.getKey())) {

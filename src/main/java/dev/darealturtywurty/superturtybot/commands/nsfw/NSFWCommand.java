@@ -107,12 +107,12 @@ public class NSFWCommand extends CoreCommand {
 
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
-            event.getHook().editOriginal("You must specify a subcommand!").queue();
+            event.getHook().editOriginal("❌ You must specify a subcommand!").queue();
             return;
         }
 
         if (!isValidChannel(event.getChannel())) {
-            event.getHook().editOriginal("This command can only be used in NSFW channels!").queue();
+            event.getHook().editOriginal("❌ This command can only be used in NSFW channels!").queue();
             return;
         }
 

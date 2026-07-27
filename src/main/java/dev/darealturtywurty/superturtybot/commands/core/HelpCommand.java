@@ -105,7 +105,7 @@ public class HelpCommand extends CoreCommand {
                 .ifPresentOrElse(
                         cmd -> populateEmbed(embed, cmd),
                         () -> {
-                            embed.setDescription("No command found by name '%s'!".formatted(command));
+                            embed.setDescription("❌ No command found by name '%s'!".formatted(command));
                             embed.setColor(Color.RED);
                         });
 

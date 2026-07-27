@@ -78,7 +78,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
             StandardCharsets.UTF_8);
         final Pair<Boolean, Either<String, EmbedBuilder>> returned = makeRequest(searchTerm);
         if (Boolean.FALSE.equals(returned.getLeft())) {
-            reply(event, returned.getRight().getLeft(), false, true);
+            reply(event, "❌ " + returned.getRight().getLeft(), false, true);
             return;
         }
 

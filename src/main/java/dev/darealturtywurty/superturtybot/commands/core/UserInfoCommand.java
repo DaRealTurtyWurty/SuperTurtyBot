@@ -66,7 +66,7 @@ public class UserInfoCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
-            reply(event, "You must be in a server to use this command!", false, true);
+            reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
         
@@ -89,14 +89,14 @@ public class UserInfoCommand extends CoreCommand {
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
         if (!event.isFromGuild()) {
-            event.deferReply(true).setContent("You must be in a server to use this command!").mentionRepliedUser(false)
+            event.deferReply(true).setContent("❌ You must be in a server to use this command!").mentionRepliedUser(false)
                 .queue();
             return;
         }
         
         final Member member = event.getTargetMember();
         if (member == null) {
-            event.deferReply(true).setContent("You can only use this command on a member of this server!")
+            event.deferReply(true).setContent("❌ You can only use this command on a member of this server!")
                 .mentionRepliedUser(false).queue();
             return;
         }

@@ -217,7 +217,7 @@ public class TagCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null) {
-            reply(event, "You can only use this command inside of a server!", false);
+            reply(event, "❌ You can only use this command inside of a server!", false);
             return;
         }
 
@@ -231,7 +231,7 @@ public class TagCommand extends CoreCommand {
             case "get" -> {
                 final OptionMapping tagName = event.getOption("name");
                 if (tagName == null) {
-                    reply(event, "This is not a valid action!", true, true);
+                    reply(event, "❌ This is not a valid action!", true, true);
                     return;
                 }
 
@@ -249,7 +249,7 @@ public class TagCommand extends CoreCommand {
             case "create" -> {
                 final OptionMapping tagName0 = event.getOption("name");
                 if (tagName0 == null) {
-                    reply(event, "This is not a valid action!", true, true);
+                    reply(event, "❌ This is not a valid action!", true, true);
                     return;
                 }
                 final Bson createFilter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),

@@ -196,7 +196,7 @@ public class GuessSexPositionCommand extends CoreCommand {
             if (game == null) return;
 
             if (game.isFullyRevealed()) {
-                event.reply("You have already revealed all tiles!").setEphemeral(true).queue();
+                event.reply("❌ You have already revealed all tiles!").setEphemeral(true).queue();
                 return;
             }
 
@@ -205,7 +205,7 @@ public class GuessSexPositionCommand extends CoreCommand {
             int x = Integer.parseInt(splitValue[0]);
             int y = Integer.parseInt(splitValue[1]);
             if (game.isRevealed(x, y)) {
-                event.reply("You have already revealed this tile!").setEphemeral(true).queue();
+                event.reply("❌ You have already revealed this tile!").setEphemeral(true).queue();
                 return;
             }
 

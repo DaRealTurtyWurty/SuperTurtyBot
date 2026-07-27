@@ -96,12 +96,12 @@ public class StrawpollCommand extends CoreCommand {
         final String option1 = event.getOption("option1", OptionMapping::getAsString);
         final String option2 = event.getOption("option2", OptionMapping::getAsString);
         if (question == null) {
-            reply(event, "You must supply a question!", false, true);
+            reply(event, "❌ You must supply a question!", false, true);
             return;
         }
 
         if (option1 == null || option2 == null) {
-            reply(event, "You must supply at least two options!", false, true);
+            reply(event, "❌ You must supply at least two options!", false, true);
             return;
         }
 
@@ -121,14 +121,14 @@ public class StrawpollCommand extends CoreCommand {
             final String dateStr = mapping.getAsString();
             final String[] parts = dateStr.split("-");
             if (parts.length < 3) {
-                reply(event, "You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional", false, true);
+                reply(event, "❌ You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional", false, true);
                 return null;
             }
 
             try {
                 return DateFormat.getInstance().parseObject(TimeUtils.parseDate(parts));
             } catch (final ParseException exception) {
-                reply(event, "There was an issue parsing this date. Please report the following to the bot owner:\n"
+                reply(event, "❌ There was an issue parsing this date. Please report the following to the bot owner:\n"
                         + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception), false);
                 return null;
             }
@@ -190,10 +190,10 @@ public class StrawpollCommand extends CoreCommand {
 
             final String url = "https://strawpoll.com/" + response.get("content_id").getAsString();
             Constants.LOGGER.info("FLOAT strawpoll was just created: {}", url);
-            return url;
+            return "✅ " + url;
         } catch (IOException | JsonSyntaxException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to create strawpoll!", exception);
-            return "There has been an error connecting to strawpoll, please report the following to the bot owner:\n"
+            return "❌ There has been an error connecting to strawpoll, please report the following to the bot owner:\n"
                     + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception);
         }
     }

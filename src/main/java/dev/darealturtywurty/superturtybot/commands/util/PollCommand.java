@@ -110,7 +110,7 @@ public class PollCommand extends CoreCommand {
         event.getChannel().sendMessageEmbeds(embedAndOptions.getKey().build()).queue(msg -> {
             embedAndOptions.getValue().forEach(emote -> msg.addReaction(Emoji.fromUnicode(emote)).queue());
 
-            reply(event, "Successfully created poll!", false, true);
+            reply(event, "✅ Successfully created poll!", false, true);
         });
     }
 

@@ -51,14 +51,14 @@ public class AdviceCommand extends CoreCommand {
             final JsonObject json = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
                 JsonObject.class);
             if (!json.has("slip")) {
-                reply(event, "There appears to be an issue processing this command! Please try again later.", false, true);
+                reply(event, "❌ There appears to be an issue processing this command! Please try again later.", false, true);
                 return;
             }
             
             final String advice = json.getAsJsonObject("slip").get("advice").getAsString();
             reply(event, advice, false);
         } catch (final IOException | URISyntaxException exception) {
-            reply(event, "There appears to be an issue processing this command! Please try again later.", false, true);
+            reply(event, "❌ There appears to be an issue processing this command! Please try again later.", false, true);
             Constants.LOGGER.error("An error occurred while running the advice command!", exception);
         }
     }

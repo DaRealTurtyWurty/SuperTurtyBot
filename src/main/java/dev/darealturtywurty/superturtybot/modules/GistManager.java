@@ -99,10 +99,10 @@ public class GistManager extends ListenerAdapter {
                     final String url = gist.getHtmlUrl();
                     event.getReaction().clearReactions()
                             .queue(v -> message
-                                    .reply("Gist created at the request of " + event.getUser().getAsMention() + "!\n" + url)
+                                    .reply("✅ Gist created at the request of " + event.getUser().getAsMention() + "!\n" + url)
                                     .mentionRepliedUser(false).queue());
                 } catch (final IOException exception) {
-                    message.reply("There has been an error creating a gist for this file!").mentionRepliedUser(false)
+                    message.reply("❌ There has been an error creating a gist for this file!").mentionRepliedUser(false)
                             .queue();
                     Constants.LOGGER.error("Failed to create gist!", exception);
                 }

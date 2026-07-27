@@ -81,7 +81,7 @@ public class UnbanCommand extends CoreCommand {
                     }));
                 event.getGuild().unban(user).queue(success -> {
                     TempBanManager.clearTempBan(event.getGuild().getIdLong(), user.getIdLong());
-                    reply(event, "Successfully unbanned " + user.getAsMention() + "!", false);
+                    reply(event, "✅ Successfully unbanned " + user.getAsMention() + "!", false);
                     final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                     if (Boolean.TRUE.equals(logging.getKey())) {
                         BanCommand.log(logging.getValue(),
@@ -89,18 +89,18 @@ public class UnbanCommand extends CoreCommand {
                     }
                 }, error -> {
                     if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                        reply(event, "I do not have permission to unban " + user.getAsMention(), false, true);
+                        reply(event, "❌ I do not have permission to unban " + user.getAsMention(), false, true);
                     } else {
                         final var embed = new EmbedBuilder();
                         embed.setTitle("Please report this to TurtyWurty!", "https://discord.gg/BAYB3A38wn");
-                        embed.setDescription("**" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                         embed.setTimestamp(Instant.now());
                         embed.setColor(Color.red);
                         reply(event, embed, true, true);
                     }
                 });
             } else {
-                reply(event, "You do not have permission to unban " + user.getAsMention(), false, true);
+                reply(event, "❌ You do not have permission to unban " + user.getAsMention(), false, true);
             }
         }
     }

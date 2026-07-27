@@ -144,7 +144,7 @@ public class TempBanCommand extends CoreCommand {
                 },
                 error -> {
                     if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                        reply(event, "I do not have permission to ban " + user.getAsMention(), false, true);
+                        reply(event, "❌ I do not have permission to ban " + user.getAsMention(), false, true);
                     } else {
                         reply(event, "❌ Failed to temporarily ban " + user.getAsMention() + ": " + error.getMessage(),
                                 false, true);
