@@ -139,8 +139,6 @@ public final class GameNewsProxyClient {
             }
 
             proxyEndpoints = List.copyOf(refreshedEndpoints);
-            Constants.LOGGER.info("Loaded {} game-news proxies ({} total valid).",
-                    proxyEndpoints.size(), allValidEndpoints.size());
             return true;
         } catch (Exception exception) {
             Constants.LOGGER.warn("Failed to refresh the game-news proxy list.", exception);
