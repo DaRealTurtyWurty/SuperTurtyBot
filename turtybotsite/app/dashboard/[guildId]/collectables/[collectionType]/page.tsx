@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import CollectablesSettingsForm from "@/components/CollectablesSettingsForm";
-import {fetchDashboardCollectablesSettings} from "@/lib/dashboard-api";
+import {fetchDashboardCollectablesPage, fetchDashboardCollectablesSettings} from "@/lib/dashboard-api";
 import {handleDashboardPageError} from "@/lib/dashboard-offline";
 
 export default async function CollectablesCollectionPage({
@@ -22,6 +22,9 @@ export default async function CollectablesCollectionPage({
     if (!collection) {
         notFound();
     }
+    const initialCollectionPage = collection.presentation === "image"
+        ? await fetchDashboardCollectablesPage(guildId, collectionType).catch(handleDashboardPageError)
+        : undefined;
 
     return <div className="space-y-6">
         <div className="space-y-3">
@@ -36,6 +39,11 @@ export default async function CollectablesCollectionPage({
             </div>
         </div>
 
-        <CollectablesSettingsForm guildId={guildId} initialSettings={settings} collectionType={collectionType} />
+        <CollectablesSettingsForm
+            guildId={guildId}
+            initialSettings={settings}
+            collectionType={collectionType}
+            initialCollectionPage={initialCollectionPage ?? undefined}
+        />
     </div>;
 }

@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.UserCollect
 import dev.darealturtywurty.superturtybot.modules.collectable.Collectable;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollector;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
+import dev.darealturtywurty.superturtybot.modules.collectable.CollectablePresentation;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableRarity;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -91,7 +92,7 @@ public class CollectablesCommand extends CoreCommand {
             return;
         }
 
-        CollectableGameCollector<?> collector = CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().get(collection);
+        CollectableGameCollector<?> collector = CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.get(collection);
         if (collector == null) {
             event.getHook().sendMessage("❌ That collection does not exist!").queue();
             return;
@@ -107,7 +108,7 @@ public class CollectablesCommand extends CoreCommand {
         Map<CollectableRarity, List<Collectable>> collectables = new HashMap<>();
         Registry<? extends Collectable> registry = collector.getRegistry();
         for (String collectableName : userCollection.getCollectables()) {
-            Collectable collectable = registry.getRegistry().get(collectableName);
+            Collectable collectable = registry.get(collectableName);
             if (collectable == null)
                 continue;
 
@@ -121,7 +122,10 @@ public class CollectablesCommand extends CoreCommand {
 
             var builder = new StringBuilder();
             for (Collectable collectable : rares) {
-                builder.append(collectable.getEmoji()).append(" ").append(collectable.getRichName()).append(", ");
+                if (collector.getPresentation() == CollectablePresentation.EMOJI)
+                    builder.append(collectable.getEmoji()).append(" ");
+
+                builder.append(collectable.getRichName()).append(", ");
             }
 
             embed.addField(rarity.getName() + " (" + rares.size() + ")", builder.substring(0, builder.length() - 2), false);

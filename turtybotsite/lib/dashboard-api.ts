@@ -285,7 +285,7 @@ export interface DashboardVoiceChannelNotifierUpsertRequest {
 export interface DashboardCollectableItem {
     name: string;
     richName: string;
-    emoji: string;
+    emoji: string | null;
     rarity: string;
     note: string | null;
 }
@@ -293,7 +293,20 @@ export interface DashboardCollectableItem {
 export interface DashboardCollectableCollection {
     type: string;
     displayName: string;
+    presentation: "emoji" | "image";
+    totalCollectables: number;
     disabledCollectables: string[];
+    collectables: DashboardCollectableItem[];
+}
+
+export interface DashboardCollectablesPage {
+    type: string;
+    displayName: string;
+    presentation: "emoji" | "image";
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
     collectables: DashboardCollectableItem[];
 }
 
@@ -836,6 +849,48 @@ export async function fetchDashboardCollectablesSettings(guildId: string) {
     return dashboardFetch<DashboardCollectablesSettings>(`/api/guilds/${guildId}/config/collectables`, {
         method: "GET"
     });
+}
+
+export async function fetchDashboardCollectablesPage(
+    guildId: string,
+    collectionType: string,
+    page = 1,
+    pageSize = 60,
+    query = ""
+) {
+    const searchParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString()
+    });
+    if (query.trim()) {
+        searchParams.set("query", query.trim());
+    }
+
+    return dashboardFetch<DashboardCollectablesPage>(
+        `/api/guilds/${guildId}/config/collectables/${encodeURIComponent(collectionType)}?${searchParams.toString()}`,
+        {method: "GET"}
+    );
+}
+
+export async function fetchDashboardCollectableImage(collectionType: string, collectableName: string) {
+    try {
+        return await fetch(createDashboardApiUrl(
+            `/api/collectables/${encodeURIComponent(collectionType)}/${encodeURIComponent(collectableName)}/image`
+        ), {
+            method: "GET",
+            headers: {
+                "Accept": "image/png,image/jpeg",
+                "X-TurtyBot-Api-Key": getRequiredEnv("DASHBOARD_API_KEY")
+            },
+            cache: "no-store"
+        });
+    } catch {
+        throw new DashboardApiError(
+            "The bot is currently offline.",
+            503,
+            "dashboard_offline"
+        );
+    }
 }
 
 export async function fetchDashboardSuggestionsSettings(guildId: string) {

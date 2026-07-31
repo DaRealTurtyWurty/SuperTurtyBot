@@ -63,6 +63,7 @@ import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 
 public final class DashboardRoutes {
@@ -227,6 +228,8 @@ public final class DashboardRoutes {
         app.put("/api/guilds/{guildId}/config/birthday", this::updateBirthdaySettings);
         app.get("/api/guilds/{guildId}/config/collectables", ctx -> ctx.json(this.collectablesSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/collectables", this::updateCollectablesSettings);
+        app.get("/api/guilds/{guildId}/config/collectables/{type}", this::getCollectablesPage);
+        app.get("/api/collectables/{type}/{name}/image", this::getCollectableImage);
         app.get("/api/guilds/{guildId}/config/opt-in-channels", ctx -> ctx.json(this.optInChannelsSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/opt-in-channels", this::updateOptInChannelsSettings);
         app.get("/api/guilds/{guildId}/config/suggestions", ctx -> ctx.json(this.suggestionsSettingsService.getSettings(parseGuildId(ctx))));
@@ -444,6 +447,27 @@ public final class DashboardRoutes {
         long guildId = parseGuildId(ctx);
         CollectablesSettingsRequest request = ctx.bodyAsClass(CollectablesSettingsRequest.class);
         ctx.json(this.collectablesSettingsService.updateSettings(guildId, request));
+    }
+
+    private void getCollectablesPage(Context ctx) {
+        ctx.json(this.collectablesSettingsService.getCollectablesPage(
+                parseGuildId(ctx),
+                ctx.pathParam("type"),
+                ctx.queryParam("query"),
+                parsePositiveIntQuery(ctx, "page", 1),
+                parsePositiveIntQuery(ctx, "pageSize", 60)
+        ));
+    }
+
+    private void getCollectableImage(Context ctx) throws Exception {
+        var image = this.collectablesSettingsService.getCollectableImage(
+                ctx.pathParam("type"),
+                ctx.pathParam("name")
+        );
+        ctx.contentType(image.contentType());
+        ctx.header("Content-Length", Long.toString(Files.size(image.path())));
+        ctx.header("Cache-Control", "private, max-age=86400");
+        ctx.result(Files.newInputStream(image.path()));
     }
 
     private void updateOptInChannelsSettings(Context ctx) {

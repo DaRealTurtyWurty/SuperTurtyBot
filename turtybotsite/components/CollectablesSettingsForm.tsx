@@ -1,17 +1,18 @@
 "use client";
 
-import type {FormEvent} from "react";
+import type {FormEvent, KeyboardEvent} from "react";
 import {useState, useTransition} from "react";
 import Link from "next/link";
 import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
-import type {DashboardCollectablesSettings} from "@/lib/dashboard-api";
+import type {DashboardCollectablesPage, DashboardCollectablesSettings} from "@/lib/dashboard-api";
 import GuildChannelSelect from "@/components/GuildChannelSelect";
-import CollectableEmoji from "@/components/CollectableEmoji";
+import CollectableVisual from "@/components/CollectableVisual";
 
 interface CollectablesSettingsFormProps {
     guildId: string;
     initialSettings: DashboardCollectablesSettings;
     collectionType?: string;
+    initialCollectionPage?: DashboardCollectablesPage;
 }
 
 type CollectablesSettingsState = Omit<DashboardCollectablesSettings, "collectorChannelId"> & {
@@ -31,14 +32,25 @@ function cloneSettings(initialSettings: DashboardCollectablesSettings): Collecta
     };
 }
 
-export default function CollectablesSettingsForm({guildId, initialSettings, collectionType}: CollectablesSettingsFormProps) {
+export default function CollectablesSettingsForm({
+    guildId,
+    initialSettings,
+    collectionType,
+    initialCollectionPage
+}: CollectablesSettingsFormProps) {
     const [settings, setSettings] = useState(() => cloneSettings(initialSettings));
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [collectionPage, setCollectionPage] = useState(initialCollectionPage ?? null);
+    const [collectionQuery, setCollectionQuery] = useState("");
+    const [isCollectionLoading, setIsCollectionLoading] = useState(false);
     const [isPending, startTransition] = useTransition();
     const {markSaved} = useDashboardUnsavedChanges(settings);
     const selectedCollection = collectionType ? settings.collections.find(collection => collection.type === collectionType) ?? null : null;
     const visibleCollections = selectedCollection ? [selectedCollection] : settings.collections;
+    const visibleCollectables = selectedCollection?.presentation === "image"
+        ? collectionPage?.collectables ?? []
+        : selectedCollection?.collectables ?? [];
 
     function updateBoolean(key: "collectingEnabled" | "collectableTypesRestricted", value: boolean) {
         setSettings(current => ({
@@ -87,6 +99,47 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
 
     function collectionPageHref(type: string) {
         return `/dashboard/${guildId}/collectables/${type}`;
+    }
+
+    async function loadCollectionPage(page: number, query = collectionQuery) {
+        if (!selectedCollection || selectedCollection.presentation !== "image") {
+            return;
+        }
+
+        setIsCollectionLoading(true);
+        setError(null);
+        const searchParams = new URLSearchParams({
+            collectionType: selectedCollection.type,
+            page: page.toString(),
+            pageSize: (collectionPage?.pageSize ?? 60).toString()
+        });
+        if (query.trim()) {
+            searchParams.set("query", query.trim());
+        }
+
+        try {
+            const response = await fetch(`/api/dashboard/guilds/${guildId}/collectables?${searchParams.toString()}`);
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null) as {message?: string} | null;
+                setError(payload?.message ?? "Failed to load collectables.");
+                return;
+            }
+            setCollectionPage(await response.json() as DashboardCollectablesPage);
+        } finally {
+            setIsCollectionLoading(false);
+        }
+    }
+
+    function searchCollection() {
+        void loadCollectionPage(1, collectionQuery);
+    }
+
+    function onCollectionSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+        if (event.key !== "Enter") {
+            return;
+        }
+        event.preventDefault();
+        searchCollection();
     }
 
     function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -189,7 +242,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                 <div>
                     <h3 className="text-lg font-semibold text-white">{selectedCollection.displayName}</h3>
                     <p className="mt-1 text-sm text-slate-400">
-                        {selectedCollection.collectables.length} collectables.
+                        {selectedCollection.totalCollectables} collectables.
                         {isCollectionTypeEnabled(selectedCollection.type) ? "" : " Disabled in the collection type filter."}
                     </p>
                 </div>
@@ -202,8 +255,30 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                 </Link>
             </div>
 
+            {selectedCollection.presentation === "image" ? <div className="flex flex-wrap items-center gap-3 border border-slate-800/80 bg-slate-950/50 p-4">
+                <input
+                    type="search"
+                    value={collectionQuery}
+                    onChange={event => setCollectionQuery(event.target.value)}
+                    onKeyDown={onCollectionSearchKeyDown}
+                    placeholder="Search character names"
+                    className="min-w-0 flex-1 border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-400"
+                />
+                <button
+                    type="button"
+                    onClick={searchCollection}
+                    disabled={isCollectionLoading}
+                    className="border border-sky-400 px-4 py-2 text-sm font-semibold text-sky-200 disabled:opacity-60"
+                >
+                    {isCollectionLoading ? "Loading..." : "Search"}
+                </button>
+                {collectionPage ? <span className="text-xs text-slate-500">
+                    {collectionPage.totalCount} result{collectionPage.totalCount === 1 ? "" : "s"}
+                </span> : null}
+            </div> : null}
+
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {selectedCollection.collectables.map(collectable => {
+                {visibleCollectables.map(collectable => {
                     const disabled = selectedCollection.disabledCollectables.includes(collectable.name);
 
                     return <label
@@ -212,7 +287,13 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                     >
                         <span className="min-w-0">
                             <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                                <CollectableEmoji emoji={collectable.emoji} label={collectable.richName} />
+                                <CollectableVisual
+                                    guildId={guildId}
+                                    collectionType={selectedCollection.type}
+                                    presentation={selectedCollection.presentation}
+                                    collectable={collectable}
+                                    large={selectedCollection.presentation === "image"}
+                                />
                                 <span className="truncate">{collectable.richName}</span>
                             </span>
                             <span className="mt-1 block text-xs text-slate-500">
@@ -228,6 +309,28 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                     </label>;
                 })}
             </div>
+
+            {selectedCollection.presentation === "image" && collectionPage && collectionPage.totalPages > 1 ? <div className="flex items-center justify-between gap-4">
+                <button
+                    type="button"
+                    disabled={isCollectionLoading || collectionPage.page <= 1}
+                    onClick={() => void loadCollectionPage(collectionPage.page - 1)}
+                    className="border border-slate-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                    Previous
+                </button>
+                <span className="text-sm text-slate-400">
+                    Page {collectionPage.page} of {collectionPage.totalPages}
+                </span>
+                <button
+                    type="button"
+                    disabled={isCollectionLoading || collectionPage.page >= collectionPage.totalPages}
+                    onClick={() => void loadCollectionPage(collectionPage.page + 1)}
+                    className="border border-slate-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                    Next
+                </button>
+            </div> : null}
         </section> : <section className="space-y-4">
             <div>
                 <h3 className="text-lg font-semibold text-white">Collections</h3>
@@ -247,7 +350,7 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                             <div className="min-w-0">
                                 <h4 className="text-base font-semibold text-white">{collection.displayName}</h4>
                                 <p className="mt-1 text-sm text-slate-400">
-                                    {collection.collectables.length} collectables.
+                                    {collection.totalCollectables} collectables.
                                     {collection.disabledCollectables.length} disabled.
                                 </p>
                             </div>
@@ -266,7 +369,12 @@ export default function CollectablesSettingsForm({guildId, initialSettings, coll
                                 className="rounded border border-slate-800/80 bg-slate-950/50 px-2 py-1 text-sm text-white"
                                 title={collectable.richName}
                             >
-                                <CollectableEmoji emoji={collectable.emoji} label={collectable.richName} />
+                                <CollectableVisual
+                                    guildId={guildId}
+                                    collectionType={collection.type}
+                                    presentation={collection.presentation}
+                                    collectable={collectable}
+                                />
                             </span>)}
                         </div>
 

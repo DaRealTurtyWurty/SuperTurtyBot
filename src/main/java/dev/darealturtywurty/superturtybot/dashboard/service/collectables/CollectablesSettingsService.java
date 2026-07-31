@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.collectable.Collectable;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollector;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
+import dev.darealturtywurty.superturtybot.modules.collectable.CollectablePresentation;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,9 +16,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class CollectablesSettingsService {
+    private static final int IMAGE_COLLECTION_PREVIEW_SIZE = 6;
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final JDA jda;
 
     public CollectablesSettingsService(JDA jda) {
@@ -71,14 +76,19 @@ public final class CollectablesSettingsService {
     private CollectablesSettingsResponse toResponse(GuildData guildData) {
         List<DashboardCollectableCollection> collections = new ArrayList<>();
         for (CollectableGameCollector<?> collector : sortedCollectors()) {
-            List<DashboardCollectableItem> collectables = collector.getRegistry().getRegistry().values().stream()
-                    .sorted(Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
+            int responseLimit = collector.getPresentation() == CollectablePresentation.IMAGE
+                    ? IMAGE_COLLECTION_PREVIEW_SIZE
+                    : Integer.MAX_VALUE;
+            List<DashboardCollectableItem> collectables = collector.getSortedCollectables().stream()
+                    .limit(responseLimit)
                     .map(this::toItem)
                     .toList();
 
             collections.add(new DashboardCollectableCollection(
                     collector.getName(),
                     collector.getDisplayName(),
+                    collector.getPresentation().getId(),
+                    collector.getRegistry().size(),
                     guildData.getDisabledCollectables(collector.getName()),
                     collectables
             ));
@@ -91,6 +101,57 @@ public final class CollectablesSettingsService {
                 guildData.getCollectableTypesList(),
                 collections
         );
+    }
+
+    public DashboardCollectablesPage getCollectablesPage(long guildId, String type, String query, int page, int pageSize) {
+        GuildData.getOrCreateGuildData(guildId);
+        CollectableGameCollector<?> collector = getCollector(type);
+
+        int sanitizedPage = Math.max(page, 1);
+        int sanitizedPageSize = Math.clamp(pageSize, 1, MAX_PAGE_SIZE);
+        String normalizedQuery = query == null
+                ? ""
+                : query.trim().substring(0, Math.min(query.trim().length(), 100)).toLowerCase(Locale.ROOT);
+        List<? extends Collectable> matches = collector.getSortedCollectables().stream()
+                .filter(collectable -> normalizedQuery.isEmpty()
+                        || collectable.getRichName().toLowerCase(Locale.ROOT).contains(normalizedQuery)
+                        || collectable.getName().toLowerCase(Locale.ROOT).contains(normalizedQuery))
+                .toList();
+
+        int totalCount = matches.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalCount / sanitizedPageSize));
+        int boundedPage = Math.min(sanitizedPage, totalPages);
+        int fromIndex = Math.min((boundedPage - 1) * sanitizedPageSize, totalCount);
+        int toIndex = Math.min(fromIndex + sanitizedPageSize, totalCount);
+
+        return new DashboardCollectablesPage(
+                collector.getName(),
+                collector.getDisplayName(),
+                collector.getPresentation().getId(),
+                boundedPage,
+                sanitizedPageSize,
+                totalCount,
+                totalPages,
+                matches.subList(fromIndex, toIndex).stream().map(this::toItem).toList()
+        );
+    }
+
+    public DashboardCollectableImage getCollectableImage(String type, String name) {
+        CollectableGameCollector<?> collector = getCollector(type);
+        if (collector.getPresentation() != CollectablePresentation.IMAGE) {
+            throw new DashboardApiException(HttpStatus.NOT_FOUND, "collectable_image_not_found",
+                    "That collection does not use images.");
+        }
+
+        Collectable collectable = collector.getRegistry().get(name);
+        if (collectable == null || collectable.getImagePath() == null) {
+            throw new DashboardApiException(HttpStatus.NOT_FOUND, "collectable_image_not_found",
+                    "That collectable image does not exist.");
+        }
+
+        String fileName = collectable.getImagePath().getFileName().toString().toLowerCase(Locale.ROOT);
+        String contentType = fileName.endsWith(".png") ? "image/png" : "image/jpeg";
+        return new DashboardCollectableImage(collectable.getImagePath(), contentType);
     }
 
     private DashboardCollectableItem toItem(Collectable collectable) {
@@ -110,7 +171,7 @@ public final class CollectablesSettingsService {
     }
 
     private boolean hasCollector(String type) {
-        return CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().containsKey(type);
+        return CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.containsKey(type);
     }
 
     private List<String> validateCollectables(String type, List<String> collectables) {
@@ -118,13 +179,12 @@ public final class CollectablesSettingsService {
             return List.of();
         }
 
-        CollectableGameCollector<?> collector = CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().get(type);
+        CollectableGameCollector<?> collector = CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.get(type);
         if (collector == null) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_collectable_type",
                     "One of the supplied collectable types was not recognized.");
         }
 
-        Map<String, ? extends Collectable> registry = collector.getRegistry().getRegistry();
         List<String> sanitized = new ArrayList<>();
         for (String collectable : collectables) {
             if (collectable == null || collectable.isBlank()) {
@@ -132,7 +192,7 @@ public final class CollectablesSettingsService {
             }
 
             String trimmed = collectable.trim();
-            if (!registry.containsKey(trimmed)) {
+            if (!collector.getRegistry().containsKey(trimmed)) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_collectable",
                         "One of the supplied collectables was not recognized.");
             }
@@ -143,6 +203,17 @@ public final class CollectablesSettingsService {
         }
 
         return sanitized;
+    }
+
+    private CollectableGameCollector<?> getCollector(String type) {
+        CollectableGameCollector<?> collector = type == null
+                ? null
+                : CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.get(type);
+        if (collector == null) {
+            throw new DashboardApiException(HttpStatus.NOT_FOUND, "invalid_collectable_type",
+                    "That collectable type was not recognized.");
+        }
+        return collector;
     }
 
     private List<String> sanitizeTypes(List<String> types) {

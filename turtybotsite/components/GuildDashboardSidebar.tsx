@@ -135,13 +135,15 @@ const NAV_SECTIONS: SidebarSection[] = [
                     {label: "Enabled Collections", fragment: "enabled-collections"},
                     {label: "Minecraft Mobs", fragment: "minecraft-mobs"},
                     {label: "Rainbow Six Operators", fragment: "r6-operators"},
-                    {label: "Countries", fragment: "countries"}
+                    {label: "Countries", fragment: "countries"},
+                    {label: "Anime Characters", fragment: "anime-characters"}
                 ],
                 children: [
                     {label: "Overview", href: (guildId: string) => `/dashboard/${guildId}/collectables`},
                     {label: "Minecraft Mobs", href: (guildId: string) => `/dashboard/${guildId}/collectables/minecraft_mobs`},
                     {label: "Rainbow Six Operators", href: (guildId: string) => `/dashboard/${guildId}/collectables/r6_operators`},
-                    {label: "Countries", href: (guildId: string) => `/dashboard/${guildId}/collectables/countries`}
+                    {label: "Countries", href: (guildId: string) => `/dashboard/${guildId}/collectables/countries`},
+                    {label: "Anime Characters", href: (guildId: string) => `/dashboard/${guildId}/collectables/anime_characters`}
                 ]
             },
             {

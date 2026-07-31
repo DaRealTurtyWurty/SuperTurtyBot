@@ -10,22 +10,28 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.UserCollect
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import lombok.Getter;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReference;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,22 +43,34 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     private static final long DUPLICATE_REPLY_DELETE_DELAY_SECONDS = 5L;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private final List<CollectableGameInstance<T>> gameInstances = new ArrayList<>();
+    private final List<CollectableGameInstance<T>> gameInstances = new CopyOnWriteArrayList<>();
     private final Map<Long, Boolean> scheduledGuilds = new HashMap<>();
     private final Map<Long, List<Long>> guildMessageMap = new HashMap<>();
+    private volatile WeightedRandomBag<T> defaultWeightedBag;
+    private volatile int defaultWeightedBagSize = -1;
+    private volatile List<T> sortedCollectables;
+    private volatile int sortedCollectablesSize = -1;
     @Getter
     private final Registry<T> registry;
     private String name;
     @Getter
     private final String displayName;
+    @Getter
+    private final CollectablePresentation presentation;
     private final long initialLoadDelay;
 
     private boolean hasDoneInitialLoad = false;
 
     protected CollectableGameCollector(Registry<T> registry, String name, String displayName) {
+        this(registry, name, displayName, CollectablePresentation.EMOJI);
+    }
+
+    protected CollectableGameCollector(Registry<T> registry, String name, String displayName,
+                                       CollectablePresentation presentation) {
         this.registry = registry;
         this.name = name;
         this.displayName = displayName;
+        this.presentation = presentation;
         this.initialLoadDelay = INITIAL_LOAD_COUNTER.getAndIncrement() * INITIAL_LOAD_DELAY_HOURS;
     }
 
@@ -115,7 +133,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
 
             UserCollectables.Collectables userCollectablesOfType = userCollectables.getCollectables(collectable.getCollectionType());
             if (userCollectablesOfType.hasCollectable(collectable)) {
-                message.reply("❌ You have already collected " + collectable.getEmoji() + " `" + collectable.getRichName() + "`!").mentionRepliedUser(true)
+                message.reply("❌ You have already collected " + formatCollectableName(collectable) + "!").mentionRepliedUser(true)
                         .queue(message1 -> message1.delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS));
                 event.getMessage().delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS, success -> {}, failure -> {});
                 return;
@@ -124,7 +142,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             if (answer.matches(content)) {
                 userCollectablesOfType.collect(collectable);
                 Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
-                CoreCommand.reply(event, "✅ You have successfully collected " + collectable.getEmoji() + " `" + collectable.getRichName() + "`!");
+                CoreCommand.reply(event, "✅ You have successfully collected " + formatCollectableName(collectable) + "!");
 
                 gameInstances.remove(instance);
                 message.editMessage("\n\n**This collectable has been collected by " + user.getAsMention() + "!**").queue();
@@ -135,12 +153,19 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     }
 
     public T getRandomWeightedCollectable(GuildData data) {
-        List<T> collectables = new ArrayList<>(this.registry.getRegistry().values());
-        if (data != null) {
-            collectables.removeIf(collectable ->
-                    !data.isCollectableTypeEnabled(getName())
-                            || data.getDisabledCollectables(getName()).contains(collectable.getName()));
-        }
+        if (data != null && !data.isCollectableTypeEnabled(getName()))
+            return null;
+
+        List<String> disabledCollectables = data == null
+                ? List.of()
+                : data.getDisabledCollectables(getName());
+        if (disabledCollectables.isEmpty())
+            return getDefaultWeightedBag().getRandom();
+
+        var disabledCollectableSet = new HashSet<>(disabledCollectables);
+        List<T> collectables = this.registry.values().stream()
+                .filter(collectable -> !disabledCollectableSet.contains(collectable.getName()))
+                .toList();
 
         if (collectables.isEmpty()) {
             return null;
@@ -156,6 +181,44 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         return bag.getRandom();
     }
 
+    public List<T> getSortedCollectables() {
+        int registrySize = this.registry.size();
+        List<T> current = this.sortedCollectables;
+        if (current != null && this.sortedCollectablesSize == registrySize)
+            return current;
+
+        synchronized (this) {
+            if (this.sortedCollectables != null && this.sortedCollectablesSize == registrySize)
+                return this.sortedCollectables;
+
+            this.sortedCollectables = this.registry.values().stream()
+                    .sorted(java.util.Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
+                    .toList();
+            this.sortedCollectablesSize = registrySize;
+            return this.sortedCollectables;
+        }
+    }
+
+    private WeightedRandomBag<T> getDefaultWeightedBag() {
+        int registrySize = this.registry.size();
+        WeightedRandomBag<T> current = this.defaultWeightedBag;
+        if (current != null && this.defaultWeightedBagSize == registrySize)
+            return current;
+
+        synchronized (this) {
+            if (this.defaultWeightedBag != null && this.defaultWeightedBagSize == registrySize)
+                return this.defaultWeightedBag;
+
+            var rebuilt = new WeightedRandomBag<T>();
+            for (T collectable : this.registry.values()) {
+                rebuilt.addEntry(collectable, collectable.getRarity().calculateWeight());
+            }
+            this.defaultWeightedBag = rebuilt;
+            this.defaultWeightedBagSize = registrySize;
+            return rebuilt;
+        }
+    }
+
     private void handleScheduling(MessageReceivedEvent event, Guild guild) {
         if (scheduledGuilds.getOrDefault(guild.getIdLong(), false))
             return;
@@ -167,7 +230,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             scheduledGuilds.put(guild.getIdLong(), true);
             executor.schedule(() -> {
                 try {
-                    scheduleCollectable(event, guild);
+                    scheduleCollectable(event.getChannel(), guild, event.getJDA());
                 } catch (Exception exception) {
                     Constants.LOGGER.error("Error scheduling initial collectable in guild {}", guild.getIdLong(), exception);
                 } finally {
@@ -193,14 +256,14 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         executor.schedule(() -> {
             try {
                 scheduledGuilds.put(guild.getIdLong(), false);
-                scheduleCollectable(event, guild);
+                scheduleCollectable(event.getChannel(), guild, event.getJDA());
             } catch (Exception exception) {
                 Constants.LOGGER.error("Error scheduling collectable in guild {}", guild.getIdLong(), exception);
             }
         }, delay, TimeUnit.HOURS);
     }
 
-    private void scheduleCollectable(MessageReceivedEvent event, Guild guild) {
+    private void scheduleCollectable(MessageChannel channel, Guild guild, JDA jda) {
         GuildData data = GuildData.getOrCreateGuildData(guild);
         T collectable = getRandomWeightedCollectable(data);
         if (collectable == null) {
@@ -208,26 +271,54 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             return;
         }
         var embed = new EmbedBuilder()
-                .setTitle("🎉 A " + collectable.getRarity().getName() + " " + collectable.getEmoji() + " **" + collectable.getRichName() + "** has appeared!")
+                .setTitle("🎉 A " + collectable.getRarity().getName() + " " + formatCollectableTitle(collectable) + " has appeared!")
                 .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
                 .setTimestamp(Instant.now())
-                .setAuthor("Part of the " + displayName + " Collection", null, event.getJDA().getSelfUser().getAvatarUrl())
+                .setAuthor("Part of the " + displayName + " Collection", null, jda.getSelfUser().getAvatarUrl())
                 .setColor(collectable.getRarity().getColor());
 
         if(collectable.getNote() != null) {
             embed.addField("Note", collectable.getNote(), false);
         }
 
-        event.getChannel().sendMessageEmbeds(embed.build()).queue(message ->
-        {
+        var action = channel.sendMessageEmbeds(embed.build());
+        if (this.presentation == CollectablePresentation.IMAGE) {
+            Path imagePath = collectable.getImagePath();
+            if (imagePath == null) {
+                Constants.LOGGER.error("Image collection {} contains an item without an image: {}", getName(), collectable.getName());
+                return;
+            }
+
+            String attachmentName = imagePath.getFileName().toString();
+            embed.setImage("attachment://" + attachmentName);
+            action = channel.sendMessageEmbeds(embed.build())
+                    .addFiles(FileUpload.fromData(imagePath, attachmentName));
+        }
+
+        action.queue(message -> {
             CollectableGameInstance<T> instance = new CollectableGameInstance<>(
-                    guild.getIdLong(), event.getChannel().getIdLong(), message.getIdLong(),
+                    guild.getIdLong(), channel.getIdLong(), message.getIdLong(),
                     collectable);
             gameInstances.add(instance);
 
             executor.schedule(() -> expireCollectable(instance, message),
                     COLLECTABLE_EXPIRY_MINUTES, TimeUnit.MINUTES);
-        });
+        }, failure -> Constants.LOGGER.error("Failed to send collectable {} in guild {}",
+                collectable.getName(), guild.getIdLong(), failure));
+    }
+
+    private String formatCollectableName(Collectable collectable) {
+        if (this.presentation == CollectablePresentation.EMOJI)
+            return collectable.getEmoji() + " `" + collectable.getRichName() + "`";
+
+        return "`" + collectable.getRichName() + "`";
+    }
+
+    private String formatCollectableTitle(Collectable collectable) {
+        if (this.presentation == CollectablePresentation.EMOJI)
+            return collectable.getEmoji() + " **" + collectable.getRichName() + "**";
+
+        return "**" + collectable.getRichName() + "**";
     }
 
     private void expireCollectable(CollectableGameInstance<T> instance, Message message) {

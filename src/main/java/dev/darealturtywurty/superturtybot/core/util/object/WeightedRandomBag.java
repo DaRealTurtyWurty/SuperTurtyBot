@@ -27,14 +27,22 @@ public class WeightedRandomBag<T> {
     }
 
     public @Nullable Entry getRandomEntry() {
-        final double randVal = this.rand.nextDouble() * this.accumulatedWeight;
+        if (this.entries.isEmpty())
+            return null;
 
-        for (final Entry entry : this.entries) {
-            if (entry.getAccumulatedWeight() >= randVal)
-                return entry;
+        final double randVal = this.rand.nextDouble() * this.accumulatedWeight;
+        int low = 0;
+        int high = this.entries.size() - 1;
+        while (low < high) {
+            int middle = (low + high) >>> 1;
+            if (this.entries.get(middle).getAccumulatedWeight() >= randVal) {
+                high = middle;
+            } else {
+                low = middle + 1;
+            }
         }
 
-        return null;
+        return this.entries.get(low);
     }
 
     public @Nullable T getRandom() {

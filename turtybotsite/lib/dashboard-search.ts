@@ -18,7 +18,7 @@ export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
     {
         label: "Collectables",
         href: guildId => `/dashboard/${guildId}/collectables`,
-        terms: ["collector channel", "enable collectables", "restrict collection types", "enabled collections", "minecraft mobs", "rainbow six operators", "countries"]
+        terms: ["collector channel", "enable collectables", "restrict collection types", "enabled collections", "minecraft mobs", "rainbow six operators", "countries", "anime characters", "images"]
     },
     {
         label: "Welcome",
