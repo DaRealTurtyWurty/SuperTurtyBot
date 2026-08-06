@@ -28,9 +28,14 @@ public final class GameNewsProxyClient {
     private static final Duration REFRESH_INTERVAL = Duration.ofMinutes(10);
     private static final Duration FAILED_REFRESH_INTERVAL = Duration.ofMinutes(1);
     private static final int MAX_PROXY_ATTEMPTS = 3;
+    private static final int MAX_DIRECT_ATTEMPTS = 2;
     private static final double MIN_UPTIME_PERCENT = 80.0;
     private static final double MAX_LATENCY_MILLIS = 1_500.0;
     private static final Object REFRESH_LOCK = new Object();
+    private static final OkHttpClient DIRECT_CLIENT = Constants.HTTP_CLIENT.newBuilder()
+            .readTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
+            .build();
 
     private static volatile List<ProxyEndpoint> proxyEndpoints = List.of();
     private static volatile long nextRefreshAt;
@@ -40,7 +45,7 @@ public final class GameNewsProxyClient {
 
     public static Response execute(Request request, String sourceName) throws IOException {
         if (!Environment.INSTANCE.gameNewsProxiesEnabled().orElse(false) || !request.url().isHttps())
-            return Constants.HTTP_CLIENT.newCall(request).execute();
+            return executeDirect(request, sourceName, null);
 
         List<ProxyEndpoint> candidates = new ArrayList<>(getProxyEndpoints());
         Collections.shuffle(candidates, ThreadLocalRandom.current());
@@ -50,7 +55,7 @@ public final class GameNewsProxyClient {
         for (int index = 0; index < attempts; index++) {
             ProxyEndpoint endpoint = candidates.get(index);
             try {
-                Response response = clientFor(endpoint).newCall(request).execute();
+                Response response = executeBuffered(clientFor(endpoint), request);
                 if (!shouldRetryWithAnotherProxy(response.code()))
                     return response;
 
@@ -67,15 +72,59 @@ public final class GameNewsProxyClient {
                     attempts, sourceName);
         }
 
-        try {
-            return Constants.HTTP_CLIENT.newCall(request).execute();
-        } catch (IOException directFailure) {
-            if (lastProxyFailure != null) {
-                directFailure.addSuppressed(lastProxyFailure);
+        return executeDirect(request, sourceName, lastProxyFailure);
+    }
+
+    private static Response executeDirect(Request request, String sourceName, IOException proxyFailure)
+            throws IOException {
+        int attempts = isRetryableMethod(request.method()) ? MAX_DIRECT_ATTEMPTS : 1;
+        IOException lastFailure = null;
+        for (int index = 0; index < attempts; index++) {
+            try {
+                Response response = executeBuffered(DIRECT_CLIENT, request);
+                if (index == attempts - 1 || !shouldRetryWithAnotherProxy(response.code()))
+                    return response;
+
+                lastFailure = new IOException("Direct request returned HTTP " + response.code());
+                response.close();
+            } catch (IOException exception) {
+                lastFailure = exception;
             }
 
-            throw directFailure;
+            if (index < attempts - 1) {
+                Constants.LOGGER.debug("Game-news request for {} failed; retrying directly ({}/{}).",
+                        sourceName, index + 1, attempts);
+            }
         }
+
+        if (lastFailure == null)
+            lastFailure = new IOException("Game-news request failed without a response");
+        if (proxyFailure != null)
+            lastFailure.addSuppressed(proxyFailure);
+        throw lastFailure;
+    }
+
+    /**
+     * Reads the body before an attempt is considered successful. OkHttp can receive
+     * response headers successfully and then fail while consuming an HTTP/2 or proxy
+     * stream; buffering here keeps those failures inside the retry/fallback boundary.
+     */
+    private static Response executeBuffered(OkHttpClient client, Request request) throws IOException {
+        Response response = client.newCall(request).execute();
+        ResponseBody body = response.body();
+        if (body == null)
+            return response;
+
+        try (response) {
+            byte[] bytes = body.bytes();
+            return response.newBuilder()
+                    .body(ResponseBody.create(bytes, body.contentType()))
+                    .build();
+        }
+    }
+
+    private static boolean isRetryableMethod(String method) {
+        return "GET".equals(method) || "HEAD".equals(method);
     }
 
     private static List<ProxyEndpoint> getProxyEndpoints() {

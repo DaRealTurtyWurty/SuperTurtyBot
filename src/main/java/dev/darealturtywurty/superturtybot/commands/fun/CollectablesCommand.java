@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 import com.mongodb.client.model.Filters;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.core.util.discord.PaginatedEmbed;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserCollectables;
 import dev.darealturtywurty.superturtybot.modules.collectable.Collectable;
@@ -11,7 +12,6 @@ import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCol
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectablePresentation;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableRarity;
 import dev.darealturtywurty.superturtybot.registry.Registry;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -22,6 +22,9 @@ import java.time.Instant;
 import java.util.*;
 
 public class CollectablesCommand extends CoreCommand {
+    private static final int FIELDS_PER_PAGE = 5;
+    private static final int FIELD_VALUE_MAX_LENGTH = 1_024;
+
     public CollectablesCommand() {
         super(new Types(true, false, false, false));
     }
@@ -100,11 +103,6 @@ public class CollectablesCommand extends CoreCommand {
 
         UserCollectables.Collectables userCollection = userCollectables.getCollectables(collector);
 
-        var embed = new EmbedBuilder()
-                .setTitle(event.getUser().getEffectiveName() + "'s " + collector.getDisplayName() + " Collection (" + userCollection.getCollectables().size() + ")")
-                .setTimestamp(Instant.now())
-                .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
-
         Map<CollectableRarity, List<Collectable>> collectables = new HashMap<>();
         Registry<? extends Collectable> registry = collector.getRegistry();
         for (String collectableName : userCollection.getCollectables()) {
@@ -115,20 +113,35 @@ public class CollectablesCommand extends CoreCommand {
             collectables.computeIfAbsent(collectable.getRarity(), rarity -> new ArrayList<>()).add(collectable);
         }
 
-        for (var rarity : CollectableRarity.values()) {
+        if (collectables.isEmpty()) {
+            event.getHook().sendMessage("❌ You do not have any collectables in that collection!").queue();
+            return;
+        }
+
+        var contents = new PaginatedEmbed.ContentsBuilder();
+        for (CollectableRarity rarity : CollectableRarity.values()) {
             List<Collectable> rares = collectables.get(rarity);
             if (rares == null)
                 continue;
 
-            var builder = new StringBuilder();
+            List<String> formattedCollectables = new ArrayList<>(rares.size());
             for (Collectable collectable : rares) {
+                var formatted = new StringBuilder();
                 if (collector.getPresentation() == CollectablePresentation.EMOJI)
-                    builder.append(collectable.getEmoji()).append(" ");
+                    formatted.append(collectable.getEmoji()).append(" ");
 
-                builder.append(collectable.getRichName()).append(", ");
+                formatted.append(collectable.getRichName());
+                formattedCollectables.add(formatted.toString());
             }
 
-            embed.addField(rarity.getName() + " (" + rares.size() + ")", builder.substring(0, builder.length() - 2), false);
+            List<String> fieldValues = createFieldValues(formattedCollectables);
+            for (int index = 0; index < fieldValues.size(); index++) {
+                String fieldName = rarity.getName() + " (" + rares.size() + ")";
+                if (index > 0)
+                    fieldName += " (continued)";
+
+                contents.field(fieldName, fieldValues.get(index));
+            }
         }
 
         int highestOrdinal = 0;
@@ -137,7 +150,59 @@ public class CollectablesCommand extends CoreCommand {
                 highestOrdinal = rarity.ordinal();
         }
 
-        embed.setColor(CollectableRarity.values()[highestOrdinal].getColor());
-        event.getHook().sendMessageEmbeds(embed.build()).queue();
+        PaginatedEmbed embed = new PaginatedEmbed.Builder(FIELDS_PER_PAGE, contents)
+                .title(event.getUser().getEffectiveName() + "'s " + collector.getDisplayName() + " Collection (" + userCollection.getCollectables().size() + ")")
+                .timestamp(Instant.now())
+                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+                .color(CollectableRarity.values()[highestOrdinal].getColor())
+                .authorOnly(event.getUser().getIdLong())
+                .build(event.getJDA());
+
+        embed.send(event.getHook());
+    }
+
+    static List<String> createFieldValues(List<String> collectables) {
+        List<String> fields = new ArrayList<>();
+        var current = new StringBuilder();
+
+        for (String collectable : collectables) {
+            if (collectable.length() > FIELD_VALUE_MAX_LENGTH) {
+                if (!current.isEmpty()) {
+                    fields.add(current.toString());
+                    current.setLength(0);
+                }
+
+                int start = 0;
+                while (collectable.length() - start > FIELD_VALUE_MAX_LENGTH) {
+                    int end = start + FIELD_VALUE_MAX_LENGTH;
+                    if (Character.isHighSurrogate(collectable.charAt(end - 1))
+                            && Character.isLowSurrogate(collectable.charAt(end))) {
+                        end--;
+                    }
+
+                    fields.add(collectable.substring(start, end));
+                    start = end;
+                }
+
+                current.append(collectable, start, collectable.length());
+                continue;
+            }
+
+            int requiredLength = collectable.length() + (current.isEmpty() ? 0 : 2);
+            if (!current.isEmpty() && current.length() + requiredLength > FIELD_VALUE_MAX_LENGTH) {
+                fields.add(current.toString());
+                current.setLength(0);
+            }
+
+            if (!current.isEmpty())
+                current.append(", ");
+
+            current.append(collectable);
+        }
+
+        if (!current.isEmpty())
+            fields.add(current.toString());
+
+        return fields;
     }
 }
