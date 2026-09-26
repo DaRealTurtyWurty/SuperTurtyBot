@@ -86,7 +86,7 @@ public class PurgeCommand extends CoreCommand {
 
         final int amount = event.getOption("amount", 100, OptionMapping::getAsInt);
         if (amount < 1 || amount > 500) {
-            event.getMember().ban(0, TimeUnit.DAYS).reason("Hacking TurtyBot").queue();
+            reply(event, "❌ The amount of messages to purge must be between 1 and 500!", false, true);
             return;
         }
 
