@@ -375,7 +375,6 @@ Frontend dashboard pages:
 
 ### Developer Quality
 
-- Generate command metadata automatically into JSON/Markdown from `CoreCommand` instances to prevent docs drift.
 - Add integration tests for command registration, dashboard route coverage, and config option descriptors.
 - Add smoke tests for every dashboard API route with fake guild/config data.
 - Add health checks for external API keys and optional dependencies like FFmpeg, OpenAI, Twitch, Steam, GitHub, and Pexels.

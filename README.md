@@ -23,6 +23,10 @@ More information is available at [turtywurty.dev/projects/turtybot](https://turt
 - Staff can configure things like automod, role menus, logging, suggestions, notifier feeds, and other server features.
 - Communities can use it for recurring engagement through levelling, leaderboards, birthdays, starboard posts, and chat revival prompts.
 
+## Command Metadata
+
+Run `./gradlew generateCommandMetadata` to regenerate [commands.json](commands.json). The normal Gradle `build` task also regenerates it. The JSON is generated from the active `CoreCommand` instances in `CommandHook` and includes command descriptions, categories, access notes, usage, rate limits, scopes, and the Discord registration payloads (including options and subcommands). It does not require a running bot or Discord token.
+
 ## License
 
 TurtyBot is licensed under the GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE) for the full license text.

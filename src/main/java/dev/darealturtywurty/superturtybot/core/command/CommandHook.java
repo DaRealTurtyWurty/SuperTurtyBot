@@ -53,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -251,6 +252,11 @@ public class CommandHook extends ListenerAdapter {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     protected static void registerCommand(CoreCommand cmd, CommandListUpdateAction updates) {
+        updates.addCommands(createCommandData(cmd));
+    }
+
+    static List<CommandData> createCommandData(CoreCommand cmd) {
+        List<CommandData> registrations = new ArrayList<>();
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
             final List<OptionData> options = cmd.createOptions();
@@ -277,19 +283,21 @@ public class CommandHook extends ListenerAdapter {
                 }
             }
 
-            updates.addCommands(data);
+            registrations.add(data);
         }
 
         if (cmd.types.messageCtx()) {
-            updates.addCommands(Commands.message(cmd.getRichName()));
+            registrations.add(Commands.message(cmd.getRichName()));
         }
 
         if (cmd.types.userCtx()) {
-            updates.addCommands(Commands.user(cmd.getRichName()));
+            registrations.add(Commands.user(cmd.getRichName()));
         }
+
+        return registrations;
     }
 
-    private static Set<CoreCommand> createCommands() {
+    static Set<CoreCommand> createCommands() {
         final Set<CoreCommand> commands = new HashSet<>();
         // Core
         commands.add(new PingCommand());

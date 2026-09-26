@@ -102,3 +102,16 @@ compileJava.options.encoding = "UTF-8"
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
+
+tasks.register("generateCommandMetadata", JavaExec) {
+    group = "documentation"
+    description = "Generate commands.json from the commands registered by CommandHook."
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "dev.darealturtywurty.superturtybot.core.command.CommandMetadataGenerator"
+    args layout.projectDirectory.file("commands.json").asFile.absolutePath
+}
+
+tasks.named("build") {
+    dependsOn tasks.named("generateCommandMetadata")
+}
