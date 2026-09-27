@@ -8,8 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 public class MappingsCommand extends CoreCommand {
     public MappingsCommand() {
         super(new Types(true, false, false, false));
-        addSubcommands(new TranslateCommand());
-        addSubcommands(new SearchCommand());
+        addSubcommands(new TranslateCommand(), new SearchCommand());
     }
 
     @Override
@@ -19,7 +18,7 @@ public class MappingsCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Run minecraft mapping related commands.";
+        return "Search and translate Minecraft classes, methods, and fields.";
     }
 
     @Override

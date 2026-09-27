@@ -28,14 +28,15 @@ import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
+import dev.darealturtywurty.superturtybot.commands.util.minecraft.MappingsCommand;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MinecraftCommand;
 import dev.darealturtywurty.superturtybot.commands.util.remindme.RemindMeCommand;
 import dev.darealturtywurty.superturtybot.commands.util.roblox.RobloxCommand;
 import dev.darealturtywurty.superturtybot.commands.util.steam.SteamCommand;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.*;
-import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.anime.AnimeCharacterRegistry;
+import dev.darealturtywurty.superturtybot.modules.collectable.country.CountryCollectableRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.minecraft.MinecraftMobRegistry;
 import dev.darealturtywurty.superturtybot.modules.collectable.r6s.RainbowSixOperatorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.RegisterCountingCommand;
@@ -54,8 +55,8 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -257,7 +258,7 @@ public class CommandHook extends ListenerAdapter {
         updates.addCommands(createCommandData(cmd));
     }
 
-    static List<CommandData> createCommandData(CoreCommand cmd) {
+    public static List<CommandData> createCommandData(CoreCommand cmd) {
         List<CommandData> registrations = new ArrayList<>();
         if (cmd.types.slash()) {
             final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
@@ -299,7 +300,7 @@ public class CommandHook extends ListenerAdapter {
         return registrations;
     }
 
-    static Set<CoreCommand> createCommands() {
+    public static Set<CoreCommand> createCommands() {
         final Set<CoreCommand> commands = new HashSet<>();
         // Core
         commands.add(new PingCommand());
@@ -354,7 +355,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new LatexCommand());
         commands.add(new AddRoleToThreadCommand());
         commands.add(new RunCodeCommand());
-        //commands.add(new MappingsCommand());
+        commands.add(new MappingsCommand());
         commands.add(new QuestCommand());
 
         // Moderation

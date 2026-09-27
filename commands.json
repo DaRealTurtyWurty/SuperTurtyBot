@@ -842,6 +842,78 @@
       ]
     },
     {
+      "name": "quest",
+      "richName": "Quest",
+      "description": "View and manage quests.",
+      "category": "Core",
+      "access": "Everyone",
+      "usage": "/quest",
+      "serverOnly": true,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 0,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "View and manage quests.",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "quest",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [
+            {
+              "description": "List all available quests.",
+              "description_localizations": {},
+              "name": "list",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            },
+            {
+              "description": "View the details and progress of one of your quests.",
+              "description_localizations": {},
+              "name": "view",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": true,
+                  "description": "The quest to view.",
+                  "description_localizations": {},
+                  "name": "quest",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                }
+              ],
+              "type": 1
+            },
+            {
+              "description": "Replace all three weekly quests with new quests.",
+              "description_localizations": {},
+              "name": "reroll",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            }
+          ],
+          "type": 1
+        }
+      ]
+    },
+    {
       "name": "restart",
       "richName": "Restart",
       "description": "Restarts the bot",
@@ -4009,24 +4081,24 @@
               "autocomplete": false,
               "choices": [
                 {
-                  "name": "Countries",
-                  "name_localizations": {},
-                  "value": "countries"
-                },
-                {
                   "name": "Rainbow Six Operators",
                   "name_localizations": {},
                   "value": "r6_operators"
                 },
                 {
-                  "name": "Minecraft Mobs",
+                  "name": "Countries",
                   "name_localizations": {},
-                  "value": "minecraft_mobs"
+                  "value": "countries"
                 },
                 {
                   "name": "Anime Characters",
                   "name_localizations": {},
                   "value": "anime_characters"
+                },
+                {
+                  "name": "Minecraft Mobs",
+                  "name_localizations": {},
+                  "value": "minecraft_mobs"
                 }
               ],
               "description": "The collection you want to view",
@@ -8775,6 +8847,317 @@
               "name": "economy",
               "name_localizations": {},
               "options": [],
+              "type": 1
+            }
+          ],
+          "type": 1
+        }
+      ]
+    },
+    {
+      "name": "mappings",
+      "richName": "Mappings",
+      "description": "Search and translate Minecraft classes, methods, and fields.",
+      "category": "Utility",
+      "access": "Everyone",
+      "usage": "/mappings",
+      "serverOnly": false,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 0,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Search and translate Minecraft classes, methods, and fields.",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "mappings",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [
+            {
+              "description": "Translate a Minecraft class, method, or field between mapping channels",
+              "description_localizations": {},
+              "name": "translate",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": true,
+                  "description": "The Minecraft version",
+                  "description_localizations": {},
+                  "name": "version",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Mojmap",
+                      "name_localizations": {},
+                      "value": "mojmap"
+                    },
+                    {
+                      "name": "MCP",
+                      "name_localizations": {},
+                      "value": "mcp"
+                    },
+                    {
+                      "name": "SRG",
+                      "name_localizations": {},
+                      "value": "srg"
+                    },
+                    {
+                      "name": "Yarn",
+                      "name_localizations": {},
+                      "value": "yarn"
+                    },
+                    {
+                      "name": "Intermediary",
+                      "name_localizations": {},
+                      "value": "intermediary"
+                    },
+                    {
+                      "name": "Obfuscated",
+                      "name_localizations": {},
+                      "value": "obfuscated"
+                    }
+                  ],
+                  "description": "The mapping channel to translate from",
+                  "description_localizations": {},
+                  "name": "from",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Mojmap",
+                      "name_localizations": {},
+                      "value": "mojmap"
+                    },
+                    {
+                      "name": "MCP",
+                      "name_localizations": {},
+                      "value": "mcp"
+                    },
+                    {
+                      "name": "SRG",
+                      "name_localizations": {},
+                      "value": "srg"
+                    },
+                    {
+                      "name": "Yarn",
+                      "name_localizations": {},
+                      "value": "yarn"
+                    },
+                    {
+                      "name": "Intermediary",
+                      "name_localizations": {},
+                      "value": "intermediary"
+                    },
+                    {
+                      "name": "Obfuscated",
+                      "name_localizations": {},
+                      "value": "obfuscated"
+                    }
+                  ],
+                  "description": "The mapping channel to translate to",
+                  "description_localizations": {},
+                  "name": "to",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": true,
+                  "description": "Class or member name, e.g. Minecraft or Minecraft#getInstance",
+                  "description_localizations": {},
+                  "name": "mapping",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Client",
+                      "name_localizations": {},
+                      "value": "client"
+                    },
+                    {
+                      "name": "Server",
+                      "name_localizations": {},
+                      "value": "server"
+                    }
+                  ],
+                  "description": "The game side (defaults to client)",
+                  "description_localizations": {},
+                  "name": "side",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude classes",
+                  "description_localizations": {},
+                  "name": "ignore_classes",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude methods",
+                  "description_localizations": {},
+                  "name": "ignore_methods",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude fields",
+                  "description_localizations": {},
+                  "name": "ignore_fields",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                }
+              ],
+              "type": 1
+            },
+            {
+              "description": "Search for a Minecraft class, method, or field",
+              "description_localizations": {},
+              "name": "search",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": true,
+                  "description": "The Minecraft version",
+                  "description_localizations": {},
+                  "name": "version",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Mojmap",
+                      "name_localizations": {},
+                      "value": "mojmap"
+                    },
+                    {
+                      "name": "MCP",
+                      "name_localizations": {},
+                      "value": "mcp"
+                    },
+                    {
+                      "name": "SRG",
+                      "name_localizations": {},
+                      "value": "srg"
+                    },
+                    {
+                      "name": "Yarn",
+                      "name_localizations": {},
+                      "value": "yarn"
+                    },
+                    {
+                      "name": "Intermediary",
+                      "name_localizations": {},
+                      "value": "intermediary"
+                    },
+                    {
+                      "name": "Obfuscated",
+                      "name_localizations": {},
+                      "value": "obfuscated"
+                    }
+                  ],
+                  "description": "The mapping channel to search",
+                  "description_localizations": {},
+                  "name": "channel",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": true,
+                  "description": "Class or member name, e.g. Minecraft or Minecraft#getInstance",
+                  "description_localizations": {},
+                  "name": "mapping",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Client",
+                      "name_localizations": {},
+                      "value": "client"
+                    },
+                    {
+                      "name": "Server",
+                      "name_localizations": {},
+                      "value": "server"
+                    }
+                  ],
+                  "description": "The game side (defaults to client)",
+                  "description_localizations": {},
+                  "name": "side",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude classes",
+                  "description_localizations": {},
+                  "name": "ignore_classes",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude methods",
+                  "description_localizations": {},
+                  "name": "ignore_methods",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Exclude fields",
+                  "description_localizations": {},
+                  "name": "ignore_fields",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 5
+                }
+              ],
               "type": 1
             }
           ],

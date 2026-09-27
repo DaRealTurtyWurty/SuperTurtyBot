@@ -19,6 +19,8 @@ public record VersionPackage(Arguments arguments, AssetIndex assetIndex, String 
                              Downloads downloads, String id, JavaVersion javaVersion, List<Library> libraries,
                              Logging logging, String mainClass, int minimumLauncherVersion, String releaseTime,
                              String time, String type) {
+    private static final Map<PistonMetaVersion, Path> PATH_CACHE = new ConcurrentHashMap<>();
+
     public static VersionPackage fromJson(JsonObject json) {
         Arguments arguments;
         try {
@@ -79,10 +81,8 @@ public record VersionPackage(Arguments arguments, AssetIndex assetIndex, String 
         return versionPackage;
     }
 
-    private static final Map<PistonMetaVersion, Path> PATH_CACHE = new ConcurrentHashMap<>();
-
     public static void download(PistonMetaVersion metaVersion, Path outputFile) {
-        if(PATH_CACHE.containsKey(metaVersion))
+        if (PATH_CACHE.containsKey(metaVersion))
             return;
 
         String url = metaVersion.url();
@@ -97,7 +97,7 @@ public record VersionPackage(Arguments arguments, AssetIndex assetIndex, String 
     public static Path getOrDownload(PistonMetaVersion metaVersion) {
         return PATH_CACHE.computeIfAbsent(metaVersion, version -> {
             Path path = Path.of("versions", version.id() + ".json");
-            if(Files.exists(path))
+            if (Files.exists(path))
                 return path;
 
             download(version, path);

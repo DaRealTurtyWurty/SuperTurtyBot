@@ -5,7 +5,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 
 public record Logging(Client client) {
     public static Logging fromJson(JsonObject json) {
-        if(json == null)
+        if (json == null)
             return null;
 
         JsonObject clientJson = json.getAsJsonObject("client");

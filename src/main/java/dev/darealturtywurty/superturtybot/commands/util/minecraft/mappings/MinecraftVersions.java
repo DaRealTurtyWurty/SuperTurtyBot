@@ -5,86 +5,49 @@ import com.google.common.cache.CacheBuilder;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.piston.PistonMeta;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.piston.PistonMetaVersion;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.piston.version.VersionPackage;
-import dev.darealturtywurty.superturtybot.core.util.DefaultLoaderCache;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class MinecraftVersions {
-    private static final DefaultLoaderCache<PistonMeta> PISTON_META_CACHE = new DefaultLoaderCache<>(() -> {
-        Path path = Path.of("./piston_meta.json");
-        PistonMeta.download(path);
-        return PistonMeta.load(path);
-    });
-
-    private static final Cache<PistonMetaVersion, VersionPackage> VERSION_PACKAGE_CACHE =
-            CacheBuilder.newBuilder()
-                    .maximumSize(500)
-                    .build();
+    private static final Cache<String, List<PistonMetaVersion>> VERSIONS = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .build();
+    private static final Cache<PistonMetaVersion, VersionPackage> PACKAGES = CacheBuilder.newBuilder()
+            .maximumSize(50)
+            .build();
 
     public static List<String> getPistonVersions() {
-        PistonMeta pistonMeta = PISTON_META_CACHE.get();
-        if (pistonMeta == null) {
-            return List.of();
-        }
-
-        List<String> choices = new ArrayList<>();
-        for (PistonMetaVersion version : pistonMeta.versions()) {
-            VersionPackage versionPackage = VERSION_PACKAGE_CACHE.getIfPresent(version);
-            if (versionPackage == null) {
-                Path path = VersionPackage.getOrDownload(version);
-                versionPackage = VersionPackage.fromPath(path);
-                if (versionPackage == null) {
-                    continue;
-                }
-
-                VERSION_PACKAGE_CACHE.put(version, versionPackage);
-            }
-
-            choices.add(versionPackage.id());
-        }
-
-        return choices;
+        return versions().stream().map(PistonMetaVersion::id).toList();
     }
 
-    public static PistonMetaVersion getVersion(String versionString) {
-        PistonMeta pistonMeta = PISTON_META_CACHE.get();
-        if (pistonMeta == null)
-            return null;
+    public static PistonMetaVersion getVersion(String name) {
+        return versions().stream()
+                .filter(version -> version.id().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+    }
 
-        for (PistonMetaVersion version : pistonMeta.versions()) {
-            VersionPackage versionPackage = VERSION_PACKAGE_CACHE.getIfPresent(version);
-            if (versionPackage == null) {
-                Path path = VersionPackage.getOrDownload(version);
-                versionPackage = VersionPackage.fromPath(path);
-                if (versionPackage == null) {
-                    continue;
-                }
-
-                VERSION_PACKAGE_CACHE.put(version, versionPackage);
-            }
-
-            if (versionPackage.id().equalsIgnoreCase(versionString)) {
-                return version;
-            }
+    private static List<PistonMetaVersion> versions() {
+        try {
+            return VERSIONS.get("manifest", () -> {
+                var json = MappingDownloads.json(PistonMeta.META_URL).getAsJsonObject();
+                return List.copyOf(Arrays.asList(Constants.GSON.fromJson(json.get("versions"), PistonMetaVersion[].class)));
+            });
+        } catch (ExecutionException exception) {
+            throw new IllegalStateException("Unable to load Minecraft versions", exception.getCause());
         }
-
-        return null;
     }
 
     public static VersionPackage getVersionPackage(PistonMetaVersion version) {
-        VersionPackage versionPackage = VERSION_PACKAGE_CACHE.getIfPresent(version);
-        if (versionPackage == null) {
-            Path path = VersionPackage.getOrDownload(version);
-            versionPackage = VersionPackage.fromPath(path);
-            if (versionPackage == null) {
-                return null;
-            }
-
-            VERSION_PACKAGE_CACHE.put(version, versionPackage);
+        try {
+            return PACKAGES.get(version, () -> VersionPackage.fromJson(
+                    MappingDownloads.json(version.url()).getAsJsonObject()));
+        } catch (ExecutionException exception) {
+            throw new IllegalStateException("Unable to load Minecraft version " + version.id(), exception.getCause());
         }
-
-        return versionPackage;
     }
 }

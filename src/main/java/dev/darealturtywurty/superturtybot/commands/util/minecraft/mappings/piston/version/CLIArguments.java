@@ -15,16 +15,6 @@ public class CLIArguments {
         this.arguments.addAll(arguments);
     }
 
-    public List<Argument> arguments() {
-        return this.arguments;
-    }
-
-    public Optional<Argument> getArgument(String name) {
-        return this.arguments.stream()
-                .filter(argument -> argument.name().equals(name))
-                .findFirst();
-    }
-
     private static List<Argument> readKeyValues(JsonArray array, BiConsumer<List<Argument>, JsonElement> notPrimitiveHandler) {
         List<Argument> arguments = new ArrayList<>();
         if (array == null || array.isEmpty()) {
@@ -202,6 +192,16 @@ public class CLIArguments {
         });
 
         return new CLIArguments(args);
+    }
+
+    public List<Argument> arguments() {
+        return this.arguments;
+    }
+
+    public Optional<Argument> getArgument(String name) {
+        return this.arguments.stream()
+                .filter(argument -> argument.name().equals(name))
+                .findFirst();
     }
 
     public static class Argument {
