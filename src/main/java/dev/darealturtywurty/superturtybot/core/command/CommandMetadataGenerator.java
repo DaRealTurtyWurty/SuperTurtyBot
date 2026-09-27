@@ -24,10 +24,10 @@ public final class CommandMetadataGenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 1)
-            throw new IllegalArgumentException("Expected one output path for command metadata JSON");
+        if (args.length > 1)
+            throw new IllegalArgumentException("Expected at most one output path for command metadata JSON");
 
-        Path output = Path.of(args[0]);
+        Path output = Path.of(args.length == 0 ? "commands.json" : args[0]);
         Path parent = output.toAbsolutePath().getParent();
         if (parent != null) {
             Files.createDirectories(parent);

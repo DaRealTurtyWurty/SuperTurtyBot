@@ -27,6 +27,8 @@ More information is available at [turtywurty.dev/projects/turtybot](https://turt
 
 Run `./gradlew generateCommandMetadata` to regenerate [commands.json](commands.json). The normal Gradle `build` task also regenerates it. The JSON is generated from the active `CoreCommand` instances in `CommandHook` and includes command descriptions, categories, access notes, usage, rate limits, scopes, and the Discord registration payloads (including options and subcommands). It does not require a running bot or Discord token.
 
+The `/marketplace` command uses MongoDB transactions to transfer listings, items, and money together. Its MongoDB deployment must support transactions (a replica set or sharded cluster).
+
 ## License
 
 TurtyBot is licensed under the GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE) for the full license text.

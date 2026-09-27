@@ -2881,6 +2881,198 @@
       ]
     },
     {
+      "name": "marketplace",
+      "richName": "Marketplace",
+      "description": "Trade collectables, rank-card and economy items, and property rentals.",
+      "category": "Economy",
+      "access": "Everyone",
+      "usage": "/marketplace browse\n/marketplace list <type> <item> <price> [collection] [days]\n/marketplace buy <id>\n/marketplace cancel <id>",
+      "serverOnly": true,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 10,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Trade collectables, rank-card and economy items, and property rentals.",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "marketplace",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [
+            {
+              "description": "Browse current listings",
+              "description_localizations": {},
+              "name": "browse",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Collectable",
+                      "name_localizations": {},
+                      "value": "collectable"
+                    },
+                    {
+                      "name": "Rank card item",
+                      "name_localizations": {},
+                      "value": "rank_card"
+                    },
+                    {
+                      "name": "Economy item",
+                      "name_localizations": {},
+                      "value": "economy_item"
+                    },
+                    {
+                      "name": "Property rental",
+                      "name_localizations": {},
+                      "value": "rental"
+                    }
+                  ],
+                  "description": "Filter by asset type",
+                  "description_localizations": {},
+                  "name": "type",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 3
+                }
+              ],
+              "type": 1
+            },
+            {
+              "description": "List an asset for sale or rent",
+              "description_localizations": {},
+              "name": "list",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": false,
+                  "choices": [
+                    {
+                      "name": "Collectable",
+                      "name_localizations": {},
+                      "value": "collectable"
+                    },
+                    {
+                      "name": "Rank-card item",
+                      "name_localizations": {},
+                      "value": "rank_card"
+                    },
+                    {
+                      "name": "Economy item",
+                      "name_localizations": {},
+                      "value": "economy_item"
+                    },
+                    {
+                      "name": "Property rental",
+                      "name_localizations": {},
+                      "value": "rental"
+                    }
+                  ],
+                  "description": "Kind of asset",
+                  "description_localizations": {},
+                  "name": "type",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": true,
+                  "description": "Choose an item you own or a rentable property",
+                  "description_localizations": {},
+                  "name": "item",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Positive price in this server's currency",
+                  "description_localizations": {},
+                  "name": "price",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                },
+                {
+                  "autocomplete": true,
+                  "description": "Required for collectables; choose one you own",
+                  "description_localizations": {},
+                  "name": "collection",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 3
+                },
+                {
+                  "autocomplete": false,
+                  "description": "Rental duration in days; defaults to 7",
+                  "description_localizations": {},
+                  "max_value": 30,
+                  "min_value": 1,
+                  "name": "days",
+                  "name_localizations": {},
+                  "required": false,
+                  "type": 4
+                }
+              ],
+              "type": 1
+            },
+            {
+              "description": "Buy a listing",
+              "description_localizations": {},
+              "name": "buy",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": true,
+                  "description": "Choose a current listing",
+                  "description_localizations": {},
+                  "name": "id",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                }
+              ],
+              "type": 1
+            },
+            {
+              "description": "Cancel your listing",
+              "description_localizations": {},
+              "name": "cancel",
+              "name_localizations": {},
+              "options": [
+                {
+                  "autocomplete": true,
+                  "description": "Choose one of your listings",
+                  "description_localizations": {},
+                  "name": "id",
+                  "name_localizations": {},
+                  "required": true,
+                  "type": 3
+                }
+              ],
+              "type": 1
+            }
+          ],
+          "type": 1
+        }
+      ]
+    },
+    {
       "name": "poker",
       "richName": "Poker",
       "description": "Play a simplified Texas Hold'em hand against the dealer.",
@@ -3817,14 +4009,9 @@
               "autocomplete": false,
               "choices": [
                 {
-                  "name": "Anime Characters",
+                  "name": "Countries",
                   "name_localizations": {},
-                  "value": "anime_characters"
-                },
-                {
-                  "name": "Minecraft Mobs",
-                  "name_localizations": {},
-                  "value": "minecraft_mobs"
+                  "value": "countries"
                 },
                 {
                   "name": "Rainbow Six Operators",
@@ -3832,9 +4019,14 @@
                   "value": "r6_operators"
                 },
                 {
-                  "name": "Countries",
+                  "name": "Minecraft Mobs",
                   "name_localizations": {},
-                  "value": "countries"
+                  "value": "minecraft_mobs"
+                },
+                {
+                  "name": "Anime Characters",
+                  "name_localizations": {},
+                  "value": "anime_characters"
                 }
               ],
               "description": "The collection you want to view",

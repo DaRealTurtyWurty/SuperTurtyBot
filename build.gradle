@@ -108,6 +108,9 @@ tasks.register("generateCommandMetadata", JavaExec) {
     description = "Generate commands.json from the commands registered by CommandHook."
     dependsOn classes
     classpath = sourceSets.main.runtimeClasspath
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
     mainClass = "dev.darealturtywurty.superturtybot.core.command.CommandMetadataGenerator"
     args layout.projectDirectory.file("commands.json").asFile.absolutePath
 }

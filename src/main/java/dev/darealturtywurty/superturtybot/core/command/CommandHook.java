@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestComman
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.economy.blackjack.BlackjackCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.gofish.GoFishCommand;
+import dev.darealturtywurty.superturtybot.commands.economy.marketplace.MarketplaceCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.poker.PokerCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.property.PropertyCommand;
 import dev.darealturtywurty.superturtybot.commands.fun.*;
@@ -433,6 +434,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new RewardCommand());
         commands.add(new RobCommand());
         commands.add(new ShopCommand());
+        commands.add(new MarketplaceCommand());
         commands.add(new WithdrawCommand());
         commands.add(new SlotsCommand());
         commands.add(new SetMoneyCommand());

@@ -2,9 +2,11 @@ package dev.darealturtywurty.superturtybot.database;
 
 import com.mongodb.*;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
@@ -17,6 +19,7 @@ import dev.darealturtywurty.superturtybot.database.codecs.NewsitemCodec;
 import dev.darealturtywurty.superturtybot.database.codecs.ReminderCodec;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
+import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -30,6 +33,7 @@ public class Database {
     private static volatile Database instance;
 
     public final MongoDatabase mongoDatabase;
+    private final MongoClient client;
     public final MongoCollection<Levelling> levelling;
     public final MongoCollection<Counting> counting;
     public final MongoCollection<Suggestion> suggestions;
@@ -57,6 +61,7 @@ public class Database {
     public final MongoCollection<TempBan> tempBans;
     public final MongoCollection<WordleProfile> wordleProfiles;
     public final MongoCollection<Economy> economy;
+    public final MongoCollection<MarketplaceListing> marketplaceListings;
     public final MongoCollection<ChatReviver> chatRevivers;
     public final MongoCollection<Birthday> birthdays;
     public final MongoCollection<UserCollectables> userCollectables;
@@ -69,6 +74,7 @@ public class Database {
     public final MongoCollection<DashboardSession> dashboardSessions;
 
     private Database(MongoClient client) {
+        this.client = client;
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
         this.levelling = mongoDatabase.getCollection("levelling", Levelling.class);
@@ -98,6 +104,7 @@ public class Database {
         this.tempBans = mongoDatabase.getCollection("tempBans", TempBan.class);
         this.wordleProfiles = mongoDatabase.getCollection("wordleProfiles", WordleProfile.class);
         this.economy = mongoDatabase.getCollection("economy", Economy.class);
+        this.marketplaceListings = mongoDatabase.getCollection("marketplaceListings", MarketplaceListing.class);
         this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = mongoDatabase.getCollection("birthdays", Birthday.class);
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
@@ -125,6 +132,10 @@ public class Database {
         }
 
         return local;
+    }
+
+    public ClientSession startSession() {
+        return this.client.startSession();
     }
 
     public static void ensureIndexes() {
@@ -170,6 +181,10 @@ public class Database {
             db.tempBans.createIndex(Indexes.descending("expiresAt"));
             db.wordleProfiles.createIndex(userIndex);
             db.economy.createIndex(guildUser);
+            db.marketplaceListings.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("createdAt")));
+            db.marketplaceListings.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("seller"),
+                    Indexes.descending("item")),
+                    new IndexOptions().unique(true).partialFilterExpression(Filters.eq("type", "rental")));
             db.chatRevivers.createIndex(guildIndex);
             db.birthdays.createIndex(userIndex);
             db.userCollectables.createIndex(userIndex);

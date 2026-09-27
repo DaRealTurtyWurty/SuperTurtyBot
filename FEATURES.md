@@ -166,6 +166,7 @@ Notes:
 | `/reward` | Slash | Server | Claims rewards. Subcommand: `claimall`. |
 | `/rob` | Slash | Server | Attempts to rob another user's wallet. |
 | `/shop` | Slash | Server | Views, buys, and sells shop items. Subcommands: `view`, `buy`, `sell`. |
+| `/marketplace` | Slash | Server | User listings for collectables, rank-card items, economy items, and timed property rentals. Subcommands: `browse`, `list`, `buy`, `cancel`. |
 | `/withdraw` | Slash | Server | Moves bank money into the wallet. |
 | `/slots` | Slash | Server | Slot machine betting. |
 | `prefix:setmoney` | Prefix | Server | Admin command to set user money. |
@@ -348,7 +349,6 @@ Frontend dashboard pages:
 
 ### Economy And Games
 
-- Marketplace: user-to-user shop for collectables, rank-card items, property rental contracts, and economy items.
 - Crafting/upgrades: combine collectables or shop items into cosmetics, boosts, or limited badges.
 - Daily/weekly quests for money and XP, integrated with the reward command.
 - Stock/crypto parody market: simulated market with server-local prices, news events, and risk controls.
