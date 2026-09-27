@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -141,6 +142,8 @@ public class CrosswordCommand extends CoreCommand {
                     boolean completed = game.isComplete();
                     Optional<FileUpload> upload = createUpload(game, completed);
                     if (completed) {
+                        QuestManager.INSTANCE.recordMinigameCompletion(
+                                game.getGuildId(), game.getUserId(), "crossword", game.getThreadId());
                         if (upload.isPresent()) {
                             thread.sendMessage("✅ Crossword complete.")
                                     .setFiles(upload.get())

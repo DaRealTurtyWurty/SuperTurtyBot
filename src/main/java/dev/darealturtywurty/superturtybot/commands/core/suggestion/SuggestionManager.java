@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.SuggestionResponse;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Suggestion;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -97,7 +98,7 @@ public final class SuggestionManager extends ListenerAdapter {
             return future;
         }
 
-        if(suggestionNumber < 0) {
+        if (suggestionNumber < 0) {
             future.complete(null);
             return future;
         }
@@ -185,6 +186,13 @@ public final class SuggestionManager extends ListenerAdapter {
                 type.richName + " by " + responder.getUser().getEffectiveName(),  response, false).build()).queue();
             suggestion.getResponses().add(new SuggestionResponse(type.name(), response, responder.getIdLong(), time));
             Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
+            if (type == SuggestionResponse.Type.APPROVED || type == SuggestionResponse.Type.CONSIDERED) {
+                QuestManager.INSTANCE.recordSuggestionAccepted(
+                        guild.getIdLong(),
+                        suggestion.getUser(),
+                        suggestion.getMessage()
+                );
+            }
             future.complete(suggestion);
         }, err -> Database.getDatabase().suggestions.deleteOne(filter));
         

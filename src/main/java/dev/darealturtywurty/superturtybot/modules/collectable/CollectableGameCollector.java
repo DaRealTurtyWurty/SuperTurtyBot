@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.util.object.WeightedRandomBag;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserCollectables;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import dev.darealturtywurty.superturtybot.registry.Registerable;
 import dev.darealturtywurty.superturtybot.registry.Registry;
 import lombok.Getter;
@@ -26,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -142,6 +144,16 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             if (answer.matches(content)) {
                 userCollectablesOfType.collect(collectable);
                 Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
+                QuestManager.INSTANCE.recordCollectableEarned(
+                        guild,
+                        user,
+                        message.getIdLong(),
+                        collectable.getCollectionType().getName(),
+                        collectable.getName(),
+                        collectable.getRarity().ordinal(),
+                        message.getTimeCreated().toInstant().toEpochMilli(),
+                        event.getMessage().getTimeCreated().toInstant().toEpochMilli()
+                );
                 CoreCommand.reply(event, "✅ You have successfully collected " + formatCollectableName(collectable) + "!");
 
                 gameInstances.remove(instance);
@@ -192,7 +204,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                 return this.sortedCollectables;
 
             this.sortedCollectables = this.registry.values().stream()
-                    .sorted(java.util.Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
+                    .sorted(Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
                     .toList();
             this.sortedCollectablesSize = registrySize;
             return this.sortedCollectables;
@@ -277,7 +289,7 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                 .setAuthor("Part of the " + displayName + " Collection", null, jda.getSelfUser().getAvatarUrl())
                 .setColor(collectable.getRarity().getColor());
 
-        if(collectable.getNote() != null) {
+        if (collectable.getNote() != null) {
             embed.addField("Note", collectable.getNote(), false);
         }
 

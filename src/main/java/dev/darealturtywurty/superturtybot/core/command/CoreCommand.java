@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -189,6 +190,13 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (validateRatelimit(event.getUser().getIdLong(),
                 end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                         .setEphemeral(true).queue())) {
+            QuestManager.INSTANCE.recordCommandUsed(
+                    event.getGuild(),
+                    event.getUser(),
+                    getName(),
+                    getCategory().getName()
+            );
+
             String subcommand = event.getSubcommandName();
             if (subcommand == null) {
                 runSlash(event);
@@ -247,7 +255,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     private boolean validateRatelimit(long user, Consumer<String> ratelimitResponse) {
-        if(user == Environment.INSTANCE.ownerId().orElse(-1L))
+        if (user == Environment.INSTANCE.ownerId().orElse(-1L))
             return true;
 
         Pair<TimeUnit, Long> ratelimit = getRatelimit();

@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.Loan;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -84,7 +85,7 @@ public class LoanCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
+        if (account.isImprisoned()) {
             event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot request a loan! You will be released %s.",
                     TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
             return;
@@ -152,6 +153,12 @@ public class LoanCommand extends EconomyCommand {
 
                 EconomyManager.payLoan(account, loan, amountToPay);
                 if (loan.isPaidOff()) {
+                    QuestManager.INSTANCE.recordEconomyAction(
+                            guild.getIdLong(),
+                            event.getUser().getIdLong(),
+                            QuestManager.ECONOMY_LOAN_REPAID,
+                            loan.getId()
+                    );
                     event.getHook().editOriginal("✅ You have paid back %s%s and paid off your loan!".formatted(
                             config.getEconomyCurrency(), StringUtils.numberFormat(amountToPay)
                     )).queue();

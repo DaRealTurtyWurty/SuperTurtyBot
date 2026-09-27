@@ -1,25 +1,19 @@
 package dev.darealturtywurty.superturtybot.database;
 
 import com.mongodb.*;
+import com.mongodb.client.*;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.database.codecs.BigDecimalCodec;
-import dev.darealturtywurty.superturtybot.database.codecs.BigIntegerCodec;
-import dev.darealturtywurty.superturtybot.database.codecs.ColorCodec;
-import dev.darealturtywurty.superturtybot.database.codecs.NewsitemCodec;
-import dev.darealturtywurty.superturtybot.database.codecs.ReminderCodec;
+import dev.darealturtywurty.superturtybot.database.codecs.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
-import org.bson.Document;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestActivity;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestPlayer;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -72,6 +66,8 @@ public class Database {
     public final MongoCollection<ModmailTranscriptChunk> modmailTranscriptChunks;
     public final MongoCollection<StickyRoles> stickyRoles;
     public final MongoCollection<DashboardSession> dashboardSessions;
+    public final MongoCollection<QuestPlayer> questPlayers;
+    public final MongoCollection<QuestActivity> questActivities;
 
     private Database(MongoClient client) {
         this.client = client;
@@ -115,6 +111,8 @@ public class Database {
         this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks", ModmailTranscriptChunk.class);
         this.stickyRoles = mongoDatabase.getCollection("stickyRoles", StickyRoles.class);
         this.dashboardSessions = mongoDatabase.getCollection("dashboardSessions", DashboardSession.class);
+        this.questPlayers = mongoDatabase.getCollection("questPlayers", QuestPlayer.class);
+        this.questActivities = mongoDatabase.getCollection("questActivities", QuestActivity.class);
 
         ShutdownHooks.register(client::close);
     }
@@ -200,6 +198,18 @@ public class Database {
             db.stickyRoles.createIndex(guildUser, new IndexOptions().unique(true));
             db.dashboardSessions.createIndex(Indexes.descending("sessionId"), new IndexOptions().unique(true));
             db.dashboardSessions.createIndex(Indexes.descending("expiresAt"), new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
+            db.questPlayers.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("weekStart")),
+                    new IndexOptions().unique(true));
+            db.questActivities.createIndex(
+                    Indexes.compoundIndex(
+                            Indexes.ascending("guild"),
+                            Indexes.ascending("user"),
+                            Indexes.ascending("weekStart"),
+                            Indexes.ascending("type"),
+                            Indexes.ascending("sourceId")
+                    ),
+                    new IndexOptions().unique(true)
+            );
 
             return null;
         });

@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
@@ -116,10 +117,22 @@ public class GeoGuesserCommand extends SubcommandCommand {
                 .success(msgEvent -> {
                     String guess = msgEvent.getMessage().getContentRaw();
                     if (game.guess(guess)) {
+                        QuestManager.INSTANCE.recordGeographyAnswer(
+                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                                msgEvent.getMessageIdLong(), true
+                        );
+                        QuestManager.INSTANCE.recordGeographyGameCompleted(
+                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                                game.getMessageId(), 1, game.getGuesses().size()
+                        );
                         GAMES.remove(game);
                         thread.sendMessage("✅ **Correct!**").queue(ignored ->
                                 thread.getManager().setArchived(true).setLocked(true).queue());
                     } else {
+                        QuestManager.INSTANCE.recordGeographyAnswer(
+                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                                msgEvent.getMessageIdLong(), false
+                        );
                         thread.sendMessage("❌ **Incorrect!**").queue();
 
                         if (game.hasLost()) {

@@ -2,10 +2,13 @@ package dev.darealturtywurty.superturtybot.commands.util;
 
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -31,6 +34,16 @@ public class PollCommand extends CoreCommand {
         NUMBER_EMOTE_MAP.put(8, "8️⃣");
         NUMBER_EMOTE_MAP.put(9, "9️⃣");
         NUMBER_EMOTE_MAP.put(10, "🔟");
+    }
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event) {
+        if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot()
+                || event.getUser().isSystem()
+                || !NUMBER_EMOTE_MAP.containsValue(event.getReaction().getEmoji().getName()))
+            return;
+
+        QuestManager.INSTANCE.recordPollVote(event.getGuild(), event.getMessageIdLong(), event.getUser());
     }
 
     public PollCommand() {
@@ -109,6 +122,11 @@ public class PollCommand extends CoreCommand {
         final Pair<EmbedBuilder, List<String>> embedAndOptions = createEmbed(event.getUser(), question, options);
         event.getChannel().sendMessageEmbeds(embedAndOptions.getKey().build()).queue(msg -> {
             embedAndOptions.getValue().forEach(emote -> msg.addReaction(Emoji.fromUnicode(emote)).queue());
+
+            Guild guild = event.getGuild();
+            if (guild != null) {
+                QuestManager.INSTANCE.recordPollCreated(guild, event.getUser(), msg.getIdLong());
+            }
 
             reply(event, "✅ Successfully created poll!", false, true);
         });

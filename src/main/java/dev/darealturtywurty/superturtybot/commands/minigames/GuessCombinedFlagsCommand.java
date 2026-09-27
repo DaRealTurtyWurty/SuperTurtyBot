@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestD
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
@@ -238,10 +239,17 @@ public class GuessCombinedFlagsCommand extends SubcommandCommand {
 
         // add the region to the game
         if (game.guess(region)) {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "combined_flags", event.getMessageIdLong(), true
+            );
             event.getMessage().reply("✅ Correct guess!").queue();
 
             // check if the game has ended
             if (game.hasWon()) {
+                QuestManager.INSTANCE.recordGeographyGameCompleted(
+                        event.getGuild(), event.getAuthor(), "combined_flags",
+                        game.getMessageId(), game.getRegions().size(), game.getGuesses().size()
+                );
                 // remove the game from the map
                 GAMES.remove(game.getMessageId(), game);
 
@@ -285,6 +293,9 @@ public class GuessCombinedFlagsCommand extends SubcommandCommand {
                 });
             }
         } else {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "combined_flags", event.getMessageIdLong(), false
+            );
             event.getMessage().reply("❌ Was not a correct guess!").queue();
 
             if (game.getIncorrectGuesses() >= 9) {

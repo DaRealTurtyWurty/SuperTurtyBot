@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -87,6 +88,8 @@ public class WordSearchCommand extends CoreCommand {
                             thread.sendMessage("✅ You found all the words! Game over!")
                                     .setFiles(upload.get())
                                     .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+                            QuestManager.INSTANCE.recordMinigameCompletion(
+                                    game.getGuildId(), game.getUserId(), "word_search", game.getThreadId());
                             GAMES.remove(game);
                             return;
                         }
@@ -348,8 +351,9 @@ public class WordSearchCommand extends CoreCommand {
                     .build());
             if (response.isLeft())
                 return List.copyOf(response.getLeft());
-            else
+            else {
                 Constants.LOGGER.error("Failed to get words for word search! Status: " + response.getRight());
+            }
 
             return List.of();
         }
@@ -369,22 +373,30 @@ public class WordSearchCommand extends CoreCommand {
         private Direction guessBestDirection(int row, int column) {
             int up = 0, right = 0, down = 0, left = 0, upRight = 0, downRight = 0, downLeft = 0, upLeft = 0;
             for (String word : this.words) {
-                if (canFitWord(word, row, column, Direction.UP))
+                if (canFitWord(word, row, column, Direction.UP)) {
                     up++;
-                if (canFitWord(word, row, column, Direction.RIGHT))
+                }
+                if (canFitWord(word, row, column, Direction.RIGHT)) {
                     right++;
-                if (canFitWord(word, row, column, Direction.DOWN))
+                }
+                if (canFitWord(word, row, column, Direction.DOWN)) {
                     down++;
-                if (canFitWord(word, row, column, Direction.LEFT))
+                }
+                if (canFitWord(word, row, column, Direction.LEFT)) {
                     left++;
-                if (canFitWord(word, row, column, Direction.UP_RIGHT))
+                }
+                if (canFitWord(word, row, column, Direction.UP_RIGHT)) {
                     upRight++;
-                if (canFitWord(word, row, column, Direction.DOWN_RIGHT))
+                }
+                if (canFitWord(word, row, column, Direction.DOWN_RIGHT)) {
                     downRight++;
-                if (canFitWord(word, row, column, Direction.DOWN_LEFT))
+                }
+                if (canFitWord(word, row, column, Direction.DOWN_LEFT)) {
                     downLeft++;
-                if (canFitWord(word, row, column, Direction.UP_LEFT))
+                }
+                if (canFitWord(word, row, column, Direction.UP_LEFT)) {
                     upLeft++;
+                }
             }
 
             int max = Math.max(Math.max(Math.max(Math.max(Math.max(Math.max(Math.max(up, right), down), left), upRight), downRight), downLeft), upLeft);

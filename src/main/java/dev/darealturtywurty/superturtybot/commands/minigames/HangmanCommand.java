@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.MathUtils;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -235,6 +236,8 @@ public class HangmanCommand extends CoreCommand {
                             threadChannel.sendMessage("✅ You won! The word was `" + game.getWord() + "`!")
                                     .setFiles(upload)
                                     .queue(ignored -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
+                            QuestManager.INSTANCE.recordMinigameCompletion(
+                                    game.getGuildId(), game.getUserId(), "hangman", game.getThreadId());
                             GAMES.remove(game);
                         } catch (IOException exception) {
                             Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);

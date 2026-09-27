@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Showcase;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -73,7 +74,12 @@ public final class StarboardManager extends ListenerAdapter {
             updates.add(Updates.set("stars", showcase.getStars()));
 
             final long starboardMessageId = showcase.getStarboardMessage();
-            if (showcase.getStars() >= 5) {
+            if (showcase.getStars() >= config.getMinimumStars()) {
+                QuestManager.INSTANCE.recordShowcaseThresholdReached(
+                        event.getGuild().getIdLong(),
+                        showcase.getUser(),
+                        showcase.getMessage()
+                );
                 getStarboard(event.getGuild()).thenAccept(starboard -> {
                     if (starboardMessageId == 0) {
                         final CompletableFuture<Long> messageId = sendStarboard(event.getJDA(), starboard, filter,

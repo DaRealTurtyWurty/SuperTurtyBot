@@ -1,5 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.minigames.battleships;
 
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -81,7 +82,7 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
                 response.append(" They sunk a ")
                         .append(attackResult.sunkType().name().toLowerCase(Locale.ROOT).replace('_', ' '))
                         .append('!');
-                if(game.isPowerUpsEnabled()) {
+            if (game.isPowerUpsEnabled()) {
                     BattleshipsCommand.PowerUp powerUp = game.grantRandomPowerUp(user.getIdLong());
                     if (powerUp != null) {
                         response.append(" ").append(user.getAsMention())
@@ -96,6 +97,16 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
 
         if (attackResult.gameOver()) {
             response.append("\n🏆 ").append(user.getAsMention()).append(" wins! Game over.");
+            if (game.isPvP()) {
+                QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                        guild,
+                        "battleships",
+                        game.getThreadId(),
+                        game.getPlayer1().getUserId(),
+                        game.getPlayer2().getUserId(),
+                        user.getIdLong()
+                );
+            }
             BattleshipsCommand.GAMES.remove(game.getThreadId(), game);
             event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
             try {

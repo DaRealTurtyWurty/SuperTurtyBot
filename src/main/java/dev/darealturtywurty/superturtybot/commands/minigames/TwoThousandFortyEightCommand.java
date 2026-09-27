@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.TwoThousandFortyEightProfile;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.components.ActionComponent;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -150,6 +151,13 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
                 .flatMap(itemComponents -> itemComponents.getButtons().stream())
                 .filter(button -> !button.getLabel().equals("\u0000"))
                 .allMatch(ActionComponent::isDisabled);
+        QuestManager.INSTANCE.record2048Progress(
+                event.getGuild(),
+                event.getUser(),
+                message.getIdLong(),
+                game.getHighestTile(),
+                allArrowButtonsDisabled
+        );
         if (!allArrowButtonsDisabled) {
             createEventWaiter(event, message, game).build();
         }
@@ -344,6 +352,13 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
                     .toArray(int[][]::new);
             makeMove(direction, boardToModify, addition -> {});
             return !Arrays.deepEquals(boardToModify, board);
+        }
+
+        public int getHighestTile() {
+            return Arrays.stream(board)
+                    .flatMapToInt(Arrays::stream)
+                    .max()
+                    .orElse(0);
         }
     }
 }

@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Counting.Us
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.counting.maths.MathHandler;
 import dev.darealturtywurty.superturtybot.modules.counting.maths.MathOperation;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -45,7 +46,7 @@ public class CountingManager extends ListenerAdapter {
 
         Guild guild = event.getGuild();
         Member member = event.getMember();
-        if(member == null)
+        if (member == null)
             return;
 
         GuildData guildData = GuildData.getOrCreateGuildData(guild);
@@ -164,6 +165,12 @@ public class CountingManager extends ListenerAdapter {
 
             updates.add(Updates.set("users", profile.getUsers()));
             Database.getDatabase().counting.updateOne(filter, updates);
+            QuestManager.INSTANCE.recordValidCount(
+                    guild,
+                    user,
+                    message.getIdLong(),
+                    message.getTimeCreated().toInstant()
+            );
 
             if (data.getCurrentCountSuccession() == maxSuccession) {
                 channel.upsertPermissionOverride(member).setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();

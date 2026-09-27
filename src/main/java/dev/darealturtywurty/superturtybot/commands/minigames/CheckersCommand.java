@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -67,7 +68,7 @@ public class CheckersCommand extends CoreCommand {
         game.switchTurn();
         channel.sendMessage("❌ You took too long to move, it is now <@%d>'s turn!".formatted(game.getCurrentTurn())).queue();
 
-        if(game.isBot() && !game.isTurn(game.getOpponentId())) {
+        if (game.isBot() && !game.isTurn(game.getOpponentId())) {
             Pair<Pair<Integer, Integer>,Pair<Integer, Integer>> botMove = game.playBot();
             String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'), botMove.getLeft().getLeft() + 1);
             String botTo = "%s%s".formatted((char) (botMove.getRight().getRight() + 'A'), botMove.getRight().getLeft() + 1);
@@ -76,6 +77,18 @@ public class CheckersCommand extends CoreCommand {
                 channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
                         .setFiles(createFileUpload(game, channel))
                         .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+
+                if (!game.isBot()) {
+                    QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                            channel.getGuild(),
+                            "checkers",
+                            game.getThreadId(),
+                            game.getUserId(),
+                            game.getOpponentId(),
+                            game.getOpponentId()
+                    );
+                }
+
                 GAMES.remove(game);
 
                 return;
@@ -97,8 +110,8 @@ public class CheckersCommand extends CoreCommand {
             return;
         }
 
-        if(data.equalsIgnoreCase("cancel")) {
-            if(game.getSelectedPiece() == null) {
+        if (data.equalsIgnoreCase("cancel")) {
+            if (game.getSelectedPiece() == null) {
                 channel.sendMessage("❌ You do not currently have a piece selected!")
                         .queue(ignored -> createEventWaiter(game, channel).build());
                 return;
@@ -111,7 +124,7 @@ public class CheckersCommand extends CoreCommand {
             return;
         }
 
-        if(data.equalsIgnoreCase("give up")) {
+        if (data.equalsIgnoreCase("give up")) {
             channel.sendMessageFormat("✅ <@%d> has given up! <@%d> has won the game!", event.getAuthor().getIdLong(), game.isTurn(event.getAuthor().getIdLong()) ? game.getOpponentId() : game.getUserId())
                     .setFiles(createFileUpload(game, channel))
                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
@@ -119,7 +132,7 @@ public class CheckersCommand extends CoreCommand {
             return;
         }
 
-        if(data.length() != 2) {
+        if (data.length() != 2) {
             createEventWaiter(game, channel).build();
             return;
         }
@@ -131,7 +144,7 @@ public class CheckersCommand extends CoreCommand {
         if (Character.isDigit(split[0])) {
             rowStr = String.valueOf(split[0]);
             columnStr = String.valueOf(split[1]);
-        } else if(Character.isDigit(split[1])) {
+        } else if (Character.isDigit(split[1])) {
             rowStr = String.valueOf(split[1]);
             columnStr = String.valueOf(split[0]);
         } else {
@@ -141,14 +154,14 @@ public class CheckersCommand extends CoreCommand {
         }
 
         int parsedRow = Integer.parseInt(rowStr);
-        if(parsedRow < 1 || parsedRow > 8) {
+        if (parsedRow < 1 || parsedRow > 8) {
             reply(event, "❌ That is not a valid row!");
             createEventWaiter(game, channel).build();
             return;
         }
 
         char parsedColumn = columnStr.charAt(0);
-        if(parsedColumn < 'A' || parsedColumn > 'H') {
+        if (parsedColumn < 'A' || parsedColumn > 'H') {
             reply(event, "❌ That is not a valid column!");
             createEventWaiter(game, channel).build();
             return;
@@ -157,8 +170,8 @@ public class CheckersCommand extends CoreCommand {
         int row = parsedRow - 1;
         int column = parsedColumn - 'A';
 
-        if(game.getSelectedPiece() == null) {
-            if(!game.setSelectedPiece(event.getAuthor().getIdLong(), Pair.of(row, column))) {
+        if (game.getSelectedPiece() == null) {
+            if (!game.setSelectedPiece(event.getAuthor().getIdLong(), Pair.of(row, column))) {
                 reply(event, "❌ You do not have a piece at %s!".formatted(data));
                 createEventWaiter(game, channel).build();
                 return;
@@ -171,7 +184,7 @@ public class CheckersCommand extends CoreCommand {
         }
 
         Pair<Integer, Integer> selectedPiece = game.getSelectedPiece();
-        if(!game.makeMove(event.getAuthor().getIdLong(), selectedPiece.getLeft(), selectedPiece.getRight(), row, column)) {
+        if (!game.makeMove(event.getAuthor().getIdLong(), selectedPiece.getLeft(), selectedPiece.getRight(), row, column)) {
             reply(event, "❌ You cannot place a piece there!");
             createEventWaiter(game, channel).build();
             return;
@@ -183,6 +196,16 @@ public class CheckersCommand extends CoreCommand {
             channel.sendMessageFormat("✅ <@%d> has won the game!", event.getAuthor().getIdLong())
                     .setFiles(createFileUpload(game, channel))
                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+            if (!game.isBot()) {
+                QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                        channel.getGuild(),
+                        "checkers",
+                        game.getThreadId(),
+                        game.getUserId(),
+                        game.getOpponentId(),
+                        event.getAuthor().getIdLong()
+                );
+            }
             GAMES.remove(game);
             return;
         }
@@ -246,16 +269,16 @@ public class CheckersCommand extends CoreCommand {
 
         for (int row = 0; row < game.board.length; row++) {
             for (int column = 0; column < game.board[row].length; column++) {
-                if((row + column) % 2 == 0) {
+                if ((row + column) % 2 == 0) {
                     graphics.setColor(Color.BLACK);
-                    if(game.getSelectedPiece() != null) {
-                        if(game.getSelectedPiece().getLeft() == row && game.getSelectedPiece().getRight() == column) {
+                    if (game.getSelectedPiece() != null) {
+                        if (game.getSelectedPiece().getLeft() == row && game.getSelectedPiece().getRight() == column) {
                             graphics.setColor(Color.BLUE);
                         } else {
                             List<Pair<Integer, Integer>> availableMoves = game.getAvailableMoves(game.getSelectedPiece().getLeft(), game.getSelectedPiece().getRight());
 
                             final int finalRow = row, finalColumn = column;
-                            if(availableMoves.stream().anyMatch(pair -> pair.getLeft() == finalRow && pair.getRight() == finalColumn)) {
+                            if (availableMoves.stream().anyMatch(pair -> pair.getLeft() == finalRow && pair.getRight() == finalColumn)) {
                                 graphics.setColor(Color.GREEN);
                             }
                         }
@@ -500,7 +523,7 @@ public class CheckersCommand extends CoreCommand {
             int column = selectedPiece.getRight();
 
             char symbol = userId == this.userId ? 'X' : 'O';
-            if(get(row, column) == symbol) {
+            if (get(row, column) == symbol) {
                 this.selectedPiece = selectedPiece;
                 return true;
             }
@@ -549,11 +572,10 @@ public class CheckersCommand extends CoreCommand {
             }
 
             Pair<Integer, Integer> selectedMove = availableMoves.get(ThreadLocalRandom.current().nextInt(availableMoves.size()));
-            if(makeMove(this.opponentId, selectedPiece.getLeft(), selectedPiece.getRight(), selectedMove.getLeft(), selectedMove.getRight())) {
+            if (makeMove(this.opponentId, selectedPiece.getLeft(), selectedPiece.getRight(), selectedMove.getLeft(), selectedMove.getRight()))
                 return Pair.of(selectedPiece, selectedMove);
-            } else {
-                return playBot();
-            }
+
+            return playBot();
         }
 
         public char get(int row, int column) {
@@ -564,7 +586,7 @@ public class CheckersCommand extends CoreCommand {
         }
 
         public boolean canPlace(long userId, int fromRow, int fromColumn, int toRow, int toColumn) {
-            if(!isTurn(userId))
+            if (!isTurn(userId))
                 return false;
 
             if (fromRow < 0 || fromRow >= 8 || fromColumn < 0 || fromColumn >= 8 || toRow < 0 || toRow >= 8 || toColumn < 0 || toColumn >= 8)

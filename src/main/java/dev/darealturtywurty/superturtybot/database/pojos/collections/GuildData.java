@@ -165,6 +165,7 @@ public class GuildData {
     private boolean discordInviteGuardEnabled;
     private boolean scamDetectionEnabled;
     private Map<String, VoiceChannelNotifier> voiceChannelNotifiers;
+    private boolean questEnabled;
 
     public GuildData() {
         this(0L);
@@ -290,6 +291,7 @@ public class GuildData {
         this.discordInviteGuardEnabled = true;
         this.scamDetectionEnabled = true;
         this.voiceChannelNotifiers = new HashMap<>();
+        this.questEnabled = true;
     }
 
     public static GuildData getOrCreateGuildData(long guildId) {

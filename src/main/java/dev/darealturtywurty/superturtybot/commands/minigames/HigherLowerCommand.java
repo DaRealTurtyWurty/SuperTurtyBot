@@ -10,6 +10,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -353,6 +354,7 @@ public class HigherLowerCommand extends CoreCommand {
                     }
 
                     if (populationGame.getCountry0().getPopulation() > populationGame.getCountry1().getPopulation()) {
+                        recordGeographyAnswer(event, game, true);
                         threadChannel.sendMessage(
                                         "✅ Correct! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
                                 .queue();
@@ -360,6 +362,7 @@ public class HigherLowerCommand extends CoreCommand {
                         // change the second country to the first country and get a new country
                         populations(threadChannel, populationGame);
                     } else {
+                        recordGeographyAnswer(event, game, false);
                         threadChannel.sendMessage(
                                         "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
                                 .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
@@ -374,6 +377,7 @@ public class HigherLowerCommand extends CoreCommand {
                     }
 
                     if (populationGame.getCountry0().getPopulation() < populationGame.getCountry1().getPopulation()) {
+                        recordGeographyAnswer(event, game, true);
                         threadChannel.sendMessage(
                                         "✅ Correct! " + populationGame.getCountry0().getName() + " has a lower population than " + populationGame.getCountry1().getName())
                                 .queue();
@@ -381,6 +385,7 @@ public class HigherLowerCommand extends CoreCommand {
                         // change the second country to the first country and get a new country
                         populations(threadChannel, populationGame);
                     } else {
+                        recordGeographyAnswer(event, game, false);
                         threadChannel.sendMessage(
                                         "❌ Incorrect! " + populationGame.getCountry0().getName() + " has a higher population than " + populationGame.getCountry1().getName())
                                 .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
@@ -400,6 +405,7 @@ public class HigherLowerCommand extends CoreCommand {
                     }
 
                     if (areaGame.getCountry0().getLandAreaKm() > areaGame.getCountry1().getLandAreaKm()) {
+                        recordGeographyAnswer(event, game, true);
                         threadChannel.sendMessage(
                                         "✅ Correct! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
                                 .queue();
@@ -407,6 +413,7 @@ public class HigherLowerCommand extends CoreCommand {
                         // change the second country to the first country and get a new country
                         countryAreas(threadChannel, areaGame);
                     } else {
+                        recordGeographyAnswer(event, game, false);
                         threadChannel.sendMessage(
                                         "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
                                 .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
@@ -421,6 +428,7 @@ public class HigherLowerCommand extends CoreCommand {
                     }
 
                     if (areaGame.getCountry0().getLandAreaKm() < areaGame.getCountry1().getLandAreaKm()) {
+                        recordGeographyAnswer(event, game, true);
                         threadChannel.sendMessage(
                                         "✅ Correct! " + areaGame.getCountry0().getName() + " has a lower area than " + areaGame.getCountry1().getName())
                                 .queue();
@@ -428,6 +436,7 @@ public class HigherLowerCommand extends CoreCommand {
                         // change the second country to the first country and get a new country
                         countryAreas(threadChannel, areaGame);
                     } else {
+                        recordGeographyAnswer(event, game, false);
                         threadChannel.sendMessage(
                                         "❌ Incorrect! " + areaGame.getCountry0().getName() + " has a higher area than " + areaGame.getCountry1().getName())
                                 .queue(message -> threadChannel.getManager().setArchived(true).setLocked(true).queue());
@@ -701,5 +710,15 @@ public class HigherLowerCommand extends CoreCommand {
     private void unregisterGame(Game game) {
         GAMES.remove(game.getChannelId(), game);
         MESSAGE_GAMES.remove(game.getMessageId(), game);
+    }
+
+    private static void recordGeographyAnswer(ButtonInteractionEvent event, Game game, boolean correct) {
+        QuestManager.INSTANCE.recordGeographyAnswer(
+                event.getGuild(),
+                event.getUser(),
+                "higher_lower_" + game.getSubcommand(),
+                event.getMessageIdLong(),
+                correct
+        );
     }
 }

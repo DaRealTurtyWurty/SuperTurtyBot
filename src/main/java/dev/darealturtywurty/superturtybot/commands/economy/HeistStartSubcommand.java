@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -348,6 +349,12 @@ public class HeistStartSubcommand extends HeistSubcommand {
 
                 EconomyManager.HeistResult heistResult = EconomyManager.heistCompleted(account, heist.getAverageStageTime());
                 EconomyManager.updateAccount(account);
+                QuestManager.INSTANCE.recordEconomyAction(
+                        guild.getIdLong(),
+                        member.getIdLong(),
+                        QuestManager.ECONOMY_HEIST_COMPLETED,
+                        Long.toString(heist.getMessageId())
+                );
                 thread.sendMessage("✅ **Heist successful!** You have earned %s!%n%n%s".formatted(
                                 StringUtils.numberFormat(BigInteger.valueOf(heistResult.earned()), config),
                                 heistResult.leveledUp() ? "🎉 You have levelled up! You are now level %d!".formatted(account.getHeistLevel() + 1) : "").trim())
@@ -451,11 +458,21 @@ public class HeistStartSubcommand extends HeistSubcommand {
 
     private static int determineHeistStages(int heistLevel) {
         int stages = 1;
-        if (heistLevel > 10) stages++;
-        if (heistLevel > 25) stages++;
-        if (heistLevel > 50) stages++;
-        if (heistLevel > 75) stages++;
-        if (heistLevel > 100) stages++;
+        if (heistLevel > 10) {
+            stages++;
+        }
+        if (heistLevel > 25) {
+            stages++;
+        }
+        if (heistLevel > 50) {
+            stages++;
+        }
+        if (heistLevel > 75) {
+            stages++;
+        }
+        if (heistLevel > 100) {
+            stages++;
+        }
         return Math.min(stages, 6);
     }
 
@@ -466,11 +483,21 @@ public class HeistStartSubcommand extends HeistSubcommand {
 
     private static int determineHeistGridColumns(int heistLevel) {
         int columns = 2;
-        if (heistLevel > 10) columns++;
-        if (heistLevel > 25) columns++;
-        if (heistLevel > 50) columns++;
-        if (heistLevel > 75) columns++;
-        if (heistLevel > 100) columns++;
+        if (heistLevel > 10) {
+            columns++;
+        }
+        if (heistLevel > 25) {
+            columns++;
+        }
+        if (heistLevel > 50) {
+            columns++;
+        }
+        if (heistLevel > 75) {
+            columns++;
+        }
+        if (heistLevel > 100) {
+            columns++;
+        }
         return Math.min(columns, 6);
     }
 

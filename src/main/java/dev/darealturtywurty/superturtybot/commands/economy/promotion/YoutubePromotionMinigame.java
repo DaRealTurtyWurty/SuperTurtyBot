@@ -122,7 +122,7 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
                                                                         buildVideoUrl(displayPair.second()))
                                                                 .queue(ignored -> channel.getManager().setArchived(true)
                                                                         .setLocked(true).queue());
-                                                        account.setJobLevel(account.getJobLevel() + 1);
+                                                        EconomyManager.promoteJob(account);
                                                     } else {
                                                         channel.sendMessageFormat(
                                                                         "❌ That is not correct! The correct answer was %d.\n1) %,d views - %s\n2) %,d views - %s",

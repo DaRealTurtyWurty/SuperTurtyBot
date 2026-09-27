@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -79,6 +80,18 @@ public class Connect4Command extends CoreCommand {
                         channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
                                 .setFiles(createFileUpload(game, channel))
                                 .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+
+                        if (!game.isBot()) {
+                            QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                                    channel.getGuild(),
+                                    "connect4",
+                                    game.getThreadId(),
+                                    game.getUserId(),
+                                    game.getOpponentId(),
+                                    event.getUser().getIdLong()
+                            );
+                        }
+
                         GAMES.remove(game);
 
                         return;
@@ -115,6 +128,18 @@ public class Connect4Command extends CoreCommand {
 
             channel.sendMessageFormat("✅ The game has ended in a draw!")
                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+
+            if (!game.isBot()) {
+                QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                        channel.getGuild(),
+                        "connect4",
+                        game.getThreadId(),
+                        game.getUserId(),
+                        game.getOpponentId(),
+                        0L
+                );
+            }
+
             GAMES.remove(game);
 
             return true;
@@ -132,12 +157,14 @@ public class Connect4Command extends CoreCommand {
     private static void respondToButton(Connect4Command.Game game, ThreadChannel channel, ButtonInteractionEvent event, boolean wait) {
         FileUpload file = createFileUpload(game, channel);
         MessageEditCallbackAction editAction = event.deferEdit().setComponents(createRows(game));
-        if (file != null)
+        if (file != null) {
             editAction.setFiles(file);
+        }
 
         editAction.queue(ignored -> {
-            if (!channel.isLocked() && wait)
+            if (!channel.isLocked() && wait) {
                 createEventWaiter(game, channel).build();
+            }
         });
     }
 
@@ -209,8 +236,9 @@ public class Connect4Command extends CoreCommand {
                     "connect4-%d".formatted(i),
                     "%d".formatted(i + 1));
 
-            if (!game.canPlace(i) || (game.isBot() && !game.isTurn(game.getUserId())))
+            if (!game.canPlace(i) || (game.isBot() && !game.isTurn(game.getUserId()))) {
                 button = button.asDisabled();
+            }
 
             buttons.add(button);
             if (buttons.size() == 5) {

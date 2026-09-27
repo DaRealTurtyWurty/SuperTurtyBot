@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.WouldYouRatherRequest
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -68,7 +69,7 @@ public class WouldYouRatherCommand extends CoreCommand {
         boolean nsfw = event.getOption("nsfw", false, OptionMapping::getAsBoolean);
         boolean includeNsfw = event.getOption("include-nsfw", true, OptionMapping::getAsBoolean);
 
-        if(nsfw && !NSFWCommand.isValidChannel(event.getChannel())) {
+        if (nsfw && !NSFWCommand.isValidChannel(event.getChannel())) {
             event.getHook().editOriginal("❌ This command can only be used in NSFW channels!").queue();
             return;
         }
@@ -82,6 +83,11 @@ public class WouldYouRatherCommand extends CoreCommand {
         event.getHook().editOriginal(question).queue(msg -> {
             msg.addReaction(Emoji.fromUnicode("U+1F170")).queue();
             msg.addReaction(Emoji.fromUnicode("U+1F171")).queue();
+            QuestManager.INSTANCE.recordConversationPromptUsed(
+                    event.getGuild(),
+                    event.getUser(),
+                    event.getIdLong()
+            );
         });
     }
 

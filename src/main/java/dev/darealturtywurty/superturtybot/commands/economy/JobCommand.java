@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.util.StringUtils;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -105,7 +106,7 @@ public class JobCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         String subcommand = event.getSubcommandName();
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
+        if (account.isImprisoned()) {
             event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot interact with your job! You will be released %s.",
                     TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
             return;
@@ -139,6 +140,13 @@ public class JobCommand extends EconomyCommand {
                     EconomyManager.updateAccount(account);
                     return;
                 }
+
+                QuestManager.INSTANCE.recordEconomyAction(
+                        guild.getIdLong(),
+                        event.getUser().getIdLong(),
+                        QuestManager.ECONOMY_JOB_SHIFT,
+                        event.getId()
+                );
 
                 String levelUpMessage = "";
                 if (account.isReadyForPromotion()) {

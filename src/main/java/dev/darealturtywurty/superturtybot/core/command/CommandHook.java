@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.commands.core.*;
 import dev.darealturtywurty.superturtybot.commands.core.config.GuildConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.config.UserConfigCommand;
 import dev.darealturtywurty.superturtybot.commands.core.notifier.NotifierCommand;
+import dev.darealturtywurty.superturtybot.commands.core.quest.QuestCommand;
 import dev.darealturtywurty.superturtybot.commands.core.suggestion.SuggestCommand;
 import dev.darealturtywurty.superturtybot.commands.economy.*;
 import dev.darealturtywurty.superturtybot.commands.economy.blackjack.BlackjackCommand;
@@ -354,6 +355,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new AddRoleToThreadCommand());
         commands.add(new RunCodeCommand());
         //commands.add(new MappingsCommand());
+        commands.add(new QuestCommand());
 
         // Moderation
         commands.add(new BanCommand());

@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
 import dev.darealturtywurty.superturtybot.modules.economy.PropertyRegistry;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -56,6 +57,12 @@ public class PropertyBuySubcommand extends PropertySubcommand {
         account.getProperties().add(property);
         account.addTransaction(totalCost.negate(), MoneyTransaction.PROPERTY);
         EconomyManager.updateAccount(account);
+        QuestManager.INSTANCE.recordEconomyAction(
+                guild.getIdLong(),
+                event.getUser().getIdLong(),
+                QuestManager.ECONOMY_PROPERTY_PURCHASED,
+                event.getId()
+        );
 
         PropertyCommand.hookReply(event, "✅ You bought %s for %s (including %s estate tax)!"
                 .formatted(property.getName(),

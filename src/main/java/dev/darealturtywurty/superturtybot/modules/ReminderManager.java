@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Reminder;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -63,6 +64,7 @@ public final class ReminderManager {
         var reminder = new Reminder(generateReminderId(guildId, userId), guildId, userId, reminderText, channelId, time, System.currentTimeMillis());
         Database.getDatabase().reminders.insertOne(reminder);
         scheduleReminder(reminder);
+        QuestManager.INSTANCE.recordReminderCreated(guildId, userId, reminder.getId());
         return reminder;
     }
 
@@ -198,7 +200,7 @@ public final class ReminderManager {
                 .addEmbeds(createReminderEmbed(reminder, false))
                 .setAllowedMentions(List.of(Message.MentionType.USER))
                 .queue(
-                        success -> deleteReminderRecord(reminder.getGuild(), reminder.getUser(), reminder.getId()),
+                        _ -> completeReminder(reminder.getGuild(), reminder.getUser(), reminder.getId()),
                         _ -> fallback.run());
     }
 
@@ -206,7 +208,7 @@ public final class ReminderManager {
         user.openPrivateChannel().queue(
                 channel -> channel.sendMessageEmbeds(createReminderEmbed(reminder, true))
                         .queue(
-                                success -> deleteReminderRecord(guildId, user.getIdLong(), reminder.getId()),
+                                _ -> completeReminder(guildId, user.getIdLong(), reminder.getId()),
                                 failure -> {
                                     Constants.LOGGER.warn("Failed to send reminder {} to user {}", reminder.getId(), reminder.getUser(), failure);
                                     deleteReminderRecord(guildId, user.getIdLong(), reminder.getId());
@@ -215,6 +217,11 @@ public final class ReminderManager {
                     Constants.LOGGER.warn("Failed to open DM for reminder {} and user {}", reminder.getId(), reminder.getUser(), failure);
                     deleteReminderRecord(guildId, user.getIdLong(), reminder.getId());
                 });
+    }
+
+    private static void completeReminder(long guildId, long userId, String reminderId) {
+        QuestManager.INSTANCE.recordReminderFired(guildId, userId, reminderId);
+        deleteReminderRecord(guildId, userId, reminderId);
     }
 
     private static String formatReminderMessage(Reminder reminder) {
@@ -228,7 +235,7 @@ public final class ReminderManager {
         }
 
         var embed = new EmbedBuilder()
-                .setTitle("\u23F0 Reminder")
+                .setTitle("⏰ Reminder")
                 .setDescription(description)
                 .addField("Reminder ID", '`' + reminder.getId() + '`', true)
                 .addField("Created", TimeFormat.RELATIVE.format(reminder.getCreatedAt()), true)

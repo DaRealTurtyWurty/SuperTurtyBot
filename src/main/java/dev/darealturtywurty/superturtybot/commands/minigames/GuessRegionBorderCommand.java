@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestD
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
@@ -195,6 +196,13 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
 
         // check if the region is correct
         if (game.guess(region)) {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), true
+            );
+            QuestManager.INSTANCE.recordGeographyGameCompleted(
+                    event.getGuild(), event.getAuthor(), "region_border",
+                    game.getMessageId(), 1, game.getGuesses().size()
+            );
             var thread = (ThreadChannel) event.getChannel();
             thread.sendMessage(String.format("Correct! The region was: %s", game.getRegion().getName()))
                     .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
@@ -209,6 +217,9 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
 
             return;
         } else {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), false
+            );
             event.getChannel()
                     .sendMessage(String.format("Incorrect! You have %d guesses left.", 9 - game.getGuesses().size()))
                     .queue();

@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import dev.darealturtywurty.superturtybot.modules.economy.Property;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -51,6 +52,12 @@ public class PropertyUpgradeSubcommand extends PropertySubcommand {
         property.setUpgradeLevel(property.getUpgradeLevel() + 1);
         account.addTransaction(upgradeCost.negate(), MoneyTransaction.PROPERTY);
         EconomyManager.updateAccount(account);
+        QuestManager.INSTANCE.recordEconomyAction(
+                guild.getIdLong(),
+                event.getUser().getIdLong(),
+                QuestManager.ECONOMY_PROPERTY_UPGRADED,
+                event.getId()
+        );
 
         PropertyCommand.hookReply(event, "✅ Upgraded %s to level %d for %s."
                 .formatted(property.getName(), property.getUpgradeLevel(), StringUtils.numberFormat(upgradeCost, config)));

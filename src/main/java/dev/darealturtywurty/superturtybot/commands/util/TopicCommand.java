@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -66,7 +67,12 @@ public class TopicCommand extends CoreCommand {
     
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        reply(event, getRandomTopic());
+        event.reply(getRandomTopic()).mentionRepliedUser(false).queue(ignored ->
+                QuestManager.INSTANCE.recordConversationPromptUsed(
+                        event.getGuild(),
+                        event.getUser(),
+                        event.getIdLong()
+                ));
     }
 
     public static String getRandomTopic() {

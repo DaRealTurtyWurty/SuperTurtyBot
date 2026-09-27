@@ -9,6 +9,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -322,7 +323,9 @@ public class ChessCommand extends CoreCommand {
     }
 
     private static boolean tryToMakeMoveAndSendMessage(MessageReceivedEvent event, Game game, ThreadChannel channel, Move move) {
-        if (!game.makeMove(move)) return false;
+        if (!game.makeMove(move))
+            return false;
+
         game.selectedSquare = null;
         String from = move.getFrom().value();
         String to = move.getTo().value();
@@ -337,6 +340,16 @@ public class ChessCommand extends CoreCommand {
                             game.getMovesText()
                     )
                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+
+            QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                    channel.getGuild(),
+                    "chess",
+                    game.threadId,
+                    game.userId,
+                    game.opponentId,
+                    event.getAuthor().getIdLong()
+            );
+
             return true;
         }
 

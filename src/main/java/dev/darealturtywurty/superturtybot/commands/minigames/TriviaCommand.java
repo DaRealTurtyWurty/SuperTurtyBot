@@ -8,6 +8,7 @@ import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
@@ -204,7 +205,7 @@ public class TriviaCommand extends CoreCommand {
                         error -> Constants.LOGGER.debug("Could not add user {} to trivia thread {}",
                                 event.getUser().getId(), thread.getId(), error));
 
-                sendTriviaQuestion(thread, event, question).whenComplete((message, sendError) -> {
+                sendTriviaQuestion(thread, event, question).whenComplete((_, sendError) -> {
                     if (sendError != null) {
                         Constants.LOGGER.error("Failed to send trivia question in thread {}", thread.getId(),
                                 sendError);
@@ -317,7 +318,8 @@ public class TriviaCommand extends CoreCommand {
 
     @Override
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) return;
+        if (!event.isFromGuild() || event.getGuild() == null)
+            return;
 
         TriviaData data = CACHED_TRIVIA.stream()
                 .filter(triviaData -> triviaData.selectMenuId().equals(event.getComponentId()))
@@ -330,9 +332,8 @@ public class TriviaCommand extends CoreCommand {
             return;
 
         event.deferEdit().queue();
-        if (data.userId() != event.getUser().getIdLong()) {
+        if (data.userId() != event.getUser().getIdLong())
             return;
-        }
 
         int selectedAnswer;
         try {
@@ -383,6 +384,14 @@ public class TriviaCommand extends CoreCommand {
                     .getAsMention() + ", you are incorrect! The correct answer is " + correctAnswer).queue();
             event.getHook().editOriginalComponents().queue();
         }
+
+        boolean correct = correctAnswer.equals(response);
+        QuestManager.INSTANCE.recordTriviaAnswer(
+                event.getGuild(),
+                event.getUser(),
+                Long.toString(data.messageId()),
+                correct
+        );
 
         CACHED_TRIVIA.remove(data);
     }

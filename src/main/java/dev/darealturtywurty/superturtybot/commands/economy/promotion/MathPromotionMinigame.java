@@ -78,7 +78,7 @@ public class MathPromotionMinigame implements PromotionMinigame {
                                             channel.sendMessageFormat("✅ You have been promoted to level %d!",
                                                             account.getJobLevel() + 1)
                                                     .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                            account.setJobLevel(account.getJobLevel() + 1);
+                                            EconomyManager.promoteJob(account);
                                         } else {
                                             channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
                                                             challenge.result())

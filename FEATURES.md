@@ -340,7 +340,6 @@ Frontend dashboard pages:
 
 ### Community Engagement
 
-- Quest system: weekly server quests such as answer trivia, win a game, post in showcase, finish a counting streak, or help in support channels.
 - Achievements and badges: cross-feature badges for games, economy milestones, moderation participation, birthdays, collectables, and streaks.
 - Server seasons: resettable seasonal leaderboards for XP, economy, minigames, counting, and collectables with rewards at season end.
 - Reputation/kudos: peer recognition with cooldowns, leaderboards, anti-farming checks, and optional role rewards.

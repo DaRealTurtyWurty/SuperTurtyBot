@@ -21,6 +21,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
 import dev.darealturtywurty.superturtybot.modules.WordleReminderManager;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.Guild;
@@ -72,7 +73,7 @@ public class WordleCommand extends CoreCommand {
     private static final BufferedImage DEFAULT_IMAGE;
 
     static {
-        if(Environment.INSTANCE.turtyApiKey().isPresent()) {
+        if (Environment.INSTANCE.turtyApiKey().isPresent()) {
             char[] topRow = "QWERTYUIOP".toCharArray();
             char[] middleRow = "ASDFGHJKL".toCharArray();
             char[] bottomRow = "ZXCVBNM".toCharArray();
@@ -110,9 +111,8 @@ public class WordleCommand extends CoreCommand {
             }, 0, 0));
 
             DEFAULT_IMAGE = TurtyBot.loadImage("wordle.png");
-            if(DEFAULT_IMAGE == null) {
+            if (DEFAULT_IMAGE == null)
                 throw new IllegalStateException("Failed to load 'wordle.png'!");
-            }
         } else {
             DEFAULT_IMAGE = null;
         }
@@ -415,6 +415,11 @@ public class WordleCommand extends CoreCommand {
         }
 
         Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", game.getUserId()), profile);
+        QuestManager.INSTANCE.recordWordleCompletion(
+                guild,
+                game.getUserId(),
+                LocalDate.now(WORDLE_TIME_ZONE)
+        );
         WordleReminderManager.scheduleReminder(game.getUserId(), guild, streakData.getReminderAt());
     }
 

@@ -69,7 +69,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
                                                         channel.sendMessageFormat("✅ You have been promoted to level %d!",
                                                                         account.getJobLevel() + 1)
                                                                 .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                                        account.setJobLevel(account.getJobLevel() + 1);
+                                                        EconomyManager.promoteJob(account);
                                                     } else {
                                                         channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s.",
                                                                         code.language().name())
@@ -114,8 +114,9 @@ public class CodePromotionMinigame implements PromotionMinigame {
                     return Optional.empty();
 
                 for (int attempt = 0; attempt < MAX_LOCAL_SNIPPET_ATTEMPTS; attempt++) {
-                    if (onAttempt != null)
+                    if (onAttempt != null) {
                         onAttempt.accept(attempt + 1);
+                    }
 
                     AllowedLanguage targetLanguage = pickRandomAllowedLanguage();
                     if (targetLanguage == null)
@@ -123,8 +124,9 @@ public class CodePromotionMinigame implements PromotionMinigame {
 
                     long randomId = ThreadLocalRandom.current().nextLong(1, maxId + 1);
                     SnippetRow row = fetchSnippetRowByLanguage(connection, targetLanguage, randomId);
-                    if (row == null)
+                    if (row == null) {
                         row = fetchFirstSnippetRowByLanguage(connection, targetLanguage);
+                    }
                     if (row == null)
                         continue;
 
@@ -314,29 +316,33 @@ public class CodePromotionMinigame implements PromotionMinigame {
 
                 if (inBlockComment) {
                     commentLines++;
-                    if (trimmed.contains("*/"))
+                    if (trimmed.contains("*/")) {
                         inBlockComment = false;
+                    }
                     continue;
                 }
 
                 if (inHtmlComment) {
                     commentLines++;
-                    if (trimmed.contains("-->"))
+                    if (trimmed.contains("-->")) {
                         inHtmlComment = false;
+                    }
                     continue;
                 }
 
                 if (trimmed.startsWith("/*")) {
                     commentLines++;
-                    if (!trimmed.contains("*/"))
+                    if (!trimmed.contains("*/")) {
                         inBlockComment = true;
+                    }
                     continue;
                 }
 
                 if (trimmed.startsWith("<!--")) {
                     commentLines++;
-                    if (!trimmed.contains("-->"))
+                    if (!trimmed.contains("-->")) {
                         inHtmlComment = true;
+                    }
                     continue;
                 }
 

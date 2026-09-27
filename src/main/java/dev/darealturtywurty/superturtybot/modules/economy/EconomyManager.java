@@ -11,6 +11,7 @@ import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Economy;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.UserConfig;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -281,6 +282,16 @@ public class EconomyManager {
         float baseMultiplier = account.getJob().getPromotionMultiplier();
         int jobLevel = account.getJobLevel();
         return baseMultiplier * (1.0f + (jobLevel * 0.05f));
+    }
+
+    public static void promoteJob(Economy account) {
+        account.setJobLevel(account.getJobLevel() + 1);
+        QuestManager.INSTANCE.recordEconomyAction(
+                account.getGuild(),
+                account.getUser(),
+                QuestManager.ECONOMY_JOB_PROMOTION,
+                UUID.randomUUID().toString()
+        );
     }
 
     public static boolean registerJob(Economy account, String job) {

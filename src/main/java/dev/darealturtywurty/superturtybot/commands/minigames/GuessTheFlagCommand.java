@@ -6,6 +6,7 @@ import dev.darealturtywurty.superturtybot.core.api.request.RegionExcludeRequestD
 import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.function.Either;
+import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import io.javalin.http.HttpStatus;
 import lombok.Getter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
@@ -177,6 +178,9 @@ public class GuessTheFlagCommand extends SubcommandCommand {
 
         // add the region to the game
         if (game.guess(region)) {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), true
+            );
             FileUpload flag = null;
             try (var outputStream = new ByteArrayOutputStream()) {
                 ImageIO.write(game.getFlag().getLeft(), "png", outputStream);
@@ -206,6 +210,9 @@ public class GuessTheFlagCommand extends SubcommandCommand {
                                         .queue());
                     });
         } else {
+            QuestManager.INSTANCE.recordGeographyAnswer(
+                    event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), false
+            );
             event.getChannel().sendMessage("❌ Incorrect guess!").queue();
         }
     }
