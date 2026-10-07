@@ -375,7 +375,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
             Optional<AllowedLanguage> providedLanguage = AllowedLanguage.fromValue(provided);
             return expectedLanguage.isPresent()
                     && providedLanguage.isPresent()
-                    && expectedLanguage.get() == providedLanguage.get();
+                    && expectedLanguage.get().isEquivalentTo(providedLanguage.get());
         }
 
         private static AllowedLanguage pickRandomAllowedLanguage() {
@@ -424,6 +424,12 @@ public class CodePromotionMinigame implements PromotionMinigame {
                 }
 
                 return Optional.empty();
+            }
+
+            private boolean isEquivalentTo(AllowedLanguage other) {
+                return this == other
+                        || (this == BASH && other == SHELL)
+                        || (this == SHELL && other == BASH);
             }
 
             private boolean matches(String value) {
