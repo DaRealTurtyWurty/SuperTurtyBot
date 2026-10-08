@@ -3,11 +3,11 @@ package dev.darealturtywurty.superturtybot.dashboard.service.session;
 import java.util.List;
 
 public record DashboardUserProfileResponse(
-        String userId,
-        Birthday birthday,
-        Wordle wordle,
-        Collectables collectables,
-        List<EconomyEntry> economy
+    String userId,
+    Birthday birthday,
+    Wordle wordle,
+    Collectables collectables,
+    List<EconomyEntry> economy
 ) {
     public record Birthday(int day, int month, int year) {
     }
@@ -25,14 +25,14 @@ public record DashboardUserProfileResponse(
     }
 
     public record EconomyEntry(
-            String guildId,
-            String currency,
-            String bank,
-            String wallet,
-            int crimeLevel,
-            int heistLevel,
-            String job,
-            int jobLevel
+        String guildId,
+        String currency,
+        String bank,
+        String wallet,
+        int crimeLevel,
+        int heistLevel,
+        String job,
+        int jobLevel
     ) {
     }
 }

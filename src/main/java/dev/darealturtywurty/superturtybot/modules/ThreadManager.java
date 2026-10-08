@@ -29,32 +29,36 @@ public class ThreadManager extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor()
-                .isBot() || event.getAuthor().isSystem() || event.getMessage().getContentRaw()
-                .isBlank() || event.getMessage().getType().isSystem()) return;
+            .isBot() || event.getAuthor().isSystem()
+            || event.getMessage().getContentRaw()
+                .isBlank()
+            || event.getMessage().getType().isSystem())
+            return;
 
-        if(event.isFromThread() && event.getMessage().getIdLong() == event.getChannel().getIdLong()) {
+        if (event.isFromThread() && event.getMessage().getIdLong() == event.getChannel().getIdLong()) {
             final Guild guild = event.getGuild();
             final ThreadChannel thread = event.getChannel().asThreadChannel();
             thread.addThreadMember(guild.getSelfMember()).queue(RestAction.getDefaultSuccess(),
-                    throwable -> Constants.LOGGER.error("Unable to add myself to a thread!", throwable));
+                throwable -> Constants.LOGGER.error("Unable to add myself to a thread!", throwable));
 
             setupThread(guild, thread);
             return;
         }
 
-        if(event.isFromThread())
+        if (event.isFromThread())
             return;
 
         final Guild guild = event.getGuild();
         GuildData config = GuildData.getOrCreateGuildData(guild);
 
         final List<Long> channels = GuildData.getLongs(config.getAutoThreadChannels());
-        if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong())) return;
+        if (channels.isEmpty() || !channels.contains(event.getChannel().getIdLong()))
+            return;
 
         final String content = event.getMessage().getContentRaw();
         event.getMessage().createThreadChannel(
-                        content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0, Channel.MAX_NAME_LENGTH) : content)
-                .queue(RestAction.getDefaultSuccess(), RestAction.getDefaultSuccess());
+            content.length() > Channel.MAX_NAME_LENGTH ? content.substring(0, Channel.MAX_NAME_LENGTH) : content)
+            .queue(RestAction.getDefaultSuccess(), RestAction.getDefaultSuccess());
     }
 
     private void setupThread(Guild guild, ThreadChannel thread) {
@@ -68,17 +72,18 @@ public class ThreadManager extends ListenerAdapter {
         thread.sendMessage("Beans").setAllowedMentions(List.of()).queue(message -> {
             var mentions = new StringBuilder("<@" + ownerId + ">");
             guild.getRoles().stream()
-                    .filter(role -> role.hasPermission(Permission.MANAGE_THREADS) || role.hasPermission(Permission.MESSAGE_MANAGE))
-                    .map(guild::findMembersWithRoles)
-                    .forEach(task -> task.onSuccess(members -> {
-                        members.stream().map(Member::getAsMention).forEach(mentions::append);
+                .filter(role -> role.hasPermission(Permission.MANAGE_THREADS)
+                    || role.hasPermission(Permission.MESSAGE_MANAGE))
+                .map(guild::findMembersWithRoles)
+                .forEach(task -> task.onSuccess(members -> {
+                    members.stream().map(Member::getAsMention).forEach(mentions::append);
 
-                        message.editMessage(mentions).queueAfter(2, TimeUnit.SECONDS,
-                                msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
-                                        RestAction.getDefaultSuccess(),
-                                        throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
-                                throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
-                    }).onError(throwable -> Constants.LOGGER.error("Failed to get members with roles!", throwable)));
+                    message.editMessage(mentions).queueAfter(2, TimeUnit.SECONDS,
+                        msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS,
+                            RestAction.getDefaultSuccess(),
+                            throwable -> Constants.LOGGER.error("Failed to delete message!", throwable)),
+                        throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
+                }).onError(throwable -> Constants.LOGGER.error("Failed to get members with roles!", throwable)));
         }, throwable -> Constants.LOGGER.error("Failed to send message to thread!", throwable));
     }
 }

@@ -19,11 +19,10 @@ public class RemindMeCommand extends CoreCommand {
     public RemindMeCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new RemindMeCreateSubcommand(),
-                new RemindMeListSubcommand(),
-                new RemindMeDeleteSubcommand(),
-                new RemindMeClearSubcommand()
-        );
+            new RemindMeCreateSubcommand(),
+            new RemindMeListSubcommand(),
+            new RemindMeDeleteSubcommand(),
+            new RemindMeClearSubcommand());
     }
 
     @Override
@@ -39,10 +38,10 @@ public class RemindMeCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return """
-                /remindme create <duration> <reminder>
-                /remindme list
-                /remindme delete <id>
-                /remindme clear""";
+            /remindme create <duration> <reminder>
+            /remindme list
+            /remindme delete <id>
+            /remindme clear""";
     }
 
     @Override
@@ -82,23 +81,23 @@ public class RemindMeCommand extends CoreCommand {
 
         if (subcommand.equalsIgnoreCase("create") && focusedName.equals("duration")) {
             List<String> suggestions = DURATION_SUGGESTIONS.stream()
-                    .filter(choice -> focusedValue.isBlank() || choice.toLowerCase(Locale.ROOT).contains(focusedValue))
-                    .limit(25)
-                    .toList();
+                .filter(choice -> focusedValue.isBlank() || choice.toLowerCase(Locale.ROOT).contains(focusedValue))
+                .limit(25)
+                .toList();
             event.replyChoiceStrings(suggestions).queue();
             return;
         }
 
         if (subcommand.equalsIgnoreCase("delete") && focusedName.equals("id")) {
             List<Command.Choice> choices = ReminderManager.getRemindersForUser(event.getUser().getIdLong()).stream()
-                    .filter(reminder -> focusedValue.isBlank()
-                            || safeLower(reminder.getId()).contains(focusedValue)
-                            || safeLower(reminder.getReminder()).contains(focusedValue))
-                    .limit(25)
-                    .map(reminder -> new Command.Choice(
-                            RemindMeSubcommand.formatReminderChoice(reminder.getId(), reminder.getReminder()),
-                            reminder.getId()))
-                    .toList();
+                .filter(reminder -> focusedValue.isBlank()
+                    || safeLower(reminder.getId()).contains(focusedValue)
+                    || safeLower(reminder.getReminder()).contains(focusedValue))
+                .limit(25)
+                .map(reminder -> new Command.Choice(
+                    RemindMeSubcommand.formatReminderChoice(reminder.getId(), reminder.getReminder()),
+                    reminder.getId()))
+                .toList();
             event.replyChoices(choices).queue();
             return;
         }

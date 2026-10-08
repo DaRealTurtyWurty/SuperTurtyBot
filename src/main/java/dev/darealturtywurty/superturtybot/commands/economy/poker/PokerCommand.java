@@ -19,12 +19,11 @@ public class PokerCommand extends EconomyCommand {
 
     public PokerCommand() {
         addSubcommands(
-                new PokerPlayCommand(),
-                new PokerCheckCommand(),
-                new PokerBetCommand(),
-                new PokerFoldCommand(),
-                new PokerHowToPlayCommand()
-        );
+            new PokerPlayCommand(),
+            new PokerCheckCommand(),
+            new PokerBetCommand(),
+            new PokerFoldCommand(),
+            new PokerHowToPlayCommand());
     }
 
     public static Game getOngoingGame(SlashCommandInteractionEvent event) {
@@ -37,8 +36,8 @@ public class PokerCommand extends EconomyCommand {
 
         for (Game game : games) {
             if (game.getGuild() == event.getGuild().getIdLong()
-                    && game.getUser() == event.getUser().getIdLong()
-                    && !game.isFinished())
+                && game.getUser() == event.getUser().getIdLong()
+                && !game.isFinished())
                 return game;
         }
 
@@ -93,10 +92,20 @@ public class PokerCommand extends EconomyCommand {
         TIMEOUT
     }
 
-    public record Settlement(Result result, BigInteger bet, BigInteger payout,
-                             HandRank playerRank, HandRank dealerRank) {
-        public Settlement(Result result, BigInteger bet, BigInteger payout,
-                          HandRank playerRank, HandRank dealerRank) {
+    public record Settlement(
+        Result result,
+        BigInteger bet,
+        BigInteger payout,
+        HandRank playerRank,
+        HandRank dealerRank
+    ) {
+        public Settlement(
+            Result result,
+            BigInteger bet,
+            BigInteger payout,
+            HandRank playerRank,
+            HandRank dealerRank
+        ) {
             this.result = Objects.requireNonNull(result, "result");
             this.bet = Objects.requireNonNull(bet, "bet");
             this.payout = Objects.requireNonNull(payout, "payout");
@@ -201,14 +210,14 @@ public class PokerCommand extends EconomyCommand {
                 throw new IllegalStateException("Game has not finished yet.");
 
             String payoutText = settlement.payout().signum() == 0
-                    ? currencyFormatter.apply(settlement.bet())
-                    : currencyFormatter.apply(settlement.payout());
+                ? currencyFormatter.apply(settlement.bet())
+                : currencyFormatter.apply(settlement.payout());
 
             String handInfo = "";
             if (settlement.playerRank() != null && settlement.dealerRank() != null) {
                 handInfo = " Your hand: **%s**. Dealer: **%s**."
-                        .formatted(settlement.playerRank().getDisplayName(),
-                                settlement.dealerRank().getDisplayName());
+                    .formatted(settlement.playerRank().getDisplayName(),
+                        settlement.dealerRank().getDisplayName());
             }
 
             return switch (settlement.result()) {
@@ -303,8 +312,8 @@ public class PokerCommand extends EconomyCommand {
             return "(none)";
 
         return cards.stream()
-                .map(BlackjackCommand.Card::display)
-                .collect(Collectors.joining(" "));
+            .map(BlackjackCommand.Card::display)
+            .collect(Collectors.joining(" "));
     }
 
     @Getter
@@ -363,7 +372,7 @@ public class PokerCommand extends EconomyCommand {
                         for (int d = c + 1; d < size - 1; d++) {
                             for (int e = d + 1; e < size; e++) {
                                 List<BlackjackCommand.Card> hand = List.of(
-                                        cards.get(a), cards.get(b), cards.get(c), cards.get(d), cards.get(e));
+                                    cards.get(a), cards.get(b), cards.get(c), cards.get(d), cards.get(e));
                                 EvaluatedHand current = evaluateFive(hand);
                                 if (best == null || current.compareTo(best) > 0) {
                                     best = current;
@@ -389,21 +398,19 @@ public class PokerCommand extends EconomyCommand {
             boolean isStraight = straightHigh > 0;
 
             List<Map.Entry<Integer, Integer>> groups = counts.entrySet().stream()
-                    .sorted((a, b) -> {
-                        int countDiff = Integer.compare(b.getValue(), a.getValue());
-                        if (countDiff != 0)
-                            return countDiff;
+                .sorted((a, b) -> {
+                    int countDiff = Integer.compare(b.getValue(), a.getValue());
+                    if (countDiff != 0)
+                        return countDiff;
 
-                        return Integer.compare(b.getKey(), a.getKey());
-                    })
-                    .toList();
+                    return Integer.compare(b.getKey(), a.getKey());
+                })
+                .toList();
 
-            if (isStraight && isFlush) {
+            if (isStraight && isFlush)
                 return straightHigh == 14 && uniqueRanks.contains(10)
-                        ? new EvaluatedHand(HandRank.ROYAL_FLUSH, List.of(14))
-                        : new EvaluatedHand(HandRank.STRAIGHT_FLUSH, List.of(straightHigh));
-
-            }
+                    ? new EvaluatedHand(HandRank.ROYAL_FLUSH, List.of(14))
+                    : new EvaluatedHand(HandRank.STRAIGHT_FLUSH, List.of(straightHigh));
 
             if (groups.get(0).getValue() == 4) {
                 int quad = groups.get(0).getKey();
@@ -426,10 +433,10 @@ public class PokerCommand extends EconomyCommand {
             if (groups.get(0).getValue() == 3) {
                 int trips = groups.getFirst().getKey();
                 List<Integer> kickers = groups.stream()
-                        .filter(entry -> entry.getValue() == 1)
-                        .map(Map.Entry::getKey)
-                        .sorted((a, b) -> Integer.compare(b, a))
-                        .toList();
+                    .filter(entry -> entry.getValue() == 1)
+                    .map(Map.Entry::getKey)
+                    .sorted((a, b) -> Integer.compare(b, a))
+                    .toList();
                 List<Integer> tiebreakers = new ArrayList<>();
                 tiebreakers.add(trips);
                 tiebreakers.addAll(kickers);
@@ -446,10 +453,10 @@ public class PokerCommand extends EconomyCommand {
             if (groups.get(0).getValue() == 2) {
                 int pair = groups.getFirst().getKey();
                 List<Integer> kickers = groups.stream()
-                        .filter(entry -> entry.getValue() == 1)
-                        .map(Map.Entry::getKey)
-                        .sorted((a, b) -> Integer.compare(b, a))
-                        .toList();
+                    .filter(entry -> entry.getValue() == 1)
+                    .map(Map.Entry::getKey)
+                    .sorted((a, b) -> Integer.compare(b, a))
+                    .toList();
                 List<Integer> tiebreakers = new ArrayList<>();
                 tiebreakers.add(pair);
                 tiebreakers.addAll(kickers);
@@ -461,8 +468,8 @@ public class PokerCommand extends EconomyCommand {
 
         private static List<Integer> sortedRanksDesc(Map<Integer, Integer> counts) {
             return counts.keySet().stream()
-                    .sorted((a, b) -> Integer.compare(b, a))
-                    .toList();
+                .sorted((a, b) -> Integer.compare(b, a))
+                .toList();
         }
 
         private static int straightHigh(List<Integer> sortedRanksAsc) {
@@ -470,10 +477,10 @@ public class PokerCommand extends EconomyCommand {
                 return 0;
 
             if (sortedRanksAsc.get(0) == 2
-                    && sortedRanksAsc.get(1) == 3
-                    && sortedRanksAsc.get(2) == 4
-                    && sortedRanksAsc.get(3) == 5
-                    && sortedRanksAsc.get(4) == 14)
+                && sortedRanksAsc.get(1) == 3
+                && sortedRanksAsc.get(2) == 4
+                && sortedRanksAsc.get(3) == 5
+                && sortedRanksAsc.get(4) == 14)
                 return 5;
 
             int first = sortedRanksAsc.get(0);

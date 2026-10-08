@@ -45,10 +45,13 @@ public class EventWaiter extends ListenerAdapter {
         private final Class<T> eventClass;
         private long timeout = -1;
         private TimeUnit timeUnit = null;
-        private Consumer<T> success = t -> {};
+        private Consumer<T> success = t -> {
+        };
         private Predicate<T> condition = t -> true;
-        private Runnable failure = () -> {};
-        private Runnable timeoutAction = () -> {};
+        private Runnable failure = () -> {
+        };
+        private Runnable timeoutAction = () -> {
+        };
 
         public Builder(Class<T> eventClass) {
             Checks.notNull(eventClass, "Event class");
@@ -88,9 +91,10 @@ public class EventWaiter extends ListenerAdapter {
         }
 
         public void build() {
-            Set<Waiter<?>> waiters = EventWaiter.this.waitingEvents.computeIfAbsent(this.eventClass, k -> new HashSet<>());
+            Set<Waiter<?>> waiters = EventWaiter.this.waitingEvents.computeIfAbsent(this.eventClass,
+                k -> new HashSet<>());
             var waiter = new Waiter<>(this.eventClass, this.success, this.condition, this.failure,
-                    this.timeoutAction, this.timeout, this.timeUnit);
+                this.timeoutAction, this.timeout, this.timeUnit);
             waiters.add(waiter);
             EventWaiter.this.waitingEvents.put(this.eventClass, waiters);
 
@@ -109,7 +113,7 @@ public class EventWaiter extends ListenerAdapter {
     public void onGenericEvent(@NotNull GenericEvent event) {
         Class<?> eventClass = event.getClass();
         while (eventClass != null) {
-            if(this.waitingEvents.containsKey(eventClass)) {
+            if (this.waitingEvents.containsKey(eventClass)) {
                 Set<Waiter<?>> waiters = this.waitingEvents.get(eventClass);
                 Waiter<?>[] toRemove = waiters.toArray(new Waiter[0]);
 
@@ -120,17 +124,24 @@ public class EventWaiter extends ListenerAdapter {
         }
     }
 
-    private record Waiter<T extends GenericEvent>(Class<T> eventClass, Consumer<T> success, Predicate<T> condition,
-                                                  Runnable failure, Runnable timeoutAction, long timeout, TimeUnit timeUnit) {
-        boolean run(@NotNull GenericEvent event) {
-            if(eventClass.isInstance(event)) {
+    private record Waiter<T extends GenericEvent>(
+        Class<T> eventClass,
+        Consumer<T> success,
+        Predicate<T> condition,
+        Runnable failure,
+        Runnable timeoutAction,
+        long timeout,
+        TimeUnit timeUnit
+    ) {
+        private boolean run(@NotNull GenericEvent event) {
+            if (eventClass.isInstance(event)) {
                 try {
                     T castedEvent = eventClass.cast(event);
-                    if(condition.test(castedEvent)) {
+                    if (condition.test(castedEvent)) {
                         this.success.accept(castedEvent);
                         return true;
                     }
-                } catch(Exception exception) {
+                } catch (Exception exception) {
                     this.failure.run();
                     Constants.LOGGER.error("An error occurred while running a waiter!", exception);
                     return false;

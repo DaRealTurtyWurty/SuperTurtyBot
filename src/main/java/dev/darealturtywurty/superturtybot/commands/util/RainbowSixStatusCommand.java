@@ -65,19 +65,21 @@ public class RainbowSixStatusCommand extends CoreCommand {
         }
 
         Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Ubi-AppId", "39baebad-39e5-4552-8c25-2c9b919064e2")
-                .addHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType())
-                .build();
+            .url(url)
+            .addHeader("Ubi-AppId", "39baebad-39e5-4552-8c25-2c9b919064e2")
+            .addHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType())
+            .build();
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response.code());
+            if (!response.isSuccessful())
+                throw new IOException("Unexpected code " + response.code());
 
             ResponseBody body = response.body();
-            if (body == null) throw new IOException("Response body is null!");
+            if (body == null)
+                throw new IOException("Response body is null!");
 
             String bodyString = body.string();
             JsonArray gameStatusesJson = Constants.GSON.fromJson(bodyString, JsonObject.class)
-                    .getAsJsonArray("gameStatuses");
+                .getAsJsonArray("gameStatuses");
             List<GameStatus> statuses = new ArrayList<>();
             for (JsonElement status : gameStatusesJson) {
                 statuses.add(Constants.GSON.fromJson(status, GameStatus.class));
@@ -86,7 +88,8 @@ public class RainbowSixStatusCommand extends CoreCommand {
             var embed = new EmbedBuilder();
             embed.setTitle("Rainbow Six Siege Status");
             embed.setTimestamp(Instant.now());
-            embed.setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+            embed.setFooter("Requested by " + event.getUser().getEffectiveName(),
+                event.getUser().getEffectiveAvatarUrl());
 
             var description = new StringBuilder("The status of Rainbow Six Siege servers.\n\n");
 
@@ -98,11 +101,10 @@ public class RainbowSixStatusCommand extends CoreCommand {
 
                 StatusType statusType = StatusType.fromStatus(status.getStatus());
                 if (statusType == null) {
-                    if(status.isMaintenance()) {
+                    if (status.isMaintenance()) {
                         statusType = StatusType.MAINTENANCE;
-                    } else {
+                    } else
                         continue;
-                    }
                 }
 
                 if (statusType.ordinal() > worstStatus.ordinal()) {
@@ -110,12 +112,12 @@ public class RainbowSixStatusCommand extends CoreCommand {
                 }
 
                 description.append("**")
-                        .append(platformType.getDisplayName())
-                        .append("**: ")
-                        .append(statusType.getEmoji())
-                        .append(" ")
-                        .append(statusType.getDisplayName())
-                        .append("\n");
+                    .append(platformType.getDisplayName())
+                    .append("**: ")
+                    .append(statusType.getEmoji())
+                    .append(" ")
+                    .append(statusType.getDisplayName())
+                    .append("\n");
 
                 if (status.getImpactedFeatures().length > 0) {
                     description.append("_Impacted Features: ");
@@ -140,8 +142,10 @@ public class RainbowSixStatusCommand extends CoreCommand {
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         } catch (IOException exception) {
-            event.getHook().sendMessage("❌ An error occurred while getting the status of Rainbow Six Siege servers!").queue();
-            Constants.LOGGER.error("An error occurred while getting the status of Rainbow Six Siege servers!", exception);
+            event.getHook().sendMessage("❌ An error occurred while getting the status of Rainbow Six Siege servers!")
+                .queue();
+            Constants.LOGGER.error("An error occurred while getting the status of Rainbow Six Siege servers!",
+                exception);
         }
     }
 

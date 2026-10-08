@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import java.awt.Color;
 import java.util.List;
 
-abstract class QuestSubcommand extends SubcommandCommand {
+public abstract class QuestSubcommand extends SubcommandCommand {
     protected QuestSubcommand(String name, String description) {
         super(name, description);
     }
@@ -45,17 +45,22 @@ abstract class QuestSubcommand extends SubcommandCommand {
         execute(event, guild, member, player, events);
     }
 
-    protected abstract void execute(SlashCommandInteractionEvent event, Guild guild, Member member,
-                                    QuestPlayer player, List<QuestEvent> events);
+    protected abstract void execute(
+        SlashCommandInteractionEvent event,
+        Guild guild,
+        Member member,
+        QuestPlayer player,
+        List<QuestEvent> events
+    );
 
     protected static EmbedBuilder createQuestEmbed(Quest<?, ?> quest, QuestStatus status, QuestPlayer player) {
         return new EmbedBuilder()
-                .setTitle(quest.getDisplayName())
-                .setDescription(quest.getDescription())
-                .setColor(getStatusColor(status, player.hasBeenRewarded(quest.getId())))
-                .addField("Status", getStatusLabel(status, player.hasBeenRewarded(quest.getId())), true)
-                .addField("Progress", status.displayProgress(), true)
-                .addField("Reward", quest.getReward().getDescription(), true);
+            .setTitle(quest.getDisplayName())
+            .setDescription(quest.getDescription())
+            .setColor(getStatusColor(status, player.hasBeenRewarded(quest.getId())))
+            .addField("Status", getStatusLabel(status, player.hasBeenRewarded(quest.getId())), true)
+            .addField("Progress", status.displayProgress(), true)
+            .addField("Reward", quest.getReward().getDescription(), true);
     }
 
     protected static String getStatusLabel(QuestStatus status, boolean rewarded) {

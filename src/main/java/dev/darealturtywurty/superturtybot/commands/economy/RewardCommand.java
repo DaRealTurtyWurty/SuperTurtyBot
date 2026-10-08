@@ -20,22 +20,23 @@ import java.util.function.Function;
 
 public class RewardCommand extends EconomyCommand {
     private static final List<RewardDefinition> REWARDS = List.of(
-            new RewardDefinition("daily", 1000L, 2, TimeUnit.DAYS.toMillis(1),
-                    Economy::getNextDaily, Economy::setNextDaily),
-            new RewardDefinition("weekly", 10000L, 5, TimeUnit.DAYS.toMillis(7),
-                    Economy::getNextWeekly, Economy::setNextWeekly),
-            new RewardDefinition("monthly", 50000L, 10, TimeUnit.DAYS.toMillis(31),
-                    Economy::getNextMonthly, Economy::setNextMonthly),
-            new RewardDefinition("yearly", 100000L, 20, TimeUnit.DAYS.toMillis(365),
-                    Economy::getNextYearly, Economy::setNextYearly)
-    );
+        new RewardDefinition("daily", 1000L, 2, TimeUnit.DAYS.toMillis(1),
+            Economy::getNextDaily, Economy::setNextDaily),
+        new RewardDefinition("weekly", 10000L, 5, TimeUnit.DAYS.toMillis(7),
+            Economy::getNextWeekly, Economy::setNextWeekly),
+        new RewardDefinition("monthly", 50000L, 10, TimeUnit.DAYS.toMillis(31),
+            Economy::getNextMonthly, Economy::setNextMonthly),
+        new RewardDefinition("yearly", 100000L, 20, TimeUnit.DAYS.toMillis(365),
+            Economy::getNextYearly, Economy::setNextYearly));
 
     @Override
     public List<SubcommandData> createSubcommandData() {
-        return new ArrayList<>(REWARDS.stream().map(reward ->
-                new SubcommandData(reward.name(), "Claim your " + reward.name() + " reward!")).toList()) {{
-            add(new SubcommandData("claimall", "Claim all available rewards at once!"));
-        }};
+        return new ArrayList<>(REWARDS.stream()
+            .map(reward -> new SubcommandData(reward.name(), "Claim your " + reward.name() + " reward!")).toList()) {
+            {
+                add(new SubcommandData("claimall", "Claim all available rewards at once!"));
+            }
+        };
     }
 
     @Override
@@ -70,9 +71,12 @@ public class RewardCommand extends EconomyCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access your rewards! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+        if (account.isImprisoned()) {
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot access your rewards! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -99,7 +103,7 @@ public class RewardCommand extends EconomyCommand {
         }
 
         RewardDefinition rewardDefinition = REWARDS.stream()
-                .filter(reward -> reward.name().equals(subcommand)).findFirst().orElse(null);
+            .filter(reward -> reward.name().equals(subcommand)).findFirst().orElse(null);
         if (rewardDefinition == null) {
             event.getHook().editOriginal("❌ That is not a valid reward!").queue();
             return;
@@ -109,17 +113,19 @@ public class RewardCommand extends EconomyCommand {
         event.getHook().editOriginal(message).queue();
     }
 
-    private String handleReward(SlashCommandInteractionEvent event,
-                                Economy account,
-                                GuildData config,
-                                RewardDefinition rewardInfo) {
+    private String handleReward(
+        SlashCommandInteractionEvent event,
+        Economy account,
+        GuildData config,
+        RewardDefinition rewardInfo
+    ) {
         final String name = rewardInfo.name();
         long rewardAmount = rewardInfo.baseAmount();
         final long nextAllowedTime = rewardInfo.nextAllowedTimeGetter().apply(account);
 
         if (nextAllowedTime > System.currentTimeMillis())
             return "⏱️ You can next claim your %s reward %s."
-                    .formatted(name, TimeFormat.RELATIVE.format(nextAllowedTime));
+                .formatted(name, TimeFormat.RELATIVE.format(nextAllowedTime));
 
         if (account.getJob() != null) {
             rewardAmount = EconomyManager.getPayAmount(account) * rewardInfo.jobMultiplier();
@@ -142,14 +148,16 @@ public class RewardCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
 
         return "✅ You claimed your %s reward of %s!"
-                .formatted(name, StringUtils.numberFormat(rewardBigInteger, config));
+            .formatted(name, StringUtils.numberFormat(rewardBigInteger, config));
     }
 
-    private record RewardDefinition(String name,
-                                    long baseAmount,
-                                    int jobMultiplier,
-                                    long cooldownMillis,
-                                    Function<Economy, Long> nextAllowedTimeGetter,
-                                    BiConsumer<Economy, Long> nextAllowedTimeSetter) {
+    private record RewardDefinition(
+        String name,
+        long baseAmount,
+        int jobMultiplier,
+        long cooldownMillis,
+        Function<Economy, Long> nextAllowedTimeGetter,
+        BiConsumer<Economy, Long> nextAllowedTimeSetter
+    ) {
     }
 }

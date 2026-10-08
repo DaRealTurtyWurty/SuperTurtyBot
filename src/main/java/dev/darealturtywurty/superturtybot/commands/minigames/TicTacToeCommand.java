@@ -90,7 +90,8 @@ public class TicTacToeCommand extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
@@ -123,108 +124,114 @@ public class TicTacToeCommand extends CoreCommand {
             List<Game> games = GAMES.stream().filter(game -> game.getGuildId() == guild.getIdLong()).toList();
 
             // check that the user is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong() || game.getOpponentId() == event.getUser().getIdLong())) {
+            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong()
+                || game.getOpponentId() == event.getUser().getIdLong())) {
                 event.getHook().editOriginal("❌ You are already in a game!").queue();
                 return;
             }
 
             // check that the opponent is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
+            if (games.stream().anyMatch(
+                game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
                 event.getHook().editOriginal("❌ The opponent you specified is already in a game!").queue();
                 return;
             }
 
             // create the game
-            var game = new Game(guild.getIdLong(), event.getChannel().getIdLong(), event.getUser().getIdLong(), opponent.getIdLong(), opponent.isBot());
+            var game = new Game(guild.getIdLong(), event.getChannel().getIdLong(), event.getUser().getIdLong(),
+                opponent.getIdLong(), opponent.isBot());
             GAMES.add(game);
 
             // create the thread
             final String threadName = "Tic Tac Toe - %s vs %s".formatted(event.getUser().getName(), opponent.getName());
             event.getHook().editOriginal("✅ Successfully created a game of Tic Tac Toe!")
-                    .flatMap(message ->
-                            message.createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
-                    .queue(thread -> {
-                        game.setThreadId(thread.getIdLong());
-                        thread.addThreadMember(event.getUser()).queue();
-                        thread.addThreadMember(opponent).queue();
-                        thread.sendMessageFormat("✅ <@%d> and <@%d> have started a game of Tic Tac Toe! It is <@%d>'s turn!",
-                                event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong()).queue(message -> {
+                .flatMap(message -> message
+                    .createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
+                .queue(thread -> {
+                    game.setThreadId(thread.getIdLong());
+                    thread.addThreadMember(event.getUser()).queue();
+                    thread.addThreadMember(opponent).queue();
+                    thread
+                        .sendMessageFormat("✅ <@%d> and <@%d> have started a game of Tic Tac Toe! It is <@%d>'s turn!",
+                            event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong())
+                        .queue(message -> {
                             game.setMessageId(message.getIdLong());
                             message.editMessageComponents(createRows(game))
-                                    .setFiles(createFileUpload(game, thread))
-                                    .flatMap(ignored -> message.pin())
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
+                                .setFiles(createFileUpload(game, thread))
+                                .flatMap(_ -> message.pin())
+                                .queue(_ -> createEventWaiter(game, thread).build());
                         });
-                    });
-        }, throwable ->
-                event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
+                });
+        }, throwable -> event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
     }
 
     private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(Game game, ThreadChannel channel) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(event -> {
-                    if (event.getGuild() == null ||
-                            event.getGuild().getIdLong() != game.getGuildId() ||
-                            event.getChannel().getIdLong() != game.getThreadId() ||
-                            event.getMessageIdLong() != game.getMessageId())
-                        return false;
+            .condition(event -> {
+                if (event.getGuild() == null ||
+                    event.getGuild().getIdLong() != game.getGuildId() ||
+                    event.getChannel().getIdLong() != game.getThreadId() ||
+                    event.getMessageIdLong() != game.getMessageId())
+                    return false;
 
-                    if (!game.isTurn(event.getUser().getIdLong())) {
-                        event.deferEdit().queue();
-                        return false;
-                    }
+                if (!game.isTurn(event.getUser().getIdLong())) {
+                    event.deferEdit().queue();
+                    return false;
+                }
 
-                    return true;
-                })
-                .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> {
-                    channel.sendMessageFormat("❌ <@%d> did not make a move in time! The game has been cancelled!", game.getCurrentTurn())
-                            .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                return true;
+            })
+            .timeout(1, TimeUnit.MINUTES)
+            .timeoutAction(() -> {
+                channel
+                    .sendMessageFormat("❌ <@%d> did not make a move in time! The game has been cancelled!",
+                        game.getCurrentTurn())
+                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .failure(() -> {
+                channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
+                    _ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .success(event -> {
+                String[] data = event.getComponentId().split("-");
+                int x = Integer.parseInt(data[1]), y = Integer.parseInt(data[2]);
+
+                game.makeMove(x, y);
+
+                if (game.hasWon(event.getUser().getIdLong())) {
+                    respondToButton(game, channel, event, false);
+
+                    channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
+                        .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
                     GAMES.remove(game);
-                })
-                .failure(() -> {
-                    channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                            ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                    GAMES.remove(game);
-                })
-                .success(event -> {
-                    String[] data = event.getComponentId().split("-");
-                    int x = Integer.parseInt(data[1]), y = Integer.parseInt(data[2]);
 
-                    game.makeMove(x, y);
+                    return;
+                } else if (handleDraw(game, channel, event))
+                    return;
 
-                    if (game.hasWon(event.getUser().getIdLong())) {
+                if (!game.isBot()) {
+                    respondToButton(game, channel, event);
+                } else {
+                    game.playBot();
+
+                    if (game.hasWon(game.getOpponentId())) {
                         respondToButton(game, channel, event, false);
 
-                        channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
-                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                        channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
+                            .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
 
                         return;
-                    } else if (handleDraw(game, channel, event))
-                        return;
-
-                    if (!game.isBot()) {
-                        respondToButton(game, channel, event);
                     } else {
-                        game.playBot();
-
-                        if (game.hasWon(game.getOpponentId())) {
-                            respondToButton(game, channel, event, false);
-
-                            channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
-                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                            GAMES.remove(game);
-
+                        if (handleDraw(game, channel, event))
                             return;
-                        } else {
-                            if (handleDraw(game, channel, event))
-                                return;
-                        }
-
-                        respondToButton(game, channel, event);
                     }
-                });
+
+                    respondToButton(game, channel, event);
+                }
+            });
     }
 
     private static boolean handleDraw(Game game, ThreadChannel channel, ButtonInteractionEvent event) {
@@ -232,7 +239,7 @@ public class TicTacToeCommand extends CoreCommand {
             respondToButton(game, channel, event, false);
 
             channel.sendMessageFormat("✅ The game has ended in a draw!")
-                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
 
             return true;
@@ -250,12 +257,14 @@ public class TicTacToeCommand extends CoreCommand {
     private static void respondToButton(Game game, ThreadChannel channel, ButtonInteractionEvent event, boolean wait) {
         FileUpload file = createFileUpload(game, channel);
         MessageEditCallbackAction editAction = event.deferEdit().setComponents(createRows(game));
-        if (file != null)
+        if (file != null) {
             editAction.setFiles(file);
+        }
 
-        editAction.queue(ignored -> {
-            if (!channel.isLocked() && wait)
+        editAction.queue(_ -> {
+            if (!channel.isLocked() && wait) {
                 createEventWaiter(game, channel).build();
+            }
         });
     }
 
@@ -267,7 +276,7 @@ public class TicTacToeCommand extends CoreCommand {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to write image!", exception);
             channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
             return null;
         }
@@ -296,9 +305,9 @@ public class TicTacToeCommand extends CoreCommand {
                 if (!game.isEmpty(x, y)) {
                     String character = String.valueOf(c);
                     graphics.drawString(
-                            character,
-                            x * 100 + 50 - metrics.stringWidth(character) / 2,
-                            y * 100 + 50 + metrics.getHeight() / 2 - metrics.getDescent());
+                        character,
+                        x * 100 + 50 - metrics.stringWidth(character) / 2,
+                        y * 100 + 50 + metrics.getHeight() / 2 - metrics.getDescent());
                 }
             }
         }
@@ -315,12 +324,13 @@ public class TicTacToeCommand extends CoreCommand {
             for (int column = 0; column < 3; column++) {
                 // label the buttons with the index
                 var button = Button.primary(
-                        "tictactoe-%d-%d".formatted(column, row),
-                        "%d".formatted(1 + index++));
+                    "tictactoe-%d-%d".formatted(column, row),
+                    "%d".formatted(1 + index++));
 
                 // disable the button if it has already been used, or it is the bot's turn
-                if (!game.isEmpty(column, row) || (game.isBot() && game.isTurn(game.getOpponentId())))
+                if (!game.isEmpty(column, row) || (game.isBot() && game.isTurn(game.getOpponentId()))) {
                     button = button.asDisabled();
+                }
 
                 buttons.add(button);
             }
@@ -417,8 +427,8 @@ public class TicTacToeCommand extends CoreCommand {
 
         public boolean isDraw() {
             return Arrays.stream(board)
-                    .flatMapToInt(row -> new String(row).chars())
-                    .allMatch(column -> column != '\u0000');
+                .flatMapToInt(row -> new String(row).chars())
+                .allMatch(column -> column != '\u0000');
         }
 
         public void playBot() {
@@ -426,23 +436,29 @@ public class TicTacToeCommand extends CoreCommand {
             char playerSymbol = getSymbolFor(userId);
 
             Map.Entry<Integer, Integer> move = findWinningMove(botSymbol);
-            if (move == null)
+            if (move == null) {
                 move = findWinningMove(playerSymbol);
+            }
 
-            if (move == null && isEmpty(1, 1))
+            if (move == null && isEmpty(1, 1)) {
                 move = Map.entry(1, 1);
+            }
 
-            if (move == null)
+            if (move == null) {
                 move = findPreferredMove(new int[][]{{0, 0}, {2, 0}, {0, 2}, {2, 2}});
+            }
 
-            if (move == null)
+            if (move == null) {
                 move = findPreferredMove(new int[][]{{1, 0}, {0, 1}, {2, 1}, {1, 2}});
+            }
 
-            if (move == null)
+            if (move == null) {
                 move = randomMove();
+            }
 
-            if (move != null)
+            if (move != null) {
                 makeMove(move.getKey(), move.getValue());
+            }
         }
 
         private Map.Entry<Integer, Integer> findWinningMove(char symbol) {
@@ -478,8 +494,9 @@ public class TicTacToeCommand extends CoreCommand {
             List<Map.Entry<Integer, Integer>> moves = new ArrayList<>();
             for (int column = 0; column < 3; column++) {
                 for (int row = 0; row < 3; row++) {
-                    if (isEmpty(column, row))
+                    if (isEmpty(column, row)) {
                         moves.add(Map.entry(column, row));
+                    }
                 }
             }
 

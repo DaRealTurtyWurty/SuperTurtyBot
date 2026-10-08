@@ -43,9 +43,10 @@ public class PingCommand extends CoreCommand {
         event.deferReply().queue();
 
         JDA jda = event.getJDA();
-        jda.getRestPing().queue(ping ->
-                event.getHook().editOriginalFormat("Rest Ping: %sms\nWebsocket Ping: %sms", ping, jda.getGatewayPing())
-                        .mentionRepliedUser(false)
-                        .queue());
+        jda.getRestPing()
+            .queue(ping -> event.getHook()
+                .editOriginalFormat("Rest Ping: %sms\nWebsocket Ping: %sms", ping, jda.getGatewayPing())
+                .mentionRepliedUser(false)
+                .queue());
     }
 }

@@ -34,7 +34,7 @@ public class GoFishHandSubcommand extends GoFishSubcommand {
         }
 
         String message = "**Your hand:** " + GoFishCommand.renderHand(player)
-                + "\n**Your books:** " + GoFishCommand.renderBooks(player);
+            + "\n**Your books:** " + GoFishCommand.renderBooks(player);
         try (FileUpload upload = GoFishImageRenderer.createUpload(player.hand())) {
             event.getHook().editOriginal(message).setFiles(upload).queue();
         } catch (Exception exception) {

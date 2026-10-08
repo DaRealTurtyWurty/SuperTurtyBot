@@ -20,7 +20,8 @@ public class PropertyPauseRentSubcommand extends PropertySubcommand {
 
     @Override
     protected void execute(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
-        Property property = PropertyCommand.getOwnedProperty(account, event.getOption("property", OptionMapping::getAsString));
+        Property property = PropertyCommand.getOwnedProperty(account,
+            event.getOption("property", OptionMapping::getAsString));
         if (property == null) {
             PropertyCommand.hookReply(event, "❌ You do not own that property!");
             return;

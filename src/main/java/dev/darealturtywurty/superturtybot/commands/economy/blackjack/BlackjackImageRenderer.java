@@ -83,8 +83,10 @@ public final class BlackjackImageRenderer {
         return image;
     }
 
-    private static BufferedImage resolveSampleImage(List<BlackjackCommand.Card> dealerCards,
-                                                    List<BlackjackCommand.Card> playerCards) {
+    private static BufferedImage resolveSampleImage(
+        List<BlackjackCommand.Card> dealerCards,
+        List<BlackjackCommand.Card> playerCards
+    ) {
         if (!dealerCards.isEmpty())
             return getCardImage(dealerCards.getFirst());
 
@@ -116,13 +118,20 @@ public final class BlackjackImageRenderer {
         return (totalWidth - handWidth) / 2;
     }
 
-    private static void drawHand(Graphics2D graphics, List<BlackjackCommand.Card> cards, int startX, int y,
-                                 int cardWidth, int cardHeight, boolean hideHoleCard) {
+    private static void drawHand(
+        Graphics2D graphics,
+        List<BlackjackCommand.Card> cards,
+        int startX,
+        int y,
+        int cardWidth,
+        int cardHeight,
+        boolean hideHoleCard
+    ) {
         int x = startX;
         for (int i = 0; i < cards.size(); i++) {
             BufferedImage cardImage = (hideHoleCard && i == 1)
-                    ? getCardBack(cardWidth, cardHeight)
-                    : getCardImage(cards.get(i));
+                ? getCardBack(cardWidth, cardHeight)
+                : getCardImage(cards.get(i));
             drawCardShadow(graphics, x, y, cardWidth, cardHeight);
             graphics.drawImage(cardImage, x, y, null);
             x += cardWidth + GAP;
@@ -156,7 +165,7 @@ public final class BlackjackImageRenderer {
 
     private static BufferedImage getCardBack(int width, int height) {
         String key = width + "x" + height;
-        return BACK_CACHE.computeIfAbsent(key, ignored -> roundCardCorners(createCardBack(width, height)));
+        return BACK_CACHE.computeIfAbsent(key, _ -> roundCardCorners(createCardBack(width, height)));
     }
 
     private static BufferedImage createCardBack(int width, int height) {
@@ -189,7 +198,8 @@ public final class BlackjackImageRenderer {
         var rounded = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = rounded.createGraphics();
         configureGraphics(graphics);
-        graphics.setClip(new RoundRectangle2D.Float(0, 0, width, height, CARD_CORNER_RADIUS * 2F, CARD_CORNER_RADIUS * 2F));
+        graphics
+            .setClip(new RoundRectangle2D.Float(0, 0, width, height, CARD_CORNER_RADIUS * 2F, CARD_CORNER_RADIUS * 2F));
         graphics.drawImage(image, 0, 0, null);
         graphics.dispose();
         return rounded;

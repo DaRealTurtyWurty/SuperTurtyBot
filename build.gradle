@@ -87,9 +87,9 @@ application {
 jar {
     manifest {
         attributes(
-                "Implementation-Title": "SuperTurtyBot",
-                "Implementation-Version": "1.0-alpha",
-                "Main-Class": "dev.darealturtywurty.superturtybot.TurtyBot"
+        "Implementation-Title": "SuperTurtyBot",
+        "Implementation-Version": "1.0-alpha",
+        "Main-Class": "dev.darealturtywurty.superturtybot.TurtyBot"
         )
     }
 }

@@ -27,11 +27,10 @@ public class BlackjackCommand extends EconomyCommand {
 
     public BlackjackCommand() {
         addSubcommands(
-                new BlackjackPlayCommand(),
-                new BlackjackHitCommand(),
-                new BlackjackStandCommand(),
-                new BlackjackHowToPlayCommand()
-        );
+            new BlackjackPlayCommand(),
+            new BlackjackHitCommand(),
+            new BlackjackStandCommand(),
+            new BlackjackHowToPlayCommand());
     }
 
     public static Game getOngoingGame(SlashCommandInteractionEvent event) {
@@ -40,7 +39,8 @@ public class BlackjackCommand extends EconomyCommand {
             return null;
 
         for (Game game : games) {
-            if (game.getGuild() == event.getGuild().getIdLong() && game.getUser() == event.getUser().getIdLong() && !game.isFinished())
+            if (game.getGuild() == event.getGuild().getIdLong() && game.getUser() == event.getUser().getIdLong()
+                && !game.isFinished())
                 return game;
         }
 
@@ -225,8 +225,8 @@ public class BlackjackCommand extends EconomyCommand {
                 case PUSH -> bet;
                 case PLAYER_WIN, DEALER_BUST -> bet.multiply(BigInteger.valueOf(2));
                 case PLAYER_BLACKJACK -> BLACKJACK_PAYS_3_TO_2
-                        ? bet.multiply(BigInteger.valueOf(5)).divide(BigInteger.valueOf(2))
-                        : bet.multiply(BigInteger.valueOf(2));
+                    ? bet.multiply(BigInteger.valueOf(5)).divide(BigInteger.valueOf(2))
+                    : bet.multiply(BigInteger.valueOf(2));
                 case DEALER_WIN, PLAYER_BUST, DEALER_BLACKJACK, TIMEOUT -> BigInteger.ZERO;
             };
 
@@ -235,7 +235,8 @@ public class BlackjackCommand extends EconomyCommand {
 
         private void ensureStatus(Status expected) {
             if (status != expected)
-                throw new IllegalStateException("Invalid game state: expected %s but was %s".formatted(expected, status));
+                throw new IllegalStateException(
+                    "Invalid game state: expected %s but was %s".formatted(expected, status));
 
             if (settlement != null)
                 throw new IllegalStateException("Game has already finished.");
@@ -266,20 +267,23 @@ public class BlackjackCommand extends EconomyCommand {
 
             return switch (settlement.result()) {
                 case PLAYER_BUST ->
-                        "You busted and lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
+                    "You busted and lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
                 case DEALER_BUST ->
-                        "The dealer busted! You win %s.".formatted(currencyFormatter.apply(settlement.payout()));
+                    "The dealer busted! You win %s.".formatted(currencyFormatter.apply(settlement.payout()));
                 case PLAYER_WIN -> "You win! You receive %s.".formatted(currencyFormatter.apply(settlement.payout()));
                 case DEALER_WIN ->
-                        "The dealer wins. You lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
+                    "The dealer wins. You lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
                 case PUSH ->
-                        "It's a push! Your bet of %s has been returned.".formatted(currencyFormatter.apply(settlement.bet()));
+                    "It's a push! Your bet of %s has been returned."
+                        .formatted(currencyFormatter.apply(settlement.bet()));
                 case PLAYER_BLACKJACK ->
-                        "Blackjack! You win %s.".formatted(currencyFormatter.apply(settlement.payout()));
+                    "Blackjack! You win %s.".formatted(currencyFormatter.apply(settlement.payout()));
                 case DEALER_BLACKJACK ->
-                        "The dealer has blackjack. You lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
+                    "The dealer has blackjack. You lost your bet of %s."
+                        .formatted(currencyFormatter.apply(settlement.bet()));
                 case TIMEOUT ->
-                        "Your game has timed out due to inactivity. You lost your bet of %s.".formatted(currencyFormatter.apply(settlement.bet()));
+                    "Your game has timed out due to inactivity. You lost your bet of %s."
+                        .formatted(currencyFormatter.apply(settlement.bet()));
             };
         }
 
@@ -495,7 +499,8 @@ public class BlackjackCommand extends EconomyCommand {
 
             JsonObject cardsJson = Constants.GSON.fromJson(new InputStreamReader(inputStream), JsonObject.class);
             String emojiName = rank.getName() + "_of_" + suit.getName();
-            JsonObject environmentEmojis = cardsJson.getAsJsonObject(Environment.INSTANCE.isDevelopment() ? "dev" : "prod");
+            JsonObject environmentEmojis = cardsJson
+                .getAsJsonObject(Environment.INSTANCE.isDevelopment() ? "dev" : "prod");
             if (!environmentEmojis.has(emojiName))
                 throw new IllegalStateException("Emoji for card %s not found.".formatted(emojiName));
 
@@ -510,7 +515,8 @@ public class BlackjackCommand extends EconomyCommand {
             try {
                 return emojiElement.getAsLong();
             } catch (Exception exception) {
-                throw new IllegalStateException("Emoji entry for card %s is not a valid long.".formatted(emojiName), exception);
+                throw new IllegalStateException("Emoji entry for card %s is not a valid long.".formatted(emojiName),
+                    exception);
             }
         }
 

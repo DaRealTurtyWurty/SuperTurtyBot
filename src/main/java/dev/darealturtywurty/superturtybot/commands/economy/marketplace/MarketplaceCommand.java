@@ -25,24 +25,23 @@ public class MarketplaceCommand extends EconomyCommand {
 
     public MarketplaceCommand() {
         addSubcommands(
-                new MarketplaceBrowseSubcommand(),
-                new MarketplaceListSubcommand(),
-                new MarketplaceBuySubcommand(),
-                new MarketplaceCancelSubcommand()
-        );
+            new MarketplaceBrowseSubcommand(),
+            new MarketplaceListSubcommand(),
+            new MarketplaceBuySubcommand(),
+            new MarketplaceCancelSubcommand());
     }
 
     public static EmbedBuilder notice(String title, String description, boolean error) {
         return new EmbedBuilder().setColor(error ? new Color(219, 78, 78) : ACCENT)
-                .setTitle(title).setDescription(description);
+            .setTitle(title).setDescription(description);
     }
 
     public static EmbedBuilder result(String title, MarketplaceListing listing, GuildData config) {
         var embed = new EmbedBuilder().setColor(ACCENT).setTitle(title)
-                .addField("Item", displayItem(listing), true)
-                .addField("Price", StringUtils.numberFormat(listing.getPrice(), config), true)
-                .addField("Type", typeName(listing.getType()), true)
-                .addField("Listing ID", "`" + listing.getId() + "`", false);
+            .addField("Item", displayItem(listing), true)
+            .addField("Price", StringUtils.numberFormat(listing.getPrice(), config), true)
+            .addField("Type", typeName(listing.getType()), true)
+            .addField("Listing ID", "`" + listing.getId() + "`", false);
         if (MarketplaceService.RENTAL.equals(listing.getType())) {
             embed.addField("Rental period", listing.getDays() + " days", true);
         }
@@ -57,8 +56,8 @@ public class MarketplaceCommand extends EconomyCommand {
 
         for (MarketplaceListing listing : listings) {
             String details = "**" + StringUtils.numberFormat(listing.getPrice(), config) + "** · "
-                    + typeName(listing.getType()) + " · <@" + listing.getSeller() + ">\n"
-                    + "ID: `" + listing.getId() + "`";
+                + typeName(listing.getType()) + " · <@" + listing.getSeller() + ">\n"
+                + "ID: `" + listing.getId() + "`";
             if (MarketplaceService.RENTAL.equals(listing.getType())) {
                 details += " · " + listing.getDays() + " days";
             }
@@ -108,18 +107,18 @@ public class MarketplaceCommand extends EconomyCommand {
     @Override
     public String getHowToUse() {
         return """
-                /marketplace browse
-                /marketplace list <type> <item> <price> [collection] [days]
-                /marketplace buy <id>
-                /marketplace cancel <id>""";
+            /marketplace browse
+            /marketplace list <type> <item> <price> [collection] [days]
+            /marketplace buy <id>
+            /marketplace cancel <id>""";
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         event.getHook().editOriginalEmbeds(notice("Marketplace",
-                "Use `/marketplace browse` to view listings, `/marketplace list` to sell or rent, "
-                        + "`/marketplace buy` to purchase, or `/marketplace cancel` to withdraw your listing.",
-                false).build()).queue();
+            "Use `/marketplace browse` to view listings, `/marketplace list` to sell or rent, "
+                + "`/marketplace buy` to purchase, or `/marketplace cancel` to withdraw your listing.",
+            false).build()).queue();
     }
 
     @Override
@@ -139,14 +138,16 @@ public class MarketplaceCommand extends EconomyCommand {
         try {
             List<Command.Choice> choices = switch (subcommand == null ? "" : subcommand) {
                 case "list" -> listChoices(event, option);
-                case "buy", "cancel" -> option.equals("id") ? listingChoices(guild.getIdLong(),
-                        subcommand.equals("cancel") ? event.getUser().getIdLong() : -1) : List.of();
+                case "buy", "cancel" -> option.equals("id")
+                    ? listingChoices(guild.getIdLong(),
+                        subcommand.equals("cancel") ? event.getUser().getIdLong() : -1)
+                    : List.of();
                 default -> List.of();
             };
             event.replyChoices(choices.stream()
-                    .filter(choice -> query.isBlank() || choice.getName().toLowerCase(Locale.ROOT).contains(query)
-                            || choice.getAsString().toLowerCase(Locale.ROOT).contains(query))
-                    .limit(25).toList()).queue();
+                .filter(choice -> query.isBlank() || choice.getName().toLowerCase(Locale.ROOT).contains(query)
+                    || choice.getAsString().toLowerCase(Locale.ROOT).contains(query))
+                .limit(25).toList()).queue();
         } catch (RuntimeException exception) {
             event.replyChoices().queue();
         }
@@ -157,49 +158,62 @@ public class MarketplaceCommand extends EconomyCommand {
         long user = event.getUser().getIdLong();
         if (option.equals("collection")) {
             UserCollectables owned = db.userCollectables.find(Filters.eq("user", user)).first();
-            if (owned == null || owned.getCollectables() == null) return List.of();
+            if (owned == null || owned.getCollectables() == null)
+                return List.of();
             return owned.getCollectables().stream()
-                    .filter(group -> group.getCollectables() != null && !group.getCollectables().isEmpty())
-                    .map(group -> new Command.Choice(group.getType().replace('_', ' '), group.getType()))
-                    .toList();
+                .filter(group -> group.getCollectables() != null && !group.getCollectables().isEmpty())
+                .map(group -> new Command.Choice(group.getType().replace('_', ' '), group.getType()))
+                .toList();
         }
-        if (!option.equals("item")) return List.of();
+        if (!option.equals("item"))
+            return List.of();
 
         String type = event.getOption("type", OptionMapping::getAsString);
-        if (type == null) return List.of();
+        if (type == null)
+            return List.of();
         return switch (type) {
             case MarketplaceService.COLLECTABLE -> {
                 UserCollectables owned = db.userCollectables.find(Filters.eq("user", user)).first();
-                if (owned == null || owned.getCollectables() == null) yield List.of();
+                if (owned == null || owned.getCollectables() == null)
+                    yield List.of();
                 String selectedCollection = event.getOption("collection", OptionMapping::getAsString);
                 var choices = new ArrayList<Command.Choice>();
                 for (UserCollectables.Collectables group : owned.getCollectables()) {
-                    if (selectedCollection != null && !selectedCollection.equals(group.getType())) continue;
-                    if (group.getCollectables() == null) continue;
+                    if (selectedCollection != null && !selectedCollection.equals(group.getType()))
+                        continue;
+                    if (group.getCollectables() == null)
+                        continue;
                     for (String item : group.getCollectables()) {
-                        choices.add(new Command.Choice(shorten(item + " · " + group.getType().replace('_', ' ')), item));
+                        choices
+                            .add(new Command.Choice(shorten(item + " · " + group.getType().replace('_', ' ')), item));
                     }
                 }
                 yield choices;
             }
             case MarketplaceService.RANK_CARD -> {
                 var level = db.levelling.find(Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                        Filters.eq("user", user))).first();
-                yield level == null || level.getInventory() == null ? List.of()
-                        : level.getInventory().stream().map(item -> new Command.Choice(shorten(item), item)).toList();
+                    Filters.eq("user", user))).first();
+                yield level == null || level.getInventory() == null
+                    ? List.of()
+                    : level.getInventory().stream().map(item -> new Command.Choice(shorten(item), item)).toList();
             }
             case MarketplaceService.ECONOMY_ITEM, MarketplaceService.RENTAL -> {
                 var account = db.economy.find(Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                        Filters.eq("user", user))).first();
-                if (account == null) yield List.of();
-                if (MarketplaceService.ECONOMY_ITEM.equals(type)) {
-                    yield account.getShopItems() == null ? List.of() : account.getShopItems().stream()
+                    Filters.eq("user", user))).first();
+                if (account == null)
+                    yield List.of();
+                if (MarketplaceService.ECONOMY_ITEM.equals(type))
+                    yield account.getShopItems() == null
+                        ? List.of()
+                        : account.getShopItems().stream()
                             .map(item -> new Command.Choice(shorten(item.getName() + " (#" + item.getId() + ")"),
-                                    String.valueOf(item.getId()))).toList();
-                }
-                yield account.getProperties() == null ? List.of() : account.getProperties().stream()
+                                String.valueOf(item.getId())))
+                            .toList();
+                yield account.getProperties() == null
+                    ? List.of()
+                    : account.getProperties().stream()
                         .filter(property -> property.getOwner() == user && !property.isRentActive()
-                                && property.getRent() != null && !property.getRent().isPaused())
+                            && property.getRent() != null && !property.getRent().isPaused())
                         .map(property -> new Command.Choice(shorten(property.getName()), property.getName())).toList();
             }
             default -> List.of();
@@ -207,12 +221,13 @@ public class MarketplaceCommand extends EconomyCommand {
     }
 
     private static List<Command.Choice> listingChoices(long guild, long seller) {
-        var listings = seller == -1 ? MarketplaceService.browse(guild, null, 25)
-                : MarketplaceService.browseSeller(guild, seller, 25);
+        var listings = seller == -1
+            ? MarketplaceService.browse(guild, null, 25)
+            : MarketplaceService.browseSeller(guild, seller, 25);
         return listings.stream()
-                .map(listing -> new Command.Choice(shorten(displayItem(listing) + " · "
-                        + typeName(listing.getType())), listing.getId()))
-                .toList();
+            .map(listing -> new Command.Choice(shorten(displayItem(listing) + " · "
+                + typeName(listing.getType())), listing.getId()))
+            .toList();
     }
 
     private static String shorten(String value) {

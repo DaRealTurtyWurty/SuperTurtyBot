@@ -14,21 +14,18 @@ public final class CollectablesEarnedRule implements QuestRule<CollectablesEarne
 
     @Override
     public void apply(CollectablesEarnedConfig config, CollectablesEarnedState state, QuestEvent event) {
-        if (!(event instanceof QuestEvent.CollectableEarned(
-                String questionId, String collectionType, int rarityOrdinal, long responseTimeMillis,
-                LocalDate date
-        )))
+        if (!(event instanceof QuestEvent.CollectableEarned(String questionId, String collectionType, int rarityOrdinal, long responseTimeMillis, LocalDate date)))
             return;
 
         if (config.collectionType() != null && !config.collectionType().equals(collectionType))
             return;
 
         if (config.minimumRarityOrdinal() >= 0
-                && rarityOrdinal < config.minimumRarityOrdinal())
+            && rarityOrdinal < config.minimumRarityOrdinal())
             return;
 
         if (config.maximumResponseTimeMillis() > 0
-                && responseTimeMillis > config.maximumResponseTimeMillis())
+            && responseTimeMillis > config.maximumResponseTimeMillis())
             return;
 
         if (state.questionIds.add(questionId)) {

@@ -22,16 +22,14 @@ public final class WelcomeSettingsService {
 
     public WelcomeSettingsResponse updateSettings(long guildId, WelcomeSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         long welcomeChannelId = parseChannelId(request.getWelcomeChannelId());
-        if (welcomeChannelId != 0L && guild.getTextChannelById(welcomeChannelId) == null) {
+        if (welcomeChannelId != 0L && guild.getTextChannelById(welcomeChannelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_welcome_channel",
-                    "The supplied welcome channel was not a text channel in this guild.");
-        }
+                "The supplied welcome channel was not a text channel in this guild.");
 
         GuildData guildData = GuildData.getOrCreateGuildData(guildId);
         guildData.setWelcomeChannel(welcomeChannelId);
@@ -44,10 +42,9 @@ public final class WelcomeSettingsService {
 
     private static WelcomeSettingsResponse toResponse(GuildData guildData) {
         return new WelcomeSettingsResponse(
-                guildData.getWelcomeChannel() == 0L ? null : Long.toString(guildData.getWelcomeChannel()),
-                guildData.isShouldAnnounceJoins(),
-                guildData.isShouldAnnounceLeaves()
-        );
+            guildData.getWelcomeChannel() == 0L ? null : Long.toString(guildData.getWelcomeChannel()),
+            guildData.isShouldAnnounceJoins(),
+            guildData.isShouldAnnounceLeaves());
     }
 
     private static long parseChannelId(String channelId) {
@@ -59,7 +56,7 @@ public final class WelcomeSettingsService {
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_channel_id",
-                    "One of the supplied channel IDs was not a valid Discord snowflake.");
+                "One of the supplied channel IDs was not a valid Discord snowflake.");
         }
     }
 }

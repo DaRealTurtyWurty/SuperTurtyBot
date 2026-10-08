@@ -66,7 +66,8 @@ public final class WordleReminderManager {
         unschedule(reminderKey);
 
         long delayMillis = Math.max(0L, reminderAt - System.currentTimeMillis());
-        ScheduledFuture<?> future = SCHEDULER.schedule(() -> fireReminder(userId, guildId), delayMillis, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = SCHEDULER.schedule(() -> fireReminder(userId, guildId), delayMillis,
+            TimeUnit.MILLISECONDS);
         SCHEDULED_REMINDERS.put(reminderKey, future);
     }
 
@@ -79,10 +80,10 @@ public final class WordleReminderManager {
             return;
 
         WordleStreakData streakData = profile.getStreaks()
-                .stream()
-                .filter(streak -> streak.getGuild() == guildId)
-                .findFirst()
-                .orElse(null);
+            .stream()
+            .filter(streak -> streak.getGuild() == guildId)
+            .findFirst()
+            .orElse(null);
         if (streakData == null || !isPendingReminder(streakData))
             return;
 
@@ -98,21 +99,21 @@ public final class WordleReminderManager {
         }
 
         jda.retrieveUserById(userId).queue(
-                user -> sendReminder(user, streakData),
-                failure -> {
-                    Constants.LOGGER.warn("Failed to retrieve user {} for Wordle reminder", userId, failure);
-                    markReminderSent(userId, guildId);
-                });
+            user -> sendReminder(user, streakData),
+            failure -> {
+                Constants.LOGGER.warn("Failed to retrieve user {} for Wordle reminder", userId, failure);
+                markReminderSent(userId, guildId);
+            });
     }
 
     private static void sendReminder(User user, WordleStreakData streakData) {
         MessageChannel destination = findReminderDestination(streakData);
         if (destination != null) {
             destination.sendMessage(formatChannelReminderMessage(user.getIdLong(), streakData.getStreak()))
-                    .setAllowedMentions(List.of(Message.MentionType.USER))
-                    .queue(
-                            success -> markReminderSent(user.getIdLong(), streakData.getGuild()),
-                            failure -> sendDirectMessage(user, streakData));
+                .setAllowedMentions(List.of(Message.MentionType.USER))
+                .queue(
+                    success -> markReminderSent(user.getIdLong(), streakData.getGuild()),
+                    failure -> sendDirectMessage(user, streakData));
             return;
         }
 
@@ -127,7 +128,8 @@ public final class WordleReminderManager {
         if (guild == null)
             return null;
 
-        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class, streakData.getReminderChannelId());
+        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class,
+            streakData.getReminderChannelId());
         if (channel != null)
             return channel;
 
@@ -137,29 +139,33 @@ public final class WordleReminderManager {
 
     private static void sendDirectMessage(User user, WordleStreakData streakData) {
         user.openPrivateChannel().queue(
-                channel -> channel.sendMessage(formatDirectReminderMessage(streakData.getGuild(), streakData.getStreak())).queue(
-                        success -> markReminderSent(user.getIdLong(), streakData.getGuild()),
-                        failure -> {
-                            Constants.LOGGER.warn("Failed to send Wordle reminder to user {}", user.getIdLong(), failure);
-                            markReminderSent(user.getIdLong(), streakData.getGuild());
-                        }),
-                failure -> {
-                    Constants.LOGGER.warn("Failed to open DM for Wordle reminder for user {}", user.getIdLong(), failure);
-                    markReminderSent(user.getIdLong(), streakData.getGuild());
-                });
+            channel -> channel.sendMessage(formatDirectReminderMessage(streakData.getGuild(), streakData.getStreak()))
+                .queue(
+                    success -> markReminderSent(user.getIdLong(), streakData.getGuild()),
+                    failure -> {
+                        Constants.LOGGER.warn("Failed to send Wordle reminder to user {}", user.getIdLong(), failure);
+                        markReminderSent(user.getIdLong(), streakData.getGuild());
+                    }),
+            failure -> {
+                Constants.LOGGER.warn("Failed to open DM for Wordle reminder for user {}", user.getIdLong(), failure);
+                markReminderSent(user.getIdLong(), streakData.getGuild());
+            });
     }
 
     private static String formatChannelReminderMessage(long userId, int streak) {
-        return "<@%d> you can play Wordle again here. Your current streak is %d day%s.".formatted(userId, streak, streak == 1 ? "" : "s");
+        return "<@%d> you can play Wordle again here. Your current streak is %d day%s.".formatted(userId, streak,
+            streak == 1 ? "" : "s");
     }
 
     private static String formatDirectReminderMessage(long guildId, int streak) {
         if (guildId == 0L)
-            return "You can play Wordle again in DMs. Your current streak is %d day%s.".formatted(streak, streak == 1 ? "" : "s");
+            return "You can play Wordle again in DMs. Your current streak is %d day%s.".formatted(streak,
+                streak == 1 ? "" : "s");
 
         Guild guild = jda == null ? null : jda.getGuildById(guildId);
         String guildName = guild == null ? "that server" : guild.getName();
-        return "You can play Wordle again in %s. Your current streak there is %d day%s.".formatted(guildName, streak, streak == 1 ? "" : "s");
+        return "You can play Wordle again in %s. Your current streak there is %d day%s.".formatted(guildName, streak,
+            streak == 1 ? "" : "s");
     }
 
     private static boolean isPendingReminder(WordleStreakData streakData) {
@@ -168,18 +174,19 @@ public final class WordleReminderManager {
 
     private static void markReminderSent(long userId, long guildId) {
         Database.getDatabase().wordleProfiles.updateOne(
-                Filters.and(
-                        Filters.eq("user", userId),
-                        Filters.eq("streaks.guild", guildId)),
-                Updates.combine(
-                        Updates.set("streaks.$.reminderSent", true),
-                        Updates.set("streaks.$.reminderAt", 0L)));
+            Filters.and(
+                Filters.eq("user", userId),
+                Filters.eq("streaks.guild", guildId)),
+            Updates.combine(
+                Updates.set("streaks.$.reminderSent", true),
+                Updates.set("streaks.$.reminderAt", 0L)));
     }
 
     private static void unschedule(String reminderKey) {
         ScheduledFuture<?> future = SCHEDULED_REMINDERS.remove(reminderKey);
-        if (future != null)
+        if (future != null) {
             future.cancel(false);
+        }
     }
 
     private static String createReminderKey(long userId, long guildId) {

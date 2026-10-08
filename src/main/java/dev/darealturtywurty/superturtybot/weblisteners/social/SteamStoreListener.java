@@ -41,7 +41,8 @@ public class SteamStoreListener {
     private static final RssReader READER = new RssReader();
 
     static {
-        READER.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36");
+        READER.setUserAgent(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36");
         READER.addHeader("Accept-Language", "en-US,en;q=0.9");
     }
 
@@ -54,7 +55,7 @@ public class SteamStoreListener {
         EXECUTOR.scheduleAtFixedRate(() -> {
             try {
                 List<SteamStoreNotifier> notifiers = Database.getDatabase().steamStoreNotifier.find()
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (notifiers.isEmpty())
                     return;
 
@@ -67,7 +68,7 @@ public class SteamStoreListener {
                         handleNotifier(jda, notifier, articles);
                     } catch (Exception exception) {
                         Constants.LOGGER.error("Failed to process Steam store notifier for guild {}",
-                                notifier.getGuild(), exception);
+                            notifier.getGuild(), exception);
                     }
                 }
             } catch (Exception exception) {
@@ -83,10 +84,10 @@ public class SteamStoreListener {
                 return List.of();
 
             return READER.read(new ByteArrayInputStream(bytes))
-                    .map(SteamStoreListener::toArticle)
-                    .flatMap(Optional::stream)
-                    .filter(article -> matchesTitle(article.title()))
-                    .toList();
+                .map(SteamStoreListener::toArticle)
+                .flatMap(Optional::stream)
+                .filter(article -> matchesTitle(article.title()))
+                .toList();
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read Steam store RSS feed", exception);
             return List.of();
@@ -101,8 +102,8 @@ public class SteamStoreListener {
 
         String articleId = normalizeArticleId(link);
         String legacyArticleId = item.getGuid()
-                .filter(value -> !value.isBlank())
-                .orElse(articleId);
+            .filter(value -> !value.isBlank())
+            .orElse(articleId);
         String contentHtml = item.getContent().or(item::getDescription).orElse("");
         Instant publishedAt = parseTimestamp(item);
 
@@ -117,7 +118,8 @@ public class SteamStoreListener {
         String imageUrl = resolveImageUrl(articleDocument, contentHtml);
         String youtubeUrl = extractYouTubeUrl(contentHtml, articleDocument).orElse("");
 
-        return Optional.of(new SteamStoreArticle(articleId, legacyArticleId, title, link, description, imageUrl, publishedAt, youtubeUrl));
+        return Optional.of(new SteamStoreArticle(articleId, legacyArticleId, title, link, description, imageUrl,
+            publishedAt, youtubeUrl));
     }
 
     private static Instant parseTimestamp(Item item) {
@@ -133,7 +135,7 @@ public class SteamStoreListener {
 
         try {
             return new DateTime().toInstant(raw);
-        } catch (Exception ignored) {
+        } catch (Exception _) {
             return Instant.now();
         }
     }
@@ -188,11 +190,11 @@ public class SteamStoreListener {
             return "";
 
         for (String selector : List.of(
-                "iframe[src*='youtube.com/embed/']",
-                "iframe[src*='youtube-nocookie.com/embed/']",
-                "a[href*='youtube.com/watch']",
-                "a[href*='youtu.be/']",
-                "a[href*='youtube.com/shorts/']")) {
+            "iframe[src*='youtube.com/embed/']",
+            "iframe[src*='youtube-nocookie.com/embed/']",
+            "a[href*='youtube.com/watch']",
+            "a[href*='youtu.be/']",
+            "a[href*='youtube.com/shorts/']")) {
             Element element = document.selectFirst(selector);
             if (element == null)
                 continue;
@@ -211,11 +213,12 @@ public class SteamStoreListener {
             return "";
 
         String normalized = url.trim().replace("&quot;", "");
-        if (normalized.startsWith("//"))
+        if (normalized.startsWith("//")) {
             normalized = "https:" + normalized;
+        }
 
         try {
-            URI uri = new URI(normalized);
+            var uri = new URI(normalized);
             String host = Optional.ofNullable(uri.getHost()).orElse("").toLowerCase(Locale.ROOT);
             String path = Optional.ofNullable(uri.getPath()).orElse("");
             String query = Optional.ofNullable(uri.getQuery()).orElse("");
@@ -252,7 +255,7 @@ public class SteamStoreListener {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception _) {
         }
 
         return "";
@@ -269,8 +272,9 @@ public class SteamStoreListener {
         }
 
         int nextSlash = trimmed.indexOf('/');
-        if (nextSlash >= 0)
+        if (nextSlash >= 0) {
             trimmed = trimmed.substring(0, nextSlash);
+        }
 
         return trimmed;
     }
@@ -283,10 +287,9 @@ public class SteamStoreListener {
         }
 
         StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
-                "Steam store");
-        if (channel == null) {
+            "Steam store");
+        if (channel == null)
             return;
-        }
 
         List<String> storedArticleIds = notifier.getStoredArticleIds();
         if (storedArticleIds == null) {
@@ -324,16 +327,17 @@ public class SteamStoreListener {
             changed = true;
         }
 
-        if (changed)
+        if (changed) {
             persistStoredArticles(notifier);
+        }
     }
 
     private static void persistStoredArticles(SteamStoreNotifier notifier) {
         Database.getDatabase().steamStoreNotifier.updateOne(
-                Filters.and(
-                        Filters.eq("guild", notifier.getGuild()),
-                        Filters.eq("channel", notifier.getChannel())),
-                Updates.set("storedArticleIds", notifier.getStoredArticleIds()));
+            Filters.and(
+                Filters.eq("guild", notifier.getGuild()),
+                Filters.eq("channel", notifier.getChannel())),
+            Updates.set("storedArticleIds", notifier.getStoredArticleIds()));
     }
 
     private static boolean isLegacyCacheMismatch(List<String> storedArticleIds, List<SteamStoreArticle> articles) {
@@ -356,39 +360,53 @@ public class SteamStoreListener {
         return url == null ? "" : url.trim();
     }
 
-    private static boolean sendUpdate(StandardGuildMessageChannel channel, SteamStoreNotifier notifier,
-                                      SteamStoreArticle article) {
+    private static boolean sendUpdate(
+        StandardGuildMessageChannel channel,
+        SteamStoreNotifier notifier,
+        SteamStoreArticle article
+    ) {
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle(article.title(), article.url())
-                .setDescription(NewsScraperUtils.truncate(
-                        article.description(), MessageEmbed.DESCRIPTION_MAX_LENGTH,
-                        "New Steam sale or fest announcement detected."))
-                .setColor(0x1B4D6B)
-                .setTimestamp(article.publishedAt())
-                .setFooter("Steam");
+            .setTitle(article.title(), article.url())
+            .setDescription(NewsScraperUtils.truncate(
+                article.description(), MessageEmbed.DESCRIPTION_MAX_LENGTH,
+                "New Steam sale or fest announcement detected."))
+            .setColor(0x1B4D6B)
+            .setTimestamp(article.publishedAt())
+            .setFooter("Steam");
 
-        if (!article.imageUrl().isBlank())
+        if (!article.imageUrl().isBlank()) {
             embed.setImage(article.imageUrl());
+        }
 
-        if (!article.youtubeUrl().isBlank())
+        if (!article.youtubeUrl().isBlank()) {
             embed.addField("Trailer", article.youtubeUrl(), false);
+        }
 
         String content = notifier.getMention() + " New Steam sale or fest: **" + article.title() + "**.";
-        if (!article.youtubeUrl().isBlank())
+        if (!article.youtubeUrl().isBlank()) {
             content += "\nTrailer: " + article.youtubeUrl();
+        }
 
         return NotifierDeliverySupport.sendAndWait(
-                channel.sendMessageEmbeds(embed.build())
-                        .setContent(content),
-                "Steam store",
-                channel);
+            channel.sendMessageEmbeds(embed.build())
+                .setContent(content),
+            "Steam store",
+            channel);
     }
 
     public static boolean isInitialized() {
         return IS_INITIALIZED.get();
     }
 
-    private record SteamStoreArticle(String id, String legacyId, String title, String url, String description, String imageUrl,
-                                     Instant publishedAt, String youtubeUrl) {
+    private record SteamStoreArticle(
+        String id,
+        String legacyId,
+        String title,
+        String url,
+        String description,
+        String imageUrl,
+        Instant publishedAt,
+        String youtubeUrl
+    ) {
     }
 }

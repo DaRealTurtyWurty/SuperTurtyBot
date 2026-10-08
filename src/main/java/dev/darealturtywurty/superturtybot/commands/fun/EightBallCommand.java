@@ -68,8 +68,9 @@ public class EightBallCommand extends CoreCommand {
         final String question = event.getOption("question", "No question provided!", OptionMapping::getAsString);
         try {
             final URLConnection connection = new URI(
-                "https://www.eightballapi.com/api?question=%s&biased=true".formatted(URLEncoder.encode(question, StandardCharsets.UTF_8)))
-                    .toURL().openConnection();
+                "https://www.eightballapi.com/api?question=%s&biased=true"
+                    .formatted(URLEncoder.encode(question, StandardCharsets.UTF_8)))
+                .toURL().openConnection();
             final JsonObject result = Constants.GSON
                 .fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8), JsonObject.class);
 

@@ -5,7 +5,8 @@ import dev.darealturtywurty.superturtybot.modules.quest.QuestRule;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestStatus;
 
 public final class ReminderCompletionRule
-        implements QuestRule<ReminderCompletionConfig, ReminderCompletionState> {
+    implements
+        QuestRule<ReminderCompletionConfig, ReminderCompletionState> {
     @Override
     public ReminderCompletionState createState() {
         return new ReminderCompletionState();
@@ -24,8 +25,8 @@ public final class ReminderCompletionRule
     @Override
     public QuestStatus status(ReminderCompletionConfig config, ReminderCompletionState state) {
         int completedReminders = Math.toIntExact(state.createdReminderIds.stream()
-                .filter(state.firedReminderIds::contains)
-                .count());
+            .filter(state.firedReminderIds::contains)
+            .count());
         int progress = Math.min(completedReminders, config.requiredReminders());
         return new QuestStatus(progress, config.requiredReminders(), progress >= config.requiredReminders());
     }

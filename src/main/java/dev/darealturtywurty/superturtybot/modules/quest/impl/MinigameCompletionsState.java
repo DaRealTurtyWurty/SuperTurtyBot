@@ -9,6 +9,6 @@ public final class MinigameCompletionsState {
     public final Map<String, Set<String>> completionIdsByGameType = new HashMap<>();
 
     public void add(String gameType, String sourceId) {
-        completionIdsByGameType.computeIfAbsent(gameType, ignored -> new HashSet<>()).add(sourceId);
+        completionIdsByGameType.computeIfAbsent(gameType, _ -> new HashSet<>()).add(sourceId);
     }
 }

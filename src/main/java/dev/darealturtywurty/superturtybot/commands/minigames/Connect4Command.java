@@ -43,83 +43,87 @@ public class Connect4Command extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(Connect4Command.Game game, ThreadChannel channel) {
+    private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(
+        Connect4Command.Game game,
+        ThreadChannel channel
+    ) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(event -> {
-                    if (event.getGuild() == null ||
-                            event.getGuild().getIdLong() != game.getGuildId() ||
-                            event.getChannel().getIdLong() != game.getThreadId() ||
-                            event.getMessageIdLong() != game.getMessageId())
-                        return false;
+            .condition(event -> {
+                if (event.getGuild() == null ||
+                    event.getGuild().getIdLong() != game.getGuildId() ||
+                    event.getChannel().getIdLong() != game.getThreadId() ||
+                    event.getMessageIdLong() != game.getMessageId())
+                    return false;
 
-                    if (!game.isTurn(event.getUser().getIdLong())) {
-                        event.deferEdit().queue();
-                        return false;
+                if (!game.isTurn(event.getUser().getIdLong())) {
+                    event.deferEdit().queue();
+                    return false;
+                }
+
+                return true;
+            })
+            .timeout(1, TimeUnit.MINUTES)
+            .timeoutAction(() -> {
+                channel
+                    .sendMessageFormat("❌ <@%d> did not make a move in time! The game has been cancelled!",
+                        game.getCurrentTurn())
+                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .failure(() -> {
+                channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
+                    _ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .success(event -> {
+                String[] data = event.getComponentId().split("-");
+                game.makeMove(Integer.parseInt(data[1]));
+
+                if (game.hasWon(event.getUser().getIdLong())) {
+                    respondToButton(game, channel, event, false);
+
+                    channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
+                        .setFiles(createFileUpload(game, channel))
+                        .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+
+                    if (!game.isBot()) {
+                        QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
+                            channel.getGuild(),
+                            "connect4",
+                            game.getThreadId(),
+                            game.getUserId(),
+                            game.getOpponentId(),
+                            event.getUser().getIdLong());
                     }
 
-                    return true;
-                })
-                .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> {
-                    channel.sendMessageFormat("❌ <@%d> did not make a move in time! The game has been cancelled!", game.getCurrentTurn())
-                            .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
                     GAMES.remove(game);
-                })
-                .failure(() -> {
-                    channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                            ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                    GAMES.remove(game);
-                })
-                .success(event -> {
-                    String[] data = event.getComponentId().split("-");
-                    game.makeMove(Integer.parseInt(data[1]));
 
-                    if (game.hasWon(event.getUser().getIdLong())) {
+                    return;
+                } else if (handleDraw(game, channel, event))
+                    return;
+
+                if (!game.isBot()) {
+                    respondToButton(game, channel, event);
+                } else {
+                    game.playBot();
+
+                    if (game.hasWon(game.getOpponentId())) {
                         respondToButton(game, channel, event, false);
 
-                        channel.sendMessageFormat("✅ <@%d> has won the game!", event.getUser().getIdLong())
-                                .setFiles(createFileUpload(game, channel))
-                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-
-                        if (!game.isBot()) {
-                            QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                                    channel.getGuild(),
-                                    "connect4",
-                                    game.getThreadId(),
-                                    game.getUserId(),
-                                    game.getOpponentId(),
-                                    event.getUser().getIdLong()
-                            );
-                        }
-
+                        channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
+                            .setFiles(createFileUpload(game, channel))
+                            .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
 
                         return;
-                    } else if (handleDraw(game, channel, event))
-                        return;
-
-                    if (!game.isBot()) {
-                        respondToButton(game, channel, event);
                     } else {
-                        game.playBot();
-
-                        if (game.hasWon(game.getOpponentId())) {
-                            respondToButton(game, channel, event, false);
-
-                            channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
-                                    .setFiles(createFileUpload(game, channel))
-                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                            GAMES.remove(game);
-
+                        if (handleDraw(game, channel, event))
                             return;
-                        } else {
-                            if (handleDraw(game, channel, event))
-                                return;
-                        }
-
-                        respondToButton(game, channel, event);
                     }
-                });
+
+                    respondToButton(game, channel, event);
+                }
+            });
     }
 
     private static boolean handleDraw(Connect4Command.Game game, ThreadChannel channel, ButtonInteractionEvent event) {
@@ -127,17 +131,16 @@ public class Connect4Command extends CoreCommand {
             respondToButton(game, channel, event, false);
 
             channel.sendMessageFormat("✅ The game has ended in a draw!")
-                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
 
             if (!game.isBot()) {
                 QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                        channel.getGuild(),
-                        "connect4",
-                        game.getThreadId(),
-                        game.getUserId(),
-                        game.getOpponentId(),
-                        0L
-                );
+                    channel.getGuild(),
+                    "connect4",
+                    game.getThreadId(),
+                    game.getUserId(),
+                    game.getOpponentId(),
+                    0L);
             }
 
             GAMES.remove(game);
@@ -150,18 +153,27 @@ public class Connect4Command extends CoreCommand {
         return false;
     }
 
-    private static void respondToButton(Connect4Command.Game game, ThreadChannel channel, ButtonInteractionEvent event) {
+    private static void respondToButton(
+        Connect4Command.Game game,
+        ThreadChannel channel,
+        ButtonInteractionEvent event
+    ) {
         respondToButton(game, channel, event, true);
     }
 
-    private static void respondToButton(Connect4Command.Game game, ThreadChannel channel, ButtonInteractionEvent event, boolean wait) {
+    private static void respondToButton(
+        Connect4Command.Game game,
+        ThreadChannel channel,
+        ButtonInteractionEvent event,
+        boolean wait
+    ) {
         FileUpload file = createFileUpload(game, channel);
         MessageEditCallbackAction editAction = event.deferEdit().setComponents(createRows(game));
         if (file != null) {
             editAction.setFiles(file);
         }
 
-        editAction.queue(ignored -> {
+        editAction.queue(_ -> {
             if (!channel.isLocked() && wait) {
                 createEventWaiter(game, channel).build();
             }
@@ -176,7 +188,7 @@ public class Connect4Command extends CoreCommand {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to write image!", exception);
             channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
             return null;
         }
@@ -205,7 +217,9 @@ public class Connect4Command extends CoreCommand {
 
         try {
             red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar().download().join());
-            yellow = ImageIO.read(game.isBot() ? jda.getSelfUser().getEffectiveAvatar().download().join() : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
+            yellow = ImageIO.read(game.isBot()
+                ? jda.getSelfUser().getEffectiveAvatar().download().join()
+                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
         }
@@ -233,8 +247,8 @@ public class Connect4Command extends CoreCommand {
         List<Button> buttons = new ArrayList<>();
         for (int i = 0; i < game.board.length; i++) {
             var button = Button.primary(
-                    "connect4-%d".formatted(i),
-                    "%d".formatted(i + 1));
+                "connect4-%d".formatted(i),
+                "%d".formatted(i + 1));
 
             if (!game.canPlace(i) || (game.isBot() && !game.isTurn(game.getUserId()))) {
                 button = button.asDisabled();
@@ -302,7 +316,8 @@ public class Connect4Command extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
@@ -332,44 +347,48 @@ public class Connect4Command extends CoreCommand {
                 return;
             }
 
-            List<Connect4Command.Game> games = GAMES.stream().filter(game -> game.getGuildId() == guild.getIdLong()).toList();
+            List<Connect4Command.Game> games = GAMES.stream().filter(game -> game.getGuildId() == guild.getIdLong())
+                .toList();
 
             // check that the user is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong() || game.getOpponentId() == event.getUser().getIdLong())) {
+            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong()
+                || game.getOpponentId() == event.getUser().getIdLong())) {
                 event.getHook().editOriginal("❌ You are already in a game!").queue();
                 return;
             }
 
             // check that the opponent is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
+            if (games.stream().anyMatch(
+                game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
                 event.getHook().editOriginal("❌ The opponent you specified is already in a game!").queue();
                 return;
             }
 
             // create the game
-            var game = new Connect4Command.Game(guild.getIdLong(), event.getChannel().getIdLong(), event.getUser().getIdLong(), opponent.getIdLong(), opponent.isBot());
+            var game = new Connect4Command.Game(guild.getIdLong(), event.getChannel().getIdLong(),
+                event.getUser().getIdLong(), opponent.getIdLong(), opponent.isBot());
             GAMES.add(game);
 
             // create the thread
             final String threadName = "Connect 4 - %s vs %s".formatted(event.getUser().getName(), opponent.getName());
             event.getHook().editOriginal("✅ Successfully created a game of Connect 4!")
-                    .flatMap(message ->
-                            message.createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
-                    .queue(thread -> {
-                        game.setThreadId(thread.getIdLong());
-                        thread.addThreadMember(event.getUser()).queue();
-                        thread.addThreadMember(opponent).queue();
-                        thread.sendMessageFormat("✅ <@%d> and <@%d> have started a game of Connect 4! It is <@%d>'s turn!",
-                                event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong()).queue(message -> {
+                .flatMap(message -> message
+                    .createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
+                .queue(thread -> {
+                    game.setThreadId(thread.getIdLong());
+                    thread.addThreadMember(event.getUser()).queue();
+                    thread.addThreadMember(opponent).queue();
+                    thread.sendMessageFormat("✅ <@%d> and <@%d> have started a game of Connect 4! It is <@%d>'s turn!",
+                        event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong())
+                        .queue(message -> {
                             game.setMessageId(message.getIdLong());
                             message.editMessageComponents(createRows(game))
-                                    .setFiles(createFileUpload(game, thread))
-                                    .flatMap(ignored -> message.pin())
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
+                                .setFiles(createFileUpload(game, thread))
+                                .flatMap(_ -> message.pin())
+                                .queue(_ -> createEventWaiter(game, thread).build());
                         });
-                    });
-        }, throwable ->
-                event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
+                });
+        }, throwable -> event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
     }
 
     @Getter
@@ -434,54 +453,54 @@ public class Connect4Command extends CoreCommand {
             // Check for 4 in a row
             for (int y = 0; y < 7; y++) {
                 for (int x = 0; x < 4; x++) {
-                    if (board[x][y] == symbol && board[x + 1][y] == symbol && board[x + 2][y] == symbol && board[x + 3][y] == symbol) {
+                    if (board[x][y] == symbol && board[x + 1][y] == symbol && board[x + 2][y] == symbol
+                        && board[x + 3][y] == symbol)
                         return true;
-                    }
                 }
             }
 
             // Check for 4 in a column
             for (int x = 0; x < 7; x++) {
                 for (int y = 0; y < 4; y++) {
-                    if (board[x][y] == symbol && board[x][y + 1] == symbol && board[x][y + 2] == symbol && board[x][y + 3] == symbol) {
+                    if (board[x][y] == symbol && board[x][y + 1] == symbol && board[x][y + 2] == symbol
+                        && board[x][y + 3] == symbol)
                         return true;
-                    }
                 }
             }
 
             // Check for 4 in an upward-right diagonal
             for (int x = 0; x < 4; x++) {
                 for (int y = 0; y < 4; y++) {
-                    if (board[x][y] == symbol && board[x + 1][y + 1] == symbol && board[x + 2][y + 2] == symbol && board[x + 3][y + 3] == symbol) {
+                    if (board[x][y] == symbol && board[x + 1][y + 1] == symbol && board[x + 2][y + 2] == symbol
+                        && board[x + 3][y + 3] == symbol)
                         return true;
-                    }
                 }
             }
 
             // Check for 4 in an downward-right diagonal
             for (int x = 0; x < 4; x++) {
                 for (int y = 3; y < 7; y++) {
-                    if (board[x][y] == symbol && board[x + 1][y - 1] == symbol && board[x + 2][y - 2] == symbol && board[x + 3][y - 3] == symbol) {
+                    if (board[x][y] == symbol && board[x + 1][y - 1] == symbol && board[x + 2][y - 2] == symbol
+                        && board[x + 3][y - 3] == symbol)
                         return true;
-                    }
                 }
             }
 
             // Check for 4 in an upward-left diagonal
             for (int x = 3; x < 7; x++) {
                 for (int y = 0; y < 4; y++) {
-                    if (board[x][y] == symbol && board[x - 1][y + 1] == symbol && board[x - 2][y + 2] == symbol && board[x - 3][y + 3] == symbol) {
+                    if (board[x][y] == symbol && board[x - 1][y + 1] == symbol && board[x - 2][y + 2] == symbol
+                        && board[x - 3][y + 3] == symbol)
                         return true;
-                    }
                 }
             }
 
             // Check for 4 in a downward-left diagonal
             for (int x = 3; x < 7; x++) {
                 for (int y = 3; y < 7; y++) {
-                    if (board[x][y] == symbol && board[x - 1][y - 1] == symbol && board[x - 2][y - 2] == symbol && board[x - 3][y - 3] == symbol) {
+                    if (board[x][y] == symbol && board[x - 1][y - 1] == symbol && board[x - 2][y - 2] == symbol
+                        && board[x - 3][y - 3] == symbol)
                         return true;
-                    }
                 }
             }
 
@@ -490,8 +509,8 @@ public class Connect4Command extends CoreCommand {
 
         public boolean isDraw() {
             return Arrays.stream(board)
-                    .flatMapToInt(row -> new String(row).chars())
-                    .allMatch(column -> column != '\u0000');
+                .flatMapToInt(row -> new String(row).chars())
+                .allMatch(column -> column != '\u0000');
         }
 
         public void playBot() {
@@ -521,9 +540,8 @@ public class Connect4Command extends CoreCommand {
         public int findLowestEmptyRow(int column) {
             char[] columnData = this.board[column];
             for (int i = columnData.length - 1; i >= 0; i--) {
-                if (columnData[i] == '\u0000') {
+                if (columnData[i] == '\u0000')
                     return i;
-                }
             }
 
             return -1;

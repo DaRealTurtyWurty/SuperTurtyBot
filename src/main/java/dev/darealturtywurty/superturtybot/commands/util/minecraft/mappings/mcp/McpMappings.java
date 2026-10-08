@@ -22,17 +22,17 @@ public record McpMappings(MemoryMappingTree tree, String build) {
         };
         String suffix = "-" + mappingVersion;
         String build = ForgeMaven.versions("mcp_stable").stream()
-                .filter(candidate -> candidate.endsWith(suffix))
-                .max(Comparator.comparingInt(candidate -> Integer.parseInt(candidate.substring(0, candidate.indexOf('-')))))
-                .orElse(null);
+            .filter(candidate -> candidate.endsWith(suffix))
+            .max(Comparator.comparingInt(candidate -> Integer.parseInt(candidate.substring(0, candidate.indexOf('-')))))
+            .orElse(null);
         String artifact = "mcp_stable";
         if (build == null) {
             artifact = "mcp_snapshot";
             build = ForgeMaven.versions(artifact).stream()
-                    .filter(candidate -> candidate.endsWith(suffix))
-                    .max(Comparator.naturalOrder())
-                    .orElseThrow(() -> new IllegalArgumentException("MCP names are not available for Minecraft " + version
-                            + ". Try SRG or Mojmap instead."));
+                .filter(candidate -> candidate.endsWith(suffix))
+                .max(Comparator.naturalOrder())
+                .orElseThrow(() -> new IllegalArgumentException("MCP names are not available for Minecraft " + version
+                    + ". Try SRG or Mojmap instead."));
         }
 
         Path archive = ForgeMaven.download(artifact, build, "", Path.of("versions", version));
@@ -72,7 +72,7 @@ public record McpMappings(MemoryMappingTree tree, String build) {
         var names = new HashMap<String, String>();
         var format = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build();
         try (var reader = new InputStreamReader(zip.getInputStream(entry), StandardCharsets.UTF_8);
-             var records = format.parse(reader)) {
+            var records = format.parse(reader)) {
             for (var record : records) {
                 names.put(record.get("searge"), record.get("name"));
             }

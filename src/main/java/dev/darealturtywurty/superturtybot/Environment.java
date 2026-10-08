@@ -251,7 +251,7 @@ public final class Environment {
 
     public void print() {
         this.env.entries(Dotenv.Filter.DECLARED_IN_ENV_FILE)
-                .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));
+            .forEach(entry -> Constants.LOGGER.debug("{}={}", entry.getKey(), entry.getValue()));
     }
 
     public Activity.ActivityType activityType() {
@@ -263,7 +263,8 @@ public final class Environment {
         if (this.env != null)
             throw new IllegalStateException("Environment already loaded!");
 
-        DotenvBuilder builder = Dotenv.configure().directory(Files.isDirectory(environment) ? environment.toString() : environment.getParent().toString());
+        DotenvBuilder builder = Dotenv.configure()
+            .directory(Files.isDirectory(environment) ? environment.toString() : environment.getParent().toString());
         if (Files.exists(environment)) {
             builder.filename(environment.getFileName().toString());
         }

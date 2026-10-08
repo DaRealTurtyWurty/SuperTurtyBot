@@ -58,17 +58,17 @@ public class QuoteCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("add", "Adds a quote.")
-                        .addOption(OptionType.STRING, "text", "The text of the quote.", true)
-                        .addOption(OptionType.USER, "user", "The user who said the quote.", true),
-                new SubcommandData("remove", "Removes a quote.")
-                        .addOption(OptionType.INTEGER, "number", "The number of the quote to remove.", true),
-                new SubcommandData("list", "Lists all quotes.")
-                        .addOption(OptionType.USER, "user", "The user to list quotes for.", false),
-                new SubcommandData("list_compact", "Lists all quotes compactly.")
-                        .addOption(OptionType.USER, "user", "The user to list quotes for.", false),
-                new SubcommandData("get", "Gets a quote.")
-                        .addOption(OptionType.INTEGER, "number", "The number of the quote to get.", true),
-                new SubcommandData("random", "Gets a random quote."));
+            .addOption(OptionType.STRING, "text", "The text of the quote.", true)
+            .addOption(OptionType.USER, "user", "The user who said the quote.", true),
+            new SubcommandData("remove", "Removes a quote.")
+                .addOption(OptionType.INTEGER, "number", "The number of the quote to remove.", true),
+            new SubcommandData("list", "Lists all quotes.")
+                .addOption(OptionType.USER, "user", "The user to list quotes for.", false),
+            new SubcommandData("list_compact", "Lists all quotes compactly.")
+                .addOption(OptionType.USER, "user", "The user to list quotes for.", false),
+            new SubcommandData("get", "Gets a quote.")
+                .addOption(OptionType.INTEGER, "number", "The number of the quote to get.", true),
+            new SubcommandData("random", "Gets a random quote."));
     }
 
     @Override
@@ -126,7 +126,7 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (quotes.stream().anyMatch(quote -> quote.getText().equals(text))) {
                     event.getHook().editOriginal("❌ That quote already exists!").queue();
                     return;
@@ -139,9 +139,8 @@ public class QuoteCommand extends CoreCommand {
                     Message found = null;
                     for (var message : messages) {
                         if (message.getAuthor().getIdLong() != userToQuote.getIdLong() || !message.getContentRaw()
-                                .toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT))) {
+                            .toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)))
                             continue;
-                        }
 
                         found = message;
                     }
@@ -152,8 +151,8 @@ public class QuoteCommand extends CoreCommand {
                     }
 
                     var quote = new Quote(guild.getIdLong(), found.getChannelIdLong(), found.getIdLong(),
-                            userToQuote.getIdLong(), event.getUser().getIdLong(), text,
-                            found.getTimeCreated().toInstant().toEpochMilli());
+                        userToQuote.getIdLong(), event.getUser().getIdLong(), text,
+                        found.getTimeCreated().toInstant().toEpochMilli());
                     Database.getDatabase().quotes.insertOne(quote);
                     event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
                 });
@@ -162,7 +161,7 @@ public class QuoteCommand extends CoreCommand {
             case "remove" -> {
                 int number = event.getOption("number", 0, OptionMapping::getAsInt);
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (number < 1 || number > quotes.size()) {
                     event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
@@ -170,19 +169,19 @@ public class QuoteCommand extends CoreCommand {
 
                 quotes = quotes.stream().sorted(Comparator.comparingLong(Quote::getTimestamp)).toList();
                 Quote quote = quotes.get(number - 1);
-                if (quote.getAddedBy() != event.getUser().getIdLong() && !event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+                if (quote.getAddedBy() != event.getUser().getIdLong()
+                    && !event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
                     event.getHook().editOriginal("❌ You cannot remove someone else's quote!").queue();
                     return;
                 }
 
                 DeleteResult result = Database.getDatabase().quotes.deleteOne(
-                        Filters.and(
-                                Filters.eq("guild", guild.getIdLong()),
-                                Filters.eq("timestamp", quote.getTimestamp()),
-                                Filters.eq("addedBy", quote.getAddedBy()),
-                                Filters.eq("text", quote.getText()),
-                                Filters.eq("user", quote.getUser())
-                        ));
+                    Filters.and(
+                        Filters.eq("guild", guild.getIdLong()),
+                        Filters.eq("timestamp", quote.getTimestamp()),
+                        Filters.eq("addedBy", quote.getAddedBy()),
+                        Filters.eq("text", quote.getText()),
+                        Filters.eq("user", quote.getUser())));
                 if (result.getDeletedCount() == 0) {
                     event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
@@ -195,7 +194,7 @@ public class QuoteCommand extends CoreCommand {
                 User user = event.getOption("user", OptionMapping::getAsUser);
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (quotes.isEmpty()) {
                     event.getHook().editOriginal("❌ There are no quotes!").queue();
                     return;
@@ -206,7 +205,8 @@ public class QuoteCommand extends CoreCommand {
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (int index = 0; index < quotes.size(); index++) {
                     Quote quote = quotes.get(index);
-                    if (user != null && quote.getUser() != user.getIdLong()) continue;
+                    if (user != null && quote.getUser() != user.getIdLong())
+                        continue;
 
                     String text = quote.getText();
                     if (text.length() > 100) {
@@ -219,12 +219,14 @@ public class QuoteCommand extends CoreCommand {
                     String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
                     String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
-                    contents.field("Quote #" + (index + 1), "%s%s%nAdded by: %s%nHappened: %s%nLink: [Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
-                                    text,
-                                    user == null ? "\nSaid by: " + saidByName : "",
-                                    addedByName,
-                                    TimeFormat.RELATIVE.format(quote.getTimestamp()),
-                                    quote.getGuild(), quote.getChannel(), quote.getMessage()));
+                    contents.field("Quote #" + (index + 1),
+                        "%s%s%nAdded by: %s%nHappened: %s%nLink: [Jump to Message](https://discord.com/channels/%d/%d/%d)"
+                            .formatted(
+                                text,
+                                user == null ? "\nSaid by: " + saidByName : "",
+                                addedByName,
+                                TimeFormat.RELATIVE.format(quote.getTimestamp()),
+                                quote.getGuild(), quote.getChannel(), quote.getMessage()));
                 }
                 if (contents.build().isEmpty() && user != null) {
                     event.getHook().editOriginal("❌ There are no quotes by " + user.getAsMention() + "!").queue();
@@ -232,23 +234,24 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(5, contents)
-                        .title("Quotes" + (user == null ? "" : " by " + user.getEffectiveName()) + " in " + guild.getName())
-                        .description("Total Quotes: " + contents.build().size())
-                        .color(Color.CYAN)
-                        .timestamp(Instant.now())
-                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                        .authorOnly(event.getUser().getIdLong())
-                        .build(event.getJDA());
+                    .title("Quotes" + (user == null ? "" : " by " + user.getEffectiveName()) + " in " + guild.getName())
+                    .description("Total Quotes: " + contents.build().size())
+                    .color(Color.CYAN)
+                    .timestamp(Instant.now())
+                    .footer("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl())
+                    .authorOnly(event.getUser().getIdLong())
+                    .build(event.getJDA());
 
                 embed.send(event.getHook(),
-                        () -> event.getHook().editOriginal("❌ Failed to send quotes!").queue());
+                    () -> event.getHook().editOriginal("❌ Failed to send quotes!").queue());
             }
 
             case "list_compact" -> {
                 User user = event.getOption("user", OptionMapping::getAsUser);
 
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (quotes.isEmpty()) {
                     event.getHook().editOriginal("❌ There are no quotes!").queue();
                     return;
@@ -259,7 +262,8 @@ public class QuoteCommand extends CoreCommand {
                 var contents = new PaginatedEmbed.ContentsBuilder();
                 for (int index = 0; index < quotes.size(); index++) {
                     Quote quote = quotes.get(index);
-                    if (user != null && quote.getUser() != user.getIdLong()) continue;
+                    if (user != null && quote.getUser() != user.getIdLong())
+                        continue;
 
                     String text = quote.getText();
                     if (text.length() > 100) {
@@ -271,14 +275,13 @@ public class QuoteCommand extends CoreCommand {
                     String saidByName = saidBy == null ? "Unknown" : saidBy.getAsMention();
                     String finalText = text;
                     int finalIndex = index;
-                    contents.custom(builder -> builder.appendDescription("\n[#%s](https://discord.com/channels/%d/%d/%d)%s: %s"
-                                    .formatted(
-                                            finalIndex + 1,
-                                            quote.getGuild(), quote.getChannel(), quote.getMessage(),
-                                            user == null ? " by " + saidByName : "",
-                                            finalText
-                                    ))
-                    );
+                    contents.custom(
+                        builder -> builder.appendDescription("\n[#%s](https://discord.com/channels/%d/%d/%d)%s: %s"
+                            .formatted(
+                                finalIndex + 1,
+                                quote.getGuild(), quote.getChannel(), quote.getMessage(),
+                                user == null ? " by " + saidByName : "",
+                                finalText)));
                 }
                 if (contents.build().isEmpty() && user != null) {
                     event.getHook().editOriginal("❌ There are no quotes by " + user.getAsMention() + "!").queue();
@@ -286,20 +289,22 @@ public class QuoteCommand extends CoreCommand {
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(20, contents)
-                        .title("Quotes%s in %s\nTotal Quotes: %d".formatted(user == null ? "" : " by " + user.getEffectiveName(), guild.getName(), contents.build().size()))
-                        .color(Color.CYAN)
-                        .timestamp(Instant.now())
-                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                        .authorOnly(event.getUser().getIdLong())
-                        .build(event.getJDA());
+                    .title("Quotes%s in %s\nTotal Quotes: %d".formatted(
+                        user == null ? "" : " by " + user.getEffectiveName(), guild.getName(), contents.build().size()))
+                    .color(Color.CYAN)
+                    .timestamp(Instant.now())
+                    .footer("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl())
+                    .authorOnly(event.getUser().getIdLong())
+                    .build(event.getJDA());
 
                 embed.send(event.getHook(),
-                        () -> event.getHook().editOriginal("❌ Failed to send quotes!").queue());
+                    () -> event.getHook().editOriginal("❌ Failed to send quotes!").queue());
             }
 
             case "random" -> {
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (quotes.isEmpty()) {
                     event.getHook().editOriginal("❌ There are no quotes!").queue();
                     return;
@@ -317,24 +322,26 @@ public class QuoteCommand extends CoreCommand {
                 String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
                 var builder = new EmbedBuilder()
-                        .setTitle("Quote #" + index)
-                        .setDescription(quote.getText())
-                        .addField("Said by", saidByName, true)
-                        .addField("Added by", addedByName, true)
-                        .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
-                        .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
-                                quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
-                        .setColor(Color.CYAN)
-                        .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                    .setTitle("Quote #" + index)
+                    .setDescription(quote.getText())
+                    .addField("Said by", saidByName, true)
+                    .addField("Added by", addedByName, true)
+                    .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
+                    .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
+                        quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
+                    .setColor(Color.CYAN)
+                    .setTimestamp(Instant.now())
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl());
 
                 event.getHook().editOriginalEmbeds(builder.build()).queue();
             }
 
             case "get" -> {
-                int number = event.getOption("number", 0, optionMapping -> (int) Math.min(Integer.MAX_VALUE, optionMapping.getAsLong()));
+                int number = event.getOption("number", 0,
+                    optionMapping -> (int) Math.min(Integer.MAX_VALUE, optionMapping.getAsLong()));
                 List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (number < 1 || number > quotes.size()) {
                     event.getHook().editOriginal("❌ That quote does not exist!").queue();
                     return;
@@ -350,16 +357,17 @@ public class QuoteCommand extends CoreCommand {
                 String addedByName = addedBy == null ? "Unknown" : addedBy.getAsMention();
 
                 var builder = new EmbedBuilder()
-                        .setTitle("Quote #" + (quotes.indexOf(quote) + 1))
-                        .setDescription(quote.getText())
-                        .addField("Said by", saidByName, true)
-                        .addField("Added by", addedByName, true)
-                        .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
-                        .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
-                                quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
-                        .setColor(Color.CYAN)
-                        .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                    .setTitle("Quote #" + (quotes.indexOf(quote) + 1))
+                    .setDescription(quote.getText())
+                    .addField("Said by", saidByName, true)
+                    .addField("Added by", addedByName, true)
+                    .addField("Date", TimeFormat.RELATIVE.format(quote.getTimestamp()), true)
+                    .addField("Link", "[Jump to Message](https://discord.com/channels/%d/%d/%d)".formatted(
+                        quote.getGuild(), quote.getChannel(), quote.getMessage()), true)
+                    .setColor(Color.CYAN)
+                    .setTimestamp(Instant.now())
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl());
 
                 event.getHook().editOriginalEmbeds(builder.build()).queue();
             }
@@ -407,15 +415,15 @@ public class QuoteCommand extends CoreCommand {
         }
 
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                .into(new ArrayList<>());
+            .into(new ArrayList<>());
         if (quotes.stream().anyMatch(quote -> quote.getText().equals(messageContent))) {
             event.getHook().editOriginal("❌ That quote already exists!").queue();
             return;
         }
 
         var quote = new Quote(guild.getIdLong(), message.getChannelIdLong(), message.getIdLong(),
-                messageAuthor.getIdLong(), user.getIdLong(), messageContent,
-                message.getTimeCreated().toInstant().toEpochMilli());
+            messageAuthor.getIdLong(), user.getIdLong(), messageContent,
+            message.getTimeCreated().toInstant().toEpochMilli());
         Database.getDatabase().quotes.insertOne(quote);
         event.getHook().editOriginal("✅ Quote added! #" + (quotes.size() + 1)).queue();
     }

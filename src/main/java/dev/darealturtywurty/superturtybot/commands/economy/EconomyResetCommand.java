@@ -48,33 +48,34 @@ public class EconomyResetCommand extends EconomyCommand {
         }
 
         event.getMessage().reply("⚠️ This will delete all economy accounts for this server. Are you sure?")
-                .setComponents(ActionRow.of(
-                        Button.danger("economyreset:confirm", "Confirm Reset"),
-                        Button.secondary("economyreset:cancel", "Cancel")))
-                .mentionRepliedUser(false)
-                .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                        .timeout(2, TimeUnit.MINUTES)
-                        .timeoutAction(() -> message.editMessage("❌ Economy reset timed out.").setComponents().queue())
-                        .failure(() -> message.editMessage("❌ An error occurred while resetting the economy.").setComponents().queue())
-                        .condition(buttonEvent -> buttonEvent.isFromGuild()
-                                && Objects.requireNonNull(buttonEvent.getGuild()).getIdLong() == guild.getIdLong()
-                                && buttonEvent.getUser().getIdLong() == event.getAuthor().getIdLong()
-                                && buttonEvent.getMessageIdLong() == message.getIdLong()
-                                && buttonEvent.getComponentId().startsWith("economyreset:"))
-                        .success(buttonEvent -> {
-                            buttonEvent.deferEdit().queue();
-                            if (buttonEvent.getComponentId().equals("economyreset:cancel")) {
-                                message.editMessage("❌ Economy reset cancelled.").setComponents().queue();
-                                return;
-                            }
+            .setComponents(ActionRow.of(
+                Button.danger("economyreset:confirm", "Confirm Reset"),
+                Button.secondary("economyreset:cancel", "Cancel")))
+            .mentionRepliedUser(false)
+            .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
+                .timeout(2, TimeUnit.MINUTES)
+                .timeoutAction(() -> message.editMessage("❌ Economy reset timed out.").setComponents().queue())
+                .failure(() -> message.editMessage("❌ An error occurred while resetting the economy.").setComponents()
+                    .queue())
+                .condition(buttonEvent -> buttonEvent.isFromGuild()
+                    && Objects.requireNonNull(buttonEvent.getGuild()).getIdLong() == guild.getIdLong()
+                    && buttonEvent.getUser().getIdLong() == event.getAuthor().getIdLong()
+                    && buttonEvent.getMessageIdLong() == message.getIdLong()
+                    && buttonEvent.getComponentId().startsWith("economyreset:"))
+                .success(buttonEvent -> {
+                    buttonEvent.deferEdit().queue();
+                    if (buttonEvent.getComponentId().equals("economyreset:cancel")) {
+                        message.editMessage("❌ Economy reset cancelled.").setComponents().queue();
+                        return;
+                    }
 
-                            Database.getDatabase().economy.deleteMany(Filters.eq("guild", guild.getIdLong()));
-                            config.setEndOfDayIncomeTax(new HashMap<>());
-                            Database.getDatabase().guildData.updateOne(Filters.eq("guild", guild.getIdLong()),
-                                    Updates.set("endOfDayIncomeTax", config.getEndOfDayIncomeTax()));
+                    Database.getDatabase().economy.deleteMany(Filters.eq("guild", guild.getIdLong()));
+                    config.setEndOfDayIncomeTax(new HashMap<>());
+                    Database.getDatabase().guildData.updateOne(Filters.eq("guild", guild.getIdLong()),
+                        Updates.set("endOfDayIncomeTax", config.getEndOfDayIncomeTax()));
 
-                            message.editMessage("✅ Economy has been reset for this server.").setComponents().queue();
-                        })
-                        .build());
+                    message.editMessage("✅ Economy has been reset for this server.").setComponents().queue();
+                })
+                .build());
     }
 }

@@ -75,10 +75,10 @@ public class EconomyManager {
 
     public static Optional<Economy> getAccount(Guild guild, User user) {
         return Optional.ofNullable(Database.getDatabase().economy.find(
-                Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", user.getIdLong())
-                )).first());
+            Filters.and(
+                Filters.eq("guild", guild.getIdLong()),
+                Filters.eq("user", user.getIdLong())))
+            .first());
     }
 
     public static Economy createAccount(Guild guild, User user) {
@@ -97,10 +97,10 @@ public class EconomyManager {
 
     public static Economy getOrCreateAccount(Guild guild, long userId) {
         Optional<Economy> existing = Optional.ofNullable(Database.getDatabase().economy.find(
-                Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", userId)
-                )).first());
+            Filters.and(
+                Filters.eq("guild", guild.getIdLong()),
+                Filters.eq("user", userId)))
+            .first());
         if (existing.isPresent())
             return existing.get();
 
@@ -162,7 +162,7 @@ public class EconomyManager {
             List<Economy> accounts = Database.getDatabase().economy.find().into(new ArrayList<>());
 
             Map<Long, List<Economy>> guildsAccounts = accounts.stream()
-                    .collect(Collectors.groupingBy(Economy::getGuild));
+                .collect(Collectors.groupingBy(Economy::getGuild));
             for (Map.Entry<Long, List<Economy>> guildAccounts : guildsAccounts.entrySet()) {
                 long guildId = guildAccounts.getKey();
                 Guild guild = jda.getGuildById(guildId);
@@ -175,52 +175,55 @@ public class EconomyManager {
 
                 Map<String, Long> endOfDayIncomeTaxes = guildData.getEndOfDayIncomeTax();
                 guildAccounts.getValue()
-                        .stream()
-                        .filter(account -> endOfDayIncomeTaxes.containsKey(String.valueOf(account.getUser())))
-                        .forEach(account -> {
-                            long amount = endOfDayIncomeTaxes.get(String.valueOf(account.getUser()));
-                            if (amount <= 0) return;
-                            User user = jda.getUserById(account.getUser());
-                            if (user == null) return;
+                    .stream()
+                    .filter(account -> endOfDayIncomeTaxes.containsKey(String.valueOf(account.getUser())))
+                    .forEach(account -> {
+                        long amount = endOfDayIncomeTaxes.get(String.valueOf(account.getUser()));
+                        if (amount <= 0)
+                            return;
+                        User user = jda.getUserById(account.getUser());
+                        if (user == null)
+                            return;
 
-                            BigInteger amountBigInteger = BigInteger.valueOf(amount);
-                            removeMoney(account, amountBigInteger, true);
-                            account.addTransaction(amountBigInteger.negate(), MoneyTransaction.TAX);
+                        BigInteger amountBigInteger = BigInteger.valueOf(amount);
+                        removeMoney(account, amountBigInteger, true);
+                        account.addTransaction(amountBigInteger.negate(), MoneyTransaction.TAX);
 
-                            updateAccount(account);
-                            endOfDayIncomeTaxes.remove(String.valueOf(account.getUser()));
+                        updateAccount(account);
+                        endOfDayIncomeTaxes.remove(String.valueOf(account.getUser()));
 
-                            UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", account.getUser())).first();
-                            if (userConfig == null) {
-                                userConfig = new UserConfig(account.getUser());
-                                Database.getDatabase().userConfig.insertOne(userConfig);
-                            }
+                        UserConfig userConfig = Database.getDatabase().userConfig
+                            .find(Filters.eq("user", account.getUser())).first();
+                        if (userConfig == null) {
+                            userConfig = new UserConfig(account.getUser());
+                            Database.getDatabase().userConfig.insertOne(userConfig);
+                        }
 
-                            UserConfig.TaxMessageType taxMessageType = userConfig.getTaxMessageType();
-                            if (taxMessageType != UserConfig.TaxMessageType.OFF) {
-                                user.openPrivateChannel()
-                                        .flatMap(channel -> channel.sendMessageFormat(
-                                                        "You were taxed %s for the end of the day in %s!",
-                                                        StringUtils.numberFormat(amountBigInteger, guildData),
-                                                        guild.getName())
-                                                .setSuppressedNotifications(taxMessageType == UserConfig.TaxMessageType.SILENT))
-                                        .queue();
-                            }
-                        });
+                        UserConfig.TaxMessageType taxMessageType = userConfig.getTaxMessageType();
+                        if (taxMessageType != UserConfig.TaxMessageType.OFF) {
+                            user.openPrivateChannel()
+                                .flatMap(channel -> channel.sendMessageFormat(
+                                    "You were taxed %s for the end of the day in %s!",
+                                    StringUtils.numberFormat(amountBigInteger, guildData),
+                                    guild.getName())
+                                    .setSuppressedNotifications(taxMessageType == UserConfig.TaxMessageType.SILENT))
+                                .queue();
+                        }
+                    });
 
                 guildData.setEndOfDayIncomeTax(endOfDayIncomeTaxes);
                 Database.getDatabase().guildData.updateOne(Filters.eq("guild", guildId),
-                        Updates.set("endOfDayIncomeTax", endOfDayIncomeTaxes));
+                    Updates.set("endOfDayIncomeTax", endOfDayIncomeTaxes));
             }
         }, 12, 0));
     }
 
     public static void updateAccount(Economy account) {
         Database.getDatabase().economy.replaceOne(
-                Filters.and(
-                        Filters.eq("guild", account.getGuild()),
-                        Filters.eq("user", account.getUser())),
-                account);
+            Filters.and(
+                Filters.eq("guild", account.getGuild()),
+                Filters.eq("user", account.getUser())),
+            account);
     }
 
     public static boolean hasJob(Economy account) {
@@ -235,7 +238,8 @@ public class EconomyManager {
     }
 
     public static long work(Economy account) {
-        if (isOnWorkCooldown(account)) return 0;
+        if (isOnWorkCooldown(account))
+            return 0;
 
         long amount = getPayAmount(account);
         long earned = Math.max(10, amount);
@@ -262,11 +266,12 @@ public class EconomyManager {
         updateAccount(account);
 
         Map<String, Long> endOfDayIncome = data.getEndOfDayIncomeTax();
-        long newAmount = (long) (endOfDayIncome.getOrDefault(String.valueOf(account.getUser()), 0L) + earned * data.getIncomeTax());
+        long newAmount = (long) (endOfDayIncome.getOrDefault(String.valueOf(account.getUser()), 0L)
+            + earned * data.getIncomeTax());
         endOfDayIncome.put(String.valueOf(account.getUser()), newAmount);
         data.setEndOfDayIncomeTax(endOfDayIncome);
         Database.getDatabase().guildData.updateOne(Filters.eq("guild", account.getGuild()),
-                Updates.set("endOfDayIncomeTax", endOfDayIncome));
+            Updates.set("endOfDayIncomeTax", endOfDayIncome));
 
         return amount;
     }
@@ -287,15 +292,15 @@ public class EconomyManager {
     public static void promoteJob(Economy account) {
         account.setJobLevel(account.getJobLevel() + 1);
         QuestManager.INSTANCE.recordEconomyAction(
-                account.getGuild(),
-                account.getUser(),
-                QuestManager.ECONOMY_JOB_PROMOTION,
-                UUID.randomUUID().toString()
-        );
+            account.getGuild(),
+            account.getUser(),
+            QuestManager.ECONOMY_JOB_PROMOTION,
+            UUID.randomUUID().toString());
     }
 
     public static boolean registerJob(Economy account, String job) {
-        if (hasJob(account)) return false;
+        if (hasJob(account))
+            return false;
 
         Economy.Job found;
         try {
@@ -325,10 +330,10 @@ public class EconomyManager {
         builder.addField("Level", String.valueOf(account.getJobLevel()), false);
         builder.addField("Salary", String.format("$%d", Math.max(10, getPayAmount(account))), false);
         builder.addField("Promotion Multiplier", String.format("x%.2f (base x%.2f)",
-                getEffectivePromotionMultiplier(account),
-                account.getJob().getPromotionMultiplier()), false);
+            getEffectivePromotionMultiplier(account),
+            account.getJob().getPromotionMultiplier()), false);
         builder.addField("Work Cooldown", String.format("%d seconds", account.getJob().getWorkCooldownSeconds()),
-                false);
+            false);
         builder.addField("Next Work", TimeFormat.RELATIVE.format(account.getNextWork()), false);
 
         return builder;
@@ -373,11 +378,11 @@ public class EconomyManager {
 
     public static Loan addLoan(Economy account, BigInteger amount) {
         var loan = new Loan(
-                UUID.randomUUID().toString(),
-                amount,
-                getInterestRate(amount),
-                System.currentTimeMillis(),
-                System.currentTimeMillis() + getTimeToPayOff(amount));
+            UUID.randomUUID().toString(),
+            amount,
+            getInterestRate(amount),
+            System.currentTimeMillis(),
+            System.currentTimeMillis() + getTimeToPayOff(amount));
         account.getLoans().add(loan);
         account.setNextLoan(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
 
@@ -406,8 +411,9 @@ public class EconomyManager {
     }
 
     public static BigDecimal getInterestRate(BigInteger amount) {
-        BigDecimal half = new BigDecimal("0.5");
-        if (amount.compareTo(BigInteger.valueOf(5000)) < 0) return half;
+        var half = new BigDecimal("0.5");
+        if (amount.compareTo(BigInteger.valueOf(5000)) < 0)
+            return half;
 
         return new BigDecimal(amount).scaleByPowerOfTen(-4).add(half);
     }

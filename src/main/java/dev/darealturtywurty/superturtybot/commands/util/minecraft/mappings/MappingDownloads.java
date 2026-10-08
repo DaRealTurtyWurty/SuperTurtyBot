@@ -19,9 +19,9 @@ import java.util.HexFormat;
 
 public final class MappingDownloads {
     private static final HttpClient CLIENT = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
+        .connectTimeout(Duration.ofSeconds(10))
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .build();
 
     private MappingDownloads() {
     }
@@ -32,9 +32,9 @@ public final class MappingDownloads {
 
     public static byte[] download(String url) throws IOException {
         var request = HttpRequest.newBuilder(URI.create(url))
-                .timeout(Duration.ofSeconds(45))
-                .GET()
-                .build();
+            .timeout(Duration.ofSeconds(45))
+            .GET()
+            .build();
         try {
             var response = CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() != 200)

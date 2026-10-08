@@ -23,7 +23,7 @@ public class InternetRulesCommand extends CoreCommand {
 
     static {
         new Thread(() -> {
-            try(final InputStream stream = TurtyBot.loadResource("rules_of_the_internet.txt")) {
+            try (final InputStream stream = TurtyBot.loadResource("rules_of_the_internet.txt")) {
                 if (stream == null)
                     throw new IllegalStateException("Could not find rules_of_the_internet.txt!");
 
@@ -80,7 +80,7 @@ public class InternetRulesCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final int number = event.getOption("rule_number", 0, OptionMapping::getAsInt);
-        if(number < 1 || number > RULES.size()) {
+        if (number < 1 || number > RULES.size()) {
             reply(event, "❌ You must supply a rule number between 1 and " + RULES.size() + "!", false, true);
             return;
         }

@@ -71,8 +71,9 @@ public class PeriodicTableCommand extends CoreCommand {
         final String urlStr = ENDPOINT.formatted(element);
         try {
             final URLConnection connection = new URI(urlStr).toURL().openConnection();
-            final JsonElement jsonElem = Constants.GSON.fromJson(IOUtils.toString(connection.getInputStream(), StandardCharsets.ISO_8859_1), JsonElement.class);
-            if(jsonElem.isJsonPrimitive()) {
+            final JsonElement jsonElem = Constants.GSON.fromJson(
+                IOUtils.toString(connection.getInputStream(), StandardCharsets.ISO_8859_1), JsonElement.class);
+            if (jsonElem.isJsonPrimitive()) {
                 reply(event, "❌ Element not found!", false, true);
                 return;
             }

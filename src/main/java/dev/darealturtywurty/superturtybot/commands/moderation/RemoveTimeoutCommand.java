@@ -77,20 +77,26 @@ public class RemoveTimeoutCommand extends CoreCommand {
             return;
         }
 
-        if (event.getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS) && event.getMember().canInteract(member)) {
+        if (event.getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
+            && event.getMember().canInteract(member)) {
             member.getUser().openPrivateChannel().queue(
-                    channel -> channel.sendMessage("✅ Your timeout on `" + event.getGuild().getName() + "` has been removed!").queue(
-                            success -> {}, error -> {}));
+                channel -> channel
+                    .sendMessage("✅ Your timeout on `" + event.getGuild().getName() + "` has been removed!").queue(
+                        success -> {
+                        }, error -> {
+                        }));
 
             event.getGuild().removeTimeout(member).queue(success -> {
                 reply(event, "✅ Successfully removed timeout from " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                 if (Boolean.TRUE.equals(logging.getKey())) {
-                    BanCommand.log(logging.getValue(), event.getMember().getAsMention() + " has removed the time-out from " + member.getAsMention() + "!", true);
+                    BanCommand.log(logging.getValue(), event.getMember().getAsMention()
+                        + " has removed the time-out from " + member.getAsMention() + "!", true);
                 }
             }, error -> {
                 if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                    reply(event, "❌ I do not have permission to remove a timeout from " + member.getAsMention(), false, true);
+                    reply(event, "❌ I do not have permission to remove a timeout from " + member.getAsMention(), false,
+                        true);
                 } else {
                     final var embed = new EmbedBuilder();
                     embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
@@ -101,7 +107,8 @@ public class RemoveTimeoutCommand extends CoreCommand {
                 }
             });
         } else {
-            reply(event, "❌ You do not have permission to remove the timeout from " + member.getAsMention(), false, true);
+            reply(event, "❌ You do not have permission to remove the timeout from " + member.getAsMention(), false,
+                true);
         }
     }
 }

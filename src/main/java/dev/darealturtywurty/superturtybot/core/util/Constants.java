@@ -23,7 +23,7 @@ public final class Constants {
     static {
         ShutdownHooks.register(() -> ShutdownHooks.shutdownOkHttpClient(HTTP_CLIENT));
     }
-    
+
     private Constants() {
         throw new IllegalAccessError("Attempted to construct utility class!");
     }

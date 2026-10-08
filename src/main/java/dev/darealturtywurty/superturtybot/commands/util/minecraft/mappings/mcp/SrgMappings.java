@@ -19,7 +19,9 @@ public final class SrgMappings {
 
     public static MemoryMappingTree load(String version) throws IOException {
         var builds = ForgeMaven.versions("mcp_config");
-        String build = builds.contains(version) ? version : builds.stream()
+        String build = builds.contains(version)
+            ? version
+            : builds.stream()
                 .filter(candidate -> candidate.startsWith(version + "-"))
                 .max(Comparator.naturalOrder())
                 .orElse(null);
@@ -28,8 +30,8 @@ public final class SrgMappings {
             throw new IllegalArgumentException("SRG mappings are not available for Minecraft " + version + ".");
 
         Path archive = legacy
-                ? ForgeMaven.download("mcp", version, "-srg", Path.of("versions", version))
-                : ForgeMaven.download("mcp_config", build, "", Path.of("versions", version));
+            ? ForgeMaven.download("mcp", version, "-srg", Path.of("versions", version))
+            : ForgeMaven.download("mcp_config", build, "", Path.of("versions", version));
         var tree = new MemoryMappingTree(true);
         try (var zip = new ZipFile(archive.toFile())) {
             var entry = zip.getEntry(legacy ? "joined.srg" : "config/joined.tsrg");
@@ -41,7 +43,7 @@ public final class SrgMappings {
                     SrgFileReader.read(reader, "official", "srg", tree);
                 } else {
                     TsrgFileReader.read(reader, "official", "srg",
-                            new MappingNsRenamer(tree, Map.of("obf", "official")));
+                        new MappingNsRenamer(tree, Map.of("obf", "official")));
                 }
             }
         }

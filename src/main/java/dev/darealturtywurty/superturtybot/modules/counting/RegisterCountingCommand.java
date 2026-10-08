@@ -33,7 +33,7 @@ public class RegisterCountingCommand extends CoreCommand {
                 .addChoice("hexadecimal", "hexadecimal").addChoice("base36", "base36").addChoice("squares", "squares"),
             new OptionData(OptionType.BOOLEAN, "unregister", "Whether or not to unregister this channel", false));
     }
-    
+
     @Override
     public String getAccess() {
         return "Server Owner";
@@ -43,7 +43,7 @@ public class RegisterCountingCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Registers a counting channel";
@@ -82,7 +82,7 @@ public class RegisterCountingCommand extends CoreCommand {
         }
 
         GuildChannelUnion rawChannel = event.getOption("channel", OptionMapping::getAsChannel);
-        if(rawChannel == null || rawChannel.getType() != ChannelType.TEXT) {
+        if (rawChannel == null || rawChannel.getType() != ChannelType.TEXT) {
             reply(event, "❌ You must supply a valid text channel!", false, true);
             return;
         }

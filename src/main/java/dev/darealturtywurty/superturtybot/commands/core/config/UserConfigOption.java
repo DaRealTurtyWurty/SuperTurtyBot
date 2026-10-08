@@ -67,7 +67,7 @@ public class UserConfigOption implements Registerable {
     public boolean validate(SlashCommandInteractionEvent event, String value) {
         return this.validator.test(event, value);
     }
-    
+
     public static class Builder {
         private DataType dataType = DataType.STRING;
         private BiConsumer<UserConfig, String> serializer = (config, str) -> {
@@ -75,29 +75,29 @@ public class UserConfigOption implements Registerable {
         private BiPredicate<SlashCommandInteractionEvent, String> validator = (dataType, str) -> true;
         private Function<UserConfig, Object> valueFromConfig = config -> null;
         private Function<String, List<Pair<String, String>>> autoComplete = str -> new ArrayList<>();
-        
+
         public UserConfigOption build() {
             return new UserConfigOption(this);
         }
-        
+
         public Builder dataType(@NotNull DataType dataType) {
             Checks.notNull(dataType, "dataType");
             this.dataType = dataType;
             return this;
         }
-        
+
         public Builder serializer(@NotNull BiConsumer<UserConfig, String> serializer) {
             Checks.notNull(serializer, "serializer");
             this.serializer = serializer;
             return this;
         }
-        
+
         public Builder validator(@NotNull BiPredicate<SlashCommandInteractionEvent, String> validator) {
             Checks.notNull(validator, "validator");
             this.validator = validator;
             return this;
         }
-        
+
         public Builder valueFromConfig(@NotNull Function<UserConfig, Object> valueFromConfig) {
             Checks.notNull(valueFromConfig, "valueFromConfig");
             this.valueFromConfig = valueFromConfig;

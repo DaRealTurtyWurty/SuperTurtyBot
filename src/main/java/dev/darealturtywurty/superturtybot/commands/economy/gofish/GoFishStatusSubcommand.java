@@ -29,20 +29,20 @@ public class GoFishStatusSubcommand extends GoFishSubcommand {
             return;
         }
 
-        StringJoiner playersJoiner = new StringJoiner("\n");
+        var playersJoiner = new StringJoiner("\n");
         game.getPlayerStates().forEach(player -> playersJoiner.add(
-                "<@" + player.userId() + "> - " + player.hand().size() + " cards, "
-                        + player.books().size() + " books"
-        ));
+            "<@" + player.userId() + "> - " + player.hand().size() + " cards, "
+                + player.books().size() + " books"));
 
         BigInteger pot = game.getBet().multiply(BigInteger.valueOf(game.playerCount()));
         String message = "**Go Fish Status**\n"
-                + "Started: " + (game.isStarted() ? "Yes" : "No") + "\n"
-                + "Host: <@" + game.getHostId() + ">\n"
-                + "Current turn: " + (game.isStarted() ? "<@" + game.getCurrentPlayerId() + ">" : "(not started)") + "\n"
-                + "Bet: " + StringUtils.numberFormat(game.getBet(), config) + " | Pot: " + StringUtils.numberFormat(pot, config) + "\n"
-                + "Deck: " + game.getDeck().size() + " cards\n"
-                + "**Players**\n" + playersJoiner;
+            + "Started: " + (game.isStarted() ? "Yes" : "No") + "\n"
+            + "Host: <@" + game.getHostId() + ">\n"
+            + "Current turn: " + (game.isStarted() ? "<@" + game.getCurrentPlayerId() + ">" : "(not started)") + "\n"
+            + "Bet: " + StringUtils.numberFormat(game.getBet(), config) + " | Pot: "
+            + StringUtils.numberFormat(pot, config) + "\n"
+            + "Deck: " + game.getDeck().size() + " cards\n"
+            + "**Players**\n" + playersJoiner;
 
         event.getHook().editOriginal(message).queue();
     }

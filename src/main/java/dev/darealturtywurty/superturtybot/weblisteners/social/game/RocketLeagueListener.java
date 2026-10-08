@@ -127,8 +127,13 @@ public final class RocketLeagueListener extends AbstractScrapedGameListener<Rock
     }
 
     @Override
-    protected Instant resolvePublishedAt(Document articleDocument, Element link, Element context, String title,
-                                         String listingTitle) {
+    protected Instant resolvePublishedAt(
+        Document articleDocument,
+        Element link,
+        Element context,
+        String title,
+        String listingTitle
+    ) {
         String value = NewsScraperUtils.extractMetaPublishedTime(articleDocument);
         if (!value.isBlank()) {
             Instant parsed = NewsScraperUtils.parseFlexibleInstant(value);
@@ -175,7 +180,7 @@ public final class RocketLeagueListener extends AbstractScrapedGameListener<Rock
 
         try {
             return LocalDate.parse(value, DATE_FORMATTER).atStartOfDay().toInstant(ZoneOffset.UTC);
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
             return null;
         }
     }

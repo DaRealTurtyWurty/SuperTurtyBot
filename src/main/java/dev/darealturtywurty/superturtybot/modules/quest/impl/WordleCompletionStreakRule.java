@@ -7,7 +7,8 @@ import dev.darealturtywurty.superturtybot.modules.quest.QuestStatus;
 import java.time.LocalDate;
 
 public final class WordleCompletionStreakRule
-        implements QuestRule<WordleCompletionStreakConfig, WordleCompletionStreakState> {
+    implements
+        QuestRule<WordleCompletionStreakConfig, WordleCompletionStreakState> {
     @Override
     public WordleCompletionStreakState createState() {
         return new WordleCompletionStreakState();
@@ -28,8 +29,8 @@ public final class WordleCompletionStreakRule
 
         for (LocalDate date : state.completedDays.stream().sorted().toList()) {
             currentStreak = previous != null && date.equals(previous.plusDays(1))
-                    ? currentStreak + 1
-                    : 1;
+                ? currentStreak + 1
+                : 1;
             bestStreak = Math.max(bestStreak, currentStreak);
             previous = date;
         }

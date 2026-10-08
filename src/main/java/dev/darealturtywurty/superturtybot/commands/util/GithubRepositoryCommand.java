@@ -94,29 +94,31 @@ public class GithubRepositoryCommand extends CoreCommand {
         event.deferReply().queue();
 
         // https://github.com/owner/repository.git?...
-        if(rawOption.matches("https://github\\.com/[^/]+/[^/]+")) {
+        if (rawOption.matches("https://github\\.com/[^/]+/[^/]+")) {
             String[] split = rawOption.split("/");
             rawOption = split[split.length - 1];
 
             // remove ?... from the end
-            if(rawOption.contains("?")) {
+            if (rawOption.contains("?")) {
                 rawOption = rawOption.substring(0, rawOption.indexOf("?"));
             }
 
             // remove .git from the end
-            if(rawOption.endsWith(".git")) {
+            if (rawOption.endsWith(".git")) {
                 rawOption = rawOption.substring(0, rawOption.indexOf(".git"));
             }
 
             String owner = split[split.length - 2];
             String name = split[split.length - 1];
 
-            @NotNull Repository repo;
+            @NotNull
+            Repository repo;
             try {
                 repo = findRepo(owner, name);
             } catch (final IOException | URISyntaxException exception) {
-                event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + rawOption + "`!")
-                        .mentionRepliedUser(false).queue();
+                event.getHook()
+                    .editOriginal("❌ I could not find any repositories matching the name: `" + rawOption + "`!")
+                    .mentionRepliedUser(false).queue();
                 return;
             }
 
@@ -131,15 +133,17 @@ public class GithubRepositoryCommand extends CoreCommand {
         try {
             repositories = searchGithubRepo(repositoryName);
         } catch (final IOException | URISyntaxException exception) {
-            event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
+            event.getHook()
+                .editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
                 .mentionRepliedUser(false).queue();
             Constants.LOGGER.error("Failed to search for repositories!", exception);
             return;
         }
 
         if (repositories.isEmpty()) {
-            event.getHook().editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
-                    .mentionRepliedUser(false).queue();
+            event.getHook()
+                .editOriginal("❌ I could not find any repositories matching the name: `" + repositoryName + "`!")
+                .mentionRepliedUser(false).queue();
             return;
         }
 
@@ -151,41 +155,45 @@ public class GithubRepositoryCommand extends CoreCommand {
 
         var contentsBuilder = new PaginatedEmbed.ContentsBuilder();
         for (final Repository repo : repositories) {
-            String description = repo.description().substring(0, Math.min(repo.description().length(), MessageEmbed.VALUE_MAX_LENGTH));
+            String description = repo.description().substring(0,
+                Math.min(repo.description().length(), MessageEmbed.VALUE_MAX_LENGTH));
             contentsBuilder.field(repo.name() + " - " + repo.url(), description, false);
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contentsBuilder)
-                .title("GitHub Repositories")
-                .description("Here are the repositories I found matching the search term: `" + repositoryName + "`")
-                .color(Color.BLUE)
-                .timestamp(Instant.now())
-                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                .authorOnly(event.getUser().getIdLong())
-                .build(event.getJDA());
+            .title("GitHub Repositories")
+            .description("Here are the repositories I found matching the search term: `" + repositoryName + "`")
+            .color(Color.BLUE)
+            .timestamp(Instant.now())
+            .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+            .authorOnly(event.getUser().getIdLong())
+            .build(event.getJDA());
 
         embed.send(event.getHook(),
-                () -> event.getHook().editOriginal("I found " + repositories.size() + " repositories matching the search term: `" + repositoryName + "`!")
-                        .mentionRepliedUser(false)
-                        .queue()
-        );
+            () -> event.getHook()
+                .editOriginal("I found " + repositories.size() + " repositories matching the search term: `"
+                    + repositoryName + "`!")
+                .mentionRepliedUser(false)
+                .queue());
 
         embed.setOnMessageUpdate(message -> {
             List<MessageTopLevelComponent> components = new ArrayList<>(message.getComponents());
 
             // get a list of the current page's fields
-            List<Repository> currentRepos = repositories.subList(embed.getPage() * 10, Math.min(repositories.size(), (embed.getPage() + 1) * 10));
+            List<Repository> currentRepos = repositories.subList(embed.getPage() * 10,
+                Math.min(repositories.size(), (embed.getPage() + 1) * 10));
 
-            //noinspection DataFlowIssue
+            // noinspection DataFlowIssue
             var menu = StringSelectMenu.create("github-%d-%d-%d-%d".formatted(
-                            event.isFromGuild() ? event.getGuild().getIdLong() : 0,
-                            event.getChannel().getIdLong(),
-                            message.getIdLong(),
-                            event.getUser().getIdLong()))
-                    .setPlaceholder("Select a Repository")
-                    .addOptions(currentRepos.stream().map(repo -> SelectOption.of(repo.name(), repo.authorName() + "::" + repo.name())).toList())
-                    .setRequiredRange(1, 1)
-                    .build();
+                event.isFromGuild() ? event.getGuild().getIdLong() : 0,
+                event.getChannel().getIdLong(),
+                message.getIdLong(),
+                event.getUser().getIdLong()))
+                .setPlaceholder("Select a Repository")
+                .addOptions(currentRepos.stream()
+                    .map(repo -> SelectOption.of(repo.name(), repo.authorName() + "::" + repo.name())).toList())
+                .setRequiredRange(1, 1)
+                .build();
 
             components.add(ActionRow.of(menu));
             message.editMessageComponents(components).queue();
@@ -198,7 +206,8 @@ public class GithubRepositoryCommand extends CoreCommand {
         String[] split = id.split("-");
 
         String type = split[0];
-        if (!type.equals("github-")) return;
+        if (!type.equals("github-"))
+            return;
 
         long guildId = Long.parseLong(split[1]);
         long channelId = Long.parseLong(split[2]);
@@ -206,11 +215,15 @@ public class GithubRepositoryCommand extends CoreCommand {
         long userId = Long.parseLong(split[4]);
 
         Guild guild = event.getGuild();
-        if (guildId == 0 && guild != null) return;
-        else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
-        else if(event.getChannel().getIdLong() != channelId) return;
-        else if(event.getMessageIdLong() != messageId) return;
-        else if(event.getUser().getIdLong() != userId) {
+        if (guildId == 0 && guild != null)
+            return;
+        else if (guildId != 0 && guild != null && guild.getIdLong() != guildId)
+            return;
+        else if (event.getChannel().getIdLong() != channelId)
+            return;
+        else if (event.getMessageIdLong() != messageId)
+            return;
+        else if (event.getUser().getIdLong() != userId) {
             event.deferEdit().queue();
             return;
         }
@@ -310,7 +323,8 @@ public class GithubRepositoryCommand extends CoreCommand {
 
     private static Color languageToColor(final String language) {
         try {
-            final URLConnection urlc = new URI("https://raw.githubusercontent.com/ozh/github-colors/master/colors.json").toURL()
+            final URLConnection urlc = new URI("https://raw.githubusercontent.com/ozh/github-colors/master/colors.json")
+                .toURL()
                 .openConnection();
             urlc.addRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
@@ -361,9 +375,26 @@ public class GithubRepositoryCommand extends CoreCommand {
         return getDetails(Constants.GSON.fromJson(result, JsonObject.class));
     }
 
-    private record Repository(String name, String authorName, String url, String description, String language,
-        String defaultBranch, String creationDate, String lastUpdated, License license, int stars, int forks,
-        int watchers, int subscribers, int openIssueCount, int estimateSize, boolean isFork, boolean archived, boolean disabled) {
+    private record Repository(
+        String name,
+        String authorName,
+        String url,
+        String description,
+        String language,
+        String defaultBranch,
+        String creationDate,
+        String lastUpdated,
+        License license,
+        int stars,
+        int forks,
+        int watchers,
+        int subscribers,
+        int openIssueCount,
+        int estimateSize,
+        boolean isFork,
+        boolean archived,
+        boolean disabled
+    ) {
     }
 
     private record License(String key, String name) {

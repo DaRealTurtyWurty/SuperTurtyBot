@@ -49,50 +49,46 @@ public final class WarningsSettingsService {
         Guild guild = requireGuild(guildId);
         if (warningUuid == null || warningUuid.isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_uuid",
-                    "The warning UUID was missing.");
+                "The warning UUID was missing.");
 
         Warning warning = Database.getDatabase().warnings.find(Filters.and(
-                Filters.eq("guild", guildId),
-                Filters.eq("uuid", warningUuid)
-        )).first();
+            Filters.eq("guild", guildId),
+            Filters.eq("uuid", warningUuid))).first();
         if (warning == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "warning_not_found",
-                    "That warning could not be found.");
+                "That warning could not be found.");
 
         return new DashboardWarningDetailResponse(
-                toRecord(guild, warning),
-                toUserSummary(guild, warning.getUser()),
-                listWarningsForUser(guild, warning.getUser(), warningUuid)
-        );
+            toRecord(guild, warning),
+            toUserSummary(guild, warning.getUser()),
+            listWarningsForUser(guild, warning.getUser(), warningUuid));
     }
 
     public DashboardWarningHistoryResponse getUserWarnings(long guildId, long userId) {
         Guild guild = requireGuild(guildId);
         return new DashboardWarningHistoryResponse(
-                toUserSummary(guild, userId),
-                listWarningsForUser(guild, userId, null)
-        );
+            toUserSummary(guild, userId),
+            listWarningsForUser(guild, userId, null));
     }
 
     public DashboardWarningsResponse deleteWarning(long guildId, String warningUuid) {
         Guild guild = requireGuild(guildId);
         if (warningUuid == null || warningUuid.isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_uuid",
-                    "The warning UUID was missing.");
+                "The warning UUID was missing.");
 
         Warning warning = Database.getDatabase().warnings.find(Filters.and(
-                Filters.eq("guild", guildId),
-                Filters.eq("uuid", warningUuid)
-        )).first();
+            Filters.eq("guild", guildId),
+            Filters.eq("uuid", warningUuid))).first();
         if (warning == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "warning_not_found",
-                    "That warning could not be found.");
+                "That warning could not be found.");
 
         var warnedUser = this.jda.getUserById(warning.getUser());
         if (warnedUser == null) {
             try {
                 warnedUser = this.jda.retrieveUserById(warning.getUser()).complete();
-            } catch (Exception ignored) {
+            } catch (Exception _) {
             }
         }
 
@@ -100,9 +96,8 @@ public final class WarningsSettingsService {
             WarnManager.removeWarn(warnedUser, guild, warningUuid, this.jda.getSelfUser());
         } else {
             Database.getDatabase().warnings.findOneAndDelete(Filters.and(
-                    Filters.eq("guild", guildId),
-                    Filters.eq("uuid", warningUuid)
-            ));
+                Filters.eq("guild", guildId),
+                Filters.eq("uuid", warningUuid)));
         }
 
         return new DashboardWarningsResponse(toSettings(GuildData.getOrCreateGuildData(guildId)), listWarnings(guild));
@@ -112,31 +107,29 @@ public final class WarningsSettingsService {
         Guild guild = this.jda.getGuildById(guildId);
         if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
+                "TurtyBot is not currently connected to that guild.");
 
         return guild;
     }
 
     private static WarningsSettingsResponse toSettings(GuildData guildData) {
         return new WarningsSettingsResponse(
-                guildData.isWarningsModeratorOnly(),
-                Math.max(0, guildData.getWarningExpiryDays()),
-                guildData.getWarningXpPercentage(),
-                guildData.getWarningEconomyPercentage(),
-                guildData.getEffectiveWarningSanctions().stream()
-                        .map(WarningsSettingsService::toPayload)
-                        .toList()
-        );
+            guildData.isWarningsModeratorOnly(),
+            Math.max(0, guildData.getWarningExpiryDays()),
+            guildData.getWarningXpPercentage(),
+            guildData.getWarningEconomyPercentage(),
+            guildData.getEffectiveWarningSanctions().stream()
+                .map(WarningsSettingsService::toPayload)
+                .toList());
     }
 
     private static WarningSanctionPayload toPayload(WarningSanctionConfig sanction) {
         return new WarningSanctionPayload(
-                sanction.getId(),
-                sanction.getType(),
-                sanction.getWarningCount(),
-                sanction.getDurationMinutes(),
-                sanction.getDeleteMessageDays()
-        );
+            sanction.getId(),
+            sanction.getType(),
+            sanction.getWarningCount(),
+            sanction.getDurationMinutes(),
+            sanction.getDeleteMessageDays());
     }
 
     private static List<WarningSanctionConfig> toSanctions(List<WarningSanctionPayload> sanctions) {
@@ -144,37 +137,36 @@ public final class WarningsSettingsService {
             return GuildData.createDefaultWarningSanctions();
 
         return sanctions.stream()
-                .map(payload -> new WarningSanctionConfig(
-                        payload.id() == null || payload.id().isBlank() ? UUID.randomUUID().toString() : payload.id(),
-                        payload.type(),
-                        payload.warningCount(),
-                        payload.durationMinutes(),
-                        payload.deleteMessageDays()
-                ))
-                .toList();
+            .map(payload -> new WarningSanctionConfig(
+                payload.id() == null || payload.id().isBlank() ? UUID.randomUUID().toString() : payload.id(),
+                payload.type(),
+                payload.warningCount(),
+                payload.durationMinutes(),
+                payload.deleteMessageDays()))
+            .toList();
     }
 
     private List<DashboardWarningRecord> listWarnings(Guild guild) {
         return Database.getDatabase().warnings.find(Filters.eq("guild", guild.getIdLong()))
-                .sort(Sorts.descending("warnedAt"))
-                .limit(100)
-                .into(new ArrayList<>())
-                .stream()
-                .map(warning -> toRecord(guild, warning))
-                .toList();
+            .sort(Sorts.descending("warnedAt"))
+            .limit(100)
+            .into(new ArrayList<>())
+            .stream()
+            .map(warning -> toRecord(guild, warning))
+            .toList();
     }
 
     private List<DashboardWarningRecord> listWarningsForUser(Guild guild, long userId, String excludeUuid) {
         var warnings = Database.getDatabase().warnings.find(Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", userId)))
-                .sort(Sorts.descending("warnedAt"))
-                .limit(100)
-                .into(new ArrayList<>())
-                .stream()
-                .filter(warning -> excludeUuid == null || !excludeUuid.equals(warning.getUuid()))
-                .map(warning -> toRecord(guild, warning))
-                .toList();
+            Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("user", userId)))
+            .sort(Sorts.descending("warnedAt"))
+            .limit(100)
+            .into(new ArrayList<>())
+            .stream()
+            .filter(warning -> excludeUuid == null || !excludeUuid.equals(warning.getUuid()))
+            .map(warning -> toRecord(guild, warning))
+            .toList();
 
         return warnings;
     }
@@ -187,18 +179,17 @@ public final class WarningsSettingsService {
         boolean active = WarnManager.isWarningActive(config, warning, System.currentTimeMillis());
 
         return new DashboardWarningRecord(
-                warning.getUuid(),
-                Long.toString(warning.getUser()),
-                warnedUser.displayName(),
-                warnedUser.avatarUrl(),
-                Long.toString(warning.getWarner()),
-                warnerUser.displayName(),
-                warnerUser.avatarUrl(),
-                warning.getReason(),
-                warning.getWarnedAt(),
-                expiresAt,
-                active
-        );
+            warning.getUuid(),
+            Long.toString(warning.getUser()),
+            warnedUser.displayName(),
+            warnedUser.avatarUrl(),
+            Long.toString(warning.getWarner()),
+            warnerUser.displayName(),
+            warnerUser.avatarUrl(),
+            warning.getReason(),
+            warning.getWarnedAt(),
+            expiresAt,
+            active);
     }
 
     private DashboardWarningUserSummary toUserSummary(Guild guild, long userId) {
@@ -208,14 +199,12 @@ public final class WarningsSettingsService {
 
     private ResolvedUser resolveUser(Guild guild, long userId) {
         Member member = guild.getMemberById(userId);
-        if (member != null) {
+        if (member != null)
             return new ResolvedUser(member.getEffectiveName(), member.getEffectiveAvatarUrl());
-        }
 
         var user = this.jda.getUserById(userId);
-        if (user != null) {
+        if (user != null)
             return new ResolvedUser(user.getName(), user.getEffectiveAvatarUrl());
-        }
 
         return new ResolvedUser("Unknown User", null);
     }
@@ -223,59 +212,59 @@ public final class WarningsSettingsService {
     private static void validateRequest(WarningsSettingsRequest request) {
         if (request == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warnings_settings",
-                    "The warnings settings payload was missing.");
+                "The warnings settings payload was missing.");
 
         if (request.warningExpiryDays() < 0 || request.warningExpiryDays() > 3650)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_expiry_days",
-                    "Warning expiry must be between 0 and 3650 days.");
+                "Warning expiry must be between 0 and 3650 days.");
 
-        if (!Float.isFinite(request.warningXpPercentage()) || request.warningXpPercentage() < 0F || request.warningXpPercentage() >= 100F)
+        if (!Float.isFinite(request.warningXpPercentage()) || request.warningXpPercentage() < 0F
+            || request.warningXpPercentage() >= 100F)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_xp_percentage",
-                    "The warning XP percentage must be between 0 and 100.");
+                "The warning XP percentage must be between 0 and 100.");
 
-        if (!Float.isFinite(request.warningEconomyPercentage()) || request.warningEconomyPercentage() < 0F || request.warningEconomyPercentage() >= 100F)
+        if (!Float.isFinite(request.warningEconomyPercentage()) || request.warningEconomyPercentage() < 0F
+            || request.warningEconomyPercentage() >= 100F)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_economy_percentage",
-                    "The warning economy percentage must be between 0 and 100.");
+                "The warning economy percentage must be between 0 and 100.");
 
         if (request.sanctions() == null || request.sanctions().isEmpty())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanctions",
-                    "At least one warning sanction must be configured.");
+                "At least one warning sanction must be configured.");
 
         if (request.sanctions().size() > 25)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "too_many_warning_sanctions",
-                    "No more than 25 warning sanctions can be configured.");
+                "No more than 25 warning sanctions can be configured.");
 
         for (WarningSanctionPayload sanction : request.sanctions()) {
             WarningSanctionAction action = WarningSanctionAction.fromKey(sanction.type());
             if (action == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_type",
-                        "One of the warning sanctions had an invalid action type.");
+                    "One of the warning sanctions had an invalid action type.");
 
             if (sanction.warningCount() <= 0 || sanction.warningCount() > 100)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_threshold",
-                        "Warning sanction thresholds must be between 1 and 100.");
+                    "Warning sanction thresholds must be between 1 and 100.");
 
             if ((action == WarningSanctionAction.TIMEOUT || action == WarningSanctionAction.TEMPBAN)
-                    && (sanction.durationMinutes() <= 0 || sanction.durationMinutes() > 40320L)) {
+                && (sanction.durationMinutes() <= 0 || sanction.durationMinutes() > 40320L))
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_duration",
-                        "Timeout and temporary ban sanctions must be between 1 minute and 28 days.");
-            }
+                    "Timeout and temporary ban sanctions must be between 1 minute and 28 days.");
 
-            if (action != WarningSanctionAction.TIMEOUT && action != WarningSanctionAction.TEMPBAN && sanction.durationMinutes() != 0L) {
+            if (action != WarningSanctionAction.TIMEOUT && action != WarningSanctionAction.TEMPBAN
+                && sanction.durationMinutes() != 0L)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_duration",
-                        "Only timeout and temporary ban sanctions can define a duration.");
-            }
+                    "Only timeout and temporary ban sanctions can define a duration.");
 
             if ((action == WarningSanctionAction.BAN || action == WarningSanctionAction.TEMPBAN)
-                    && (sanction.deleteMessageDays() < 0 || sanction.deleteMessageDays() > 7)) {
+                && (sanction.deleteMessageDays() < 0 || sanction.deleteMessageDays() > 7))
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_delete_days",
-                        "Ban and temporary ban sanctions can only delete between 0 and 7 days of messages.");
-            }
+                    "Ban and temporary ban sanctions can only delete between 0 and 7 days of messages.");
 
-            if (action != WarningSanctionAction.BAN && action != WarningSanctionAction.TEMPBAN && sanction.deleteMessageDays() != 0) {
+            if (action != WarningSanctionAction.BAN && action != WarningSanctionAction.TEMPBAN
+                && sanction.deleteMessageDays() != 0)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_warning_sanction_delete_days",
-                        "Only ban and temporary ban sanctions can define deleted message days.");
-            }
+                    "Only ban and temporary ban sanctions can define deleted message days.");
         }
     }
 

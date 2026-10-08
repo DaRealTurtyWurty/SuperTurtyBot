@@ -22,18 +22,23 @@ import java.util.regex.Pattern;
 
 public final class NewsScraperUtils {
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
-    private static final Pattern ISO_TIMESTAMP_PATTERN = Pattern.compile("\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z\\b");
+    private static final Pattern ISO_TIMESTAMP_PATTERN = Pattern
+        .compile("\\b\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z\\b");
 
     private NewsScraperUtils() {
     }
 
     public static Document fetchDocument(String url, String referer, String logPrefix) throws IOException {
         return fetchDocument(url, referer, logPrefix,
-                request -> Constants.HTTP_CLIENT.newCall(request).execute());
+            request -> Constants.HTTP_CLIENT.newCall(request).execute());
     }
 
-    public static Document fetchDocument(String url, String referer, String logPrefix,
-                                         RequestExecutor requestExecutor) throws IOException {
+    public static Document fetchDocument(
+        String url,
+        String referer,
+        String logPrefix,
+        RequestExecutor requestExecutor
+    ) throws IOException {
         byte[] responseBytes = fetchBytes(url, referer, logPrefix, requestExecutor);
         if (responseBytes == null)
             return null;
@@ -43,16 +48,20 @@ public final class NewsScraperUtils {
 
     public static byte[] fetchBytes(String url, String referer, String logPrefix) throws IOException {
         return fetchBytes(url, referer, logPrefix,
-                request -> Constants.HTTP_CLIENT.newCall(request).execute());
+            request -> Constants.HTTP_CLIENT.newCall(request).execute());
     }
 
-    public static byte[] fetchBytes(String url, String referer, String logPrefix,
-                                    RequestExecutor requestExecutor) throws IOException {
+    public static byte[] fetchBytes(
+        String url,
+        String referer,
+        String logPrefix,
+        RequestExecutor requestExecutor
+    ) throws IOException {
         Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .headers(defaultHeaders(referer))
-                .build();
+            .url(url)
+            .get()
+            .headers(defaultHeaders(referer))
+            .build();
 
         try (Response response = requestExecutor.execute(request)) {
             if (!response.isSuccessful()) {
@@ -70,14 +79,15 @@ public final class NewsScraperUtils {
 
     private static Headers defaultHeaders(String referer) {
         return new Headers.Builder()
-                .add("User-Agent", USER_AGENT)
-                .add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,application/rss+xml,text/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-                .add("Accept-Language", "en-US,en;q=0.9")
-                .add("Cache-Control", "no-cache")
-                .add("Pragma", "no-cache")
-                .add("Referer", referer)
-                .add("Upgrade-Insecure-Requests", "1")
-                .build();
+            .add("User-Agent", USER_AGENT)
+            .add("Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,application/rss+xml,text/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+            .add("Accept-Language", "en-US,en;q=0.9")
+            .add("Cache-Control", "no-cache")
+            .add("Pragma", "no-cache")
+            .add("Referer", referer)
+            .add("Upgrade-Insecure-Requests", "1")
+            .build();
     }
 
     public static String extractArticleTitle(Document document) {
@@ -171,9 +181,9 @@ public final class NewsScraperUtils {
             return "";
 
         for (String selector : List.of(
-                "meta[property=og:description]",
-                "meta[name=description]",
-                "meta[name=twitter:description]")) {
+            "meta[property=og:description]",
+            "meta[name=description]",
+            "meta[name=twitter:description]")) {
             Element element = document.selectFirst(selector);
             if (element == null)
                 continue;
@@ -191,10 +201,10 @@ public final class NewsScraperUtils {
             return "";
 
         for (String selector : List.of(
-                "meta[property=og:image]",
-                "meta[name=twitter:image]",
-                "meta[name=twitter:image:src]",
-                "link[rel=image_src]")) {
+            "meta[property=og:image]",
+            "meta[name=twitter:image]",
+            "meta[name=twitter:image:src]",
+            "link[rel=image_src]")) {
             Element element = document.selectFirst(selector);
             if (element == null)
                 continue;
@@ -219,16 +229,18 @@ public final class NewsScraperUtils {
             return "";
 
         for (String selector : List.of(
-                "meta[property=article:published_time]",
-                "meta[name=article:published_time]",
-                "meta[property=og:published_time]",
-                "meta[name=publish-date]",
-                "time[datetime]")) {
+            "meta[property=article:published_time]",
+            "meta[name=article:published_time]",
+            "meta[property=og:published_time]",
+            "meta[name=publish-date]",
+            "time[datetime]")) {
             Element element = document.selectFirst(selector);
             if (element == null)
                 continue;
 
-            String value = element.hasAttr("content") ? element.attr("content").trim() : element.attr("datetime").trim();
+            String value = element.hasAttr("content")
+                ? element.attr("content").trim()
+                : element.attr("datetime").trim();
             if (!value.isBlank())
                 return value;
         }
@@ -271,22 +283,22 @@ public final class NewsScraperUtils {
 
         try {
             return Instant.parse(value);
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
         }
 
         try {
             return OffsetDateTime.parse(value).toInstant();
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
         }
 
         try {
             return ZonedDateTime.parse(value).toInstant();
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
         }
 
         try {
             return LocalDate.parse(value).atStartOfDay().toInstant(ZoneOffset.UTC);
-        } catch (DateTimeParseException ignored) {
+        } catch (DateTimeParseException _) {
         }
 
         return null;
@@ -341,9 +353,8 @@ public final class NewsScraperUtils {
     public static Element findContext(Element link) {
         Element current = link;
         for (int depth = 0; depth < 6 && current != null; depth++) {
-            if (!extractImageUrl(current).isBlank() || hasHeading(current)) {
+            if (!extractImageUrl(current).isBlank() || hasHeading(current))
                 return current;
-            }
 
             current = current.parent();
         }

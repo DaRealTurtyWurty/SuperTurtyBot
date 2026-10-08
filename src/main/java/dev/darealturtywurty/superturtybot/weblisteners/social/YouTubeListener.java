@@ -67,12 +67,11 @@ public class YouTubeListener {
         IS_RUNNING.set(true);
 
         Bson notifierFilter = Filters.and(
-                Filters.exists("youtubeChannel", true),
-                Filters.ne("youtubeChannel", ""),
-                Filters.exists("channel", true),
-                Filters.ne("channel", 0L),
-                Filters.exists("guild", true)
-        );
+            Filters.exists("youtubeChannel", true),
+            Filters.ne("youtubeChannel", ""),
+            Filters.exists("channel", true),
+            Filters.ne("channel", 0L),
+            Filters.exists("guild", true));
         EXECUTOR.scheduleAtFixedRate(() -> {
             Map<String, List<YoutubeNotifier>> channelMap = new HashMap<>();
             for (YoutubeNotifier notifier : Database.getDatabase().youtubeNotifier.find(notifierFilter)) {
@@ -90,7 +89,7 @@ public class YouTubeListener {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException exception) {
                         logFetchFailure(channelId, "request:" + exception.getClass().getName(),
-                                () -> Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception));
+                            () -> Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception));
                     }
 
                     @Override
@@ -98,8 +97,8 @@ public class YouTubeListener {
                         try (ResponseBody body = response.body()) {
                             if (!response.isSuccessful()) {
                                 logFetchFailure(channelId, "status:" + response.code(),
-                                        () -> Constants.LOGGER.error("Failed response from channel '{}' (status {})",
-                                                channelId, response.code()));
+                                    () -> Constants.LOGGER.error("Failed response from channel '{}' (status {})",
+                                        channelId, response.code()));
                                 return;
                             }
 
@@ -107,7 +106,8 @@ public class YouTubeListener {
 
                             if (body == null) {
                                 logFetchFailure(channelId, "empty-body",
-                                        () -> Constants.LOGGER.error("Failed response from channel '{}' (empty body)", channelId));
+                                    () -> Constants.LOGGER.error("Failed response from channel '{}' (empty body)",
+                                        channelId));
                                 return;
                             }
 
@@ -138,8 +138,8 @@ public class YouTubeListener {
                                     notifier.setChannel(0L);
                                     final Bson filter = getFilter(guild.getIdLong());
                                     Database.getDatabase().youtubeNotifier.updateOne(
-                                            Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                            Updates.set("channel", 0L));
+                                        Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
+                                        Updates.set("channel", 0L));
                                     continue;
                                 }
 
@@ -149,32 +149,33 @@ public class YouTubeListener {
 
                                         final Bson filter = getFilter(guild.getIdLong());
                                         Database.getDatabase().youtubeNotifier.updateOne(
-                                                Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                                Updates.set("storedVideos", notifier.getStoredVideos()));
+                                            Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
+                                            Updates.set("storedVideos", notifier.getStoredVideos()));
 
                                         VideoDetails details = videoDetailsMap.getOrDefault(video.videoId(),
-                                                VideoDetails.unknown());
+                                            VideoDetails.unknown());
                                         var embed = new EmbedBuilder()
-                                                .setTitle(video.title(), video.url())
-                                                .setDescription(video.description())
-                                                .setImage(video.thumbnailUrl())
-                                                .addField("Channel",
-                                                        "[" + video.channel().name() + "](" + video.channel().url() + ")",
-                                                        true)
-                                                .addField("Type", details.type().label(), true)
-                                                .addField("Published At", formatDiscordTimestamp(video.publishedAt()), true)
-                                                .setFooter("YouTube Video ID: " + video.videoId())
-                                                .setTimestamp(Instant.now());
-                                        String message = buildNotificationMessage(notifier.getMention(), video, details);
+                                            .setTitle(video.title(), video.url())
+                                            .setDescription(video.description())
+                                            .setImage(video.thumbnailUrl())
+                                            .addField("Channel",
+                                                "[" + video.channel().name() + "](" + video.channel().url() + ")",
+                                                true)
+                                            .addField("Type", details.type().label(), true)
+                                            .addField("Published At", formatDiscordTimestamp(video.publishedAt()), true)
+                                            .setFooter("YouTube Video ID: " + video.videoId())
+                                            .setTimestamp(Instant.now());
+                                        String message = buildNotificationMessage(notifier.getMention(), video,
+                                            details);
                                         channel.sendMessage(message)
-                                                .setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
-                                                .setEmbeds(embed.build()).queue();
+                                            .setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
+                                            .setEmbeds(embed.build()).queue();
                                     }
                                 }
                             }
                         } catch (final Exception exception) {
                             Constants.LOGGER.error("Failed to process YouTube notifier response for '{}'", channelId,
-                                    exception);
+                                exception);
                         }
                     }
                 });
@@ -247,8 +248,8 @@ public class YouTubeListener {
         String videoId = getChildByName(entry, "yt:videoId").map(Node::getTextContent).orElse("");
         String title = getChildByName(entry, "title").map(Node::getTextContent).orElse("");
         String url = getChildByName(entry, "link")
-                .map(node -> node.getAttributes().getNamedItem("href").getTextContent())
-                .orElse("");
+            .map(node -> node.getAttributes().getNamedItem("href").getTextContent())
+            .orElse("");
 
         String channelId = getChildByName(entry, "yt:channelId").map(Node::getTextContent).orElse("");
         Node authorNode = getChildByName(entry, "author").orElse(null);
@@ -258,15 +259,15 @@ public class YouTubeListener {
 
         Optional<Node> mediaGroup = getChildByName(entry, "media:group");
         String thumbnailUrl = mediaGroup.flatMap(group -> getChildByName(group, "media:thumbnail"))
-                .map(node -> node.getAttributes().getNamedItem("url").getTextContent())
-                .orElse("");
+            .map(node -> node.getAttributes().getNamedItem("url").getTextContent())
+            .orElse("");
         String description = mediaGroup.flatMap(group -> getChildByName(group, "media:description"))
-                .map(Node::getTextContent)
-                .orElse("");
+            .map(Node::getTextContent)
+            .orElse("");
 
         Video.MediaStatistics mediaStatistics = parseMediaStatistics(entry).orElse(new Video.MediaStatistics(0, 0));
         return new Video(id, videoId, title, url, channel, publishedAt, updatedAt,
-                thumbnailUrl, description, mediaStatistics);
+            thumbnailUrl, description, mediaStatistics);
     }
 
     private static Optional<Video.MediaStatistics> parseMediaStatistics(Node entry) {
@@ -277,38 +278,38 @@ public class YouTubeListener {
         Optional<Node> communityOpt = getChildByName(group.get(), "media:community");
 
         int likes = communityOpt.flatMap(community -> getChildByName(community, "media:starRating"))
-                .map(node -> {
-                    String countStr = node.getAttributes().getNamedItem("count").getTextContent();
-                    try {
-                        return Integer.parseInt(countStr);
-                    } catch (NumberFormatException ignored) {
-                        return 0;
-                    }
-                })
-                .orElse(0);
+            .map(node -> {
+                String countStr = node.getAttributes().getNamedItem("count").getTextContent();
+                try {
+                    return Integer.parseInt(countStr);
+                } catch (NumberFormatException _) {
+                    return 0;
+                }
+            })
+            .orElse(0);
         int views = communityOpt.flatMap(community -> getChildByName(community, "media:statistics"))
-                .map(node -> {
-                    String viewsStr = node.getAttributes().getNamedItem("views").getTextContent();
-                    try {
-                        return Integer.parseInt(viewsStr);
-                    } catch (NumberFormatException ignored) {
-                        return 0;
-                    }
-                })
-                .orElse(0);
+            .map(node -> {
+                String viewsStr = node.getAttributes().getNamedItem("views").getTextContent();
+                try {
+                    return Integer.parseInt(viewsStr);
+                } catch (NumberFormatException _) {
+                    return 0;
+                }
+            })
+            .orElse(0);
         return Optional.of(new Video.MediaStatistics(likes, views));
     }
 
     private static LocalDateTime readDateTime(Optional<String> dateTimeStr) {
         return dateTimeStr.map(str -> {
-                    try {
-                        return OffsetDateTime.parse(str).toLocalDateTime();
-                    } catch (Exception exception) {
-                        Constants.LOGGER.error("Failed to parse date time string: {}", str, exception);
-                        return LocalDateTime.MIN;
-                    }
-                })
-                .orElseGet(LocalDateTime::now);
+            try {
+                return OffsetDateTime.parse(str).toLocalDateTime();
+            } catch (Exception exception) {
+                Constants.LOGGER.error("Failed to parse date time string: {}", str, exception);
+                return LocalDateTime.MIN;
+            }
+        })
+            .orElseGet(LocalDateTime::now);
     }
 
     private static Optional<Video.Channel> parseChannel(Node authorNode, String channelId) {
@@ -346,7 +347,7 @@ public class YouTubeListener {
 
         Map<String, VideoDetails> results = new HashMap<>();
         String apiUrl = Environment.INSTANCE.youtubeVideosApiUrl()
-                .orElse("https://www.googleapis.com/youtube/v3/videos");
+            .orElse("https://www.googleapis.com/youtube/v3/videos");
 
         for (int i = 0; i < ids.size(); i += MAX_IDS_PER_REQUEST) {
             List<String> chunk = ids.subList(i, Math.min(i + MAX_IDS_PER_REQUEST, ids.size()));
@@ -357,10 +358,10 @@ public class YouTubeListener {
             }
 
             url = url.newBuilder()
-                    .addQueryParameter("part", "contentDetails,snippet,liveStreamingDetails")
-                    .addQueryParameter("id", String.join(",", chunk))
-                    .addQueryParameter("key", apiKey.get())
-                    .build();
+                .addQueryParameter("part", "contentDetails,snippet,liveStreamingDetails")
+                .addQueryParameter("id", String.join(",", chunk))
+                .addQueryParameter("key", apiKey.get())
+                .build();
 
             Request request = new Request.Builder().url(url).build();
             try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
@@ -387,18 +388,21 @@ public class YouTubeListener {
 
                     String id = item.has("id") ? item.get("id").getAsString() : "";
                     JsonObject snippet = item.has("snippet") ? item.getAsJsonObject("snippet") : null;
-                    JsonObject contentDetails = item.has("contentDetails") ? item.getAsJsonObject("contentDetails") : null;
+                    JsonObject contentDetails = item.has("contentDetails")
+                        ? item.getAsJsonObject("contentDetails")
+                        : null;
                     JsonObject liveStreamingDetails = item.has("liveStreamingDetails")
-                            ? item.getAsJsonObject("liveStreamingDetails")
-                            : null;
+                        ? item.getAsJsonObject("liveStreamingDetails")
+                        : null;
 
                     String liveContent = snippet != null && snippet.has("liveBroadcastContent")
-                            ? snippet.get("liveBroadcastContent").getAsString()
-                            : "";
+                        ? snippet.get("liveBroadcastContent").getAsString()
+                        : "";
                     String duration = contentDetails != null && contentDetails.has("duration")
-                            ? contentDetails.get("duration").getAsString()
-                            : "";
-                    String scheduledStartTime = liveStreamingDetails != null && liveStreamingDetails.has("scheduledStartTime")
+                        ? contentDetails.get("duration").getAsString()
+                        : "";
+                    String scheduledStartTime = liveStreamingDetails != null
+                        && liveStreamingDetails.has("scheduledStartTime")
                             ? liveStreamingDetails.get("scheduledStartTime").getAsString()
                             : "";
 
@@ -416,8 +420,8 @@ public class YouTubeListener {
 
     private static VideoDetails determineDetails(String liveBroadcastContent, String duration, String scheduledStart) {
         VideoStatus status = "upcoming".equalsIgnoreCase(liveBroadcastContent)
-                ? VideoStatus.SCHEDULED
-                : VideoStatus.UPLOADED;
+            ? VideoStatus.SCHEDULED
+            : VideoStatus.UPLOADED;
 
         Instant scheduledAt = null;
         if (status == VideoStatus.SCHEDULED && scheduledStart != null && !scheduledStart.isBlank()) {
@@ -444,13 +448,14 @@ public class YouTubeListener {
 
     private static String buildNotificationMessage(String mention, Video video, VideoDetails details) {
         String channelName = video.channel().name();
-        if (channelName == null || channelName.isBlank())
+        if (channelName == null || channelName.isBlank()) {
             channelName = "Unknown channel";
+        }
 
         String verb = details.status() == VideoStatus.SCHEDULED ? "scheduled" : "uploaded";
         String typeLabel = details.type() == VideoType.UNKNOWN
-                ? "video"
-                : details.type().label().toLowerCase(Locale.ROOT);
+            ? "video"
+            : details.type().label().toLowerCase(Locale.ROOT);
         String scheduledSuffix = "";
         if (details.status() == VideoStatus.SCHEDULED && details.scheduledAt() != null) {
             long epoch = details.scheduledAt().getEpochSecond();
@@ -464,9 +469,18 @@ public class YouTubeListener {
         return TimeFormat.DATE_TIME_SHORT.format(time.toInstant(ZoneOffset.UTC));
     }
 
-    private record Video(String id, String videoId, String title, String url, Channel channel,
-                         LocalDateTime publishedAt, LocalDateTime updatedAt, String thumbnailUrl, String description,
-                         MediaStatistics mediaStatistics) {
+    private record Video(
+        String id,
+        String videoId,
+        String title,
+        String url,
+        Channel channel,
+        LocalDateTime publishedAt,
+        LocalDateTime updatedAt,
+        String thumbnailUrl,
+        String description,
+        MediaStatistics mediaStatistics
+    ) {
         private record Channel(String id, String name, String url) {
         }
 

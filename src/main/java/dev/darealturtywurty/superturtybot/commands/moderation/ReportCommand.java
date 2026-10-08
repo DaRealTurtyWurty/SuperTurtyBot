@@ -21,7 +21,7 @@ public class ReportCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to report", true),
-                new OptionData(OptionType.STRING, "reason", "The reason for the report", true));
+            new OptionData(OptionType.STRING, "reason", "The reason for the report", true));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ReportCommand extends CoreCommand {
             return;
         }
 
-        if(user.isSystem()) {
+        if (user.isSystem()) {
             reply(event, "❌ You cannot report a system user!", false, true);
             return;
         }
@@ -83,15 +83,16 @@ public class ReportCommand extends CoreCommand {
         try {
             ReportManager.reportUser(event.getGuild(), user, reporter, reason);
             reply(event,
-                    "✅ Successfully reported " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720) + "`",
-                    false,
-                    true);
+                "✅ Successfully reported " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720)
+                    + "`",
+                false,
+                true);
         } catch (RuntimeException exception) {
             reply(event,
-                    "❌ Failed to report " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720)
-                            + "`: " + exception.getMessage(),
-                    false,
-                    true);
+                "❌ Failed to report " + user.getEffectiveName() + " for `" + ReportManager.truncate(reason, 1720)
+                    + "`: " + exception.getMessage(),
+                false,
+                true);
         }
     }
 

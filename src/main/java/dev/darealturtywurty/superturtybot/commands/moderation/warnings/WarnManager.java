@@ -31,21 +31,32 @@ public class WarnManager {
     private WarnManager() {
     }
 
-    public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
-                                           @NotNull String reason) {
+    public static @NotNull Warning addWarn(
+        @NotNull User toWarn,
+        @NotNull Guild guild,
+        @NotNull Member warner,
+        @NotNull String reason
+    ) {
         return addWarn(toWarn, guild, warner, reason, System.currentTimeMillis());
     }
 
-    public static @NotNull Warning addWarn(@NotNull User toWarn, @NotNull Guild guild, @NotNull Member warner,
-                                           @NotNull String reason, long time) {
+    public static @NotNull Warning addWarn(
+        @NotNull User toWarn,
+        @NotNull Guild guild,
+        @NotNull Member warner,
+        @NotNull String reason,
+        long time
+    ) {
         GuildData config = GuildData.getOrCreateGuildData(guild);
 
         float xpPercentage = config.getWarningXpPercentage();
         float economyPercentage = config.getWarningEconomyPercentage();
 
         if (xpPercentage > 0 && LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
-            Levelling profile = Database.getDatabase().levelling.find(Filters.and(Filters.eq("guild", guild.getIdLong()),
-                    Filters.eq("user", toWarn.getIdLong()))).first();
+            Levelling profile = Database.getDatabase().levelling
+                .find(Filters.and(Filters.eq("guild", guild.getIdLong()),
+                    Filters.eq("user", toWarn.getIdLong())))
+                .first();
             if (profile != null) {
                 int xp = profile.getXp();
 
@@ -62,7 +73,8 @@ public class WarnManager {
             BigInteger balance = EconomyManager.getBalance(account);
 
             // take economyPercentage% of balance
-            BigInteger toTake = new BigDecimal(balance).divide(BigDecimal.valueOf(economyPercentage), RoundingMode.DOWN).toBigInteger();
+            BigInteger toTake = new BigDecimal(balance).divide(BigDecimal.valueOf(economyPercentage), RoundingMode.DOWN)
+                .toBigInteger();
 
             EconomyManager.removeMoney(account, toTake, true);
             account.addTransaction(toTake.negate(), MoneyTransaction.WARNING);
@@ -70,19 +82,19 @@ public class WarnManager {
         }
 
         final var warn = new Warning(guild.getIdLong(), toWarn.getIdLong(), reason, warner.getIdLong(), time,
-                getWarningExpiresAt(config, time), UUID.randomUUID().toString());
+            getWarningExpiresAt(config, time), UUID.randomUUID().toString());
         Database.getDatabase().warnings.insertOne(warn);
 
         Member toWarnMember = guild.getMember(toWarn);
-        if(toWarnMember == null)
+        if (toWarnMember == null)
             return warn;
 
         Member selfMember = guild.getSelfMember();
-        if(!selfMember.canInteract(toWarnMember))
+        if (!selfMember.canInteract(toWarnMember))
             return warn;
 
         // check that self has perms to add sanctions
-        if(!selfMember.hasPermission(Permission.MANAGE_ROLES, Permission.BAN_MEMBERS, Permission.KICK_MEMBERS))
+        if (!selfMember.hasPermission(Permission.MANAGE_ROLES, Permission.BAN_MEMBERS, Permission.KICK_MEMBERS))
             return warn;
 
         WarningSanctions.applyForWarningCount(guild, toWarn, warner.getUser(), getActiveWarnCount(guild, toWarn));
@@ -106,16 +118,21 @@ public class WarnManager {
         return warnings;
     }
 
-    public static @Nullable Warning removeWarn(@NotNull User toRemoveWarn, @NotNull Guild guild, @NotNull String uuid,
-                                               @NotNull User remover) {
+    public static @Nullable Warning removeWarn(
+        @NotNull User toRemoveWarn,
+        @NotNull Guild guild,
+        @NotNull String uuid,
+        @NotNull User remover
+    ) {
         int previousWarnings = getActiveWarnCount(guild, toRemoveWarn);
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("user", toRemoveWarn.getIdLong()), Filters.eq("uuid", uuid));
+            Filters.eq("user", toRemoveWarn.getIdLong()), Filters.eq("uuid", uuid));
 
         final Warning removed = Database.getDatabase().warnings.findOneAndDelete(filter);
         if (removed != null) {
             int currentWarnings = getActiveWarnCount(guild, toRemoveWarn);
-            WarningSanctions.syncAfterWarningCountChange(guild, toRemoveWarn, remover, previousWarnings, currentWarnings);
+            WarningSanctions.syncAfterWarningCountChange(guild, toRemoveWarn, remover, previousWarnings,
+                currentWarnings);
         }
 
         return removed;
@@ -127,8 +144,8 @@ public class WarnManager {
 
     public static List<Warning> getWarningsSorted(@NotNull Guild guild, @NotNull User user) {
         return getWarns(guild, user).stream()
-                .sorted(Comparator.comparingLong(Warning::getWarnedAt))
-                .toList();
+            .sorted(Comparator.comparingLong(Warning::getWarnedAt))
+            .toList();
     }
 
     public static boolean isWarningActive(@NotNull Guild guild, @NotNull Warning warning) {
@@ -145,9 +162,8 @@ public class WarnManager {
     }
 
     public static long getWarningExpiresAt(@NotNull GuildData config, @NotNull Warning warning) {
-        if (warning.getExpiresAt() > 0) {
+        if (warning.getExpiresAt() > 0)
             return warning.getExpiresAt();
-        }
 
         return getWarningExpiresAt(config, warning.getWarnedAt());
     }
@@ -167,9 +183,8 @@ public class WarnManager {
 
     private static long getWarningExpiresAt(@NotNull GuildData config, long warnedAt) {
         int expiryDays = Math.max(0, config.getWarningExpiryDays());
-        if (expiryDays == 0) {
+        if (expiryDays == 0)
             return 0L;
-        }
 
         return warnedAt + TimeUnit.DAYS.toMillis(expiryDays);
     }

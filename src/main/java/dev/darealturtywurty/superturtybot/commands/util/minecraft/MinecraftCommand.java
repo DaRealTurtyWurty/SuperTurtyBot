@@ -129,21 +129,22 @@ public class MinecraftCommand extends CoreCommand {
         String encodedUsername = URLEncoder.encode(username.trim(), StandardCharsets.UTF_8);
         try {
             int rotation = 10;
-            String url = "https://minecraft-api.com/api/skins/%s/body/10.%d/10/json".formatted(encodedUsername, rotation);
+            String url = "https://minecraft-api.com/api/skins/%s/body/10.%d/10/json".formatted(encodedUsername,
+                rotation);
             byte[] bytes = decodeSkin(url);
 
             final var embed = new EmbedBuilder()
-                    .setTimestamp(Instant.now())
-                    .setColor(Color.BLUE)
-                    .setDescription("The skin for `" + username + "` is:")
-                    .setImage("attachment://" + encodedUsername + ".png")
-                    .build();
+                .setTimestamp(Instant.now())
+                .setColor(Color.BLUE)
+                .setDescription("The skin for `" + username + "` is:")
+                .setImage("attachment://" + encodedUsername + ".png")
+                .build();
 
             event.getHook().sendFiles(FileUpload.fromData(bytes, encodedUsername + ".png"))
-                    .addEmbeds(embed)
-                    .flatMap(msg -> msg.editMessageEmbeds(embed)
-                            .setComponents(createButtons(msg.getIdLong(), rotation)))
-                    .queue(message -> createEventWaiter(event, message).build());
+                .addEmbeds(embed)
+                .flatMap(msg -> msg.editMessageEmbeds(embed)
+                    .setComponents(createButtons(msg.getIdLong(), rotation)))
+                .queue(message -> createEventWaiter(event, message).build());
         } catch (final IllegalStateException exception) {
             Constants.LOGGER.error("Error getting skin for {}", username, exception);
             event.getHook().sendMessage("❌ This player does not exist!").queue();
@@ -152,8 +153,8 @@ public class MinecraftCommand extends CoreCommand {
 
     private static ActionRow createButtons(long messageId, int rotation) {
         return ActionRow.of(Button.primary(messageId + "-rotate-counter-clockwise-" + rotation, "↩️"),
-                Button.primary(messageId + "-dismiss", "🚮"),
-                Button.primary(messageId + "-rotate-clockwise-" + rotation, "↪️"));
+            Button.primary(messageId + "-dismiss", "🚮"),
+            Button.primary(messageId + "-rotate-clockwise-" + rotation, "↪️"));
     }
 
     private static byte[] decodeSkin(String url) {
@@ -170,32 +171,35 @@ public class MinecraftCommand extends CoreCommand {
         }
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(SlashCommandInteractionEvent event, Message message) {
+    private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(
+        SlashCommandInteractionEvent event,
+        Message message
+    ) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(btnEvent -> btnEvent.getMessageIdLong() == message.getIdLong()
-                        && btnEvent.getUser().equals(event.getUser())
-                        && btnEvent.getChannelIdLong() == event.getChannel().getIdLong()
-                        && btnEvent.getComponentId().startsWith(message.getId() + "-"))
-                .timeout(10, TimeUnit.MINUTES)
-                .timeoutAction(() -> message.delete().queue())
-                .failure(() -> message.delete().queue())
-                .success(btnEvent -> {
-                    String action = btnEvent.getComponentId().replace(message.getId() + "-", "").trim();
-                    if (action.equals("dismiss")) {
-                        message.delete().queue();
-                        return;
-                    }
+            .condition(btnEvent -> btnEvent.getMessageIdLong() == message.getIdLong()
+                && btnEvent.getUser().equals(event.getUser())
+                && btnEvent.getChannelIdLong() == event.getChannel().getIdLong()
+                && btnEvent.getComponentId().startsWith(message.getId() + "-"))
+            .timeout(10, TimeUnit.MINUTES)
+            .timeoutAction(() -> message.delete().queue())
+            .failure(() -> message.delete().queue())
+            .success(btnEvent -> {
+                String action = btnEvent.getComponentId().replace(message.getId() + "-", "").trim();
+                if (action.equals("dismiss")) {
+                    message.delete().queue();
+                    return;
+                }
 
-                    int newRotation = Integer.parseInt(action.substring(action.lastIndexOf("-") + 1));
-                    action = action.substring(0, action.lastIndexOf("-"));
+                int newRotation = Integer.parseInt(action.substring(action.lastIndexOf("-") + 1));
+                action = action.substring(0, action.lastIndexOf("-"));
 
-                    switch (action) {
-                        case "rotate-counter-clockwise" -> onRotate(btnEvent, message, newRotation - 45);
-                        case "rotate-clockwise" -> onRotate(btnEvent, message, newRotation + 45);
-                    }
+                switch (action) {
+                    case "rotate-counter-clockwise" -> onRotate(btnEvent, message, newRotation - 45);
+                    case "rotate-clockwise" -> onRotate(btnEvent, message, newRotation + 45);
+                }
 
-                    createEventWaiter(event, message).build();
-                });
+                createEventWaiter(event, message).build();
+            });
     }
 
     private static void onRotate(ButtonInteractionEvent btnEvent, Message message, int rotation) {
@@ -206,7 +210,7 @@ public class MinecraftCommand extends CoreCommand {
         }
 
         final MessageEmbed oldEmbed = message.getEmbeds().getFirst();
-        final EmbedBuilder newEmbed = new EmbedBuilder(oldEmbed);
+        final var newEmbed = new EmbedBuilder(oldEmbed);
 
         MessageEmbed.ImageInfo image = oldEmbed.getImage();
         if (image == null) {
@@ -223,25 +227,24 @@ public class MinecraftCommand extends CoreCommand {
         final String filename = newUrl.substring(newUrl.lastIndexOf("/")).replace("/", "");
         final String newUsername = filename.split(".png")[0];
         byte[] newBytes = decodeSkin("https://minecraft-api.com/api/skins/%s/body/10.%d/10/json"
-                .formatted(newUsername, rotation));
+            .formatted(newUsername, rotation));
 
         newEmbed.setImage("attachment://" + newUsername + ".png");
         btnEvent.deferEdit().setAttachments(FileUpload.fromData(newBytes, newUsername + ".png"))
-                .setEmbeds(newEmbed.build())
-                .setComponents(createButtons(message.getIdLong(), rotation))
-                .queue();
+            .setEmbeds(newEmbed.build())
+            .setComponents(createButtons(message.getIdLong(), rotation))
+            .queue();
     }
 
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("username", "Gets the Minecraft Username from a UUID.")
-                        .addOption(OptionType.STRING, "uuid", "The UUID used to get this user's name from", true),
-                new SubcommandData("uuid", "Gets the Minecraft UUID from a username.")
-                        .addOption(OptionType.STRING, "username", "The username of which to get the UUID for", true),
-                new SubcommandData("skin", "Gets the Minecraft Skin from a UUID.")
-                        .addOption(OptionType.STRING, "uuid", "The UUID used to get this user's skin from", true)
-        );
+            new SubcommandData("username", "Gets the Minecraft Username from a UUID.")
+                .addOption(OptionType.STRING, "uuid", "The UUID used to get this user's name from", true),
+            new SubcommandData("uuid", "Gets the Minecraft UUID from a username.")
+                .addOption(OptionType.STRING, "username", "The username of which to get the UUID for", true),
+            new SubcommandData("skin", "Gets the Minecraft Skin from a UUID.")
+                .addOption(OptionType.STRING, "uuid", "The UUID used to get this user's skin from", true));
     }
 
     @Override

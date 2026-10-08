@@ -104,11 +104,13 @@ public class Database {
         this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
         this.birthdays = mongoDatabase.getCollection("birthdays", Birthday.class);
         this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
-        this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight", TwoThousandFortyEightProfile.class);
+        this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight",
+            TwoThousandFortyEightProfile.class);
         this.stickyMessages = mongoDatabase.getCollection("stickyMessages", StickyMessage.class);
         this.modmailTickets = mongoDatabase.getCollection("modmailTickets", ModmailTicket.class);
         this.modmailBlockedUsers = mongoDatabase.getCollection("modmailBlockedUsers", ModmailBlockedUser.class);
-        this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks", ModmailTranscriptChunk.class);
+        this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks",
+            ModmailTranscriptChunk.class);
         this.stickyRoles = mongoDatabase.getCollection("stickyRoles", StickyRoles.class);
         this.dashboardSessions = mongoDatabase.getCollection("dashboardSessions", DashboardSession.class);
         this.questPlayers = mongoDatabase.getCollection("questPlayers", QuestPlayer.class);
@@ -155,15 +157,16 @@ public class Database {
             db.starboard.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, messageIndex, userIndex));
             db.guildData.createIndex(guildIndex);
             db.userConfig.createIndex(guildUser);
-            db.youtubeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
+            db.youtubeNotifier
+                .createIndex(Indexes.compoundIndex(guildIndex, channelIndex, Indexes.descending("youtubeChannel")));
             db.twitchNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("channel")));
             db.steamNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("appId")));
             db.steamStoreNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.redditNotifier.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("subreddit")));
             db.redditPostCache.createIndex(Indexes.compoundIndex(
-                    Indexes.descending("subreddit"),
-                    Indexes.descending("guid")),
-                    new IndexOptions().unique(true));
+                Indexes.descending("subreddit"),
+                Indexes.descending("guid")),
+                new IndexOptions().unique(true));
             db.redditPostCache.createIndex(Indexes.descending("createdAt"));
             db.minecraftNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
             db.siegeNotifier.createIndex(Indexes.compoundIndex(guildIndex, channelIndex));
@@ -181,35 +184,37 @@ public class Database {
             db.economy.createIndex(guildUser);
             db.marketplaceListings.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("createdAt")));
             db.marketplaceListings.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("seller"),
-                    Indexes.descending("item")),
-                    new IndexOptions().unique(true).partialFilterExpression(Filters.eq("type", "rental")));
+                Indexes.descending("item")),
+                new IndexOptions().unique(true).partialFilterExpression(Filters.eq("type", "rental")));
             db.chatRevivers.createIndex(guildIndex);
             db.birthdays.createIndex(userIndex);
             db.userCollectables.createIndex(userIndex);
             db.twoThousandFortyEight.createIndex(userIndex);
-            db.stickyMessages.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));
-            db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, channelIndex), new IndexOptions().unique(true));
+            db.stickyMessages.createIndex(Indexes.compoundIndex(guildIndex, channelIndex),
+                new IndexOptions().unique(true));
+            db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, channelIndex),
+                new IndexOptions().unique(true));
             db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("open")));
             db.modmailTickets.createIndex(Indexes.compoundIndex(guildIndex, Indexes.descending("ticketNumber")));
             db.modmailBlockedUsers.createIndex(guildUser, new IndexOptions().unique(true));
             db.modmailTranscriptChunks.createIndex(
-                    Indexes.compoundIndex(guildIndex, Indexes.descending("ticketChannel"), Indexes.descending("chunkIndex")),
-                    new IndexOptions().unique(true));
+                Indexes.compoundIndex(guildIndex, Indexes.descending("ticketChannel"),
+                    Indexes.descending("chunkIndex")),
+                new IndexOptions().unique(true));
             db.stickyRoles.createIndex(guildUser, new IndexOptions().unique(true));
             db.dashboardSessions.createIndex(Indexes.descending("sessionId"), new IndexOptions().unique(true));
-            db.dashboardSessions.createIndex(Indexes.descending("expiresAt"), new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
+            db.dashboardSessions.createIndex(Indexes.descending("expiresAt"),
+                new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
             db.questPlayers.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("weekStart")),
-                    new IndexOptions().unique(true));
+                new IndexOptions().unique(true));
             db.questActivities.createIndex(
-                    Indexes.compoundIndex(
-                            Indexes.ascending("guild"),
-                            Indexes.ascending("user"),
-                            Indexes.ascending("weekStart"),
-                            Indexes.ascending("type"),
-                            Indexes.ascending("sourceId")
-                    ),
-                    new IndexOptions().unique(true)
-            );
+                Indexes.compoundIndex(
+                    Indexes.ascending("guild"),
+                    Indexes.ascending("user"),
+                    Indexes.ascending("weekStart"),
+                    Indexes.ascending("type"),
+                    Indexes.ascending("sourceId")),
+                new IndexOptions().unique(true));
 
             return null;
         });
@@ -217,20 +222,18 @@ public class Database {
 
     private static CodecRegistry buildCodecRegistry() {
         final CodecRegistry pojoRegistry = CodecRegistries
-                .fromProviders(PojoCodecProvider.builder().automatic(true).build());
+            .fromProviders(PojoCodecProvider.builder().automatic(true).build());
         final CodecRegistry customCodecRegistry = CodecRegistries.fromCodecs(
-                new BigIntegerCodec(),
-                new BigDecimalCodec(),
-                new ColorCodec(),
-                new NewsitemCodec(),
-                new ReminderCodec()
-        );
+            new BigIntegerCodec(),
+            new BigDecimalCodec(),
+            new ColorCodec(),
+            new NewsitemCodec(),
+            new ReminderCodec());
 
         return CodecRegistries.fromRegistries(
-                customCodecRegistry,
-                MongoClientSettings.getDefaultCodecRegistry(),
-                pojoRegistry
-        );
+            customCodecRegistry,
+            MongoClientSettings.getDefaultCodecRegistry(),
+            pojoRegistry);
     }
 
     private static MongoClient connect(CodecRegistry codec) {
@@ -238,24 +241,23 @@ public class Database {
         if (uri.isBlank()) {
             Constants.LOGGER.error("MongoDB connection string has not been set!");
             return MongoClients.create(
-                    MongoClientSettings.builder()
-                            .codecRegistry(codec)
-                            .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
-                            .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
-                            .build()
-            );
+                MongoClientSettings.builder()
+                    .codecRegistry(codec)
+                    .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
+                    .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
+                    .build());
         }
 
         var connectionString = new ConnectionString(uri);
         var settings = MongoClientSettings.builder()
-                .applyConnectionString(connectionString)
-                .codecRegistry(codec)
-                .applicationName("TurtyBot")
-                .retryReads(true)
-                .retryWrites(true)
-                .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
-                .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
-                .build();
+            .applyConnectionString(connectionString)
+            .codecRegistry(codec)
+            .applicationName("TurtyBot")
+            .retryReads(true)
+            .retryWrites(true)
+            .applyToClusterSettings(builder -> builder.serverSelectionTimeout(15, TimeUnit.SECONDS))
+            .applyToSocketSettings(builder -> builder.readTimeout(30, TimeUnit.SECONDS))
+            .build();
 
         return MongoClients.create(settings);
     }
@@ -267,10 +269,12 @@ public class Database {
                 return callable.call();
             } catch (MongoSocketReadException | MongoTimeoutException exception) {
                 last = exception;
-                if (index == attempts) break;
+                if (index == attempts)
+                    break;
                 try {
                     Thread.sleep(backoffBase.toMillis() * index);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException _) {
+                }
             } catch (MongoException exception) {
                 throw exception;
             } catch (Exception exception) {

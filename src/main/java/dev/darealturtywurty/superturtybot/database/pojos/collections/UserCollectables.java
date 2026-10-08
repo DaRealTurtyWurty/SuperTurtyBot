@@ -19,11 +19,12 @@ public class UserCollectables {
     }
 
     public Collectables getCollectables(CollectableGameCollector<?> type) {
-        return collectables.stream().filter(collectables -> collectables.getType().equals(type.getName())).findFirst().orElseGet(() -> {
-            var collectables = new Collectables(type.getName());
-            this.collectables.add(collectables);
-            return collectables;
-        });
+        return collectables.stream().filter(collectables -> collectables.getType().equals(type.getName())).findFirst()
+            .orElseGet(() -> {
+                var collectables = new Collectables(type.getName());
+                this.collectables.add(collectables);
+                return collectables;
+            });
     }
 
     public void collect(CollectableGameCollector<?> type, Collectable collectable) {

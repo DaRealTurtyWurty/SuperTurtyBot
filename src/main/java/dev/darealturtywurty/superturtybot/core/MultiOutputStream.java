@@ -15,20 +15,23 @@ public class MultiOutputStream extends OutputStream {
 
     @Override
     public synchronized void write(int b) throws IOException {
-        for (OutputStream os : streams)
+        for (OutputStream os : streams) {
             os.write(b);
+        }
     }
 
     @Override
     public synchronized void write(byte @NotNull [] bytes, int off, int len) throws IOException {
-        for (OutputStream os : streams)
+        for (OutputStream os : streams) {
             os.write(bytes, off, len);
+        }
     }
 
     @Override
     public synchronized void flush() throws IOException {
-        for (OutputStream os : streams)
+        for (OutputStream os : streams) {
             os.flush();
+        }
     }
 
     @Override
@@ -38,8 +41,9 @@ public class MultiOutputStream extends OutputStream {
             try {
                 os.close();
             } catch (IOException exception) {
-                if (first == null)
+                if (first == null) {
                     first = exception;
+                }
             }
         }
 

@@ -28,19 +28,33 @@ public abstract class BattleshipsSubcommand extends SubcommandCommand {
 
     protected abstract void executeSubcommand(SlashCommandInteractionEvent event);
 
-    protected static WebhookMessageEditAction<Message> replyBattleships(SlashCommandInteractionEvent event, String message, boolean mention) {
+    protected static WebhookMessageEditAction<Message> replyBattleships(
+        SlashCommandInteractionEvent event,
+        String message,
+        boolean mention
+    ) {
         return event.getHook().editOriginal(message).mentionRepliedUser(mention);
     }
 
-    protected static WebhookMessageEditAction<Message> replyBattleships(SlashCommandInteractionEvent event, String message) {
+    protected static WebhookMessageEditAction<Message> replyBattleships(
+        SlashCommandInteractionEvent event,
+        String message
+    ) {
         return replyBattleships(event, message, false);
     }
 
-    protected static WebhookMessageEditAction<Message> replyBattleships(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention) {
+    protected static WebhookMessageEditAction<Message> replyBattleships(
+        SlashCommandInteractionEvent event,
+        EmbedBuilder embed,
+        boolean mention
+    ) {
         return event.getHook().editOriginalEmbeds(embed.build()).mentionRepliedUser(mention);
     }
 
-    protected static WebhookMessageEditAction<Message> replyBattleships(SlashCommandInteractionEvent event, EmbedBuilder embed) {
+    protected static WebhookMessageEditAction<Message> replyBattleships(
+        SlashCommandInteractionEvent event,
+        EmbedBuilder embed
+    ) {
         return replyBattleships(event, embed, false);
     }
 

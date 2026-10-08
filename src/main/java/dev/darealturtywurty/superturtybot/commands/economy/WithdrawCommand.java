@@ -38,19 +38,24 @@ public class WithdrawCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot withdraw money! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot withdraw money! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
-        BigInteger amount = event.getOption("amount", BigInteger.ZERO.max(account.getWallet().negate()), StringUtils.getAsBigInteger(event));
+        BigInteger amount = event.getOption("amount", BigInteger.ZERO.max(account.getWallet().negate()),
+            StringUtils.getAsBigInteger(event));
         if (amount == null) {
             event.getHook().editOriginalFormat("❌ The amount provided is not a valid number!").queue();
             return;
         }
 
         if (amount.signum() <= 0) {
-            event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency()).queue();
+            event.getHook().editOriginalFormat("❌ You must withdraw at least %s1!", config.getEconomyCurrency())
+                .queue();
             return;
         }
 
@@ -62,6 +67,6 @@ public class WithdrawCommand extends EconomyCommand {
         EconomyManager.withdraw(account, amount);
         EconomyManager.updateAccount(account);
         event.getHook().editOriginalFormat("✅ You have withdrawn %s from your bank!",
-                StringUtils.numberFormat(amount, config)).queue();
+            StringUtils.numberFormat(amount, config)).queue();
     }
 }

@@ -19,8 +19,12 @@ import java.util.Set;
 
 public record YoutubeApiClient(String apiKey, String videosApiUrl) {
 
-    private static YoutubeVideo parseVideo(String id, JsonObject snippet, JsonObject statistics,
-                                           JsonObject contentDetails) {
+    private static YoutubeVideo parseVideo(
+        String id,
+        JsonObject snippet,
+        JsonObject statistics,
+        JsonObject contentDetails
+    ) {
         String title = getAsString(snippet, "title");
         if (title == null || title.isBlank())
             return null;
@@ -95,10 +99,10 @@ public record YoutubeApiClient(String apiKey, String videosApiUrl) {
 
     public VideoFetchResult fetchVideos(List<String> videoIds) throws IOException {
         HttpUrl url = HttpUrl.parse(videosApiUrl).newBuilder()
-                .addQueryParameter("part", "snippet,statistics,contentDetails")
-                .addQueryParameter("id", String.join(",", videoIds))
-                .addQueryParameter("key", apiKey)
-                .build();
+            .addQueryParameter("part", "snippet,statistics,contentDetails")
+            .addQueryParameter("id", String.join(",", videoIds))
+            .addQueryParameter("key", apiKey)
+            .build();
 
         Request request = new Request.Builder().url(url).get().build();
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
@@ -130,8 +134,9 @@ public record YoutubeApiClient(String apiKey, String videosApiUrl) {
                     continue;
 
                 YoutubeVideo video = parseVideo(id, snippet, statistics, contentDetails);
-                if (video != null)
+                if (video != null) {
                     videos.add(video);
+                }
             }
 
             Set<String> missing = new HashSet<>(videoIds);

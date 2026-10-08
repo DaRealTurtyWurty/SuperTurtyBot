@@ -22,15 +22,13 @@ public final class MiscSettingsService {
 
     public MiscSettingsResponse updateSettings(long guildId, MiscSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
-        if (request == null) {
+        if (request == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_misc_settings",
-                    "The misc settings payload was missing.");
-        }
+                "The misc settings payload was missing.");
 
         GuildData guildData = GuildData.getOrCreateGuildData(guildId);
         guildData.setShouldCreateGists(request.isShouldCreateGists());
@@ -45,30 +43,27 @@ public final class MiscSettingsService {
 
     private static MiscSettingsResponse toResponse(GuildData guildData) {
         return new MiscSettingsResponse(
-                guildData.isShouldCreateGists(),
-                guildData.isShouldSendStartupMessage(),
-                guildData.isShouldSendChangelog(),
-                guildData.isStickyRolesEnabled(),
-                guildData.getPatronRole() == 0L ? null : Long.toString(guildData.getPatronRole())
-        );
+            guildData.isShouldCreateGists(),
+            guildData.isShouldSendStartupMessage(),
+            guildData.isShouldSendChangelog(),
+            guildData.isStickyRolesEnabled(),
+            guildData.getPatronRole() == 0L ? null : Long.toString(guildData.getPatronRole()));
     }
 
     private static long parseRoleId(Guild guild, String roleId) {
-        if (roleId == null || roleId.isBlank()) {
+        if (roleId == null || roleId.isBlank())
             return 0L;
-        }
 
         try {
             long parsed = Long.parseLong(roleId.trim());
-            if (guild.getRoleById(parsed) == null) {
+            if (guild.getRoleById(parsed) == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_patron_role",
-                        "The supplied patron role was not a valid role in this guild.");
-            }
+                    "The supplied patron role was not a valid role in this guild.");
 
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_patron_role",
-                    "The supplied patron role ID was not a valid Discord snowflake.");
+                "The supplied patron role ID was not a valid Discord snowflake.");
         }
     }
 }

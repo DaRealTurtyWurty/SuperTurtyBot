@@ -13,7 +13,7 @@ public final class GeographyAnswersRule implements QuestRule<GeographyAnswersCon
     @Override
     public void apply(GeographyAnswersConfig config, GeographyAnswersState state, QuestEvent event) {
         if (!(event instanceof QuestEvent.GeographyAnswered(String sourceId, String gameType, boolean correct))
-                || !correct)
+            || !correct)
             return;
 
         state.correctAnswerIds.add(sourceId);
@@ -34,12 +34,11 @@ public final class GeographyAnswersRule implements QuestRule<GeographyAnswersCon
             return new QuestStatus(answerProgress, config.requiredCorrectAnswers(), answersComplete);
 
         String progressText = answerProgress + "/" + config.requiredCorrectAnswers() + " answers • "
-                + typeProgress + "/" + config.requiredGameTypes() + " modes";
+            + typeProgress + "/" + config.requiredGameTypes() + " modes";
         return new QuestStatus(
-                answerProgress + typeProgress,
-                config.requiredCorrectAnswers() + config.requiredGameTypes(),
-                answersComplete && typesComplete,
-                progressText
-        );
+            answerProgress + typeProgress,
+            config.requiredCorrectAnswers() + config.requiredGameTypes(),
+            answersComplete && typesComplete,
+            progressText);
     }
 }

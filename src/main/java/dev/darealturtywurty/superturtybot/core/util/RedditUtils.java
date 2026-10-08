@@ -40,9 +40,11 @@ public final class RedditUtils {
     public static RedditClient REDDIT;
 
     static {
-        if (Environment.INSTANCE.redditClientId().isPresent() && Environment.INSTANCE.redditClientSecret().isPresent()) {
-            final var userAgent = new UserAgent("bot", "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
-            final OkHttpNetworkAdapter adapter = new OkHttpNetworkAdapter(userAgent, createHttpClient());
+        if (Environment.INSTANCE.redditClientId().isPresent()
+            && Environment.INSTANCE.redditClientSecret().isPresent()) {
+            final var userAgent = new UserAgent("bot",
+                "dev.darealturtywurty.superturtybot" + (CommandHook.isDevMode() ? ".dev" : ""), "1.0", "TurtyWurty");
+            final var adapter = new OkHttpNetworkAdapter(userAgent, createHttpClient());
             REDDIT = createRedditClient(adapter);
             if (REDDIT != null) {
                 REDDIT.setLogHttp(true);
@@ -56,7 +58,7 @@ public final class RedditUtils {
 
     public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, RootCommentNode post) {
         var embed = new EmbedBuilder();
-        String title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
+        var title = new String(Charsets.UTF_8.encode(post.getSubject().getTitle()).array());
         embed.setTitle(title.length() > 256 ? title.substring(0, 256) : title);
 
         String description = post.getSubject().getBody();
@@ -67,13 +69,15 @@ public final class RedditUtils {
         if (post.getSubject().getPreview() != null) {
             if (post.getSubject().getPreview().getImages().size() > 1) {
                 List<String> images = post.getSubject().getPreview().getImages().stream()
-                        .map(SubmissionPreview.ImageSet::getSource).map(SubmissionPreview.Variation::getUrl)
-                        .map(url -> url.replace("external-preview", "i").replace("preview", "i")).toList();
+                    .map(SubmissionPreview.ImageSet::getSource).map(SubmissionPreview.Variation::getUrl)
+                    .map(url -> url.replace("external-preview", "i").replace("preview", "i")).toList();
                 return Either.right(images);
             }
         }
 
-        String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject()
+        String mediaURL = post.getSubject().getUrl().isBlank()
+            ? post.getSubject().getThumbnail()
+            : post.getSubject()
                 .getUrl();
         if (mediaURL == null || mediaURL.isBlank())
             return null;
@@ -84,7 +88,7 @@ public final class RedditUtils {
                 URLConnection connection = new URI(json).toURL().openConnection();
                 connection.setRequestProperty("User-Agent", "TurtyWurty");
                 JsonObject listing = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
-                        JsonArray.class).get(0).getAsJsonObject();
+                    JsonArray.class).get(0).getAsJsonObject();
                 JsonObject data = listing.getAsJsonObject("data");
                 JsonArray children = data.getAsJsonArray("children");
                 JsonObject childData = children.get(0).getAsJsonObject().getAsJsonObject("data");
@@ -108,7 +112,9 @@ public final class RedditUtils {
         }
 
         if (requireMedia) {
-            mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail() : post.getSubject().getUrl();
+            mediaURL = post.getSubject().getUrl().isBlank()
+                ? post.getSubject().getThumbnail()
+                : post.getSubject().getUrl();
 
             if (mediaURL == null || mediaURL.isBlank())
                 return null;
@@ -141,11 +147,13 @@ public final class RedditUtils {
 
     @Nullable
     public static Either<EmbedBuilder, Collection<String>> constructEmbed(boolean requireMedia, String... subreddits) {
-        if (subreddits.length < 1) return null;
+        if (subreddits.length < 1)
+            return null;
 
         final SubredditReference subreddit = getRandomSubreddit(subreddits);
         final RootCommentNode post = findValidPost(subreddit, subreddits);
-        if (post == null) return null;
+        if (post == null)
+            return null;
 
         return constructEmbed(requireMedia, post);
     }
@@ -161,9 +169,8 @@ public final class RedditUtils {
 
         for (final String candidate : candidates) {
             final RootCommentNode post = getRandomPost(getSubreddit(candidate));
-            if (post != null) {
+            if (post != null)
                 return post;
-            }
         }
 
         return null;
@@ -183,10 +190,10 @@ public final class RedditUtils {
     @Nullable
     public static Submission getRandomSubmission(SubredditReference subreddit) {
         final List<Submission> posts = subreddit.posts()
-                .sorting(SubredditSort.HOT)
-                .limit(50)
-                .build()
-                .accumulateMerged(1);
+            .sorting(SubredditSort.HOT)
+            .limit(50)
+            .build()
+            .accumulateMerged(1);
 
         if (posts.isEmpty()) {
             Constants.LOGGER.warn("Reddit returned no hot posts for r/{}", subreddit.getSubreddit());
@@ -207,7 +214,7 @@ public final class RedditUtils {
         if (username.isPresent() && refreshToken.isPresent()) {
             Constants.LOGGER.info("Using Reddit refresh token authentication for user '{}'.", username.get());
             final Credentials credentials = Credentials.webapp(clientId, clientSecret,
-                    Environment.INSTANCE.redditRedirectUrl().orElse("http://localhost"));
+                Environment.INSTANCE.redditRedirectUrl().orElse("http://localhost"));
             final OAuthData initialOAuthData = OAuthData.create("", List.of(), refreshToken.get(), new Date(0));
             return new RedditClient(adapter, initialOAuthData, credentials, new NoopTokenStore(), username.get());
         }
@@ -220,7 +227,7 @@ public final class RedditUtils {
 
         if (username.isPresent() || refreshToken.isPresent() || password.isPresent()) {
             Constants.LOGGER.warn(
-                    "Incomplete Reddit authenticated configuration provided. Falling back to userless authentication.");
+                "Incomplete Reddit authenticated configuration provided. Falling back to userless authentication.");
         }
 
         Constants.LOGGER.info("Using Reddit userless authentication.");
@@ -233,8 +240,8 @@ public final class RedditUtils {
         final var builder = new OkHttpClient.Builder();
         if (Environment.INSTANCE.redditProxyHost().isPresent() && Environment.INSTANCE.redditProxyPort().isPresent()) {
             final var proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-                    Environment.INSTANCE.redditProxyHost().get(),
-                    Environment.INSTANCE.redditProxyPort().get()));
+                Environment.INSTANCE.redditProxyHost().get(),
+                Environment.INSTANCE.redditProxyPort().get()));
             builder.proxy(proxy);
         }
 
@@ -254,8 +261,8 @@ public final class RedditUtils {
                 return null;
             }
         }).filter(Objects::nonNull).findFirst().orElseThrow(() -> new IllegalArgumentException(
-                "Given list of subreddits does not contain any that are valid!\nSubreddits: '" + String.join(", ",
-                        subreddits) + "'"));
+            "Given list of subreddits does not contain any that are valid!\nSubreddits: '" + String.join(", ",
+                subreddits) + "'"));
     }
 
     @NotNull
@@ -265,13 +272,13 @@ public final class RedditUtils {
 
     public static boolean verifyVideo(String url) {
         return !url.endsWith("mp4") && !url.endsWith("mov") && !url.endsWith("wmv") && !url.endsWith(
-                "avi") && !url.endsWith("flv") && !url.endsWith("webm") && !url.endsWith("mkv");
+            "avi") && !url.endsWith("flv") && !url.endsWith("webm") && !url.endsWith("mkv");
     }
 
     public static boolean isEmbedVideo(String url) {
         return url.contains("redgifs") || url.contains("xvideos") || url.contains("xhamster") ||
-                url.contains("xxx") || url.contains("porn") || url.contains("nsfw") || url.contains("gfycat") ||
-                url.contains("/watch.") || url.contains("reddit.com") || url.contains("twitter") ||
-                url.contains("hub") || url.contains("imgur") || url.contains("tiktok") || url.contains("youtube");
+            url.contains("xxx") || url.contains("porn") || url.contains("nsfw") || url.contains("gfycat") ||
+            url.contains("/watch.") || url.contains("reddit.com") || url.contains("twitter") ||
+            url.contains("hub") || url.contains("imgur") || url.contains("tiktok") || url.contains("youtube");
     }
 }

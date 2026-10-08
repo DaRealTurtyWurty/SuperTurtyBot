@@ -37,7 +37,7 @@ public class PistonMeta {
 
     public static void download(Path path) {
         try (InputStream stream = new URI(META_URL).toURL().openStream()) {
-            String json = new String(stream.readAllBytes());
+            var json = new String(stream.readAllBytes());
             Files.createDirectories(path.getParent());
             Files.writeString(path, json);
 
@@ -57,9 +57,8 @@ public class PistonMeta {
 
     public PistonMetaVersion findVersion(String version) {
         for (PistonMetaVersion metaVersion : this.versions) {
-            if (metaVersion.id().equals(version)) {
+            if (metaVersion.id().equals(version))
                 return metaVersion;
-            }
         }
 
         return null;

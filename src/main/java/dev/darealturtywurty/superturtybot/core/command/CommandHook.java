@@ -129,7 +129,6 @@ public class CommandHook extends ListenerAdapter {
             EconomyManager.start(jda);
         }
 
-
         if (!BirthdayManager.isRunning()) {
             BirthdayManager.start(jda);
         }
@@ -160,7 +159,8 @@ public class CommandHook extends ListenerAdapter {
     }
 
     private static void sendStartupMessage(@Nullable TextChannel channel, boolean shouldSendChangelog) {
-        if (channel == null) return;
+        if (channel == null)
+            return;
 
         if (shouldSendChangelog) {
             String changelog = ChangelogFetcher.INSTANCE.appendChangelog(STARTUP_MESSAGE);
@@ -172,10 +172,12 @@ public class CommandHook extends ListenerAdapter {
 
     private static void printCommandList(JDA jda, Set<CoreCommand> cmds) {
         final List<TextChannel> channels = jda.getTextChannelsByName("command-list", true);
-        if (channels.isEmpty()) return;
+        if (channels.isEmpty())
+            return;
 
         final TextChannel cmdList = channels.getFirst();
-        if (cmdList == null) return;
+        if (cmdList == null)
+            return;
 
         final var builder = new StringBuilder();
         final var previous = new AtomicReference<CoreCommand>();
@@ -187,44 +189,48 @@ public class CommandHook extends ListenerAdapter {
 
         final var guild = new AtomicInteger();
         final var global = new AtomicInteger();
-        cmds.stream().sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName())).forEach(cmd -> {
-            if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
-                builder.append("\n**").append(cmd.getCategory().getName()).append("**\n");
-            } else if (previous.get() == null) {
-                builder.append("**").append(cmd.getCategory().getName()).append("**\n");
-            }
+        cmds.stream()
+            .sorted((cmd0, cmd1) -> cmd0.getCategory().getName().compareToIgnoreCase(cmd1.getCategory().getName()))
+            .forEach(cmd -> {
+                if (previous.get() != null && !previous.get().getCategory().equals(cmd.getCategory())) {
+                    builder.append("\n**").append(cmd.getCategory().getName()).append("**\n");
+                } else if (previous.get() == null) {
+                    builder.append("**").append(cmd.getCategory().getName()).append("**\n");
+                }
 
-            builder.append("`").append(cmd.types.slash() ? "/" : ".").append(cmd.getName()).append("`\n");
-            previous.set(cmd);
+                builder.append("`").append(cmd.types.slash() ? "/" : ".").append(cmd.getName()).append("`\n");
+                previous.set(cmd);
 
-            if (cmd.types.slash()) {
-                slashes.incrementAndGet();
-            }
+                if (cmd.types.slash()) {
+                    slashes.incrementAndGet();
+                }
 
-            if (cmd.types.normal()) {
-                prefixes.incrementAndGet();
-            }
+                if (cmd.types.normal()) {
+                    prefixes.incrementAndGet();
+                }
 
-            if (cmd.types.messageCtx()) {
-                messageCtx.incrementAndGet();
-            }
+                if (cmd.types.messageCtx()) {
+                    messageCtx.incrementAndGet();
+                }
 
-            if (cmd.types.userCtx()) {
-                userCtx.incrementAndGet();
-            }
+                if (cmd.types.userCtx()) {
+                    userCtx.incrementAndGet();
+                }
 
-            if (cmd.isServerOnly()) {
-                guild.incrementAndGet();
-            } else {
-                global.incrementAndGet();
-            }
-        });
+                if (cmd.isServerOnly()) {
+                    guild.incrementAndGet();
+                } else {
+                    global.incrementAndGet();
+                }
+            });
 
         cmdList.createCopy().setPosition(cmdList.getPosition()).queue(success -> {
             success.sendMessage(builder.toString()).queue();
-            success.sendMessage("\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** message context commands.\nThere are **%d** user context commands.\nThere are **%d** guild commands.\nThere are **%d** global commands.".formatted(
-                            slashes.get(), prefixes.get(), messageCtx.get(), userCtx.get(), guild.get(), global.get()))
-                    .queue();
+            success.sendMessage(
+                "\n\nThere are **%s** slash commands.\nThere are **%d** prefix commands.\nThere are **%d** message context commands.\nThere are **%d** user context commands.\nThere are **%d** guild commands.\nThere are **%d** global commands."
+                    .formatted(
+                        slashes.get(), prefixes.get(), messageCtx.get(), userCtx.get(), guild.get(), global.get()))
+                .queue();
             cmdList.delete().queue();
         });
     }
@@ -232,12 +238,10 @@ public class CommandHook extends ListenerAdapter {
     private static void registerCommands(JDA jda, Collection<CoreCommand> commands) {
         CommandListUpdateAction updates = jda.updateCommands();
         commands.forEach(cmd -> registerCommand(cmd, updates));
-        updates.queue(registered ->
-                registered.forEach(command ->
-                        commands.stream()
-                                .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
-                                .findFirst()
-                                .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
+        updates.queue(registered -> registered.forEach(command -> commands.stream()
+            .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
+            .findFirst()
+            .ifPresent(registeredCommand -> registeredCommand.setCommandId(command.getId()))));
     }
 
     private static void registerCommands(Guild guild, Collection<CoreCommand> commands) {
@@ -246,9 +250,9 @@ public class CommandHook extends ListenerAdapter {
         updates.queue(registered -> {
             for (Command command : registered) {
                 commands.stream()
-                        .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
-                        .findFirst()
-                        .ifPresent(registeredCommand -> registeredCommand.setCommandId(guild.getIdLong(), command.getId()));
+                    .filter(registeredCommand -> registeredCommand.getName().equals(command.getName()))
+                    .findFirst()
+                    .ifPresent(registeredCommand -> registeredCommand.setCommandId(guild.getIdLong(), command.getId()));
             }
         });
     }
@@ -261,7 +265,8 @@ public class CommandHook extends ListenerAdapter {
     public static List<CommandData> createCommandData(CoreCommand cmd) {
         List<CommandData> registrations = new ArrayList<>();
         if (cmd.types.slash()) {
-            final SlashCommandData data = Commands.slash(cmd.getName(), cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
+            final SlashCommandData data = Commands.slash(cmd.getName(),
+                cmd.getDescription().substring(0, Math.min(cmd.getDescription().length(), 100)));
             final List<OptionData> options = cmd.createOptions();
             if (!options.isEmpty()) {
                 data.addOptions(options);
@@ -313,7 +318,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new UserConfigCommand());
         commands.add(new OptCommand());
         commands.add(new UptimeCommand());
-        //commands.add(new SystemStatsCommand());
+        // commands.add(new SystemStatsCommand());
         commands.add(new EvalCommand());
         commands.add(new SpeakCommand());
         commands.add(new AnnounceCommand());
@@ -350,7 +355,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new RobloxCommand());
         commands.add(new MinecraftCommand());
         commands.add(new WikipediaCommand());
-        //commands.add(new ConvertCommand());
+        // commands.add(new ConvertCommand());
         commands.add(new BirthdayCommand());
         commands.add(new LatexCommand());
         commands.add(new AddRoleToThreadCommand());
@@ -411,7 +416,7 @@ public class CommandHook extends ListenerAdapter {
         // Levelling
         commands.add(new RankCommand());
         commands.add(new LeaderboardCommand());
-        //commands.add(new XPInventoryCommand());
+        // commands.add(new XPInventoryCommand());
         commands.add(new SetXPCommand());
 
         // Minigames
@@ -496,10 +501,10 @@ public class CommandHook extends ListenerAdapter {
         // This ensures that the startup message can't be sent multiple times
         if (LOADED_GUILDS.add(guild.getIdLong())) {
             TextChannel generalChannel = guild.getTextChannels()
-                    .stream()
-                    .filter(channel -> channel.getName().equals("general"))
-                    .findFirst()
-                    .orElseGet(guild::getSystemChannel);
+                .stream()
+                .filter(channel -> channel.getName().equals("general"))
+                .findFirst()
+                .orElseGet(guild::getSystemChannel);
 
             GuildData config = GuildData.getOrCreateGuildData(guild);
 

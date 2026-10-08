@@ -28,7 +28,7 @@ public class ClearWarningsCommand extends CoreCommand {
         return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true),
             new OptionData(OptionType.STRING, "reason", "The reason for clearing the warnings", false));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Ban Permission)";
@@ -75,7 +75,7 @@ public class ClearWarningsCommand extends CoreCommand {
             reply(event, "❌ You require the `Ban Members` permission to use this command!", false, true);
             return;
         }
-        
+
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         final User user = event.getOption("user", OptionMapping::getAsUser);
@@ -89,7 +89,7 @@ public class ClearWarningsCommand extends CoreCommand {
             .queue(success -> {
             }, error -> {
             }));
-        
+
         final Set<Warning> warns = WarnManager.clearWarnings(event.getGuild(), user, event.getUser());
 
         final var embed = new EmbedBuilder();

@@ -27,10 +27,10 @@ public class DailyTaskScheduler {
 
     public static void start() {
         SCHEDULER.scheduleAtFixedRate(
-                DailyTaskScheduler::runTasks,
-                getTimeUntilNextMinute(),
-                60000,
-                TimeUnit.MILLISECONDS);
+            DailyTaskScheduler::runTasks,
+            getTimeUntilNextMinute(),
+            60000,
+            TimeUnit.MILLISECONDS);
     }
 
     private static void runTasks() {

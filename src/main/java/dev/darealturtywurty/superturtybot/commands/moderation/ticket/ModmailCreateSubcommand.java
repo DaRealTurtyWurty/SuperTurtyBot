@@ -32,14 +32,15 @@ public class ModmailCreateSubcommand extends ModmailSubcommand {
         }
 
         event.deferReply(true).queue();
-        CompletableFuture.supplyAsync(() -> ModmailManager.createTicket(member, message, ModmailManager.TICKET_SOURCE_SLASH_COMMAND))
-                .thenAccept(result -> event.getHook()
-                        .editOriginal("✅ Ticket created: " + result.channel().getAsMention())
-                        .queue())
-                .exceptionally(throwable -> {
-                    event.getHook().editOriginal(resolveError(throwable)).queue();
-                    return null;
-                });
+        CompletableFuture
+            .supplyAsync(() -> ModmailManager.createTicket(member, message, ModmailManager.TICKET_SOURCE_SLASH_COMMAND))
+            .thenAccept(result -> event.getHook()
+                .editOriginal("✅ Ticket created: " + result.channel().getAsMention())
+                .queue())
+            .exceptionally(throwable -> {
+                event.getHook().editOriginal(resolveError(throwable)).queue();
+                return null;
+            });
     }
 
     private static String resolveError(Throwable throwable) {

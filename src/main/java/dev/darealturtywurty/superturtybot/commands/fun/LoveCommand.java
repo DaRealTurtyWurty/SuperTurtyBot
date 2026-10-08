@@ -78,11 +78,11 @@ public class LoveCommand extends CoreCommand {
 
         // check if the love has already been calculated
         LoveData data = USER_LOVE_CACHE.stream()
-                .filter(d -> (d.user1() == user1 && d.user2() == user2) || (d.user1() == user2 && d.user2() == user1))
-                .findFirst()
-                .orElse(null);
+            .filter(d -> (d.user1() == user1 && d.user2() == user2) || (d.user1() == user2 && d.user2() == user1))
+            .findFirst()
+            .orElse(null);
 
-        if(data == null || System.currentTimeMillis() - data.timeCalculated() > TimeUnit.DAYS.toMillis(1)) {
+        if (data == null || System.currentTimeMillis() - data.timeCalculated() > TimeUnit.DAYS.toMillis(1)) {
             love = (float) (Math.random() * 100);
             USER_LOVE_CACHE.add(new LoveData(user1, user2, love, System.currentTimeMillis()));
             return love;
@@ -96,18 +96,19 @@ public class LoveCommand extends CoreCommand {
         int emptyLength = length - filledLength;
 
         return filled.repeat(Math.max(0, filledLength)) +
-                empty.repeat(Math.max(0, emptyLength));
+            empty.repeat(Math.max(0, emptyLength));
     }
 
     public static EmbedBuilder createLoveEmbed(User user1, User user2) {
         float love = calculateLove(user1.getIdLong(), user2.getIdLong());
         String loveBar = makeProgressBar(100, love, 10, "💝", "🖤");
         return new EmbedBuilder()
-                .setTitle("Love Calculator")
-                .setDescription("**" + user1.getAsMention() + "** and **" + user2.getAsMention() + "** are " + String.format("%.2f", love) + "% compatible!\n" + loveBar)
-                .setTimestamp(Instant.now())
-                .setColor(calculateColorOfPercentage(love))
-                .setFooter("Requested by " + user1.getEffectiveName(), user1.getEffectiveAvatarUrl());
+            .setTitle("Love Calculator")
+            .setDescription("**" + user1.getAsMention() + "** and **" + user2.getAsMention() + "** are "
+                + String.format("%.2f", love) + "% compatible!\n" + loveBar)
+            .setTimestamp(Instant.now())
+            .setColor(calculateColorOfPercentage(love))
+            .setFooter("Requested by " + user1.getEffectiveName(), user1.getEffectiveAvatarUrl());
     }
 
     public static Color calculateColorOfPercentage(double percentage) {
@@ -131,5 +132,6 @@ public class LoveCommand extends CoreCommand {
         return new Color(red, green, blue);
     }
 
-    public record LoveData(long user1, long user2, float love, long timeCalculated) {}
+    public record LoveData(long user1, long user2, float love, long timeCalculated) {
+    }
 }

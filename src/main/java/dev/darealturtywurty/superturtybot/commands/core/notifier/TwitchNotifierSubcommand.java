@@ -58,12 +58,14 @@ public class TwitchNotifierSubcommand extends BaseNotifierSubcommand {
             return;
 
         Database.getDatabase().twitchNotifier.insertOne(
-                new TwitchNotifier(guild.getIdLong(), twitchChannel, context.channelId(), context.mention()));
+            new TwitchNotifier(guild.getIdLong(), twitchChannel, context.channelId(), context.mention()));
         if (TwitchListener.subscribeChannel(twitchChannel)) {
-            reply(event, "✅ I have successfully set up a notifier for this Twitch channel in <#" + context.channelId() + ">!");
+            reply(event,
+                "✅ I have successfully set up a notifier for this Twitch channel in <#" + context.channelId() + ">!");
         } else {
-            reply(event, "❌ I have failed to set up a notifier for this channel. Check that the channel name is correct!",
-                    false, true);
+            reply(event,
+                "❌ I have failed to set up a notifier for this channel. Check that the channel name is correct!",
+                false, true);
         }
     }
 }

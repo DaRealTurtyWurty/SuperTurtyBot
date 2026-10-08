@@ -42,13 +42,15 @@ public class AnnounceCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
+        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId()
+            .orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
 
         event.getMessage().delete().queue();
         int commandIndex = event.getMessage().getContentRaw().indexOf(getName());
 
-        String content = "**[ANNOUNCEMENT]** " + event.getMessage().getContentRaw().substring(commandIndex + getName().length());
+        String content = "**[ANNOUNCEMENT]** "
+            + event.getMessage().getContentRaw().substring(commandIndex + getName().length());
         event.getJDA().getGuilds().forEach(guild -> {
             GuildChannel defaultChannel = guild.getDefaultChannel();
             if (defaultChannel == null || !defaultChannel.getType().isMessage()) {
@@ -61,7 +63,7 @@ public class AnnounceCommand extends CoreCommand {
                 defaultChannel = textChannels.getFirst();
             }
 
-            if(defaultChannel instanceof GuildMessageChannel messageChannel) {
+            if (defaultChannel instanceof GuildMessageChannel messageChannel) {
                 messageChannel.sendMessage(content).queue();
             }
         });

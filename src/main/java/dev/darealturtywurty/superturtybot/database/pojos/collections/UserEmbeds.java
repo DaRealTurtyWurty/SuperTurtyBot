@@ -38,9 +38,8 @@ public class UserEmbeds {
 
     public Optional<EmbedBuilder> getEmbed(final String name) {
         String embed = this.embeds.get(name);
-        if (embed == null) {
+        if (embed == null)
             return Optional.empty();
-        }
 
         return Optional.of(EmbedBuilder.fromData(DataObject.fromJson(embed)));
     }

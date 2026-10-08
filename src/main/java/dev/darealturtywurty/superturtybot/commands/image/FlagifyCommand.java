@@ -58,23 +58,23 @@ public class FlagifyCommand extends CoreCommand {
     protected void runUserCtx(UserContextInteractionEvent event) {
         Guild guild = event.getGuild();
         Member target = event.getTargetMember();
-        if(!event.isFromGuild() || guild == null || target == null) {
+        if (!event.isFromGuild() || guild == null || target == null) {
             event.reply("❌ This command can only be used in a server!")
-                    .mentionRepliedUser(false)
-                    .setEphemeral(true)
-                    .queue();
+                .mentionRepliedUser(false)
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         event.deferReply().queue();
 
         Either<BufferedImage, HttpStatus> response = ApiHandler.flagify(
-                new ImageFlagifyRequestData.Builder(target.getEffectiveAvatar().getUrl())
-                        .colors(5)
-                        .build());
-        if(response.isRight()) {
+            new ImageFlagifyRequestData.Builder(target.getEffectiveAvatar().getUrl())
+                .colors(5)
+                .build());
+        if (response.isRight()) {
             event.getHook().editOriginal("❌ Failed to flagify user!")
-                    .queue();
+                .queue();
             Constants.LOGGER.error("Failed to flagify user: {}", response.getRight());
             return;
         }
@@ -84,7 +84,7 @@ public class FlagifyCommand extends CoreCommand {
             ImageIO.write(response.getLeft(), "png", baos);
         } catch (IOException exception) {
             event.getHook().editOriginal("❌ Failed to flagify user!")
-                    .queue();
+                .queue();
             Constants.LOGGER.error("Failed to flagify user: {}", exception.getMessage());
             return;
         }
@@ -93,8 +93,8 @@ public class FlagifyCommand extends CoreCommand {
 
         var upload = FileUpload.fromData(data, "flag.png");
         event.getHook().sendMessage("Here is %s as a flag!".formatted(target.getAsMention()))
-                .setAllowedMentions(null)
-                .addFiles(upload)
-                .queue();
+            .setAllowedMentions(null)
+            .addFiles(upload)
+            .queue();
     }
 }

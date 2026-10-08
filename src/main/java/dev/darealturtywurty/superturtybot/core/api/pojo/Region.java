@@ -20,7 +20,18 @@ public class Region {
 
     private List<String> aliases;
 
-    public Region(double population, String name, String cca3, String cca2, String region, double landAreaKm, double densityMi, String flag, String outline, List<String> aliases) {
+    public Region(
+        double population,
+        String name,
+        String cca3,
+        String cca2,
+        String region,
+        double landAreaKm,
+        double densityMi,
+        String flag,
+        String outline,
+        List<String> aliases
+    ) {
         this.population = population;
         this.name = name;
         this.cca3 = cca3;

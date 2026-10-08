@@ -27,55 +27,56 @@ public class NasaCommand implements BiConsumer<SlashCommandInteractionEvent, Ima
             event.deferReply().queue();
 
             final String nasaUrl = "https://api.nasa.gov/planetary/apod?api_key=%s"
-                    .formatted(Environment.INSTANCE.nasaApiKey().get());
+                .formatted(Environment.INSTANCE.nasaApiKey().get());
             final Request request = new Request.Builder().url(nasaUrl).get().build();
             try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     event.getHook()
-                            .sendMessage("❌ Failed to get response!")
-                            .mentionRepliedUser(false)
-                            .queue();
+                        .sendMessage("❌ Failed to get response!")
+                        .mentionRepliedUser(false)
+                        .queue();
                     return;
                 }
 
                 ResponseBody body = response.body();
                 if (body == null) {
                     event.getHook()
-                            .sendMessage("❌ Failed to get response!")
-                            .mentionRepliedUser(false)
-                            .queue();
+                        .sendMessage("❌ Failed to get response!")
+                        .mentionRepliedUser(false)
+                        .queue();
                     return;
                 }
 
                 String bodyString = body.string();
                 if (bodyString.isBlank()) {
                     event.getHook()
-                            .sendMessage("❌ Failed to get response!")
-                            .mentionRepliedUser(false)
-                            .queue();
+                        .sendMessage("❌ Failed to get response!")
+                        .mentionRepliedUser(false)
+                        .queue();
                     return;
                 }
 
                 NasaResponseData nasaResponseDataResponse = NasaResponseData.fromJsonString(bodyString);
                 var embed = new EmbedBuilder()
-                        .setTitle(nasaResponseDataResponse.getTitle())
-                        .setImage(nasaResponseDataResponse.getHdurl())
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                        .setTimestamp(Instant.now())
-                        .setColor(0x2278c2)
-                        .build();
+                    .setTitle(nasaResponseDataResponse.getTitle())
+                    .setImage(nasaResponseDataResponse.getHdurl())
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl())
+                    .setTimestamp(Instant.now())
+                    .setColor(0x2278c2)
+                    .build();
 
                 event.getHook()
-                        .sendMessageEmbeds(embed)
-                        .mentionRepliedUser(false)
-                        .queue();
+                    .sendMessageEmbeds(embed)
+                    .mentionRepliedUser(false)
+                    .queue();
             }
         } catch (final IOException exception) {
             Constants.LOGGER.error("❌ Something went wrong with the NasaCommand!", exception);
             event.getHook()
-                    .sendMessage("❌ Something went wrong with the NasaCommand!")
-                    .mentionRepliedUser(false)
-                    .queue();
+                .sendMessage("❌ Something went wrong with the NasaCommand!")
+                .mentionRepliedUser(false)
+                .queue();
         }
     }
 

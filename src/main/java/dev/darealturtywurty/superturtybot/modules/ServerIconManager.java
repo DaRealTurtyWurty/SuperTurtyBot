@@ -61,9 +61,10 @@ public class ServerIconManager {
 
                     guild.getManager().setIcon(icon).queue();
                 } catch (IOException exception) {
-                    Constants.LOGGER.error("An error occurred while setting the server icon for guild: {}", guild.getId(), exception);
+                    Constants.LOGGER.error("An error occurred while setting the server icon for guild: {}",
+                        guild.getId(), exception);
                 }
-                
+
                 yesterdayIcons.put(entry.getKey(), iconPath);
             }
         }, 0, 1, TimeUnit.DAYS);
@@ -200,7 +201,8 @@ public class ServerIconManager {
             public static DateRange fromString(String str) {
                 String[] parts = str.split(" - ");
                 String[] date = parts[0].split("/");
-                return new DateRange(new DayOfYear(Integer.parseInt(date[0]), Integer.parseInt(date[1])), Integer.parseInt(parts[1]));
+                return new DateRange(new DayOfYear(Integer.parseInt(date[0]), Integer.parseInt(date[1])),
+                    Integer.parseInt(parts[1]));
             }
 
             public record DayOfYear(int month, int day) {
@@ -232,8 +234,10 @@ public class ServerIconManager {
 
                 @Override
                 public boolean equals(Object obj) {
-                    if (this == obj) return true;
-                    if (obj == null || getClass() != obj.getClass()) return false;
+                    if (this == obj)
+                        return true;
+                    if (obj == null || getClass() != obj.getClass())
+                        return false;
                     DayOfYear dayOfYear = (DayOfYear) obj;
                     return month == dayOfYear.month && day == dayOfYear.day;
                 }

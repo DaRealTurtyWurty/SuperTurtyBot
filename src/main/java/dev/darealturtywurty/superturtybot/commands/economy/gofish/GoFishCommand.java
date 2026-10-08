@@ -25,20 +25,19 @@ import java.util.concurrent.*;
 
 public class GoFishCommand extends EconomyCommand {
     protected static final Map<Long, Game> GAMES = new ConcurrentHashMap<>();
-    static final int MIN_PLAYERS = 2;
-    static final int MAX_PLAYERS = 6;
-    static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
+    public static final int MIN_PLAYERS = 2;
+    public static final int MAX_PLAYERS = 6;
+    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
     private static final long INACTIVITY_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(5);
 
     public GoFishCommand() {
         addSubcommands(
-                new GoFishCreateSubcommand(),
-                new GoFishHowToPlaySubcommand(),
-                new GoFishAskSubcommand(),
-                new GoFishHandSubcommand(),
-                new GoFishStatusSubcommand(),
-                new GoFishLeaveSubcommand()
-        );
+            new GoFishCreateSubcommand(),
+            new GoFishHowToPlaySubcommand(),
+            new GoFishAskSubcommand(),
+            new GoFishHandSubcommand(),
+            new GoFishStatusSubcommand(),
+            new GoFishLeaveSubcommand());
     }
 
     @Override
@@ -157,12 +156,11 @@ public class GoFishCommand extends EconomyCommand {
 
         event.getHook().editOriginal("✅ You joined the Go Fish game!").queue();
         event.getChannel().sendMessageFormat(
-                "✅ %s joined the Go Fish game. Players: %d/%d | Bet: %s",
-                event.getUser().getAsMention(),
-                game.playerCount(),
-                game.getMaxPlayers(),
-                StringUtils.numberFormat(game.getBet(), config)
-        ).queue();
+            "✅ %s joined the Go Fish game. Players: %d/%d | Bet: %s",
+            event.getUser().getAsMention(),
+            game.playerCount(),
+            game.getMaxPlayers(),
+            StringUtils.numberFormat(game.getBet(), config)).queue();
 
         updateLobbyMessage(guild, config, game, false);
     }
@@ -197,53 +195,51 @@ public class GoFishCommand extends EconomyCommand {
 
         cancelAutoStart(game);
         refundAndCancel(guild, config, game,
-                "⚠️ The Go Fish game was canceled by the host. All bets were refunded.");
+            "⚠️ The Go Fish game was canceled by the host. All bets were refunded.");
         event.getHook().editOriginal("✅ Go Fish game canceled. All bets have been refunded.").queue();
     }
 
-    static Game getGame(long channelId) {
+    public static Game getGame(long channelId) {
         return GAMES.get(channelId);
     }
 
-    static Game findGameByUser(long guildId, long userId) {
+    public static Game findGameByUser(long guildId, long userId) {
         for (Game game : GAMES.values()) {
-            if (game.getGuildId() == guildId && game.hasPlayer(userId)) {
+            if (game.getGuildId() == guildId && game.hasPlayer(userId))
                 return game;
-            }
         }
 
         return null;
     }
 
-    static void removeGame(Game game) {
+    public static void removeGame(Game game) {
         if (game != null) {
             GAMES.remove(game.getLobbyChannelId());
             GAMES.remove(game.getChannelId());
         }
     }
 
-    static void addGameChannelMapping(Game game, long channelId) {
+    private static void addGameChannelMapping(Game game, long channelId) {
         if (game != null) {
             GAMES.put(channelId, game);
         }
     }
 
-    static void scheduleAutoStart(Guild guild, Game game) {
+    public static void scheduleAutoStart(Guild guild, Game game) {
         ScheduledFuture<?> future = SCHEDULER.schedule(() -> autoStartGame(guild, game), 2, TimeUnit.MINUTES);
         game.setAutoStartFuture(future);
     }
 
-    static void scheduleInactivityWatch(Guild guild, Game game) {
+    private static void scheduleInactivityWatch(Guild guild, Game game) {
         ScheduledFuture<?> future = SCHEDULER.scheduleAtFixedRate(
-                () -> checkInactivity(guild, game),
-                10,
-                10,
-                TimeUnit.SECONDS
-        );
+            () -> checkInactivity(guild, game),
+            10,
+            10,
+            TimeUnit.SECONDS);
         game.setInactivityFuture(future);
     }
 
-    static void cancelInactivityWatch(Game game) {
+    public static void cancelInactivityWatch(Game game) {
         ScheduledFuture<?> future = game.getInactivityFuture();
         if (future != null) {
             future.cancel(false);
@@ -259,14 +255,14 @@ public class GoFishCommand extends EconomyCommand {
             if (System.currentTimeMillis() - game.getLastActionMillis() >= INACTIVITY_TIMEOUT_MS) {
                 GuildData config = GuildData.getOrCreateGuildData(guild);
                 refundAndCancel(guild, config, game,
-                        "⏱️ The Go Fish game timed out due to inactivity. All bets were refunded.");
+                    "⏱️ The Go Fish game timed out due to inactivity. All bets were refunded.");
                 closeGameThread(guild, game);
                 cancelInactivityWatch(game);
             }
         }
     }
 
-    static void cancelAutoStart(Game game) {
+    public static void cancelAutoStart(Game game) {
         ScheduledFuture<?> future = game.getAutoStartFuture();
         if (future != null) {
             future.cancel(false);
@@ -286,18 +282,18 @@ public class GoFishCommand extends EconomyCommand {
                 TextChannel lobby = guild.getTextChannelById(game.getLobbyChannelId());
                 if (lobby == null) {
                     refundAndCancel(guild, config, game,
-                            "⚠️ Not enough players joined. The Go Fish game was canceled and all bets were refunded.");
+                        "⚠️ Not enough players joined. The Go Fish game was canceled and all bets were refunded.");
                     return;
                 }
                 startGameInThread(guild, config, game, lobby, true);
             } else {
                 refundAndCancel(guild, config, game,
-                        "⚠️ Not enough players joined. The Go Fish game was canceled and all bets were refunded.");
+                    "⚠️ Not enough players joined. The Go Fish game was canceled and all bets were refunded.");
             }
         }
     }
 
-    static void refundAndCancel(Guild guild, GuildData config, Game game, String message) {
+    public static void refundAndCancel(Guild guild, GuildData config, Game game, String message) {
         for (PlayerState player : game.getPlayerStates()) {
             Economy account = EconomyManager.getOrCreateAccount(guild, player.userId());
             EconomyManager.addMoney(account, game.getBet(), false);
@@ -310,7 +306,7 @@ public class GoFishCommand extends EconomyCommand {
         sendChannelMessage(guild, game, message);
     }
 
-    static void updateLobbyMessage(Guild guild, GuildData config, Game game, boolean closeLobby) {
+    public static void updateLobbyMessage(Guild guild, GuildData config, Game game, boolean closeLobby) {
         TextChannel channel = guild.getTextChannelById(game.getLobbyChannelId());
         if (channel == null || game.getLobbyMessageId() == 0L)
             return;
@@ -318,22 +314,22 @@ public class GoFishCommand extends EconomyCommand {
         channel.retrieveMessageById(game.getLobbyMessageId()).queue(message -> {
             String content = buildLobbyMessage(game, config, closeLobby);
             Button joinButton = Button.success("gofish:join:" + game.getChannelId(), "Join Game")
-                    .withDisabled(closeLobby || game.isFull() || game.isStarted());
+                .withDisabled(closeLobby || game.isFull() || game.isStarted());
             Button startButton = Button.primary("gofish:start:" + game.getChannelId(), "Force Start")
-                    .withDisabled(closeLobby || game.isStarted());
+                .withDisabled(closeLobby || game.isStarted());
             Button cancelButton = Button.danger("gofish:cancel:" + game.getChannelId(), "Cancel")
-                    .withDisabled(closeLobby || game.isStarted());
+                .withDisabled(closeLobby || game.isStarted());
             message.editMessage(content).setComponents(ActionRow.of(joinButton, startButton, cancelButton)).queue();
-        }, ignored -> {
+        }, _ -> {
         });
     }
 
     private static String buildLobbyMessage(Game game, GuildData config, boolean closed) {
         String status = closed ? " (lobby closed)" : "";
         return "🃏 **Go Fish** created by <@" + game.getHostId() + ">" + status + "\n"
-                + "Bet: " + StringUtils.numberFormat(game.getBet(), config)
-                + " | Players: " + game.playerCount() + "/" + game.getMaxPlayers()
-                + "\nJoin with the button below.";
+            + "Bet: " + StringUtils.numberFormat(game.getBet(), config)
+            + " | Players: " + game.playerCount() + "/" + game.getMaxPlayers()
+            + "\nJoin with the button below.";
     }
 
     private static void sendChannelMessage(Guild guild, Game game, String message) {
@@ -343,7 +339,13 @@ public class GoFishCommand extends EconomyCommand {
         }
     }
 
-    private static void startGameInThread(Guild guild, GuildData config, Game game, TextChannel lobby, boolean autoStart) {
+    private static void startGameInThread(
+        Guild guild,
+        GuildData config,
+        Game game,
+        TextChannel lobby,
+        boolean autoStart
+    ) {
         lobby.createThreadChannel("Go Fish Game").queue(thread -> {
             game.setChannelId(thread.getIdLong());
             addGameChannelMapping(game, thread.getIdLong());
@@ -357,20 +359,20 @@ public class GoFishCommand extends EconomyCommand {
 
             String startPrefix = autoStart ? "🃏 **Go Fish** started automatically!" : "🃏 **Go Fish** started!";
             thread.sendMessage(startPrefix + "\nFirst turn: <@" + game.getCurrentPlayerId() + ">\n"
-                    + "It's your turn! Use `/gofish ask <player> <rank>` or `/gofish hand`.").queue();
-        }, ignored -> {
+                + "It's your turn! Use `/gofish ask <player> <rank>` or `/gofish hand`.").queue();
+        }, _ -> {
         });
     }
 
-    static void closeGameThread(Guild guild, Game game) {
+    public static void closeGameThread(Guild guild, Game game) {
         var thread = guild.getThreadChannelById(game.getChannelId());
         if (thread != null) {
             thread.getManager().setArchived(true).setLocked(true).queue();
         }
     }
 
-    static OptionData buildRankOption() {
-        OptionData option = new OptionData(OptionType.STRING, "rank", "The rank you want to ask for.", true);
+    public static OptionData buildRankOption() {
+        var option = new OptionData(OptionType.STRING, "rank", "The rank you want to ask for.", true);
         option.addChoice("Ace", "A");
         option.addChoice("2", "2");
         option.addChoice("3", "3");
@@ -387,7 +389,7 @@ public class GoFishCommand extends EconomyCommand {
         return option;
     }
 
-    static BlackjackCommand.Card.Rank parseRank(String value) {
+    public static BlackjackCommand.Card.Rank parseRank(String value) {
         if (value == null)
             return null;
 
@@ -409,7 +411,7 @@ public class GoFishCommand extends EconomyCommand {
         };
     }
 
-    static String formatRank(BlackjackCommand.Card.Rank rank) {
+    public static String formatRank(BlackjackCommand.Card.Rank rank) {
         return switch (rank) {
             case ACE -> "Ace";
             case TWO -> "2";
@@ -427,7 +429,7 @@ public class GoFishCommand extends EconomyCommand {
         };
     }
 
-    static String renderHand(PlayerState player) {
+    public static String renderHand(PlayerState player) {
         if (player.hand().isEmpty())
             return "(empty)";
 
@@ -441,7 +443,7 @@ public class GoFishCommand extends EconomyCommand {
         return builder.toString();
     }
 
-    static String renderBooks(PlayerState player) {
+    public static String renderBooks(PlayerState player) {
         if (player.books().isEmpty())
             return "(none)";
 
@@ -472,7 +474,7 @@ public class GoFishCommand extends EconomyCommand {
         private ScheduledFuture<?> autoStartFuture;
         private ScheduledFuture<?> inactivityFuture;
 
-        Game(long guildId, long channelId, long hostId, BigInteger bet, int maxPlayers) {
+        public Game(long guildId, long channelId, long hostId, BigInteger bet, int maxPlayers) {
             this.guildId = guildId;
             this.lobbyChannelId = channelId;
             this.channelId = channelId;
@@ -481,66 +483,66 @@ public class GoFishCommand extends EconomyCommand {
             this.maxPlayers = maxPlayers;
         }
 
-        boolean hasPlayer(long userId) {
+        public boolean hasPlayer(long userId) {
             return players.containsKey(userId);
         }
 
-        PlayerState getPlayer(long userId) {
+        public PlayerState getPlayer(long userId) {
             return players.get(userId);
         }
 
-        int playerCount() {
+        public int playerCount() {
             return players.size();
         }
 
-        boolean isFull() {
+        private boolean isFull() {
             return players.size() >= maxPlayers;
         }
 
-        Collection<PlayerState> getPlayerStates() {
+        public Collection<PlayerState> getPlayerStates() {
             return players.values();
         }
 
-        void addPlayer(long userId, BigInteger betPaid) {
+        public void addPlayer(long userId, BigInteger betPaid) {
             players.put(userId, new PlayerState(userId, betPaid));
         }
 
-        void setLobbyMessageId(long lobbyMessageId) {
+        public void setLobbyMessageId(long lobbyMessageId) {
             this.lobbyMessageId = lobbyMessageId;
         }
 
-        void setAutoStartFuture(ScheduledFuture<?> autoStartFuture) {
+        private void setAutoStartFuture(ScheduledFuture<?> autoStartFuture) {
             this.autoStartFuture = autoStartFuture;
         }
 
-        void setInactivityFuture(ScheduledFuture<?> inactivityFuture) {
+        private void setInactivityFuture(ScheduledFuture<?> inactivityFuture) {
             this.inactivityFuture = inactivityFuture;
         }
 
-        long getLastActionMillis() {
+        private long getLastActionMillis() {
             return lastActionAt.toEpochMilli();
         }
 
-        void setChannelId(long channelId) {
+        private void setChannelId(long channelId) {
             this.channelId = channelId;
         }
 
-        void removePlayer(long userId) {
+        public void removePlayer(long userId) {
             players.remove(userId);
         }
 
-        boolean canStart() {
+        private boolean canStart() {
             return !started && players.size() >= MIN_PLAYERS;
         }
 
-        long getCurrentPlayerId() {
+        public long getCurrentPlayerId() {
             if (turnOrder.isEmpty())
                 return -1L;
 
             return turnOrder.get(turnIndex);
         }
 
-        void start() {
+        public void start() {
             if (started)
                 return;
 
@@ -563,20 +565,21 @@ public class GoFishCommand extends EconomyCommand {
             lastActionAt = Instant.now();
         }
 
-        void markFinished() {
+        public void markFinished() {
             finished = true;
             lastActionAt = Instant.now();
         }
 
-        boolean shouldEnd() {
-            return totalBooks() == 13 || (deck.isEmpty() && players.values().stream().allMatch(player -> player.hand().isEmpty()));
+        public boolean shouldEnd() {
+            return totalBooks() == 13
+                || (deck.isEmpty() && players.values().stream().allMatch(player -> player.hand().isEmpty()));
         }
 
-        int totalBooks() {
+        private int totalBooks() {
             return players.values().stream().mapToInt(player -> player.books().size()).sum();
         }
 
-        List<Long> determineWinners() {
+        public List<Long> determineWinners() {
             int maxBooks = players.values().stream().mapToInt(player -> player.books().size()).max().orElse(0);
             List<Long> winners = new ArrayList<>();
             for (PlayerState player : players.values()) {
@@ -588,7 +591,7 @@ public class GoFishCommand extends EconomyCommand {
             return winners;
         }
 
-        void advanceTurn() {
+        public void advanceTurn() {
             if (turnOrder.isEmpty())
                 return;
 
@@ -597,18 +600,18 @@ public class GoFishCommand extends EconomyCommand {
                 turnIndex = (turnIndex + 1) % turnOrder.size();
                 attempts++;
             } while (attempts <= turnOrder.size()
-                    && players.get(turnOrder.get(turnIndex)) != null
-                    && players.get(turnOrder.get(turnIndex)).hand().isEmpty()
-                    && deck.isEmpty());
+                && players.get(turnOrder.get(turnIndex)) != null
+                && players.get(turnOrder.get(turnIndex)).hand().isEmpty()
+                && deck.isEmpty());
 
             lastActionAt = Instant.now();
         }
 
-        void touch() {
+        public void touch() {
             lastActionAt = Instant.now();
         }
 
-        List<BlackjackCommand.Card.Rank> completeBooks(PlayerState player) {
+        public List<BlackjackCommand.Card.Rank> completeBooks(PlayerState player) {
             Map<BlackjackCommand.Card.Rank, Integer> counts = new EnumMap<>(BlackjackCommand.Card.Rank.class);
             for (BlackjackCommand.Card card : player.hand()) {
                 counts.merge(card.rank(), 1, Integer::sum);
@@ -629,23 +632,26 @@ public class GoFishCommand extends EconomyCommand {
         }
     }
 
-    record PlayerState(long userId, BigInteger betPaid, List<BlackjackCommand.Card> hand,
-                       Set<BlackjackCommand.Card.Rank> books) {
-        PlayerState(long userId, BigInteger betPaid) {
+    public record PlayerState(
+        long userId,
+        BigInteger betPaid,
+        List<BlackjackCommand.Card> hand,
+        Set<BlackjackCommand.Card.Rank> books
+    ) {
+        private PlayerState(long userId, BigInteger betPaid) {
             this(userId, betPaid, new ArrayList<>(), new LinkedHashSet<>());
         }
 
-        boolean hasRank(BlackjackCommand.Card.Rank rank) {
+        public boolean hasRank(BlackjackCommand.Card.Rank rank) {
             for (BlackjackCommand.Card card : hand) {
-                if (card.rank() == rank) {
+                if (card.rank() == rank)
                     return true;
-                }
             }
 
             return false;
         }
 
-        List<BlackjackCommand.Card> removeAllOfRank(BlackjackCommand.Card.Rank rank) {
+        public List<BlackjackCommand.Card> removeAllOfRank(BlackjackCommand.Card.Rank rank) {
             List<BlackjackCommand.Card> removed = new ArrayList<>();
             Iterator<BlackjackCommand.Card> iterator = hand.iterator();
             while (iterator.hasNext()) {

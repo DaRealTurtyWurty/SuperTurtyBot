@@ -31,8 +31,8 @@ public final class StarboardManager extends ListenerAdapter {
     public static final StarboardManager INSTANCE = new StarboardManager();
     private static final EnumSet<Permission> ALLOWED_PERMS = EnumSet.of(Permission.VIEW_CHANNEL);
     private static final EnumSet<Permission> DISALLOWED_PERMS = EnumSet.of(Permission.MESSAGE_SEND,
-            Permission.MESSAGE_ADD_REACTION, Permission.CREATE_PUBLIC_THREADS, Permission.CREATE_PRIVATE_THREADS,
-            Permission.MESSAGE_SEND_IN_THREADS);
+        Permission.MESSAGE_ADD_REACTION, Permission.CREATE_PUBLIC_THREADS, Permission.CREATE_PRIVATE_THREADS,
+        Permission.MESSAGE_SEND_IN_THREADS);
 
     private StarboardManager() {
     }
@@ -40,7 +40,7 @@ public final class StarboardManager extends ListenerAdapter {
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.isFromThread() || !event.isFromType(ChannelType.TEXT)
-                || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
+            || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
             return;
 
         final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
@@ -55,7 +55,7 @@ public final class StarboardManager extends ListenerAdapter {
             return;
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                Filters.eq("channel", channel.getIdLong()), Filters.eq("message", event.getMessageIdLong()));
+            Filters.eq("channel", channel.getIdLong()), Filters.eq("message", event.getMessageIdLong()));
         final Showcase showcase = Database.getDatabase().starboard.find(filter).first();
         if (showcase == null)
             return;
@@ -63,10 +63,10 @@ public final class StarboardManager extends ListenerAdapter {
         event.getChannel().retrieveMessageById(event.getMessageIdLong()).queue(m -> {
             final List<Bson> updates = new ArrayList<>();
             final MessageReaction reaction = m.getReactions()
-                    .stream()
-                    .filter(r -> config.getStarEmoji().equals(r.getEmoji().getFormatted()))
-                    .findFirst()
-                    .orElse(null);
+                .stream()
+                .filter(r -> config.getStarEmoji().equals(r.getEmoji().getFormatted()))
+                .findFirst()
+                .orElse(null);
             if (reaction == null)
                 return;
 
@@ -76,14 +76,13 @@ public final class StarboardManager extends ListenerAdapter {
             final long starboardMessageId = showcase.getStarboardMessage();
             if (showcase.getStars() >= config.getMinimumStars()) {
                 QuestManager.INSTANCE.recordShowcaseThresholdReached(
-                        event.getGuild().getIdLong(),
-                        showcase.getUser(),
-                        showcase.getMessage()
-                );
+                    event.getGuild().getIdLong(),
+                    showcase.getUser(),
+                    showcase.getMessage());
                 getStarboard(event.getGuild()).thenAccept(starboard -> {
                     if (starboardMessageId == 0) {
                         final CompletableFuture<Long> messageId = sendStarboard(event.getJDA(), starboard, filter,
-                                showcase);
+                            showcase);
                         messageId.thenAccept(id -> {
                             if (id != -1L) {
                                 showcase.setStarboardMessage(id);
@@ -95,21 +94,21 @@ public final class StarboardManager extends ListenerAdapter {
                         });
                     } else {
                         starboard.retrieveMessageById(starboardMessageId).queue(
-                                message -> message.editMessage(config.getStarEmoji() + " **" + showcase.getStars()
-                                        + "** from <#" + showcase.getChannel() + ">").mentionRepliedUser(false).queue(),
-                                error -> {
-                                    final CompletableFuture<Long> messageId = sendStarboard(event.getJDA(), starboard,
-                                            filter, showcase);
-                                    messageId.thenAccept(id -> {
-                                        if (id != -1L) {
-                                            showcase.setStarboardMessage(id);
-                                            updates.add(Updates.set("starboardMessage", showcase.getStarboardMessage()));
-                                            Database.getDatabase().starboard.updateOne(filter, updates);
-                                        } else {
-                                            updates.clear();
-                                        }
-                                    });
+                            message -> message.editMessage(config.getStarEmoji() + " **" + showcase.getStars()
+                                + "** from <#" + showcase.getChannel() + ">").mentionRepliedUser(false).queue(),
+                            error -> {
+                                final CompletableFuture<Long> messageId = sendStarboard(event.getJDA(), starboard,
+                                    filter, showcase);
+                                messageId.thenAccept(id -> {
+                                    if (id != -1L) {
+                                        showcase.setStarboardMessage(id);
+                                        updates.add(Updates.set("starboardMessage", showcase.getStarboardMessage()));
+                                        Database.getDatabase().starboard.updateOne(filter, updates);
+                                    } else {
+                                        updates.clear();
+                                    }
                                 });
+                            });
                     }
                 });
 
@@ -123,7 +122,7 @@ public final class StarboardManager extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild() || event.isFromThread() || event.isWebhookMessage()
-                || !event.isFromType(ChannelType.TEXT) || event.getAuthor().isBot() || event.getAuthor().isSystem())
+            || !event.isFromType(ChannelType.TEXT) || event.getAuthor().isBot() || event.getAuthor().isSystem())
             return;
 
         final TextChannel channel = event.getChannel().asTextChannel();
@@ -136,13 +135,13 @@ public final class StarboardManager extends ListenerAdapter {
         final Message message = event.getMessage();
 
         if (config.isStarboardMediaOnly() && message.getAttachments().isEmpty()
-                && !Constants.URL_VALIDATOR.isValid(message.getContentDisplay()) && message.getEmbeds().isEmpty())
+            && !Constants.URL_VALIDATOR.isValid(message.getContentDisplay()) && message.getEmbeds().isEmpty())
             return;
 
         message.addReaction(Emoji.fromFormatted(config.getStarEmoji())).queue();
 
         Database.getDatabase().starboard.insertOne(new Showcase(event.getGuild().getIdLong(), channel.getIdLong(),
-                message.getIdLong(), event.getAuthor().getIdLong()));
+            message.getIdLong(), event.getAuthor().getIdLong()));
     }
 
     private static CompletableFuture<TextChannel> getStarboard(Guild guild) {
@@ -181,17 +180,19 @@ public final class StarboardManager extends ListenerAdapter {
             final String formattedTime = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 
             channel.sendMessage("⭐ **" + showcase.getStars() + "** from <#" + showcase.getChannel() + ">")
-                    .setEmbeds(new EmbedBuilder()
-                            .setAuthor(author.getEffectiveName(),
-                                    member == null ? author.getEffectiveAvatarUrl() : member.getEffectiveAvatarUrl())
-                            .setColor(member == null ? Color.CYAN : member.getColor() == null ? Color.CYAN : member.getColor())
-                            .setDescription(msg.getContentRaw()).setFooter(showcase.getMessage() + " • " + formattedTime)
-                            .addField("Source", "[Jump]" + "(" + msg.getJumpUrl() + ")", false)
-                            .setImage(msg.getEmbeds().isEmpty()
-                                    ? msg.getAttachments().isEmpty() ? null : msg.getAttachments().getFirst().getUrl()
-                                    : msg.getEmbeds().getFirst().getImage() == null ? null : msg.getEmbeds().getFirst().getImage().getUrl())
-                            .build())
-                    .queue(ms -> future.complete(ms.getIdLong()));
+                .setEmbeds(new EmbedBuilder()
+                    .setAuthor(author.getEffectiveName(),
+                        member == null ? author.getEffectiveAvatarUrl() : member.getEffectiveAvatarUrl())
+                    .setColor(member == null ? Color.CYAN : member.getColor() == null ? Color.CYAN : member.getColor())
+                    .setDescription(msg.getContentRaw()).setFooter(showcase.getMessage() + " • " + formattedTime)
+                    .addField("Source", "[Jump]" + "(" + msg.getJumpUrl() + ")", false)
+                    .setImage(msg.getEmbeds().isEmpty()
+                        ? msg.getAttachments().isEmpty() ? null : msg.getAttachments().getFirst().getUrl()
+                        : msg.getEmbeds().getFirst().getImage() == null
+                            ? null
+                            : msg.getEmbeds().getFirst().getImage().getUrl())
+                    .build())
+                .queue(ms -> future.complete(ms.getIdLong()));
         }, error -> {
             Database.getDatabase().starboard.deleteOne(filter);
             future.complete(-1L);

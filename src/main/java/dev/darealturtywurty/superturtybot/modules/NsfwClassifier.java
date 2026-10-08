@@ -16,13 +16,17 @@ import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public record NsfwClassifier(OrtEnvironment environment, OrtSession session, String inputName,
-                             Config config) implements AutoCloseable {
+public record NsfwClassifier(
+    OrtEnvironment environment,
+    OrtSession session,
+    String inputName,
+    Config config
+) implements AutoCloseable {
     private static final AtomicBoolean LOGGED_SHAPE_ERROR = new AtomicBoolean(false);
 
     public static NsfwClassifier create(Path modelPath, Config config) throws OrtException {
         OrtEnvironment environment = OrtEnvironment.getEnvironment();
-        OrtSession.SessionOptions options = new OrtSession.SessionOptions();
+        var options = new OrtSession.SessionOptions();
         OrtSession session = environment.createSession(modelPath.toString(), options);
         String inputName = session.getInputNames().iterator().next();
         return new NsfwClassifier(environment, session, inputName, config);
@@ -35,10 +39,10 @@ public record NsfwClassifier(OrtEnvironment environment, OrtSession session, Str
 
         float[] data = toFloatArray(inputImage, config);
         long[] shape = config.layout() == InputLayout.NHWC
-                ? new long[]{1, config.imageSize(), config.imageSize(), 3}
-                : new long[]{1, 3, config.imageSize(), config.imageSize()};
+            ? new long[]{1, config.imageSize(), config.imageSize(), 3}
+            : new long[]{1, 3, config.imageSize(), config.imageSize()};
         try (OnnxTensor tensor = OnnxTensor.createTensor(environment, FloatBuffer.wrap(data), shape);
-             OrtSession.Result results = session.run(Map.of(inputName, tensor))) {
+            OrtSession.Result results = session.run(Map.of(inputName, tensor))) {
             Object output = results.get(0).getValue();
             Double score = extractScore(output);
             if (score == null)
@@ -68,7 +72,7 @@ public record NsfwClassifier(OrtEnvironment environment, OrtSession session, Str
             if (image == null)
                 return null;
 
-            BufferedImage resized = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
+            var resized = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics = resized.createGraphics();
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             graphics.drawImage(image, 0, 0, size, size, null);
@@ -90,8 +94,8 @@ public record NsfwClassifier(OrtEnvironment environment, OrtSession session, Str
             float g = (rgb >> 8) & 0xFF;
             float b = rgb & 0xFF;
             float[] ordered = config.channelOrder() == ChannelOrder.BGR
-                    ? new float[]{b, g, r}
-                    : new float[]{r, g, b};
+                ? new float[]{b, g, r}
+                : new float[]{r, g, b};
 
             ordered[0] = ordered[0] - config.mean0();
             ordered[1] = ordered[1] - config.mean1();
@@ -141,7 +145,13 @@ public record NsfwClassifier(OrtEnvironment environment, OrtSession session, Str
         BGR
     }
 
-    public record Config(int imageSize, InputLayout layout, ChannelOrder channelOrder,
-                         float mean0, float mean1, float mean2) {
+    public record Config(
+        int imageSize,
+        InputLayout layout,
+        ChannelOrder channelOrder,
+        float mean0,
+        float mean1,
+        float mean2
+    ) {
     }
 }

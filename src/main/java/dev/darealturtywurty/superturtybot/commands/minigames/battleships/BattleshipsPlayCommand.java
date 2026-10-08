@@ -29,9 +29,10 @@ public class BattleshipsPlayCommand extends BattleshipsSubcommand {
         Guild guild = event.getGuild();
         User user = event.getUser();
         BattleshipsCommand.Game existingGame = BattleshipsCommand.getGame(guild.getIdLong(), user.getIdLong())
-                .orElse(null);
+            .orElse(null);
         if (existingGame != null) {
-            replyBattleships(event, "❌ You are already in a game! Please finish it at <#" + existingGame.getThreadId() + ">.").queue();
+            replyBattleships(event,
+                "❌ You are already in a game! Please finish it at <#" + existingGame.getThreadId() + ">.").queue();
             return;
         }
 
@@ -48,26 +49,36 @@ public class BattleshipsPlayCommand extends BattleshipsSubcommand {
 
         boolean enablePowerUps = event.getOption("enable-powerups", false, OptionMapping::getAsBoolean);
 
-        replyBattleships(event, "✅ Starting a game of Battleships between " + user.getAsMention() + " and " + opponent.getAsMention() + "!").queue(message -> {
-            message.createThreadChannel("Battleships: " + user.getName() + " vs " + opponent.getName())
+        replyBattleships(event,
+            "✅ Starting a game of Battleships between " + user.getAsMention() + " and " + opponent.getAsMention() + "!")
+            .queue(message -> {
+                message.createThreadChannel("Battleships: " + user.getName() + " vs " + opponent.getName())
                     .queue(threadChannel -> {
                         var game = new BattleshipsCommand.Game(guild.getIdLong(),
-                                event.getChannel().getIdLong(), threadChannel.getIdLong(),
-                                user.getIdLong(), opponent.getIdLong(), true, enablePowerUps);
+                            event.getChannel().getIdLong(), threadChannel.getIdLong(),
+                            user.getIdLong(), opponent.getIdLong(), true, enablePowerUps);
                         BattleshipsCommand.GAMES.put(threadChannel.getIdLong(), game);
 
-                        threadChannel.sendMessage("Game started between " + user.getAsMention() + " and " + opponent.getAsMention() + "!").queue();
+                        threadChannel
+                            .sendMessage(
+                                "Game started between " + user.getAsMention() + " and " + opponent.getAsMention() + "!")
+                            .queue();
                         try {
                             String[] names = BattleshipsCommand.buildNames(event, game);
                             FileUpload upload = BattleshipsImageRenderer.createUpload(game, names);
-                            threadChannel.sendMessage("Here is the initial game board. Please use the `/battleships place` command to place your ships.").addFiles(upload).queue();
+                            threadChannel.sendMessage(
+                                "Here is the initial game board. Please use the `/battleships place` command to place your ships.")
+                                .addFiles(upload).queue();
                         } catch (IOException exception) {
-                            Constants.LOGGER.error("Failed to render battleships image for game in thread {}", threadChannel.getId(), exception);
-                            threadChannel.sendMessage("❌ An error occurred while generating the game board image.").queue();
+                            Constants.LOGGER.error("Failed to render battleships image for game in thread {}",
+                                threadChannel.getId(), exception);
+                            threadChannel.sendMessage("❌ An error occurred while generating the game board image.")
+                                .queue();
                             BattleshipsCommand.GAMES.remove(threadChannel.getIdLong());
-                            threadChannel.getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
+                            threadChannel.getManager().setLocked(true).setArchived(true).queueAfter(5,
+                                TimeUnit.SECONDS);
                         }
                     });
-        });
+            });
     }
 }

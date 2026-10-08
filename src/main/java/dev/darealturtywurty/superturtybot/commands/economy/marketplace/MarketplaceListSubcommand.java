@@ -16,15 +16,15 @@ public class MarketplaceListSubcommand extends MarketplaceSubcommand {
     public MarketplaceListSubcommand() {
         super("list", "List an asset for sale or rent");
         addOption(new OptionData(OptionType.STRING, "type", "Kind of asset", true)
-                .addChoice("Collectable", MarketplaceService.COLLECTABLE)
-                .addChoice("Rank-card item", MarketplaceService.RANK_CARD)
-                .addChoice("Economy item", MarketplaceService.ECONOMY_ITEM)
-                .addChoice("Property rental", MarketplaceService.RENTAL));
+            .addChoice("Collectable", MarketplaceService.COLLECTABLE)
+            .addChoice("Rank-card item", MarketplaceService.RANK_CARD)
+            .addChoice("Economy item", MarketplaceService.ECONOMY_ITEM)
+            .addChoice("Property rental", MarketplaceService.RENTAL));
         addOption(OptionType.STRING, "item", "Choose an item you own or a rentable property", true, true);
         addOption(OptionType.STRING, "price", "Positive price in this server's currency", true);
         addOption(OptionType.STRING, "collection", "Required for collectables; choose one you own", false, true);
         addOption(new OptionData(OptionType.INTEGER, "days", "Rental duration in days; defaults to 7", false)
-                .setRequiredRange(1, 30));
+            .setRequiredRange(1, 30));
     }
 
     @Override
@@ -45,11 +45,11 @@ public class MarketplaceListSubcommand extends MarketplaceSubcommand {
             throw new IllegalArgumentException("Price must be a whole number.");
         }
         MarketplaceListing listing = MarketplaceService.list(guild.getIdLong(), event.getUser().getIdLong(),
-                type, collection, item, price, days);
+            type, collection, item, price, days);
         if (!MarketplaceService.RENTAL.equals(listing.getType())) {
             QuestManager.INSTANCE.recordMarketplaceItemListed(guild, event.getUser(), listing.getId());
         }
         event.getHook().editOriginalEmbeds(MarketplaceCommand.result("Listing created", listing, config)
-                .setFooter("Buyers can find this listing with /marketplace browse.").build()).queue();
+            .setFooter("Buyers can find this listing with /marketplace browse.").build()).queue();
     }
 }

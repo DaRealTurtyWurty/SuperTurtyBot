@@ -52,15 +52,16 @@ public final class LevellingManager extends ListenerAdapter {
                 Map<Long, List<Levelling>> levellingPerGuild = new HashMap<>();
                 Map<Long, Guild> guildCacheMap = new HashMap<>();
                 for (Levelling levelling : Database.getDatabase().levelling.find()) {
-                    Guild guild = guildCacheMap.computeIfAbsent(levelling.getGuild(), id -> TurtyBot.getJDA().getGuildById(id));
+                    Guild guild = guildCacheMap.computeIfAbsent(levelling.getGuild(),
+                        id -> TurtyBot.getJDA().getGuildById(id));
                     if (guild == null)
                         continue;
 
                     if (levelling.getLastMessageTime() < currentTime - sevenDaysInMillis) {
                         if (levelling.getXp() <= 0 && levelling.getInventory().isEmpty()) {
                             Database.getDatabase().levelling.deleteOne(Filters.and(
-                                    Filters.eq("guild", levelling.getGuild()),
-                                    Filters.eq("user", levelling.getUser())));
+                                Filters.eq("guild", levelling.getGuild()),
+                                Filters.eq("user", levelling.getUser())));
 
                             Member member = guild.getMemberById(levelling.getUser());
                             if (member == null)
@@ -92,27 +93,27 @@ public final class LevellingManager extends ListenerAdapter {
                             continue;
 
                         TurtyBot.getJDA().retrieveUserById(levelling.getUser())
-                                .useCache(true)
-                                .queue(user -> {
-                                    if (user == null) {
-                                        Constants.LOGGER.error("User {} ({}) not found in {}",
-                                                levelling.getUser(),
-                                                "<@" + levelling.getUser() + ">",
-                                                guild.getName() + " (" + guild.getId() + ")");
-                                        Database.getDatabase().levelling.deleteOne(Filters.and(
-                                                Filters.eq("guild", levelling.getGuild()),
-                                                Filters.eq("user", levelling.getUser())));
-                                        return;
-                                    }
+                            .useCache(true)
+                            .queue(user -> {
+                                if (user == null) {
+                                    Constants.LOGGER.error("User {} ({}) not found in {}",
+                                        levelling.getUser(),
+                                        "<@" + levelling.getUser() + ">",
+                                        guild.getName() + " (" + guild.getId() + ")");
+                                    Database.getDatabase().levelling.deleteOne(Filters.and(
+                                        Filters.eq("guild", levelling.getGuild()),
+                                        Filters.eq("user", levelling.getUser())));
+                                    return;
+                                }
 
-                                    setXP(guild, user, newXP);
-                                    Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
-                                            xp - newXP,
-                                            user.getId(),
-                                            user.getAsMention(),
-                                            guild.getName() + " (" + guild.getId() + ")");
-                                }, throwable ->
-                                        Constants.LOGGER.error("Error retrieving user {} in {}: {}", levelling.getUser(), guild.getId(), throwable.getMessage()));
+                                setXP(guild, user, newXP);
+                                Constants.LOGGER.info("Removed 5% ({}) XP from {} ({}) in {}",
+                                    xp - newXP,
+                                    user.getId(),
+                                    user.getAsMention(),
+                                    guild.getName() + " (" + guild.getId() + ")");
+                            }, throwable -> Constants.LOGGER.error("Error retrieving user {} in {}: {}",
+                                levelling.getUser(), guild.getId(), throwable.getMessage()));
                     }
                 }
             }
@@ -134,7 +135,8 @@ public final class LevellingManager extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem() || event.getAuthor().isBot())
+        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isSystem()
+            || event.getAuthor().isBot())
             return;
 
         final Guild guild = event.getGuild();
@@ -144,7 +146,8 @@ public final class LevellingManager extends ListenerAdapter {
         if (!config.isLevellingEnabled() || disabledChannels.contains(event.getChannel().getIdLong()))
             return;
 
-        if (event.getChannel().getType().isThread() && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))
+        if (event.getChannel().getType().isThread()
+            && disabledChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))
             return;
 
         Member member = event.getMember();
@@ -157,8 +160,8 @@ public final class LevellingManager extends ListenerAdapter {
                 return;
 
             Database.getDatabase().levelling.updateOne(
-                    Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", member.getIdLong())),
-                    Updates.set("lastMessageTime", System.currentTimeMillis()));
+                Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", member.getIdLong())),
+                Updates.set("lastMessageTime", System.currentTimeMillis()));
         }
 
         if (!cooldown(guild, member, config))
@@ -166,7 +169,8 @@ public final class LevellingManager extends ListenerAdapter {
 
         List<Long> boostedChannels = GuildData.getLongs(config.getXpBoostedChannels());
         int boostPercentage = 100;
-        if (boostedChannels.contains(event.getChannel().getIdLong()) || (event.getChannel().getType().isThread() && boostedChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))) {
+        if (boostedChannels.contains(event.getChannel().getIdLong()) || (event.getChannel().getType().isThread()
+            && boostedChannels.contains(event.getChannel().asThreadChannel().getParentChannel().getIdLong()))) {
             boostPercentage += config.getXpBoostPercentage();
         }
 
@@ -177,7 +181,7 @@ public final class LevellingManager extends ListenerAdapter {
             }
         }
 
-        if(config.isDoServerBoostsAffectXP() && member.getTimeBoosted() != null) {
+        if (config.isDoServerBoostsAffectXP() && member.getTimeBoosted() != null) {
             boostPercentage += config.getXpBoostPercentage();
         }
 
@@ -185,7 +189,8 @@ public final class LevellingManager extends ListenerAdapter {
         xp = Math.max((int) (xp * (boostPercentage / 100f)), 1);
 
         int newXp = addXP(guild, member.getUser(), xp, new LevelUpMessage(guild, Optional.of(event.getMessage())));
-        if (newXp <= 0) return;
+        if (newXp <= 0)
+            return;
 
         // TODO: Re-enable when implemented properly
         /*
@@ -279,7 +284,8 @@ public final class LevellingManager extends ListenerAdapter {
         this.cooldownMap.computeIfAbsent(guild.getIdLong(), id -> new ConcurrentHashMap<>());
         final Map<Long, Long> cooldowns = this.cooldownMap.get(guild.getIdLong());
 
-        if (cooldowns.containsKey(member.getIdLong()) && cooldowns.get(member.getIdLong()) > 0) return false;
+        if (cooldowns.containsKey(member.getIdLong()) && cooldowns.get(member.getIdLong()) > 0)
+            return false;
 
         cooldowns.put(member.getIdLong(), config.getLevelCooldown());
         return true;
@@ -291,19 +297,20 @@ public final class LevellingManager extends ListenerAdapter {
         Map<Integer, Long> levelRoles = getLevelRoles(config);
 
         List<Role> toAddRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() <= level)
-                .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
-                .map(guild::getRoleById)
-                .filter(Objects::nonNull).toList();
+            .filter(it -> !userRoles.contains(it.getValue())).map(Map.Entry::getValue)
+            .map(guild::getRoleById)
+            .filter(Objects::nonNull).toList();
         List<Role> toRemoveRoles = levelRoles.entrySet().stream().filter(it -> it.getKey() > level)
-                .filter(it -> userRoles.contains(it.getValue())).map(Map.Entry::getValue)
-                .map(guild::getRoleById)
-                .filter(Objects::nonNull).toList();
+            .filter(it -> userRoles.contains(it.getValue())).map(Map.Entry::getValue)
+            .map(guild::getRoleById)
+            .filter(Objects::nonNull).toList();
 
         guild.modifyMemberRoles(member, toAddRoles, toRemoveRoles).queue();
     }
 
     private void sendLevelUpMessage(GuildData config, Member member, int level, @Nullable Message replyTo) {
-        if (config.isDisableLevelUpMessages()) return;
+        if (config.isDisableLevelUpMessages())
+            return;
 
         UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", member.getIdLong())).first();
         if (userConfig == null) {
@@ -340,7 +347,8 @@ public final class LevellingManager extends ListenerAdapter {
                 } else if (type != UserConfig.LevelUpMessageType.NORMAL) {
                     replyTo.reply(description).mentionRepliedUser(false).queue();
                 }
-            } else if (config.isShouldEmbedLevelUpMessage() && channel != null && type != UserConfig.LevelUpMessageType.NORMAL) {
+            } else if (config.isShouldEmbedLevelUpMessage() && channel != null
+                && type != UserConfig.LevelUpMessageType.NORMAL) {
                 channel.sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
             } else if (channel != null) {
                 channel.sendMessage(description).mentionRepliedUser(false).queue();
@@ -353,7 +361,7 @@ public final class LevellingManager extends ListenerAdapter {
 
         final Map<String, Rarity> canAdd = new HashMap<>();
         RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values()
-                .forEach(item -> canAdd.put(item.getName(), item.rarity));
+            .forEach(item -> canAdd.put(item.getName(), item.rarity));
 
         inventory.forEach(canAdd::remove);
 
@@ -365,11 +373,12 @@ public final class LevellingManager extends ListenerAdapter {
         record LevelWithRole(int level, long role) {
         }
 
-        if (config.getLevelRoles().isEmpty()) return Map.of();
+        if (config.getLevelRoles().isEmpty())
+            return Map.of();
 
         return Stream.of(config.getLevelRoles().split("[ ;]")).map(it -> it.split("->"))
-                .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
-                .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
+            .map(it -> new LevelWithRole(Integer.parseInt(it[0].trim()), Long.parseLong(it[1].trim())))
+            .collect(Collectors.toMap(LevelWithRole::level, LevelWithRole::role));
     }
 
     public static int getLevelForXP(final int xp) {

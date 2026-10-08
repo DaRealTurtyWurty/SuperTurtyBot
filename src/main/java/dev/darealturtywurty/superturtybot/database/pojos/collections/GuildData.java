@@ -309,30 +309,54 @@ public class GuildData {
     }
 
     public boolean shouldLog(Event event) {
-        if (event instanceof ChannelCreateEvent) return this.logChannelCreate;
-        if (event instanceof ChannelDeleteEvent) return this.logChannelDelete;
-        if (event instanceof EmojiAddedEvent) return this.logEmojiAdded;
-        if (event instanceof EmojiRemovedEvent) return this.logEmojiRemoved;
-        if (event instanceof GenericChannelUpdateEvent) return this.logChannelUpdate;
-        if (event instanceof GenericEmojiUpdateEvent) return this.logEmojiUpdate;
-        if (event instanceof GenericForumTagUpdateEvent) return this.logForumTagUpdate;
-        if (event instanceof GenericGuildStickerUpdateEvent) return this.logStickerUpdate;
-        if (event instanceof GenericGuildUpdateEvent) return this.logGuildUpdate;
-        if (event instanceof GenericRoleUpdateEvent) return this.logRoleUpdate;
-        if (event instanceof GuildBanEvent) return this.logBan;
-        if (event instanceof GuildInviteCreateEvent) return this.logInviteCreate;
-        if (event instanceof GuildInviteDeleteEvent) return this.logInviteDelete;
-        if (event instanceof GuildMemberJoinEvent) return this.logMemberJoin;
-        if (event instanceof GuildMemberRemoveEvent) return this.logMemberRemove;
-        if (event instanceof GuildStickerAddedEvent) return this.logStickerAdded;
-        if (event instanceof GuildStickerRemovedEvent) return this.logStickerRemove;
-        if (event instanceof GuildMemberUpdateTimeOutEvent) return this.logTimeout;
-        if (event instanceof GuildUnbanEvent) return this.logUnban;
-        if (event instanceof MessageBulkDeleteEvent) return this.logMessageBulkDelete;
-        if (event instanceof MessageDeleteEvent) return this.logMessageDelete;
-        if (event instanceof MessageUpdateEvent) return this.logMessageUpdate;
-        if (event instanceof RoleCreateEvent) return this.logRoleCreate;
-        if (event instanceof RoleDeleteEvent) return this.logRoleDelete;
+        if (event instanceof ChannelCreateEvent)
+            return this.logChannelCreate;
+        if (event instanceof ChannelDeleteEvent)
+            return this.logChannelDelete;
+        if (event instanceof EmojiAddedEvent)
+            return this.logEmojiAdded;
+        if (event instanceof EmojiRemovedEvent)
+            return this.logEmojiRemoved;
+        if (event instanceof GenericChannelUpdateEvent)
+            return this.logChannelUpdate;
+        if (event instanceof GenericEmojiUpdateEvent)
+            return this.logEmojiUpdate;
+        if (event instanceof GenericForumTagUpdateEvent)
+            return this.logForumTagUpdate;
+        if (event instanceof GenericGuildStickerUpdateEvent)
+            return this.logStickerUpdate;
+        if (event instanceof GenericGuildUpdateEvent)
+            return this.logGuildUpdate;
+        if (event instanceof GenericRoleUpdateEvent)
+            return this.logRoleUpdate;
+        if (event instanceof GuildBanEvent)
+            return this.logBan;
+        if (event instanceof GuildInviteCreateEvent)
+            return this.logInviteCreate;
+        if (event instanceof GuildInviteDeleteEvent)
+            return this.logInviteDelete;
+        if (event instanceof GuildMemberJoinEvent)
+            return this.logMemberJoin;
+        if (event instanceof GuildMemberRemoveEvent)
+            return this.logMemberRemove;
+        if (event instanceof GuildStickerAddedEvent)
+            return this.logStickerAdded;
+        if (event instanceof GuildStickerRemovedEvent)
+            return this.logStickerRemove;
+        if (event instanceof GuildMemberUpdateTimeOutEvent)
+            return this.logTimeout;
+        if (event instanceof GuildUnbanEvent)
+            return this.logUnban;
+        if (event instanceof MessageBulkDeleteEvent)
+            return this.logMessageBulkDelete;
+        if (event instanceof MessageDeleteEvent)
+            return this.logMessageDelete;
+        if (event instanceof MessageUpdateEvent)
+            return this.logMessageUpdate;
+        if (event instanceof RoleCreateEvent)
+            return this.logRoleCreate;
+        if (event instanceof RoleDeleteEvent)
+            return this.logRoleDelete;
 
         return false;
     }
@@ -390,14 +414,13 @@ public class GuildData {
 
     public static List<WarningSanctionConfig> createDefaultWarningSanctions() {
         return new ArrayList<>(List.of(
-                new WarningSanctionConfig("timeout-1", "timeout", 1, 120L, 0),
-                new WarningSanctionConfig("timeout-2", "timeout", 2, 240L, 0),
-                new WarningSanctionConfig("timeout-3", "timeout", 3, 360L, 0),
-                new WarningSanctionConfig("kick-3", "kick", 3, 0L, 0),
-                new WarningSanctionConfig("timeout-4", "timeout", 4, 480L, 0),
-                new WarningSanctionConfig("timeout-5", "timeout", 5, 600L, 0),
-                new WarningSanctionConfig("ban-5", "ban", 5, 0L, 0)
-        ));
+            new WarningSanctionConfig("timeout-1", "timeout", 1, 120L, 0),
+            new WarningSanctionConfig("timeout-2", "timeout", 2, 240L, 0),
+            new WarningSanctionConfig("timeout-3", "timeout", 3, 360L, 0),
+            new WarningSanctionConfig("kick-3", "kick", 3, 0L, 0),
+            new WarningSanctionConfig("timeout-4", "timeout", 4, 480L, 0),
+            new WarningSanctionConfig("timeout-5", "timeout", 5, 600L, 0),
+            new WarningSanctionConfig("ban-5", "ban", 5, 0L, 0)));
     }
 
     private static List<String> splitDelimitedList(String value) {
@@ -405,10 +428,10 @@ public class GuildData {
             return List.of();
 
         return Arrays.stream(value.split("[;,]"))
-                .map(String::trim)
-                .filter(entry -> !entry.isBlank())
-                .distinct()
-                .toList();
+            .map(String::trim)
+            .filter(entry -> !entry.isBlank())
+            .distinct()
+            .toList();
     }
 
     private static String joinDelimitedList(Collection<String> values) {
@@ -416,9 +439,9 @@ public class GuildData {
             return "";
 
         return values.stream()
-                .map(value -> value == null ? "" : value.trim())
-                .filter(value -> !value.isBlank())
-                .distinct()
-                .collect(Collectors.joining(";"));
+            .map(value -> value == null ? "" : value.trim())
+            .filter(value -> !value.isBlank())
+            .distinct()
+            .collect(Collectors.joining(";"));
     }
 }

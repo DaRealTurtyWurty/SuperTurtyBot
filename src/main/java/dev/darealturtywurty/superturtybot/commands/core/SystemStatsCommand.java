@@ -73,43 +73,47 @@ public class SystemStatsCommand extends CoreCommand {
 
         // get disk
 
-        /*HWDiskStore disk = sysInfo.getHardware().getDiskStores().getFirst();
-        disk.updateAttributes();
-
-        long readBytes = disk.getReadBytes();
-        long writeBytes = disk.getWriteBytes();
-        long diskTimestamp = disk.getTimeStamp();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
-        disk.updateAttributes();
-        long newReadBytes = disk.getReadBytes();
-        long newWriteBytes = disk.getWriteBytes();
-        long newDiskTimestamp = disk.getTimeStamp();
-
-        long readBytesPerSecond = (newReadBytes - readBytes) / (newDiskTimestamp - diskTimestamp);
-        long writeBytesPerSecond = (newWriteBytes - writeBytes) / (newDiskTimestamp - diskTimestamp);*/
+        /*
+         * HWDiskStore disk = sysInfo.getHardware().getDiskStores().getFirst();
+         * disk.updateAttributes();
+         *
+         * long readBytes = disk.getReadBytes();
+         * long writeBytes = disk.getWriteBytes();
+         * long diskTimestamp = disk.getTimeStamp();
+         * try {
+         * Thread.sleep(1000);
+         * } catch (InterruptedException exception) {
+         * exception.printStackTrace();
+         * }
+         * disk.updateAttributes();
+         * long newReadBytes = disk.getReadBytes();
+         * long newWriteBytes = disk.getWriteBytes();
+         * long newDiskTimestamp = disk.getTimeStamp();
+         *
+         * long readBytesPerSecond = (newReadBytes - readBytes) / (newDiskTimestamp - diskTimestamp);
+         * long writeBytesPerSecond = (newWriteBytes - writeBytes) / (newDiskTimestamp - diskTimestamp);
+         */
 
         // get network
         NetworkIF net = sysInfo.getHardware().getNetworkIFs().getFirst();
         net.updateAttributes();
 
-        /*long bytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
-        long bytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
-        long timestamp = net.getTimeStamp();
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
-        net.updateAttributes();
-        long newBytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
-        long newBytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
-        long newTimestamp = net.getTimeStamp();
-        long sentSpeed = (newBytesSent - bytesSent) / ((newTimestamp - timestamp) / 1000);
-        long recvSpeed = (newBytesRecv - bytesRecv) / ((newTimestamp - timestamp) / 1000);*/
+        /*
+         * long bytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
+         * long bytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
+         * long timestamp = net.getTimeStamp();
+         * try {
+         * Thread.sleep(2000);
+         * } catch (InterruptedException exception) {
+         * exception.printStackTrace();
+         * }
+         * net.updateAttributes();
+         * long newBytesSent = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesSent();
+         * long newBytesRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getBytesRecv();
+         * long newTimestamp = net.getTimeStamp();
+         * long sentSpeed = (newBytesSent - bytesSent) / ((newTimestamp - timestamp) / 1000);
+         * long recvSpeed = (newBytesRecv - bytesRecv) / ((newTimestamp - timestamp) / 1000);
+         */
 
         long packetsSent = sysInfo.getHardware().getNetworkIFs().getFirst().getPacketsSent();
         long packetsRecv = sysInfo.getHardware().getNetworkIFs().getFirst().getPacketsRecv();
@@ -129,8 +133,8 @@ public class SystemStatsCommand extends CoreCommand {
         String jdaVersion = JDAInfo.VERSION;
 
         var stats = new SystemStats(cpu, processes, threads, uptime, availableRam, totalRam, usedRamPercent,
-                virtualUsed, virtualTotal, virtualUsage, pageSize, packetsSent, packetsRecv, osName, osVersion, osArch,
-                osManufacturer, osBootTime, javaVersion, javaVendor, jdaVersion);
+            virtualUsed, virtualTotal, virtualUsage, pageSize, packetsSent, packetsRecv, osName, osVersion, osArch,
+            osManufacturer, osBootTime, javaVersion, javaVendor, jdaVersion);
 
         BufferedImage image = createStatsImage(stats);
         var baos = new ByteArrayOutputStream();
@@ -177,21 +181,21 @@ public class SystemStatsCommand extends CoreCommand {
         graphics.drawString("Virtual Usage: " + String.format("%.2f", stats.virtualUsage) + "%", 10, gap * 13);
         graphics.drawString("Page Size: " + bytesFormatted(stats.pageSize), 10, gap * 14);
 
-        //graphics.setFont(font);
-        //graphics.drawString("Disk", 10, gap * 16);
-        //graphics.setFont(font2);
-        //graphics.drawString("Read Speed: " + bytesFormatted(stats.readSpeed) + "/s", 10, gap * 17);
-        //graphics.drawString("Write Speed: " + bytesFormatted(stats.writeSpeed) + "/s", 10, gap * 18);
+        // graphics.setFont(font);
+        // graphics.drawString("Disk", 10, gap * 16);
+        // graphics.setFont(font2);
+        // graphics.drawString("Read Speed: " + bytesFormatted(stats.readSpeed) + "/s", 10, gap * 17);
+        // graphics.drawString("Write Speed: " + bytesFormatted(stats.writeSpeed) + "/s", 10, gap * 18);
 
         graphics.setFont(font);
         graphics.drawString("Network", 500, gap);
         graphics.setFont(font2);
-        //graphics.drawString("Sent: " + bytesFormatted(stats.bytesSent), 500, gap * 2);
-        //graphics.drawString("Received: " + bytesFormatted(stats.bytesReceived), 500, gap * 3);
+        // graphics.drawString("Sent: " + bytesFormatted(stats.bytesSent), 500, gap * 2);
+        // graphics.drawString("Received: " + bytesFormatted(stats.bytesReceived), 500, gap * 3);
         graphics.drawString("Packets Sent: " + stats.packetsSent, 500, gap * 2);
         graphics.drawString("Packets Received: " + stats.packetsReceived, 500, gap * 3);
-        //graphics.drawString("Upload Speed: " + bytesFormatted(stats.sentSpeed) + "/s", 500, gap * 6);
-        //graphics.drawString("Download Speed: " + bytesFormatted(stats.receiveSpeed) + "/s", 500, gap * 7);
+        // graphics.drawString("Upload Speed: " + bytesFormatted(stats.sentSpeed) + "/s", 500, gap * 6);
+        // graphics.drawString("Download Speed: " + bytesFormatted(stats.receiveSpeed) + "/s", 500, gap * 7);
 
         graphics.setFont(font);
         graphics.drawString("Operating System", 500, gap * 5);
@@ -248,10 +252,28 @@ public class SystemStatsCommand extends CoreCommand {
         return String.format("%.2f %s", value, unit);
     }
 
-    private record SystemStats(double cpu, int processes, int threads, long uptime, long availableRam, long totalRam,
-                               double ramUsage, long virtualUsed, long virtualTotal, double virtualUsage, long pageSize,
-                               long packetsSent, long packetsReceived, String osName, String osVersion, String osArch,
-                               String osManufacturer, long osBootTime, String javaVersion, String javaVendor,
-                               String jdaVersion) {
+    private record SystemStats(
+        double cpu,
+        int processes,
+        int threads,
+        long uptime,
+        long availableRam,
+        long totalRam,
+        double ramUsage,
+        long virtualUsed,
+        long virtualTotal,
+        double virtualUsage,
+        long pageSize,
+        long packetsSent,
+        long packetsReceived,
+        String osName,
+        String osVersion,
+        String osArch,
+        String osManufacturer,
+        long osBootTime,
+        String javaVersion,
+        String javaVendor,
+        String jdaVersion
+    ) {
     }
 }

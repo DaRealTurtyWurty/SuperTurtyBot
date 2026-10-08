@@ -15,7 +15,7 @@ public class Counting {
     private long guild;
     private long channel;
     private String countingMode;
-    
+
     private List<UserData> users;
     private int currentCount;
     private int highestCount;
@@ -26,12 +26,12 @@ public class Counting {
     private long lastCountingMessageMillis;
 
     private String additionalData;
-    
+
     public Counting(long guildId, long channelId, CountingMode mode) {
         this.guild = guildId;
         this.channel = channelId;
         this.countingMode = mode.name();
-        
+
         this.users = new ArrayList<>();
         this.currentCount = 0;
         this.highestCount = 0;
@@ -49,13 +49,13 @@ public class Counting {
     @AllArgsConstructor
     public static class UserData {
         private long user;
-        
+
         private int currentCountSuccession;
         private int totalCounts;
-        
+
         public UserData(long userId) {
             this.user = userId;
-            
+
             this.currentCountSuccession = 0;
             this.totalCounts = 0;
         }

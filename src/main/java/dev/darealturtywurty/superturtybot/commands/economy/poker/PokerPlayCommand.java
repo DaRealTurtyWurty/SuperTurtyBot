@@ -50,10 +50,11 @@ public class PokerPlayCommand extends PokerSubcommand {
             return;
         }
 
-        final List<PokerCommand.Game> games = PokerCommand.GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
+        final List<PokerCommand.Game> games = PokerCommand.GAMES.computeIfAbsent(guild.getIdLong(),
+            _ -> new ArrayList<>());
         if (!games.isEmpty() && games.stream().anyMatch(game -> game.getGuild() == guild.getIdLong()
-                && game.getUser() == event.getUser().getIdLong()
-                && !game.isFinished())) {
+            && game.getUser() == event.getUser().getIdLong()
+            && !game.isFinished())) {
             event.getHook().editOriginal("❌ You are already in a poker game!").queue();
             return;
         }
@@ -62,69 +63,74 @@ public class PokerPlayCommand extends PokerSubcommand {
         EconomyManager.updateAccount(account);
 
         event.getHook().editOriginalFormat("✅ You have started a poker hand with a bet of %s!",
-                StringUtils.numberFormat(amount, config)).flatMap(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s Poker Game")).queue(thread -> {
-            thread.addThreadMember(event.getUser()).queue();
+            StringUtils.numberFormat(amount, config))
+            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Poker Game"))
+            .queue(thread -> {
+                thread.addThreadMember(event.getUser()).queue();
 
-            thread.sendMessageFormat("%s, your poker hand has started! Your bet: %s\n" +
-                            "Use `/poker check` to continue, `/poker bet` to bet, or `/poker fold` to fold.",
+                thread.sendMessageFormat("%s, your poker hand has started! Your bet: %s\n" +
+                    "Use `/poker check` to continue, `/poker bet` to bet, or `/poker fold` to fold.",
                     event.getUser().getAsMention(),
-                    StringUtils.numberFormat(amount, config)).queue(ignored -> {
-                var game = new PokerCommand.Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
-                games.add(game);
+                    StringUtils.numberFormat(amount, config)).queue(_ -> {
+                        var game = new PokerCommand.Game(guild.getIdLong(), thread.getIdLong(),
+                            event.getUser().getIdLong(), amount);
+                        games.add(game);
 
-                game.start();
-                String content = buildStateMessage(game, config);
-                try (FileUpload upload = PokerImageRenderer.createUpload(game, false)) {
-                    thread.sendMessage(content).setFiles(upload).queue();
-                } catch (Exception exception) {
-                    Constants.LOGGER.error("Failed to create poker image!", exception);
-                    thread.sendMessage(content + "\n❌ Failed to create the poker image.").queue();
-                }
-
-                AtomicReference<ScheduledFuture<?>> checkerRef = new AtomicReference<>();
-                ScheduledFuture<?> future = SCHEDULER.scheduleAtFixedRate(() -> {
-                    if (game.isFinished()) {
-                        ScheduledFuture<?> checker = checkerRef.get();
-                        if (checker != null) {
-                            checker.cancel(false);
+                        game.start();
+                        String content = buildStateMessage(game, config);
+                        try (FileUpload upload = PokerImageRenderer.createUpload(game, false)) {
+                            thread.sendMessage(content).setFiles(upload).queue();
+                        } catch (Exception exception) {
+                            Constants.LOGGER.error("Failed to create poker image!", exception);
+                            thread.sendMessage(content + "\n❌ Failed to create the poker image.").queue();
                         }
 
-                        return;
-                    }
+                        AtomicReference<ScheduledFuture<?>> checkerRef = new AtomicReference<>();
+                        ScheduledFuture<?> future = SCHEDULER.scheduleAtFixedRate(() -> {
+                            if (game.isFinished()) {
+                                ScheduledFuture<?> checker = checkerRef.get();
+                                if (checker != null) {
+                                    checker.cancel(false);
+                                }
 
-                    long now = System.currentTimeMillis();
-                    if (now - game.getLastActionTime() >= TimeUnit.MINUTES.toMillis(5)) {
-                        if (games.remove(game)) {
-                            game.timeout();
-                            PokerCommand.Settlement settlement = game.getSettlement();
-                            applySettlement(account, settlement);
-                            thread.sendMessageFormat("%s, %s",
-                                    event.getUser().getAsMention(),
-                                    game.getResultMessage(number -> StringUtils.numberFormat(number, config))).queue();
-                            thread.getManager().setArchived(true).setLocked(true).queueAfter(5, TimeUnit.SECONDS);
-                        }
-                    }
-                }, 0, 5, TimeUnit.SECONDS);
+                                return;
+                            }
 
-                checkerRef.set(future);
+                            long now = System.currentTimeMillis();
+                            if (now - game.getLastActionTime() >= TimeUnit.MINUTES.toMillis(5)) {
+                                if (games.remove(game)) {
+                                    game.timeout();
+                                    PokerCommand.Settlement settlement = game.getSettlement();
+                                    applySettlement(account, settlement);
+                                    thread.sendMessageFormat("%s, %s",
+                                        event.getUser().getAsMention(),
+                                        game.getResultMessage(number -> StringUtils.numberFormat(number, config)))
+                                        .queue();
+                                    thread.getManager().setArchived(true).setLocked(true).queueAfter(5,
+                                        TimeUnit.SECONDS);
+                                }
+                            }
+                        }, 0, 5, TimeUnit.SECONDS);
+
+                        checkerRef.set(future);
+                    });
             });
-        });
     }
 
-    static String buildStateMessage(PokerCommand.Game game, GuildData config) {
+    public static String buildStateMessage(PokerCommand.Game game, GuildData config) {
         PokerCommand.Settlement settlement = game.getSettlement();
         String stage = game.isFinished() && settlement != null
-                ? (settlement.result() == PokerCommand.Result.PLAYER_FOLD || settlement.result() == PokerCommand.Result.TIMEOUT
-                ? "Finished"
-                : "Showdown")
-                : game.getStage().getLabel();
+            ? (settlement.result() == PokerCommand.Result.PLAYER_FOLD
+                || settlement.result() == PokerCommand.Result.TIMEOUT
+                    ? "Finished"
+                    : "Showdown")
+            : game.getStage().getLabel();
         String prompt = game.isFinished()
-                ? ""
-                : "\nUse `/poker check` to continue, `/poker bet` to bet, or `/poker fold` to fold.";
+            ? ""
+            : "\nUse `/poker check` to continue, `/poker bet` to bet, or `/poker fold` to fold.";
         return "**Stage:** " + stage + "\n"
-                + "**Your total bet:** " + StringUtils.numberFormat(game.getTotalBet(), config) + "\n"
-                + "**Pot:** " + StringUtils.numberFormat(game.getTotalBet().multiply(BigInteger.valueOf(2)), config)
-                + prompt;
+            + "**Your total bet:** " + StringUtils.numberFormat(game.getTotalBet(), config) + "\n"
+            + "**Pot:** " + StringUtils.numberFormat(game.getTotalBet().multiply(BigInteger.valueOf(2)), config)
+            + prompt;
     }
 }

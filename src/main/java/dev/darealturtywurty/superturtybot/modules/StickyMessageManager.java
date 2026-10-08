@@ -37,7 +37,8 @@ public final class StickyMessageManager extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot() || event.getAuthor().isSystem())
+        if (!event.isFromGuild() || event.isWebhookMessage() || event.getAuthor().isBot()
+            || event.getAuthor().isSystem())
             return;
 
         StickyMessage sticky = getSticky(event.getGuild().getIdLong(), event.getChannel().getIdLong());
@@ -48,7 +49,7 @@ public final class StickyMessageManager extends ListenerAdapter {
 
         // Ignore the sticky post itself so reposting doesn't cause a loop.
         if (sticky.getPostedMessage() == event.getMessageIdLong()
-                || event.getMessageIdLong() == ACTIVE_STICKY_MESSAGES.getOrDefault(key, 0L))
+            || event.getMessageIdLong() == ACTIVE_STICKY_MESSAGES.getOrDefault(key, 0L))
             return;
 
         scheduleRepost(event.getGuild(), event.getChannel().asGuildMessageChannel().getIdLong());
@@ -65,14 +66,14 @@ public final class StickyMessageManager extends ListenerAdapter {
 
         ACTIVE_STICKY_MESSAGES.remove(createKey(sticky.getGuild(), sticky.getChannel()));
         Database.getDatabase().stickyMessages.updateOne(
-                Filters.and(Filters.eq("guild", sticky.getGuild()), Filters.eq("channel", sticky.getChannel())),
-                Updates.set("postedMessage", 0L));
+            Filters.and(Filters.eq("guild", sticky.getGuild()), Filters.eq("channel", sticky.getChannel())),
+            Updates.set("postedMessage", 0L));
     }
 
     public static StickyMessage getSticky(long guildId, long channelId) {
         return Database.getDatabase().stickyMessages.find(Filters.and(
-                Filters.eq("guild", guildId),
-                Filters.eq("channel", channelId))).first();
+            Filters.eq("guild", guildId),
+            Filters.eq("channel", channelId))).first();
     }
 
     public static void saveSticky(StickyMessage sticky) {
@@ -83,9 +84,9 @@ public final class StickyMessageManager extends ListenerAdapter {
 
         sticky.setUpdatedAt(System.currentTimeMillis());
         Database.getDatabase().stickyMessages.replaceOne(
-                Filters.and(Filters.eq("guild", sticky.getGuild()), Filters.eq("channel", sticky.getChannel())),
-                sticky,
-                new ReplaceOptions().upsert(true));
+            Filters.and(Filters.eq("guild", sticky.getGuild()), Filters.eq("channel", sticky.getChannel())),
+            sticky,
+            new ReplaceOptions().upsert(true));
     }
 
     public static boolean clearSticky(Guild guild, long channelId) {
@@ -97,8 +98,8 @@ public final class StickyMessageManager extends ListenerAdapter {
         ACTIVE_STICKY_MESSAGES.remove(createKey(guild.getIdLong(), channelId));
         deletePostedSticky(guild, channelId, sticky.getPostedMessage());
         Database.getDatabase().stickyMessages.deleteOne(Filters.and(
-                Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("channel", channelId)));
+            Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("channel", channelId)));
         return true;
     }
 
@@ -110,7 +111,7 @@ public final class StickyMessageManager extends ListenerAdapter {
 
     private static void scheduleRepost(Guild guild, long channelId) {
         final String key = createKey(guild.getIdLong(), channelId);
-        DebounceState state = DEBOUNCE_STATES.computeIfAbsent(key, ignored -> new DebounceState());
+        DebounceState state = DEBOUNCE_STATES.computeIfAbsent(key, _ -> new DebounceState());
         long version;
         synchronized (state) {
             state.lastMessageAt = System.currentTimeMillis();
@@ -142,18 +143,31 @@ public final class StickyMessageManager extends ListenerAdapter {
         return guildId + ":" + channelId;
     }
 
-    private static ScheduledFuture<?> scheduleFlush(Guild guild, long channelId, String key, DebounceState state, long version, long delayMillis) {
-        return SCHEDULER.schedule(() -> flushRepost(guild, channelId, key, state, version), delayMillis, TimeUnit.MILLISECONDS);
+    private static ScheduledFuture<?> scheduleFlush(
+        Guild guild,
+        long channelId,
+        String key,
+        DebounceState state,
+        long version,
+        long delayMillis
+    ) {
+        return SCHEDULER.schedule(() -> flushRepost(guild, channelId, key, state, version), delayMillis,
+            TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    private static void flushRepost(Guild guild, long channelId, String key, DebounceState state, long expectedVersion) {
+    private static void flushRepost(
+        Guild guild,
+        long channelId,
+        String key,
+        DebounceState state,
+        long expectedVersion
+    ) {
         try {
             long remainingDelay;
             synchronized (state) {
-                if (state.version != expectedVersion) {
+                if (state.version != expectedVersion)
                     return;
-                }
 
                 remainingDelay = REPOST_DEBOUNCE_MILLIS - (System.currentTimeMillis() - state.lastMessageAt);
                 if (remainingDelay > 0L) {
@@ -192,25 +206,27 @@ public final class StickyMessageManager extends ListenerAdapter {
         if (sticky.hasEmbed()) {
             EmbedBuilder embed = EmbedBuilder.fromData(DataObject.fromJson(sticky.getEmbed()));
             channel.sendMessageEmbeds(embed.build()).queue(
-                    message -> updatePostedMessage(guild.getIdLong(), channel.getIdLong(), message),
-                    failure -> Constants.LOGGER.warn("Failed to post sticky embed in channel {}", channel.getIdLong(), failure));
+                message -> updatePostedMessage(guild.getIdLong(), channel.getIdLong(), message),
+                failure -> Constants.LOGGER.warn("Failed to post sticky embed in channel {}", channel.getIdLong(),
+                    failure));
             return;
         }
 
         if (sticky.hasText()) {
             channel.sendMessage(sticky.getContent()).queue(
-                    message -> updatePostedMessage(guild.getIdLong(), channel.getIdLong(), message),
-                    failure -> Constants.LOGGER.warn("Failed to post sticky message in channel {}", channel.getIdLong(), failure));
+                message -> updatePostedMessage(guild.getIdLong(), channel.getIdLong(), message),
+                failure -> Constants.LOGGER.warn("Failed to post sticky message in channel {}", channel.getIdLong(),
+                    failure));
         }
     }
 
     private static void updatePostedMessage(long guildId, long channelId, Message message) {
         ACTIVE_STICKY_MESSAGES.put(createKey(guildId, channelId), message.getIdLong());
         Database.getDatabase().stickyMessages.updateOne(
-                Filters.and(Filters.eq("guild", guildId), Filters.eq("channel", channelId)),
-                Updates.combine(
-                        Updates.set("postedMessage", message.getIdLong()),
-                        Updates.set("updatedAt", System.currentTimeMillis())));
+            Filters.and(Filters.eq("guild", guildId), Filters.eq("channel", channelId)),
+            Updates.combine(
+                Updates.set("postedMessage", message.getIdLong()),
+                Updates.set("updatedAt", System.currentTimeMillis())));
     }
 
     private static void deletePostedSticky(Guild guild, long channelId, long postedMessageId) {
@@ -223,8 +239,9 @@ public final class StickyMessageManager extends ListenerAdapter {
 
         ACTIVE_STICKY_MESSAGES.remove(createKey(guild.getIdLong(), channelId), postedMessageId);
         messageChannel.deleteMessageById(postedMessageId).queue(
-                _ -> {},
-                failure -> Constants.LOGGER.debug("Failed to delete old sticky message {}", postedMessageId, failure));
+            _ -> {
+            },
+            failure -> Constants.LOGGER.debug("Failed to delete old sticky message {}", postedMessageId, failure));
     }
 
     private static final class DebounceState {

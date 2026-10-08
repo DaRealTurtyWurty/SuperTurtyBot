@@ -30,59 +30,58 @@ public class SuggestCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("add", "Adds a suggestion to the suggestion channel").addOptions(
-                        new OptionData(OptionType.STRING, "suggestion", "The thing that you want to suggest", true),
-                        new OptionData(OptionType.STRING, "media_url", "A media URL that you would like to add to your suggestion", false)
-                ),
-                new SubcommandData("approve", "Approves a suggestion").addOptions(
-                        new OptionData(OptionType.INTEGER, "suggestion_number", "The number of the suggestion you want to approve", true),
-                        new OptionData(OptionType.STRING, "reason", "The reason for approving the suggestion", false)
-                ),
-                new SubcommandData("deny", "Denies a suggestion").addOptions(
-                        new OptionData(OptionType.INTEGER, "suggestion_number", "The number of the suggestion you want to deny", true),
-                        new OptionData(OptionType.STRING, "reason", "The reason for denying the suggestion", false)
-                ),
-                new SubcommandData("consider", "Considers a suggestion").addOptions(
-                        new OptionData(OptionType.INTEGER, "suggestion_number", "The number of the suggestion you want to consider", true),
-                        new OptionData(OptionType.STRING, "reason", "The reason for considering the suggestion", false)
-                ),
-                new SubcommandData("delete", "Deletes a suggestion").addOptions(
-                        new OptionData(OptionType.INTEGER, "suggestion_number", "The number of the suggestion you want to delete", true),
-                        new OptionData(OptionType.STRING, "reason", "The reason for deleting the suggestion", false)
-                )
-        );
+            new SubcommandData("add", "Adds a suggestion to the suggestion channel").addOptions(
+                new OptionData(OptionType.STRING, "suggestion", "The thing that you want to suggest", true),
+                new OptionData(OptionType.STRING, "media_url",
+                    "A media URL that you would like to add to your suggestion", false)),
+            new SubcommandData("approve", "Approves a suggestion").addOptions(
+                new OptionData(OptionType.INTEGER, "suggestion_number",
+                    "The number of the suggestion you want to approve", true),
+                new OptionData(OptionType.STRING, "reason", "The reason for approving the suggestion", false)),
+            new SubcommandData("deny", "Denies a suggestion").addOptions(
+                new OptionData(OptionType.INTEGER, "suggestion_number", "The number of the suggestion you want to deny",
+                    true),
+                new OptionData(OptionType.STRING, "reason", "The reason for denying the suggestion", false)),
+            new SubcommandData("consider", "Considers a suggestion").addOptions(
+                new OptionData(OptionType.INTEGER, "suggestion_number",
+                    "The number of the suggestion you want to consider", true),
+                new OptionData(OptionType.STRING, "reason", "The reason for considering the suggestion", false)),
+            new SubcommandData("delete", "Deletes a suggestion").addOptions(
+                new OptionData(OptionType.INTEGER, "suggestion_number",
+                    "The number of the suggestion you want to delete", true),
+                new OptionData(OptionType.STRING, "reason", "The reason for deleting the suggestion", false)));
     }
 
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.CORE;
     }
-    
+
     @Override
     public String getDescription() {
         return "Allows you to suggest something (e.g. a bot feature/improvement) to the server! Also allows you to approve, deny, consider, and delete suggestions!";
     }
-    
+
     @Override
     public String getHowToUse() {
         return """
-                /suggest add <suggestion> [media_url]
-                /suggest approve <suggestion_number> [reason]
-                /suggest deny <suggestion_number> [reason]
-                /suggest consider <suggestion_number> [reason]
-                /suggest delete <suggestion_number> [reason]""";
+            /suggest add <suggestion> [media_url]
+            /suggest approve <suggestion_number> [reason]
+            /suggest deny <suggestion_number> [reason]
+            /suggest consider <suggestion_number> [reason]
+            /suggest delete <suggestion_number> [reason]""";
     }
-    
+
     @Override
     public String getName() {
         return "suggest";
     }
-    
+
     @Override
     public String getRichName() {
         return "Suggest";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
@@ -92,27 +91,27 @@ public class SuggestCommand extends CoreCommand {
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 30L);
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
-        
+
         final TextChannel suggestionChannel = SuggestionManager.getSuggestionChannel(event);
         if (suggestionChannel == null)
             return;
 
         String subcommand = event.getSubcommandName();
-        if(subcommand == null || subcommand.isBlank()) {
+        if (subcommand == null || subcommand.isBlank()) {
             reply(event, "❌ You must specify a subcommand!", false, true);
             return;
         }
 
-        if(!"add".equalsIgnoreCase(subcommand)) {
+        if (!"add".equalsIgnoreCase(subcommand)) {
             // check permission
-            if(!event.getMember().hasPermission(suggestionChannel, Permission.MANAGE_CHANNEL)) {
+            if (!event.getMember().hasPermission(suggestionChannel, Permission.MANAGE_CHANNEL)) {
                 reply(event, "❌ You do not have permission to use this command!", false, true);
                 return;
             }
@@ -138,18 +137,19 @@ public class SuggestCommand extends CoreCommand {
         event.deferReply(false).mentionRepliedUser(false).queue();
         final String mediaURL = event.getOption("media_url", OptionMapping::getAsString);
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.addSuggestion(suggestionChannel,
-                event.getGuild(), event.getMember(), suggestionStr, mediaURL);
+            event.getGuild(), event.getMember(), suggestionStr, mediaURL);
         suggestion.thenAccept(sug -> {
             final var embed = new EmbedBuilder();
             embed.setTimestamp(Instant.now());
             embed.setColor(sug != null ? Color.GREEN : Color.RED);
             embed.setTitle(
-                    sug != null ? "✅ Suggestion successfully added!" : "❌ There was an issue adding this suggestion!",
-                    sug != null
-                            ? "https://discord.com/channels/" + event.getGuild().getIdLong() + "/"
-                            + suggestionChannel.getIdLong() + "/" + sug.getMessage()
-                            : "");
-            embed.setFooter("Created by: " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
+                sug != null ? "✅ Suggestion successfully added!" : "❌ There was an issue adding this suggestion!",
+                sug != null
+                    ? "https://discord.com/channels/" + event.getGuild().getIdLong() + "/"
+                        + suggestionChannel.getIdLong() + "/" + sug.getMessage()
+                    : "");
+            embed.setFooter("Created by: " + event.getUser().getEffectiveName(),
+                event.getMember().getEffectiveAvatarUrl());
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();
         });
@@ -160,8 +160,8 @@ public class SuggestCommand extends CoreCommand {
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         final CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
-                suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.APPROVED);
-        if(suggestion == null) {
+            suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.APPROVED);
+        if (suggestion == null) {
             reply(event, "❌ You must supply a valid suggestion number!", false, true);
             return;
         }
@@ -183,13 +183,14 @@ public class SuggestCommand extends CoreCommand {
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.GREEN);
                 embed.setTitle("✅" + event.getUser().getEffectiveName() + " has approved your suggestion!",
-                        "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
-                                + "/" + sug.getMessage());
+                    "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
+                        + "/" + sug.getMessage());
                 embed.setDescription(reason);
                 embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
-            }, throwable -> {});
+            }, throwable -> {
+            });
 
             reply(event, "✅ Successfully approved suggestion #" + suggestionNumber + "!");
         });
@@ -200,8 +201,8 @@ public class SuggestCommand extends CoreCommand {
         String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
-                suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.DENIED);
-        if(suggestion == null) {
+            suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.DENIED);
+        if (suggestion == null) {
             reply(event, "❌ You must supply a valid suggestion number!", false, true);
             return;
         }
@@ -223,13 +224,14 @@ public class SuggestCommand extends CoreCommand {
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.RED);
                 embed.setTitle("❌" + event.getUser().getEffectiveName() + " has denied your suggestion!",
-                        "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
-                                + "/" + sug.getMessage());
+                    "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
+                        + "/" + sug.getMessage());
                 embed.setDescription(reason);
                 embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
-            }, throwable -> {});
+            }, throwable -> {
+            });
 
             reply(event, "✅ Successfully denied suggestion #" + suggestionNumber + "!");
         });
@@ -240,9 +242,9 @@ public class SuggestCommand extends CoreCommand {
         String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         CompletableFuture<Suggestion> suggestion = SuggestionManager.respondSuggestion(event.getGuild(),
-                suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.CONSIDERED);
+            suggestionChannel, event.getMember(), suggestionNumber, reason, SuggestionResponse.Type.CONSIDERED);
 
-        if(suggestion == null) {
+        if (suggestion == null) {
             reply(event, "❌ You must supply a valid suggestion number!", false, true);
             return;
         }
@@ -264,13 +266,14 @@ public class SuggestCommand extends CoreCommand {
                 embed.setTimestamp(Instant.now());
                 embed.setColor(Color.YELLOW);
                 embed.setTitle("⚠" + event.getUser().getEffectiveName() + " has considered your suggestion!",
-                        "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
-                                + "/" + sug.getMessage());
+                    "https://discord.com/channels/" + event.getGuild().getIdLong() + "/" + suggestionChannel.getIdLong()
+                        + "/" + sug.getMessage());
                 embed.setDescription(reason);
                 embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
 
                 channel.sendMessageEmbeds(embed.build()).queue();
-            }, throwable -> {});
+            }, throwable -> {
+            });
 
             reply(event, "✅ Successfully considered suggestion #" + suggestionNumber + "!");
         });
@@ -280,10 +283,10 @@ public class SuggestCommand extends CoreCommand {
         int suggestionNumber = event.getOption("suggestion_number", 0, OptionMapping::getAsInt);
 
         CompletableFuture<Suggestion> suggestion = SuggestionManager.deleteSuggestion(event.getGuild(),
-                suggestionChannel, event.getMember(), suggestionNumber);
+            suggestionChannel, event.getMember(), suggestionNumber);
 
         suggestion.thenAccept(sug -> {
-            if(sug == null) {
+            if (sug == null) {
                 reply(event, "❌ You must supply a valid suggestion number!", false, true);
                 return;
             }

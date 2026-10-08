@@ -55,13 +55,15 @@ public class SetMoneyCommand extends EconomyCommand {
         BigInteger amount = BigInteger.ZERO;
         try {
             user = Long.parseLong(args[1]);
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException _) {
             type = switch (args[1]) {
                 case "add" -> Type.ADD;
                 case "remove" -> Type.REMOVE;
                 case "set" -> Type.SET;
                 default -> {
-                    reply(event, "❌ You must provide a user and an amount (and optionally an action; `add` or `remove`)!", false);
+                    reply(event,
+                        "❌ You must provide a user and an amount (and optionally an action; `add` or `remove`)!",
+                        false);
                     yield Type.INVALID;
                 }
             };
@@ -73,9 +75,8 @@ public class SetMoneyCommand extends EconomyCommand {
                     reply(event, "❌ You must provide a user!", false);
                     return;
                 }
-            } else {
+            } else
                 return;
-            }
 
             try {
                 amount = new BigInteger(args[3]);
@@ -92,7 +93,7 @@ public class SetMoneyCommand extends EconomyCommand {
         if (amount.signum() == 0) {
             try {
                 amount = new BigInteger(args[2]);
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException _) {
                 reply(event, "❌ You must provide an amount!", false);
                 return;
             }
@@ -110,15 +111,15 @@ public class SetMoneyCommand extends EconomyCommand {
                 EconomyManager.addMoney(account, amount);
                 account.addTransaction(amount, MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Added %s to %s's balance!"
-                                .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
-                        false);
+                    .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
+                    false);
             }
             case REMOVE -> {
                 EconomyManager.removeMoney(account, amount);
                 account.addTransaction(amount.negate(), MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Removed %s from %s's balance!"
-                                .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
-                        false);
+                    .formatted(StringUtils.numberFormat(amount, config), user1.getAsMention()),
+                    false);
             }
             case SET -> {
                 BigInteger prevBalance = EconomyManager.getBalance(account);
@@ -128,8 +129,8 @@ public class SetMoneyCommand extends EconomyCommand {
                 BigInteger difference = EconomyManager.getBalance(account).subtract(prevBalance);
                 account.addTransaction(difference, MoneyTransaction.SET_MONEY);
                 reply(event, "✅ Set %s's balance to %s!"
-                                .formatted(user1.getAsMention(), StringUtils.numberFormat(amount, config)),
-                        false);
+                    .formatted(user1.getAsMention(), StringUtils.numberFormat(amount, config)),
+                    false);
             }
             default -> reply(event, "🤓 Hackerman!", false);
         }

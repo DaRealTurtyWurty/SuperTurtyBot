@@ -12,44 +12,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReportManager {
-    private static final String REPORT_MESSAGE =
-            "%s has been reported for `%s` by %s. Please review the report and " + "take appropriate action.";
+    private static final String REPORT_MESSAGE = "%s has been reported for `%s` by %s. Please review the report and "
+        + "take appropriate action.";
 
     public static Report reportUser(Guild guild, User reported, User reporter, String reason) {
-        if (guild == null) {
+        if (guild == null)
             throw new IllegalArgumentException("No guild context available.");
-        }
 
-        if (reported == null) {
+        if (reported == null)
             throw new IllegalArgumentException("Reported user was missing.");
-        }
 
-        if (reporter == null) {
+        if (reporter == null)
             throw new IllegalArgumentException("Reporter user was missing.");
-        }
 
-        if (reason == null || reason.isBlank()) {
+        if (reason == null || reason.isBlank())
             throw new IllegalArgumentException("Report reason was empty.");
-        }
 
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config != null && config.getModLogging() != 0L) {
             TextChannel modLogging = guild.getTextChannelById(config.getModLogging());
             if (modLogging != null) {
                 modLogging.sendMessage(
-                                REPORT_MESSAGE.formatted(reported.getAsMention(), truncate(reason, 1720),
-                                        reporter.getAsMention()))
-                        .queue();
+                    REPORT_MESSAGE.formatted(reported.getAsMention(), truncate(reason, 1720),
+                        reporter.getAsMention()))
+                    .queue();
             }
         }
 
-        Report report = new Report(guild.getIdLong(), reported.getIdLong(), reporter.getIdLong(), reason);
+        var report = new Report(guild.getIdLong(), reported.getIdLong(), reporter.getIdLong(), reason);
         Database.getDatabase().reports.insertOne(report);
         return report;
     }
 
     public static String truncate(String str, int maxLength) {
-        if (str == null || str.isBlank()) return str;
+        if (str == null || str.isBlank())
+            return str;
         return str.length() > maxLength ? str.substring(0, maxLength - 3) + "..." : str;
     }
 
@@ -58,8 +55,8 @@ public class ReportManager {
             return List.of();
 
         return Database.getDatabase().reports.find(
-                               Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("reported",
-                                       user.getIdLong())))
-                                             .into(new ArrayList<>());
+            Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("reported",
+                user.getIdLong())))
+            .into(new ArrayList<>());
     }
 }

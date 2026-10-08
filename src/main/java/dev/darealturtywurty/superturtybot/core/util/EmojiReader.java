@@ -21,10 +21,10 @@ public class EmojiReader {
         if (path == null)
             throw new IllegalArgumentException("Emoji path cannot be null!");
 
-        if(Files.notExists(path))
+        if (Files.notExists(path))
             throw new IllegalArgumentException("Emoji path does not exist! " + path.toAbsolutePath());
 
-        if(!path.toString().endsWith(".json"))
+        if (!path.toString().endsWith(".json"))
             throw new IllegalArgumentException("Emoji path must be a JSON file!");
 
         emojisPath = path;
@@ -41,9 +41,8 @@ public class EmojiReader {
                 Constants.LOGGER.error("Failed to read emojis from file!", exception);
                 return Map.of();
             }
-        } else {
+        } else
             return EMOJIS;
-        }
 
         Map<String, Long> emojis = new HashMap<>();
         for (Map.Entry<String, JsonElement> entry : json.entrySet()) {

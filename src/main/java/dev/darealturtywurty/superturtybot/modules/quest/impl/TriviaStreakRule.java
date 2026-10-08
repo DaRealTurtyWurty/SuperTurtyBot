@@ -27,9 +27,8 @@ public final class TriviaStreakRule implements QuestRule<TriviaStreakConfig, Tri
     public QuestStatus status(TriviaStreakConfig config, TriviaStreakState state) {
         int target = config.requiredAnswers();
         return new QuestStatus(
-                Math.min(state.best, target),
-                target,
-                state.best >= target
-        );
+            Math.min(state.best, target),
+            target,
+            state.best >= target);
     }
 }

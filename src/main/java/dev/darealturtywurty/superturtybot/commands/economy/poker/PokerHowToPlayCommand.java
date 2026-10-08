@@ -13,19 +13,19 @@ public class PokerHowToPlayCommand extends PokerSubcommand {
     @Override
     protected void execute(SlashCommandInteractionEvent event, Guild guild, Economy account, GuildData config) {
         String message = """
-                **Poker (Texas Hold'em) — How to Play**
-                Goal: make the best 5-card hand using your 2 hole cards + 5 community cards.
+            **Poker (Texas Hold'em) — How to Play**
+            Goal: make the best 5-card hand using your 2 hole cards + 5 community cards.
 
-                **Commands**
-                - `/poker play <bet>`: start a hand (creates a thread)
-                - `/poker check`: reveal the next community cards
-                - `/poker bet <amount>`: increase the pot before the next reveal
-                - `/poker fold`: fold and end the hand
+            **Commands**
+            - `/poker play <bet>`: start a hand (creates a thread)
+            - `/poker check`: reveal the next community cards
+            - `/poker bet <amount>`: increase the pot before the next reveal
+            - `/poker fold`: fold and end the hand
 
-                **Rounds**
-                - Pre-Flop → Flop → Turn → River → Showdown
-                - At showdown, your best 5-card hand is compared to the dealer.
-                """;
+            **Rounds**
+            - Pre-Flop → Flop → Turn → River → Showdown
+            - At showdown, your best 5-card hand is compared to the dealer.
+            """;
         event.getHook().editOriginal(message).queue();
     }
 }

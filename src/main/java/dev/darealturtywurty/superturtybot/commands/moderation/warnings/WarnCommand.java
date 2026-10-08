@@ -30,7 +30,7 @@ public class WarnCommand extends CoreCommand {
         return List.of(new OptionData(OptionType.USER, "user", "The user to warn", true),
             new OptionData(OptionType.STRING, "reason", "The reason for why you want to warn that user", false));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Ban Permission)";
@@ -80,14 +80,14 @@ public class WarnCommand extends CoreCommand {
 
         final User user = event.getOption("user", event.getUser(), OptionMapping::getAsUser);
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
-        
+
         user.openPrivateChannel()
             .queue(channel -> channel
                 .sendMessage("You have been warned on `" + event.getGuild().getName() + "` for `" + reason + "`!")
                 .queue(success -> {
                 }, error -> {
                 }));
-        
+
         final Warning warn = WarnManager.addWarn(user, event.getGuild(), event.getMember(), reason);
 
         event.getJDA().retrieveUserById(warn.getWarner()).queue(warner -> {

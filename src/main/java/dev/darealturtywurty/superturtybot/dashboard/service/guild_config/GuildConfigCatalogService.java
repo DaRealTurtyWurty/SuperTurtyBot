@@ -16,17 +16,16 @@ public final class GuildConfigCatalogService {
 
     public GuildConfigCatalogService() {
         this.sortedOptions = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .toList();
+            .sorted(Map.Entry.comparingByKey())
+            .toList();
 
         this.descriptors = this.sortedOptions.stream()
-                .map(entry -> new GuildConfigOptionDescriptor(
-                        entry.getKey(),
-                        entry.getValue().getRichName(),
-                        entry.getValue().getSaveName(),
-                        entry.getValue().getDataType()
-                ))
-                .toList();
+            .map(entry -> new GuildConfigOptionDescriptor(
+                entry.getKey(),
+                entry.getValue().getRichName(),
+                entry.getValue().getSaveName(),
+                entry.getValue().getDataType()))
+            .toList();
     }
 
     public List<GuildConfigOptionDescriptor> listOptions() {

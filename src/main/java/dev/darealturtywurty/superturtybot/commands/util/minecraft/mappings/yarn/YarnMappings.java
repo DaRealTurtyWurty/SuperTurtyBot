@@ -15,15 +15,16 @@ import java.util.Map;
 public record YarnMappings(MemoryMappingTree tree, String build) {
     public static YarnMappings load(String version) throws IOException {
         var builds = MappingDownloads.json("https://meta.fabricmc.net/v2/versions/yarn/" + MappingFiles.encode(version))
-                .getAsJsonArray();
+            .getAsJsonArray();
         JsonObject latest = builds.asList().stream().map(JsonElement::getAsJsonObject)
-                .max(Comparator.comparingInt(build -> build.get("build").getAsInt()))
-                .orElseThrow(() -> new IllegalArgumentException("Yarn mappings are not available for Minecraft " + version + "."));
+            .max(Comparator.comparingInt(build -> build.get("build").getAsInt()))
+            .orElseThrow(
+                () -> new IllegalArgumentException("Yarn mappings are not available for Minecraft " + version + "."));
         String build = latest.get("version").getAsString();
         String encodedBuild = MappingFiles.encode(build);
         Path jar = MappingDownloads.cached("https://maven.fabricmc.net/net/fabricmc/yarn/"
-                        + encodedBuild + "/yarn-" + encodedBuild + "-v2.jar",
-                Path.of("versions", version, "yarn-" + build + "-v2.jar"), null);
+            + encodedBuild + "/yarn-" + encodedBuild + "-v2.jar",
+            Path.of("versions", version, "yarn-" + build + "-v2.jar"), null);
         var tree = IntermediaryMappings.load(version);
         MappingFiles.readTiny(jar, Map.of("named", "yarn")).accept(tree);
         return new YarnMappings(tree, build);

@@ -73,30 +73,31 @@ public class RunCodeCommand extends CoreCommand {
 
             EvaluationResult result = evaluateCode(codeBlock.language(), codeContent);
             var embed = new EmbedBuilder()
-                    .setTitle(codeBlock.language().name() + " Code Execution")
-                    .setDescription(result.message())
-                    .setColor(result.success() ? 0x00CC00 : 0xCC0000)
-                    .setTimestamp(event.getTimeCreated())
-                    .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                .setTitle(codeBlock.language().name() + " Code Execution")
+                .setDescription(result.message())
+                .setColor(result.success() ? 0x00CC00 : 0xCC0000)
+                .setTimestamp(event.getTimeCreated())
+                .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                    event.getUser().getEffectiveAvatarUrl());
 
             event.getHook().sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
         });
     }
 
     private static String buildExecutionJson(String code, String languageId) {
-        JsonObject object = new JsonObject();
+        var object = new JsonObject();
         object.addProperty("source", code);
-        JsonObject options = new JsonObject();
+        var options = new JsonObject();
 
-        JsonObject compilerOptions = new JsonObject();
+        var compilerOptions = new JsonObject();
         compilerOptions.addProperty("executorRequest", true);
         options.add("compilerOptions", compilerOptions);
 
-        JsonObject filters = new JsonObject();
+        var filters = new JsonObject();
         filters.addProperty("execute", true);
         options.add("filters", filters);
 
-        JsonArray tools = new JsonArray();
+        var tools = new JsonArray();
         options.add("tools", tools);
 
         object.add("options", options);
@@ -107,18 +108,17 @@ public class RunCodeCommand extends CoreCommand {
 
     private static EvaluationResult evaluateCode(ProgrammingLanguage language, String code) {
         String compiler = language.compiler();
-        if(Objects.equals(compiler, "custom")) {
+        if (Objects.equals(compiler, "custom"))
             return language.customCompiler().apply(code);
-        }
         String endpoint = "https://godbolt.org/api/compiler/" + compiler + "/compile";
 
         var request = new Request.Builder()
-                .url(endpoint)
-                .post(RequestBody.create(buildExecutionJson(code, language.id()), MediaType.get("application/json")))
-                .addHeader("Accept", "application/json")
-                .build();
+            .url(endpoint)
+            .post(RequestBody.create(buildExecutionJson(code, language.id()), MediaType.get("application/json")))
+            .addHeader("Accept", "application/json")
+            .build();
 
-        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 Constants.LOGGER.error("Failed to evaluate code! Response code: {}", response.code());
                 return new EvaluationResult(false, "Failed to evaluate code! Response code: " + response.code());
@@ -165,10 +165,12 @@ public class RunCodeCommand extends CoreCommand {
         if (!attachments.isEmpty()) {
             // find one with a code file
             for (Message.Attachment attachment : attachments) {
-                if(attachment.isImage() || attachment.isVideo()) continue;
+                if (attachment.isImage() || attachment.isVideo())
+                    continue;
 
                 String fileName = attachment.getFileExtension();
-                if (fileName == null) continue;
+                if (fileName == null)
+                    continue;
 
                 for (ProgrammingLanguage language : ProgrammingLanguage.values()) {
                     if (!fileName.endsWith(language.id()))
@@ -190,26 +192,31 @@ public class RunCodeCommand extends CoreCommand {
         for (var language : ProgrammingLanguage.values()) {
             String codeBlock = "```" + language.id() + "\n";
             int start = content.indexOf(codeBlock);
-            if (start == -1) continue;
+            if (start == -1)
+                continue;
 
             int end = content.indexOf("```", start + codeBlock.length());
-            if (end == -1) continue;
+            if (end == -1)
+                continue;
 
-            return new CodeBlock(language, CompletableFuture.completedFuture(content.substring(start + codeBlock.length(), end)));
+            return new CodeBlock(language,
+                CompletableFuture.completedFuture(content.substring(start + codeBlock.length(), end)));
         }
 
         return null;
     }
 
-    public record EvaluationResult(boolean success, String message) {}
+    public record EvaluationResult(boolean success, String message) {
+    }
 
-    public record CodeBlock(ProgrammingLanguage language, CompletableFuture<String> code) {}
+    public record CodeBlock(ProgrammingLanguage language, CompletableFuture<String> code) {
+    }
 
     public static void requestLanguages() {
         String endpoint = "https://godbolt.org/api/languages";
 
         var request = new Request.Builder().url(endpoint).addHeader("Accept", "application/json").build();
-        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 Constants.LOGGER.error("Failed to get the languages! Response code: {}", response.code());
                 return;
@@ -253,21 +260,24 @@ public class RunCodeCommand extends CoreCommand {
         String url = "https://godbolt.org/api/compilers/" + languageId;
 
         var request = new Request.Builder().url(url).addHeader("Accept", "application/json").build();
-        try(Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
+        try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                Constants.LOGGER.error("Failed to get the compilers for language {}! Response code: {}", languageId, response.code());
+                Constants.LOGGER.error("Failed to get the compilers for language {}! Response code: {}", languageId,
+                    response.code());
                 return List.of();
             }
 
             ResponseBody body = response.body();
             if (body == null) {
-                Constants.LOGGER.error("Failed to get the compilers for language {}! Response body is null!", languageId);
+                Constants.LOGGER.error("Failed to get the compilers for language {}! Response body is null!",
+                    languageId);
                 return List.of();
             }
 
             String content = body.string();
             if (content.isBlank() || content.contains("404 Not Found")) {
-                Constants.LOGGER.error("Failed to get the compilers for language {}! Response body is empty!", languageId);
+                Constants.LOGGER.error("Failed to get the compilers for language {}! Response body is empty!",
+                    languageId);
                 return List.of();
             }
 
@@ -280,7 +290,8 @@ public class RunCodeCommand extends CoreCommand {
 
             return compilers;
         } catch (IOException exception) {
-            Constants.LOGGER.error("An error occurred while trying to get the compilers for language {}!", languageId, exception);
+            Constants.LOGGER.error("An error occurred while trying to get the compilers for language {}!", languageId,
+                exception);
             return List.of();
         }
     }
@@ -364,59 +375,61 @@ public class RunCodeCommand extends CoreCommand {
             try {
                 code = code.replaceAll("[^+\\-.<>\\[\\]]", "");
                 final int length = 65535;
-                StringBuilder resultBuilder = new StringBuilder();
+                var resultBuilder = new StringBuilder();
 
                 byte[] array = new byte[length];
                 int index = 0;
                 int c = 0;
-                for(int currentChar = 0; currentChar < code.length(); currentChar++) {
+                for (int currentChar = 0; currentChar < code.length(); currentChar++) {
                     char ch = code.charAt(currentChar);
                     switch (ch) {
                         case '>' -> {
-                            if (index == length - 1)
+                            if (index == length - 1) {
                                 index = 0;
-                            else
+                            } else {
                                 index++;
+                            }
                         }
                         case '<' -> {
-                            if (index == 0)
+                            if (index == 0) {
                                 index = length - 1;
-                            else
+                            } else {
                                 index--;
+                            }
                         }
                         case '+' -> array[index]++;
                         case '-' -> array[index]--;
-                        case '.' -> resultBuilder.append((char)(array[index]));
+                        case '.' -> resultBuilder.append((char) (array[index]));
                         case '[' -> {
-                            if (array[index] == 0)
-                            {
+                            if (array[index] == 0) {
                                 currentChar++;
-                                while (c > 0 || code.charAt(currentChar) != ']')
-                                {
-                                    if (code.charAt(currentChar) == '[')
+                                while (c > 0 || code.charAt(currentChar) != ']') {
+                                    if (code.charAt(currentChar) == '[') {
                                         c++;
-                                    else if (code.charAt(currentChar) == ']')
+                                    } else if (code.charAt(currentChar) == ']') {
                                         c--;
+                                    }
                                     currentChar++;
                                 }
                             }
                         }
                         case ']' -> {
-                            if (array[index] != 0)
-                            {
+                            if (array[index] != 0) {
                                 currentChar--;
-                                while (c > 0 || code.charAt(currentChar) != '[')
-                                {
-                                    if (code.charAt(currentChar) == ']')
-                                        c ++;
-                                    else if (code.charAt(currentChar) == '[')
-                                        c --;
+                                while (c > 0 || code.charAt(currentChar) != '[') {
+                                    if (code.charAt(currentChar) == ']') {
+                                        c++;
+                                    } else if (code.charAt(currentChar) == '[') {
+                                        c--;
+                                    }
                                     currentChar--;
                                 }
                             }
                         }
                         default -> {
-                            return new EvaluationResult(false, "Unknown character: \"%s\" at %d, this shouldn't be possible".formatted(ch, currentChar+1));
+                            return new EvaluationResult(false,
+                                "Unknown character: \"%s\" at %d, this shouldn't be possible".formatted(ch,
+                                    currentChar + 1));
                         }
                     }
                 }
@@ -430,7 +443,12 @@ public class RunCodeCommand extends CoreCommand {
             VALUES.add(this);
         }
 
-        public static void addCustomCompiler(String id, String name, List<String> fileExtensions, Function<String, EvaluationResult> compiler) {
+        public static void addCustomCompiler(
+            String id,
+            String name,
+            List<String> fileExtensions,
+            Function<String, EvaluationResult> compiler
+        ) {
             new ProgrammingLanguage(id, name, fileExtensions, List.of("custom"));
             PREFERRED_COMPILERS.put(id, "custom");
             CUSTOM_COMPILERS.put(id, compiler);
@@ -438,9 +456,8 @@ public class RunCodeCommand extends CoreCommand {
 
         public static ProgrammingLanguage fromString(String id) {
             for (ProgrammingLanguage language : VALUES) {
-                if (language.id().equalsIgnoreCase(id)) {
+                if (language.id().equalsIgnoreCase(id))
                     return language;
-                }
             }
 
             return null;

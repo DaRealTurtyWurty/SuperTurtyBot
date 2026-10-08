@@ -61,7 +61,8 @@ public class WordleCommand extends CoreCommand {
     private static final Map<Long, String> GUILD_WORDS = new HashMap<>();
     private static final AtomicReference<String> GLOBAL_WORD = new AtomicReference<>();
 
-    private static final WordRequest COMMON_WORD_REQUEST_DATA = new WordRequest.Builder().length(5).amount(2000).build();
+    private static final WordRequest COMMON_WORD_REQUEST_DATA = new WordRequest.Builder().length(5).amount(2000)
+        .build();
     private static final Path WORDLE_FILE = Path.of("./wordle.json");
     private static final ZoneOffset WORDLE_TIME_ZONE = ZoneOffset.UTC;
     private static final long WORDLE_REMINDER_DELAY = TimeUnit.HOURS.toMillis(24);
@@ -189,9 +190,9 @@ public class WordleCommand extends CoreCommand {
 
         WordleProfile profile = getProfile(event.getUser().getIdLong());
         Optional<WordleStreakData> streakData = profile.getStreaks()
-                .stream()
-                .filter(streak -> streak.getGuild() == 0L)
-                .findFirst();
+            .stream()
+            .filter(streak -> streak.getGuild() == 0L)
+            .findFirst();
         if (streakData.isPresent() && streakData.get().isHasPlayedToday()) {
             event.getHook().sendMessage("❌ You have already played today!").queue();
             return;
@@ -207,23 +208,23 @@ public class WordleCommand extends CoreCommand {
         BufferedImage image = createGame(event, word, messageFuture);
 
         try {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            var stream = new ByteArrayOutputStream();
             ImageIO.write(image, "png", stream);
             byte[] data = stream.toByteArray();
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
 
             event.getHook()
-                    .sendMessage("Can you guess today's word? You have 6 tries!")
-                    .setFiles(upload)
-                    .queue(message -> {
-                        try {
-                            upload.close();
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error("An error occurred while closing the file upload!", exception);
-                        } finally {
-                            messageFuture.complete(message);
-                        }
-                    });
+                .sendMessage("Can you guess today's word? You have 6 tries!")
+                .setFiles(upload)
+                .queue(message -> {
+                    try {
+                        upload.close();
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error("An error occurred while closing the file upload!", exception);
+                    } finally {
+                        messageFuture.complete(message);
+                    }
+                });
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while creating the game!").queue();
             Constants.LOGGER.error("An error occurred while creating the game!", exception);
@@ -246,9 +247,9 @@ public class WordleCommand extends CoreCommand {
 
         WordleProfile profile = getProfile(event.getUser().getIdLong());
         Optional<WordleStreakData> streakData = profile.getStreaks()
-                .stream()
-                .filter(streak -> streak.getGuild() == guild.getIdLong())
-                .findFirst();
+            .stream()
+            .filter(streak -> streak.getGuild() == guild.getIdLong())
+            .findFirst();
         if (streakData.isPresent() && streakData.get().isHasPlayedToday()) {
             event.getHook().sendMessage("❌ You have already played today!").queue();
             return;
@@ -264,43 +265,48 @@ public class WordleCommand extends CoreCommand {
         BufferedImage image = createGame(event, word, messageFuture);
 
         try {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            var stream = new ByteArrayOutputStream();
             ImageIO.write(image, "png", stream);
             byte[] data = stream.toByteArray();
-            //noinspection resource
+            // noinspection resource
             FileUpload upload = FileUpload.fromData(data, "wordle.png");
 
             event.getChannel()
-                    .asTextChannel()
-                    .createThreadChannel(event.getUser().getName() + "'s Wordle Game", true)
-                    .setInvitable(false)
-                    .queue(thread -> {
-                        thread.addThreadMember(event.getUser()).queue();
-                        thread.sendMessage("Can you guess today's word? You have 6 tries!")
-                                .setFiles(upload)
-                                .queue(message -> {
-                                    try {
-                                        upload.close();
-                                    } catch (IOException exception) {
-                                        Constants.LOGGER.error("An error occurred while closing the file upload!", exception);
-                                    } finally {
-                                        messageFuture.complete(message);
-                                    }
-                                });
+                .asTextChannel()
+                .createThreadChannel(event.getUser().getName() + "'s Wordle Game", true)
+                .setInvitable(false)
+                .queue(thread -> {
+                    thread.addThreadMember(event.getUser()).queue();
+                    thread.sendMessage("Can you guess today's word? You have 6 tries!")
+                        .setFiles(upload)
+                        .queue(message -> {
+                            try {
+                                upload.close();
+                            } catch (IOException exception) {
+                                Constants.LOGGER.error("An error occurred while closing the file upload!", exception);
+                            } finally {
+                                messageFuture.complete(message);
+                            }
+                        });
 
-                        event.getHook()
-                                .sendMessage("✅ Created a thread for you to play the game in! " + thread.getAsMention())
-                                .queue();
-                    });
+                    event.getHook()
+                        .sendMessage("✅ Created a thread for you to play the game in! " + thread.getAsMention())
+                        .queue();
+                });
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while creating the game!").queue();
             Constants.LOGGER.error("An error occurred while creating the game!", exception);
         }
     }
 
-    private static BufferedImage createGame(SlashCommandInteractionEvent event, String word, CompletableFuture<Message> messageFuture) {
+    private static BufferedImage createGame(
+        SlashCommandInteractionEvent event,
+        String word,
+        CompletableFuture<Message> messageFuture
+    ) {
         messageFuture.thenAccept(message -> {
-            @Nullable Long guildId = event.isFromGuild() && event.getGuild() != null ? event.getGuild().getIdLong() : null;
+            @Nullable
+            Long guildId = event.isFromGuild() && event.getGuild() != null ? event.getGuild().getIdLong() : null;
             long channelId = message.getChannel().getIdLong();
             long messageId = message.getIdLong();
             long userId = event.getUser().getIdLong();
@@ -316,31 +322,31 @@ public class WordleCommand extends CoreCommand {
             createEventWaiter(event.getGuild(), game).build();
         });
         return createImage(new ArrayList<>(),
-                guess -> new Game.LetterState[] {
-                        Game.LetterState.NOT_GUESSED,
-                        Game.LetterState.NOT_GUESSED,
-                        Game.LetterState.NOT_GUESSED,
-                        Game.LetterState.NOT_GUESSED,
-                        Game.LetterState.NOT_GUESSED
-                },
-                character -> Game.LetterState.NOT_GUESSED);
+            guess -> new Game.LetterState[]{
+                Game.LetterState.NOT_GUESSED,
+                Game.LetterState.NOT_GUESSED,
+                Game.LetterState.NOT_GUESSED,
+                Game.LetterState.NOT_GUESSED,
+                Game.LetterState.NOT_GUESSED
+            },
+            character -> Game.LetterState.NOT_GUESSED);
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Guild guild, Game game) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event -> {
-                    String content = event.getMessage().getContentRaw();
-                    return ((event.isFromGuild() && event.getGuild().getIdLong() == guild.getIdLong())
-                            || !event.isFromGuild())
-                            && event.getChannel().getIdLong() == game.getChannelId()
-                            && event.getAuthor().getIdLong() == game.getUserId()
-                            && (!isInvalidWord(content) || content.equalsIgnoreCase("give up"));
-                })
-                .success(event -> {
-                    if (handleResponse(event, game)) {
-                        createEventWaiter(guild, game).build();
-                    }
-                });
+            .condition(event -> {
+                String content = event.getMessage().getContentRaw();
+                return ((event.isFromGuild() && event.getGuild().getIdLong() == guild.getIdLong())
+                    || !event.isFromGuild())
+                    && event.getChannel().getIdLong() == game.getChannelId()
+                    && event.getAuthor().getIdLong() == game.getUserId()
+                    && (!isInvalidWord(content) || content.equalsIgnoreCase("give up"));
+            })
+            .success(event -> {
+                if (handleResponse(event, game)) {
+                    createEventWaiter(guild, game).build();
+                }
+            });
     }
 
     private static boolean handleResponse(MessageReceivedEvent event, Game game) {
@@ -375,7 +381,8 @@ public class WordleCommand extends CoreCommand {
     private static void sendUpdatedImage(MessageChannel channel, Game game) {
         try {
             Map<Character, Game.LetterState> characterColors = game.getCharacterColors();
-            BufferedImage image = createImage(game.getGuesses(), game::getLetterStates, key -> characterColors.getOrDefault(key, Game.LetterState.NOT_GUESSED));
+            BufferedImage image = createImage(game.getGuesses(), game::getLetterStates,
+                key -> characterColors.getOrDefault(key, Game.LetterState.NOT_GUESSED));
             var baos = new ByteArrayOutputStream();
             ImageIO.write(image, "png", baos);
             byte[] data = baos.toByteArray();
@@ -390,9 +397,9 @@ public class WordleCommand extends CoreCommand {
     private static void updateDatabase(long guild, Game game, boolean won) {
         WordleProfile profile = getProfile(game.getUserId());
         WordleStreakData streakData = profile.getStreaks()
-                .stream()
-                .filter(streak -> streak.getGuild() == guild)
-                .findFirst().orElse(null);
+            .stream()
+            .filter(streak -> streak.getGuild() == guild)
+            .findFirst().orElse(null);
         if (streakData == null) {
             streakData = new WordleStreakData();
             streakData.setGuild(guild);
@@ -416,10 +423,9 @@ public class WordleCommand extends CoreCommand {
 
         Database.getDatabase().wordleProfiles.replaceOne(Filters.eq("user", game.getUserId()), profile);
         QuestManager.INSTANCE.recordWordleCompletion(
-                guild,
-                game.getUserId(),
-                LocalDate.now(WORDLE_TIME_ZONE)
-        );
+            guild,
+            game.getUserId(),
+            LocalDate.now(WORDLE_TIME_ZONE));
         WordleReminderManager.scheduleReminder(game.getUserId(), guild, streakData.getReminderAt());
     }
 
@@ -432,11 +438,12 @@ public class WordleCommand extends CoreCommand {
         }
 
         ThreadChannel thread = guild.getThreadChannelById(game.getChannelId());
-        if (thread == null) return;
+        if (thread == null)
+            return;
 
         if (game.isWon()) {
             thread.sendMessage("Congratulations! You won! The word was: " + game.getWord())
-                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+                .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             updateDatabase(guild.getIdLong(), game, true);
             return;
@@ -444,21 +451,22 @@ public class WordleCommand extends CoreCommand {
 
         if (game.isLost()) {
             thread.sendMessage("You lost! The word was: " + game.getWord())
-                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+                .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             updateDatabase(guild.getIdLong(), game, false);
             return;
         }
 
         thread.sendMessage("The game has ended! The word was: " + game.getWord())
-                .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
     }
 
     private static void endGame(@NotNull User user, @NotNull Game game) {
         PRIVATE_GAMES.remove(user.getIdLong());
 
         user.openPrivateChannel().queue(channel -> {
-            if (channel == null) return;
+            if (channel == null)
+                return;
 
             if (game.isWon()) {
                 channel.sendMessage("Congratulations! You won! The word was: " + game.getWord()).queue();
@@ -475,12 +483,16 @@ public class WordleCommand extends CoreCommand {
             }
 
             channel.sendMessage("The game has ended! The word was: " + game.getWord()).queue();
-        }, ignored -> {
+        }, _ -> {
         });
     }
 
-    private static BufferedImage createImage(List<String> guesses, Function<String, Game.LetterState[]> letterStateGetter, Function<Character, Game.LetterState> letterToState) {
-        BufferedImage image = new BufferedImage(DEFAULT_IMAGE.getWidth(), DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    private static BufferedImage createImage(
+        List<String> guesses,
+        Function<String, Game.LetterState[]> letterStateGetter,
+        Function<Character, Game.LetterState> letterToState
+    ) {
+        var image = new BufferedImage(DEFAULT_IMAGE.getWidth(), DEFAULT_IMAGE.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
 
         graphics.drawImage(DEFAULT_IMAGE, 0, 0, null);
@@ -499,19 +511,19 @@ public class WordleCommand extends CoreCommand {
                 graphics.setColor(letterStates[letterIndex].getColor());
 
                 graphics.fillRect(
-                        startX + letterIndex * (guessedSize + spacing),
-                        startY + guessIndex * (guessedSize + spacing),
-                        guessedSize,
-                        guessedSize);
+                    startX + letterIndex * (guessedSize + spacing),
+                    startY + guessIndex * (guessedSize + spacing),
+                    guessedSize,
+                    guessedSize);
 
                 graphics.setColor(Color.WHITE);
 
                 String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
                 graphics.drawString(
-                        characterStr,
-                        startX + (letterIndex * (guessedSize + spacing)) + guessedSize / 2f - metrics.stringWidth(characterStr) / 2f - 0.5f,
-                        startY + (guessIndex * (guessedSize + spacing)) + guessedSize / 2f + letterHeight / 2f
-                );
+                    characterStr,
+                    startX + (letterIndex * (guessedSize + spacing)) + guessedSize / 2f
+                        - metrics.stringWidth(characterStr) / 2f - 0.5f,
+                    startY + (guessIndex * (guessedSize + spacing)) + guessedSize / 2f + letterHeight / 2f);
             }
         }
 
@@ -524,15 +536,13 @@ public class WordleCommand extends CoreCommand {
 
             String characterStr = String.valueOf(character).toUpperCase(Locale.ROOT);
             graphics.drawString(
-                    characterStr,
-                    position.getLeft() + keyWidth / 2f - metrics.stringWidth(characterStr) / 2f - 0.5f,
-                    position.getRight() + keyHeight / 2f + letterHeight / 2f
-            );
+                characterStr,
+                position.getLeft() + keyWidth / 2f - metrics.stringWidth(characterStr) / 2f - 0.5f,
+                position.getRight() + keyHeight / 2f + letterHeight / 2f);
         });
 
         return image;
     }
-
 
     private static void fetchAndStoreWords(long daysElapsed) {
         resetDaily(daysElapsed);
@@ -600,9 +610,8 @@ public class WordleCommand extends CoreCommand {
         Either<List<String>, HttpStatus> words = ApiHandler.getCommonWords(COMMON_WORD_REQUEST_DATA);
         if (words.isLeft()) {
             List<String> wordList = words.getLeft();
-            if (wordList.isEmpty()) {
+            if (wordList.isEmpty())
                 return Optional.empty();
-            }
 
             return Optional.of(wordList.get(ThreadLocalRandom.current().nextInt(wordList.size())));
         }
@@ -637,8 +646,8 @@ public class WordleCommand extends CoreCommand {
             LocalDate cachedDate = getCachedWordleDate(object);
             if (cachedDate == null || !cachedDate.equals(currentDate)) {
                 long daysElapsed = cachedDate == null || cachedDate.isAfter(currentDate)
-                        ? 0L
-                        : ChronoUnit.DAYS.between(cachedDate, currentDate);
+                    ? 0L
+                    : ChronoUnit.DAYS.between(cachedDate, currentDate);
                 fetchAndStoreWords(daysElapsed);
                 return;
             }
@@ -672,10 +681,10 @@ public class WordleCommand extends CoreCommand {
 
     private static boolean isInvalidWord(String word) {
         return word.length() != 5
-                || !word.matches("[a-zA-Z]+")
-                || word.isBlank()
-                || word.contains(" ")
-                || !ApiHandler.isWord(word).converge(Boolean::booleanValue, httpStatus -> false);
+            || !word.matches("[a-zA-Z]+")
+            || word.isBlank()
+            || word.contains(" ")
+            || !ApiHandler.isWord(word).converge(Boolean::booleanValue, httpStatus -> false);
     }
 
     private static LocalDate getCurrentWordleDate() {
@@ -687,16 +696,16 @@ public class WordleCommand extends CoreCommand {
             try {
                 return LocalDate.parse(object.get("date").getAsString());
             } catch (DateTimeParseException exception) {
-                Constants.LOGGER.warn("Failed to parse cached Wordle date, falling back to the file timestamp.", exception);
+                Constants.LOGGER.warn("Failed to parse cached Wordle date, falling back to the file timestamp.",
+                    exception);
             }
         }
 
-        if (Files.exists(WORDLE_FILE)) {
+        if (Files.exists(WORDLE_FILE))
             return Files.getLastModifiedTime(WORDLE_FILE)
-                    .toInstant()
-                    .atOffset(WORDLE_TIME_ZONE)
-                    .toLocalDate();
-        }
+                .toInstant()
+                .atOffset(WORDLE_TIME_ZONE)
+                .toLocalDate();
 
         return null;
     }
@@ -738,7 +747,14 @@ public class WordleCommand extends CoreCommand {
         private final long userId;
         private final long reminderChannelId;
 
-        public Game(String word, @Nullable Long guildId, long channelId, long messageId, long userId, long reminderChannelId) {
+        public Game(
+            String word,
+            @Nullable Long guildId,
+            long channelId,
+            long messageId,
+            long userId,
+            long reminderChannelId
+        ) {
             this.word = word;
             this.tries = 6;
 
@@ -791,10 +807,12 @@ public class WordleCommand extends CoreCommand {
             // Second pass: greedily match yellow letters
             for (int letterToColorIndex = 0; letterToColorIndex < length; letterToColorIndex++) {
                 // Only change letters that were not marked as correct
-                if (letterStates[letterToColorIndex] == LetterState.CORRECT) continue;
+                if (letterStates[letterToColorIndex] == LetterState.CORRECT)
+                    continue;
                 // Yellow letters are matched by searching the entire target word
                 int letterIndexInTarget = targetLetters.indexOf(guess.charAt(letterToColorIndex));
-                if (letterIndexInTarget == -1) continue;
+                if (letterIndexInTarget == -1)
+                    continue;
                 // Remove yellow letters once matched,
                 // each letter only matches once
                 targetLetters.set(letterIndexInTarget, null);
@@ -815,7 +833,8 @@ public class WordleCommand extends CoreCommand {
                 for (int i = 0; i < guess.length(); i++) {
                     LetterState letterState = letterStates[i];
                     char letter = guess.charAt(i);
-                    boolean noExistingData = letters.getOrDefault(letter, LetterState.NOT_GUESSED) == LetterState.NOT_GUESSED;
+                    boolean noExistingData = letters.getOrDefault(letter,
+                        LetterState.NOT_GUESSED) == LetterState.NOT_GUESSED;
 
                     if (noExistingData && letterState == LetterState.NOT_GUESSED) {
                         letters.put(letter, LetterState.INCORRECT);

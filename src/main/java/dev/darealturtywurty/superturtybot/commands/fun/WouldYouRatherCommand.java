@@ -27,9 +27,8 @@ public class WouldYouRatherCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.BOOLEAN, "nsfw", "Whether or not to get a NSFW question.", false),
-                new OptionData(OptionType.BOOLEAN, "include-nsfw", "Whether or not to include NSFW questions.", false)
-        );
+            new OptionData(OptionType.BOOLEAN, "nsfw", "Whether or not to get a NSFW question.", false),
+            new OptionData(OptionType.BOOLEAN, "include-nsfw", "Whether or not to include NSFW questions.", false));
     }
 
     @Override
@@ -84,19 +83,16 @@ public class WouldYouRatherCommand extends CoreCommand {
             msg.addReaction(Emoji.fromUnicode("U+1F170")).queue();
             msg.addReaction(Emoji.fromUnicode("U+1F171")).queue();
             QuestManager.INSTANCE.recordConversationPromptUsed(
-                    event.getGuild(),
-                    event.getUser(),
-                    event.getIdLong()
-            );
+                event.getGuild(),
+                event.getUser(),
+                event.getIdLong());
         });
     }
 
     public static String getRandomQuestion(boolean nsfw, boolean includeNsfw) {
-        WouldYouRatherRequest request = nsfw ?
-                WouldYouRatherRequest.nsfw() :
-                includeNsfw ?
-                        WouldYouRatherRequest.randomlyNsfw() :
-                        WouldYouRatherRequest.sfw();
+        WouldYouRatherRequest request = nsfw
+            ? WouldYouRatherRequest.nsfw()
+            : includeNsfw ? WouldYouRatherRequest.randomlyNsfw() : WouldYouRatherRequest.sfw();
 
         Either<WouldYouRather, HttpStatus> response = ApiHandler.getRandomWouldYouRather(request);
         int attempts = 0;
@@ -104,11 +100,11 @@ public class WouldYouRatherCommand extends CoreCommand {
             response = ApiHandler.getRandomWouldYouRather(request);
         }
 
-        if (response.isRight()) {
+        if (response.isRight())
             return "An error occurred while fetching a question!";
-        }
 
         WouldYouRather wouldYouRather = response.getLeft();
-        return "**Would you rather...**\n\n" + wouldYouRather.optionA() + " 🅰️\n\n**OR**\n\n" + wouldYouRather.optionB() + " 🅱️";
+        return "**Would you rather...**\n\n" + wouldYouRather.optionA() + " 🅰️\n\n**OR**\n\n"
+            + wouldYouRather.optionB() + " 🅱️";
     }
 }

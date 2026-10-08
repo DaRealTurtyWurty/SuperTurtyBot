@@ -93,7 +93,8 @@ public record Library(Download artifact, String name, Optional<List<DownloadRule
         }
 
         public enum Action {
-            ALLOW, DISALLOW
+            ALLOW,
+            DISALLOW
         }
 
         public record OperatingSystem(String name) {

@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
-abstract class StickySubcommand extends SubcommandCommand {
+public abstract class StickySubcommand extends SubcommandCommand {
     protected static final int MAX_STICKY_MESSAGE_LENGTH = 2000;
 
     protected StickySubcommand(String name, String description) {

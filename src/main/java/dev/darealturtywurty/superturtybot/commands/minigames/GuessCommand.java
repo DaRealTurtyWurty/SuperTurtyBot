@@ -11,8 +11,8 @@ public class GuessCommand extends CoreCommand {
         super(new Types(true, false, false, false));
 
         addSubcommands(new GeoGuesserCommand(),
-                new GuessCombinedFlagsCommand(),
-                new GuessRegionBorderCommand());
+            new GuessCombinedFlagsCommand(),
+            new GuessRegionBorderCommand());
     }
 
     @Override
@@ -43,8 +43,8 @@ public class GuessCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return "/guess geoguesser\n"
-                + "/guess combinedflags [number] [include-territories] [exclude-countries]\n"
-                + "/guess border [exclude-islands] [exclude-mainland] [exclude-countries] [include-territories]";
+            + "/guess combinedflags [number] [include-territories] [exclude-countries]\n"
+            + "/guess border [exclude-islands] [exclude-mainland] [exclude-countries] [include-territories]";
     }
 
     @Override

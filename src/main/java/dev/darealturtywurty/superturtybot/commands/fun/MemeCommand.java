@@ -15,22 +15,22 @@ public class MemeCommand extends CoreCommand {
     public MemeCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.FUN;
     }
-    
+
     @Override
     public String getDescription() {
         return "Gets some hot memes";
     }
-    
+
     @Override
     public String getName() {
         return "meme";
     }
-    
+
     @Override
     public String getRichName() {
         return "Meme";
@@ -44,17 +44,18 @@ public class MemeCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         reply(event, "Loading meme...");
-        final String[] subreddits = { "memes", "dankmemes", "blackpeopletwitter", "memeeconomy", "me_irl",
-            "adviceanimals", "surrealmemes" };
-        
+        final String[] subreddits = {"memes", "dankmemes", "blackpeopletwitter", "memeeconomy", "me_irl",
+            "adviceanimals", "surrealmemes"};
+
         final SubredditReference subreddit = RedditUtils.getRandomSubreddit(subreddits);
         final RootCommentNode post = RedditUtils.findValidPost(subreddit, subreddits);
-        if(post == null) {
+        if (post == null) {
             event.getHook().editOriginal("❌ Unable to find a valid post!").queue();
             return;
         }
 
-        final String mediaURL = post.getSubject().getUrl().isBlank() ? post.getSubject().getThumbnail()
+        final String mediaURL = post.getSubject().getUrl().isBlank()
+            ? post.getSubject().getThumbnail()
             : post.getSubject().getUrl();
         if (mediaURL == null) {
             event.getHook().editOriginal("❌ Unable to find a valid post!").queue();

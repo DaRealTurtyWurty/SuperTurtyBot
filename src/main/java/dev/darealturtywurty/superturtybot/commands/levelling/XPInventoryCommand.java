@@ -35,8 +35,8 @@ public class XPInventoryCommand extends CoreCommand {
                 throw new IllegalStateException("Unable to load font: fonts/Code New Roman.otf");
 
             this.usedFont = Font
-                    .createFont(Font.TRUETYPE_FONT, stream)
-                    .deriveFont(60f);
+                .createFont(Font.TRUETYPE_FONT, stream)
+                .deriveFont(60f);
         } catch (FontFormatException | IOException exception) {
             throw new IllegalStateException("Unable to load font", exception);
         }
@@ -82,7 +82,7 @@ public class XPInventoryCommand extends CoreCommand {
         }
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                Filters.eq("user", event.getUser().getIdLong()));
+            Filters.eq("user", event.getUser().getIdLong()));
         Levelling profile = Database.getDatabase().levelling.find(filter).first();
         if (profile == null) {
             profile = new Levelling(event.getGuild().getIdLong(), event.getUser().getIdLong());
@@ -96,14 +96,16 @@ public class XPInventoryCommand extends CoreCommand {
             final var output = new ByteArrayOutputStream();
             ImageIO.write(image, "png", output);
             event.deferReply().setFiles(FileUpload.fromData(output.toByteArray(), "inventory.png"))
-                    .mentionRepliedUser(false).queue();
+                .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Error creating inventory!", exception);
-            reply(event, "❌ There has been an error creating your inventory. This has been reported to the bot owner!", false, true);
+            reply(event, "❌ There has been an error creating your inventory. This has been reported to the bot owner!",
+                false, true);
         }
     }
 
-    private BufferedImage createInventory(List<String> inventory, Member member) throws IOException, URISyntaxException {
+    private BufferedImage createInventory(List<String> inventory, Member member)
+        throws IOException, URISyntaxException {
         final BufferedImage template = getTemplate();
         final var buffer = new BufferedImage(template.getWidth(), template.getHeight(), BufferedImage.TYPE_INT_ARGB);
         final Graphics2D graphics = buffer.createGraphics();
@@ -111,17 +113,17 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.drawImage(template, 0, 0, template.getWidth(), template.getHeight(), null);
 
         final BufferedImage profilePic = BotUtils
-                .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
+            .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
         graphics.drawImage(profilePic, 80, 68, profilePic.getWidth(), profilePic.getHeight(), null);
 
         graphics.setFont(this.usedFont);
         final String name = member.getUser().getEffectiveName();
         graphics.drawString((name.length() > 22 ? name.substring(0, 22) + "..." : name) + "'s Levelling Inventory",
-                80 + profilePic.getWidth() + 30,
-                68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
+            80 + profilePic.getWidth() + 30,
+            68 + profilePic.getHeight() / 2 + graphics.getFontMetrics().getHeight() / 4);
 
         final List<RankCardItem> items = inventory.stream()
-                .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
+            .map(n -> RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().get(n)).toList();
 
         // TODO: sort items and render items
 

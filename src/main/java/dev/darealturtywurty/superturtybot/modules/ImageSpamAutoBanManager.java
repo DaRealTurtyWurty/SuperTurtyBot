@@ -45,14 +45,15 @@ public class ImageSpamAutoBanManager {
 
         final long now = System.currentTimeMillis();
         final Deque<ImageSpamMessage> recentMessages = this.imageSpamMessages.computeIfAbsent(member.getIdLong(),
-                ignored -> new ConcurrentLinkedDeque<>());
+            _ -> new ConcurrentLinkedDeque<>());
         recentMessages.addLast(new ImageSpamMessage(guild.getIdLong(), message.getChannel().getIdLong(), now));
         pruneHistory(recentMessages, now, TimeUnit.SECONDS.toMillis(windowSeconds));
 
         final Set<Long> channelsWithinWindow = new HashSet<>();
         for (final ImageSpamMessage entry : recentMessages) {
-            if (entry.guildId() == guild.getIdLong())
+            if (entry.guildId() == guild.getIdLong()) {
                 channelsWithinWindow.add(entry.channelId());
+            }
         }
 
         if (channelsWithinWindow.size() >= 2) {
@@ -60,8 +61,9 @@ public class ImageSpamAutoBanManager {
             recentMessages.clear();
         }
 
-        if (recentMessages.isEmpty())
+        if (recentMessages.isEmpty()) {
             this.imageSpamMessages.remove(member.getIdLong());
+        }
     }
 
     private void pruneHistory(Deque<ImageSpamMessage> history, long now, long windowMillis) {
@@ -91,18 +93,20 @@ public class ImageSpamAutoBanManager {
 
         final String reason = "Automatic ban: multi-channel image spam detected";
         guild.ban(member, 0, TimeUnit.DAYS).reason(reason).queue(
-                success -> {
-                    TempBanManager.clearTempBan(guild.getIdLong(), member.getIdLong());
-                    logImageSpamBan(guild, member, reason);
-                },
-                error -> Constants.LOGGER.warn("Failed to auto-ban {} in {} for image spam", member.getIdLong(), guild.getIdLong(), error));
+            success -> {
+                TempBanManager.clearTempBan(guild.getIdLong(), member.getIdLong());
+                logImageSpamBan(guild, member, reason);
+            },
+            error -> Constants.LOGGER.warn("Failed to auto-ban {} in {} for image spam", member.getIdLong(),
+                guild.getIdLong(), error));
     }
 
     private void logImageSpamBan(Guild guild, Member member, String reason) {
         final var logging = BanCommand.canLog(guild);
         if (Boolean.TRUE.equals(logging.getKey())) {
             BanCommand.log(logging.getValue(), member.getAsMention()
-                    + " was automatically banned for sending repeated multi-image messages across channels. Reason: `" + reason + "`.", false);
+                + " was automatically banned for sending repeated multi-image messages across channels. Reason: `"
+                + reason + "`.", false);
         }
     }
 

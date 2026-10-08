@@ -42,7 +42,8 @@ public class PublicShop {
     }
 
     public static void run() {
-        if (isRunning()) return;
+        if (isRunning())
+            return;
 
         IS_RUNNING.set(true);
 

@@ -55,6 +55,7 @@ public class LatexCommand extends CoreCommand {
             return;
         }
 
-        reply(event, "https://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20%5Cbg_white%20" + UrlEscapers.urlFragmentEscaper().escape(latex));
+        reply(event, "https://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20%5Cbg_white%20"
+            + UrlEscapers.urlFragmentEscaper().escape(latex));
     }
 }

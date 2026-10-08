@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public abstract class RemindMeSubcommand extends SubcommandCommand {
     private static final Pattern DURATION_PATTERN = Pattern.compile(
-            "(?i)(\\d+)\\s*(w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?|ins?)?|s(?:ec(?:ond)?s?|ecs?)?)");
+        "(?i)(\\d+)\\s*(w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?|ins?)?|s(?:ec(?:ond)?s?|ecs?)?)");
     private static final long MIN_DURATION_MILLIS = TimeUnit.SECONDS.toMillis(5);
     private static final long MAX_DURATION_MILLIS = TimeUnit.DAYS.toMillis(365);
 

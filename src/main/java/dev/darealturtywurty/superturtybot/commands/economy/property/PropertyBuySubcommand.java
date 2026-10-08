@@ -35,7 +35,8 @@ public class PropertyBuySubcommand extends PropertySubcommand {
             return;
         }
 
-        PropertyCommand.OwnedProperty existingOwner = PropertyCommand.findOwnedProperty(guild.getIdLong(), template.getName());
+        PropertyCommand.OwnedProperty existingOwner = PropertyCommand.findOwnedProperty(guild.getIdLong(),
+            template.getName());
         if (existingOwner != null) {
             if (existingOwner.account().getUser() == account.getUser()) {
                 PropertyCommand.hookReply(event, "❌ You already own this property!");
@@ -49,7 +50,7 @@ public class PropertyBuySubcommand extends PropertySubcommand {
         BigInteger totalCost = template.getOriginalPrice().add(template.getEstateTax());
         if (!EconomyManager.removeBalance(account, totalCost)) {
             PropertyCommand.hookReply(event, "❌ You need another %s to buy this property!".formatted(
-                    StringUtils.numberFormat(totalCost.subtract(EconomyManager.getBalance(account)), config)));
+                StringUtils.numberFormat(totalCost.subtract(EconomyManager.getBalance(account)), config)));
             return;
         }
 
@@ -58,15 +59,14 @@ public class PropertyBuySubcommand extends PropertySubcommand {
         account.addTransaction(totalCost.negate(), MoneyTransaction.PROPERTY);
         EconomyManager.updateAccount(account);
         QuestManager.INSTANCE.recordEconomyAction(
-                guild.getIdLong(),
-                event.getUser().getIdLong(),
-                QuestManager.ECONOMY_PROPERTY_PURCHASED,
-                event.getId()
-        );
+            guild.getIdLong(),
+            event.getUser().getIdLong(),
+            QuestManager.ECONOMY_PROPERTY_PURCHASED,
+            event.getId());
 
         PropertyCommand.hookReply(event, "✅ You bought %s for %s (including %s estate tax)!"
-                .formatted(property.getName(),
-                        StringUtils.numberFormat(template.getOriginalPrice(), config),
-                        StringUtils.numberFormat(template.getEstateTax(), config)));
+            .formatted(property.getName(),
+                StringUtils.numberFormat(template.getOriginalPrice(), config),
+                StringUtils.numberFormat(template.getEstateTax(), config)));
     }
 }

@@ -26,11 +26,11 @@ public class TempBanCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.USER, "user", "The user to temporarily ban!", true),
-                new OptionData(OptionType.STRING, "duration", "How long to ban the user for (e.g. 30m, 2h, 7d)", true),
-                new OptionData(OptionType.INTEGER, "delete_days", "Number of days to delete this user's messages", false)
-                        .setRequiredRange(0, 7),
-                new OptionData(OptionType.STRING, "reason", "The ban reason", false));
+            new OptionData(OptionType.USER, "user", "The user to temporarily ban!", true),
+            new OptionData(OptionType.STRING, "duration", "How long to ban the user for (e.g. 30m, 2h, 7d)", true),
+            new OptionData(OptionType.INTEGER, "delete_days", "Number of days to delete this user's messages", false)
+                .setRequiredRange(0, 7),
+            new OptionData(OptionType.STRING, "reason", "The ban reason", false));
     }
 
     @Override
@@ -115,40 +115,40 @@ public class TempBanCommand extends CoreCommand {
         final long expiresAt = System.currentTimeMillis() + durationMillis;
         final String finalReason = reason;
         user.openPrivateChannel().queue(
-                channel -> channel.sendMessage("You have been temporarily banned from `" + event.getGuild().getName()
-                        + "` until " + TimeFormat.RELATIVE.format(expiresAt) + " for reason: `" + finalReason + "`!")
-                        .queue(
-                                ignored -> {
-                                },
-                                ignored -> {
-                                }),
-                ignored -> {
-                });
+            channel -> channel.sendMessage("You have been temporarily banned from `" + event.getGuild().getName()
+                + "` until " + TimeFormat.RELATIVE.format(expiresAt) + " for reason: `" + finalReason + "`!")
+                .queue(
+                    _ -> {
+                    },
+                    _ -> {
+                    }),
+            _ -> {
+            });
 
         event.getGuild().ban(user, deleteDays, TimeUnit.DAYS).reason(finalReason).queue(
-                success -> {
-                    TempBanManager.createOrUpdateTempBan(event.getGuild().getIdLong(), user.getIdLong(),
-                            event.getMember().getIdLong(), finalReason, deleteDays, expiresAt);
-                    reply(event,
-                            "✅ Successfully temporarily banned " + user.getAsMention() + " until "
-                                    + TimeFormat.RELATIVE.format(expiresAt) + "!",
-                            false);
-                    final var logging = BanCommand.canLog(event.getGuild());
-                    if (Boolean.TRUE.equals(logging.getKey())) {
-                        BanCommand.log(logging.getValue(),
-                                event.getMember().getAsMention() + " has temporarily banned " + user.getAsMention()
-                                        + " until " + TimeFormat.RELATIVE.format(expiresAt) + " for reason: `"
-                                        + finalReason + "`!",
-                                false);
-                    }
-                },
-                error -> {
-                    if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
-                        reply(event, "❌ I do not have permission to ban " + user.getAsMention(), false, true);
-                    } else {
-                        reply(event, "❌ Failed to temporarily ban " + user.getAsMention() + ": " + error.getMessage(),
-                                false, true);
-                    }
-                });
+            success -> {
+                TempBanManager.createOrUpdateTempBan(event.getGuild().getIdLong(), user.getIdLong(),
+                    event.getMember().getIdLong(), finalReason, deleteDays, expiresAt);
+                reply(event,
+                    "✅ Successfully temporarily banned " + user.getAsMention() + " until "
+                        + TimeFormat.RELATIVE.format(expiresAt) + "!",
+                    false);
+                final var logging = BanCommand.canLog(event.getGuild());
+                if (Boolean.TRUE.equals(logging.getKey())) {
+                    BanCommand.log(logging.getValue(),
+                        event.getMember().getAsMention() + " has temporarily banned " + user.getAsMention()
+                            + " until " + TimeFormat.RELATIVE.format(expiresAt) + " for reason: `"
+                            + finalReason + "`!",
+                        false);
+                }
+            },
+            error -> {
+                if (error instanceof InsufficientPermissionException || error instanceof HierarchyException) {
+                    reply(event, "❌ I do not have permission to ban " + user.getAsMention(), false, true);
+                } else {
+                    reply(event, "❌ Failed to temporarily ban " + user.getAsMention() + ": " + error.getMessage(),
+                        false, true);
+                }
+            });
     }
 }

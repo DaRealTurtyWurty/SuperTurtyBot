@@ -46,7 +46,8 @@ public class BlackjackStandCommand extends BlackjackSubcommand {
             return;
         }
 
-        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
+        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(),
+            _ -> new ArrayList<>());
 
         synchronized (game) {
             game.stand();
@@ -55,7 +56,8 @@ public class BlackjackStandCommand extends BlackjackSubcommand {
             applySettlement(account, settlement);
 
             games.remove(game);
-            String resultMessage = game.getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()));
+            String resultMessage = game
+                .getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()));
             String content = "%s has chosen to stand.\n%s".formatted(event.getUser().getAsMention(), resultMessage);
             try (FileUpload upload = BlackjackImageRenderer.createUpload(game, true)) {
                 event.getHook().editOriginal(content).setFiles(upload).queue();

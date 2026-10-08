@@ -65,12 +65,13 @@ public class SlowmodeCommand extends CoreCommand {
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null || event.getChannelType() != ChannelType.TEXT || event.getMember() == null) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getChannelType() != ChannelType.TEXT
+            || event.getMember() == null) {
             reply(event, "❌ This command can only be used in channels that allow for slowmode!", false, true);
             return;
         }
 
-        if(!event.getMember().hasPermission(event.getChannel().asTextChannel(), Permission.MANAGE_CHANNEL)) {
+        if (!event.getMember().hasPermission(event.getChannel().asTextChannel(), Permission.MANAGE_CHANNEL)) {
             reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
         }

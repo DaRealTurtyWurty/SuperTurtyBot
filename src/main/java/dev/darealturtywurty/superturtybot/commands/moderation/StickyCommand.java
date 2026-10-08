@@ -19,11 +19,10 @@ public class StickyCommand extends CoreCommand {
     public StickyCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new StickyTextSubcommand(),
-                new StickyEmbedSubcommand(),
-                new StickyViewSubcommand(),
-                new StickyClearSubcommand()
-        );
+            new StickyTextSubcommand(),
+            new StickyEmbedSubcommand(),
+            new StickyViewSubcommand(),
+            new StickyClearSubcommand());
     }
 
     @Override
@@ -44,10 +43,10 @@ public class StickyCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return """
-                /sticky text <channel> <content>
-                /sticky embed <channel> <name>
-                /sticky view <channel>
-                /sticky clear <channel>""";
+            /sticky text <channel> <content>
+            /sticky embed <channel> <name>
+            /sticky view <channel>
+            /sticky clear <channel>""";
     }
 
     @Override
@@ -68,10 +67,11 @@ public class StickyCommand extends CoreCommand {
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
         if (!event.getName().equals(getName()) || !"embed".equals(event.getSubcommandName())
-                || !"name".equals(event.getFocusedOption().getName()))
+            || !"name".equals(event.getFocusedOption().getName()))
             return;
 
-        UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", event.getUser().getIdLong())).first();
+        UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", event.getUser().getIdLong()))
+            .first();
         if (userEmbeds == null) {
             event.replyChoices().queue();
             return;
@@ -79,9 +79,9 @@ public class StickyCommand extends CoreCommand {
 
         String value = event.getFocusedOption().getValue().toLowerCase(Locale.ROOT);
         event.replyChoiceStrings(userEmbeds.getEmbeds().keySet().stream()
-                .filter(name -> value.isBlank() || name.toLowerCase(Locale.ROOT).contains(value))
-                .limit(25)
-                .toList()).queue();
+            .filter(name -> value.isBlank() || name.toLowerCase(Locale.ROOT).contains(value))
+            .limit(25)
+            .toList()).queue();
     }
 
     @Override

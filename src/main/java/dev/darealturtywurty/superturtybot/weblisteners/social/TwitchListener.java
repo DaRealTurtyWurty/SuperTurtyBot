@@ -20,16 +20,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TwitchListener {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
     private static TwitchClient twitchClient;
-    
+
     public static void initialize(JDA jda) {
         if (IS_INITIALIZED.get())
             return;
 
         Environment.INSTANCE.twitchOAuthToken().ifPresentOrElse(token -> {
             twitchClient = TwitchClientBuilder.builder().withDefaultEventHandler(ReactorEventHandler.class)
-                    .withDefaultAuthToken(new OAuth2Credential("twitch", token))
-                    .withEnableHelix(true)
-                    .build();
+                .withDefaultAuthToken(new OAuth2Credential("twitch", token))
+                .withEnableHelix(true)
+                .build();
 
             twitchClient.getEventManager().onEvent(ChannelGoLiveEvent.class, event -> handleGoLive(jda, event));
             IS_INITIALIZED.set(true);
@@ -39,7 +39,7 @@ public class TwitchListener {
     public static boolean isInitialized() {
         return IS_INITIALIZED.get();
     }
-    
+
     public static boolean subscribeChannel(String channel) {
         if (twitchClient == null) {
             Constants.LOGGER.warn("Twitch listener has not been initialized, cannot subscribe to {}.", channel);
@@ -82,7 +82,7 @@ public class TwitchListener {
                 continue;
 
             discordChannel.sendMessage(notifier.getMention() + " **" + channelName + "** is now live!\nGame: **"
-                    + (gameName.isBlank() ? "Just Chatting" : gameName) + "**!\nTitle: " + title + "\n" + url).queue();
+                + (gameName.isBlank() ? "Just Chatting" : gameName) + "**!\nTitle: " + title + "\n" + url).queue();
         }
     }
 }

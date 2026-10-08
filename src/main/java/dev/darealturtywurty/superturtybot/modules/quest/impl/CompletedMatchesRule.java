@@ -26,9 +26,8 @@ public final class CompletedMatchesRule implements QuestRule<CompletedMatchesCon
         int progress = Math.min(state.completedMatchIds.size(), target);
 
         return new QuestStatus(
-                progress,
-                target,
-                progress >= target
-        );
+            progress,
+            target,
+            progress >= target);
     }
 }

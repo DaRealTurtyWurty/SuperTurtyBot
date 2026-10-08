@@ -12,7 +12,12 @@ public class RegionExcludeRequestData {
     private final boolean excludeIslands;
     private final boolean excludeMainland;
 
-    private RegionExcludeRequestData(boolean excludeCountries, boolean excludeTerritories, boolean excludeIslands, boolean excludeMainland) {
+    private RegionExcludeRequestData(
+        boolean excludeCountries,
+        boolean excludeTerritories,
+        boolean excludeIslands,
+        boolean excludeMainland
+    ) {
         this.excludeCountries = excludeCountries;
         this.excludeTerritories = excludeTerritories;
         this.excludeIslands = excludeIslands;
@@ -26,14 +31,18 @@ public class RegionExcludeRequestData {
     public List<String> getExclusions() {
         List<String> exclusions = new ArrayList<>();
 
-        if (excludeCountries)
+        if (excludeCountries) {
             exclusions.add("countries");
-        if (excludeTerritories)
+        }
+        if (excludeTerritories) {
             exclusions.add("territories");
-        if (excludeIslands)
+        }
+        if (excludeIslands) {
             exclusions.add("islands");
-        if (excludeMainland)
+        }
+        if (excludeMainland) {
             exclusions.add("mainland");
+        }
 
         return exclusions;
     }

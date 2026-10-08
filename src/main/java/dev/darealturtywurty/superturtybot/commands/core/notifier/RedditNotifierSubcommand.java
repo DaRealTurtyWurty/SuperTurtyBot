@@ -56,7 +56,7 @@ public class RedditNotifierSubcommand extends BaseNotifierSubcommand {
             return;
 
         Database.getDatabase().redditNotifier.insertOne(
-                new RedditNotifier(guild.getIdLong(), subreddit, context.channelId(), context.mention()));
+            new RedditNotifier(guild.getIdLong(), subreddit, context.channelId(), context.mention()));
 
         reply(event, "✅ I have successfully set up a notifier for this subreddit in <#" + context.channelId() + ">!");
     }

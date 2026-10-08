@@ -45,7 +45,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
      * portion of the stacktrace.
      */
     private static final int MAXIMUM_STACKTRACE_LENGTH = 1700;
-    
+
     static {
         var jdaExists = true;
         try {
@@ -53,19 +53,19 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         } catch (final ClassNotFoundException e) {
             jdaExists = false;
         }
-        
+
         JDA_EXISTS = jdaExists;
     }
-    
+
     /**
      * {@inheritDoc}
      *
-     * @param  event the event
-     * @return       the string
+     * @param event the event
+     * @return the string
      */
     @Override
     public String doLayout(final ILoggingEvent event) {
-        final StringBuilder builder = new StringBuilder(2000);
+        final var builder = new StringBuilder(2000);
         builder.append(LEVEL_TO_EMOTE.getOrDefault(event.getLevel(), UNKNOWN_EMOTE));
         builder.append(" [**").append(event.getLoggerName());
         if (event.getMarkerList() != null && !event.getMarkerList().isEmpty()) {
@@ -74,12 +74,12 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         }
 
         builder.append("**] - ").append(getFormattedMessage(event)).append(CoreConstants.LINE_SEPARATOR);
-        
+
         if (event.getThrowableProxy() != null) {
             final IThrowableProxy proxy = event.getThrowableProxy();
             builder.append(proxy.getClassName()).append(": ").append(proxy.getMessage())
                 .append(CoreConstants.LINE_SEPARATOR);
-            
+
             final StringBuilder stacktrace = buildStacktrace(proxy);
             String stacktraceCutoff = null;
             builder.append("Stacktrace: ");
@@ -87,10 +87,10 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
                 stacktraceCutoff = stacktrace.substring(MAXIMUM_STACKTRACE_LENGTH, stacktrace.length());
                 stacktrace.delete(MAXIMUM_STACKTRACE_LENGTH, stacktrace.length());
             }
-            
+
             builder.append(CoreConstants.LINE_SEPARATOR).append("```ansi").append(CoreConstants.LINE_SEPARATOR)
                 .append(stacktrace).append("```");
-            
+
             if (stacktraceCutoff != null) {
                 builder.append("*Too long to fully display. ").append(stacktraceCutoff.length())
                     .append(" characters or ").append(stacktraceCutoff.lines().count())
@@ -99,24 +99,24 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         }
         return builder.toString();
     }
-    
+
     private StringBuilder buildStacktrace(IThrowableProxy exception) {
         final var builder = new StringBuilder();
         for (int i = 0; i < exception.getStackTraceElementProxyArray().length; i++) {
             builder.append("\t ").append(exception.getStackTraceElementProxyArray()[i].toString())
                 .append(CoreConstants.LINE_SEPARATOR);
         }
-        
+
         return builder;
     }
-    
+
     /**
      * Converts the given {@link ILoggingEvent} into a formatted message string, converting {@link IMentionable}s as
      * needed.
      *
-     * @param  event The logging event
-     * @return       The formatted message, with replaced mentions
-     * @see          #tryFormat(Object) #tryConvertMentionables(Object)
+     * @param event The logging event
+     * @return The formatted message, with replaced mentions
+     * @see #tryFormat(Object) #tryConvertMentionables(Object)
      */
     private String getFormattedMessage(final ILoggingEvent event) {
         final Object[] arguments = event.getArgumentArray();
@@ -125,13 +125,13 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             for (var i = 0; i < arguments.length; i++) {
                 newArgs[i] = tryFormat(arguments[i]);
             }
-            
+
             return MessageFormatter.arrayFormat(event.getMessage(), newArgs).getMessage();
         }
-        
+
         return event.getFormattedMessage();
     }
-    
+
     private static Object tryFormat(final Object obj) {
         if (JDA_EXISTS) {
             final Object jda = JDAFormatter.format(obj);
@@ -143,9 +143,9 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
             final Stream<Object> stream = col.stream().map(DiscordLogbackLayout::tryFormat);
             if (obj instanceof Set)
                 return stream.collect(Collectors.toSet());
-            
+
             return stream.collect(Collectors.toList());
-            
+
         }
 
         if (obj instanceof final Map<?, ?> map)
@@ -158,7 +158,7 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
 
         return obj;
     }
-    
+
     public static final class JDAFormatter {
         /**
          * Tries to convert the given object (or any contained objects within) to
@@ -170,8 +170,8 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
          * <p>
          * If the object is {@link IMentionable}, cast and convert into mention, then return the new mention.
          *
-         * @param  obj The object
-         * @return     The converted object, according to the conversion rules
+         * @param obj The object
+         * @return The converted object, according to the conversion rules
          */
         @Nullable
         public static Object format(final Object obj) {
@@ -183,13 +183,14 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
                 case final Role role -> name = role.getName();
                 case final GuildChannel channel -> name = channel.getName();
                 case final Emoji emoji -> name = emoji.getName();
-                default -> {}
+                default -> {
+                }
             }
-            
+
             if (name != null)
                 return String.format("%s (%s;`%s`)", ((IMentionable) obj).getAsMention(), name,
                     ((IMentionable) obj).getIdLong());
-            
+
             return String.format("%s (`%s`)", ((IMentionable) obj).getAsMention(), ((IMentionable) obj).getIdLong());
         }
     }

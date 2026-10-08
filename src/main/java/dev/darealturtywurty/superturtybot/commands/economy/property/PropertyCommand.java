@@ -23,19 +23,18 @@ import java.util.List;
 public class PropertyCommand extends EconomyCommand {
     public PropertyCommand() {
         addSubcommands(
-                new PropertyBuySubcommand(),
-                new PropertySellSubcommand(),
-                new PropertyListSubcommand(),
-                new PropertyInfoSubcommand(),
-                new PropertyUpgradeSubcommand(),
-                new PropertyTradeSubcommand(),
-                new PropertyRentSubcommand(),
-                new PropertyRentChooseSubcommand(),
-                new PropertyRentRerollSubcommand(),
-                new PropertyStopRentSubcommand(),
-                new PropertyPauseRentSubcommand(),
-                new PropertyResumeRentSubcommand()
-        );
+            new PropertyBuySubcommand(),
+            new PropertySellSubcommand(),
+            new PropertyListSubcommand(),
+            new PropertyInfoSubcommand(),
+            new PropertyUpgradeSubcommand(),
+            new PropertyTradeSubcommand(),
+            new PropertyRentSubcommand(),
+            new PropertyRentChooseSubcommand(),
+            new PropertyRentRerollSubcommand(),
+            new PropertyStopRentSubcommand(),
+            new PropertyPauseRentSubcommand(),
+            new PropertyResumeRentSubcommand());
     }
 
     @Override
@@ -56,32 +55,32 @@ public class PropertyCommand extends EconomyCommand {
     @Override
     public String getHowToUse() {
         return """
-                To buy a property:
-                `/property buy <property>`
-                To sell a property:
-                `/property sell <property>`
-                To list properties:
-                `/property list [user] [include-sold] [include-rented]`
-                To get info on a property:
-                `/property info <property>`
-                To upgrade a property:
-                `/property upgrade <property>`
-                To trade a property:
-                `/property trade <user> <your-property> <their-property>`
-                To view renter offers for your property:
-                `/property rent <property>`
-                To choose a renter offer:
-                `/property rent-choose <property> <offer>`
-                To re-roll renter offers for a fee:
-                `/property rent-reroll <property>`
-                Offers refresh automatically after 24h if unchosen.
-                To stop renting out a property:
-                `/property stop-rent <property>`
-                To pause renting a property:
-                `/property pause-rent <property>`
-                To resume renting a property:
-                `/property resume-rent <property>`
-                """;
+            To buy a property:
+            `/property buy <property>`
+            To sell a property:
+            `/property sell <property>`
+            To list properties:
+            `/property list [user] [include-sold] [include-rented]`
+            To get info on a property:
+            `/property info <property>`
+            To upgrade a property:
+            `/property upgrade <property>`
+            To trade a property:
+            `/property trade <user> <your-property> <their-property>`
+            To view renter offers for your property:
+            `/property rent <property>`
+            To choose a renter offer:
+            `/property rent-choose <property> <offer>`
+            To re-roll renter offers for a fee:
+            `/property rent-reroll <property>`
+            Offers refresh automatically after 24h if unchosen.
+            To stop renting out a property:
+            `/property stop-rent <property>`
+            To pause renting a property:
+            `/property pause-rent <property>`
+            To resume renting a property:
+            `/property resume-rent <property>`
+            """;
     }
 
     @Override
@@ -90,12 +89,12 @@ public class PropertyCommand extends EconomyCommand {
             return;
 
         if (event.getFocusedOption().getName().equalsIgnoreCase("property")
-                || event.getFocusedOption().getName().equalsIgnoreCase("your-property")
-                || event.getFocusedOption().getName().equalsIgnoreCase("their-property")) {
+            || event.getFocusedOption().getName().equalsIgnoreCase("your-property")
+            || event.getFocusedOption().getName().equalsIgnoreCase("their-property")) {
             event.replyChoices(PropertyRegistry.PROPERTIES.getRegistry().entrySet().stream()
-                    .map(entry -> new Command.Choice(
-                            entry.getValue().getName(), entry.getKey()))
-                    .toList()).queue();
+                .map(entry -> new Command.Choice(
+                    entry.getValue().getName(), entry.getKey()))
+                .toList()).queue();
         }
     }
 
@@ -107,7 +106,7 @@ public class PropertyCommand extends EconomyCommand {
         }
     }
 
-    static void normalizeRent(Property property) {
+    public static void normalizeRent(Property property) {
         if (property == null || !property.hasRenter())
             return;
 
@@ -116,23 +115,23 @@ public class PropertyCommand extends EconomyCommand {
         }
     }
 
-    static Property getOwnedProperty(Economy account, String propertyName) {
+    public static Property getOwnedProperty(Economy account, String propertyName) {
         if (propertyName == null)
             return null;
 
         return account.getProperties().stream()
-                .filter(property -> property.getName().equalsIgnoreCase(propertyName))
-                .findFirst()
-                .orElse(null);
+            .filter(property -> property.getName().equalsIgnoreCase(propertyName))
+            .findFirst()
+            .orElse(null);
     }
 
-    static OwnedProperty findOwnedProperty(long guildId, String propertyName) {
+    public static OwnedProperty findOwnedProperty(long guildId, String propertyName) {
         if (propertyName == null)
             return null;
 
         List<Economy> accounts = Database.getDatabase().economy
-                .find(Filters.eq("guild", guildId))
-                .into(new ArrayList<>());
+            .find(Filters.eq("guild", guildId))
+            .into(new ArrayList<>());
         for (Economy economy : accounts) {
             for (Property property : economy.getProperties()) {
                 if (!property.getName().equalsIgnoreCase(propertyName))
@@ -147,10 +146,10 @@ public class PropertyCommand extends EconomyCommand {
         return null;
     }
 
-    record OwnedProperty(Economy account, Property property) {
+    public record OwnedProperty(Economy account, Property property) {
     }
 
-    static String formatRenter(Property property, Guild guild) {
+    public static String formatRenter(Property property, Guild guild) {
         if (!property.isRentActive())
             return "None";
 
@@ -161,7 +160,7 @@ public class PropertyCommand extends EconomyCommand {
         return renterMember == null ? "Unknown" : renterMember.getAsMention();
     }
 
-    static BigInteger calculateRerollCost(Property property) {
+    public static BigInteger calculateRerollCost(Property property) {
         BigInteger rent = calculateRent(property);
         if (rent.signum() <= 0)
             return BigInteger.ZERO;
@@ -170,7 +169,7 @@ public class PropertyCommand extends EconomyCommand {
         return cost.signum() == 0 ? BigInteger.ONE : cost;
     }
 
-    static BigInteger calculateRent(Property property) {
+    public static BigInteger calculateRent(Property property) {
         if (property == null || property.getRent() == null)
             return BigInteger.ZERO;
 
@@ -196,7 +195,7 @@ public class PropertyCommand extends EconomyCommand {
         return rent;
     }
 
-    static void hookReply(SlashCommandInteractionEvent event, String message) {
+    public static void hookReply(SlashCommandInteractionEvent event, String message) {
         event.getHook().editOriginal(message).queue();
     }
 }

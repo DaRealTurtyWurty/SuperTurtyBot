@@ -44,23 +44,23 @@ public class MinecraftListener {
     private static final String MINECRAFT_BASE_URL = "https://www.minecraft.net";
     private static final int STORED_ARTICLE_LIMIT = 30;
     private static final List<String> VERSION_CONTEXT_KEYWORDS = List.of(
-            "snapshot",
-            "pre-release",
-            "prerelease",
-            "release candidate",
-            "release",
-            "update",
-            "available now",
-            "now available",
-            "out now",
-            "out today",
-            "drops today",
-            "launches today");
+        "snapshot",
+        "pre-release",
+        "prerelease",
+        "release candidate",
+        "release",
+        "update",
+        "available now",
+        "now available",
+        "out now",
+        "out today",
+        "drops today",
+        "launches today");
     private static final Pattern SNAPSHOT_PATTERN = Pattern.compile("\\b\\d{2}w\\d{2}[a-z]\\b",
-            Pattern.CASE_INSENSITIVE);
+        Pattern.CASE_INSENSITIVE);
     private static final Pattern VERSION_WITH_SUFFIX_PATTERN = Pattern.compile(
-            "\\b\\d+(?:\\.\\d+){1,3}(?:\\s+(?:pre-release|release candidate|rc)\\s+\\d+)?\\b",
-            Pattern.CASE_INSENSITIVE);
+        "\\b\\d+(?:\\.\\d+){1,3}(?:\\s+(?:pre-release|release candidate|rc)\\s+\\d+)?\\b",
+        Pattern.CASE_INSENSITIVE);
     private static final Pattern VERSION_PATTERN = Pattern.compile("\\b\\d+(?:\\.\\d+){1,3}\\b");
     private static final Pattern EPOCH_PATTERN = Pattern.compile("^\\d{10,17}$");
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
@@ -75,7 +75,7 @@ public class MinecraftListener {
         EXECUTOR.scheduleAtFixedRate(() -> {
             try {
                 List<MinecraftNotifier> notifiers = Database.getDatabase().minecraftNotifier.find()
-                        .into(new ArrayList<>());
+                    .into(new ArrayList<>());
                 if (notifiers.isEmpty())
                     return;
 
@@ -88,7 +88,7 @@ public class MinecraftListener {
                         handleNotifier(jda, notifier, articles);
                     } catch (Exception exception) {
                         Constants.LOGGER.error("Failed to process Minecraft notifier for guild {}",
-                                notifier.getGuild(), exception);
+                            notifier.getGuild(), exception);
                     }
                 }
             } catch (Exception exception) {
@@ -99,10 +99,10 @@ public class MinecraftListener {
 
     private static List<MinecraftArticle> readRelevantArticles() {
         Request request = new Request.Builder()
-                .url(FEED_URL)
-                .header("Accept", "application/json")
-                .header("User-Agent", "SuperTurtyBot/1.0")
-                .build();
+            .url(FEED_URL)
+            .header("Accept", "application/json")
+            .header("User-Agent", "SuperTurtyBot/1.0")
+            .build();
 
         try (Response response = GameNewsProxyClient.execute(request, "Minecraft")) {
             if (!response.isSuccessful()) {
@@ -126,9 +126,9 @@ public class MinecraftListener {
         Map<String, MinecraftArticle> articles = new LinkedHashMap<>();
         collectArticles(root, articles);
         return articles.values().stream()
-                .filter(MinecraftListener::isVersionArticle)
-                .sorted(Comparator.comparing(MinecraftArticle::publishedAt).reversed())
-                .toList();
+            .filter(MinecraftListener::isVersionArticle)
+            .sorted(Comparator.comparing(MinecraftArticle::publishedAt).reversed())
+            .toList();
     }
 
     private static void collectArticles(JsonElement element, Map<String, MinecraftArticle> articles) {
@@ -159,24 +159,24 @@ public class MinecraftListener {
             return Optional.empty();
 
         String link = findString(object, "url", "link", "articleUrl", "canonicalUrl", "defaultUrl", "pagePath", "path")
-                .map(MinecraftListener::normalizeLink)
-                .orElse("");
+            .map(MinecraftListener::normalizeLink)
+            .orElse("");
         Instant publishedAt = findInstant(object, "publishDate", "publishedAt", "published", "date",
-                "updated", "lastUpdated", "startDate", "createdAt")
-                .orElse(Instant.EPOCH);
+            "updated", "lastUpdated", "startDate", "createdAt")
+            .orElse(Instant.EPOCH);
 
         if (link.isBlank() && publishedAt.equals(Instant.EPOCH))
             return Optional.empty();
 
         String guid = findString(object, "id", "guid", "articleId", "contentId", "slug", "key")
-                .filter(value -> !value.isBlank())
-                .orElse(link.isBlank() ? title : link);
+            .filter(value -> !value.isBlank())
+            .orElse(link.isBlank() ? title : link);
         String description = findString(object, "description", "summary", "excerpt", "shortDescription", "body", "text")
-                .map(value -> Jsoup.parse(value).text().trim())
-                .orElse("");
+            .map(value -> Jsoup.parse(value).text().trim())
+            .orElse("");
         String author = findString(object, "author", "creator", "byline")
-                .filter(value -> !value.isBlank())
-                .orElse("Minecraft");
+            .filter(value -> !value.isBlank())
+            .orElse("Minecraft");
 
         return Optional.of(new MinecraftArticle(guid, title, link, description, author, publishedAt));
     }
@@ -190,7 +190,7 @@ public class MinecraftListener {
             try {
                 long epoch = Long.parseLong(trimmed);
                 return trimmed.length() <= 10 ? Instant.ofEpochSecond(epoch) : Instant.ofEpochMilli(epoch);
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException _) {
                 // Fall through to the string-based parsers below.
             }
         }
@@ -200,7 +200,7 @@ public class MinecraftListener {
         } catch (Exception exception) {
             try {
                 return OffsetDateTime.parse(trimmed).toInstant();
-            } catch (Exception ignored) {
+            } catch (Exception _) {
                 try {
                     return ZonedDateTime.parse(trimmed).toInstant();
                 } catch (Exception ignoredAgain) {
@@ -229,20 +229,18 @@ public class MinecraftListener {
         String normalizedTitle = article.title().toLowerCase(Locale.ROOT);
         String normalizedDescription = article.description().toLowerCase(Locale.ROOT);
         return containsAny(normalizedTitle, VERSION_CONTEXT_KEYWORDS)
-                || containsAny(normalizedDescription, VERSION_CONTEXT_KEYWORDS);
+            || containsAny(normalizedDescription, VERSION_CONTEXT_KEYWORDS);
     }
 
     private static void handleNotifier(JDA jda, MinecraftNotifier notifier, List<MinecraftArticle> articles) {
         Guild guild = jda.getGuildById(notifier.getGuild());
-        if (guild == null) {
+        if (guild == null)
             return;
-        }
 
         StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
-                "Minecraft");
-        if (channel == null) {
+            "Minecraft");
+        if (channel == null)
             return;
-        }
 
         List<String> storedArticles = notifier.getStoredArticles();
         if (storedArticles == null) {
@@ -265,10 +263,10 @@ public class MinecraftListener {
             }
 
             storedArticles.addAll(articles.stream()
-                    .filter(article -> !failedRecentArticles.contains(article.id()))
-                    .map(MinecraftArticle::id)
-                    .limit(STORED_ARTICLE_LIMIT)
-                    .toList());
+                .filter(article -> !failedRecentArticles.contains(article.id()))
+                .map(MinecraftArticle::id)
+                .limit(STORED_ARTICLE_LIMIT)
+                .toList());
             if (!storedArticles.isEmpty()) {
                 persistStoredArticles(notifier);
             }
@@ -289,14 +287,15 @@ public class MinecraftListener {
             changed = true;
         }
 
-        if (changed)
+        if (changed) {
             persistStoredArticles(notifier);
+        }
     }
 
     private static void persistStoredArticles(MinecraftNotifier notifier) {
         Database.getDatabase().minecraftNotifier.updateOne(
-                Filters.and(Filters.eq("guild", notifier.getGuild()), Filters.eq("channel", notifier.getChannel())),
-                Updates.set("storedArticles", notifier.getStoredArticles()));
+            Filters.and(Filters.eq("guild", notifier.getGuild()), Filters.eq("channel", notifier.getChannel())),
+            Updates.set("storedArticles", notifier.getStoredArticles()));
     }
 
     private static void trimStoredArticles(List<String> storedArticles) {
@@ -305,22 +304,25 @@ public class MinecraftListener {
         }
     }
 
-    private static boolean sendUpdate(StandardGuildMessageChannel channel, MinecraftNotifier notifier,
-                                      MinecraftArticle article) {
+    private static boolean sendUpdate(
+        StandardGuildMessageChannel channel,
+        MinecraftNotifier notifier,
+        MinecraftArticle article
+    ) {
         String versionLabel = extractVersionLabel(article);
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("New Minecraft Version: " + versionLabel, article.link().isBlank() ? null : article.link())
-                .setDescription(truncate(article.description(), MessageEmbed.DESCRIPTION_MAX_LENGTH))
-                .setAuthor(article.author())
-                .setColor(0x6CC349)
-                .setTimestamp(article.publishedAt())
-                .setFooter("Minecraft.net");
+            .setTitle("New Minecraft Version: " + versionLabel, article.link().isBlank() ? null : article.link())
+            .setDescription(truncate(article.description(), MessageEmbed.DESCRIPTION_MAX_LENGTH))
+            .setAuthor(article.author())
+            .setColor(0x6CC349)
+            .setTimestamp(article.publishedAt())
+            .setFooter("Minecraft.net");
 
         return NotifierDeliverySupport.sendAndWait(
-                channel.sendMessageEmbeds(embed.build())
-                        .setContent(notifier.getMention()),
-                "Minecraft",
-                channel);
+            channel.sendMessageEmbeds(embed.build())
+                .setContent(notifier.getMention()),
+            "Minecraft",
+            channel);
     }
 
     private static String truncate(String value, int maxLength) {
@@ -391,7 +393,7 @@ public class MinecraftListener {
 
         JsonObject object = element.getAsJsonObject();
         for (String preferredKey : List.of("default", "value", "text", "content", "name", "label", "title",
-                "url", "href", "path")) {
+            "url", "href", "path")) {
             JsonElement preferred = getFieldIgnoreCase(object, preferredKey);
             if (preferred == null)
                 continue;
@@ -484,6 +486,13 @@ public class MinecraftListener {
         return IS_INITIALIZED.get();
     }
 
-    private record MinecraftArticle(String id, String title, String link, String description, String author,
-                                    Instant publishedAt) {}
+    private record MinecraftArticle(
+        String id,
+        String title,
+        String link,
+        String description,
+        String author,
+        Instant publishedAt
+    ) {
+    }
 }

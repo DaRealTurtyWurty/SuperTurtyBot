@@ -8,9 +8,9 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.Iterator;
 
-
 /**
- * <a href="https://web.archive.org/web/20190114053839/http://elliot.kroo.net/software/java/GifSequenceWriter/GifSequenceWriter.java">Credit</a>
+ * <a href=
+ * "https://web.archive.org/web/20190114053839/http://elliot.kroo.net/software/java/GifSequenceWriter/GifSequenceWriter.java">Credit</a>
  */
 public class GifSequenceWriter {
     protected ImageWriter gifWriter;
@@ -20,13 +20,18 @@ public class GifSequenceWriter {
     /**
      * Creates a new GifSequenceWriter
      *
-     * @param outputStream        the ImageOutputStream to be written to
-     * @param imageType           one of the imageTypes specified in BufferedImage
+     * @param outputStream the ImageOutputStream to be written to
+     * @param imageType one of the imageTypes specified in BufferedImage
      * @param timeBetweenFramesMS the time between frames in milliseconds
-     * @param loopContinuously    whether the gif should loop repeatedly
+     * @param loopContinuously whether the gif should loop repeatedly
      * @throws IIOException if no gif ImageWriters are found
      */
-    public GifSequenceWriter(ImageOutputStream outputStream, int imageType, int timeBetweenFramesMS, boolean loopContinuously) throws IOException {
+    public GifSequenceWriter(
+        ImageOutputStream outputStream,
+        int imageType,
+        int timeBetweenFramesMS,
+        boolean loopContinuously
+    ) throws IOException {
         // my method to create a writer
         gifWriter = getWriter();
         imageWriteParam = gifWriter.getDefaultWriteParam();
@@ -48,7 +53,7 @@ public class GifSequenceWriter {
 
         IIOMetadataNode appEntensionsNode = getNode(root, "ApplicationExtensions");
 
-        IIOMetadataNode child = new IIOMetadataNode("ApplicationExtension");
+        var child = new IIOMetadataNode("ApplicationExtension");
 
         child.setAttribute("applicationID", "NETSCAPE");
         child.setAttribute("authenticationCode", "2.0");
@@ -86,11 +91,10 @@ public class GifSequenceWriter {
      */
     private static ImageWriter getWriter() throws IIOException {
         Iterator<ImageWriter> iter = ImageIO.getImageWritersBySuffix("gif");
-        if (!iter.hasNext()) {
+        if (!iter.hasNext())
             throw new IIOException("No GIF Image Writers Exist");
-        } else {
+        else
             return iter.next();
-        }
     }
 
     /**
@@ -104,11 +108,10 @@ public class GifSequenceWriter {
     private static IIOMetadataNode getNode(IIOMetadataNode rootNode, String nodeName) {
         int nNodes = rootNode.getLength();
         for (int i = 0; i < nNodes; i++) {
-            if (rootNode.item(i).getNodeName().compareToIgnoreCase(nodeName) == 0) {
+            if (rootNode.item(i).getNodeName().compareToIgnoreCase(nodeName) == 0)
                 return ((IIOMetadataNode) rootNode.item(i));
-            }
         }
-        IIOMetadataNode node = new IIOMetadataNode(nodeName);
+        var node = new IIOMetadataNode(nodeName);
         rootNode.appendChild(node);
         return (node);
     }

@@ -19,10 +19,9 @@ public class QuestCommand extends CoreCommand {
     public QuestCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new ListQuestsSubcommand(),
-                new ViewQuestSubcommand(),
-                new RerollQuestsSubcommand()
-        );
+            new ListQuestsSubcommand(),
+            new ViewQuestSubcommand(),
+            new RerollQuestsSubcommand());
     }
 
     @Override
@@ -46,13 +45,13 @@ public class QuestCommand extends CoreCommand {
             QuestPlayer player = QuestManager.INSTANCE.getOrCreateWeeklyQuests(guild, member);
             String input = event.getFocusedOption().getValue().toLowerCase(Locale.ROOT);
             List<Command.Choice> choices = player.getAssignedQuestIds().stream()
-                    .map(QuestManager.QUESTS::get)
-                    .filter(Objects::nonNull)
-                    .filter(quest -> quest.getDisplayName().toLowerCase(Locale.ROOT).contains(input)
-                            || quest.getId().toLowerCase(Locale.ROOT).contains(input))
-                    .limit(25)
-                    .map(quest -> new Command.Choice(quest.getDisplayName(), quest.getId()))
-                    .toList();
+                .map(QuestManager.QUESTS::get)
+                .filter(Objects::nonNull)
+                .filter(quest -> quest.getDisplayName().toLowerCase(Locale.ROOT).contains(input)
+                    || quest.getId().toLowerCase(Locale.ROOT).contains(input))
+                .limit(25)
+                .map(quest -> new Command.Choice(quest.getDisplayName(), quest.getId()))
+                .toList();
             event.replyChoices(choices).queue();
         } catch (RuntimeException exception) {
             event.replyChoices().queue();

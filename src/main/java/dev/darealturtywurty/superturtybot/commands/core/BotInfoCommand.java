@@ -62,12 +62,13 @@ public class BotInfoCommand extends CoreCommand {
 
         embed.addField("", "**__Commands__**:", false);
         embed.addField("Slash",
-                String.valueOf(CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.slash()).count()), true);
+            String.valueOf(CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.slash()).count()), true);
         embed.addField("Prefix",
-                String.valueOf(CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.normal()).count()), true);
+            String.valueOf(CommandHook.INSTANCE.getCommands().stream().filter(cmd -> cmd.types.normal()).count()),
+            true);
         embed.addField("Context", String.valueOf(CommandHook.INSTANCE.getCommands().stream()
-                .filter(cmd -> cmd.types.messageCtx() || cmd.types.userCtx()).count()), true);
-        
+            .filter(cmd -> cmd.types.messageCtx() || cmd.types.userCtx()).count()), true);
+
         embed.setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
 
         return embed;

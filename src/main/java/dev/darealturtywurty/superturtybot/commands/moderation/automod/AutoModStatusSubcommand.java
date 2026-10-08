@@ -25,7 +25,7 @@ public class AutoModStatusSubcommand extends AutoModSubcommand {
         embed.setFooter(event.getGuild().getName(), event.getGuild().getIconUrl());
         embed.addField("Invite Guard", bool(config.isDiscordInviteGuardEnabled()), true);
         embed.addField("Invite Whitelist", formatChannelList(event.getGuild(),
-                GuildData.getLongs(config.getDiscordInviteWhitelistChannels())), false);
+            GuildData.getLongs(config.getDiscordInviteWhitelistChannels())), false);
         embed.addField("Scam Detection", bool(config.isScamDetectionEnabled()), true);
         embed.addField("Image Spam AutoBan", bool(config.isImageSpamAutoBanEnabled()), true);
         embed.addField("Image Spam Window", config.getImageSpamWindowSeconds() + " seconds", true);

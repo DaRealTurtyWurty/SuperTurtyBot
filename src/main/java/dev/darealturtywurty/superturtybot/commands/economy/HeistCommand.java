@@ -25,11 +25,11 @@ public class HeistCommand extends EconomyCommand {
     @Override
     public String getHowToUse() {
         return """
-                To start a heist:
-                `/heist start`
-                To view your heist profile:
-                `/heist profile`
-                """;
+            To start a heist:
+            `/heist start`
+            To view your heist profile:
+            `/heist profile`
+            """;
     }
 
     @Override

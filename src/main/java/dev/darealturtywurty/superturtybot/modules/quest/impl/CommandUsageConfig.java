@@ -3,10 +3,10 @@ package dev.darealturtywurty.superturtybot.modules.quest.impl;
 import java.util.Set;
 
 public record CommandUsageConfig(
-        Set<String> acceptedCommandTypes,
-        String requiredCategory,
-        int requiredDistinctCommandTypes,
-        int requiredDays
+    Set<String> acceptedCommandTypes,
+    String requiredCategory,
+    int requiredDistinctCommandTypes,
+    int requiredDays
 ) {
     public CommandUsageConfig {
         acceptedCommandTypes = Set.copyOf(acceptedCommandTypes);

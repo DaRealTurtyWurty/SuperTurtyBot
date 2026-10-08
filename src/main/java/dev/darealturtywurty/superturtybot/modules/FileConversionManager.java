@@ -30,30 +30,30 @@ import java.util.concurrent.*;
 public class FileConversionManager extends ListenerAdapter {
     public static final FileConversionManager INSTANCE = new FileConversionManager();
 
-    private static final List<String> SUPPORTED_VIDEO_FORMATS =
-            List.of("3g2", "3gp", "3gpp", "avi", "cavs", "dv", "dvr", "flv", "m2ts", "m4v", "mkv", "mod",
-                    "mov", "mpeg", "mpg", "mts", "mxf", "rm", "rmvb", "swf", "ts", "vob", "wmv", "wtv");
+    private static final List<String> SUPPORTED_VIDEO_FORMATS = List.of("3g2", "3gp", "3gpp", "avi", "cavs", "dv",
+        "dvr", "flv", "m2ts", "m4v", "mkv", "mod",
+        "mov", "mpeg", "mpg", "mts", "mxf", "rm", "rmvb", "swf", "ts", "vob", "wmv", "wtv");
 
-    private static final List<String> SUPPORTED_AUDIO_FORMATS =
-            List.of("aac", "aiff", "alac", "amr", "flac", "m4a", "wma", "mp2", "ac3", "aif", "aifc", "au",
-                    "caf", "m4b", "oga", "voc", "weba", "wav");
+    private static final List<String> SUPPORTED_AUDIO_FORMATS = List.of("aac", "aiff", "alac", "amr", "flac", "m4a",
+        "wma", "mp2", "ac3", "aif", "aifc", "au",
+        "caf", "m4b", "oga", "voc", "weba", "wav");
 
-    private static final List<String> SUPPORTED_IMAGE_FORMATS =
-            List.of("3fr", "arw", "avif", "bmp", "cr2", "cr3", "crw", "dcr", "dng", "eps", "erf", "heic",
-                    "heif", "icns", "ico", "jfif", "mos", "mrw", "nef", "odd", "odg", "orf", "pef", "ppm", "ps", "psd",
-                    "raf", "raw", "rw2", "tif", "tiff", "x3f", "xcf", "xps");
+    private static final List<String> SUPPORTED_IMAGE_FORMATS = List.of("3fr", "arw", "avif", "bmp", "cr2", "cr3",
+        "crw", "dcr", "dng", "eps", "erf", "heic",
+        "heif", "icns", "ico", "jfif", "mos", "mrw", "nef", "odd", "odg", "orf", "pef", "ppm", "ps", "psd",
+        "raf", "raw", "rw2", "tif", "tiff", "x3f", "xcf", "xps");
 
     private static final String CONVERT_EMOJI_CODE = "🔜";
     private static final Emoji CONVERT_EMOJI = Emoji.fromFormatted(CONVERT_EMOJI_CODE);
 
     private final Set<Long> conversionsInProgress = ConcurrentHashMap.newKeySet();
     private final ExecutorService conversionExecutor = Executors.newFixedThreadPool(
-            Math.max(2, Runtime.getRuntime().availableProcessors() / 2),
-            runnable -> {
-                final Thread thread = new Thread(runnable, "FileConversionManager");
-                thread.setDaemon(true);
-                return thread;
-            });
+        Math.max(2, Runtime.getRuntime().availableProcessors() / 2),
+        runnable -> {
+            final var thread = new Thread(runnable, "FileConversionManager");
+            thread.setDaemon(true);
+            return thread;
+        });
 
     private final FFmpeg ffmpeg;
     private final FFprobe ffprobe;
@@ -81,7 +81,7 @@ public class FileConversionManager extends ListenerAdapter {
                 if (!this.conversionExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                     this.conversionExecutor.shutdownNow();
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException _) {
                 Thread.currentThread().interrupt();
             }
         }, "FileConversionManager-Shutdown"));
@@ -108,7 +108,7 @@ public class FileConversionManager extends ListenerAdapter {
             fileExtension = fileExtension.toLowerCase(Locale.ROOT);
 
             if (!SUPPORTED_VIDEO_FORMATS.contains(fileExtension) && !SUPPORTED_AUDIO_FORMATS.contains(fileExtension)
-                    && !SUPPORTED_IMAGE_FORMATS.contains(fileExtension))
+                && !SUPPORTED_IMAGE_FORMATS.contains(fileExtension))
                 continue;
 
             hasSupportedFormat = true;
@@ -147,19 +147,20 @@ public class FileConversionManager extends ListenerAdapter {
                 return;
 
             CompletableFuture.runAsync(() -> processAttachments(message, reactor.getIdLong()), this.conversionExecutor)
-                    .whenComplete((unused, throwable) -> {
-                        this.conversionsInProgress.remove(message.getIdLong());
-                        message.removeReaction(CONVERT_EMOJI).queue(success -> {
-                        }, failure -> {
-                        });
-
-                        if (throwable != null) {
-                            Constants.LOGGER.error("Failed to convert attachment for {}", message.getIdLong(), throwable);
-                            message.reply("❌ Something went wrong while converting your attachment. Please try again later.")
-                                    .mentionRepliedUser(false)
-                                    .queue();
-                        }
+                .whenComplete((unused, throwable) -> {
+                    this.conversionsInProgress.remove(message.getIdLong());
+                    message.removeReaction(CONVERT_EMOJI).queue(success -> {
+                    }, failure -> {
                     });
+
+                    if (throwable != null) {
+                        Constants.LOGGER.error("Failed to convert attachment for {}", message.getIdLong(), throwable);
+                        message
+                            .reply("❌ Something went wrong while converting your attachment. Please try again later.")
+                            .mentionRepliedUser(false)
+                            .queue();
+                    }
+                });
         });
     }
 
@@ -179,31 +180,35 @@ public class FileConversionManager extends ListenerAdapter {
                 convertedAny = true;
             } catch (final IOException exception) {
                 Constants.LOGGER.error("Failed to convert attachment {}", attachment.getFileName(), exception);
-                message.reply("❌ Failed to convert `%s`: %s".formatted(attachment.getFileName(), exception.getMessage()))
-                        .mentionRepliedUser(false)
-                        .queue();
+                message
+                    .reply("❌ Failed to convert `%s`: %s".formatted(attachment.getFileName(), exception.getMessage()))
+                    .mentionRepliedUser(false)
+                    .queue();
             }
         }
 
         if (!foundConvertible) {
             message.reply("ℹ️ I couldn't find any attachments in a supported format to convert.")
-                    .mentionRepliedUser(false)
-                    .queue();
+                .mentionRepliedUser(false)
+                .queue();
         } else {
             if (convertedAny) {
                 message.getAuthor();
                 if (message.getAuthor().getIdLong() != requesterId) {
                     message.reply("<@%d> converted your attachments.".formatted(requesterId))
-                            .mentionRepliedUser(false)
-                            .queue();
+                        .mentionRepliedUser(false)
+                        .queue();
                 }
             }
         }
     }
 
-    private void convertAttachment(Message message, Message.Attachment attachment, ConversionType type) throws IOException {
+    private void convertAttachment(Message message, Message.Attachment attachment, ConversionType type)
+        throws IOException {
         final Path tempDir = Files.createTempDirectory("turtybot_conversion");
-        final String extension = attachment.getFileExtension() != null ? attachment.getFileExtension().toLowerCase(Locale.ROOT) : "tmp";
+        final String extension = attachment.getFileExtension() != null
+            ? attachment.getFileExtension().toLowerCase(Locale.ROOT)
+            : "tmp";
         final Path inputFile = tempDir.resolve("input." + extension);
         final Path outputFile = tempDir.resolve("output" + type.outputExtension());
 
@@ -215,21 +220,21 @@ public class FileConversionManager extends ListenerAdapter {
         }
 
         final FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(inputFile.toAbsolutePath().toString())
-                .overrideOutputFiles(true);
+            .setInput(inputFile.toAbsolutePath().toString())
+            .overrideOutputFiles(true);
 
         final FFmpegOutputBuilder outputBuilder = builder.addOutput(outputFile.toAbsolutePath().toString())
-                .setFormat(type.outputFormat());
+            .setFormat(type.outputFormat());
 
         switch (type) {
             case VIDEO -> outputBuilder.setVideoCodec("libx264")
-                    .setAudioCodec("aac")
-                    .setAudioBitRate(128_000)
-                    .setVideoFrameRate(30, 1)
-                    .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL);
+                .setAudioCodec("aac")
+                .setAudioBitRate(128_000)
+                .setVideoFrameRate(30, 1)
+                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL);
             case AUDIO -> outputBuilder.disableVideo()
-                    .setAudioCodec("libmp3lame")
-                    .setAudioBitRate(192_000);
+                .setAudioCodec("libmp3lame")
+                .setAudioBitRate(192_000);
             case IMAGE -> outputBuilder.disableAudio();
         }
 
@@ -248,15 +253,16 @@ public class FileConversionManager extends ListenerAdapter {
         final long maxFileSize = message.isFromGuild() ? message.getGuild().getMaxFileSize() : Message.MAX_FILE_SIZE;
         final long outputSize = fileBytes.length;
         message.reply("⏳ Converted `%s` (%s → %s)..."
-                .formatted(attachment.getFileName(), humanReadableSize(attachment.getSize()), humanReadableSize(outputSize)))
-                .mentionRepliedUser(false)
-                .queue();
+            .formatted(attachment.getFileName(), humanReadableSize(attachment.getSize()),
+                humanReadableSize(outputSize)))
+            .mentionRepliedUser(false)
+            .queue();
         if (outputSize > maxFileSize) {
             cleanup(tempDir);
             message.reply("⚠️ Converted file `%s` is %s which exceeds this server's upload limit of %s."
-                    .formatted(attachment.getFileName(), humanReadableSize(outputSize), humanReadableSize(maxFileSize)))
-                    .mentionRepliedUser(false)
-                    .queue();
+                .formatted(attachment.getFileName(), humanReadableSize(outputSize), humanReadableSize(maxFileSize)))
+                .mentionRepliedUser(false)
+                .queue();
             return;
         }
 
@@ -264,26 +270,30 @@ public class FileConversionManager extends ListenerAdapter {
         final String deliveredName = safeBaseName + type.outputExtension();
         final FileUpload upload = FileUpload.fromData(outputFile, deliveredName);
 
-        message.reply("✅ Converted `%s` to **.%s**.".formatted(attachment.getFileName(), type.outputExtension().substring(1)))
-                .mentionRepliedUser(false)
-                .addFiles(upload)
-                .queue(msg -> cleanup(tempDir), error -> {
-                    cleanup(tempDir);
-                    Constants.LOGGER.error("Failed to upload converted file {}", deliveredName, error);
-                    message.reply("❌ Discord rejected the converted file `%s`: %s".formatted(deliveredName, error.getMessage()))
-                            .mentionRepliedUser(false)
-                            .queue();
-                });
+        message
+            .reply(
+                "✅ Converted `%s` to **.%s**.".formatted(attachment.getFileName(), type.outputExtension().substring(1)))
+            .mentionRepliedUser(false)
+            .addFiles(upload)
+            .queue(msg -> cleanup(tempDir), error -> {
+                cleanup(tempDir);
+                Constants.LOGGER.error("Failed to upload converted file {}", deliveredName, error);
+                message
+                    .reply(
+                        "❌ Discord rejected the converted file `%s`: %s".formatted(deliveredName, error.getMessage()))
+                    .mentionRepliedUser(false)
+                    .queue();
+            });
     }
 
     private ConversionType determineConversionType(Message.Attachment attachment) {
         final String extension = attachment.getFileExtension() != null
-                ? attachment.getFileExtension().toLowerCase(Locale.ROOT)
-                : "";
+            ? attachment.getFileExtension().toLowerCase(Locale.ROOT)
+            : "";
 
         final String contentType = attachment.getContentType() != null
-                ? attachment.getContentType().toLowerCase(Locale.ROOT)
-                : "";
+            ? attachment.getContentType().toLowerCase(Locale.ROOT)
+            : "";
 
         if (contentType.startsWith("video") || SUPPORTED_VIDEO_FORMATS.contains(extension))
             return ConversionType.VIDEO;
@@ -300,10 +310,10 @@ public class FileConversionManager extends ListenerAdapter {
             stream.sorted(Comparator.reverseOrder()).forEach(path -> {
                 try {
                     Files.deleteIfExists(path);
-                } catch (IOException ignored) {
+                } catch (IOException _) {
                 }
             });
-        } catch (IOException ignored) {
+        } catch (IOException _) {
         }
     }
 

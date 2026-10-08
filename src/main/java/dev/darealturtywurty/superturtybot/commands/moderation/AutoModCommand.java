@@ -12,11 +12,10 @@ public class AutoModCommand extends CoreCommand {
     public AutoModCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new AutoModStatusSubcommand(),
-                new AutoModInviteGuardSubcommand(),
-                new AutoModScamDetectionSubcommand(),
-                new AutoModImageSpamSubcommand()
-        );
+            new AutoModStatusSubcommand(),
+            new AutoModInviteGuardSubcommand(),
+            new AutoModScamDetectionSubcommand(),
+            new AutoModImageSpamSubcommand());
     }
 
     @Override
@@ -37,10 +36,10 @@ public class AutoModCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return """
-                /automod status
-                /automod invite_guard <enabled> [clear_whitelist] [channel_1] ... [channel_5]
-                /automod scam_detection <enabled>
-                /automod image_spam <enabled> [window_seconds] [min_images] [new_member_threshold_hours]""";
+            /automod status
+            /automod invite_guard <enabled> [clear_whitelist] [channel_1] ... [channel_5]
+            /automod scam_detection <enabled>
+            /automod image_spam <enabled> [window_seconds] [min_images] [new_member_threshold_hours]""";
     }
 
     @Override

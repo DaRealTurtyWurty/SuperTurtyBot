@@ -37,19 +37,19 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
     private static final Font FONT = new Font("Arial", Font.PLAIN, 100);
     private static final Color BACKGROUND_COLOR = new Color(0xBBADA0);
     private static final Color[] COLORS = {
-            new Color(0xCDC1B4), // empty
-            new Color(0xEEE4DA), // 2
-            new Color(0xEDE0C8), // 4
-            new Color(0xF2B179), // 8
-            new Color(0xF59563), // 16
-            new Color(0xF67C5F), // 32
-            new Color(0xF65E3B), // 64
-            new Color(0xEDCF72), // 128
-            new Color(0xEDCC61), // 256
-            new Color(0xEDC850), // 512
-            new Color(0xEDC53F), // 1024
-            new Color(0xEDC22E), // 2048
-            new Color(0x3C3A32), // more than 2048
+        new Color(0xCDC1B4), // empty
+        new Color(0xEEE4DA), // 2
+        new Color(0xEDE0C8), // 4
+        new Color(0xF2B179), // 8
+        new Color(0xF59563), // 16
+        new Color(0xF67C5F), // 32
+        new Color(0xF65E3B), // 64
+        new Color(0xEDCF72), // 128
+        new Color(0xEDCC61), // 256
+        new Color(0xEDC850), // 512
+        new Color(0xEDC53F), // 1024
+        new Color(0xEDC22E), // 2048
+        new Color(0x3C3A32), // more than 2048
     };
 
     public TwoThousandFortyEightCommand() {
@@ -85,48 +85,52 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         var game = new Game();
         event.reply("✅ Created a game of 2048!")
-                .setComponents(createButtons(game))
-                .setFiles(createFileUpload(game, event.getHook()))
-                .flatMap(InteractionHook::retrieveOriginal)
-                .queue(message -> createEventWaiter(event, message, game).build());
+            .setComponents(createButtons(game))
+            .setFiles(createFileUpload(game, event.getHook()))
+            .flatMap(InteractionHook::retrieveOriginal)
+            .queue(message -> createEventWaiter(event, message, game).build());
     }
 
     private static List<ActionRow> createButtons(Game game) {
         return List.of(
-                ActionRow.of(
-                        Button.secondary("2048:disabled1", "\u0000").asDisabled(),
-                        Button.primary("2048:up", "▲").withDisabled(!game.canMove("up")),
-                        Button.secondary("2048:disabled2", "\u0000").asDisabled()),
-                ActionRow.of(
-                        Button.primary("2048:left", "◀").withDisabled(!game.canMove("left")),
-                        Button.secondary("2048:disabled3", "\u0000").asDisabled(),
-                        Button.primary("2048:right", "▶").withDisabled(!game.canMove("right"))),
-                ActionRow.of(
-                        Button.secondary("2048:disabled4", "\u0000").asDisabled(),
-                        Button.primary("2048:down", "▼").withDisabled(!game.canMove("down")),
-                        Button.secondary("2048:disabled5", "\u0000").asDisabled()));
+            ActionRow.of(
+                Button.secondary("2048:disabled1", "\u0000").asDisabled(),
+                Button.primary("2048:up", "▲").withDisabled(!game.canMove("up")),
+                Button.secondary("2048:disabled2", "\u0000").asDisabled()),
+            ActionRow.of(
+                Button.primary("2048:left", "◀").withDisabled(!game.canMove("left")),
+                Button.secondary("2048:disabled3", "\u0000").asDisabled(),
+                Button.primary("2048:right", "▶").withDisabled(!game.canMove("right"))),
+            ActionRow.of(
+                Button.secondary("2048:disabled4", "\u0000").asDisabled(),
+                Button.primary("2048:down", "▼").withDisabled(!game.canMove("down")),
+                Button.secondary("2048:disabled5", "\u0000").asDisabled()));
     }
 
-    private EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(SlashCommandInteractionEvent event, Message message, Game game) {
+    private EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(
+        SlashCommandInteractionEvent event,
+        Message message,
+        Game game
+    ) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(buttonEvent ->
-                        buttonEvent.getUser() == event.getUser() &&
-                        buttonEvent.getMessageIdLong() == message.getIdLong() &&
-                                buttonEvent.getChannelIdLong() == message.getChannelIdLong() &&
-                                (buttonEvent.getComponentId().equals("2048:up") ||
-                                buttonEvent.getComponentId().equals("2048:down") ||
-                                buttonEvent.getComponentId().equals("2048:left") ||
-                                buttonEvent.getComponentId().equals("2048:right")))
-                .timeout(5, TimeUnit.MINUTES)
-                .timeoutAction(() -> event.getHook().editOriginal("❌ Game timed out!\nScore: %d\nBest score: %d"
-                                .formatted(game.currentScore, getProfile(event.getUser().getIdLong()).bestScore))
-                        .setComponents()
-                        .queue())
-                .success(buttonEvent -> handleButtonClicked(event, buttonEvent, message, game));
+            .condition(buttonEvent -> buttonEvent.getUser() == event.getUser() &&
+                buttonEvent.getMessageIdLong() == message.getIdLong() &&
+                buttonEvent.getChannelIdLong() == message.getChannelIdLong() &&
+                (buttonEvent.getComponentId().equals("2048:up") ||
+                    buttonEvent.getComponentId().equals("2048:down") ||
+                    buttonEvent.getComponentId().equals("2048:left") ||
+                    buttonEvent.getComponentId().equals("2048:right")))
+            .timeout(5, TimeUnit.MINUTES)
+            .timeoutAction(() -> event.getHook().editOriginal("❌ Game timed out!\nScore: %d\nBest score: %d"
+                .formatted(game.currentScore, getProfile(event.getUser().getIdLong()).bestScore))
+                .setComponents()
+                .queue())
+            .success(buttonEvent -> handleButtonClicked(event, buttonEvent, message, game));
     }
 
     private static TwoThousandFortyEightProfile getProfile(long userId) {
-        TwoThousandFortyEightProfile twoThousandFortyEightProfile = Database.getDatabase().twoThousandFortyEight.find(Filters.eq("user", userId)).first();
+        TwoThousandFortyEightProfile twoThousandFortyEightProfile = Database.getDatabase().twoThousandFortyEight
+            .find(Filters.eq("user", userId)).first();
         if (twoThousandFortyEightProfile == null) {
             twoThousandFortyEightProfile = new TwoThousandFortyEightProfile(userId, 0);
             Database.getDatabase().twoThousandFortyEight.insertOne(twoThousandFortyEightProfile);
@@ -135,7 +139,12 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
         return twoThousandFortyEightProfile;
     }
 
-    private void handleButtonClicked(SlashCommandInteractionEvent event, ButtonInteractionEvent buttonEvent, Message message, Game game) {
+    private void handleButtonClicked(
+        SlashCommandInteractionEvent event,
+        ButtonInteractionEvent buttonEvent,
+        Message message,
+        Game game
+    ) {
         String[] split = buttonEvent.getComponentId().split(":");
         game.makeMove(split[1]);
 
@@ -148,25 +157,25 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
 
         List<ActionRow> buttons = createButtons(game);
         boolean allArrowButtonsDisabled = buttons.stream()
-                .flatMap(itemComponents -> itemComponents.getButtons().stream())
-                .filter(button -> !button.getLabel().equals("\u0000"))
-                .allMatch(ActionComponent::isDisabled);
+            .flatMap(itemComponents -> itemComponents.getButtons().stream())
+            .filter(button -> !button.getLabel().equals("\u0000"))
+            .allMatch(ActionComponent::isDisabled);
         QuestManager.INSTANCE.record2048Progress(
-                event.getGuild(),
-                event.getUser(),
-                message.getIdLong(),
-                game.getHighestTile(),
-                allArrowButtonsDisabled
-        );
+            event.getGuild(),
+            event.getUser(),
+            message.getIdLong(),
+            game.getHighestTile(),
+            allArrowButtonsDisabled);
         if (!allArrowButtonsDisabled) {
             createEventWaiter(event, message, game).build();
         }
-        buttonEvent.editMessage("%sScore: %d\nBest score: %d".formatted(allArrowButtonsDisabled ? "The game is over!\n" : "", game.currentScore, profile.bestScore))
-                .setFiles(createFileUpload(game, buttonEvent.getHook()))
-                .setComponents(allArrowButtonsDisabled ? List.of() : buttons)
-                .queue();
+        buttonEvent
+            .editMessage("%sScore: %d\nBest score: %d".formatted(allArrowButtonsDisabled ? "The game is over!\n" : "",
+                game.currentScore, profile.bestScore))
+            .setFiles(createFileUpload(game, buttonEvent.getHook()))
+            .setComponents(allArrowButtonsDisabled ? List.of() : buttons)
+            .queue();
     }
-
 
     private static FileUpload createFileUpload(Game game, InteractionHook hook) {
         BufferedImage image = createImage(game);
@@ -177,9 +186,9 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to write image!", exception);
             hook.editOriginal("❌ Something went wrong while creating the image! The game has been cancelled!")
-                    .setComponents()
-                    .setFiles()
-                    .queue();
+                .setComponents()
+                .setFiles()
+                .queue();
             return null;
         }
 
@@ -187,7 +196,7 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
     }
 
     public static BufferedImage createImage(Game game) {
-        BufferedImage image = new BufferedImage(990, 990, BufferedImage.TYPE_INT_RGB);
+        var image = new BufferedImage(990, 990, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setColor(BACKGROUND_COLOR);
         graphics.fillRect(0, 0, 990, 990);
@@ -202,11 +211,10 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
                 graphics.setColor(color);
                 graphics.fillRect(x * 242 + 22, y * 242 + 22, 220, 220);
 
-                if (squareValue == 0) continue;
+                if (squareValue == 0)
+                    continue;
 
-                graphics.setColor(squareValue >= 8 ?
-                        new Color(0xF9F6F2) :
-                        new Color(0x776E65));
+                graphics.setColor(squareValue >= 8 ? new Color(0xF9F6F2) : new Color(0x776E65));
                 String squareValueStr = String.valueOf(squareValue);
                 int width = fontMetrics.stringWidth(squareValueStr);
                 AffineTransform originalTransform = graphics.getTransform();
@@ -254,8 +262,8 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
 
         private void makeMove(String direction) {
             int[][] originalBoard = Arrays.stream(board)
-                    .map(int[]::clone)
-                    .toArray(int[][]::new);
+                .map(int[]::clone)
+                .toArray(int[][]::new);
             makeMove(direction, board, addition -> currentScore += addition);
             if (!Arrays.deepEquals(originalBoard, board)) {
                 spawnTileAtRandomPos(board);
@@ -285,9 +293,11 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
                 int finalI = i;
                 switch (direction) {
                     case "up" -> moveZerosToEnd(y -> board[y][finalI], (y, value) -> board[y][finalI] = value);
-                    case "down" -> moveZerosToEnd(y -> board[3 - y][finalI], (y, value) -> board[3 - y][finalI] = value);
+                    case "down" ->
+                        moveZerosToEnd(y -> board[3 - y][finalI], (y, value) -> board[3 - y][finalI] = value);
                     case "left" -> moveZerosToEnd(x -> board[finalI][x], (x, value) -> board[finalI][x] = value);
-                    case "right" -> moveZerosToEnd(x -> board[finalI][3 - x], (x, value) -> board[finalI][3 - x] = value);
+                    case "right" ->
+                        moveZerosToEnd(x -> board[finalI][3 - x], (x, value) -> board[finalI][3 - x] = value);
                 }
             }
         }
@@ -297,21 +307,21 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
                 int finalI = i;
                 switch (direction) {
                     case "up" -> mergeEqualTiles(
-                            y -> board[y][finalI],
-                            (y, value) -> board[y][finalI] = value,
-                            addScore);
+                        y -> board[y][finalI],
+                        (y, value) -> board[y][finalI] = value,
+                        addScore);
                     case "down" -> mergeEqualTiles(
-                            y -> board[3 - y][finalI],
-                            (y, value) -> board[3 - y][finalI] = value,
-                            addScore);
+                        y -> board[3 - y][finalI],
+                        (y, value) -> board[3 - y][finalI] = value,
+                        addScore);
                     case "left" -> mergeEqualTiles(
-                            x -> board[finalI][x],
-                            (x, value) -> board[finalI][x] = value,
-                            addScore);
+                        x -> board[finalI][x],
+                        (x, value) -> board[finalI][x] = value,
+                        addScore);
                     case "right" -> mergeEqualTiles(
-                            x -> board[finalI][3 - x],
-                            (x, value) -> board[finalI][3 - x] = value,
-                            addScore);
+                        x -> board[finalI][3 - x],
+                        (x, value) -> board[finalI][3 - x] = value,
+                        addScore);
                 }
             }
         }
@@ -333,7 +343,11 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
             }
         }
 
-        public static void mergeEqualTiles(Function<Integer, Integer> getValue, BiConsumer<Integer, Integer> setValue, Consumer<Integer> addScore) {
+        public static void mergeEqualTiles(
+            Function<Integer, Integer> getValue,
+            BiConsumer<Integer, Integer> setValue,
+            Consumer<Integer> addScore
+        ) {
             for (int i = 0; i < 3; i++) {
                 int num = getValue.apply(i);
                 int nextNum = getValue.apply(i + 1);
@@ -348,17 +362,18 @@ public class TwoThousandFortyEightCommand extends CoreCommand {
 
         public boolean canMove(String direction) {
             int[][] boardToModify = Arrays.stream(board)
-                    .map(int[]::clone)
-                    .toArray(int[][]::new);
-            makeMove(direction, boardToModify, addition -> {});
+                .map(int[]::clone)
+                .toArray(int[][]::new);
+            makeMove(direction, boardToModify, addition -> {
+            });
             return !Arrays.deepEquals(boardToModify, board);
         }
 
         public int getHighestTile() {
             return Arrays.stream(board)
-                    .flatMapToInt(Arrays::stream)
-                    .max()
-                    .orElse(0);
+                .flatMapToInt(Arrays::stream)
+                .max()
+                .orElse(0);
         }
     }
 }

@@ -56,7 +56,7 @@ public class SteamNotifierSubcommand extends BaseNotifierSubcommand {
             return;
 
         Database.getDatabase().steamNotifier.insertOne(
-                new SteamNotifier(guild.getIdLong(), context.channelId(), appId, context.mention()));
+            new SteamNotifier(guild.getIdLong(), context.channelId(), appId, context.mention()));
 
         reply(event, "✅ I have successfully set up a notifier for this Steam app in <#" + context.channelId() + ">!");
     }

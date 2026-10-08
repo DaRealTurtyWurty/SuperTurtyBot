@@ -21,12 +21,11 @@ public final class CountingContributorRule implements QuestRule<CountingContribu
     public QuestStatus status(CountingContributorConfig config, CountingContributorState state) {
         int countProgress = Math.min(state.counts.size(), config.requiredCounts());
         int dayProgress = Math.min(
-                Math.toIntExact(state.counts.values().stream().distinct().count()),
-                config.requiredDays()
-        );
+            Math.toIntExact(state.counts.values().stream().distinct().count()),
+            config.requiredDays());
         boolean complete = countProgress >= config.requiredCounts() && dayProgress >= config.requiredDays();
         String progressText = countProgress + "/" + config.requiredCounts() + " counts • "
-                + dayProgress + "/" + config.requiredDays() + " days";
+            + dayProgress + "/" + config.requiredDays() + " days";
         return new QuestStatus(countProgress, config.requiredCounts(), complete, progressText);
     }
 }

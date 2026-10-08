@@ -37,7 +37,8 @@ public class SpeakCommand extends CoreCommand {
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if(event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
+        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId()
+            .orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
 
         event.getMessage().delete().queue();

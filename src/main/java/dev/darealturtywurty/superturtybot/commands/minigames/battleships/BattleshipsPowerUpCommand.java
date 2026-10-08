@@ -31,12 +31,14 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
         User user = event.getUser();
         BattleshipsCommand.Game game = BattleshipsCommand.getGame(guild.getIdLong(), user.getIdLong()).orElse(null);
         if (game == null) {
-            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.").queue();
+            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.")
+                .queue();
             return;
         }
 
         if (game.getThreadId() != event.getChannel().getIdLong()) {
-            replyBattleships(event, "❌ You can only use power-ups in the game thread: <#" + game.getThreadId() + ">.").queue();
+            replyBattleships(event, "❌ You can only use power-ups in the game thread: <#" + game.getThreadId() + ">.")
+                .queue();
             return;
         }
 
@@ -56,7 +58,8 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
         }
 
         if (!game.isTurn(user.getIdLong())) {
-            replyBattleships(event, "❌ It's not your turn! It's currently <@" + game.getCurrentTurn() + ">'s turn.").queue();
+            replyBattleships(event, "❌ It's not your turn! It's currently <@" + game.getCurrentTurn() + ">'s turn.")
+                .queue();
             return;
         }
 
@@ -69,17 +72,19 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
         BattleshipsCommand.PowerUp powerUpType;
         try {
             powerUpType = BattleshipsCommand.PowerUp.valueOf(powerUpTypeStr.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             replyBattleships(event, "❌ Invalid power-up type specified.").queue();
             return;
         }
 
         if (!game.hasPowerUp(user.getIdLong(), powerUpType)) {
-            replyBattleships(event, "❌ You do not have any " + powerUpType.getDisplayName() + " power-ups available.").queue();
+            replyBattleships(event, "❌ You do not have any " + powerUpType.getDisplayName() + " power-ups available.")
+                .queue();
             return;
         }
 
-        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null, OptionMapping::getAsString);
+        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null,
+            OptionMapping::getAsString);
         if (gridPosition == null || gridPosition.isBlank()) {
             replyBattleships(event, "❌ You must specify a valid grid position to use your power-up on.").queue();
             return;
@@ -101,25 +106,25 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
 
         String[] names = BattleshipsCommand.buildNames(event, game);
         String response = "✅ You used the " + powerUpType.getDisplayName() + " power-up at "
-                + normalizedGridPosition + "!";
+            + normalizedGridPosition + "!";
 
         if (game.isGameOver(user.getIdLong())) {
             response += "\n🏆 " + user.getAsMention() + " wins! Game over.";
             if (game.isPvP()) {
                 QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                        guild,
-                        "battleships",
-                        game.getThreadId(),
-                        game.getPlayer1().getUserId(),
-                        game.getPlayer2().getUserId(),
-                        user.getIdLong()
-                );
+                    guild,
+                    "battleships",
+                    game.getThreadId(),
+                    game.getPlayer1().getUserId(),
+                    game.getPlayer2().getUserId(),
+                    user.getIdLong());
             }
             BattleshipsCommand.GAMES.remove(game.getThreadId(), game);
-            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
+            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5,
+                TimeUnit.SECONDS);
             try {
                 FileUpload upload = BattleshipsImageRenderer.createUpload(
-                        game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
+                    game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
                 replyBattleships(event, response).setFiles(upload).queue();
             } catch (IOException exception) {
                 replyBattleships(event, response).queue();
@@ -133,8 +138,8 @@ public class BattleshipsPowerUpCommand extends BattleshipsSubcommand {
         response += "\nIt's now <@" + game.getCurrentTurn() + ">'s turn to attack.";
         try {
             FileUpload upload = shouldShowOtherPlayerPosition
-                    ? BattleshipsImageRenderer.createUpload(game, names)
-                    : BattleshipsImageRenderer.createUpload(game, names, user.getIdLong());
+                ? BattleshipsImageRenderer.createUpload(game, names)
+                : BattleshipsImageRenderer.createUpload(game, names, user.getIdLong());
             replyBattleships(event, response).setFiles(upload).queue();
         } catch (IOException exception) {
             replyBattleships(event, response).queue();

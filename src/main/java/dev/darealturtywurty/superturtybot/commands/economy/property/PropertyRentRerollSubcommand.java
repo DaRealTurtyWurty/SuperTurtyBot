@@ -40,7 +40,8 @@ public class PropertyRentRerollSubcommand extends PropertySubcommand {
             return;
         }
 
-        if (property.getRent() == null || property.getRent().isPaused() || PropertyCommand.calculateRent(property).signum() <= 0) {
+        if (property.getRent() == null || property.getRent().isPaused()
+            || PropertyCommand.calculateRent(property).signum() <= 0) {
             PropertyCommand.hookReply(event, "❌ This property is not available to rent out.");
             return;
         }
@@ -48,7 +49,7 @@ public class PropertyRentRerollSubcommand extends PropertySubcommand {
         BigInteger rerollCost = PropertyCommand.calculateRerollCost(property);
         if (!EconomyManager.removeBalance(account, rerollCost)) {
             PropertyCommand.hookReply(event, "❌ You need another %s to re-roll offers!"
-                    .formatted(StringUtils.numberFormat(rerollCost.subtract(EconomyManager.getBalance(account)), config)));
+                .formatted(StringUtils.numberFormat(rerollCost.subtract(EconomyManager.getBalance(account)), config)));
             return;
         }
 
@@ -58,6 +59,6 @@ public class PropertyRentRerollSubcommand extends PropertySubcommand {
         EconomyManager.updateAccount(account);
 
         PropertyCommand.hookReply(event, "✅ Re-rolled renter offers for %s."
-                .formatted(property.getName()));
+            .formatted(property.getName()));
     }
 }

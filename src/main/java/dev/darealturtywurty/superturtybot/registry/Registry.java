@@ -35,13 +35,13 @@ public class Registry<Type extends Registerable> {
             throw new IllegalStateException("Item with name `" + name + "` has already been registered!");
         if (this.registeredObjects.contains(object))
             throw new IllegalStateException(object + " has already been registered to "
-                    + this.registerables.get(this.registerables.entrySet()
+                + this.registerables.get(this.registerables.entrySet()
                     .stream()
                     .filter(entry -> entry.getValue() == object)
                     .findFirst()
                     .orElseThrow()
                     .getKey())
-                    + "` and cannot be re-registered to another key!");
+                + "` and cannot be re-registered to another key!");
 
         object.setName(name);
         this.registerables.put(name, object);

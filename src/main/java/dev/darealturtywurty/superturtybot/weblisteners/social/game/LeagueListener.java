@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 
 public final class LeagueListener extends AbstractScrapedGameListener<LeagueNotifier> {
     private static final String NEWS_URL = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/";
-    private static final Pattern TITLE_PATTERN = Pattern.compile("(?i)(?:League of Legends\\s+)?Patch\\s+[\\d.]+\\s+Notes");
+    private static final Pattern TITLE_PATTERN = Pattern
+        .compile("(?i)(?:League of Legends\\s+)?Patch\\s+[\\d.]+\\s+Notes");
     private static final LeagueListener INSTANCE = new LeagueListener();
 
     private LeagueListener() {

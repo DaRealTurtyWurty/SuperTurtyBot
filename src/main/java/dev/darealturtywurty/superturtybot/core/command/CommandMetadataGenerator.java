@@ -41,9 +41,9 @@ public final class CommandMetadataGenerator {
 
     private static String generate() {
         List<CoreCommand> commands = CommandHook.createCommands().stream()
-                .sorted(Comparator.comparing((CoreCommand command) -> command.getCategory().getName())
-                        .thenComparing(CoreCommand::getName))
-                .toList();
+            .sorted(Comparator.comparing((CoreCommand command) -> command.getCategory().getName())
+                .thenComparing(CoreCommand::getName))
+            .toList();
 
         var root = new JsonObject();
         root.addProperty("schemaVersion", 1);

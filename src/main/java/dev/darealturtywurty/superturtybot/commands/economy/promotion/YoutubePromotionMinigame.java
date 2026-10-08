@@ -68,92 +68,93 @@ public class YoutubePromotionMinigame implements PromotionMinigame {
         }
 
         YoutubePromotionConfig config = YoutubePromotionConfig.fromEnvironment(Environment.INSTANCE);
-        event.getHook().editOriginal("🔎 Finding videos for your promotion challenge... (this may take some time)").queue();
+        event.getHook().editOriginal("🔎 Finding videos for your promotion challenge... (this may take some time)")
+            .queue();
         CompletableFuture.supplyAsync(() -> loadVideoPair(config))
-                .whenComplete((pair, throwable) -> {
-                    if (throwable != null) {
-                        Constants.LOGGER.error("Failed to start YouTube promotion minigame.", throwable);
-                        event.getHook()
-                                .editOriginal("❌ Could not start the promotion minigame right now. Please try again later.")
-                                .queue();
-                        return;
-                    }
-
+            .whenComplete((pair, throwable) -> {
+                if (throwable != null) {
+                    Constants.LOGGER.error("Failed to start YouTube promotion minigame.", throwable);
                     event.getHook()
-                            .editOriginal("✅ You have started the promotion minigame! You have 20 seconds to answer.")
-                            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                            .queue(channel -> {
-                                channel.addThreadMember(event.getUser()).queue();
+                        .editOriginal("❌ Could not start the promotion minigame right now. Please try again later.")
+                        .queue();
+                    return;
+                }
 
-                                VideoPair displayPair = maybeSwap(pair);
-                                int correctIndex = determineCorrectIndex(displayPair);
-                                var upload = ThumbnailComposer.createComparisonImageUpload(displayPair.first(),
-                                        displayPair.second());
-                                channel.sendMessage(event.getUser().getAsMention()
-                                                + " Which video has more views? Reply with `1` or `2`.")
-                                        .addFiles(upload)
-                                        .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                                                .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                                        && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                                        && parseChoice(e.getMessage().getContentRaw()) != 0)
-                                                .timeout(config.answerTimeoutSeconds(), TimeUnit.SECONDS)
-                                                .timeoutAction(() -> {
-                                                    channel.sendMessageFormat(
-                                                                    "❌ You took too long to answer! The correct answer was %d.\n1) %,d views - %s\n2) %,d views - %s",
-                                                                    correctIndex,
-                                                                    displayPair.first().viewCount(),
-                                                                    buildVideoUrl(displayPair.first()),
-                                                                    displayPair.second().viewCount(),
-                                                                    buildVideoUrl(displayPair.second()))
-                                                            .queue(ignored -> channel.getManager().setArchived(true)
-                                                                    .setLocked(true).queue());
-                                                    account.setReadyForPromotion(false);
-                                                    EconomyManager.updateAccount(account);
-                                                })
-                                                .success(messageEvent -> {
-                                                    int choice = parseChoice(messageEvent.getMessage().getContentRaw());
-                                                    if (choice == correctIndex) {
-                                                        channel.sendMessageFormat(
-                                                                        "✅ You have been promoted to level %d!\n1) %,d views - %s\n2) %,d views - %s",
-                                                                        account.getJobLevel() + 1,
-                                                                        displayPair.first().viewCount(),
-                                                                        buildVideoUrl(displayPair.first()),
-                                                                        displayPair.second().viewCount(),
-                                                                        buildVideoUrl(displayPair.second()))
-                                                                .queue(ignored -> channel.getManager().setArchived(true)
-                                                                        .setLocked(true).queue());
-                                                        EconomyManager.promoteJob(account);
-                                                    } else {
-                                                        channel.sendMessageFormat(
-                                                                        "❌ That is not correct! The correct answer was %d.\n1) %,d views - %s\n2) %,d views - %s",
-                                                                        correctIndex,
-                                                                        displayPair.first().viewCount(),
-                                                                        buildVideoUrl(displayPair.first()),
-                                                                        displayPair.second().viewCount(),
-                                                                        buildVideoUrl(displayPair.second()))
-                                                                .queue(ignored -> channel.getManager().setArchived(true)
-                                                                        .setLocked(true).queue());
-                                                    }
+                event.getHook()
+                    .editOriginal("✅ You have started the promotion minigame! You have 20 seconds to answer.")
+                    .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
+                    .queue(channel -> {
+                        channel.addThreadMember(event.getUser()).queue();
 
-                                                    account.setReadyForPromotion(false);
-                                                    EconomyManager.updateAccount(account);
-                                                }).build());
-                            });
-                });
+                        VideoPair displayPair = maybeSwap(pair);
+                        int correctIndex = determineCorrectIndex(displayPair);
+                        var upload = ThumbnailComposer.createComparisonImageUpload(displayPair.first(),
+                            displayPair.second());
+                        channel.sendMessage(event.getUser().getAsMention()
+                            + " Which video has more views? Reply with `1` or `2`.")
+                            .addFiles(upload)
+                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                                .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
+                                    && e.getAuthor().getIdLong() == event.getUser().getIdLong()
+                                    && parseChoice(e.getMessage().getContentRaw()) != 0)
+                                .timeout(config.answerTimeoutSeconds(), TimeUnit.SECONDS)
+                                .timeoutAction(() -> {
+                                    channel.sendMessageFormat(
+                                        "❌ You took too long to answer! The correct answer was %d.\n1) %,d views - %s\n2) %,d views - %s",
+                                        correctIndex,
+                                        displayPair.first().viewCount(),
+                                        buildVideoUrl(displayPair.first()),
+                                        displayPair.second().viewCount(),
+                                        buildVideoUrl(displayPair.second()))
+                                        .queue(_ -> channel.getManager().setArchived(true)
+                                            .setLocked(true).queue());
+                                    account.setReadyForPromotion(false);
+                                    EconomyManager.updateAccount(account);
+                                })
+                                .success(messageEvent -> {
+                                    int choice = parseChoice(messageEvent.getMessage().getContentRaw());
+                                    if (choice == correctIndex) {
+                                        channel.sendMessageFormat(
+                                            "✅ You have been promoted to level %d!\n1) %,d views - %s\n2) %,d views - %s",
+                                            account.getJobLevel() + 1,
+                                            displayPair.first().viewCount(),
+                                            buildVideoUrl(displayPair.first()),
+                                            displayPair.second().viewCount(),
+                                            buildVideoUrl(displayPair.second()))
+                                            .queue(_ -> channel.getManager().setArchived(true)
+                                                .setLocked(true).queue());
+                                        EconomyManager.promoteJob(account);
+                                    } else {
+                                        channel.sendMessageFormat(
+                                            "❌ That is not correct! The correct answer was %d.\n1) %,d views - %s\n2) %,d views - %s",
+                                            correctIndex,
+                                            displayPair.first().viewCount(),
+                                            buildVideoUrl(displayPair.first()),
+                                            displayPair.second().viewCount(),
+                                            buildVideoUrl(displayPair.second()))
+                                            .queue(_ -> channel.getManager().setArchived(true)
+                                                .setLocked(true).queue());
+                                    }
+
+                                    account.setReadyForPromotion(false);
+                                    EconomyManager.updateAccount(account);
+                                }).build());
+                    });
+            });
     }
 
     private VideoPair loadVideoPair(YoutubePromotionConfig config) {
         String apiKey = Environment.INSTANCE.youtubeApiKey()
-                .orElseThrow(() -> new IllegalStateException("Youtube API key is not set!"));
+            .orElseThrow(() -> new IllegalStateException("Youtube API key is not set!"));
         var apiClient = new YoutubeApiClient(apiKey, config.videosApiUrl());
         var repository = new VideoCacheRepository(videoDbPath);
         var selector = new VideoPairSelector(config.minVideoAgeMs(), config.filterShorts(),
-                config.minViewDiff(), config.minViewDiffRatio());
+            config.minViewDiff(), config.minViewDiffRatio());
 
         var candidates = repository.loadCandidates(apiClient, config.randomVideoCount(), config.maxFetchAttempts(),
-                config.cacheTtlMs());
+            config.cacheTtlMs());
         VideoPair pair = selector.pickPair(candidates)
-                .orElseThrow(() -> new IllegalStateException("Not enough videos available."));
+            .orElseThrow(() -> new IllegalStateException("Not enough videos available."));
         repository.removeFromCache(List.of(pair.first().id(), pair.second().id()));
         return pair;
     }

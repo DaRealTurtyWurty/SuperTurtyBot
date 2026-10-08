@@ -14,7 +14,7 @@ public class YoutubeNotifier {
     private long guild;
     private long channel;
     private String youtubeChannel;
-    
+
     private String mention;
     private List<String> storedVideos;
 

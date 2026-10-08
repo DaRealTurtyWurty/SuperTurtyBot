@@ -54,7 +54,9 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
             }
 
             if (game.getCurrentPlayerId() != event.getUser().getIdLong()) {
-                event.getHook().editOriginalFormat("❌ It is not your turn. Current turn: <@%d>.", game.getCurrentPlayerId()).queue();
+                event.getHook()
+                    .editOriginalFormat("❌ It is not your turn. Current turn: <@%d>.", game.getCurrentPlayerId())
+                    .queue();
                 return;
             }
 
@@ -63,7 +65,9 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
                 asker.hand().add(drawn);
                 List<BlackjackCommand.Card.Rank> newBooks = game.completeBooks(asker);
                 event.getHook().editOriginal("🃏 You had no cards, so you drew one. Use `/gofish ask` again.").queue();
-                event.getChannel().sendMessageFormat("%s draws a card because they had no cards.", event.getUser().getAsMention()).queue();
+                event.getChannel()
+                    .sendMessageFormat("%s draws a card because they had no cards.", event.getUser().getAsMention())
+                    .queue();
                 if (!newBooks.isEmpty()) {
                     announceBooks(event, newBooks);
                 }
@@ -78,7 +82,9 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
                 } else {
                     game.advanceTurn();
                     event.getHook().editOriginal("❌ You have no cards to ask with. Your turn is skipped.").queue();
-                    event.getChannel().sendMessageFormat("%s has no cards and skips their turn.", event.getUser().getAsMention()).queue();
+                    event.getChannel()
+                        .sendMessageFormat("%s has no cards and skips their turn.", event.getUser().getAsMention())
+                        .queue();
                 }
 
                 return;
@@ -106,7 +112,8 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
                 return;
             }
 
-            BlackjackCommand.Card.Rank rank = GoFishCommand.parseRank(event.getOption("rank", "", OptionMapping::getAsString));
+            BlackjackCommand.Card.Rank rank = GoFishCommand
+                .parseRank(event.getOption("rank", "", OptionMapping::getAsString));
             if (rank == null) {
                 event.getHook().editOriginal("❌ Invalid rank specified.").queue();
                 return;
@@ -127,8 +134,8 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
                 asker.hand().addAll(taken);
                 continueTurn = true;
                 publicMessage = "%s asked %s for **%s** and received %d card(s). %s goes again."
-                        .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName, taken.size(),
-                                event.getUser().getAsMention());
+                    .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName, taken.size(),
+                        event.getUser().getAsMention());
             } else {
                 if (!game.getDeck().isEmpty()) {
                     drawn = game.getDeck().draw();
@@ -138,10 +145,10 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
 
                 if (continueTurn) {
                     publicMessage = "%s asked %s for **%s**. Go fish! They drew the requested rank and go again."
-                            .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName);
+                        .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName);
                 } else {
                     publicMessage = "%s asked %s for **%s**. Go fish!"
-                            .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName);
+                        .formatted(event.getUser().getAsMention(), target.getAsMention(), rankName);
                 }
             }
 
@@ -155,10 +162,10 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
             var privateMessage = new StringBuilder();
             if (!taken.isEmpty()) {
                 privateMessage.append("✅ You received ").append(taken.size()).append(" card(s) from ")
-                        .append(target.getAsMention()).append(".\n");
+                    .append(target.getAsMention()).append(".\n");
             } else if (drawn != null) {
                 privateMessage.append("🎣 Go fish! You drew ").append(GoFishCommand.formatRank(drawn.rank()))
-                        .append(".\n");
+                    .append(".\n");
             } else {
                 privateMessage.append("🎣 Go fish! The deck is empty.\n");
             }
@@ -176,7 +183,7 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
             }
 
             privateMessage.append("**Your hand:** ").append(GoFishCommand.renderHand(asker))
-                    .append("\n**Your books:** ").append(GoFishCommand.renderBooks(asker));
+                .append("\n**Your books:** ").append(GoFishCommand.renderBooks(asker));
 
             try (FileUpload upload = GoFishImageRenderer.createUpload(asker.hand())) {
                 event.getHook().editOriginal(privateMessage.toString()).setFiles(upload).queue();
@@ -192,9 +199,8 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
 
             if (!game.isFinished() && !continueTurn) {
                 event.getChannel().sendMessageFormat(
-                        "<@%d>, it's your turn! Use `/gofish ask <player> <rank>` or `/gofish hand`.",
-                        game.getCurrentPlayerId()
-                ).queue();
+                    "<@%d>, it's your turn! Use `/gofish ask <player> <rank>` or `/gofish hand`.",
+                    game.getCurrentPlayerId()).queue();
             }
         }
     }
@@ -215,7 +221,12 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
         builder.append(joiner);
     }
 
-    private void finishGame(SlashCommandInteractionEvent event, GoFishCommand.Game game, Guild guild, GuildData config) {
+    private void finishGame(
+        SlashCommandInteractionEvent event,
+        GoFishCommand.Game game,
+        Guild guild,
+        GuildData config
+    ) {
         List<Long> winners = game.determineWinners();
         BigInteger pot = game.getBet().multiply(BigInteger.valueOf(game.playerCount()));
         BigInteger split = pot.divide(BigInteger.valueOf(winners.size()));
@@ -256,11 +267,11 @@ public class GoFishAskSubcommand extends GoFishSubcommand {
         }
 
         String splitText = winners.size() == 1
-                ? StringUtils.numberFormat(split.add(remainder), config)
-                : StringUtils.numberFormat(split, config);
+            ? StringUtils.numberFormat(split.add(remainder), config)
+            : StringUtils.numberFormat(split, config);
 
         String resultMessage = "🏁 **Go Fish finished!**\nWinners: %s\nPot: %s | Payout per winner: %s"
-                .formatted(winnerJoiner, StringUtils.numberFormat(pot, config), splitText);
+            .formatted(winnerJoiner, StringUtils.numberFormat(pot, config), splitText);
         if (winners.size() > 1 && remainder.signum() > 0) {
             resultMessage += " (+" + StringUtils.numberFormat(remainder, config) + " to the first winner)";
         }

@@ -11,7 +11,13 @@ public class RandomWordRequestData {
     private final Optional<String> startsWith;
     private final Optional<Integer> amount;
 
-    private RandomWordRequestData(Integer length, Integer minLength, Integer maxLength, String startsWith, Integer amount) {
+    private RandomWordRequestData(
+        Integer length,
+        Integer minLength,
+        Integer maxLength,
+        String startsWith,
+        Integer amount
+    ) {
         this.length = Optional.ofNullable(length);
         this.minLength = Optional.ofNullable(minLength);
         this.maxLength = Optional.ofNullable(maxLength);
@@ -25,7 +31,7 @@ public class RandomWordRequestData {
         private Integer amount = null;
 
         public Builder length(int length) {
-            if(length < 0)
+            if (length < 0)
                 throw new IllegalArgumentException("Length must be greater than 0!");
 
             this.length = length;
@@ -33,13 +39,13 @@ public class RandomWordRequestData {
         }
 
         public Builder length(int minLength, int maxLength) {
-            if(minLength < 0)
+            if (minLength < 0)
                 throw new IllegalArgumentException("Min length must be greater than 0!");
 
-            if(maxLength < 0)
+            if (maxLength < 0)
                 throw new IllegalArgumentException("Max length must be greater than 0!");
 
-            if(minLength > maxLength)
+            if (minLength > maxLength)
                 throw new IllegalArgumentException("Min length must be less than max length!");
 
             this.minLength = minLength;
@@ -48,7 +54,7 @@ public class RandomWordRequestData {
         }
 
         public Builder minLength(int minLength) {
-            if(minLength < 0)
+            if (minLength < 0)
                 throw new IllegalArgumentException("Min length must be greater than 0!");
 
             this.minLength = minLength;
@@ -56,7 +62,7 @@ public class RandomWordRequestData {
         }
 
         public Builder maxLength(int maxLength) {
-            if(maxLength < 1)
+            if (maxLength < 1)
                 throw new IllegalArgumentException("Max length must be greater than 0!");
 
             this.maxLength = maxLength;
@@ -67,7 +73,7 @@ public class RandomWordRequestData {
             if (startsWith.isBlank())
                 throw new IllegalArgumentException("Starts with cannot be blank!");
 
-            if(!startsWith.matches("[a-zA-Z]+"))
+            if (!startsWith.matches("[a-zA-Z]+"))
                 throw new IllegalArgumentException("Starts with must only contain letters!");
 
             this.startsWith = startsWith;
@@ -75,7 +81,7 @@ public class RandomWordRequestData {
         }
 
         public Builder amount(int amount) {
-            if(amount < 0)
+            if (amount < 0)
                 throw new IllegalArgumentException("Amount must be greater than 0!");
 
             this.amount = amount;

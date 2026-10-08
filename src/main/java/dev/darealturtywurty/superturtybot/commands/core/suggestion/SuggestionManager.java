@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 public final class SuggestionManager extends ListenerAdapter {
     public static final SuggestionManager INSTANCE = new SuggestionManager();
-    
+
     private SuggestionManager() {
     }
 
@@ -40,40 +40,46 @@ public final class SuggestionManager extends ListenerAdapter {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot() || event.getUser().isSystem())
             return;
-        
+
         final TextChannel suggestionChannel = getSuggestionChannel(event.getGuild());
         if (suggestionChannel == null || event.getChannel().getIdLong() != suggestionChannel.getIdLong())
             return;
-        
+
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
             Filters.eq("message", event.getMessageIdLong()));
         final Suggestion suggestion = Database.getDatabase().suggestions.find(filter).first();
         if (suggestion == null)
             return;
-        
+
         event.getChannel().retrieveMessageById(suggestion.getMessage()).queue(msg -> {
             msg.addReaction(Emoji.fromUnicode("⬆️")).queue();
             msg.addReaction(Emoji.fromUnicode("⬇️")).queue();
         }, error -> Database.getDatabase().suggestions.deleteOne(filter));
     }
-    
-    public static CompletableFuture<Suggestion> addSuggestion(TextChannel suggestionChannel, Guild guild,
-        Member suggester, String content, @Nullable String mediaUrl) {
+
+    public static CompletableFuture<Suggestion> addSuggestion(
+        TextChannel suggestionChannel,
+        Guild guild,
+        Member suggester,
+        String content,
+        @Nullable String mediaUrl
+    ) {
         final var counter = new AtomicInteger();
         Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
             .forEach(suggestion -> counter.getAndIncrement());
-        
+
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GRAY);
         embed.setTitle("Suggestion #" + counter.get());
-        embed.setFooter("Suggested by " + suggester.getUser().getEffectiveName(), suggester.getUser().getEffectiveAvatarUrl());
+        embed.setFooter("Suggested by " + suggester.getUser().getEffectiveName(),
+            suggester.getUser().getEffectiveAvatarUrl());
         embed.setDescription(content);
         if (mediaUrl != null && !mediaUrl.isBlank()) {
             embed.setImage(mediaUrl);
             embed.appendDescription("\n\n" + "**Media not showing? [Click Me](" + mediaUrl + ")**");
         }
-        
+
         final var future = new CompletableFuture<Suggestion>();
         suggestionChannel.sendMessageEmbeds(embed.build()).queue(msg -> {
             final var suggestion = new Suggestion(guild.getIdLong(), suggester.getIdLong(), msg.getIdLong(),
@@ -82,17 +88,23 @@ public final class SuggestionManager extends ListenerAdapter {
             future.complete(suggestion);
             msg.addReaction(Emoji.fromUnicode("⬆️")).queue(success -> msg.addReaction(Emoji.fromUnicode("⬇️")).queue());
         });
-        
+
         return future;
     }
 
     @NotNull
-    public static CompletableFuture<Suggestion> deleteSuggestion(Guild guild, TextChannel suggestionChannel, Member member, int suggestionNumber) {
+    public static CompletableFuture<Suggestion> deleteSuggestion(
+        Guild guild,
+        TextChannel suggestionChannel,
+        Member member,
+        int suggestionNumber
+    ) {
         final var future = new CompletableFuture<Suggestion>();
         List<Suggestion> suggestions = new ArrayList<>();
         Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
             .forEach(suggestions::add);
-        suggestions = suggestions.stream().sorted(Comparator.comparingLong(Suggestion::getCreatedAt)).collect(Collectors.toList());
+        suggestions = suggestions.stream().sorted(Comparator.comparingLong(Suggestion::getCreatedAt))
+            .collect(Collectors.toList());
         if (suggestionNumber > suggestions.size()) {
             future.complete(null);
             return future;
@@ -119,7 +131,7 @@ public final class SuggestionManager extends ListenerAdapter {
 
         return future;
     }
-    
+
     public static @Nullable TextChannel getSuggestionChannel(Guild guild) {
         final GuildData config = GuildData.getOrCreateGuildData(guild);
 
@@ -131,13 +143,13 @@ public final class SuggestionManager extends ListenerAdapter {
 
             channel = possibleChannels.getFirst();
         }
-        
+
         if (!channel.canTalk())
             return null;
-        
+
         return channel;
     }
-    
+
     public static @Nullable TextChannel getSuggestionChannel(MessageReceivedEvent event) {
         final TextChannel channel = getSuggestionChannel(event.getGuild());
         if (channel == null) {
@@ -145,10 +157,10 @@ public final class SuggestionManager extends ListenerAdapter {
                 .queue();
             return null;
         }
-        
+
         return channel;
     }
-    
+
     public static @Nullable TextChannel getSuggestionChannel(SlashCommandInteractionEvent event) {
         final TextChannel channel = getSuggestionChannel(event.getGuild());
         if (channel == null) {
@@ -156,46 +168,52 @@ public final class SuggestionManager extends ListenerAdapter {
                 .mentionRepliedUser(false).mentionRepliedUser(false).queue();
             return null;
         }
-        
+
         return channel;
     }
-    
-    public static CompletableFuture<Suggestion> respondSuggestion(Guild guild, TextChannel suggestionsChannel,
-        Member responder, int number, String response, SuggestionResponse.Type type) {
+
+    public static CompletableFuture<Suggestion> respondSuggestion(
+        Guild guild,
+        TextChannel suggestionsChannel,
+        Member responder,
+        int number,
+        String response,
+        SuggestionResponse.Type type
+    ) {
         if (number < 0)
             return null;
 
-        List<Suggestion> suggestions = Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong())).into(new ArrayList<>());
-        
+        List<Suggestion> suggestions = Database.getDatabase().suggestions.find(Filters.eq("guild", guild.getIdLong()))
+            .into(new ArrayList<>());
+
         if (number >= suggestions.size())
             return null;
-        
+
         suggestions = suggestions.stream().sorted(Comparator.comparing(Suggestion::getCreatedAt)).toList();
-        
+
         final long time = System.currentTimeMillis();
         final Suggestion suggestion = suggestions.get(number);
         if (suggestion.getUser() != responder.getIdLong() && !responder.hasPermission(Permission.MANAGE_SERVER))
             return null;
-        
+
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
             Filters.eq("message", suggestion.getMessage()));
-        
+
         final var future = new CompletableFuture<Suggestion>();
         suggestionsChannel.retrieveMessageById(suggestion.getMessage()).queue(message -> {
             message.editMessageEmbeds(new EmbedBuilder(message.getEmbeds().getFirst()).addField(
-                type.richName + " by " + responder.getUser().getEffectiveName(),  response, false).build()).queue();
+                type.richName + " by " + responder.getUser().getEffectiveName(), response, false).build()).queue();
             suggestion.getResponses().add(new SuggestionResponse(type.name(), response, responder.getIdLong(), time));
             Database.getDatabase().suggestions.updateOne(filter, Updates.set("responses", suggestion.getResponses()));
             if (type == SuggestionResponse.Type.APPROVED || type == SuggestionResponse.Type.CONSIDERED) {
                 QuestManager.INSTANCE.recordSuggestionAccepted(
-                        guild.getIdLong(),
-                        suggestion.getUser(),
-                        suggestion.getMessage()
-                );
+                    guild.getIdLong(),
+                    suggestion.getUser(),
+                    suggestion.getMessage());
             }
             future.complete(suggestion);
         }, err -> Database.getDatabase().suggestions.deleteOne(filter));
-        
+
         return future;
     }
 }

@@ -12,9 +12,8 @@ public final class GeographyFirstTryRule implements QuestRule<GeographyFirstTryC
 
     @Override
     public void apply(GeographyFirstTryConfig config, GeographyCompletionsState state, QuestEvent event) {
-        if (event instanceof QuestEvent.GeographyGameCompleted(
-                String sourceId, String gameType, _, int attempts
-        ) && config.gameType().equals(gameType) && attempts == 1) {
+        if (event instanceof QuestEvent.GeographyGameCompleted(String sourceId, String gameType, _, int attempts)
+            && config.gameType().equals(gameType) && attempts == 1) {
             state.qualifyingGameIds.add(sourceId);
         }
     }

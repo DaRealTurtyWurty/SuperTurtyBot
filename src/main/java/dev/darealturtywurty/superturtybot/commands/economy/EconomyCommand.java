@@ -37,7 +37,7 @@ public abstract class EconomyCommand extends CoreCommand {
     @Override
     protected final void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        if(guild == null) {
+        if (guild == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
@@ -46,7 +46,7 @@ public abstract class EconomyCommand extends CoreCommand {
 
         GuildData config = GuildData.getOrCreateGuildData(guild);
 
-        if(!config.isEconomyEnabled()) {
+        if (!config.isEconomyEnabled()) {
             event.getHook().sendMessage("❌ Economy is not enabled in this server!").queue();
             return;
         }
@@ -56,7 +56,7 @@ public abstract class EconomyCommand extends CoreCommand {
 
     @Override
     protected final void runNormalMessage(MessageReceivedEvent event) {
-        if(!event.isFromGuild()) {
+        if (!event.isFromGuild()) {
             reply(event, "❌ You must be in a server to use this command!", false);
             return;
         }
@@ -64,7 +64,7 @@ public abstract class EconomyCommand extends CoreCommand {
         Guild guild = event.getGuild();
         GuildData config = GuildData.getOrCreateGuildData(guild);
 
-        if(!config.isEconomyEnabled()) {
+        if (!config.isEconomyEnabled()) {
             reply(event, "❌ Economy is not enabled in this server!", false);
             return;
         }
@@ -72,6 +72,8 @@ public abstract class EconomyCommand extends CoreCommand {
         runNormalMessage(event, guild, config);
     }
 
-    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {}
-    protected void runNormalMessage(MessageReceivedEvent event, Guild guild, GuildData config) {}
+    protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
+    }
+    protected void runNormalMessage(MessageReceivedEvent event, Guild guild, GuildData config) {
+    }
 }

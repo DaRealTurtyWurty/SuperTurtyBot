@@ -81,8 +81,10 @@ public class CrashCommand extends EconomyCommand {
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -91,14 +93,17 @@ public class CrashCommand extends EconomyCommand {
             return;
         }
 
-        final List<Game> games = GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
-        if (!games.isEmpty() && games.stream().anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
+        final List<Game> games = GAMES.computeIfAbsent(guild.getIdLong(), _ -> new ArrayList<>());
+        if (!games.isEmpty() && games.stream()
+            .anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
             event.getHook().editOriginal("❌ You are already in a game of Crash!").queue();
             return;
         }
 
         if (account.getNextCrash() > System.currentTimeMillis()) {
-            event.getHook().editOriginalFormat("❌ You may crash again %s!", TimeFormat.RELATIVE.format(account.getNextCrash())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You may crash again %s!", TimeFormat.RELATIVE.format(account.getNextCrash()))
+                .queue();
             return;
         }
 
@@ -106,32 +111,36 @@ public class CrashCommand extends EconomyCommand {
         EconomyManager.removeMoney(account, amount, false);
         EconomyManager.updateAccount(account);
 
-        event.getHook().editOriginal("✅ You have bet %s!".formatted(StringUtils.numberFormat(amount, config))).flatMap(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s Crash Game")).queue(thread -> {
-            thread.addThreadMember(event.getUser()).queue();
-            thread.sendMessage(("""
-                    You have bet %s! The multiplier has started at 0.25x!
-                    
-                    It will increase by a random amount every 3 seconds, however, it will crash at a random point between 0.3x and 10.0x!
-                    
-                    You need to type `cashout` in order to cashout before it crashes. Good luck!""").formatted(StringUtils.numberFormat(amount, config))).queue(ignored -> {
-                var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
-                games.add(game);
+        event.getHook().editOriginal("✅ You have bet %s!".formatted(StringUtils.numberFormat(amount, config)))
+            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Crash Game"))
+            .queue(thread -> {
+                thread.addThreadMember(event.getUser()).queue();
+                thread.sendMessage(
+                    ("""
+                        You have bet %s! The multiplier has started at 0.25x!
 
-                TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                        .condition(msgEvent -> msgEvent.isFromGuild()
+                        It will increase by a random amount every 3 seconds, however, it will crash at a random point between 0.3x and 10.0x!
+
+                        You need to type `cashout` in order to cashout before it crashes. Good luck!""")
+                        .formatted(StringUtils.numberFormat(amount, config)))
+                    .queue(_ -> {
+                        var game = new Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
+                        games.add(game);
+
+                        TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                            .condition(msgEvent -> msgEvent.isFromGuild()
                                 && msgEvent.getGuild().getIdLong() == guild.getIdLong()
                                 && msgEvent.getChannel().getIdLong() == thread.getIdLong()
                                 && msgEvent.getAuthor().getIdLong() == event.getUser().getIdLong()
                                 && msgEvent.getMessage().getContentRaw().equalsIgnoreCase("cashout"))
-                        .success(msgEvent -> game.cashout(event.getJDA(), config, account))
-                        .failure(() -> game.close(thread))
-                        .timeout(10, TimeUnit.MINUTES)
-                        .build();
+                            .success(msgEvent -> game.cashout(event.getJDA(), config, account))
+                            .failure(() -> game.close(thread))
+                            .timeout(10, TimeUnit.MINUTES)
+                            .build();
 
-                game.start(event.getJDA(), config, account);
+                        game.start(event.getJDA(), config, account);
+                    });
             });
-        });
     }
 
     public static boolean isPlaying(long guild, long user) {
@@ -163,10 +172,10 @@ public class CrashCommand extends EconomyCommand {
 
             int crashChance = ThreadLocalRandom.current().nextInt(5, 25);
             this.future = EXECUTOR.scheduleAtFixedRate(
-                    () -> tick(jda, config, account, crashChance),
-                    5,
-                    3,
-                    TimeUnit.SECONDS);
+                () -> tick(jda, config, account, crashChance),
+                5,
+                3,
+                TimeUnit.SECONDS);
 
             Guild guild = jda.getGuildById(this.guild);
             if (guild == null)
@@ -191,8 +200,8 @@ public class CrashCommand extends EconomyCommand {
             boolean crashed = ThreadLocalRandom.current().nextInt(crashChance) == 0 && this.ticksPassed > 5;
             if (crashed) {
                 thread.sendMessage("The multiplier has crashed at %s! You have lost %s!"
-                        .formatted(stringifyMultiplier(multiplier), StringUtils.numberFormat(this.amount, config))).queue(
-                        ignored -> close(thread));
+                    .formatted(stringifyMultiplier(multiplier), StringUtils.numberFormat(this.amount, config))).queue(
+                        _ -> close(thread));
                 EconomyManager.betLoss(account, this.amount);
                 account.addTransaction(this.amount.negate(), MoneyTransaction.CRASH);
                 EconomyManager.updateAccount(account);
@@ -226,15 +235,17 @@ public class CrashCommand extends EconomyCommand {
             }
 
             double clampedMultiplier = MathUtils.clamp(multiplier, 0.25, 10.0);
-            BigInteger amount = new BigDecimal(this.amount).multiply(BigDecimal.valueOf(clampedMultiplier)).toBigInteger();
+            BigInteger amount = new BigDecimal(this.amount).multiply(BigDecimal.valueOf(clampedMultiplier))
+                .toBigInteger();
             if (multiplier >= 10) {
                 thread.sendMessage("The multiplier has reached 10.0x! You have won %s!"
-                                .formatted(StringUtils.numberFormat(amount.subtract(this.amount), config)))
-                        .queue(ignored -> close(thread));
+                    .formatted(StringUtils.numberFormat(amount.subtract(this.amount), config)))
+                    .queue(_ -> close(thread));
             } else {
                 thread.sendMessage("You have cashed out at %s! You have won %s!"
-                                .formatted(stringifyMultiplier(multiplier), StringUtils.numberFormat(amount.subtract(this.amount), config)))
-                        .queue(ignored -> close(thread));
+                    .formatted(stringifyMultiplier(multiplier),
+                        StringUtils.numberFormat(amount.subtract(this.amount), config)))
+                    .queue(_ -> close(thread));
             }
 
             EconomyManager.addMoney(account, amount);
@@ -249,7 +260,7 @@ public class CrashCommand extends EconomyCommand {
                 thread.getManager().setArchived(true).setLocked(true).queue();
             }
 
-            List<Game> games = GAMES.computeIfAbsent(this.guild, ignored -> new ArrayList<>());
+            List<Game> games = GAMES.computeIfAbsent(this.guild, _ -> new ArrayList<>());
             games.remove(this);
         }
 

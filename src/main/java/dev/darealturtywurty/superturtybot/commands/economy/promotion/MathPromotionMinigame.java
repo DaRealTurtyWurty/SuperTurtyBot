@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MathPromotionMinigame implements PromotionMinigame {
     private static BufferedImage createMathChallengeImage(String question) {
-        Font font = new Font("Arial", Font.PLAIN, 20);
+        var font = new Font("Arial", Font.PLAIN, 20);
         FontMetrics metrics = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
         int width = metrics.stringWidth(question + " = ") + 5;
         int height = metrics.getHeight() + 5;
@@ -54,41 +54,43 @@ public class MathPromotionMinigame implements PromotionMinigame {
         var challenge = MathChallenge.generateMathChallenge();
         int time = challenge.numberOfOperations() * 10;
         event.getHook()
-                .editOriginalFormat("✅ You have started the promotion minigame! You have %d seconds to answer the question!", time)
-                .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                .queue(channel -> {
-                    channel.addThreadMember(event.getUser()).queue();
+            .editOriginalFormat(
+                "✅ You have started the promotion minigame! You have %d seconds to answer the question!", time)
+            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
+            .queue(channel -> {
+                channel.addThreadMember(event.getUser()).queue();
 
-                    channel.sendMessage("Solve the following math problem to get promoted to the next job level!")
-                            .addFiles(createMathChallengeImageUpload(challenge.question()))
-                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                                    .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                            && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                            && StringUtils.isNumber(e.getMessage().getContentRaw()))
-                                    .timeout(time, TimeUnit.SECONDS)
-                                    .timeoutAction(() -> {
-                                        channel.sendMessage("❌ You took too long to answer!")
-                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    })
-                                    .success(messageEvent -> {
-                                        int answer = Integer.parseInt(messageEvent.getMessage().getContentRaw());
-                                        if (answer == challenge.result()) {
-                                            channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                                                            account.getJobLevel() + 1)
-                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                            EconomyManager.promoteJob(account);
-                                        } else {
-                                            channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
-                                                            challenge.result())
-                                                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                        }
+                channel.sendMessage("Solve the following math problem to get promoted to the next job level!")
+                    .addFiles(createMathChallengeImageUpload(challenge.question()))
+                    .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                        .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
+                            && e.getAuthor().getIdLong() == event.getUser().getIdLong()
+                            && StringUtils.isNumber(e.getMessage().getContentRaw()))
+                        .timeout(time, TimeUnit.SECONDS)
+                        .timeoutAction(() -> {
+                            channel.sendMessage("❌ You took too long to answer!")
+                                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                            account.setReadyForPromotion(false);
+                            EconomyManager.updateAccount(account);
+                        })
+                        .success(messageEvent -> {
+                            int answer = Integer.parseInt(messageEvent.getMessage().getContentRaw());
+                            if (answer == challenge.result()) {
+                                channel.sendMessageFormat("✅ You have been promoted to level %d!",
+                                    account.getJobLevel() + 1)
+                                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                EconomyManager.promoteJob(account);
+                            } else {
+                                channel
+                                    .sendMessageFormat("❌ That is not the correct answer! The correct answer was %s!",
+                                        challenge.result())
+                                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                            }
 
-                                        account.setReadyForPromotion(false);
-                                        EconomyManager.updateAccount(account);
-                                    }).build());
-                });
+                            account.setReadyForPromotion(false);
+                            EconomyManager.updateAccount(account);
+                        }).build());
+            });
     }
 
     public record MathChallenge(String question, int result, int numberOfOperations) {
@@ -110,7 +112,7 @@ public class MathPromotionMinigame implements PromotionMinigame {
         private static String generateRandomEquation() {
             int numOps = RANDOM.nextInt(1, 5);
 
-            StringBuilder equation = new StringBuilder();
+            var equation = new StringBuilder();
             for (int i = 0; i < numOps; i++) {
                 int num = RANDOM.nextInt(10, 101);
                 char operator = OPERATORS[RANDOM.nextInt(OPERATORS.length)];

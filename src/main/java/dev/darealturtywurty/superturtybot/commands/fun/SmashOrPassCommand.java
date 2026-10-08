@@ -50,7 +50,8 @@ public class SmashOrPassCommand extends CoreCommand {
         Either<Pair<String, byte[]>, HttpStatus> result = ApiHandler.getRandomCelebrity();
         if (result.isRight()) {
             event.getHook().sendMessage("❌ An error occurred while trying to get a random celebrity!").queue();
-            Constants.LOGGER.error("An error occurred while trying to get a random celebrity! Code: {}", result.getRight());
+            Constants.LOGGER.error("An error occurred while trying to get a random celebrity! Code: {}",
+                result.getRight());
             return;
         }
 
@@ -60,9 +61,9 @@ public class SmashOrPassCommand extends CoreCommand {
 
         try (FileUpload upload = FileUpload.fromData(image, name + ".jpg")) {
             event.getHook()
-                    .sendMessage("Would you smash or pass on **" + name + "**?")
-                    .setFiles(upload)
-                    .queue();
+                .sendMessage("Would you smash or pass on **" + name + "**?")
+                .setFiles(upload)
+                .queue();
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while trying to send the image!").queue();
             Constants.LOGGER.error("An error occurred while trying to send the image!", exception);

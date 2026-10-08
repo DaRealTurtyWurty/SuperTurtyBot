@@ -50,7 +50,8 @@ public class PropertyListSubcommand extends PropertySubcommand {
 
         List<Property> properties = userAccount.getProperties();
         if (properties.isEmpty()) {
-            PropertyCommand.hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
+            PropertyCommand.hookReply(event,
+                isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
             return;
         }
 
@@ -58,55 +59,62 @@ public class PropertyListSubcommand extends PropertySubcommand {
         properties.removeIf(property -> !includeRented && property.isRentActive());
 
         if (properties.isEmpty()) {
-            PropertyCommand.hookReply(event, isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
+            PropertyCommand.hookReply(event,
+                isSelf ? "❌ You do not have any properties!" : "❌ That user does not have any properties!");
             return;
         }
 
         var contents = new PaginatedEmbed.ContentsBuilder();
         var embed = new PaginatedEmbed.Builder(5, contents)
-                .title(isSelf ? "Your Properties" : member.getEffectiveName() + "'s Properties")
-                .description(isSelf ? "You have " + properties.size() + " properties!" : member.getEffectiveName() + " has " + properties.size() + " properties!")
-                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                .color(member.getColorRaw())
-                .timestamp(Instant.now())
-                .authorOnly(event.getUser().getIdLong());
+            .title(isSelf ? "Your Properties" : member.getEffectiveName() + "'s Properties")
+            .description(isSelf
+                ? "You have " + properties.size() + " properties!"
+                : member.getEffectiveName() + " has " + properties.size() + " properties!")
+            .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+            .color(member.getColorRaw())
+            .timestamp(Instant.now())
+            .authorOnly(event.getUser().getIdLong());
 
         for (Property property : properties) {
             Member owner = guild.getMemberById(property.getOwner());
             PropertyCommand.normalizeRent(property);
             contents.field(property.getName(), """
-                            Value: %s
-                            Rent Price: %s
-                            Renting: %s
-                            Sold: %s
-                            Description: %s
-                            Upgrade Level: %d
-                            Mortgaged: %s
-                            Mortgage Paid Off: %s
-                            Previous Owners: %d
-                            Estate Tax: %s
-                            Buy Date: %s
-                            Owner: %s
-                            Renter: %s
-                            Rent Ends: %s
-                            Mortgage: %s"""
-                            .formatted(
-                                    StringUtils.numberFormat(property.calculateCurrentWorth(), config),
-                                    property.getRent() == null ? "None" : StringUtils.numberFormat(PropertyCommand.calculateRent(property), config),
-                                    StringUtils.booleanToEmoji(property.isRentActive()),
-                                    StringUtils.booleanToEmoji(!property.hasOwner()),
-                                    property.getDescription(),
-                                    property.getUpgradeLevel(),
-                                    StringUtils.booleanToEmoji(property.isMortgaged()),
-                                    StringUtils.booleanToEmoji(property.isPaidOff()),
-                                    property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0,
-                                    StringUtils.numberFormat(property.getEstateTax(), config),
-                                    TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()),
-                                    property.hasOwner() ? owner == null ? "Unknown" : owner.getAsMention() : "None",
-                                    PropertyCommand.formatRenter(property, guild),
-                                    property.isRentActive() ? TimeFormat.RELATIVE.format(property.getRentEndsAt()) : "N/A",
-                                    property.isMortgaged() ? StringUtils.numberFormat(property.getMortgage().getAmount(), config) : "None"),
-                    false);
+                Value: %s
+                Rent Price: %s
+                Renting: %s
+                Sold: %s
+                Description: %s
+                Upgrade Level: %d
+                Mortgaged: %s
+                Mortgage Paid Off: %s
+                Previous Owners: %d
+                Estate Tax: %s
+                Buy Date: %s
+                Owner: %s
+                Renter: %s
+                Rent Ends: %s
+                Mortgage: %s"""
+                .formatted(
+                    StringUtils.numberFormat(property.calculateCurrentWorth(), config),
+                    property.getRent() == null
+                        ? "None"
+                        : StringUtils.numberFormat(PropertyCommand.calculateRent(property), config),
+                    StringUtils.booleanToEmoji(property.isRentActive()),
+                    StringUtils.booleanToEmoji(!property.hasOwner()),
+                    property.getDescription(),
+                    property.getUpgradeLevel(),
+                    StringUtils.booleanToEmoji(property.isMortgaged()),
+                    StringUtils.booleanToEmoji(property.isPaidOff()),
+                    property.hasPreviousOwners() ? property.getPreviousOwners().size() : 0,
+                    StringUtils.numberFormat(property.getEstateTax(), config),
+                    TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()),
+                    property.hasOwner() ? owner == null ? "Unknown" : owner.getAsMention() : "None",
+                    PropertyCommand.formatRenter(property, guild),
+                    property.isRentActive() ? TimeFormat.RELATIVE.format(property.getRentEndsAt()) : "N/A",
+                    property.isMortgaged()
+                        ? StringUtils.numberFormat(property.getMortgage().getAmount(), config)
+                        : "None"),
+                false);
         }
 
         embed.build(event.getJDA()).send(event.getHook());

@@ -31,56 +31,60 @@ public class CodePromotionMinigame implements PromotionMinigame {
     public void start(SlashCommandInteractionEvent event, Economy account) {
         event.getHook().editOriginal("🔎 Finding a code snippet for your promotion...").queue();
         CompletableFuture
-                .supplyAsync(() -> Code.findCode(attempt -> event.getHook()
-                        .editOriginalFormat("🔎 Finding a code snippet for your promotion... (try %d/%d)",
-                                attempt, MAX_LOCAL_SNIPPET_ATTEMPTS)
-                        .queue()))
-                .whenComplete((code, throwable) -> {
-                    if (throwable != null) {
-                        Constants.LOGGER.error("Failed to start code guesser promotion.", throwable);
-                        event.getHook()
-                                .editOriginal("❌ Could not start the promotion minigame right now. Please try again later.")
-                                .queue();
-                        return;
-                    }
-
+            .supplyAsync(() -> Code.findCode(attempt -> event.getHook()
+                .editOriginalFormat("🔎 Finding a code snippet for your promotion... (try %d/%d)",
+                    attempt, MAX_LOCAL_SNIPPET_ATTEMPTS)
+                .queue()))
+            .whenComplete((code, throwable) -> {
+                if (throwable != null) {
+                    Constants.LOGGER.error("Failed to start code guesser promotion.", throwable);
                     event.getHook()
-                            .editOriginal("✅ You have started the promotion minigame! You have 15 seconds to guess the programming language.")
-                            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                            .queue(channel -> {
-                                channel.addThreadMember(event.getUser()).queue();
-                                channel.sendMessageFormat(
-                                                "Guess the programming language of the following code to get promoted to the next job level!\n\n```\n%s```",
-                                                code.code().substring(0, MathUtils.clamp(code.code().length(), 0, 1900)))
-                                        .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                                                .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                                        && e.getAuthor().getIdLong() == event.getUser().getIdLong())
-                                                .timeout(15, TimeUnit.SECONDS)
-                                                .timeoutAction(() -> {
-                                                    channel.sendMessageFormat("❌ You took too long to answer! The correct answer was %s.",
-                                                                    code.language().name())
-                                                            .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                                    account.setReadyForPromotion(false);
-                                                    EconomyManager.updateAccount(account);
-                                                })
-                                                .success(messageEvent -> {
-                                                    if (Code.matchesLanguage(code.language().name(),
-                                                            messageEvent.getMessage().getContentRaw())) {
-                                                        channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                                                                        account.getJobLevel() + 1)
-                                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                                        EconomyManager.promoteJob(account);
-                                                    } else {
-                                                        channel.sendMessageFormat("❌ That is not the correct answer! The correct answer was %s.",
-                                                                        code.language().name())
-                                                                .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                                                    }
+                        .editOriginal("❌ Could not start the promotion minigame right now. Please try again later.")
+                        .queue();
+                    return;
+                }
 
-                                                    account.setReadyForPromotion(false);
-                                                    EconomyManager.updateAccount(account);
-                                                }).build());
-                            });
-                });
+                event.getHook()
+                    .editOriginal(
+                        "✅ You have started the promotion minigame! You have 15 seconds to guess the programming language.")
+                    .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
+                    .queue(channel -> {
+                        channel.addThreadMember(event.getUser()).queue();
+                        channel.sendMessageFormat(
+                            "Guess the programming language of the following code to get promoted to the next job level!\n\n```\n%s```",
+                            code.code().substring(0, MathUtils.clamp(code.code().length(), 0, 1900)))
+                            .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                                .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
+                                    && e.getAuthor().getIdLong() == event.getUser().getIdLong())
+                                .timeout(15, TimeUnit.SECONDS)
+                                .timeoutAction(() -> {
+                                    channel
+                                        .sendMessageFormat("❌ You took too long to answer! The correct answer was %s.",
+                                            code.language().name())
+                                        .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                    account.setReadyForPromotion(false);
+                                    EconomyManager.updateAccount(account);
+                                })
+                                .success(messageEvent -> {
+                                    if (Code.matchesLanguage(code.language().name(),
+                                        messageEvent.getMessage().getContentRaw())) {
+                                        channel.sendMessageFormat("✅ You have been promoted to level %d!",
+                                            account.getJobLevel() + 1)
+                                            .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                        EconomyManager.promoteJob(account);
+                                    } else {
+                                        channel
+                                            .sendMessageFormat(
+                                                "❌ That is not the correct answer! The correct answer was %s.",
+                                                code.language().name())
+                                            .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                                    }
+
+                                    account.setReadyForPromotion(false);
+                                    EconomyManager.updateAccount(account);
+                                }).build());
+                    });
+            });
     }
 
     public record Code(String code, Language language) {
@@ -97,7 +101,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
             if (response.isLeft()) {
                 Code code = response.getLeft();
                 return normalizeLanguage(code).orElseThrow(() -> new IllegalStateException(
-                        "Language is not in allowed list: " + code.language().name()));
+                    "Language is not in allowed list: " + code.language().name()));
             }
 
             throw new IllegalStateException("Could not find code! Status code: " + response.getRight().getCode());
@@ -155,7 +159,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
 
         private static long fetchMaxId(Connection connection) throws SQLException {
             try (PreparedStatement statement = connection.prepareStatement("SELECT MAX(id) FROM snippets");
-                 ResultSet resultSet = statement.executeQuery()) {
+                ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next())
                     return 0L;
 
@@ -164,16 +168,16 @@ public class CodePromotionMinigame implements PromotionMinigame {
         }
 
         private static SnippetRow fetchSnippetRowByLanguage(Connection connection, AllowedLanguage language, long id)
-                throws SQLException {
+            throws SQLException {
             try (PreparedStatement statement = connection.prepareStatement(
-                    """
-                            SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
-                            FROM snippets
-                            WHERE language = ? COLLATE NOCASE
-                              AND id >= ?
-                            ORDER BY id
-                            LIMIT 1
-                            """)) {
+                """
+                    SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
+                    FROM snippets
+                    WHERE language = ? COLLATE NOCASE
+                      AND id >= ?
+                    ORDER BY id
+                    LIMIT 1
+                    """)) {
                 statement.setString(1, language.displayName);
                 statement.setLong(2, id);
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -181,60 +185,60 @@ public class CodePromotionMinigame implements PromotionMinigame {
                         return null;
 
                     return new SnippetRow(
-                            resultSet.getString("snippet"),
-                            resultSet.getString("language"),
-                            resultSet.getString("repo_file_name"),
-                            resultSet.getString("github_repo_url"),
-                            resultSet.getString("commit_hash"),
-                            resultSet.getInt("starting_line_number"));
-                }
-            }
-        }
-
-        private static SnippetRow fetchFirstSnippetRowByLanguage(Connection connection, AllowedLanguage language)
-                throws SQLException {
-            try (PreparedStatement statement = connection.prepareStatement(
-                    """
-                            SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
-                            FROM snippets
-                            WHERE language = ? COLLATE NOCASE
-                            ORDER BY id
-                            LIMIT 1
-                            """)) {
-                statement.setString(1, language.displayName);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (!resultSet.next())
-                        return null;
-
-                    return new SnippetRow(
-                            resultSet.getString("snippet"),
-                            resultSet.getString("language"),
-                            resultSet.getString("repo_file_name"),
-                            resultSet.getString("github_repo_url"),
-                            resultSet.getString("commit_hash"),
-                            resultSet.getInt("starting_line_number"));
-                }
-            }
-        }
-
-        private static SnippetRow fetchFirstSnippetRow(Connection connection) throws SQLException {
-            try (Statement statement = connection.createStatement();
-                 ResultSet resultSet = statement.executeQuery("""
-                         SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
-                         FROM snippets
-                         ORDER BY id
-                         LIMIT 1
-                         """)) {
-                if (!resultSet.next())
-                    return null;
-
-                return new SnippetRow(
                         resultSet.getString("snippet"),
                         resultSet.getString("language"),
                         resultSet.getString("repo_file_name"),
                         resultSet.getString("github_repo_url"),
                         resultSet.getString("commit_hash"),
                         resultSet.getInt("starting_line_number"));
+                }
+            }
+        }
+
+        private static SnippetRow fetchFirstSnippetRowByLanguage(Connection connection, AllowedLanguage language)
+            throws SQLException {
+            try (PreparedStatement statement = connection.prepareStatement(
+                """
+                    SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
+                    FROM snippets
+                    WHERE language = ? COLLATE NOCASE
+                    ORDER BY id
+                    LIMIT 1
+                    """)) {
+                statement.setString(1, language.displayName);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (!resultSet.next())
+                        return null;
+
+                    return new SnippetRow(
+                        resultSet.getString("snippet"),
+                        resultSet.getString("language"),
+                        resultSet.getString("repo_file_name"),
+                        resultSet.getString("github_repo_url"),
+                        resultSet.getString("commit_hash"),
+                        resultSet.getInt("starting_line_number"));
+                }
+            }
+        }
+
+        private static SnippetRow fetchFirstSnippetRow(Connection connection) throws SQLException {
+            try (Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery("""
+                    SELECT snippet, language, repo_file_name, github_repo_url, commit_hash, starting_line_number
+                    FROM snippets
+                    ORDER BY id
+                    LIMIT 1
+                    """)) {
+                if (!resultSet.next())
+                    return null;
+
+                return new SnippetRow(
+                    resultSet.getString("snippet"),
+                    resultSet.getString("language"),
+                    resultSet.getString("repo_file_name"),
+                    resultSet.getString("github_repo_url"),
+                    resultSet.getString("commit_hash"),
+                    resultSet.getInt("starting_line_number"));
             }
         }
 
@@ -266,20 +270,23 @@ public class CodePromotionMinigame implements PromotionMinigame {
             return mergedList;
         }
 
-        private static List<String> fetchSnippetChunksFromStart(Connection connection, SnippetRow seed,
-                                                                boolean forward) throws SQLException {
+        private static List<String> fetchSnippetChunksFromStart(
+            Connection connection,
+            SnippetRow seed,
+            boolean forward
+        ) throws SQLException {
             String order = forward ? "ASC" : "DESC";
             String lineComparator = forward ? ">=" : "<=";
             String query = """
-                    SELECT snippet
-                    FROM snippets
-                    WHERE repo_file_name IS ?
-                      AND github_repo_url IS ?
-                      AND commit_hash IS ?
-                      AND starting_line_number %s ?
-                    ORDER BY starting_line_number %s
-                    LIMIT ?
-                    """.formatted(lineComparator, order);
+                SELECT snippet
+                FROM snippets
+                WHERE repo_file_name IS ?
+                  AND github_repo_url IS ?
+                  AND commit_hash IS ?
+                  AND starting_line_number %s ?
+                ORDER BY starting_line_number %s
+                LIMIT ?
+                """.formatted(lineComparator, order);
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
                 statement.setObject(1, seed.repoFileName());
@@ -347,7 +354,7 @@ public class CodePromotionMinigame implements PromotionMinigame {
                 }
 
                 if (trimmed.startsWith("//") || trimmed.startsWith("#") || trimmed.startsWith("--")
-                        || trimmed.startsWith("*") || trimmed.startsWith(";")) {
+                    || trimmed.startsWith("*") || trimmed.startsWith(";")) {
                     commentLines++;
                 }
             }
@@ -374,8 +381,8 @@ public class CodePromotionMinigame implements PromotionMinigame {
             Optional<AllowedLanguage> expectedLanguage = AllowedLanguage.fromValue(expected);
             Optional<AllowedLanguage> providedLanguage = AllowedLanguage.fromValue(provided);
             return expectedLanguage.isPresent()
-                    && providedLanguage.isPresent()
-                    && expectedLanguage.get().isEquivalentTo(providedLanguage.get());
+                && providedLanguage.isPresent()
+                && expectedLanguage.get().isEquivalentTo(providedLanguage.get());
         }
 
         private static AllowedLanguage pickRandomAllowedLanguage() {
@@ -428,8 +435,8 @@ public class CodePromotionMinigame implements PromotionMinigame {
 
             private boolean isEquivalentTo(AllowedLanguage other) {
                 return this == other
-                        || (this == BASH && other == SHELL)
-                        || (this == SHELL && other == BASH);
+                    || (this == BASH && other == SHELL)
+                    || (this == SHELL && other == BASH);
             }
 
             private boolean matches(String value) {
@@ -443,8 +450,14 @@ public class CodePromotionMinigame implements PromotionMinigame {
         public record Language(String name, String extension) {
         }
 
-        private record SnippetRow(String snippet, String language, String repoFileName, String githubRepoUrl,
-                                  String commitHash, int startingLineNumber) {
+        private record SnippetRow(
+            String snippet,
+            String language,
+            String repoFileName,
+            String githubRepoUrl,
+            String commitHash,
+            int startingLineNumber
+        ) {
         }
     }
 

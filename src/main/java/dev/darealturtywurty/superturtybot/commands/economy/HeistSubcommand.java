@@ -7,7 +7,7 @@ import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
-abstract class HeistSubcommand extends SubcommandCommand {
+public abstract class HeistSubcommand extends SubcommandCommand {
     protected HeistSubcommand(String name, String description) {
         super(name, description);
     }

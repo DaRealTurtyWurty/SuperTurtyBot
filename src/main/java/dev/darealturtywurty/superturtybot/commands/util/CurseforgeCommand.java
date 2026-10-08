@@ -55,8 +55,8 @@ public class CurseforgeCommand extends CoreCommand {
         new Thread(() -> Environment.INSTANCE.curseforgeKey().ifPresent(apiKey -> {
             try {
                 CURSE_FORGE_API = CurseForgeAPI.builder()
-                        .apiKey(apiKey)
-                        .build();
+                    .apiKey(apiKey)
+                    .build();
             } catch (LoginException exception) {
                 Constants.LOGGER.error("Failed to log in to CurseForge.", exception);
                 return;
@@ -84,14 +84,14 @@ public class CurseforgeCommand extends CoreCommand {
                         Response<List<Category>> response = helper.getCategories(game.id());
                         if (response.isEmpty()) {
                             Constants.LOGGER.warn("CurseForge returned no categories for game {} (status {}).",
-                                    game.name(), response.getStatusCode());
+                                game.name(), response.getStatusCode());
                             return Set.of();
                         }
 
                         return new HashSet<>(response.orElse(List.of()));
                     } catch (CurseForgeException exception) {
                         Constants.LOGGER.warn("Failed to get CurseForge categories for game {}.", game.name(),
-                                exception);
+                            exception);
                         return Set.of();
                     }
                 });
@@ -106,10 +106,10 @@ public class CurseforgeCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "game", "The game to search for", true, true),
-                new OptionData(OptionType.STRING, "search", "The search query", true),
-                new OptionData(OptionType.STRING, "type", "The type of project to search for", false, true),
-                new OptionData(OptionType.STRING, "category", "The category to search for", false, true),
-                new OptionData(OptionType.STRING, "game-version", "The game version to search for", false, true));
+            new OptionData(OptionType.STRING, "search", "The search query", true),
+            new OptionData(OptionType.STRING, "type", "The type of project to search for", false, true),
+            new OptionData(OptionType.STRING, "category", "The category to search for", false, true),
+            new OptionData(OptionType.STRING, "game-version", "The game version to search for", false, true));
     }
 
     @Override
@@ -188,10 +188,10 @@ public class CurseforgeCommand extends CoreCommand {
         Category categoryObj = null;
         if (category != null) {
             categoryObj = CATEGORIES.getOrDefault(gameObj, Set.of())
-                    .stream()
-                    .filter(cat -> cat.name().equalsIgnoreCase(category))
-                    .findFirst()
-                    .orElse(null);
+                .stream()
+                .filter(cat -> cat.name().equalsIgnoreCase(category))
+                .findFirst()
+                .orElse(null);
         }
 
         if (category != null && categoryObj == null) {
@@ -204,8 +204,8 @@ public class CurseforgeCommand extends CoreCommand {
         AsyncRequestHelper helper = CURSE_FORGE_API.getAsyncHelper();
         try {
             ModSearchQuery query = ModSearchQuery.of(gameObj)
-                    .sortField(ModSearchQuery.SortField.NAME)
-                    .searchFilter(search);
+                .sortField(ModSearchQuery.SortField.NAME)
+                .searchFilter(search);
             if (categoryObj != null) {
                 query.category(categoryObj);
             }
@@ -233,72 +233,80 @@ public class CurseforgeCommand extends CoreCommand {
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contentsBuilder)
-                        .title("Search Results for " + search)
-                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                        .timestamp(Instant.now())
-                        .color(Color.BLUE)
-                        .authorOnly(event.getUser().getIdLong())
-                        .build(event.getJDA());
+                    .title("Search Results for " + search)
+                    .footer("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl())
+                    .timestamp(Instant.now())
+                    .color(Color.BLUE)
+                    .authorOnly(event.getUser().getIdLong())
+                    .build(event.getJDA());
 
-                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue());
+                embed.send(event.getHook(),
+                    () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue());
 
                 embed.setOnMessageUpdate(message -> {
                     // create select menu
                     List<MessageTopLevelComponent> components = new ArrayList<>(message.getComponents());
 
                     // get a list of the current page's fields
-                    List<Mod> currentMods = mods.subList(embed.getPage() * 10, Math.min(mods.size(), (embed.getPage() + 1) * 10));
+                    List<Mod> currentMods = mods.subList(embed.getPage() * 10,
+                        Math.min(mods.size(), (embed.getPage() + 1) * 10));
 
-                    //noinspection DataFlowIssue
+                    // noinspection DataFlowIssue
                     var menu = StringSelectMenu.create("curseforge-%d-%d-%d-%d".formatted(
-                                    event.isFromGuild() ? event.getGuild().getIdLong() : 0,
-                                    event.getChannel().getIdLong(),
-                                    message.getIdLong(),
-                                    event.getUser().getIdLong()))
-                            .setPlaceholder("Select a Mod")
-                            .addOptions(currentMods.stream().map(mod -> SelectOption.of(mod.name(), String.valueOf(mod.id()))).toList())
-                            .setRequiredRange(1, 1)
-                            .build();
+                        event.isFromGuild() ? event.getGuild().getIdLong() : 0,
+                        event.getChannel().getIdLong(),
+                        message.getIdLong(),
+                        event.getUser().getIdLong()))
+                        .setPlaceholder("Select a Mod")
+                        .addOptions(currentMods.stream()
+                            .map(mod -> SelectOption.of(mod.name(), String.valueOf(mod.id()))).toList())
+                        .setRequiredRange(1, 1)
+                        .build();
                     components.add(ActionRow.of(menu));
                     message.editMessageComponents(components).queue();
                 });
 
                 TurtyBot.EVENT_WAITER.builder(StringSelectInteractionEvent.class)
-                        .condition(interactionEvent -> interactionEvent.getComponentId().startsWith("curseforge-"))
-                        .success(event1 -> {
-                            String componentId = event1.getComponentId();
-                            String[] split = componentId.split("-");
+                    .condition(interactionEvent -> interactionEvent.getComponentId().startsWith("curseforge-"))
+                    .success(event1 -> {
+                        String componentId = event1.getComponentId();
+                        String[] split = componentId.split("-");
 
-                            long guildId = Long.parseLong(split[1]);
-                            long channelId = Long.parseLong(split[2]);
-                            long messageId = Long.parseLong(split[3]);
-                            long userId = Long.parseLong(split[4]);
+                        long guildId = Long.parseLong(split[1]);
+                        long channelId = Long.parseLong(split[2]);
+                        long messageId = Long.parseLong(split[3]);
+                        long userId = Long.parseLong(split[4]);
 
-                            Guild guild = event1.getGuild();
-                            if (guildId == 0 && guild != null) return;
-                            else if (guildId != 0 && guild != null && guild.getIdLong() != guildId) return;
-                            else if (event1.getChannel().getIdLong() != channelId) return;
-                            else if (event1.getMessageIdLong() != messageId) return;
-                            else if (event1.getUser().getIdLong() != userId) {
-                                event1.deferEdit().queue();
-                                return;
-                            }
+                        Guild guild = event1.getGuild();
+                        if (guildId == 0 && guild != null)
+                            return;
+                        else if (guildId != 0 && guild != null && guild.getIdLong() != guildId)
+                            return;
+                        else if (event1.getChannel().getIdLong() != channelId)
+                            return;
+                        else if (event1.getMessageIdLong() != messageId)
+                            return;
+                        else if (event1.getUser().getIdLong() != userId) {
+                            event1.deferEdit().queue();
+                            return;
+                        }
 
-                            int value = Integer.parseInt(event1.getSelectedOptions().getFirst().getValue());
-                            Mod mod = mods.stream().filter(mod1 -> mod1.id() == value).findFirst().orElse(null);
-                            if (mod == null) {
-                                event1.deferEdit().queue();
-                                return;
-                            }
+                        int value = Integer.parseInt(event1.getSelectedOptions().getFirst().getValue());
+                        Mod mod = mods.stream().filter(mod1 -> mod1.id() == value).findFirst().orElse(null);
+                        if (mod == null) {
+                            event1.deferEdit().queue();
+                            return;
+                        }
 
-                            EmbedBuilder embed1 = createEmbed(mod);
-                            event1.deferEdit().setComponents().setEmbeds(embed1.build()).queue();
+                        EmbedBuilder embed1 = createEmbed(mod);
+                        event1.deferEdit().setComponents().setEmbeds(embed1.build()).queue();
 
-                            embed.finish();
-                        })
-                        .failure(() -> {
-                        })
-                        .build();
+                        embed.finish();
+                    })
+                    .failure(() -> {
+                    })
+                    .build();
             }, () -> event.getHook().editOriginal("❌ No projects found!").mentionRepliedUser(false).queue()));
         } catch (CurseForgeException exception) {
             event.getHook().editOriginal("❌ Failed to search for projects!").mentionRepliedUser(false).queue();
@@ -307,22 +315,24 @@ public class CurseforgeCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals(getName())) return;
+        if (!event.getName().equals(getName()))
+            return;
 
         String focusedValue = event.getFocusedOption().getValue();
         switch (event.getFocusedOption().getName()) {
             case "game" -> event.replyChoiceStrings(
-                    GAMES.keySet()
-                            .stream()
-                            .filter(game -> containsIgnoreCase(game, focusedValue))
-                            .limit(25)
-                            .toList()
-            ).queue(unused -> {
-            }, throwable -> {
-            });
+                GAMES.keySet()
+                    .stream()
+                    .filter(game -> containsIgnoreCase(game, focusedValue))
+                    .limit(25)
+                    .toList())
+                .queue(unused -> {
+                }, throwable -> {
+                });
 
             case "type" -> {
-                Game typeGame = GAMES.get(Objects.requireNonNull(event.getOption("game", OptionMapping::getAsString)).toUpperCase(Locale.ROOT));
+                Game typeGame = GAMES.get(Objects.requireNonNull(event.getOption("game", OptionMapping::getAsString))
+                    .toUpperCase(Locale.ROOT));
                 if (typeGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {
                     }, throwable -> {
@@ -339,19 +349,20 @@ public class CurseforgeCommand extends CoreCommand {
                 }
 
                 event.replyChoices(
-                        typeCategories.stream()
-                                .filter(Category::isClass)
-                                .filter(category -> containsIgnoreCase(category.name(), focusedValue))
-                                .limit(25)
-                                .map(category -> new Command.Choice(category.name(), category.id()))
-                                .toList()
-                ).queue(unused -> {
-                }, throwable -> {
-                });
+                    typeCategories.stream()
+                        .filter(Category::isClass)
+                        .filter(category -> containsIgnoreCase(category.name(), focusedValue))
+                        .limit(25)
+                        .map(category -> new Command.Choice(category.name(), category.id()))
+                        .toList())
+                    .queue(unused -> {
+                    }, throwable -> {
+                    });
             }
 
             case "category" -> {
-                Game categoryGame = GAMES.get(Objects.requireNonNull(event.getOption("game", OptionMapping::getAsString)).toUpperCase(Locale.ROOT));
+                Game categoryGame = GAMES.get(Objects
+                    .requireNonNull(event.getOption("game", OptionMapping::getAsString)).toUpperCase(Locale.ROOT));
                 if (categoryGame == null) {
                     event.replyChoices(List.of()).queue(unused -> {
                     }, throwable -> {
@@ -368,14 +379,14 @@ public class CurseforgeCommand extends CoreCommand {
                 }
 
                 event.replyChoiceStrings(
-                        categoryCategories.stream()
-                                .map(Category::name)
-                                .filter(name -> containsIgnoreCase(name, focusedValue))
-                                .limit(25)
-                                .toList()
-                ).queue(unused -> {
-                }, throwable -> {
-                });
+                    categoryCategories.stream()
+                        .map(Category::name)
+                        .filter(name -> containsIgnoreCase(name, focusedValue))
+                        .limit(25)
+                        .toList())
+                    .queue(unused -> {
+                    }, throwable -> {
+                    });
             }
             default -> event.replyChoices(List.of()).queue(unused -> {
             }, throwable -> {
@@ -395,15 +406,15 @@ public class CurseforgeCommand extends CoreCommand {
         embed.addField("Featured:", StringUtils.trueFalseToYesNo(mod.isFeatured()), true);
 
         String status = WordUtils.capitalize(
-                mod.status()
-                        .name()
-                        .toLowerCase(Locale.ROOT)
-                        .replace("_", " ")
-        );
+            mod.status()
+                .name()
+                .toLowerCase(Locale.ROOT)
+                .replace("_", " "));
         embed.addField("Status:", status, true);
 
         embed.addField("Author:", mod.authors().stream().map(ModAuthor::name).collect(Collectors.joining(", ")), true);
-        embed.addField("Categories:", mod.categories().stream().map(Category::name).collect(Collectors.joining(", ")), true);
+        embed.addField("Categories:", mod.categories().stream().map(Category::name).collect(Collectors.joining(", ")),
+            true);
 
         Set<String> versions = new HashSet<>();
         for (File file : mod.latestFiles()) {

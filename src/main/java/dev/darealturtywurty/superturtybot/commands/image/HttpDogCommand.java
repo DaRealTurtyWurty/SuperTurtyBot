@@ -138,7 +138,8 @@ public class HttpDogCommand extends CoreCommand {
         }
 
         try {
-            final URLConnection connection = new URI("https://http.dog/" + statusCode + ".jpg").toURL().openConnection();
+            final URLConnection connection = new URI("https://http.dog/" + statusCode + ".jpg").toURL()
+                .openConnection();
             event.deferReply().setFiles(FileUpload.fromData(connection.getInputStream(), statusCode + ".jpg"))
                 .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {

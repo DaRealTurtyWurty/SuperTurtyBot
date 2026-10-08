@@ -63,13 +63,13 @@ public class JobCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("work", "Work for your job"),
-                new SubcommandData("register", "Register for a job").addOptions(
-                        new OptionData(OptionType.STRING, "job", "The job you want to register for",
-                                true, true)),
-                new SubcommandData("quit", "Quit your job"),
-                new SubcommandData("profile", "View your job profile"),
-                new SubcommandData("promote", "Promote yourself to the next job level"),
-                new SubcommandData("info", "Get information about the different jobs"));
+            new SubcommandData("register", "Register for a job").addOptions(
+                new OptionData(OptionType.STRING, "job", "The job you want to register for",
+                    true, true)),
+            new SubcommandData("quit", "Quit your job"),
+            new SubcommandData("profile", "View your job profile"),
+            new SubcommandData("promote", "Promote yourself to the next job level"),
+            new SubcommandData("info", "Get information about the different jobs"));
     }
 
     @Override
@@ -95,10 +95,10 @@ public class JobCommand extends EconomyCommand {
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
         if (event.getName().equalsIgnoreCase(getName()) && Objects.requireNonNull(event.getSubcommandName())
-                .equalsIgnoreCase("register") && event.getFocusedOption().getName().equalsIgnoreCase("job")) {
+            .equalsIgnoreCase("register") && event.getFocusedOption().getName().equalsIgnoreCase("job")) {
             event.replyChoices(Arrays.stream(Economy.Job.values()).map(Economy.Job::name).map(String::toLowerCase)
-                    .map(str -> str.substring(0, 1).toUpperCase() + str.substring(1))
-                    .map(job -> new Command.Choice(job, job)).toList()).queue();
+                .map(str -> str.substring(0, 1).toUpperCase() + str.substring(1))
+                .map(job -> new Command.Choice(job, job)).toList()).queue();
         }
     }
 
@@ -107,8 +107,11 @@ public class JobCommand extends EconomyCommand {
         String subcommand = event.getSubcommandName();
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot interact with your job! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot interact with your job! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -116,7 +119,7 @@ public class JobCommand extends EconomyCommand {
             case "work" -> {
                 if (EconomyManager.isOnWorkCooldown(account)) {
                     event.getHook().editOriginal("❌ You can start working %s!"
-                            .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
+                        .formatted(TimeFormat.RELATIVE.format(account.getNextWork()))).queue();
                     return;
                 }
 
@@ -142,11 +145,10 @@ public class JobCommand extends EconomyCommand {
                 }
 
                 QuestManager.INSTANCE.recordEconomyAction(
-                        guild.getIdLong(),
-                        event.getUser().getIdLong(),
-                        QuestManager.ECONOMY_JOB_SHIFT,
-                        event.getId()
-                );
+                    guild.getIdLong(),
+                    event.getUser().getIdLong(),
+                    QuestManager.ECONOMY_JOB_SHIFT,
+                    event.getId());
 
                 String levelUpMessage = "";
                 if (account.isReadyForPromotion()) {
@@ -154,7 +156,9 @@ public class JobCommand extends EconomyCommand {
                 }
 
                 event.getHook().editOriginal("✅ You worked and earned %s!%nYou can start working %s!%n%s"
-                        .formatted(StringUtils.numberFormat(BigInteger.valueOf(money), config), TimeFormat.RELATIVE.format(account.getNextWork()), levelUpMessage)).queue();
+                    .formatted(StringUtils.numberFormat(BigInteger.valueOf(money), config),
+                        TimeFormat.RELATIVE.format(account.getNextWork()), levelUpMessage))
+                    .queue();
             }
             case "register" -> {
                 String job = Objects.requireNonNull(event.getOption("job")).getAsString();
@@ -176,28 +180,35 @@ public class JobCommand extends EconomyCommand {
                     return;
                 }
 
-                event.getHook().editOriginalFormat("❓ Are you sure you want to quit your job?%nYou are currently a level %s %s.", account.getJobLevel(), WordUtils.capitalize(account.getJob().name().toLowerCase()))
-                        .setComponents(ActionRow.of(Button.danger("job:quit", "Quit Job"), Button.success("job:cancel_quit", "Cancel")))
-                        .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                                .timeout(2, TimeUnit.MINUTES)
-                                .timeoutAction(() -> message.editMessage("❌ Job quitting has timed out!").setComponents().queue())
-                                .failure(() -> message.editMessage("❌ An error occurred while quitting the job!").setComponents().queue())
-                                .condition(buttonEvent -> buttonEvent.isFromGuild() &&
-                                        Objects.requireNonNull(buttonEvent.getGuild()).getIdLong() == guild.getIdLong() &&
-                                        Objects.requireNonNull(buttonEvent.getMember()).getIdLong() == Objects.requireNonNull(event.getMember()).getIdLong() &&
-                                        buttonEvent.getChannel().getIdLong() == message.getChannel().getIdLong() &&
-                                        buttonEvent.getMessageIdLong() == message.getIdLong() &&
-                                        buttonEvent.getComponentId().startsWith("job:"))
-                                .success(buttonEvent -> {
-                                    buttonEvent.deferEdit().queue();
-                                    if (buttonEvent.getComponentId().equals("job:cancel_quit")) {
-                                        message.editMessage("❌ Job quitting has been cancelled!").setComponents().queue();
-                                        return;
-                                    }
-                                    EconomyManager.quitJob(account);
-                                    message.editMessage("✅ You have quit your job!").setComponents().queue();
-                                })
-                                .build());
+                event.getHook()
+                    .editOriginalFormat("❓ Are you sure you want to quit your job?%nYou are currently a level %s %s.",
+                        account.getJobLevel(), WordUtils.capitalize(account.getJob().name().toLowerCase()))
+                    .setComponents(ActionRow.of(Button.danger("job:quit", "Quit Job"),
+                        Button.success("job:cancel_quit", "Cancel")))
+                    .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
+                        .timeout(2, TimeUnit.MINUTES)
+                        .timeoutAction(
+                            () -> message.editMessage("❌ Job quitting has timed out!").setComponents().queue())
+                        .failure(() -> message.editMessage("❌ An error occurred while quitting the job!")
+                            .setComponents().queue())
+                        .condition(buttonEvent -> buttonEvent.isFromGuild() &&
+                            Objects.requireNonNull(buttonEvent.getGuild()).getIdLong() == guild.getIdLong() &&
+                            Objects.requireNonNull(buttonEvent.getMember()).getIdLong() == Objects
+                                .requireNonNull(event.getMember()).getIdLong()
+                            &&
+                            buttonEvent.getChannel().getIdLong() == message.getChannel().getIdLong() &&
+                            buttonEvent.getMessageIdLong() == message.getIdLong() &&
+                            buttonEvent.getComponentId().startsWith("job:"))
+                        .success(buttonEvent -> {
+                            buttonEvent.deferEdit().queue();
+                            if (buttonEvent.getComponentId().equals("job:cancel_quit")) {
+                                message.editMessage("❌ Job quitting has been cancelled!").setComponents().queue();
+                                return;
+                            }
+                            EconomyManager.quitJob(account);
+                            message.editMessage("✅ You have quit your job!").setComponents().queue();
+                        })
+                        .build());
             }
             case "profile" -> {
                 if (!EconomyManager.hasJob(account)) {
@@ -235,26 +246,28 @@ public class JobCommand extends EconomyCommand {
             }
             case "info" -> {
                 var embed = new EmbedBuilder()
-                        .setTimestamp(Instant.now())
-                        .setColor(Color.CYAN)
-                        .setTitle("Job Information")
-                        .setDescription("Here is some information about the different jobs you can register for!")
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                    .setTimestamp(Instant.now())
+                    .setColor(Color.CYAN)
+                    .setTitle("Job Information")
+                    .setDescription("Here is some information about the different jobs you can register for!")
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl());
 
                 for (Economy.Job job : Economy.Job.values()) {
                     embed.addField(WordUtils.capitalize(job.name().toLowerCase(Locale.ROOT).replace("_", " ")),
-                            """
-                                    **Salary**: %s
-                                    **Promotion Chance**: %d%%
-                                    **Base Promotion Multiplier**: %sx
-                                    **Work Cooldown**: %s
-                                    """.formatted(StringUtils.numberFormat(BigInteger.valueOf(job.getSalary()), config),
-                                    Math.round(job.getPromotionChance() * 100),
-                                    job.getPromotionMultiplier(),
-                                    TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds()) + " minutes" + (
-                                            job.getWorkCooldownSeconds() % 60 != 0 ? " and " + job.getWorkCooldownSeconds() % 60 + " seconds" : ""
-                                    )),
-                            false);
+                        """
+                            **Salary**: %s
+                            **Promotion Chance**: %d%%
+                            **Base Promotion Multiplier**: %sx
+                            **Work Cooldown**: %s
+                            """.formatted(StringUtils.numberFormat(BigInteger.valueOf(job.getSalary()), config),
+                            Math.round(job.getPromotionChance() * 100),
+                            job.getPromotionMultiplier(),
+                            TimeUnit.SECONDS.toMinutes(job.getWorkCooldownSeconds()) + " minutes"
+                                + (job.getWorkCooldownSeconds() % 60 != 0
+                                    ? " and " + job.getWorkCooldownSeconds() % 60 + " seconds"
+                                    : "")),
+                        false);
                 }
 
                 event.getHook().sendMessageEmbeds(embed.build()).queue();
@@ -265,7 +278,7 @@ public class JobCommand extends EconomyCommand {
 
     private static String getResponse(GuildData config, User user, long amount) {
         return "✅ " + RESPONSES.get(ThreadLocalRandom.current().nextInt(RESPONSES.size()))
-                .replace("{user}", user.getAsMention())
-                .replace("{amount}", config.getEconomyCurrency() + amount);
+            .replace("{user}", user.getAsMention())
+            .replace("{amount}", config.getEconomyCurrency() + amount);
     }
 }

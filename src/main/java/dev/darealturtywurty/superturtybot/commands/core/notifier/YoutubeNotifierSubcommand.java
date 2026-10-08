@@ -34,7 +34,7 @@ public class YoutubeNotifierSubcommand extends BaseNotifierSubcommand {
             return;
 
         Bson findFilter = Filters.and(Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("youtubeChannel", youtubeChannelId));
+            Filters.eq("youtubeChannel", youtubeChannelId));
 
         boolean unsubscribe = event.getOption("unsubscribe", false, OptionMapping::getAsBoolean);
         if (unsubscribe) {
@@ -57,8 +57,9 @@ public class YoutubeNotifierSubcommand extends BaseNotifierSubcommand {
             return;
 
         Database.getDatabase().youtubeNotifier.insertOne(
-                new YoutubeNotifier(guild.getIdLong(), context.channelId(), youtubeChannelId, context.mention()));
+            new YoutubeNotifier(guild.getIdLong(), context.channelId(), youtubeChannelId, context.mention()));
 
-        reply(event, "✅ I have successfully set up a notifier for this YouTube channel in <#" + context.channelId() + ">!");
+        reply(event,
+            "✅ I have successfully set up a notifier for this YouTube channel in <#" + context.channelId() + ">!");
     }
 }

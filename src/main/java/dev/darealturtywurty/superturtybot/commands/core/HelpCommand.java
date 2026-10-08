@@ -30,12 +30,11 @@ public class HelpCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(
-                OptionType.STRING,
-                "command",
-                "Gets information about a specific command.",
-                false,
-                true
-        ));
+            OptionType.STRING,
+            "command",
+            "Gets information about a specific command.",
+            false,
+            true));
     }
 
     @Override
@@ -71,16 +70,16 @@ public class HelpCommand extends CoreCommand {
         final String term = event.getFocusedOption().getValue().toLowerCase(Locale.ROOT);
 
         final List<String> commands = CommandHook.INSTANCE.getCommands().stream()
-                .filter(cmd -> cmd.getName().contains(term))
-                .filter(cmd -> {
-                    if (!event.isFromGuild() || cmd.getCategory() != CommandCategory.NSFW)
-                        return true;
+            .filter(cmd -> cmd.getName().contains(term))
+            .filter(cmd -> {
+                if (!event.isFromGuild() || cmd.getCategory() != CommandCategory.NSFW)
+                    return true;
 
-                    return NSFWCommand.isValidChannel(event.getChannel());
-                })
-                .limit(25)
-                .map(CoreCommand::getName)
-                .toList();
+                return NSFWCommand.isValidChannel(event.getChannel());
+            })
+            .limit(25)
+            .map(CoreCommand::getName)
+            .toList();
         event.replyChoiceStrings(commands).queue();
     }
 
@@ -95,19 +94,19 @@ public class HelpCommand extends CoreCommand {
         }
 
         final var embed = new EmbedBuilder()
-                .setTimestamp(Instant.now())
-                .setColor(Color.GREEN);
+            .setTimestamp(Instant.now())
+            .setColor(Color.GREEN);
         setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());
 
         CommandHook.INSTANCE.getCommands().stream()
-                .filter(cmd -> cmd.getName().equals(command))
-                .findFirst()
-                .ifPresentOrElse(
-                        cmd -> populateEmbed(embed, cmd),
-                        () -> {
-                            embed.setDescription("❌ No command found by name '%s'!".formatted(command));
-                            embed.setColor(Color.RED);
-                        });
+            .filter(cmd -> cmd.getName().equals(command))
+            .findFirst()
+            .ifPresentOrElse(
+                cmd -> populateEmbed(embed, cmd),
+                () -> {
+                    embed.setDescription("❌ No command found by name '%s'!".formatted(command));
+                    embed.setColor(Color.RED);
+                });
 
         reply(event, embed);
     }
@@ -117,17 +116,17 @@ public class HelpCommand extends CoreCommand {
         embed.setTimestamp(Instant.now());
         embed.setColor(Color.GREEN);
         embed.setDescription("""
-                Welcome to TurtyBot.
+            Welcome to TurtyBot.
 
-                I contain a wide diversity of features ranging from economy to moderation to minigames.
+            I contain a wide diversity of features ranging from economy to moderation to minigames.
 
-                You can view my list of commands using `/commands`!""");
+            You can view my list of commands using `/commands`!""");
         return embed;
     }
 
     private void populateEmbed(EmbedBuilder embed, CoreCommand cmd) {
         embed.setDescription(String.format("Information about command: **`%s%s`**",
-                cmd.types.slash() ? "/" : Environment.INSTANCE.defaultPrefix().orElse(""), cmd.getName()));
+            cmd.types.slash() ? "/" : Environment.INSTANCE.defaultPrefix().orElse(""), cmd.getName()));
         embed.addField("Name: ", cmd.getRichName() + " (" + cmd.getName() + ")", false);
         embed.addField("Description: ", cmd.getDescription(), false);
         embed.addField("Category: ", cmd.getCategory().getName(), false);
@@ -137,7 +136,12 @@ public class HelpCommand extends CoreCommand {
         embed.addField("Is NSFW: ", StringUtils.trueFalseToYesNo(cmd.getCategory() == CommandCategory.NSFW), false);
     }
 
-    private static void setAuthor(@NotNull EmbedBuilder embed, boolean fromGuild, @Nullable User author, @Nullable Member member) {
+    private static void setAuthor(
+        @NotNull EmbedBuilder embed,
+        boolean fromGuild,
+        @Nullable User author,
+        @Nullable Member member
+    ) {
         if (fromGuild && member != null) {
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
         } else if (author != null) {

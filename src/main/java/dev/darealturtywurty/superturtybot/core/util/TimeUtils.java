@@ -39,9 +39,8 @@ public class TimeUtils {
         var currentDate = LocalDate.now();
         var birthdayThisYear = LocalDate.of(currentDate.getYear(), month, day);
 
-        if (currentDate.isAfter(birthdayThisYear)) {
+        if (currentDate.isAfter(birthdayThisYear))
             return currentDate.getYear() - 13;
-        }
 
         return currentDate.getYear() - 14;
     }
@@ -82,8 +81,8 @@ public class TimeUtils {
         }
 
         if (Month.FEBRUARY.equals(nextBirthday.getMonth()) &&
-                nextBirthday.getDayOfMonth() == 29 &&
-                Year.of(nextBirthday.getYear()).isLeap()) {
+            nextBirthday.getDayOfMonth() == 29 &&
+            Year.of(nextBirthday.getYear()).isLeap()) {
             // Leap year with February 29, adjust to February 28
             nextBirthday = nextBirthday.withDayOfMonth(28);
         }
@@ -97,14 +96,14 @@ public class TimeUtils {
 
     public static String millisecondsFormatted(final long millis) {
         final long hours = TimeUnit.MILLISECONDS.toHours(millis)
-                - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(millis));
+            - TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(millis));
         final long minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
-                - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
+            - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
         final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis)
-                - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis));
+            - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis));
         final String ret = String.format("%s%s%s", hours > 0 ? String.format("%02d", hours) + ":" : "",
-                minutes > 0 ? String.format("%02d", minutes) + ":" : "00:",
-                seconds > 0 ? String.format("%02d", seconds) : "00").trim();
+            minutes > 0 ? String.format("%02d", minutes) + ":" : "00:",
+            seconds > 0 ? String.format("%02d", seconds) : "00").trim();
         return ret.endsWith(":") ? ret.substring(0, ret.length() - 1) : ret;
     }
 

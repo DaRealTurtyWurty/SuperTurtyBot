@@ -27,13 +27,12 @@ public class BattleshipsCommand extends CoreCommand {
     public BattleshipsCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new BattleshipsHowToPlayCommand(),
-                new BattleshipsPlayCommand(),
-                new BattleshipsPlaceCommand(),
-                new BattleshipsAttackCommand(),
-                new BattleshipsRevealCommand(),
-                new BattleshipsPowerUpCommand()
-        );
+            new BattleshipsHowToPlayCommand(),
+            new BattleshipsPlayCommand(),
+            new BattleshipsPlaceCommand(),
+            new BattleshipsAttackCommand(),
+            new BattleshipsRevealCommand(),
+            new BattleshipsPowerUpCommand());
     }
 
     public static void checkAllShipsPlaced(MessageChannelUnion channel, Game game, User user) {
@@ -43,8 +42,11 @@ public class BattleshipsCommand extends CoreCommand {
 
             if (game.isReady()) {
                 channel.sendMessage("🚢 Both players have placed all their ships! Let the battle begin!\nIt's " +
-                        (game.isPlayer1(game.getCurrentTurn()) ? "<@" + game.player1.getUserId() + ">" : "<@" + game.player2.getUserId() + ">") +
-                        "'s turn to attack! Use the `/battleships attack` command to make your move.").queue();
+                    (game.isPlayer1(game.getCurrentTurn())
+                        ? "<@" + game.player1.getUserId() + ">"
+                        : "<@" + game.player2.getUserId() + ">")
+                    +
+                    "'s turn to attack! Use the `/battleships attack` command to make your move.").queue();
             }
         }
     }
@@ -98,7 +100,7 @@ public class BattleshipsCommand extends CoreCommand {
 
         switch (focused.getName()) {
             case OPTION_ORIENTATION ->
-                    event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
+                event.replyChoiceStrings(filterSuggestions(List.of("horizontal", "vertical"), value)).queue();
             case OPTION_SHIP_TYPE -> {
                 List<String> ships = new ArrayList<>();
                 if (!event.isFromGuild() || event.getGuild() == null) {
@@ -132,16 +134,19 @@ public class BattleshipsCommand extends CoreCommand {
                 }
 
                 ShipType type = parseShipType(event.getOption(OPTION_SHIP_TYPE, null, OptionMapping::getAsString));
-                Orientation orientation = parseOrientation(event.getOption(OPTION_ORIENTATION, null, OptionMapping::getAsString));
+                Orientation orientation = parseOrientation(
+                    event.getOption(OPTION_ORIENTATION, null, OptionMapping::getAsString));
 
                 List<ShipType> candidateTypes = new ArrayList<>();
                 if (type != null) {
-                    if (game.canPlaceShip(userId, type))
+                    if (game.canPlaceShip(userId, type)) {
                         candidateTypes.add(type);
+                    }
                 } else {
                     for (ShipType shipType : ShipType.values()) {
-                        if (game.canPlaceShip(userId, shipType))
+                        if (game.canPlaceShip(userId, shipType)) {
                             candidateTypes.add(shipType);
+                        }
                     }
                 }
 
@@ -160,9 +165,11 @@ public class BattleshipsCommand extends CoreCommand {
                             for (int col = 0; col < BOARD_SIZE; col++) {
                                 if (valid[col][row])
                                     continue;
-                                PlacementResult result = game.canPlaceShipAt(userId, shipType, candidateOrientation, col, row);
-                                if (result.success())
+                                PlacementResult result = game.canPlaceShipAt(userId, shipType, candidateOrientation,
+                                    col, row);
+                                if (result.success()) {
                                     valid[col][row] = true;
+                                }
                             }
                         }
                     }
@@ -171,8 +178,9 @@ public class BattleshipsCommand extends CoreCommand {
                 List<String> positions = new ArrayList<>();
                 for (int row = 0; row < BOARD_SIZE; row++) {
                     for (int col = 0; col < BOARD_SIZE; col++) {
-                        if (valid[col][row])
+                        if (valid[col][row]) {
                             positions.add("%c%d".formatted('A' + col, row + 1));
+                        }
                     }
                 }
 
@@ -186,7 +194,8 @@ public class BattleshipsCommand extends CoreCommand {
         List<String> suggestions = new ArrayList<>(25);
         String normalized = query == null ? "" : query.trim();
         for (String option : options) {
-            if (normalized.isEmpty() || option.toLowerCase(Locale.ROOT).startsWith(normalized.toLowerCase(Locale.ROOT))) {
+            if (normalized.isEmpty()
+                || option.toLowerCase(Locale.ROOT).startsWith(normalized.toLowerCase(Locale.ROOT))) {
                 suggestions.add(option);
                 if (suggestions.size() >= 25)
                     break;
@@ -220,8 +229,8 @@ public class BattleshipsCommand extends CoreCommand {
 
     public static Optional<Game> getGame(long guildId, long userId) {
         return GAMES.values().stream()
-                .filter(game -> game.getGuildId() == guildId && game.isPlayer(userId))
-                .findFirst();
+            .filter(game -> game.getGuildId() == guildId && game.isPlayer(userId))
+            .findFirst();
     }
 
     public static class Player {
@@ -264,7 +273,8 @@ public class BattleshipsCommand extends CoreCommand {
         }
 
         public void repairShip(Battleship ship, int x, int y) {
-            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(),
+                ship.getY());
             for (int[] position : positions) {
                 if (position[0] == x && position[1] == y) {
                     ship.repair();
@@ -304,7 +314,15 @@ public class BattleshipsCommand extends CoreCommand {
         @Getter
         private final boolean powerUpsEnabled;
 
-        public Game(long guildId, long channelId, long threadId, long player1Id, long player2Id, boolean isPvP, boolean powerUpsEnabled) {
+        public Game(
+            long guildId,
+            long channelId,
+            long threadId,
+            long player1Id,
+            long player2Id,
+            boolean isPvP,
+            boolean powerUpsEnabled
+        ) {
             this.guildId = guildId;
             this.channelId = channelId;
             this.threadId = threadId;
@@ -336,8 +354,8 @@ public class BattleshipsCommand extends CoreCommand {
 
         public void endTurn() {
             this.currentTurn.set(this.currentTurn.get() == this.player1.getUserId()
-                    ? this.player2.getUserId()
-                    : this.player1.getUserId());
+                ? this.player2.getUserId()
+                : this.player1.getUserId());
         }
 
         public boolean isReady() {
@@ -366,8 +384,8 @@ public class BattleshipsCommand extends CoreCommand {
 
         public boolean wasHit(long userId, int x, int y) {
             return userId == this.player1.getUserId()
-                    ? this.player2.isHit(x, y)
-                    : this.player1.isHit(x, y);
+                ? this.player2.isHit(x, y)
+                : this.player1.isHit(x, y);
         }
 
         public boolean isPlayer1(long userId) {
@@ -392,8 +410,8 @@ public class BattleshipsCommand extends CoreCommand {
 
         public boolean canPlaceShip(long userId, ShipType type) {
             return isPlayer1(userId)
-                    ? this.player1.canPlaceShip(type)
-                    : this.player2.canPlaceShip(type);
+                ? this.player1.canPlaceShip(type)
+                : this.player2.canPlaceShip(type);
         }
 
         public PlacementResult canPlaceShipAt(long userId, ShipType type, Orientation orientation, int x, int y) {
@@ -412,7 +430,8 @@ public class BattleshipsCommand extends CoreCommand {
                 if (ship == null)
                     continue;
 
-                int[][] existingPositions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                int[][] existingPositions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(),
+                    ship.getY());
                 for (int[] newPosition : newPositions) {
                     for (int[] existingPosition : existingPositions) {
                         if (newPosition[0] == existingPosition[0] && newPosition[1] == existingPosition[1])
@@ -424,7 +443,13 @@ public class BattleshipsCommand extends CoreCommand {
             return PlacementResult.SUCCESS;
         }
 
-        public synchronized PlacementResult placeShip(long userId, ShipType type, Orientation orientation, int x, int y) {
+        public synchronized PlacementResult placeShip(
+            long userId,
+            ShipType type,
+            Orientation orientation,
+            int x,
+            int y
+        ) {
             PlacementResult placementResult = canPlaceShipAt(userId, type, orientation, x, y);
             if (!placementResult.success())
                 return placementResult;
@@ -467,7 +492,8 @@ public class BattleshipsCommand extends CoreCommand {
                 if (ship == null)
                     continue;
 
-                int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(),
+                    ship.getY());
                 for (int[] position : positions) {
                     if (position[0] == x && position[1] == y)
                         return ship;
@@ -481,7 +507,8 @@ public class BattleshipsCommand extends CoreCommand {
             if (ship.isSunk())
                 return true;
 
-            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+            int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(),
+                ship.getY());
             for (int[] position : positions) {
                 if (!wasHit(attackerId, position[0], position[1]))
                     return false;
@@ -508,8 +535,8 @@ public class BattleshipsCommand extends CoreCommand {
                 return PowerUpResult.failure("You are not a player in this game.");
 
             Set<PowerUp> powerUps = isPlayer1(userId)
-                    ? this.player1.powerUps
-                    : this.player2.powerUps;
+                ? this.player1.powerUps
+                : this.player2.powerUps;
             if (!powerUps.contains(powerUp))
                 return PowerUpResult.failure("You do not have that power-up available.");
 
@@ -523,14 +550,14 @@ public class BattleshipsCommand extends CoreCommand {
 
         public boolean hasPowerUp(long userId, PowerUp powerUp) {
             return isPlayer1(userId)
-                    ? this.player1.powerUps.contains(powerUp)
-                    : this.player2.powerUps.contains(powerUp);
+                ? this.player1.powerUps.contains(powerUp)
+                : this.player2.powerUps.contains(powerUp);
         }
 
         public boolean hasScannedPosition(long userId, int scanX, int scanY) {
             return isPlayer1(userId)
-                    ? this.player2.isScanned(scanX, scanY)
-                    : this.player1.isScanned(scanX, scanY);
+                ? this.player2.isScanned(scanX, scanY)
+                : this.player1.isScanned(scanX, scanY);
         }
 
         public void markScannedPosition(long userId, int scanX, int scanY) {
@@ -553,12 +580,12 @@ public class BattleshipsCommand extends CoreCommand {
             PowerUp[] powerUps = PowerUp.values();
             int owned = 0;
             for (PowerUp powerUp : powerUps) {
-                if (hasPowerUp(userId, powerUp))
+                if (hasPowerUp(userId, powerUp)) {
                     owned++;
+                }
             }
-            if (owned >= powerUps.length) {
+            if (owned >= powerUps.length)
                 return null;
-            }
             PowerUp granted;
             var random = new Random();
             do {
@@ -592,8 +619,10 @@ public class BattleshipsCommand extends CoreCommand {
             Battleship hitShip = findHitShip(targetShips, x, y);
             if (hitShip != null && hitShip.isHasShield()) {
                 hitShip.deactivateShield();
-                markScannedPosition(attackerId, x, y); // Mark as scanned to show that the ship has been hit (but not actually hit)
-                return new AttackResult(true, "Attack processed. The ship's shield absorbed the hit!", false, false, null, false, this.currentTurn.get());
+                markScannedPosition(attackerId, x, y); // Mark as scanned to show that the ship has been hit (but not
+                                                       // actually hit)
+                return new AttackResult(true, "Attack processed. The ship's shield absorbed the hit!", false, false,
+                    null, false, this.currentTurn.get());
             }
 
             markHit(attackerId, x, y);
@@ -676,7 +705,11 @@ public class BattleshipsCommand extends CoreCommand {
 
     @Getter
     public enum ShipType {
-        CARRIER(5), BATTLESHIP(4), DESTROYER(3), SUBMARINE(3), PATROL_BOAT(2);
+        CARRIER(5),
+        BATTLESHIP(4),
+        DESTROYER(3),
+        SUBMARINE(3),
+        PATROL_BOAT(2);
 
         private final int size;
 
@@ -686,14 +719,16 @@ public class BattleshipsCommand extends CoreCommand {
     }
 
     public enum Orientation {
-        HORIZONTAL, VERTICAL;
+        HORIZONTAL,
+        VERTICAL;
 
         public Orientation getNext() {
             return Orientation.values()[(this.ordinal() + 1) % Orientation.values().length];
         }
 
         public Orientation getPrevious() {
-            return Orientation.values()[(this.ordinal() - 1 + Orientation.values().length) % Orientation.values().length];
+            return Orientation.values()[(this.ordinal() - 1 + Orientation.values().length)
+                % Orientation.values().length];
         }
 
         public int getX(int x, int size) {
@@ -713,8 +748,15 @@ public class BattleshipsCommand extends CoreCommand {
         }
     }
 
-    public record AttackResult(boolean success, String message, boolean hit, boolean sunk, ShipType sunkType,
-                               boolean gameOver, long nextTurn) {
+    public record AttackResult(
+        boolean success,
+        String message,
+        boolean hit,
+        boolean sunk,
+        ShipType sunkType,
+        boolean gameOver,
+        long nextTurn
+    ) {
         public static AttackResult failure(String message) {
             return new AttackResult(false, message, false, false, null, false, 0L);
         }
@@ -739,8 +781,11 @@ public class BattleshipsCommand extends CoreCommand {
         private final boolean shouldShowOtherPlayerPosition;
         private final Function4<Game, Long, Integer, Integer, PowerUpResult> action;
 
-        PowerUp(String displayName, boolean shouldShowOtherPlayerPosition,
-                Function4<Game, Long, Integer, Integer, PowerUpResult> action) {
+        PowerUp(
+            String displayName,
+            boolean shouldShowOtherPlayerPosition,
+            Function4<Game, Long, Integer, Integer, PowerUpResult> action
+        ) {
             this.displayName = displayName;
             this.shouldShowOtherPlayerPosition = shouldShowOtherPlayerPosition;
             this.action = action;
@@ -761,8 +806,8 @@ public class BattleshipsCommand extends CoreCommand {
             }
 
             return scanned == 0
-                    ? PowerUpResult.failure("All positions in the scan area have already been scanned.")
-                    : PowerUpResult.SUCCESS;
+                ? PowerUpResult.failure("All positions in the scan area have already been scanned.")
+                : PowerUpResult.SUCCESS;
         }
 
         private static PowerUpResult useAirstrike(Game game, long userId, int x, int y) {
@@ -784,8 +829,8 @@ public class BattleshipsCommand extends CoreCommand {
             }
 
             return attacked == 0
-                    ? PowerUpResult.failure("All positions in the airstrike area have already been attacked.")
-                    : PowerUpResult.SUCCESS;
+                ? PowerUpResult.failure("All positions in the airstrike area have already been attacked.")
+                : PowerUpResult.SUCCESS;
         }
 
         private static PowerUpResult useRepairShip(Game game, long userId, int x, int y) {
@@ -794,7 +839,8 @@ public class BattleshipsCommand extends CoreCommand {
                 if (ship == null)
                     continue;
 
-                int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                int[][] positions = Battleship.getPositions(ship.getType(), ship.getOrientation(), ship.getX(),
+                    ship.getY());
                 for (int[] position : positions) {
                     if (position[0] == x && position[1] == y) {
                         if (!ship.isSunk())
@@ -802,7 +848,7 @@ public class BattleshipsCommand extends CoreCommand {
 
                         ship.repair();
                         int[][] repairPositions = Battleship.getPositions(
-                                ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                            ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
                         for (int[] repairPosition : repairPositions) {
                             game.markRepaired(userId, repairPosition[0], repairPosition[1]);
                         }

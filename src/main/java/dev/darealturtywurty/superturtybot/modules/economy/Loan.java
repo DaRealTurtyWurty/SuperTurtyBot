@@ -36,7 +36,8 @@ public class Loan {
      * @return The amount to give back to the user if it exceeds the amount they need to pay
      */
     public BigInteger pay(BigInteger amount) {
-        if (this.paidOff) return amount;
+        if (this.paidOff)
+            return amount;
 
         BigInteger remaining = calculateAmountLeftToPay();
         BigInteger toPay = amount.min(remaining);
@@ -58,7 +59,8 @@ public class Loan {
     public BigInteger calculateTotalAmountToPay() {
         BigInteger totalAmountToPay = this.amount;
         if (System.currentTimeMillis() > this.timeToPay) {
-            totalAmountToPay = totalAmountToPay.add(new BigDecimal(this.amount).multiply(this.interestRate).toBigInteger());
+            totalAmountToPay = totalAmountToPay
+                .add(new BigDecimal(this.amount).multiply(this.interestRate).toBigInteger());
         }
 
         return totalAmountToPay;

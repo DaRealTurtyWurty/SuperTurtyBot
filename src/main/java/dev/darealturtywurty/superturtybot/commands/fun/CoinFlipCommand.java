@@ -40,9 +40,9 @@ public class CoinFlipCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.STRING, "choice", "Whether you are choosing heads or tails", false)
-                        .addChoice("heads", "heads")
-                        .addChoice("tails", "tails"));
+            new OptionData(OptionType.STRING, "choice", "Whether you are choosing heads or tails", false)
+                .addChoice("heads", "heads")
+                .addChoice("tails", "tails"));
     }
 
     @Override
@@ -77,7 +77,8 @@ public class CoinFlipCommand extends CoreCommand {
             if (ThreadLocalRandom.current().nextInt(1000) == 69) {
                 reply(event, "It landed on it's side. It was neither heads or tails! 😔", false);
             } else {
-                reply(event, "It was: " + (ThreadLocalRandom.current().nextBoolean() ? "Heads 🗣" : "Tails 🐍") + "!", false);
+                reply(event, "It was: " + (ThreadLocalRandom.current().nextBoolean() ? "Heads 🗣" : "Tails 🐍") + "!",
+                    false);
             }
         } else {
             String choiceStr = choice.getAsString();

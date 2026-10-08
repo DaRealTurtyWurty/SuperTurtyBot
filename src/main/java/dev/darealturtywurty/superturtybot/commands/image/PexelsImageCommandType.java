@@ -24,7 +24,7 @@ import java.util.function.BiConsumer;
 
 public class PexelsImageCommandType extends ImageCommandType {
     private static final String BASE_URL = "https://api.pexels.com/v1/";
-    
+
     private String searchTerm;
     private final int maxPages;
 
@@ -47,9 +47,9 @@ public class PexelsImageCommandType extends ImageCommandType {
 
         return super.setName(name);
     }
-    
+
     public static CompletableFuture<List<JsonObject>> getPhotos(String search, int maxPages) {
-        if(Environment.INSTANCE.pexelsKey().isEmpty()) {
+        if (Environment.INSTANCE.pexelsKey().isEmpty()) {
             Constants.LOGGER.warn("Pexels API key has not been set!");
             return CompletableFuture.completedFuture(null);
         }
@@ -62,7 +62,7 @@ public class PexelsImageCommandType extends ImageCommandType {
             while (url != null) {
                 final URLConnection connection = new URI(url).toURL().openConnection();
                 connection.addRequestProperty("Authorization", Environment.INSTANCE.pexelsKey().get());
-                
+
                 JsonObject response;
                 try {
                     response = Constants.GSON.fromJson(new InputStreamReader(connection.getInputStream()),
@@ -70,7 +70,7 @@ public class PexelsImageCommandType extends ImageCommandType {
                 } catch (final IOException exception) {
                     continue;
                 }
-                
+
                 if (response.has("photos")) {
                     count++;
                     final JsonArray photos = response.getAsJsonArray("photos");
@@ -78,18 +78,18 @@ public class PexelsImageCommandType extends ImageCommandType {
                         results.add(photoElement.getAsJsonObject());
                     }
                 }
-                
+
                 if (response.has("next_page")) {
                     url = response.get("next_page").getAsString();
                 } else {
                     url = null;
                 }
-                
+
                 if (count > maxPages) {
                     url = null;
                 }
             }
-            
+
             future.complete(results);
             return future;
         } catch (final IOException | URISyntaxException exception) {
@@ -98,22 +98,22 @@ public class PexelsImageCommandType extends ImageCommandType {
             return future;
         }
     }
-    
+
     public static CompletableFuture<String> getRandomPhoto(String search, int maxPages) {
         final CompletableFuture<List<JsonObject>> futurePhotos = getPhotos(search, maxPages);
-        
+
         final var futurePhoto = new CompletableFuture<String>();
         futurePhotos.thenAccept(photos -> {
             final JsonObject photo = photos.get(ThreadLocalRandom.current().nextInt(photos.size()));
             futurePhoto.complete(photo.getAsJsonObject("src").get("original").getAsString());
         });
-        
+
         return futurePhoto;
     }
-    
+
     private static BiConsumer<SlashCommandInteractionEvent, ImageCommandType> createRunner() {
         return (event, cmd) -> {
-            if(Environment.INSTANCE.pexelsKey().isEmpty()) {
+            if (Environment.INSTANCE.pexelsKey().isEmpty()) {
                 event.reply("❌ This command has been disabled by the bot owner!").mentionRepliedUser(false).queue();
                 Constants.LOGGER.warn("Pexels API key has not been set!");
                 return;

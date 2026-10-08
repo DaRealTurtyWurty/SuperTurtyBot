@@ -48,37 +48,56 @@ public class TriviaCommand extends CoreCommand {
         super(new Types(true, false, false, false));
 
         Constants.HTTP_CLIENT.newCall(new Request.Builder()
-                        .url(CATEGORIES_URL).get().build())
-                .enqueue(new Callback() {
-                    @Override
-                    public void onFailure(@NotNull Call call, @NotNull IOException exception) {
-                        throw new IllegalStateException("Failed to get trivia categories!", exception);
-                    }
+            .url(CATEGORIES_URL).get().build())
+            .enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+                    throw new IllegalStateException("Failed to get trivia categories!", exception);
+                }
 
-                    @Override
-                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        if (!response.isSuccessful())
-                            throw new IllegalStateException("Unable to get trivia categories! Response code: " + response.code());
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (!response.isSuccessful())
+                        throw new IllegalStateException(
+                            "Unable to get trivia categories! Response code: " + response.code());
 
-                        if (response.body() == null) return;
+                    if (response.body() == null)
+                        return;
 
-                        JsonObject json = Constants.GSON.fromJson(response.body().string(), JsonObject.class);
+                    JsonObject json = Constants.GSON.fromJson(response.body().string(), JsonObject.class);
 
-                        if (json == null) return;
+                    if (json == null)
+                        return;
 
-                        json.keySet().stream().map(json::getAsJsonArray)
-                                .forEach(array -> array.forEach(element -> categories.add(element.getAsString())));
-                    }
-                });
+                    json.keySet().stream().map(json::getAsJsonArray)
+                        .forEach(array -> array.forEach(element -> categories.add(element.getAsString())));
+                }
+            });
     }
 
-    public record TriviaQuestion(String category, String id, String correctAnswer, List<String> incorrectAnswers,
-                                 String question, List<String> tags, String type, String difficulty,
-                                 List<String> regions, boolean isNiche) {
+    public record TriviaQuestion(
+        String category,
+        String id,
+        String correctAnswer,
+        List<String> incorrectAnswers,
+        String question,
+        List<String> tags,
+        String type,
+        String difficulty,
+        List<String> regions,
+        boolean isNiche
+    ) {
     }
 
-    public record TriviaData(String selectMenuId, long guildId, long channelId, long messageId, long userId,
-                             TriviaQuestion question, List<String> answers) {
+    public record TriviaData(
+        String selectMenuId,
+        long guildId,
+        long channelId,
+        long messageId,
+        long userId,
+        TriviaQuestion question,
+        List<String> answers
+    ) {
     }
 
     @Override
@@ -120,8 +139,8 @@ public class TriviaCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.STRING, "category", "The category of trivia to play", false, true),
-                new OptionData(OptionType.STRING, "difficulty", "The difficulty of the trivia", false).addChoice("Easy",
-                        "easy").addChoice("Medium", "medium").addChoice("Hard", "hard"));
+            new OptionData(OptionType.STRING, "difficulty", "The difficulty of the trivia", false).addChoice("Easy",
+                "easy").addChoice("Medium", "medium").addChoice("Hard", "hard"));
     }
 
     @Override
@@ -157,7 +176,7 @@ public class TriviaCommand extends CoreCommand {
         }
 
         if (difficulty != null && !difficulty.equalsIgnoreCase("easy") && !difficulty.equalsIgnoreCase(
-                "medium") && !difficulty.equalsIgnoreCase("hard")) {
+            "medium") && !difficulty.equalsIgnoreCase("hard")) {
             reply(event, "❌ Invalid difficulty! Please use one of the following: easy, medium, hard");
             return;
         }
@@ -175,7 +194,7 @@ public class TriviaCommand extends CoreCommand {
 
         if (!canHostTriviaThreads(guild, anchorChannel)) {
             reply(event, "❌ I need permission to view messages, read message history, create public threads, "
-                    + "and send messages in threads in " + anchorChannel.getAsMention() + ".");
+                + "and send messages in threads in " + anchorChannel.getAsMention() + ".");
             return;
         }
 
@@ -195,22 +214,22 @@ public class TriviaCommand extends CoreCommand {
             getOrCreateTriviaThread(anchorChannel, threadName).whenComplete((thread, threadError) -> {
                 if (threadError != null) {
                     Constants.LOGGER.error("Failed to open trivia thread for user {}", event.getUser().getId(),
-                            threadError);
+                        threadError);
                     event.getHook().editOriginal("❌ I could not open your trivia thread in "
-                            + anchorChannel.getAsMention() + ".").queue();
+                        + anchorChannel.getAsMention() + ".").queue();
                     return;
                 }
 
                 thread.addThreadMember(event.getUser()).queue(null,
-                        error -> Constants.LOGGER.debug("Could not add user {} to trivia thread {}",
-                                event.getUser().getId(), thread.getId(), error));
+                    error -> Constants.LOGGER.debug("Could not add user {} to trivia thread {}",
+                        event.getUser().getId(), thread.getId(), error));
 
                 sendTriviaQuestion(thread, event, question).whenComplete((_, sendError) -> {
                     if (sendError != null) {
                         Constants.LOGGER.error("Failed to send trivia question in thread {}", thread.getId(),
-                                sendError);
+                            sendError);
                         event.getHook().editOriginal("❌ I could not post the trivia question in "
-                                + thread.getAsMention() + ".").queue();
+                            + thread.getAsMention() + ".").queue();
                         return;
                     }
 
@@ -218,7 +237,7 @@ public class TriviaCommand extends CoreCommand {
                         event.getHook().deleteOriginal().queue();
                     } else {
                         event.getHook().editOriginal(
-                                "✅ Your trivia question is in " + thread.getAsMention() + ".").queue();
+                            "✅ Your trivia question is in " + thread.getAsMention() + ".").queue();
                     }
                 });
             });
@@ -237,59 +256,63 @@ public class TriviaCommand extends CoreCommand {
         if (systemChannel != null && canHostTriviaThreads(guild, systemChannel))
             return systemChannel;
 
-        if (guild.getDefaultChannel() instanceof TextChannel defaultChannel && canHostTriviaThreads(guild, defaultChannel))
+        if (guild.getDefaultChannel() instanceof TextChannel defaultChannel
+            && canHostTriviaThreads(guild, defaultChannel))
             return defaultChannel;
 
         return guild.getTextChannels().stream()
-                .filter(channel -> canHostTriviaThreads(guild, channel))
-                .findFirst()
-                .orElse(null);
+            .filter(channel -> canHostTriviaThreads(guild, channel))
+            .findFirst()
+            .orElse(null);
     }
 
     private static boolean canHostTriviaThreads(Guild guild, TextChannel channel) {
         return channel.canTalk() && guild.getSelfMember().hasPermission(channel,
-                Permission.MESSAGE_HISTORY,
-                Permission.CREATE_PUBLIC_THREADS,
-                Permission.MESSAGE_SEND_IN_THREADS);
+            Permission.MESSAGE_HISTORY,
+            Permission.CREATE_PUBLIC_THREADS,
+            Permission.MESSAGE_SEND_IN_THREADS);
     }
 
-    private static CompletableFuture<ThreadChannel> getOrCreateTriviaThread(TextChannel anchorChannel,
-                                                                            String threadName) {
+    private static CompletableFuture<ThreadChannel> getOrCreateTriviaThread(
+        TextChannel anchorChannel,
+        String threadName
+    ) {
         Optional<ThreadChannel> activeThread = anchorChannel.getThreadChannels().stream()
-                .filter(thread -> !thread.isArchived())
-                .filter(thread -> thread.getName().equals(threadName))
-                .findFirst();
-        if (activeThread.isPresent()) {
+            .filter(thread -> !thread.isArchived())
+            .filter(thread -> thread.getName().equals(threadName))
+            .findFirst();
+        if (activeThread.isPresent())
             return CompletableFuture.completedFuture(activeThread.get());
-        }
 
         AtomicReference<ThreadChannel> archivedThread = new AtomicReference<>();
         return anchorChannel.retrieveArchivedPublicThreadChannels()
-                .forEachAsync(thread -> {
-                    if (thread.getName().equals(threadName)) {
-                        archivedThread.set(thread);
-                        return false;
-                    }
-                    return true;
-                })
-                .thenCompose(ignored -> {
-                    ThreadChannel existingThread = archivedThread.get();
-                    if (existingThread != null)
-                        return existingThread.getManager()
-                                .setArchived(false)
-                                .submit()
-                                .thenApply(unarchived -> existingThread);
+            .forEachAsync(thread -> {
+                if (thread.getName().equals(threadName)) {
+                    archivedThread.set(thread);
+                    return false;
+                }
+                return true;
+            })
+            .thenCompose(_ -> {
+                ThreadChannel existingThread = archivedThread.get();
+                if (existingThread != null)
+                    return existingThread.getManager()
+                        .setArchived(false)
+                        .submit()
+                        .thenApply(unarchived -> existingThread);
 
-                    return anchorChannel.createThreadChannel(threadName).submit();
-                });
+                return anchorChannel.createThreadChannel(threadName).submit();
+            });
     }
 
-    private static CompletableFuture<Message> sendTriviaQuestion(ThreadChannel thread,
-                                                                 SlashCommandInteractionEvent event,
-                                                                 TriviaQuestion question) {
+    private static CompletableFuture<Message> sendTriviaQuestion(
+        ThreadChannel thread,
+        SlashCommandInteractionEvent event,
+        TriviaQuestion question
+    ) {
         String selectId = UUID.randomUUID().toString();
         Builder selectMenu = StringSelectMenu.create(selectId)
-                .setPlaceholder("Select an answer...");
+            .setPlaceholder("Select an answer...");
 
         List<String> answers = new ArrayList<>(question.incorrectAnswers);
         answers.add(question.correctAnswer);
@@ -299,21 +322,22 @@ public class TriviaCommand extends CoreCommand {
         }
 
         return thread.sendMessage(event.getUser().getAsMention() + " Here's your trivia question!")
-                .setEmbeds(new EmbedBuilder()
-                        .setTitle(question.question())
-                        .setDescription("Category: " + question.category() + "\nDifficulty: " + question.difficulty())
-                        .setTimestamp(Instant.now())
-                        .setColor(question.difficulty().equalsIgnoreCase("easy") ? 0x00FF00
-                                : question.difficulty().equalsIgnoreCase("medium") ? 0xFFFF00 : 0xFF0000)
-                        .build())
-                .setComponents(ActionRow.of(selectMenu.build()))
-                .submit()
-                .thenApply(message -> {
-                    CACHED_TRIVIA.add(new TriviaData(selectId, event.getGuild().getIdLong(),
-                            thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), question,
-                            List.copyOf(answers)));
-                    return message;
-                });
+            .setEmbeds(new EmbedBuilder()
+                .setTitle(question.question())
+                .setDescription("Category: " + question.category() + "\nDifficulty: " + question.difficulty())
+                .setTimestamp(Instant.now())
+                .setColor(question.difficulty().equalsIgnoreCase("easy")
+                    ? 0x00FF00
+                    : question.difficulty().equalsIgnoreCase("medium") ? 0xFFFF00 : 0xFF0000)
+                .build())
+            .setComponents(ActionRow.of(selectMenu.build()))
+            .submit()
+            .thenApply(message -> {
+                CACHED_TRIVIA.add(new TriviaData(selectId, event.getGuild().getIdLong(),
+                    thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), question,
+                    List.copyOf(answers)));
+                return message;
+            });
     }
 
     @Override
@@ -322,11 +346,11 @@ public class TriviaCommand extends CoreCommand {
             return;
 
         TriviaData data = CACHED_TRIVIA.stream()
-                .filter(triviaData -> triviaData.selectMenuId().equals(event.getComponentId()))
-                .filter(triviaData -> triviaData.guildId() == event.getGuild().getIdLong())
-                .filter(triviaData -> triviaData.channelId() == event.getChannel().getIdLong())
-                .filter(triviaData -> triviaData.messageId() == event.getMessage().getIdLong()).findFirst()
-                .orElse(null);
+            .filter(triviaData -> triviaData.selectMenuId().equals(event.getComponentId()))
+            .filter(triviaData -> triviaData.guildId() == event.getGuild().getIdLong())
+            .filter(triviaData -> triviaData.channelId() == event.getChannel().getIdLong())
+            .filter(triviaData -> triviaData.messageId() == event.getMessage().getIdLong()).findFirst()
+            .orElse(null);
 
         if (data == null)
             return;
@@ -340,7 +364,7 @@ public class TriviaCommand extends CoreCommand {
             selectedAnswer = Integer.parseInt(event.getValues().getFirst());
         } catch (NumberFormatException exception) {
             Constants.LOGGER.warn("Received an invalid answer value for trivia question {}",
-                    data.question().id(), exception);
+                data.question().id(), exception);
             event.getHook().editOriginalComponents().queue();
             CACHED_TRIVIA.remove(data);
             return;
@@ -348,7 +372,7 @@ public class TriviaCommand extends CoreCommand {
 
         if (selectedAnswer < 0 || selectedAnswer >= data.answers().size()) {
             Constants.LOGGER.warn("Received out-of-range answer index {} for trivia question {}",
-                    selectedAnswer, data.question().id());
+                selectedAnswer, data.question().id());
             event.getHook().editOriginalComponents().queue();
             CACHED_TRIVIA.remove(data);
             return;
@@ -359,7 +383,7 @@ public class TriviaCommand extends CoreCommand {
 
         if (correctAnswer.equals(response)) {
             event.getMessage().reply("✅ " + event.getUser().getAsMention() + ", you are correct! " + correctAnswer +
-                    " was indeed the correct answer.").queue();
+                " was indeed the correct answer.").queue();
             event.getHook().editOriginalComponents().queue();
 
             int xpTally = 0;
@@ -377,21 +401,20 @@ public class TriviaCommand extends CoreCommand {
 
             if (LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
                 LevellingManager.INSTANCE.addXP(event.getGuild(), event.getUser(),
-                        ThreadLocalRandom.current().nextInt(xpTally, xpTally * 2));
+                    ThreadLocalRandom.current().nextInt(xpTally, xpTally * 2));
             }
         } else {
             event.getMessage().reply("❌" + event.getUser()
-                    .getAsMention() + ", you are incorrect! The correct answer is " + correctAnswer).queue();
+                .getAsMention() + ", you are incorrect! The correct answer is " + correctAnswer).queue();
             event.getHook().editOriginalComponents().queue();
         }
 
         boolean correct = correctAnswer.equals(response);
         QuestManager.INSTANCE.recordTriviaAnswer(
-                event.getGuild(),
-                event.getUser(),
-                Long.toString(data.messageId()),
-                correct
-        );
+            event.getGuild(),
+            event.getUser(),
+            Long.toString(data.messageId()),
+            correct);
 
         CACHED_TRIVIA.remove(data);
     }
@@ -410,7 +433,7 @@ public class TriviaCommand extends CoreCommand {
                 ResponseBody body = response.body();
                 if (!response.isSuccessful() || body == null) {
                     future.completeExceptionally(
-                            new IllegalStateException("Unable to get trivia! Response code: " + response.code()));
+                        new IllegalStateException("Unable to get trivia! Response code: " + response.code()));
                     return;
                 }
 
@@ -423,7 +446,7 @@ public class TriviaCommand extends CoreCommand {
 
                 List<String> incorrectAnswers = new ArrayList<>();
                 trivia.get("incorrectAnswers").getAsJsonArray().asList().stream().map(JsonElement::getAsString)
-                        .forEach(incorrectAnswers::add);
+                    .forEach(incorrectAnswers::add);
 
                 String question = trivia.get("question").getAsString();
 
@@ -435,13 +458,13 @@ public class TriviaCommand extends CoreCommand {
 
                 List<String> regions = new ArrayList<>();
                 trivia.get("regions").getAsJsonArray().asList().stream().map(JsonElement::getAsString)
-                        .forEach(regions::add);
+                    .forEach(regions::add);
 
                 boolean isNiche = trivia.get("isNiche").getAsBoolean();
 
                 future.complete(Optional.of(
-                        new TriviaQuestion(category, id, correctAnswer, incorrectAnswers, question, tags, type,
-                                difficulty, regions, isNiche)));
+                    new TriviaQuestion(category, id, correctAnswer, incorrectAnswers, question, tags, type,
+                        difficulty, regions, isNiche)));
             }
         });
 

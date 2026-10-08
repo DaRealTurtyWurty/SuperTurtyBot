@@ -25,11 +25,10 @@ public class BoostCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("list", "List available convenience boosts"),
-                new SubcommandData("status", "See your active boosts"),
-                new SubcommandData("buy", "Buy a convenience boost")
-                        .addOptions(new OptionData(OptionType.STRING, "boost", "The boost to buy", true, true))
-        );
+            new SubcommandData("list", "List available convenience boosts"),
+            new SubcommandData("status", "See your active boosts"),
+            new SubcommandData("buy", "Buy a convenience boost")
+                .addOptions(new OptionData(OptionType.STRING, "boost", "The boost to buy", true, true)));
     }
 
     @Override
@@ -49,12 +48,14 @@ public class BoostCommand extends EconomyCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equalsIgnoreCase(getName())) return;
-        if (!event.getFocusedOption().getName().equalsIgnoreCase("boost")) return;
+        if (!event.getName().equalsIgnoreCase(getName()))
+            return;
+        if (!event.getFocusedOption().getName().equalsIgnoreCase("boost"))
+            return;
 
         event.replyChoices(Stream.of(BoostType.values())
-                .map(boost -> new Command.Choice(boost.displayName(), boost.key()))
-                .toList()).queue();
+            .map(boost -> new Command.Choice(boost.displayName(), boost.key()))
+            .toList()).queue();
     }
 
     @Override
@@ -66,9 +67,12 @@ public class BoostCommand extends EconomyCommand {
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access boosters! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+        if (account.isImprisoned()) {
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot access boosters! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -84,12 +88,12 @@ public class BoostCommand extends EconomyCommand {
         var builder = new StringBuilder("**Available Boosts**\n");
         for (BoostType boost : BoostType.values()) {
             builder.append("- ")
-                    .append(boost.displayName())
-                    .append(" - ")
-                    .append(boost.description())
-                    .append(" (")
-                    .append(StringUtils.numberFormat(boost.cost(), config))
-                    .append(")\n");
+                .append(boost.displayName())
+                .append(" - ")
+                .append(boost.description())
+                .append(" (")
+                .append(StringUtils.numberFormat(boost.cost(), config))
+                .append(")\n");
         }
 
         event.getHook().editOriginal(builder.toString().trim()).queue();
@@ -103,10 +107,10 @@ public class BoostCommand extends EconomyCommand {
             if (until > System.currentTimeMillis()) {
                 any = true;
                 builder.append("- ")
-                        .append(boost.displayName())
-                        .append(" until ")
-                        .append(TimeFormat.RELATIVE.format(until))
-                        .append("\n");
+                    .append(boost.displayName())
+                    .append(" until ")
+                    .append(TimeFormat.RELATIVE.format(until))
+                    .append("\n");
             }
         }
 
@@ -128,13 +132,14 @@ public class BoostCommand extends EconomyCommand {
         long currentUntil = boost.getBoostUntil(account);
         if (currentUntil > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ That boost is already active until %s!"
-                    .formatted(TimeFormat.RELATIVE.format(currentUntil))).queue();
+                .formatted(TimeFormat.RELATIVE.format(currentUntil))).queue();
             return;
         }
 
         if (!EconomyManager.removeBalance(account, boost.cost())) {
             event.getHook().editOriginal("❌ You need another %s to buy this boost!"
-                    .formatted(StringUtils.numberFormat(boost.cost().subtract(EconomyManager.getBalance(account)), config))).queue();
+                .formatted(StringUtils.numberFormat(boost.cost().subtract(EconomyManager.getBalance(account)), config)))
+                .queue();
             return;
         }
 
@@ -143,43 +148,43 @@ public class BoostCommand extends EconomyCommand {
         EconomyManager.updateAccount(account);
 
         event.getHook().editOriginal("✅ You bought %s! It expires %s."
-                .formatted(boost.displayName(), TimeFormat.RELATIVE.format(boost.getBoostUntil(account)))).queue();
+            .formatted(boost.displayName(), TimeFormat.RELATIVE.format(boost.getBoostUntil(account)))).queue();
     }
 
     private enum BoostType {
         WORK("work", "Work Boost", "25% shorter work cooldowns for 24h",
-                BigInteger.valueOf(25_000), TimeUnit.HOURS.toMillis(24)) {
+            BigInteger.valueOf(25_000), TimeUnit.HOURS.toMillis(24)) {
             @Override
-            void apply(Economy account) {
+            protected void apply(Economy account) {
                 account.setWorkBoostUntil(System.currentTimeMillis() + durationMillis());
             }
 
             @Override
-            long getBoostUntil(Economy account) {
+            protected long getBoostUntil(Economy account) {
                 return account.getWorkBoostUntil();
             }
         },
         CRIME("crime", "Crime Boost", "25% shorter crime cooldowns for 24h",
-                BigInteger.valueOf(40_000), TimeUnit.HOURS.toMillis(24)) {
+            BigInteger.valueOf(40_000), TimeUnit.HOURS.toMillis(24)) {
             @Override
-            void apply(Economy account) {
+            protected void apply(Economy account) {
                 account.setCrimeBoostUntil(System.currentTimeMillis() + durationMillis());
             }
 
             @Override
-            long getBoostUntil(Economy account) {
+            protected long getBoostUntil(Economy account) {
                 return account.getCrimeBoostUntil();
             }
         },
         REWARD("reward", "Reward Boost", "25% shorter reward cooldowns for 24h",
-                BigInteger.valueOf(30_000), TimeUnit.HOURS.toMillis(24)) {
+            BigInteger.valueOf(30_000), TimeUnit.HOURS.toMillis(24)) {
             @Override
-            void apply(Economy account) {
+            protected void apply(Economy account) {
                 account.setRewardBoostUntil(System.currentTimeMillis() + durationMillis());
             }
 
             @Override
-            long getBoostUntil(Economy account) {
+            protected long getBoostUntil(Economy account) {
                 return account.getRewardBoostUntil();
             }
         };
@@ -198,31 +203,31 @@ public class BoostCommand extends EconomyCommand {
             this.durationMillis = durationMillis;
         }
 
-        String key() {
+        private String key() {
             return key;
         }
 
-        String displayName() {
+        private String displayName() {
             return displayName;
         }
 
-        String description() {
+        private String description() {
             return description;
         }
 
-        BigInteger cost() {
+        private BigInteger cost() {
             return cost;
         }
 
-        long durationMillis() {
+        protected long durationMillis() {
             return durationMillis;
         }
 
-        abstract void apply(Economy account);
+        protected abstract void apply(Economy account);
 
-        abstract long getBoostUntil(Economy account);
+        protected abstract long getBoostUntil(Economy account);
 
-        static BoostType fromKey(String key) {
+        private static BoostType fromKey(String key) {
             for (BoostType boost : values()) {
                 if (boost.key.equalsIgnoreCase(key) || boost.displayName.equalsIgnoreCase(key))
                     return boost;

@@ -34,7 +34,7 @@ public class GoFishLeaveSubcommand extends GoFishSubcommand {
             if (game.getHostId() == event.getUser().getIdLong()) {
                 GoFishCommand.cancelAutoStart(game);
                 GoFishCommand.refundAndCancel(guild, config, game,
-                        "⚠️ The Go Fish game was canceled by the host. All bets were refunded.");
+                    "⚠️ The Go Fish game was canceled by the host. All bets were refunded.");
                 event.getHook().editOriginal("✅ Go Fish game canceled. All bets have been refunded.").queue();
                 return;
             }
@@ -45,7 +45,7 @@ public class GoFishLeaveSubcommand extends GoFishSubcommand {
 
             event.getHook().editOriginal("✅ You left the Go Fish game. Your bet has been refunded.").queue();
             event.getChannel().sendMessageFormat("%s left the Go Fish game. Players: %d/%d",
-                    event.getUser().getAsMention(), game.playerCount(), game.getMaxPlayers()).queue();
+                event.getUser().getAsMention(), game.playerCount(), game.getMaxPlayers()).queue();
             GoFishCommand.updateLobbyMessage(guild, config, game, false);
         }
     }

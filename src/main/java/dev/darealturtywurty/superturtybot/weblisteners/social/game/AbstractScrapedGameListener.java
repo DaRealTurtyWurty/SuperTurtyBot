@@ -55,8 +55,9 @@ public abstract class AbstractScrapedGameListener<N> {
                 try {
                     handleNotifier(jda, notifier, articles);
                 } catch (Exception exception) {
-                    Constants.LOGGER.error("Failed to process {} notifier for guild {}", sourceName(), guildId(notifier),
-                            exception);
+                    Constants.LOGGER.error("Failed to process {} notifier for guild {}", sourceName(),
+                        guildId(notifier),
+                        exception);
                 }
             }
         } catch (Exception exception) {
@@ -67,7 +68,7 @@ public abstract class AbstractScrapedGameListener<N> {
     protected List<ScrapedArticle> readRelevantArticles() {
         try {
             Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
-                    request -> GameNewsProxyClient.execute(request, sourceName()));
+                request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
                 return List.of();
 
@@ -85,8 +86,8 @@ public abstract class AbstractScrapedGameListener<N> {
                         continue;
 
                     Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName(),
-                            request -> GameNewsProxyClient.execute(request, sourceName()));
-                    
+                        request -> GameNewsProxyClient.execute(request, sourceName()));
+
                     String title = resolveArticleTitle(articleDocument, listingTitle);
                     if (title.isBlank() || !matchesTitle(title))
                         continue;
@@ -117,10 +118,9 @@ public abstract class AbstractScrapedGameListener<N> {
         }
 
         StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, channelId(notifier),
-                sourceName());
-        if (channel == null) {
+            sourceName());
+        if (channel == null)
             return;
-        }
 
         List<String> storedArticleIds = storedArticleIds(notifier);
         if (storedArticleIds == null) {
@@ -137,10 +137,10 @@ public abstract class AbstractScrapedGameListener<N> {
             }
 
             List<String> remainingArticleIds = articles.stream()
-                    .map(ScrapedArticle::id)
-                    .filter(id -> !id.equals(latestArticle.id()))
-                    .limit(STORED_ARTICLE_LIMIT)
-                    .toList();
+                .map(ScrapedArticle::id)
+                .filter(id -> !id.equals(latestArticle.id()))
+                .limit(STORED_ARTICLE_LIMIT)
+                .toList();
             if (!remainingArticleIds.isEmpty()) {
                 storedArticleIds.addAll(remainingArticleIds);
                 persistStoredArticles(notifier);
@@ -165,23 +165,24 @@ public abstract class AbstractScrapedGameListener<N> {
             changed = true;
         }
 
-        if (changed)
+        if (changed) {
             persistStoredArticles(notifier);
+        }
     }
 
     private void persistStoredArticles(N notifier) {
         notifierCollection().updateOne(
-                Filters.and(Filters.eq("guild", guildId(notifier)), Filters.eq("channel", channelId(notifier))),
-                Updates.set(storedArticleFieldName(), storedArticleIds(notifier)));
+            Filters.and(Filters.eq("guild", guildId(notifier)), Filters.eq("channel", channelId(notifier))),
+            Updates.set(storedArticleFieldName(), storedArticleIds(notifier)));
     }
 
     private boolean sendUpdate(StandardGuildMessageChannel channel, N notifier, ScrapedArticle article) {
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle(article.title(), article.url())
-                .setDescription(NewsScraperUtils.truncate(article.description(), 4096, defaultDescription()))
-                .setColor(embedColor())
-                .setTimestamp(article.publishedAt())
-                .setFooter(embedFooter());
+            .setTitle(article.title(), article.url())
+            .setDescription(NewsScraperUtils.truncate(article.description(), 4096, defaultDescription()))
+            .setColor(embedColor())
+            .setTimestamp(article.publishedAt())
+            .setFooter(embedFooter());
 
         if (!article.imageUrl().isBlank()) {
             embed.setImage(article.imageUrl());
@@ -190,10 +191,10 @@ public abstract class AbstractScrapedGameListener<N> {
         customizeEmbed(embed, article);
 
         return NotifierDeliverySupport.sendAndWait(
-                channel.sendMessageEmbeds(embed.build())
-                        .setContent(mention(notifier)),
-                sourceName(),
-                channel);
+            channel.sendMessageEmbeds(embed.build())
+                .setContent(mention(notifier)),
+            sourceName(),
+            channel);
     }
 
     protected String resolveUrl(Element link) {
@@ -217,8 +218,13 @@ public abstract class AbstractScrapedGameListener<N> {
         return url;
     }
 
-    protected String resolveDescription(Document articleDocument, Element link, Element context, String title,
-                                        String listingTitle) {
+    protected String resolveDescription(
+        Document articleDocument,
+        Element link,
+        Element context,
+        String title,
+        String listingTitle
+    ) {
         String description = NewsScraperUtils.extractPrimaryDescription(articleDocument);
         if (description.isBlank()) {
             description = NewsScraperUtils.extractListDescription(link.text(), title);
@@ -231,8 +237,13 @@ public abstract class AbstractScrapedGameListener<N> {
         return description;
     }
 
-    protected String resolveImageUrl(Document articleDocument, Element link, Element context, String title,
-                                     String listingTitle) {
+    protected String resolveImageUrl(
+        Document articleDocument,
+        Element link,
+        Element context,
+        String title,
+        String listingTitle
+    ) {
         String imageUrl = NewsScraperUtils.extractMetaImage(articleDocument);
         if (imageUrl.isBlank()) {
             imageUrl = NewsScraperUtils.extractImageUrl(context);
@@ -241,8 +252,13 @@ public abstract class AbstractScrapedGameListener<N> {
         return imageUrl;
     }
 
-    protected Instant resolvePublishedAt(Document articleDocument, Element link, Element context, String title,
-                                         String listingTitle) {
+    protected Instant resolvePublishedAt(
+        Document articleDocument,
+        Element link,
+        Element context,
+        String title,
+        String listingTitle
+    ) {
         return NewsScraperUtils.extractPublishedAt(articleDocument, link.text());
     }
 
@@ -282,6 +298,13 @@ public abstract class AbstractScrapedGameListener<N> {
 
     protected abstract String defaultDescription();
 
-    protected record ScrapedArticle(String id, String title, String url, String imageUrl, Instant publishedAt,
-                                    String description) {}
+    protected record ScrapedArticle(
+        String id,
+        String title,
+        String url,
+        String imageUrl,
+        Instant publishedAt,
+        String description
+    ) {
+    }
 }

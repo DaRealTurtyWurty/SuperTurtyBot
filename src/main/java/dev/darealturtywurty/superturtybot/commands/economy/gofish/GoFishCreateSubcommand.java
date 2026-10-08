@@ -60,29 +60,29 @@ public class GoFishCreateSubcommand extends GoFishSubcommand {
         EconomyManager.updateAccount(account);
 
         var game = new GoFishCommand.Game(
-                guild.getIdLong(),
-                channelId,
-                event.getUser().getIdLong(),
-                bet,
-                maxPlayers);
+            guild.getIdLong(),
+            channelId,
+            event.getUser().getIdLong(),
+            bet,
+            maxPlayers);
         game.addPlayer(event.getUser().getIdLong(), bet);
         GoFishCommand.GAMES.put(channelId, game);
 
-        event.getHook().editOriginal("✅ Go Fish game created! Players can join with the button below. Auto-starts in 2 minutes.")
-                .queue();
+        event.getHook()
+            .editOriginal("✅ Go Fish game created! Players can join with the button below. Auto-starts in 2 minutes.")
+            .queue();
         String lobbyMessage = "🃏 **Go Fish** created by %s\nBet: %s | Players: 1/%d\nJoin with the button below."
-                .formatted(event.getUser().getAsMention(),
-                        StringUtils.numberFormat(bet, config),
-                        maxPlayers);
+            .formatted(event.getUser().getAsMention(),
+                StringUtils.numberFormat(bet, config),
+                maxPlayers);
         event.getChannel().sendMessage(lobbyMessage)
-                .setComponents(ActionRow.of(
-                        Button.success("gofish:join:" + channelId, "Join Game"),
-                        Button.primary("gofish:start:" + channelId, "Force Start"),
-                        Button.danger("gofish:cancel:" + channelId, "Cancel")
-                ))
-                .queue(message -> {
-                    game.setLobbyMessageId(message.getIdLong());
-                    GoFishCommand.scheduleAutoStart(guild, game);
-                });
+            .setComponents(ActionRow.of(
+                Button.success("gofish:join:" + channelId, "Join Game"),
+                Button.primary("gofish:start:" + channelId, "Force Start"),
+                Button.danger("gofish:cancel:" + channelId, "Cancel")))
+            .queue(message -> {
+                game.setLobbyMessageId(message.getIdLong());
+                GoFishCommand.scheduleAutoStart(guild, game);
+            });
     }
 }

@@ -41,9 +41,8 @@ public final class StringUtils {
     }
 
     private static String getSuffixForIteration(int iteration) {
-        if (iteration > 1000) {
+        if (iteration > 1000)
             return "e" + iteration * 3;
-        }
         // suffixes taken from: https://button-simulatored.fandom.com/wiki/Suffix_List
         String[] suffixForOnesDigit = {"", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"};
         String[] suffixForTensDigit = {"", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"};
@@ -125,13 +124,18 @@ public final class StringUtils {
 
     /**
      * Returns a function that parses a string OptionMapping to a BigInteger.
-     * If the string is not a valid number, the event will be replied to with an error message, and the BigInteger will be null.
+     * If the string is not a valid number, the event will be replied to with an error message, and the BigInteger will
+     * be null.
+     *
      * @param event the event to reply to if the number is not valid
      * @param wasDeferred whether the event was already deferred
      * @return a function that parses a string OptionMapping to a BigInteger
      * @see #getAsBigInteger(SlashCommandInteractionEvent)
      */
-    public static Function<OptionMapping, @Nullable BigInteger> getAsBigInteger(SlashCommandInteractionEvent event, boolean wasDeferred) {
+    public static Function<OptionMapping, @Nullable BigInteger> getAsBigInteger(
+        SlashCommandInteractionEvent event,
+        boolean wasDeferred
+    ) {
         return option -> {
             final String string = option.getAsString();
             try {
@@ -150,7 +154,9 @@ public final class StringUtils {
 
     /**
      * Returns a function that parses a string OptionMapping to a BigInteger.</br>
-     * Identical to calling {@link #getAsBigInteger(SlashCommandInteractionEvent, boolean) StringUtils.getAsBigInteger(event, true)}.
+     * Identical to calling {@link #getAsBigInteger(SlashCommandInteractionEvent, boolean)
+     * StringUtils.getAsBigInteger(event, true)}.
+     *
      * @param event the event to reply to if the number is not valid
      * @return a function that parses a string OptionMapping to a BigInteger
      * @see #getAsBigInteger(SlashCommandInteractionEvent, boolean)
@@ -175,30 +181,30 @@ public final class StringUtils {
 
             final List<String> emojis = EmojiParser.extractEmojis(string);
             final List<Long> emotes = MentionType.EMOJI.getPattern().matcher(string).results()
-                    .map(result -> string.substring(result.start(), result.end())).map(str -> {
-                        final String[] parts = str.split(":");
-                        if (parts.length < 1)
-                            return 0L;
+                .map(result -> string.substring(result.start(), result.end())).map(str -> {
+                    final String[] parts = str.split(":");
+                    if (parts.length < 1)
+                        return 0L;
 
-                        final String id = parts[parts.length - 1].replace(">", "").replace("<", "");
-                        try {
-                            return Long.parseLong(id);
-                        } catch (final NumberFormatException exception) {
-                            return 0L;
-                        }
-                    }).toList();
+                    final String id = parts[parts.length - 1].replace(">", "").replace("<", "");
+                    try {
+                        return Long.parseLong(id);
+                    } catch (final NumberFormatException exception) {
+                        return 0L;
+                    }
+                }).toList();
             if (emojis.isEmpty()) {
                 if (emotes.isEmpty())
                     return null;
 
                 final RichCustomEmoji emote = jda.getEmojiById(emotes.getFirst());
-                Member selfMember = emote == null ?
-                        null :
-                        emote.getGuild().getMemberById(guild.getSelfMember().getIdLong());
+                Member selfMember = emote == null
+                    ? null
+                    : emote.getGuild().getMemberById(guild.getSelfMember().getIdLong());
                 if (emote == null ||
-                        selfMember == null ||
-                        emote.getGuild().getMemberById(guild.getSelfMember().getIdLong()) == null ||
-                        !selfMember.canInteract(emote))
+                    selfMember == null ||
+                    emote.getGuild().getMemberById(guild.getSelfMember().getIdLong()) == null ||
+                    !selfMember.canInteract(emote))
                     return null;
 
                 return emote.getAsMention();
@@ -220,9 +226,9 @@ public final class StringUtils {
 
     public static String replaceHTMLCodes(String str) {
         return str.replace("&amp;", "&").replace("&copy;", "©").replace("&trade;", "™").replace("&thinsp;", "\u2009")
-                .replace("&ensp;", "\u2002").replace("&emsp;", "\u2003").replace("&hearts;", "♥").replace("&star;", "☆")
-                .replace("&starf;", "★").replace("&bigstar;", "★").replace("&euro;", "€").replace("&mdash;", "—")
-                .replace("&ndash;", "–");
+            .replace("&ensp;", "\u2002").replace("&emsp;", "\u2003").replace("&hearts;", "♥").replace("&star;", "☆")
+            .replace("&starf;", "★").replace("&bigstar;", "★").replace("&euro;", "€").replace("&mdash;", "—")
+            .replace("&ndash;", "–");
     }
 
     public static String stripEmote(String emote) {

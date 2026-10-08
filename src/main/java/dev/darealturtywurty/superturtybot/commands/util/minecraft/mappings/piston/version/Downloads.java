@@ -3,8 +3,12 @@ package dev.darealturtywurty.superturtybot.commands.util.minecraft.mappings.pist
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
-public record Downloads(@Nullable Download client, @Nullable Download clientMappings, @Nullable Download server,
-                        @Nullable Download serverMappings) {
+public record Downloads(
+    @Nullable Download client,
+    @Nullable Download clientMappings,
+    @Nullable Download server,
+    @Nullable Download serverMappings
+) {
     public static Downloads fromJson(JsonObject json) {
         Download client = null, clientMappings = null, server = null, serverMappings = null;
         if (json.has("client")) {

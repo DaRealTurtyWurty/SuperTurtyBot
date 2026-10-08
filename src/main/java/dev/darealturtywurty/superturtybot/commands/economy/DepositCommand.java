@@ -38,8 +38,10 @@ public class DepositCommand extends EconomyCommand {
     protected void runSlash(SlashCommandInteractionEvent event, Guild guild, GuildData config) {
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot deposit money! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot deposit money! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -55,7 +57,8 @@ public class DepositCommand extends EconomyCommand {
         }
 
         if (amount.signum() <= 0) {
-            event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency())).queue();
+            event.getHook().editOriginal("❌ You must deposit at least %s1!".formatted(config.getEconomyCurrency()))
+                .queue();
             return;
         }
 
@@ -67,8 +70,7 @@ public class DepositCommand extends EconomyCommand {
         EconomyManager.deposit(account, amount);
         EconomyManager.updateAccount(account);
         event.getHook().editOriginal("✅ You have deposited %s into your bank!\nYou now have %s in your bank.".formatted(
-                StringUtils.numberFormat(amount, config),
-                StringUtils.numberFormat(account.getBank(), config)
-        )).queue();
+            StringUtils.numberFormat(amount, config),
+            StringUtils.numberFormat(account.getBank(), config))).queue();
     }
 }

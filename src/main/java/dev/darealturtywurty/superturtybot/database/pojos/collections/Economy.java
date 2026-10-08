@@ -95,7 +95,7 @@ public class Economy {
     }
 
     public BigInteger getWallet() {
-        if(this.wallet == null) {
+        if (this.wallet == null) {
             this.wallet = BigInteger.ZERO;
         }
 
@@ -103,7 +103,7 @@ public class Economy {
     }
 
     public BigInteger getBank() {
-        if(this.bank == null) {
+        if (this.bank == null) {
             this.bank = BigInteger.ZERO;
         }
 
@@ -111,7 +111,7 @@ public class Economy {
     }
 
     public BigInteger getTotalBetLoss() {
-        if(this.totalBetLoss == null) {
+        if (this.totalBetLoss == null) {
             this.totalBetLoss = BigInteger.ZERO;
         }
 
@@ -119,7 +119,7 @@ public class Economy {
     }
 
     public BigInteger getTotalBetWin() {
-        if(this.totalBetWin == null) {
+        if (this.totalBetWin == null) {
             this.totalBetWin = BigInteger.ZERO;
         }
 

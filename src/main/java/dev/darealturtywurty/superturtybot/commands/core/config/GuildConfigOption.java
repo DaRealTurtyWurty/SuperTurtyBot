@@ -33,7 +33,7 @@ public class GuildConfigOption implements Registerable {
     private final Function<GuildData, Object> valueFromConfig;
     @Getter
     private final Function<String, List<Pair<String, String>>> autoComplete;
-    
+
     private GuildConfigOption(Builder builder) {
         this.dataType = builder.dataType;
         this.serializer = builder.serializer;
@@ -46,11 +46,11 @@ public class GuildConfigOption implements Registerable {
     public String getName() {
         return this.name;
     }
-    
+
     public String getRichName() {
         return WordUtils.capitalize(this.name.replace("_", " "));
     }
-    
+
     public String getSaveName() {
         return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, this.name);
     }
@@ -58,13 +58,13 @@ public class GuildConfigOption implements Registerable {
     public void serialize(GuildData config, String value) {
         this.serializer.accept(config, value);
     }
-    
+
     @Override
     public Registerable setName(String name) {
         this.name = name;
         return this;
     }
-    
+
     public boolean validate(SlashCommandInteractionEvent event, String value) {
         return this.validator.test(event, value);
     }
@@ -105,7 +105,9 @@ public class GuildConfigOption implements Registerable {
             return this;
         }
 
-        public GuildConfigOption.Builder autoComplete(@NotNull Function<String, List<Pair<String, String>>> autoComplete) {
+        public GuildConfigOption.Builder autoComplete(
+            @NotNull Function<String, List<Pair<String, String>>> autoComplete
+        ) {
             Checks.notNull(autoComplete, "autoComplete");
             this.autoComplete = autoComplete;
             return this;
@@ -140,7 +142,7 @@ public class GuildConfigOption implements Registerable {
             return this;
         }
     }
-    
+
     public enum DataType {
         INTEGER(str -> Ints.tryParse(str) != null),
         DOUBLE(str -> Doubles.tryParse(str) != null),
@@ -156,9 +158,9 @@ public class GuildConfigOption implements Registerable {
                 return false;
             }
         });
-        
+
         public final Function<String, Boolean> validator;
-        
+
         DataType(Function<String, Boolean> validator) {
             this.validator = validator;
         }

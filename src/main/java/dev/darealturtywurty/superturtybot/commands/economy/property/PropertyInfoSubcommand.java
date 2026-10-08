@@ -34,40 +34,44 @@ public class PropertyInfoSubcommand extends PropertySubcommand {
             }
 
             PropertyCommand.hookReply(event, """
-                    **%s**
-                    Price: %s
-                    Estate Tax: %s
-                    Base Rent: %s
-                    Description: %s
-                    """.formatted(
-                    template.getName(),
-                    StringUtils.numberFormat(template.getOriginalPrice(), config),
-                    StringUtils.numberFormat(template.getEstateTax(), config),
-                    template.getRent() == null ? "None" : StringUtils.numberFormat(PropertyCommand.calculateRent(template), config),
-                    template.getDescription()));
+                **%s**
+                Price: %s
+                Estate Tax: %s
+                Base Rent: %s
+                Description: %s
+                """.formatted(
+                template.getName(),
+                StringUtils.numberFormat(template.getOriginalPrice(), config),
+                StringUtils.numberFormat(template.getEstateTax(), config),
+                template.getRent() == null
+                    ? "None"
+                    : StringUtils.numberFormat(PropertyCommand.calculateRent(template), config),
+                template.getDescription()));
             return;
         }
 
         PropertyCommand.normalizeRent(property);
         PropertyCommand.hookReply(event, """
-                **%s**
-                Value: %s
-                Rent Price: %s
-                Renting: %s
-                Upgrade Level: %d
-                Estate Tax: %s
-                Buy Date: %s
-                Renter: %s
-                Rent Ends: %s
-                """.formatted(
-                property.getName(),
-                StringUtils.numberFormat(property.calculateCurrentWorth(), config),
-                property.getRent() == null ? "None" : StringUtils.numberFormat(PropertyCommand.calculateRent(property), config),
-                StringUtils.booleanToEmoji(property.isRentActive()),
-                property.getUpgradeLevel(),
-                StringUtils.numberFormat(property.getEstateTax(), config),
-                TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()),
-                PropertyCommand.formatRenter(property, guild),
-                property.isRentActive() ? TimeFormat.RELATIVE.format(property.getRentEndsAt()) : "N/A"));
+            **%s**
+            Value: %s
+            Rent Price: %s
+            Renting: %s
+            Upgrade Level: %d
+            Estate Tax: %s
+            Buy Date: %s
+            Renter: %s
+            Rent Ends: %s
+            """.formatted(
+            property.getName(),
+            StringUtils.numberFormat(property.calculateCurrentWorth(), config),
+            property.getRent() == null
+                ? "None"
+                : StringUtils.numberFormat(PropertyCommand.calculateRent(property), config),
+            StringUtils.booleanToEmoji(property.isRentActive()),
+            property.getUpgradeLevel(),
+            StringUtils.numberFormat(property.getEstateTax(), config),
+            TimeFormat.DATE_TIME_SHORT.format(property.getBuyDate()),
+            PropertyCommand.formatRenter(property, guild),
+            property.isRentActive() ? TimeFormat.RELATIVE.format(property.getRentEndsAt()) : "N/A"));
     }
 }

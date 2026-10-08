@@ -23,13 +23,13 @@ public class KickCommand extends CoreCommand {
     public KickCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to kick!", true),
             new OptionData(OptionType.STRING, "reason", "The kick reason", false));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Kick Permission)";
@@ -39,41 +39,41 @@ public class KickCommand extends CoreCommand {
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Kicks a member";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/kick [member]\n/kick [member] [reason]";
     }
-    
+
     @Override
     public String getName() {
         return "kick";
     }
-    
+
     @Override
     public String getRichName() {
         return "Kick Member";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
-        
+
         final Member member = event.getOption("member", OptionMapping::getAsMember);
-        if(member == null) {
+        if (member == null) {
             reply(event, "❌ You must specify a member to kick!", false, true);
             return;
         }
@@ -83,7 +83,7 @@ public class KickCommand extends CoreCommand {
             if (reason.length() > 512) {
                 reason = reason.substring(0, 512);
             }
-            
+
             final String finalReason = reason;
             member.getUser().openPrivateChannel()
                 .queue(channel -> channel.sendMessage(
@@ -91,7 +91,7 @@ public class KickCommand extends CoreCommand {
                     .queue(success -> {
                     }, error -> {
                     }));
-            
+
             event.getGuild().kick(member).reason(finalReason).queue(success -> {
                 reply(event, "✅ Successfully kicked " + member.getAsMention() + "!", false);
                 final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());

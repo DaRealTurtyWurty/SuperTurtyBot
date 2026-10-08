@@ -22,22 +22,19 @@ public final class LoggingSettingsService {
 
     public LoggingSettingsResponse updateSettings(long guildId, LoggingSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         long loggingChannelId = parseChannelId(request.getLoggingChannelId());
-        if (loggingChannelId != 0L && guild.getTextChannelById(loggingChannelId) == null) {
+        if (loggingChannelId != 0L && guild.getTextChannelById(loggingChannelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_logging_channel",
-                    "The supplied logging channel was not a text channel in this guild.");
-        }
+                "The supplied logging channel was not a text channel in this guild.");
 
         long modLoggingChannelId = parseChannelId(request.getModLoggingChannelId());
-        if (modLoggingChannelId != 0L && guild.getTextChannelById(modLoggingChannelId) == null) {
+        if (modLoggingChannelId != 0L && guild.getTextChannelById(modLoggingChannelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_mod_logging_channel",
-                    "The supplied moderation logging channel was not a text channel in this guild.");
-        }
+                "The supplied moderation logging channel was not a text channel in this guild.");
 
         GuildData guildData = GuildData.getOrCreateGuildData(guildId);
         guildData.setLoggingChannel(loggingChannelId);
@@ -73,33 +70,32 @@ public final class LoggingSettingsService {
 
     private static LoggingSettingsResponse toResponse(GuildData guildData) {
         return new LoggingSettingsResponse(
-                guildData.getLoggingChannel() == 0L ? null : Long.toString(guildData.getLoggingChannel()),
-                guildData.getModLogging() == 0L ? null : Long.toString(guildData.getModLogging()),
-                guildData.isLogChannelCreate(),
-                guildData.isLogChannelDelete(),
-                guildData.isLogChannelUpdate(),
-                guildData.isLogEmojiAdded(),
-                guildData.isLogEmojiRemoved(),
-                guildData.isLogEmojiUpdate(),
-                guildData.isLogForumTagUpdate(),
-                guildData.isLogStickerUpdate(),
-                guildData.isLogGuildUpdate(),
-                guildData.isLogRoleUpdate(),
-                guildData.isLogBan(),
-                guildData.isLogUnban(),
-                guildData.isLogInviteCreate(),
-                guildData.isLogInviteDelete(),
-                guildData.isLogMemberJoin(),
-                guildData.isLogMemberRemove(),
-                guildData.isLogStickerAdded(),
-                guildData.isLogStickerRemove(),
-                guildData.isLogTimeout(),
-                guildData.isLogMessageBulkDelete(),
-                guildData.isLogMessageDelete(),
-                guildData.isLogMessageUpdate(),
-                guildData.isLogRoleCreate(),
-                guildData.isLogRoleDelete()
-        );
+            guildData.getLoggingChannel() == 0L ? null : Long.toString(guildData.getLoggingChannel()),
+            guildData.getModLogging() == 0L ? null : Long.toString(guildData.getModLogging()),
+            guildData.isLogChannelCreate(),
+            guildData.isLogChannelDelete(),
+            guildData.isLogChannelUpdate(),
+            guildData.isLogEmojiAdded(),
+            guildData.isLogEmojiRemoved(),
+            guildData.isLogEmojiUpdate(),
+            guildData.isLogForumTagUpdate(),
+            guildData.isLogStickerUpdate(),
+            guildData.isLogGuildUpdate(),
+            guildData.isLogRoleUpdate(),
+            guildData.isLogBan(),
+            guildData.isLogUnban(),
+            guildData.isLogInviteCreate(),
+            guildData.isLogInviteDelete(),
+            guildData.isLogMemberJoin(),
+            guildData.isLogMemberRemove(),
+            guildData.isLogStickerAdded(),
+            guildData.isLogStickerRemove(),
+            guildData.isLogTimeout(),
+            guildData.isLogMessageBulkDelete(),
+            guildData.isLogMessageDelete(),
+            guildData.isLogMessageUpdate(),
+            guildData.isLogRoleCreate(),
+            guildData.isLogRoleDelete());
     }
 
     private static long parseChannelId(String channelId) {
@@ -111,7 +107,7 @@ public final class LoggingSettingsService {
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_channel_id",
-                    "One of the supplied channel IDs was not a valid Discord snowflake.");
+                "One of the supplied channel IDs was not a valid Discord snowflake.");
         }
     }
 }

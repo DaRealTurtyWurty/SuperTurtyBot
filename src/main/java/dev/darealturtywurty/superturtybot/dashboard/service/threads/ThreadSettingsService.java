@@ -29,11 +29,11 @@ public final class ThreadSettingsService {
         Guild guild = this.jda.getGuildById(guildId);
         if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
+                "TurtyBot is not currently connected to that guild.");
 
         if (request == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_thread_settings",
-                    "The thread settings payload was missing.");
+                "The thread settings payload was missing.");
 
         List<String> autoThreadChannelIds = normalizeSnowflakes(request.getAutoThreadChannelIds());
         long triviaChannelId = normalizeOptionalSnowflake(request.getTriviaChannelId());
@@ -50,10 +50,9 @@ public final class ThreadSettingsService {
 
     private static ThreadSettingsResponse toResponse(GuildData guildData) {
         return new ThreadSettingsResponse(
-                guildData.isShouldModeratorsJoinThreads(),
-                GuildData.getLongs(guildData.getAutoThreadChannels()).stream().map(String::valueOf).toList(),
-                guildData.getTriviaChannel() == 0L ? null : Long.toString(guildData.getTriviaChannel())
-        );
+            guildData.isShouldModeratorsJoinThreads(),
+            GuildData.getLongs(guildData.getAutoThreadChannels()).stream().map(String::valueOf).toList(),
+            guildData.getTriviaChannel() == 0L ? null : Long.toString(guildData.getTriviaChannel()));
     }
 
     private static void validateRequest(Guild guild, List<String> autoThreadChannelIds, long triviaChannelId) {
@@ -61,12 +60,12 @@ public final class ThreadSettingsService {
             TextChannel channel = guild.getTextChannelById(channelId);
             if (channel == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_auto_thread_channel",
-                        "One or more auto-thread channels were not valid text channels in this guild.");
+                    "One or more auto-thread channels were not valid text channels in this guild.");
         }
 
         if (triviaChannelId != 0L && guild.getTextChannelById(triviaChannelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_trivia_channel",
-                    "The trivia anchor was not a valid text channel in this guild.");
+                "The trivia anchor was not a valid text channel in this guild.");
     }
 
     private static List<String> normalizeSnowflakes(List<String> values) {
@@ -87,7 +86,7 @@ public final class ThreadSettingsService {
                 normalized.add(Long.toString(parsed));
             } catch (NumberFormatException exception) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_snowflake_id",
-                        "One of the supplied IDs was not a valid Discord snowflake.");
+                    "One of the supplied IDs was not a valid Discord snowflake.");
             }
         }
 
@@ -106,7 +105,7 @@ public final class ThreadSettingsService {
             return parsed;
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_trivia_channel",
-                    "The trivia anchor channel ID was invalid.");
+                "The trivia anchor channel ID was invalid.");
         }
     }
 }

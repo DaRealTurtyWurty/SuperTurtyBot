@@ -20,8 +20,17 @@ public class MarketplaceListing {
     private long createdAt;
     private ShopItem shopItem;
 
-    public MarketplaceListing(String id, long guild, long seller, String type, String item,
-                              String collection, BigInteger price, int days, ShopItem shopItem) {
+    public MarketplaceListing(
+        String id,
+        long guild,
+        long seller,
+        String type,
+        String item,
+        String collection,
+        BigInteger price,
+        int days,
+        ShopItem shopItem
+    ) {
         this.id = id;
         this.guild = guild;
         this.seller = seller;

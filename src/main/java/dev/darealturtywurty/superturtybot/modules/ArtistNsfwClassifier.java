@@ -25,13 +25,12 @@ public record ArtistNsfwClassifier(NsfwClassifier classifier) implements AutoClo
 
         try {
             var config = new NsfwClassifier.Config(
-                    IMAGE_SIZE,
-                    NsfwClassifier.InputLayout.NHWC,
-                    NsfwClassifier.ChannelOrder.BGR,
-                    MEAN_B,
-                    MEAN_G,
-                    MEAN_R
-            );
+                IMAGE_SIZE,
+                NsfwClassifier.InputLayout.NHWC,
+                NsfwClassifier.ChannelOrder.BGR,
+                MEAN_B,
+                MEAN_G,
+                MEAN_R);
             NsfwClassifier classifier = NsfwClassifier.create(modelPath, config);
             return Optional.of(new ArtistNsfwClassifier(classifier));
         } catch (OrtException exception) {

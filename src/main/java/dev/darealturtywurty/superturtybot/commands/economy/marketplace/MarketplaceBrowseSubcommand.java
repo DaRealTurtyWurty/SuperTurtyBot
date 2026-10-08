@@ -12,10 +12,10 @@ public class MarketplaceBrowseSubcommand extends MarketplaceSubcommand {
     public MarketplaceBrowseSubcommand() {
         super("browse", "Browse current listings");
         addOption(new OptionData(OptionType.STRING, "type", "Filter by asset type", false)
-                .addChoice("Collectable", MarketplaceService.COLLECTABLE)
-                .addChoice("Rank card item", MarketplaceService.RANK_CARD)
-                .addChoice("Economy item", MarketplaceService.ECONOMY_ITEM)
-                .addChoice("Property rental", MarketplaceService.RENTAL));
+            .addChoice("Collectable", MarketplaceService.COLLECTABLE)
+            .addChoice("Rank card item", MarketplaceService.RANK_CARD)
+            .addChoice("Economy item", MarketplaceService.ECONOMY_ITEM)
+            .addChoice("Property rental", MarketplaceService.RENTAL));
     }
 
     @Override

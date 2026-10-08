@@ -5,8 +5,8 @@ import dev.darealturtywurty.superturtybot.dashboard.service.discord.DashboardGui
 import java.util.List;
 
 public record DashboardNotifiersResponse(
-        DashboardGuildInfo guild,
-        int totalCount,
-        List<DashboardNotifierSection> sections
+    DashboardGuildInfo guild,
+    int totalCount,
+    List<DashboardNotifierSection> sections
 ) {
 }

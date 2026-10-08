@@ -23,7 +23,15 @@ public class ModmailTicket {
     private int transcriptChunkCount;
     private int transcriptMessageCount;
 
-    public ModmailTicket(long guild, long user, long channel, long category, long ticketNumber, String source, String openerMessage) {
+    public ModmailTicket(
+        long guild,
+        long user,
+        long channel,
+        long category,
+        long ticketNumber,
+        String source,
+        String openerMessage
+    ) {
         this.guild = guild;
         this.user = user;
         this.channel = channel;

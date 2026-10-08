@@ -24,7 +24,7 @@ public class TimeoutCommand extends CoreCommand {
     public TimeoutCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "member", "The member to timeout!", true),
@@ -35,56 +35,57 @@ public class TimeoutCommand extends CoreCommand {
     public String getAccess() {
         return "Moderators (Manage Members Permission)";
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
     }
-    
+
     @Override
     public String getDescription() {
         return "Timeouts a member";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/timeout [member] [duration]";
     }
-    
+
     @Override
     public String getName() {
         return "timeout";
     }
-    
+
     @Override
     public String getRichName() {
         return "Timeout Member";
     }
-    
+
     @Override
     public boolean isServerOnly() {
         return true;
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null || event.getMember() == null) {
             reply(event, "❌ You can only timeout someone who is in this server!", false, true);
             return;
         }
-        
+
         final Member member = event.getOption("member", event.getMember(), OptionMapping::getAsMember);
         if (member == null) {
             reply(event, "❌ You can only timeout someone who is in this server!", false, true);
             return;
         }
-        
+
         if (event.getMember().hasPermission(event.getGuildChannel(), Permission.MODERATE_MEMBERS)
-                && event.getMember().canInteract(member)) {
+            && event.getMember().canInteract(member)) {
             final long duration = event.getOption("duration", 15L, OptionMapping::getAsLong);
             member.getUser().openPrivateChannel()
                 .queue(channel -> channel.sendMessage(
-                    "You have been put on timeout for " + duration + " minutes in `" + event.getGuild().getName() + "`!")
+                    "You have been put on timeout for " + duration + " minutes in `" + event.getGuild().getName()
+                        + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));

@@ -7,7 +7,8 @@ public sealed interface QuestEvent {
     }
 
     record MultiplayerMatchCompleted(String sourceId, String gameType, String opponentId, boolean won)
-            implements QuestEvent {
+        implements
+            QuestEvent {
     }
 
     record MinigameCompleted(String sourceId, String gameType) implements QuestEvent {
@@ -20,11 +21,11 @@ public sealed interface QuestEvent {
     }
 
     record CollectableEarned(
-            String questionId,
-            String collectionType,
-            int rarityOrdinal,
-            long responseTimeMillis,
-            LocalDate date
+        String questionId,
+        String collectionType,
+        int rarityOrdinal,
+        long responseTimeMillis,
+        LocalDate date
     ) implements QuestEvent {
     }
 
@@ -41,7 +42,8 @@ public sealed interface QuestEvent {
     }
 
     record GeographyGameCompleted(String sourceId, String gameType, int gameSize, int attempts)
-            implements QuestEvent {
+        implements
+            QuestEvent {
     }
 
     record CommunityActivityCompleted(String sourceId, String activityType, LocalDate date) implements QuestEvent {

@@ -35,11 +35,11 @@ public class UserConfigCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("get", "Gets the current user config")
-                        .addOption(OptionType.STRING, "key", "The data key to get", false, true),
-                new SubcommandData("set", "Sets a value into the user config")
-                        .addOption(OptionType.STRING, "key", "The data key to change", true, true)
-                        .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
+            new SubcommandData("get", "Gets the current user config")
+                .addOption(OptionType.STRING, "key", "The data key to get", false, true),
+            new SubcommandData("set", "Sets a value into the user config")
+                .addOption(OptionType.STRING, "key", "The data key to change", true, true)
+                .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
 
     @Override
@@ -87,12 +87,12 @@ public class UserConfigCommand extends CoreCommand {
             final String term = query.getValue();
 
             final List<String> keys = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                    .values()
-                    .stream()
-                    .map(UserConfigOption::getSaveName)
-                    .filter(key -> key.contains(term))
-                    .limit(25)
-                    .toList();
+                .values()
+                .stream()
+                .map(UserConfigOption::getSaveName)
+                .filter(key -> key.contains(term))
+                .limit(25)
+                .toList();
             event.replyChoiceStrings(keys).queue();
         } else if (query.getName().equals("value")) {
             String key = event.getOption("key", OptionMapping::getAsString);
@@ -102,10 +102,10 @@ public class UserConfigCommand extends CoreCommand {
             }
 
             final Optional<UserConfigOption> found = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                    .values()
-                    .stream()
-                    .filter(userConfigOption -> userConfigOption.getSaveName().equalsIgnoreCase(key))
-                    .findFirst();
+                .values()
+                .stream()
+                .filter(userConfigOption -> userConfigOption.getSaveName().equalsIgnoreCase(key))
+                .findFirst();
             if (found.isEmpty()) {
                 event.replyChoices().queue();
                 return;
@@ -119,9 +119,9 @@ public class UserConfigCommand extends CoreCommand {
             }
 
             event.replyChoices(values.stream()
-                            .map(pair -> new Command.Choice(pair.getLeft(), pair.getRight()))
-                            .toList())
-                    .queue();
+                .map(pair -> new Command.Choice(pair.getLeft(), pair.getRight()))
+                .toList())
+                .queue();
         }
     }
 
@@ -141,14 +141,15 @@ public class UserConfigCommand extends CoreCommand {
             if (key == null) {
                 final var embed = new EmbedBuilder();
                 UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                        .values()
-                        .stream()
-                        .sorted(Comparator.comparing(UserConfigOption::getRichName))
-                        .forEach((option) -> {
-                            final String name = option.getRichName();
-                            final Object value = option.getValueFromConfig().apply(config);
-                            embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n");
-                        });
+                    .values()
+                    .stream()
+                    .sorted(Comparator.comparing(UserConfigOption::getRichName))
+                    .forEach((option) -> {
+                        final String name = option.getRichName();
+                        final Object value = option.getValueFromConfig().apply(config);
+                        embed.appendDescription(
+                            "**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n");
+                    });
                 embed.setFooter("For server: " + event.getGuild().getName(), event.getGuild().getIconUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("User Config for: " + event.getUser().getEffectiveName());
@@ -161,10 +162,10 @@ public class UserConfigCommand extends CoreCommand {
             // Get data by the given key
             final String copyKey = key.trim();
             final Optional<UserConfigOption> found = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                    .values()
-                    .stream()
-                    .filter(userConfigOption -> userConfigOption.getSaveName().equals(copyKey))
-                    .findFirst();
+                .values()
+                .stream()
+                .filter(userConfigOption -> userConfigOption.getSaveName().equals(copyKey))
+                .findFirst();
 
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for your user config!", false, true);
@@ -184,7 +185,7 @@ public class UserConfigCommand extends CoreCommand {
             final UserConfig config = get(event.getUser());
 
             final Optional<Entry<String, UserConfigOption>> found = UserConfigRegistry.USER_CONFIG_OPTIONS.getRegistry()
-                    .entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(key)).findFirst();
+                .entrySet().stream().filter(entry -> entry.getValue().getSaveName().equals(key)).findFirst();
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for your user config!", false, true);
                 return;
@@ -193,9 +194,9 @@ public class UserConfigCommand extends CoreCommand {
             final UserConfigOption option = found.get().getValue();
             if (Boolean.FALSE.equals(option.getDataType().validator.apply(value))) {
                 reply(event,
-                        "❌ `" + value + "` is not the right data type! `" + option.getRichName() + "` requires a `"
-                                + WordUtils.capitalize(option.getDataType().name().toLowerCase().replace("_", " ")) + "`!",
-                        false, true);
+                    "❌ `" + value + "` is not the right data type! `" + option.getRichName() + "` requires a `"
+                        + WordUtils.capitalize(option.getDataType().name().toLowerCase().replace("_", " ")) + "`!",
+                    false, true);
                 return;
             }
 
@@ -208,13 +209,18 @@ public class UserConfigCommand extends CoreCommand {
 
             option.serialize(config, value);
             final Bson update = Updates.set(option.getSaveName(), option.getValueFromConfig().apply(config));
-            final UpdateResult result = Database.getDatabase().userConfig.updateOne(Filters.eq("user", event.getUser().getIdLong()), update);
+            final UpdateResult result = Database.getDatabase().userConfig
+                .updateOne(Filters.eq("user", event.getUser().getIdLong()), update);
             if (result.getModifiedCount() > 0) {
-                event.getHook().editOriginal("✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!").mentionRepliedUser(false).queue();
+                event.getHook()
+                    .editOriginal("✅ `" + option.getRichName() + "` has successfully been set to `" + value + "`!")
+                    .mentionRepliedUser(false).queue();
                 return;
             }
 
-            event.getHook().editOriginal("❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!").mentionRepliedUser(false).queue();
+            event.getHook()
+                .editOriginal("❌ `" + value + "` was already the value assigned to `" + option.getRichName() + "`!")
+                .mentionRepliedUser(false).queue();
             return;
         }
 

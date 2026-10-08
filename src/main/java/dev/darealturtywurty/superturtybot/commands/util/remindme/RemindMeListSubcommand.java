@@ -20,14 +20,14 @@ public class RemindMeListSubcommand extends RemindMeSubcommand {
             return;
         }
 
-        StringBuilder builder = new StringBuilder("Here are your active reminders:\n");
+        var builder = new StringBuilder("Here are your active reminders:\n");
         int shown = 0;
         for (Reminder reminder : reminders) {
             String line = "`%s` %s | %s | %s\n".formatted(
-                    reminder.getId(),
-                    summarizeReminder(reminder.getReminder()),
-                    TimeFormat.RELATIVE.format(reminder.getTime()),
-                    reminder.getChannel() == 0 ? "DMs" : "<#" + reminder.getChannel() + ">");
+                reminder.getId(),
+                summarizeReminder(reminder.getReminder()),
+                TimeFormat.RELATIVE.format(reminder.getTime()),
+                reminder.getChannel() == 0 ? "DMs" : "<#" + reminder.getChannel() + ">");
             if (builder.length() + line.length() > 1900)
                 break;
 

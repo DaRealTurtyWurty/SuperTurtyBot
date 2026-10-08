@@ -19,8 +19,9 @@ public class MarketplaceCancelSubcommand extends MarketplaceSubcommand {
         String id = event.getOption("id", OptionMapping::getAsString);
         MarketplaceListing listing = MarketplaceService.cancel(guild.getIdLong(), event.getUser().getIdLong(), id);
         event.getHook().editOriginalEmbeds(MarketplaceCommand.result("Listing cancelled", listing, config)
-                .setFooter(MarketplaceService.RENTAL.equals(listing.getType())
-                        ? "The rental offer is no longer available."
-                        : "The item has been returned to your inventory.").build()).queue();
+            .setFooter(MarketplaceService.RENTAL.equals(listing.getType())
+                ? "The rental offer is no longer available."
+                : "The item has been returned to your inventory.")
+            .build()).queue();
     }
 }

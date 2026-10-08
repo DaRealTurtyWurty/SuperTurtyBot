@@ -53,13 +53,15 @@ public class SetXPCommand extends EconomyCommand {
         int amount = 0;
         try {
             user = Long.parseLong(args[1]);
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException _) {
             type = switch (args[1]) {
                 case "add" -> Type.ADD;
                 case "remove" -> Type.REMOVE;
                 case "set" -> Type.SET;
                 default -> {
-                    reply(event, "❌ You must provide a user and an amount (and optionally an action; `add` or `remove`)!", false);
+                    reply(event,
+                        "❌ You must provide a user and an amount (and optionally an action; `add` or `remove`)!",
+                        false);
                     yield Type.INVALID;
                 }
             };
@@ -71,9 +73,8 @@ public class SetXPCommand extends EconomyCommand {
                     reply(event, "❌ You must provide a user!", false);
                     return;
                 }
-            } else {
+            } else
                 return;
-            }
 
             try {
                 amount = Integer.parseInt(args[3]);
@@ -90,7 +91,7 @@ public class SetXPCommand extends EconomyCommand {
         if (amount == 0) {
             try {
                 amount = Integer.parseInt(args[2]);
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException _) {
                 reply(event, "❌ You must provide an amount!", false);
                 return;
             }
@@ -102,13 +103,13 @@ public class SetXPCommand extends EconomyCommand {
             return;
         }
 
-        if(!LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
+        if (!LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
             reply(event, "❌ Levelling is not enabled in this server!", false);
             return;
         }
 
         Levelling levelling = Database.getDatabase().levelling.find(Filters.and(Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("user", user))).first();
+            Filters.eq("user", user))).first();
         if (levelling == null) {
             levelling = new Levelling(guild.getIdLong(), user);
             Database.getDatabase().levelling.insertOne(levelling);

@@ -27,16 +27,20 @@ public class LoanCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("request", "Request a loan from the bank that you must pay back with interest at a later date.")
-                        .addOptions(new OptionData(OptionType.STRING, "amount", "The amount of money to request as a loan", true)),
-                new SubcommandData("pay", "Pay back a loan you have taken out from the bank.")
-                        .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to pay back", true, true),
-                                new OptionData(OptionType.STRING, "amount", "The amount of money to pay back")),
-                new SubcommandData("list", "List all of the loans you have taken out from the bank.")
-                        .addOptions(new OptionData(OptionType.BOOLEAN, "paid", "List only loans which are paid/not paid", false)),
-                new SubcommandData("info", "Get information about a loan you have taken out from the bank.")
-                        .addOptions(new OptionData(OptionType.STRING, "id", "The ID of the loan you want to get information about", true, true))
-        );
+            new SubcommandData("request",
+                "Request a loan from the bank that you must pay back with interest at a later date.")
+                .addOptions(
+                    new OptionData(OptionType.STRING, "amount", "The amount of money to request as a loan", true)),
+            new SubcommandData("pay", "Pay back a loan you have taken out from the bank.")
+                .addOptions(
+                    new OptionData(OptionType.STRING, "id", "The ID of the loan you want to pay back", true, true),
+                    new OptionData(OptionType.STRING, "amount", "The amount of money to pay back")),
+            new SubcommandData("list", "List all of the loans you have taken out from the bank.")
+                .addOptions(
+                    new OptionData(OptionType.BOOLEAN, "paid", "List only loans which are paid/not paid", false)),
+            new SubcommandData("info", "Get information about a loan you have taken out from the bank.")
+                .addOptions(new OptionData(OptionType.STRING, "id",
+                    "The ID of the loan you want to get information about", true, true)));
     }
 
     @Override
@@ -67,7 +71,10 @@ public class LoanCommand extends EconomyCommand {
         switch (event.getSubcommandName()) {
             case "pay" -> {
                 Economy account = EconomyManager.getOrCreateAccount(event.getGuild(), event.getUser());
-                event.replyChoiceStrings(account.getLoans().stream().filter(loan -> !loan.isPaidOff()).map(Loan::getId).toList()).queue();
+                event
+                    .replyChoiceStrings(
+                        account.getLoans().stream().filter(loan -> !loan.isPaidOff()).map(Loan::getId).toList())
+                    .queue();
             }
             case "info" -> {
                 Economy account = EconomyManager.getOrCreateAccount(event.getGuild(), event.getUser());
@@ -86,8 +93,11 @@ public class LoanCommand extends EconomyCommand {
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot request a loan! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot request a loan! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -95,14 +105,16 @@ public class LoanCommand extends EconomyCommand {
             case "request" -> {
                 if (account.getNextLoan() > System.currentTimeMillis()) {
                     event.getHook().editOriginalFormat("❌ You can request another loan %s!",
-                            TimeFormat.RELATIVE.format(account.getNextLoan())).queue();
+                        TimeFormat.RELATIVE.format(account.getNextLoan())).queue();
                     return;
                 }
 
                 BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
-                if (amount == null) return;
+                if (amount == null)
+                    return;
                 if (amount.compareTo(BigInteger.valueOf(1000)) < 0) {
-                    event.getHook().editOriginalFormat("❌ You must request at least %s1000!", config.getEconomyCurrency()).queue();
+                    event.getHook()
+                        .editOriginalFormat("❌ You must request at least %s1000!", config.getEconomyCurrency()).queue();
                     return;
                 }
 
@@ -113,20 +125,25 @@ public class LoanCommand extends EconomyCommand {
                 }
 
                 Loan loan = EconomyManager.addLoan(account, amount);
-                event.getHook().editOriginalFormat("✅ You have successfully received a loan of %s! You will have to pay back %s %s with an interest rate of %s%%!",
-                        StringUtils.numberFormat(amount, config),
-                        StringUtils.numberFormat(amount, config),
-                        TimeFormat.RELATIVE.format(loan.getTimeToPay()),
-                        String.format("%.2f", loan.getInterestRate())
-                ).queue();
+                event.getHook().editOriginalFormat(
+                    "✅ You have successfully received a loan of %s! You will have to pay back %s %s with an interest rate of %s%%!",
+                    StringUtils.numberFormat(amount, config),
+                    StringUtils.numberFormat(amount, config),
+                    TimeFormat.RELATIVE.format(loan.getTimeToPay()),
+                    String.format("%.2f", loan.getInterestRate())).queue();
             }
 
             case "pay" -> {
                 String id = event.getOption("id", OptionMapping::getAsString);
 
-                Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst().orElse(null);
+                Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst()
+                    .orElse(null);
                 if (loan == null) {
-                    event.getHook().editOriginalFormat("❌ You do not have a loan with the ID of %s! Use `/loan list` to view all of your loans.", id).queue();
+                    event.getHook()
+                        .editOriginalFormat(
+                            "❌ You do not have a loan with the ID of %s! Use `/loan list` to view all of your loans.",
+                            id)
+                        .queue();
                     return;
                 }
 
@@ -140,12 +157,14 @@ public class LoanCommand extends EconomyCommand {
                     return;
 
                 if (amount.compareTo(BigInteger.valueOf(200)) < 0) {
-                    event.getHook().editOriginalFormat("❌ You must pay back at least %s200!", config.getEconomyCurrency()).queue();
+                    event.getHook()
+                        .editOriginalFormat("❌ You must pay back at least %s200!", config.getEconomyCurrency()).queue();
                     return;
                 }
 
                 if (amount.compareTo(account.getBank()) > 0) {
-                    event.getHook().editOriginal("❌ You do not have enough money in the bank to pay back this amount!").queue();
+                    event.getHook().editOriginal("❌ You do not have enough money in the bank to pay back this amount!")
+                        .queue();
                     return;
                 }
 
@@ -154,19 +173,20 @@ public class LoanCommand extends EconomyCommand {
                 EconomyManager.payLoan(account, loan, amountToPay);
                 if (loan.isPaidOff()) {
                     QuestManager.INSTANCE.recordEconomyAction(
-                            guild.getIdLong(),
-                            event.getUser().getIdLong(),
-                            QuestManager.ECONOMY_LOAN_REPAID,
-                            loan.getId()
-                    );
+                        guild.getIdLong(),
+                        event.getUser().getIdLong(),
+                        QuestManager.ECONOMY_LOAN_REPAID,
+                        loan.getId());
                     event.getHook().editOriginal("✅ You have paid back %s%s and paid off your loan!".formatted(
-                            config.getEconomyCurrency(), StringUtils.numberFormat(amountToPay)
-                    )).queue();
+                        config.getEconomyCurrency(), StringUtils.numberFormat(amountToPay))).queue();
                 } else {
-                    event.getHook().editOriginal("✅ You have successfully paid back %s of your loan! You still have %s left to pay back!".formatted(
-                            StringUtils.numberFormat(amountToPay, config),
-                            StringUtils.numberFormat(loan.calculateAmountLeftToPay(), config)
-                    )).queue();
+                    event.getHook()
+                        .editOriginal(
+                            "✅ You have successfully paid back %s of your loan! You still have %s left to pay back!"
+                                .formatted(
+                                    StringUtils.numberFormat(amountToPay, config),
+                                    StringUtils.numberFormat(loan.calculateAmountLeftToPay(), config)))
+                        .queue();
                 }
             }
 
@@ -185,24 +205,31 @@ public class LoanCommand extends EconomyCommand {
 
                 if (loans.isEmpty()) {
                     event.getHook().editOriginalFormat("❌ You do not have any loans %s!",
-                            paid.getAsBoolean() ? "that are paid off" : "that are not paid off").queue();
+                        paid.getAsBoolean() ? "that are paid off" : "that are not paid off").queue();
                     return;
                 }
 
                 PaginatedEmbed.Builder builder = createLoanEmbed(config, loans);
                 builder.timestamp(Instant.now());
                 builder.authorOnly(event.getUser().getIdLong());
-                builder.footer("Requested by %s".formatted(event.getUser().getEffectiveName()), event.getUser().getEffectiveAvatarUrl());
+                builder.footer("Requested by %s".formatted(event.getUser().getEffectiveName()),
+                    event.getUser().getEffectiveAvatarUrl());
                 builder.build(event.getJDA()).send(event.getHook(),
-                        () -> event.getHook().editOriginal("❌ Something went wrong while trying to retrieve you your loans!").queue());
+                    () -> event.getHook()
+                        .editOriginal("❌ Something went wrong while trying to retrieve you your loans!").queue());
             }
 
             case "info" -> {
                 String id = event.getOption("id", OptionMapping::getAsString);
 
-                Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst().orElse(null);
+                Loan loan = account.getLoans().stream().filter(l -> l.getId().equalsIgnoreCase(id)).findFirst()
+                    .orElse(null);
                 if (loan == null) {
-                    event.getHook().editOriginalFormat("❌ You do not have a loan with the ID of %s! Use `/loan list` to view all of your loans.", id).queue();
+                    event.getHook()
+                        .editOriginalFormat(
+                            "❌ You do not have a loan with the ID of %s! Use `/loan list` to view all of your loans.",
+                            id)
+                        .queue();
                     return;
                 }
 
@@ -211,13 +238,17 @@ public class LoanCommand extends EconomyCommand {
                 embed.setTimestamp(Instant.now());
                 embed.setColor(loan.isPaidOff() ? Color.GREEN : Color.RED);
                 embed.addField("Loan ID", loan.getId(), false);
-                embed.addField("Original Amount", "%s".formatted(StringUtils.numberFormat(loan.getAmount(), config)), false);
+                embed.addField("Original Amount", "%s".formatted(StringUtils.numberFormat(loan.getAmount(), config)),
+                    false);
                 embed.addField("Interest Rate", "%s%%".formatted(String.format("%.2f", loan.getInterestRate())), false);
                 embed.addField("Time to Pay", TimeFormat.RELATIVE.format(loan.getTimeToPay()), false);
                 embed.addField("Paid Off", StringUtils.booleanToEmoji(loan.isPaidOff()), false);
-                embed.addField("Total Amount to Pay", "%s".formatted(StringUtils.numberFormat(loan.calculateTotalAmountToPay(), config)), false);
-                embed.addField("Amount Left to Pay", "%s".formatted(StringUtils.numberFormat(loan.calculateAmountLeftToPay(), config)), false);
-                embed.addField("Amount Paid", "%s".formatted(StringUtils.numberFormat(loan.getAmountPaid(), config)), false);
+                embed.addField("Total Amount to Pay",
+                    "%s".formatted(StringUtils.numberFormat(loan.calculateTotalAmountToPay(), config)), false);
+                embed.addField("Amount Left to Pay",
+                    "%s".formatted(StringUtils.numberFormat(loan.calculateAmountLeftToPay(), config)), false);
+                embed.addField("Amount Paid", "%s".formatted(StringUtils.numberFormat(loan.getAmountPaid(), config)),
+                    false);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -226,19 +257,18 @@ public class LoanCommand extends EconomyCommand {
 
     @NotNull
     private static PaginatedEmbed.Builder createLoanEmbed(GuildData config, List<Loan> loans) {
-        PaginatedEmbed.ContentsBuilder contents = new PaginatedEmbed.ContentsBuilder();
+        var contents = new PaginatedEmbed.ContentsBuilder();
         for (Loan loan : loans) {
             contents.field("Loan ID: %s".formatted(loan.getId()), """
-                    Amount: %s
-                    Interest Rate: %s%%
-                    Time to Pay: %s
-                    Paid Off: %s
-                    """.formatted(
-                    StringUtils.numberFormat(loan.getAmount(), config),
-                    String.format("%.2f", loan.getInterestRate()),
-                    TimeFormat.RELATIVE.format(loan.getTimeToPay()),
-                    StringUtils.booleanToEmoji(loan.isPaidOff())
-            ), false);
+                Amount: %s
+                Interest Rate: %s%%
+                Time to Pay: %s
+                Paid Off: %s
+                """.formatted(
+                StringUtils.numberFormat(loan.getAmount(), config),
+                String.format("%.2f", loan.getInterestRate()),
+                TimeFormat.RELATIVE.format(loan.getTimeToPay()),
+                StringUtils.booleanToEmoji(loan.isPaidOff())), false);
         }
 
         var builder = new PaginatedEmbed.Builder(5, contents);

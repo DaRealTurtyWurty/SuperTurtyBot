@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
-abstract class GoFishSubcommand extends SubcommandCommand {
+public abstract class GoFishSubcommand extends SubcommandCommand {
     protected GoFishSubcommand(String name, String description) {
         super(name, description);
     }
@@ -31,8 +31,10 @@ abstract class GoFishSubcommand extends SubcommandCommand {
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 

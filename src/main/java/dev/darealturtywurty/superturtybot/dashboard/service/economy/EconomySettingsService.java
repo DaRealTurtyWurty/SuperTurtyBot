@@ -24,10 +24,9 @@ public final class EconomySettingsService {
 
     public EconomySettingsResponse updateSettings(long guildId, EconomySettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         validateRequest(request);
 
@@ -44,38 +43,33 @@ public final class EconomySettingsService {
 
     private static EconomySettingsResponse toResponse(GuildData guildData) {
         return new EconomySettingsResponse(
-                guildData.getEconomyCurrency(),
-                guildData.isEconomyEnabled(),
-                guildData.isDonateEnabled(),
-                guildData.getDefaultEconomyBalance().toString(),
-                guildData.getIncomeTax()
-        );
+            guildData.getEconomyCurrency(),
+            guildData.isEconomyEnabled(),
+            guildData.isDonateEnabled(),
+            guildData.getDefaultEconomyBalance().toString(),
+            guildData.getIncomeTax());
     }
 
     private static void validateRequest(EconomySettingsRequest request) {
-        if (request.getEconomyCurrency() == null || request.getEconomyCurrency().trim().isEmpty()) {
+        if (request.getEconomyCurrency() == null || request.getEconomyCurrency().trim().isEmpty())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_economy_currency",
-                    "Economy currency is required.");
-        }
+                "Economy currency is required.");
 
-        if (request.getEconomyCurrency().trim().length() > 16) {
+        if (request.getEconomyCurrency().trim().length() > 16)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_economy_currency",
-                    "Economy currency must be 16 characters or fewer.");
-        }
+                "Economy currency must be 16 characters or fewer.");
 
         try {
-            if (new BigInteger(request.getDefaultEconomyBalance().trim()).signum() <= 0) {
+            if (new BigInteger(request.getDefaultEconomyBalance().trim()).signum() <= 0)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_default_economy_balance",
-                        "Default economy balance must be greater than zero.");
-            }
+                    "Default economy balance must be greater than zero.");
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_default_economy_balance",
-                    "Default economy balance must be a valid whole number.");
+                "Default economy balance must be a valid whole number.");
         }
 
-        if (request.getIncomeTax() < 0F || request.getIncomeTax() > 1F) {
+        if (request.getIncomeTax() < 0F || request.getIncomeTax() > 1F)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_income_tax",
-                    "Income tax must be between 0 and 1.");
-        }
+                "Income tax must be between 0 and 1.");
     }
 }

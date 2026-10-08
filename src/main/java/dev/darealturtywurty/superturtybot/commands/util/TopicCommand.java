@@ -22,7 +22,7 @@ public class TopicCommand extends CoreCommand {
 
     static {
         new Thread(() -> {
-            try(final InputStream stream = TurtyBot.loadResource("topics.txt")) {
+            try (final InputStream stream = TurtyBot.loadResource("topics.txt")) {
                 if (stream == null)
                     throw new IllegalStateException("Unable to load topics.txt");
 
@@ -64,15 +64,14 @@ public class TopicCommand extends CoreCommand {
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 5L);
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        event.reply(getRandomTopic()).mentionRepliedUser(false).queue(ignored ->
-                QuestManager.INSTANCE.recordConversationPromptUsed(
-                        event.getGuild(),
-                        event.getUser(),
-                        event.getIdLong()
-                ));
+        event.reply(getRandomTopic()).mentionRepliedUser(false)
+            .queue(_ -> QuestManager.INSTANCE.recordConversationPromptUsed(
+                event.getGuild(),
+                event.getUser(),
+                event.getIdLong()));
     }
 
     public static String getRandomTopic() {

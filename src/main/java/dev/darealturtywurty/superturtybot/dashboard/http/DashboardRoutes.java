@@ -106,38 +106,38 @@ public final class DashboardRoutes {
     private final VoiceChannelNotifierDashboardService voiceChannelNotifierDashboardService;
 
     public DashboardRoutes(
-            DashboardConfig config,
-            JDA jda,
-            GuildConfigCatalogService catalogService,
-            GuildSettingsService guildSettingsService,
-            DashboardSessionService sessionService,
-            DashboardUserProfileService userProfileService,
-            StarboardSettingsService starboardSettingsService,
-            LevellingSettingsService levellingSettingsService,
-            LoggingSettingsService loggingSettingsService,
-            WarningsSettingsService warningsSettingsService,
-            EconomySettingsService economySettingsService,
-            WelcomeSettingsService welcomeSettingsService,
-            BirthdaySettingsService birthdaySettingsService,
-            SuggestionsSettingsService suggestionsSettingsService,
-            CollectablesSettingsService collectablesSettingsService,
-            OptInChannelsSettingsService optInChannelsSettingsService,
-            SuggestionsDashboardService suggestionsDashboardService,
-            AiSettingsService aiSettingsService,
-            ChatRevivalSettingsService chatRevivalSettingsService,
-            NsfwSettingsService nsfwSettingsService,
-            ThreadSettingsService threadSettingsService,
-            MiscSettingsService miscSettingsService,
-            CountingSettingsService countingSettingsService,
-            QuotesDashboardService quotesDashboardService,
-            TagsDashboardService tagsDashboardService,
-            AutomodSettingsService automodSettingsService,
-            ModmailSettingsService modmailSettingsService,
-            ModmailTicketsService modmailTicketsService,
-            NotifiersService notifiersService,
-            ReportsService reportsService,
-            StickyMessagesService stickyMessagesService,
-            VoiceChannelNotifierDashboardService voiceChannelNotifierDashboardService
+        DashboardConfig config,
+        JDA jda,
+        GuildConfigCatalogService catalogService,
+        GuildSettingsService guildSettingsService,
+        DashboardSessionService sessionService,
+        DashboardUserProfileService userProfileService,
+        StarboardSettingsService starboardSettingsService,
+        LevellingSettingsService levellingSettingsService,
+        LoggingSettingsService loggingSettingsService,
+        WarningsSettingsService warningsSettingsService,
+        EconomySettingsService economySettingsService,
+        WelcomeSettingsService welcomeSettingsService,
+        BirthdaySettingsService birthdaySettingsService,
+        SuggestionsSettingsService suggestionsSettingsService,
+        CollectablesSettingsService collectablesSettingsService,
+        OptInChannelsSettingsService optInChannelsSettingsService,
+        SuggestionsDashboardService suggestionsDashboardService,
+        AiSettingsService aiSettingsService,
+        ChatRevivalSettingsService chatRevivalSettingsService,
+        NsfwSettingsService nsfwSettingsService,
+        ThreadSettingsService threadSettingsService,
+        MiscSettingsService miscSettingsService,
+        CountingSettingsService countingSettingsService,
+        QuotesDashboardService quotesDashboardService,
+        TagsDashboardService tagsDashboardService,
+        AutomodSettingsService automodSettingsService,
+        ModmailSettingsService modmailSettingsService,
+        ModmailTicketsService modmailTicketsService,
+        NotifiersService notifiersService,
+        ReportsService reportsService,
+        StickyMessagesService stickyMessagesService,
+        VoiceChannelNotifierDashboardService voiceChannelNotifierDashboardService
     ) {
         this.config = config;
         this.jda = jda;
@@ -176,41 +176,44 @@ public final class DashboardRoutes {
     public void register(Javalin app) {
         app.before(this::handleBefore);
 
-        app.exception(DashboardApiException.class, (exception, ctx) ->
-                writeError(ctx, exception.status(), exception.errorCode(), exception.getMessage()));
+        app.exception(DashboardApiException.class,
+            (exception, ctx) -> writeError(ctx, exception.status(), exception.errorCode(), exception.getMessage()));
 
         app.exception(Exception.class, (exception, ctx) -> {
-            Constants.LOGGER.error("Unhandled dashboard request failure for {} {}", ctx.req().getMethod(), ctx.path(), exception);
+            Constants.LOGGER.error("Unhandled dashboard request failure for {} {}", ctx.req().getMethod(), ctx.path(),
+                exception);
             writeError(ctx, HttpStatus.INTERNAL_SERVER_ERROR, "dashboard_internal_error",
-                    "The dashboard service hit an unexpected error.");
+                "The dashboard service hit an unexpected error.");
         });
 
-        app.error(HttpStatus.NOT_FOUND.getCode(), "application/json", ctx ->
-                writeError(ctx, HttpStatus.NOT_FOUND, "dashboard_not_found", "The requested dashboard route does not exist."));
+        app.error(HttpStatus.NOT_FOUND.getCode(), "application/json", ctx -> writeError(ctx, HttpStatus.NOT_FOUND,
+            "dashboard_not_found", "The requested dashboard route does not exist."));
 
         app.get("/api/health", this::getHealth);
         app.get("/api/config/options", ctx -> ctx.json(this.catalogService.listOptions()));
-        app.get("/api/guilds/{guildId}/config", ctx -> ctx.json(this.guildSettingsService.getGuildConfigSnapshot(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config",
+            ctx -> ctx.json(this.guildSettingsService.getGuildConfigSnapshot(parseGuildId(ctx))));
         app.get("/api/guilds/{guildId}/channels", ctx -> ctx.json(this.guildSettingsService.getGuildChannels(
-                parseGuildId(ctx),
-                parseUserIdQuery(ctx)
-        )));
+            parseGuildId(ctx),
+            parseUserIdQuery(ctx))));
         app.get("/api/guilds/{guildId}/roles", ctx -> ctx.json(this.guildSettingsService.getGuildRoles(
-                parseGuildId(ctx),
-                parseUserIdQuery(ctx)
-        )));
+            parseGuildId(ctx),
+            parseUserIdQuery(ctx))));
         app.get("/api/guilds/{guildId}/members", ctx -> ctx.json(this.guildSettingsService.searchGuildMembers(
-                parseGuildId(ctx),
-                parseUserIdQuery(ctx),
-                ctx.queryParam("query")
-        )));
-        app.get("/api/guilds/{guildId}/config/starboard", ctx -> ctx.json(this.starboardSettingsService.getSettings(parseGuildId(ctx))));
+            parseGuildId(ctx),
+            parseUserIdQuery(ctx),
+            ctx.queryParam("query"))));
+        app.get("/api/guilds/{guildId}/config/starboard",
+            ctx -> ctx.json(this.starboardSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/starboard", this::updateStarboardSettings);
-        app.get("/api/guilds/{guildId}/config/levelling", ctx -> ctx.json(this.levellingSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/levelling",
+            ctx -> ctx.json(this.levellingSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/levelling", this::updateLevellingSettings);
-        app.get("/api/guilds/{guildId}/config/logging", ctx -> ctx.json(this.loggingSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/logging",
+            ctx -> ctx.json(this.loggingSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/logging", this::updateLoggingSettings);
-        app.get("/api/guilds/{guildId}/warnings", ctx -> ctx.json(this.warningsSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/warnings",
+            ctx -> ctx.json(this.warningsSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/warnings", this::updateWarningsSettings);
         app.get("/api/guilds/{guildId}/warnings/users/{userId}", this::getWarningHistory);
         app.get("/api/guilds/{guildId}/warnings/{warningUuid}", this::getWarningDetail);
@@ -220,71 +223,83 @@ public final class DashboardRoutes {
         app.put("/api/guilds/{guildId}/notifiers/{type}", this::updateNotifier);
         app.delete("/api/guilds/{guildId}/notifiers/{type}", this::deleteNotifier);
         app.get("/api/guilds/{guildId}/reports/{userId}", this::getReportsForUser);
-        app.get("/api/guilds/{guildId}/config/economy", ctx -> ctx.json(this.economySettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/economy",
+            ctx -> ctx.json(this.economySettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/economy", this::updateEconomySettings);
-        app.get("/api/guilds/{guildId}/config/welcome", ctx -> ctx.json(this.welcomeSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/welcome",
+            ctx -> ctx.json(this.welcomeSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/welcome", this::updateWelcomeSettings);
-        app.get("/api/guilds/{guildId}/config/birthday", ctx -> ctx.json(this.birthdaySettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/birthday",
+            ctx -> ctx.json(this.birthdaySettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/birthday", this::updateBirthdaySettings);
-        app.get("/api/guilds/{guildId}/config/collectables", ctx -> ctx.json(this.collectablesSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/collectables",
+            ctx -> ctx.json(this.collectablesSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/collectables", this::updateCollectablesSettings);
         app.get("/api/guilds/{guildId}/config/collectables/{type}", this::getCollectablesPage);
         app.get("/api/collectables/{type}/{name}/image", this::getCollectableImage);
-        app.get("/api/guilds/{guildId}/config/opt-in-channels", ctx -> ctx.json(this.optInChannelsSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/opt-in-channels",
+            ctx -> ctx.json(this.optInChannelsSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/opt-in-channels", this::updateOptInChannelsSettings);
-        app.get("/api/guilds/{guildId}/config/suggestions", ctx -> ctx.json(this.suggestionsSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/suggestions",
+            ctx -> ctx.json(this.suggestionsSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/suggestions", this::updateSuggestionsSettings);
         app.get("/api/guilds/{guildId}/suggestions", ctx -> ctx.json(this.suggestionsDashboardService.getSuggestions(
-                parseGuildId(ctx),
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 10)
-        )));
+            parseGuildId(ctx),
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 10))));
         app.patch("/api/guilds/{guildId}/suggestions/{messageId}", this::moderateSuggestion);
         app.delete("/api/guilds/{guildId}/suggestions/{messageId}", this::deleteSuggestion);
-        app.get("/api/guilds/{guildId}/config/ai", ctx -> ctx.json(this.aiSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/ai",
+            ctx -> ctx.json(this.aiSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/ai", this::updateAiSettings);
-        app.get("/api/guilds/{guildId}/config/chat-revival", ctx -> ctx.json(this.chatRevivalSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/chat-revival",
+            ctx -> ctx.json(this.chatRevivalSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/chat-revival", this::updateChatRevivalSettings);
-        app.get("/api/guilds/{guildId}/config/nsfw", ctx -> ctx.json(this.nsfwSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/nsfw",
+            ctx -> ctx.json(this.nsfwSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/nsfw", this::updateNsfwSettings);
-        app.get("/api/guilds/{guildId}/config/threads", ctx -> ctx.json(this.threadSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/threads",
+            ctx -> ctx.json(this.threadSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/threads", this::updateThreadSettings);
-        app.get("/api/guilds/{guildId}/config/misc", ctx -> ctx.json(this.miscSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/misc",
+            ctx -> ctx.json(this.miscSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/misc", this::updateMiscSettings);
         app.get("/api/guilds/{guildId}/quotes", ctx -> ctx.json(this.quotesDashboardService.getQuotes(
-                parseGuildId(ctx),
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 10)
-        )));
+            parseGuildId(ctx),
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 10))));
         app.delete("/api/guilds/{guildId}/quotes/{quoteNumber}", this::deleteQuote);
         app.get("/api/guilds/{guildId}/tags", ctx -> ctx.json(this.tagsDashboardService.getTags(
-                parseGuildId(ctx),
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 10)
-        )));
+            parseGuildId(ctx),
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 10))));
         app.post("/api/guilds/{guildId}/tags", this::createTag);
         app.delete("/api/guilds/{guildId}/tags/{tagName}", this::deleteTag);
-        app.get("/api/guilds/{guildId}/config/automod", ctx -> ctx.json(this.automodSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/automod",
+            ctx -> ctx.json(this.automodSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/automod", this::updateAutomodSettings);
-        app.get("/api/guilds/{guildId}/config/modmail", ctx -> ctx.json(this.modmailSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/config/modmail",
+            ctx -> ctx.json(this.modmailSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/modmail", this::updateModmailSettings);
         app.get("/api/guilds/{guildId}/modmail/tickets", ctx -> ctx.json(this.modmailTicketsService.listTickets(
-                parseGuildId(ctx),
-                ctx.queryParam("status")
-        )));
+            parseGuildId(ctx),
+            ctx.queryParam("status"))));
         app.get("/api/guilds/{guildId}/modmail/tickets/{ticketNumber}", this::getModmailTicket);
-        app.get("/api/guilds/{guildId}/sticky-messages", ctx -> ctx.json(this.stickyMessagesService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/sticky-messages",
+            ctx -> ctx.json(this.stickyMessagesService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/sticky-messages", this::upsertStickyMessage);
         app.delete("/api/guilds/{guildId}/sticky-messages/{channelId}", this::deleteStickyMessage);
-        app.get("/api/guilds/{guildId}/counting", ctx -> ctx.json(this.countingSettingsService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/counting",
+            ctx -> ctx.json(this.countingSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/counting", this::upsertCountingChannel);
         app.delete("/api/guilds/{guildId}/counting/{channelId}", this::deleteCountingChannel);
-        app.get("/api/guilds/{guildId}/voice-channel-notifiers", ctx ->
-                ctx.json(this.voiceChannelNotifierDashboardService.getSettings(parseGuildId(ctx))));
+        app.get("/api/guilds/{guildId}/voice-channel-notifiers",
+            ctx -> ctx.json(this.voiceChannelNotifierDashboardService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/voice-channel-notifiers", this::upsertVoiceChannelNotifier);
         app.delete("/api/guilds/{guildId}/voice-channel-notifiers/{voiceChannelId}", this::deleteVoiceChannelNotifier);
 
-        app.get("/api/users/{userId}/profile", ctx -> ctx.json(this.userProfileService.getUserProfile(parseSnowflakeId(ctx, "userId", "invalid_user_id"))));
+        app.get("/api/users/{userId}/profile", ctx -> ctx
+            .json(this.userProfileService.getUserProfile(parseSnowflakeId(ctx, "userId", "invalid_user_id"))));
         app.post("/api/sessions", this::createSession);
         app.get("/api/sessions/{sessionId}", this::getSession);
         app.delete("/api/sessions/{sessionId}", this::deleteSession);
@@ -313,18 +328,16 @@ public final class DashboardRoutes {
     private void authenticate(Context ctx) {
         if (!this.config.hasApiKey())
             throw new DashboardApiException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "dashboard_api_key_not_configured",
-                    "The dashboard API key has not been configured on the bot."
-            );
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "dashboard_api_key_not_configured",
+                "The dashboard API key has not been configured on the bot.");
 
         String providedApiKey = extractApiKey(ctx);
         if (providedApiKey == null || !isApiKeyMatch(this.config.apiKey(), providedApiKey))
             throw new DashboardApiException(
-                    HttpStatus.UNAUTHORIZED,
-                    "dashboard_invalid_api_key",
-                    "The dashboard API key was missing or invalid."
-            );
+                HttpStatus.UNAUTHORIZED,
+                "dashboard_invalid_api_key",
+                "The dashboard API key was missing or invalid.");
     }
 
     private void applyCorsHeaders(Context ctx) {
@@ -340,13 +353,12 @@ public final class DashboardRoutes {
 
     private void getHealth(Context ctx) {
         ctx.json(new DashboardHealthResponse(
-                "ok",
-                Environment.INSTANCE.isDevelopment() ? "development" : "production",
-                this.jda.getStatus().name(),
-                TurtyBot.START_TIME,
-                this.catalogService.listOptions().size(),
-                this.config.publicUrl()
-        ));
+            "ok",
+            Environment.INSTANCE.isDevelopment() ? "development" : "production",
+            this.jda.getStatus().name(),
+            TurtyBot.START_TIME,
+            this.catalogService.listOptions().size(),
+            this.config.publicUrl()));
     }
 
     private void createSession(Context ctx) {
@@ -451,19 +463,17 @@ public final class DashboardRoutes {
 
     private void getCollectablesPage(Context ctx) {
         ctx.json(this.collectablesSettingsService.getCollectablesPage(
-                parseGuildId(ctx),
-                ctx.pathParam("type"),
-                ctx.queryParam("query"),
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 60)
-        ));
+            parseGuildId(ctx),
+            ctx.pathParam("type"),
+            ctx.queryParam("query"),
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 60)));
     }
 
     private void getCollectableImage(Context ctx) throws Exception {
         var image = this.collectablesSettingsService.getCollectableImage(
-                ctx.pathParam("type"),
-                ctx.pathParam("name")
-        );
+            ctx.pathParam("type"),
+            ctx.pathParam("name"));
         ctx.contentType(image.contentType());
         ctx.header("Content-Length", Long.toString(Files.size(image.path())));
         ctx.header("Cache-Control", "private, max-age=86400");
@@ -487,12 +497,11 @@ public final class DashboardRoutes {
         String messageId = ctx.pathParam("messageId");
         SuggestionActionRequest request = ctx.bodyAsClass(SuggestionActionRequest.class);
         ctx.json(this.suggestionsDashboardService.moderateSuggestion(
-                guildId,
-                messageId,
-                request,
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 10)
-        ));
+            guildId,
+            messageId,
+            request,
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 10)));
     }
 
     private void deleteSuggestion(Context ctx) {
@@ -500,12 +509,11 @@ public final class DashboardRoutes {
         String messageId = ctx.pathParam("messageId");
         SuggestionActionRequest request = ctx.bodyAsClass(SuggestionActionRequest.class);
         ctx.json(this.suggestionsDashboardService.deleteSuggestion(
-                guildId,
-                messageId,
-                request,
-                parsePositiveIntQuery(ctx, "page", 1),
-                parsePositiveIntQuery(ctx, "pageSize", 10)
-        ));
+            guildId,
+            messageId,
+            request,
+            parsePositiveIntQuery(ctx, "page", 1),
+            parsePositiveIntQuery(ctx, "pageSize", 10)));
     }
 
     private void updateAiSettings(Context ctx) {
@@ -618,10 +626,9 @@ public final class DashboardRoutes {
 
     private void getSession(Context ctx) {
         DashboardSessionResponse session = this.sessionService.getSession(parseSessionId(ctx));
-        if (session == null) {
+        if (session == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_session_not_found",
-                    "The dashboard session was missing or expired.");
-        }
+                "The dashboard session was missing or expired.");
 
         ctx.json(session);
     }
@@ -638,10 +645,9 @@ public final class DashboardRoutes {
 
     private static long parseUserIdQuery(Context ctx) {
         String userId = ctx.queryParam("userId");
-        if (userId == null || userId.isBlank()) {
+        if (userId == null || userId.isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_user_id",
-                    "The supplied user ID was missing.");
-        }
+                "The supplied user ID was missing.");
 
         return parseSnowflake(userId, "invalid_user_id");
     }
@@ -659,7 +665,7 @@ public final class DashboardRoutes {
             return parsed;
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, errorCode,
-                    "The supplied ID was not a valid Discord snowflake.");
+                "The supplied ID was not a valid Discord snowflake.");
         }
     }
 
@@ -667,14 +673,13 @@ public final class DashboardRoutes {
         String value = ctx.pathParam(pathParam);
         try {
             int parsed = Integer.parseInt(value);
-            if (parsed <= 0) {
+            if (parsed <= 0)
                 throw new NumberFormatException("Value must be positive.");
-            }
 
             return parsed;
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, errorCode,
-                    "The supplied ID was not a valid positive integer.");
+                "The supplied ID was not a valid positive integer.");
         }
     }
 
@@ -687,49 +692,44 @@ public final class DashboardRoutes {
             return parsed;
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, errorCode,
-                    "The supplied value was not a valid number.");
+                "The supplied value was not a valid number.");
         }
     }
 
     private static int parsePositiveIntQuery(Context ctx, String key, int fallback) {
         String raw = ctx.queryParam(key);
-        if (raw == null || raw.isBlank()) {
+        if (raw == null || raw.isBlank())
             return fallback;
-        }
 
         try {
             return Math.max(1, Integer.parseInt(raw.trim()));
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_query_param",
-                    "The query parameter %s was not a valid positive integer.".formatted(key));
+                "The query parameter %s was not a valid positive integer.".formatted(key));
         }
     }
 
     private static String parseSessionId(Context ctx) {
         String sessionId = ctx.pathParam("sessionId");
-        if (sessionId == null || sessionId.isBlank()) {
+        if (sessionId == null || sessionId.isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_session_id",
-                    "The supplied dashboard session ID was missing.");
-        }
+                "The supplied dashboard session ID was missing.");
 
         return sessionId;
     }
 
     private static void validateSessionRequest(DashboardSessionUpsertRequest request) {
-        if (request.getSessionId() == null || request.getSessionId().isBlank()) {
+        if (request.getSessionId() == null || request.getSessionId().isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_session_id",
-                    "The supplied dashboard session ID was missing.");
-        }
+                "The supplied dashboard session ID was missing.");
 
-        if (request.getUser() == null || request.getUser().getId() == null || request.getUser().getId().isBlank()) {
+        if (request.getUser() == null || request.getUser().getId() == null || request.getUser().getId().isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_session_user",
-                    "The supplied dashboard session user was missing.");
-        }
+                "The supplied dashboard session user was missing.");
 
-        if (request.getExpiresAtMs() <= request.getCreatedAtMs()) {
+        if (request.getExpiresAtMs() <= request.getCreatedAtMs())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_session_expiry",
-                    "The supplied dashboard session expiry was invalid.");
-        }
+                "The supplied dashboard session expiry was invalid.");
     }
 
     private static String extractApiKey(Context ctx) {
@@ -750,9 +750,8 @@ public final class DashboardRoutes {
 
     private static boolean isApiKeyMatch(String expected, String provided) {
         return MessageDigest.isEqual(
-                expected.getBytes(StandardCharsets.UTF_8),
-                provided.getBytes(StandardCharsets.UTF_8)
-        );
+            expected.getBytes(StandardCharsets.UTF_8),
+            provided.getBytes(StandardCharsets.UTF_8));
     }
 
     private static void writeError(Context ctx, HttpStatus status, String errorCode, String message) {

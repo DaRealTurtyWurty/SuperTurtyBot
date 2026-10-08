@@ -22,9 +22,8 @@ public class DonateCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.USER, "user", "The user to donate money to.", true),
-                new OptionData(OptionType.STRING, "amount", "The amount of money to donate.", true)
-        );
+            new OptionData(OptionType.USER, "user", "The user to donate money to.", true),
+            new OptionData(OptionType.STRING, "amount", "The amount of money to donate.", true));
     }
 
     @Override
@@ -68,29 +67,32 @@ public class DonateCommand extends EconomyCommand {
         }
 
         BigInteger amount = event.getOption("amount", StringUtils.getAsBigInteger(event));
-        if (amount == null) return;
+        if (amount == null)
+            return;
         if (amount.signum() <= 0) {
             event.getHook().editOriginal("❌ You must donate at least %s1!"
-                    .formatted(config.getEconomyCurrency())).queue();
+                .formatted(config.getEconomyCurrency())).queue();
             return;
         }
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot donate money! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot donate money! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
         if (account.getNextDonate() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can donate again %s!"
-                    .formatted(TimeFormat.RELATIVE.format(account.getNextDonate()))).queue();
+                .formatted(TimeFormat.RELATIVE.format(account.getNextDonate()))).queue();
             return;
         }
 
         if (account.getBank().compareTo(amount) < 0) {
             event.getHook().editOriginal("❌ You are missing %s!"
-                    .formatted(StringUtils.numberFormat(amount.subtract(account.getBank()), config))).queue();
+                .formatted(StringUtils.numberFormat(amount.subtract(account.getBank()), config))).queue();
             return;
         }
 
@@ -107,9 +109,9 @@ public class DonateCommand extends EconomyCommand {
         EconomyManager.updateAccount(otherAccount);
 
         event.getHook().editOriginal("✅ %s has donated %s to %s!"
-                        .formatted(event.getUser().getAsMention(),
-                                StringUtils.numberFormat(amount, config),
-                                member.getAsMention()))
-                .queue();
+            .formatted(event.getUser().getAsMention(),
+                StringUtils.numberFormat(amount, config),
+                member.getAsMention()))
+            .queue();
     }
 }

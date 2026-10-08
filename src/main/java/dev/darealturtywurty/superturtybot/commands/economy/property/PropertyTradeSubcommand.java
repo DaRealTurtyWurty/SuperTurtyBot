@@ -64,6 +64,6 @@ public class PropertyTradeSubcommand extends PropertySubcommand {
         EconomyManager.updateAccount(otherAccount);
 
         PropertyCommand.hookReply(event, "✅ Trade complete! You swapped %s with %s."
-                .formatted(yourProperty.getName(), otherProperty.getName()));
+            .formatted(yourProperty.getName(), otherProperty.getName()));
     }
 }

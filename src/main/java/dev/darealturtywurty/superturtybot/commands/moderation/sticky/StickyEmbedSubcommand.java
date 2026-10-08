@@ -32,14 +32,16 @@ public class StickyEmbedSubcommand extends StickySubcommand {
             return;
         }
 
-        UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", event.getUser().getIdLong())).first();
+        UserEmbeds userEmbeds = Database.getDatabase().userEmbeds.find(Filters.eq("user", event.getUser().getIdLong()))
+            .first();
         if (userEmbeds == null || userEmbeds.getEmbed(name).isEmpty()) {
             reply(event, "❌ You do not have a saved embed with that name!", false, true);
             return;
         }
 
         String embedJson = userEmbeds.getEmbed(name).get().build().toData().toString();
-        StickyMessage sticky = new StickyMessage(event.getGuild().getIdLong(), channel.getIdLong(), event.getUser().getIdLong(), null, embedJson);
+        var sticky = new StickyMessage(event.getGuild().getIdLong(), channel.getIdLong(), event.getUser().getIdLong(),
+            null, embedJson);
         StickyMessageManager.saveSticky(sticky);
         StickyMessageManager.repostSticky(event.getGuild(), channel, sticky);
         reply(event, "✅ Sticky embed `" + name + "` configured for " + channel.getAsMention() + ".", false, true);

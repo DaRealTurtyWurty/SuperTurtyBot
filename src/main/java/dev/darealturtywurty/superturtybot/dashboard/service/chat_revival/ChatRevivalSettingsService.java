@@ -28,10 +28,9 @@ public final class ChatRevivalSettingsService {
 
     public ChatRevivalSettingsResponse updateSettings(long guildId, ChatRevivalSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         validateRequest(guild, request);
 
@@ -48,37 +47,32 @@ public final class ChatRevivalSettingsService {
 
     private static ChatRevivalSettingsResponse toResponse(GuildData guildData) {
         return new ChatRevivalSettingsResponse(
-                guildData.isChatRevivalEnabled(),
-                guildData.getChatRevivalChannel() == 0L ? null : Long.toString(guildData.getChatRevivalChannel()),
-                guildData.getChatRevivalTime(),
-                ChatRevivalType.fromStorage(guildData.getChatRevivalTypes()).stream()
-                        .map(type -> type.name().toLowerCase(Locale.ROOT))
-                        .toList(),
-                guildData.isChatRevivalAllowNsfw()
-        );
+            guildData.isChatRevivalEnabled(),
+            guildData.getChatRevivalChannel() == 0L ? null : Long.toString(guildData.getChatRevivalChannel()),
+            guildData.getChatRevivalTime(),
+            ChatRevivalType.fromStorage(guildData.getChatRevivalTypes()).stream()
+                .map(type -> type.name().toLowerCase(Locale.ROOT))
+                .toList(),
+            guildData.isChatRevivalAllowNsfw());
     }
 
     private static void validateRequest(Guild guild, ChatRevivalSettingsRequest request) {
-        if (request.getChatRevivalTime() <= 0) {
+        if (request.getChatRevivalTime() <= 0)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_chat_revival_time",
-                    "Chat revival time must be greater than zero hours.");
-        }
+                "Chat revival time must be greater than zero hours.");
 
         long channelId = parseChannelId(request.getChatRevivalChannelId());
-        if (request.isChatRevivalEnabled() && channelId == 0L) {
+        if (request.isChatRevivalEnabled() && channelId == 0L)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "missing_chat_revival_channel",
-                    "A chat revival channel is required while chat revival is enabled.");
-        }
+                "A chat revival channel is required while chat revival is enabled.");
 
-        if (channelId != 0L && guild.getTextChannelById(channelId) == null) {
+        if (channelId != 0L && guild.getTextChannelById(channelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_chat_revival_channel",
-                    "The supplied chat revival channel was not a text channel in this guild.");
-        }
+                "The supplied chat revival channel was not a text channel in this guild.");
 
-        if (normalizeTypes(request.getChatRevivalTypes()).isEmpty()) {
+        if (normalizeTypes(request.getChatRevivalTypes()).isEmpty())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_chat_revival_types",
-                    "At least one chat revival type is required.");
-        }
+                "At least one chat revival type is required.");
     }
 
     private static long parseChannelId(String channelId) {
@@ -90,7 +84,7 @@ public final class ChatRevivalSettingsService {
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_channel_id",
-                    "One of the supplied channel IDs was not a valid Discord snowflake.");
+                "One of the supplied channel IDs was not a valid Discord snowflake.");
         }
     }
 
@@ -107,7 +101,7 @@ public final class ChatRevivalSettingsService {
                 types.add(ChatRevivalType.valueOf(inputType.trim().toUpperCase(Locale.ROOT)));
             } catch (IllegalArgumentException exception) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_chat_revival_type",
-                        "One or more chat revival types were not recognized.");
+                    "One or more chat revival types were not recognized.");
             }
         }
 
@@ -119,8 +113,8 @@ public final class ChatRevivalSettingsService {
             return "";
 
         return types.stream()
-                .map(type -> type.name().toLowerCase(Locale.ROOT))
-                .reduce((left, right) -> left + ";" + right)
-                .orElse("");
+            .map(type -> type.name().toLowerCase(Locale.ROOT))
+            .reduce((left, right) -> left + ";" + right)
+            .orElse("");
     }
 }

@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 
 import java.math.BigInteger;
 
-abstract class BlackjackSubcommand extends SubcommandCommand {
+public abstract class BlackjackSubcommand extends SubcommandCommand {
     protected BlackjackSubcommand(String name, String description) {
         super(name, description);
     }
@@ -34,8 +34,10 @@ abstract class BlackjackSubcommand extends SubcommandCommand {
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot gamble! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 

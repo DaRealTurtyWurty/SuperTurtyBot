@@ -52,20 +52,20 @@ public class LGBTifyCommand extends CoreCommand {
     protected void runUserCtx(UserContextInteractionEvent event) {
         Guild guild = event.getGuild();
         Member target = event.getTargetMember();
-        if(!event.isFromGuild() || guild == null || target == null) {
+        if (!event.isFromGuild() || guild == null || target == null) {
             event.reply("❌ This command can only be used in a server!")
-                    .mentionRepliedUser(false)
-                    .setEphemeral(true)
-                    .queue();
+                .mentionRepliedUser(false)
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         event.deferReply().queue();
 
         Either<BufferedImage, HttpStatus> response = ApiHandler.lgbtify(target.getEffectiveAvatar().getUrl());
-        if(response.isRight()) {
+        if (response.isRight()) {
             event.getHook().editOriginal("❌ Failed to LGBTify user!")
-                    .queue();
+                .queue();
             Constants.LOGGER.error("Failed to LGBTify user: {}", response.getRight());
             return;
         }
@@ -75,7 +75,7 @@ public class LGBTifyCommand extends CoreCommand {
             ImageIO.write(response.getLeft(), "png", baos);
         } catch (IOException exception) {
             event.getHook().editOriginal("❌ Failed to LGBTify user!")
-                    .queue();
+                .queue();
             Constants.LOGGER.error("Failed to LGBTify user: {}", exception.getMessage());
             return;
         }
@@ -84,8 +84,8 @@ public class LGBTifyCommand extends CoreCommand {
 
         var upload = FileUpload.fromData(data, "lgbt.png");
         event.getHook().sendMessage("Here is an LGBTified version of %s!".formatted(target.getAsMention()))
-                .setAllowedMentions(null)
-                .addFiles(upload)
-                .queue();
+            .setAllowedMentions(null)
+            .addFiles(upload)
+            .queue();
     }
 }

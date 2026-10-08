@@ -48,9 +48,12 @@ public class BalanceCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access your balance! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+        if (account.isImprisoned()) {
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot access your balance! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -62,30 +65,33 @@ public class BalanceCommand extends EconomyCommand {
         embed.setTitle("Economy Balance for: " + member.getEffectiveName());
         if (!detailed) {
             embed.setDescription("**Wallet:** %s%n**Bank:** %s%n**Total Balance:** %s%n".formatted(
-                    StringUtils.numberFormat(account.getWallet(), config),
-                    StringUtils.numberFormat(account.getBank(), config),
-                    StringUtils.numberFormat(EconomyManager.getBalance(account), config)));
+                StringUtils.numberFormat(account.getWallet(), config),
+                StringUtils.numberFormat(account.getBank(), config),
+                StringUtils.numberFormat(EconomyManager.getBalance(account), config)));
         } else {
             embed.setDescription("**Wallet:** %s%n**Bank:** %s%n**Total Balance:** %s%n".formatted(
-                    StringUtils.numberFormatExact(account.getWallet(), config),
-                    StringUtils.numberFormatExact(account.getBank(), config),
-                    StringUtils.numberFormatExact(EconomyManager.getBalance(account), config)));
+                StringUtils.numberFormatExact(account.getWallet(), config),
+                StringUtils.numberFormatExact(account.getBank(), config),
+                StringUtils.numberFormatExact(EconomyManager.getBalance(account), config)));
         }
 
         BigInteger betWins = account.getTotalBetWin();
         BigInteger betLosses = account.getTotalBetLoss();
         embed.addField("Bet Losses",
-                !detailed ? StringUtils.numberFormat(betLosses.abs(), config) : StringUtils.numberFormatExact(betLosses.abs(), config),
-                true);
+            !detailed
+                ? StringUtils.numberFormat(betLosses.abs(), config)
+                : StringUtils.numberFormatExact(betLosses.abs(), config),
+            true);
         embed.addField("Bet Wins",
-                !detailed ? StringUtils.numberFormat(betWins, config) : StringUtils.numberFormatExact(betWins, config),
-                true);
+            !detailed ? StringUtils.numberFormat(betWins, config) : StringUtils.numberFormatExact(betWins, config),
+            true);
 
         BigInteger betTotal = betWins.subtract(betLosses);
         embed.addField("Bet Total",
-                !detailed? (betTotal.signum() < 0 ? "-" : "+") + StringUtils.numberFormat(betTotal.abs(), config) :
-                        (betTotal.signum() < 0 ? "-" : "+") + StringUtils.numberFormatExact(betTotal.abs(), config),
-                true);
+            !detailed
+                ? (betTotal.signum() < 0 ? "-" : "+") + StringUtils.numberFormat(betTotal.abs(), config)
+                : (betTotal.signum() < 0 ? "-" : "+") + StringUtils.numberFormatExact(betTotal.abs(), config),
+            true);
 
         embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 

@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
  * Handles invite filtering for whitelisted channels only.
  */
 public class DiscordInviteGuard {
-    private static final Pattern INVITE_REGEX = Pattern.compile("(https?://)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com/invite)/[^ /]+?(?=\\b)");
+    private static final Pattern INVITE_REGEX = Pattern
+        .compile("(https?://)?(www\\.)?(discord\\.(gg|io|me|li)|discordapp\\.com/invite)/[^ /]+?(?=\\b)");
 
     public void handleMessage(Message message) {
         if (!message.isFromGuild())
@@ -31,9 +32,9 @@ public class DiscordInviteGuard {
 
         if (INVITE_REGEX.matcher(message.getContentRaw()).find()) {
             message.delete()
-                    .queue(success -> message.getChannel()
-                            .sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!")
-                            .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
+                .queue(success -> message.getChannel()
+                    .sendMessage(message.getAuthor().getAsMention() + " No invite links allowed!")
+                    .queue(msg -> msg.delete().queueAfter(15, TimeUnit.SECONDS)));
         }
     }
 }

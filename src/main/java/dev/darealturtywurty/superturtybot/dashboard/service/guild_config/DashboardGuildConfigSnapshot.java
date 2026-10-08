@@ -5,8 +5,8 @@ import dev.darealturtywurty.superturtybot.dashboard.service.discord.DashboardGui
 import java.util.Map;
 
 public record DashboardGuildConfigSnapshot(
-        DashboardGuildInfo guild,
-        boolean persisted,
-        Map<String, Object> config
+    DashboardGuildInfo guild,
+    boolean persisted,
+    Map<String, Object> config
 ) {
 }

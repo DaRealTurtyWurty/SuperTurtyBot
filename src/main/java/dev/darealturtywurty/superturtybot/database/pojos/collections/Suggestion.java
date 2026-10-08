@@ -15,10 +15,10 @@ public class Suggestion {
     private long guild;
     private long user;
     private long message;
-    
+
     private long createdAt;
     private List<SuggestionResponse> responses = new ArrayList<>();
-    
+
     public Suggestion(long guildId, long authorId, long messageId, long createdAt) {
         this();
         this.guild = guildId;

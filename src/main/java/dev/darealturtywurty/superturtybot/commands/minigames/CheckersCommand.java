@@ -41,52 +41,57 @@ public class CheckersCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
-    private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(CheckersCommand.Game game, ThreadChannel channel) {
+    private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(
+        CheckersCommand.Game game,
+        ThreadChannel channel
+    ) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event -> {
-                    if (!event.isFromGuild() ||
-                            event.getGuild().getIdLong() != game.getGuildId() ||
-                            event.getChannel().getIdLong() != game.getThreadId() ||
-                            event.getAuthor().isBot() ||
-                            event.getAuthor().isSystem() ||
-                            event.isWebhookMessage())
-                        return false;
+            .condition(event -> {
+                if (!event.isFromGuild() ||
+                    event.getGuild().getIdLong() != game.getGuildId() ||
+                    event.getChannel().getIdLong() != game.getThreadId() ||
+                    event.getAuthor().isBot() ||
+                    event.getAuthor().isSystem() ||
+                    event.isWebhookMessage())
+                    return false;
 
-                    return game.isTurn(event.getAuthor().getIdLong());
-                })
-                .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> skipTurn(game, channel))
-                .failure(() -> {
-                    channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                            ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
-                    GAMES.remove(game);
-                })
-                .success(event -> handleMessageReceived(event, game, channel));
+                return game.isTurn(event.getAuthor().getIdLong());
+            })
+            .timeout(1, TimeUnit.MINUTES)
+            .timeoutAction(() -> skipTurn(game, channel))
+            .failure(() -> {
+                channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
+                    _ -> channel.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .success(event -> handleMessageReceived(event, game, channel));
     }
 
     private static void skipTurn(CheckersCommand.Game game, ThreadChannel channel) {
         game.switchTurn();
-        channel.sendMessage("❌ You took too long to move, it is now <@%d>'s turn!".formatted(game.getCurrentTurn())).queue();
+        channel.sendMessage("❌ You took too long to move, it is now <@%d>'s turn!".formatted(game.getCurrentTurn()))
+            .queue();
 
         if (game.isBot() && !game.isTurn(game.getOpponentId())) {
-            Pair<Pair<Integer, Integer>,Pair<Integer, Integer>> botMove = game.playBot();
-            String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'), botMove.getLeft().getLeft() + 1);
-            String botTo = "%s%s".formatted((char) (botMove.getRight().getRight() + 'A'), botMove.getRight().getLeft() + 1);
+            Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> botMove = game.playBot();
+            String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'),
+                botMove.getLeft().getLeft() + 1);
+            String botTo = "%s%s".formatted((char) (botMove.getRight().getRight() + 'A'),
+                botMove.getRight().getLeft() + 1);
 
             if (game.hasWon(game.getOpponentId())) {
                 channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
-                        .setFiles(createFileUpload(game, channel))
-                        .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                    .setFiles(createFileUpload(game, channel))
+                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
 
                 if (!game.isBot()) {
                     QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                            channel.getGuild(),
-                            "checkers",
-                            game.getThreadId(),
-                            game.getUserId(),
-                            game.getOpponentId(),
-                            game.getOpponentId()
-                    );
+                        channel.getGuild(),
+                        "checkers",
+                        game.getThreadId(),
+                        game.getUserId(),
+                        game.getOpponentId(),
+                        game.getOpponentId());
                 }
 
                 GAMES.remove(game);
@@ -94,16 +99,22 @@ public class CheckersCommand extends CoreCommand {
                 return;
             }
 
-            channel.sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", game.getOpponentId(), botFrom, botTo, game.getCurrentTurn())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+            channel
+                .sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", game.getOpponentId(), botFrom,
+                    botTo, game.getCurrentTurn())
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> createEventWaiter(game, channel).build());
             return;
         }
 
         createEventWaiter(game, channel).build();
     }
 
-    private static void handleMessageReceived(MessageReceivedEvent event, CheckersCommand.Game game, ThreadChannel channel) {
+    private static void handleMessageReceived(
+        MessageReceivedEvent event,
+        CheckersCommand.Game game,
+        ThreadChannel channel
+    ) {
         String data = event.getMessage().getContentRaw().trim().toUpperCase();
         if (data.equalsIgnoreCase("skip")) {
             skipTurn(game, channel);
@@ -113,21 +124,23 @@ public class CheckersCommand extends CoreCommand {
         if (data.equalsIgnoreCase("cancel")) {
             if (game.getSelectedPiece() == null) {
                 channel.sendMessage("❌ You do not currently have a piece selected!")
-                        .queue(ignored -> createEventWaiter(game, channel).build());
+                    .queue(_ -> createEventWaiter(game, channel).build());
                 return;
             }
 
             game.setSelectedPiece(event.getAuthor().getIdLong(), null);
             channel.sendMessage("✅ Successfully cancelled the selected piece! Please select a new piece to move.")
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> createEventWaiter(game, channel).build());
             return;
         }
 
         if (data.equalsIgnoreCase("give up")) {
-            channel.sendMessageFormat("✅ <@%d> has given up! <@%d> has won the game!", event.getAuthor().getIdLong(), game.isTurn(event.getAuthor().getIdLong()) ? game.getOpponentId() : game.getUserId())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+            channel
+                .sendMessageFormat("✅ <@%d> has given up! <@%d> has won the game!", event.getAuthor().getIdLong(),
+                    game.isTurn(event.getAuthor().getIdLong()) ? game.getOpponentId() : game.getUserId())
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
             return;
         }
@@ -177,14 +190,17 @@ public class CheckersCommand extends CoreCommand {
                 return;
             }
 
-            event.getMessage().replyFormat("✅ Selected piece at %s!\nPlease select where you would like to move to.", columnStr + rowStr)
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+            event.getMessage()
+                .replyFormat("✅ Selected piece at %s!\nPlease select where you would like to move to.",
+                    columnStr + rowStr)
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> createEventWaiter(game, channel).build());
             return;
         }
 
         Pair<Integer, Integer> selectedPiece = game.getSelectedPiece();
-        if (!game.makeMove(event.getAuthor().getIdLong(), selectedPiece.getLeft(), selectedPiece.getRight(), row, column)) {
+        if (!game.makeMove(event.getAuthor().getIdLong(), selectedPiece.getLeft(), selectedPiece.getRight(), row,
+            column)) {
             reply(event, "❌ You cannot place a piece there!");
             createEventWaiter(game, channel).build();
             return;
@@ -194,17 +210,16 @@ public class CheckersCommand extends CoreCommand {
 
         if (game.hasWon(event.getAuthor().getIdLong())) {
             channel.sendMessageFormat("✅ <@%d> has won the game!", event.getAuthor().getIdLong())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
             if (!game.isBot()) {
                 QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                        channel.getGuild(),
-                        "checkers",
-                        game.getThreadId(),
-                        game.getUserId(),
-                        game.getOpponentId(),
-                        event.getAuthor().getIdLong()
-                );
+                    channel.getGuild(),
+                    "checkers",
+                    game.getThreadId(),
+                    game.getUserId(),
+                    game.getOpponentId(),
+                    event.getAuthor().getIdLong());
             }
             GAMES.remove(game);
             return;
@@ -212,29 +227,35 @@ public class CheckersCommand extends CoreCommand {
 
         String from = "%s%s".formatted((char) (selectedPiece.getRight() + 'A'), selectedPiece.getLeft() + 1);
         String to = "%s%s".formatted(rowStr, columnStr);
-        channel.sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", event.getAuthor().getIdLong(), from, to, game.getCurrentTurn())
-                .setFiles(createFileUpload(game, channel))
-                .queue();
+        channel
+            .sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", event.getAuthor().getIdLong(),
+                from, to, game.getCurrentTurn())
+            .setFiles(createFileUpload(game, channel))
+            .queue();
 
         if (!game.isBot()) {
             createEventWaiter(game, channel).build();
         } else {
-            Pair<Pair<Integer, Integer>,Pair<Integer, Integer>> botMove = game.playBot();
-            String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'), botMove.getLeft().getLeft() + 1);
-            String botTo = "%s%s".formatted((char) (botMove.getRight().getRight() + 'A'), botMove.getRight().getLeft() + 1);
+            Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> botMove = game.playBot();
+            String botFrom = "%s%s".formatted((char) (botMove.getLeft().getRight() + 'A'),
+                botMove.getLeft().getLeft() + 1);
+            String botTo = "%s%s".formatted((char) (botMove.getRight().getRight() + 'A'),
+                botMove.getRight().getLeft() + 1);
 
             if (game.hasWon(game.getOpponentId())) {
                 channel.sendMessageFormat("✅ <@%d> has won the game!", game.getOpponentId())
-                        .setFiles(createFileUpload(game, channel))
-                        .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                    .setFiles(createFileUpload(game, channel))
+                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
                 GAMES.remove(game);
 
                 return;
             }
 
-            channel.sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", game.getOpponentId(), botFrom, botTo, game.getCurrentTurn())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+            channel
+                .sendMessageFormat("✅ <@%d> has moved %s to %s! It is now <@%d>'s turn!", game.getOpponentId(), botFrom,
+                    botTo, game.getCurrentTurn())
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> createEventWaiter(game, channel).build());
         }
     }
 
@@ -242,7 +263,7 @@ public class CheckersCommand extends CoreCommand {
         BufferedImage image = createImage(channel.getJDA(), game);
         if (image == null) {
             channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
             return null;
         }
@@ -253,7 +274,7 @@ public class CheckersCommand extends CoreCommand {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to write image!", exception);
             channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue());
             GAMES.remove(game);
             return null;
         }
@@ -275,10 +296,12 @@ public class CheckersCommand extends CoreCommand {
                         if (game.getSelectedPiece().getLeft() == row && game.getSelectedPiece().getRight() == column) {
                             graphics.setColor(Color.BLUE);
                         } else {
-                            List<Pair<Integer, Integer>> availableMoves = game.getAvailableMoves(game.getSelectedPiece().getLeft(), game.getSelectedPiece().getRight());
+                            List<Pair<Integer, Integer>> availableMoves = game.getAvailableMoves(
+                                game.getSelectedPiece().getLeft(), game.getSelectedPiece().getRight());
 
                             final int finalRow = row, finalColumn = column;
-                            if (availableMoves.stream().anyMatch(pair -> pair.getLeft() == finalRow && pair.getRight() == finalColumn)) {
+                            if (availableMoves.stream()
+                                .anyMatch(pair -> pair.getLeft() == finalRow && pair.getRight() == finalColumn)) {
                                 graphics.setColor(Color.GREEN);
                             }
                         }
@@ -293,7 +316,9 @@ public class CheckersCommand extends CoreCommand {
 
         try {
             red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar().download().join());
-            yellow = ImageIO.read(game.isBot() ? jda.getSelfUser().getEffectiveAvatar().download().join() : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
+            yellow = ImageIO.read(game.isBot()
+                ? jda.getSelfUser().getEffectiveAvatar().download().join()
+                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
             return null;
@@ -326,12 +351,14 @@ public class CheckersCommand extends CoreCommand {
         keyGraphics.setColor(Color.WHITE);
         for (int row = 0; row < 8; row++) {
             String letter = String.valueOf((char) (row + 'A'));
-            keyGraphics.drawString(letter, 50 - metrics.stringWidth(letter) / 2, row * 100 + 140 + metrics.getDescent() * 2);
+            keyGraphics.drawString(letter, 50 - metrics.stringWidth(letter) / 2,
+                row * 100 + 140 + metrics.getDescent() * 2);
         }
 
         for (int column = 0; column < 8; column++) {
             String letter = String.valueOf(column + 1);
-            keyGraphics.drawString(letter, column * 100 + 150 - metrics.stringWidth(letter) / 2, 940 + metrics.getDescent() * 2);
+            keyGraphics.drawString(letter, column * 100 + 150 - metrics.stringWidth(letter) / 2,
+                940 + metrics.getDescent() * 2);
         }
 
         keyGraphics.dispose();
@@ -386,7 +413,8 @@ public class CheckersCommand extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
@@ -416,44 +444,48 @@ public class CheckersCommand extends CoreCommand {
                 return;
             }
 
-            List<CheckersCommand.Game> games = GAMES.stream().filter(game -> game.getGuildId() == guild.getIdLong()).toList();
+            List<CheckersCommand.Game> games = GAMES.stream().filter(game -> game.getGuildId() == guild.getIdLong())
+                .toList();
 
             // check that the user is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong() || game.getOpponentId() == event.getUser().getIdLong())) {
+            if (games.stream().anyMatch(game -> game.getUserId() == event.getUser().getIdLong()
+                || game.getOpponentId() == event.getUser().getIdLong())) {
                 event.getHook().editOriginal("❌ You are already in a game!").queue();
                 return;
             }
 
             // check that the opponent is not already in a game
-            if (games.stream().anyMatch(game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
+            if (games.stream().anyMatch(
+                game -> game.getUserId() == opponent.getIdLong() || game.getOpponentId() == opponent.getIdLong())) {
                 event.getHook().editOriginal("❌ The opponent you specified is already in a game!").queue();
                 return;
             }
 
             // create the game
-            var game = new CheckersCommand.Game(guild.getIdLong(), event.getChannel().getIdLong(), event.getUser().getIdLong(), opponent.getIdLong(), opponent.isBot());
+            var game = new CheckersCommand.Game(guild.getIdLong(), event.getChannel().getIdLong(),
+                event.getUser().getIdLong(), opponent.getIdLong(), opponent.isBot());
             GAMES.add(game);
 
             // create the thread
             final String threadName = "Checkers - %s vs %s".formatted(event.getUser().getName(), opponent.getName());
             event.getHook().editOriginal("✅ Successfully created a game of Checkers!")
-                    .flatMap(message ->
-                            message.createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
-                    .queue(thread -> {
-                        game.setThreadId(thread.getIdLong());
-                        thread.addThreadMember(event.getUser()).queue();
-                            thread.addThreadMember(opponent).queue();
-                            thread.sendMessageFormat("✅ <@%d> and <@%d> have started a game of Checkers! It is <@%d>'s turn!",
-                                    event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong()).queue(message -> {
-                                game.setMessageId(message.getIdLong());
-                                message.editMessage("Select a piece to move!")
-                                        .setFiles(createFileUpload(game, thread))
-                                        .flatMap(ignored -> message.pin())
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
+                .flatMap(message -> message
+                    .createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
+                .queue(thread -> {
+                    game.setThreadId(thread.getIdLong());
+                    thread.addThreadMember(event.getUser()).queue();
+                    thread.addThreadMember(opponent).queue();
+                    thread.sendMessageFormat("✅ <@%d> and <@%d> have started a game of Checkers! It is <@%d>'s turn!",
+                        event.getUser().getIdLong(), opponent.getIdLong(), event.getUser().getIdLong())
+                        .queue(message -> {
+                            game.setMessageId(message.getIdLong());
+                            message.editMessage("Select a piece to move!")
+                                .setFiles(createFileUpload(game, thread))
+                                .flatMap(_ -> message.pin())
+                                .queue(_ -> createEventWaiter(game, thread).build());
                         });
-                    });
-        }, throwable ->
-                event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
+                });
+        }, throwable -> event.getHook().editOriginal("❌ The opponent you specified is not in this server!").queue());
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -557,22 +589,26 @@ public class CheckersCommand extends CoreCommand {
         public boolean hasWon(long userId) {
             char opponentSymbol = userId == this.userId ? 'O' : 'X';
             return Arrays.stream(board)
-                    .flatMapToInt(row -> new String(row).chars())
-                    .noneMatch(column -> column == opponentSymbol);
+                .flatMapToInt(row -> new String(row).chars())
+                .noneMatch(column -> column == opponentSymbol);
         }
 
-        public Pair<Pair<Integer, Integer>,Pair<Integer, Integer>> playBot() {
+        public Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> playBot() {
             List<Pair<Integer, Integer>> availablePieces = getMovablePiecesForCurrentPlayer();
-            Pair<Integer, Integer> selectedPiece = availablePieces.get(ThreadLocalRandom.current().nextInt(availablePieces.size()));
-            List<Pair<Integer, Integer>> availableMoves = getAvailableMoves(selectedPiece.getLeft(), selectedPiece.getRight());
+            Pair<Integer, Integer> selectedPiece = availablePieces
+                .get(ThreadLocalRandom.current().nextInt(availablePieces.size()));
+            List<Pair<Integer, Integer>> availableMoves = getAvailableMoves(selectedPiece.getLeft(),
+                selectedPiece.getRight());
             while (availableMoves.isEmpty() && !availablePieces.isEmpty()) {
                 availablePieces.remove(selectedPiece);
                 selectedPiece = availablePieces.get(ThreadLocalRandom.current().nextInt(availablePieces.size()));
                 availableMoves = getAvailableMoves(selectedPiece.getLeft(), selectedPiece.getRight());
             }
 
-            Pair<Integer, Integer> selectedMove = availableMoves.get(ThreadLocalRandom.current().nextInt(availableMoves.size()));
-            if (makeMove(this.opponentId, selectedPiece.getLeft(), selectedPiece.getRight(), selectedMove.getLeft(), selectedMove.getRight()))
+            Pair<Integer, Integer> selectedMove = availableMoves
+                .get(ThreadLocalRandom.current().nextInt(availableMoves.size()));
+            if (makeMove(this.opponentId, selectedPiece.getLeft(), selectedPiece.getRight(), selectedMove.getLeft(),
+                selectedMove.getRight()))
                 return Pair.of(selectedPiece, selectedMove);
 
             return playBot();
@@ -589,7 +625,8 @@ public class CheckersCommand extends CoreCommand {
             if (!isTurn(userId))
                 return false;
 
-            if (fromRow < 0 || fromRow >= 8 || fromColumn < 0 || fromColumn >= 8 || toRow < 0 || toRow >= 8 || toColumn < 0 || toColumn >= 8)
+            if (fromRow < 0 || fromRow >= 8 || fromColumn < 0 || fromColumn >= 8 || toRow < 0 || toRow >= 8
+                || toColumn < 0 || toColumn >= 8)
                 return false;
 
             char symbol = userId == this.userId ? 'X' : 'O';
@@ -635,19 +672,23 @@ public class CheckersCommand extends CoreCommand {
             List<Pair<Integer, Integer>> moves = new ArrayList<>();
             if (get(row, column) == (this.userId == this.currentTurn ? 'X' : 'O')) {
                 char opponentSymbol = this.userId == this.currentTurn ? 'O' : 'X';
-                if (row > 0 && column > 0 && (isEmpty(row - 1, column - 1) || get(row - 1, column - 1) == opponentSymbol)) {
+                if (row > 0 && column > 0
+                    && (isEmpty(row - 1, column - 1) || get(row - 1, column - 1) == opponentSymbol)) {
                     moves.add(Pair.of(row - 1, column - 1));
                 }
 
-                if (row > 0 && column < 7 && (isEmpty(row - 1, column + 1) || get(row - 1, column + 1) == opponentSymbol)) {
+                if (row > 0 && column < 7
+                    && (isEmpty(row - 1, column + 1) || get(row - 1, column + 1) == opponentSymbol)) {
                     moves.add(Pair.of(row - 1, column + 1));
                 }
 
-                if (row < 7 && column > 0 && (isEmpty(row + 1, column - 1) || get(row + 1, column - 1) == opponentSymbol)) {
+                if (row < 7 && column > 0
+                    && (isEmpty(row + 1, column - 1) || get(row + 1, column - 1) == opponentSymbol)) {
                     moves.add(Pair.of(row + 1, column - 1));
                 }
 
-                if (row < 7 && column < 7 && (isEmpty(row + 1, column + 1) || get(row + 1, column + 1) == opponentSymbol)) {
+                if (row < 7 && column < 7
+                    && (isEmpty(row + 1, column + 1) || get(row + 1, column + 1) == opponentSymbol)) {
                     moves.add(Pair.of(row + 1, column + 1));
                 }
             }

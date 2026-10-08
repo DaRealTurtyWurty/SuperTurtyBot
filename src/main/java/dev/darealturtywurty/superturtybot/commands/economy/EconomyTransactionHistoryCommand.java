@@ -24,7 +24,8 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
     public EconomyTransactionHistoryCommand() {
         super("economy", "Shows the economy transaction history of a user.");
         addOption(OptionType.USER, "user", "The user to get the transaction history of.");
-        addOption(new OptionData(OptionType.STRING, "direction", "Filter transactions by direction (incoming/outgoing/both).")
+        addOption(
+            new OptionData(OptionType.STRING, "direction", "Filter transactions by direction (incoming/outgoing/both).")
                 .addChoice("Both", "both")
                 .addChoice("Incoming", "incoming")
                 .addChoice("Outgoing", "outgoing"));
@@ -50,8 +51,11 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
 
         Economy account = optAccount.get();
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot view your transaction history! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot view your transaction history! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -62,19 +66,20 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
 
         GuildData config = GuildData.getOrCreateGuildData(guild);
         List<MoneyTransaction> transactions = account.getTransactions()
-                .stream()
-                .filter(transaction -> {
-                    return switch (direction.toLowerCase()) {
-                        case "incoming" -> transaction.amount().signum() > 0;
-                        case "outgoing" -> transaction.amount().signum() < 0;
-                        default -> true;
-                    };
-                })
-                .sorted(Comparator.comparingLong(MoneyTransaction::timestamp))
-                .toList();
+            .stream()
+            .filter(transaction -> {
+                return switch (direction.toLowerCase()) {
+                    case "incoming" -> transaction.amount().signum() > 0;
+                    case "outgoing" -> transaction.amount().signum() < 0;
+                    default -> true;
+                };
+            })
+            .sorted(Comparator.comparingLong(MoneyTransaction::timestamp))
+            .toList();
 
         if (transactions.isEmpty()) {
-            event.getHook().sendMessage("❌ That user has no transactions for that filter!").mentionRepliedUser(false).queue();
+            event.getHook().sendMessage("❌ That user has no transactions for that filter!").mentionRepliedUser(false)
+                .queue();
             return;
         }
 
@@ -85,20 +90,19 @@ public class EconomyTransactionHistoryCommand extends SubcommandCommand {
             String amount = StringUtils.numberFormat(transaction.amount(), config);
             String targetLine = transaction.targetId() == null ? "" : "\nTarget: <@" + transaction.targetId() + ">";
             contents.field("Transaction #" + (index + 1), "Type: `%s`\nAmount: `%s`%s\nOccurred: %s".formatted(
-                    typeName,
-                    amount,
-                    targetLine,
-                    TimeFormat.RELATIVE.format(transaction.timestamp())
-            ));
+                typeName,
+                amount,
+                targetLine,
+                TimeFormat.RELATIVE.format(transaction.timestamp())));
         }
 
         PaginatedEmbed paginatedEmbed = new PaginatedEmbed.Builder(5, contents)
-                .title("%s's Transaction History".formatted(user.getName()))
-                .authorOnly(event.getUser().getIdLong())
-                .color(event.getMember() != null ? event.getMember().getColorRaw() : 0)
-                .timestamp(Instant.now())
-                .footer("Requested by %s".formatted(event.getUser().getAsTag()), event.getUser().getEffectiveAvatarUrl())
-                .build(event.getJDA());
+            .title("%s's Transaction History".formatted(user.getName()))
+            .authorOnly(event.getUser().getIdLong())
+            .color(event.getMember() != null ? event.getMember().getColorRaw() : 0)
+            .timestamp(Instant.now())
+            .footer("Requested by %s".formatted(event.getUser().getAsTag()), event.getUser().getEffectiveAvatarUrl())
+            .build(event.getJDA());
         paginatedEmbed.send(event.getHook());
     }
 }

@@ -10,11 +10,11 @@ import java.util.Set;
 
 public class ShutdownHooks {
     private static final Set<Runnable> HOOKS = new HashSet<>();
-    
+
     public static void register(Runnable shutdown) {
         HOOKS.add(shutdown);
     }
-    
+
     public static void shutdown(JDA jda) {
         jda.shutdown();
         HOOKS.forEach(Runnable::run);

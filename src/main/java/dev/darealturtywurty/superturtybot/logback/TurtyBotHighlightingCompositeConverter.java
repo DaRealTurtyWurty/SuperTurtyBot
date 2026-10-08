@@ -10,7 +10,7 @@ public class TurtyBotHighlightingCompositeConverter extends ForegroundCompositeC
     @Override
     protected String getForegroundColorCode(ILoggingEvent event) {
         Level level = event.getLevel();
-        if (getFirstOption().equals("thread")) {
+        if (getFirstOption().equals("thread"))
             return switch (level.toInt()) {
                 case Level.ERROR_INT -> ANSIConstants.RED_FG;
                 case Level.WARN_INT -> ANSIConstants.YELLOW_FG;
@@ -19,9 +19,8 @@ public class TurtyBotHighlightingCompositeConverter extends ForegroundCompositeC
                 case Level.TRACE_INT -> ANSIConstants.BLUE_FG;
                 default -> "";
             };
-        } else if (getFirstOption().equals("msg")) {
+        else if (getFirstOption().equals("msg"))
             return level.toInt() == Level.ERROR_INT ? ANSIConstants.RED_FG : "";
-        }
         return "";
     }
 }

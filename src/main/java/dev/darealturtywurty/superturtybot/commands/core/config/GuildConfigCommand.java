@@ -33,11 +33,11 @@ public class GuildConfigCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("get", "Gets the current server config")
-                        .addOption(OptionType.STRING, "key", "The data key to get", false, true),
-                new SubcommandData("set", "Sets a value into the server config")
-                        .addOption(OptionType.STRING, "key", "The data key to change", true, true)
-                        .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
+            new SubcommandData("get", "Gets the current server config")
+                .addOption(OptionType.STRING, "key", "The data key to get", false, true),
+            new SubcommandData("set", "Sets a value into the server config")
+                .addOption(OptionType.STRING, "key", "The data key to change", true, true)
+                .addOption(OptionType.STRING, "value", "The piece of data to assign to this key", true, true));
     }
 
     @Override
@@ -78,18 +78,18 @@ public class GuildConfigCommand extends CoreCommand {
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
         if (!event.isFromGuild() || !event.getName().equals(getName())
-                || !"key".equals(event.getFocusedOption().getName()))
+            || !"key".equals(event.getFocusedOption().getName()))
             return;
 
         final String term = event.getFocusedOption().getValue();
 
         final List<String> keys = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
-                .values()
-                .stream()
-                .map(GuildConfigOption::getSaveName)
-                .filter(key -> key.contains(term))
-                .limit(25)
-                .toList();
+            .values()
+            .stream()
+            .map(GuildConfigOption::getSaveName)
+            .filter(key -> key.contains(term))
+            .limit(25)
+            .toList();
         event.replyChoiceStrings(keys).queue();
     }
 
@@ -108,20 +108,21 @@ public class GuildConfigCommand extends CoreCommand {
         embed.setFooter(event.getGuild().getName(), event.getGuild().getIconUrl());
         embed.setTitle("Config Setup");
         embed.setDescription(
-                "Thank you for adding me to your server! The following are the default config settings. You can change them with `/serverconfig set [key] [value]`\n");
+            "Thank you for adding me to your server! The following are the default config settings. You can change them with `/serverconfig set [key] [value]`\n");
         embed.setColor(Color.CYAN);
         GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
-                .values()
-                .stream()
-                .sorted(Comparator.comparing(GuildConfigOption::getRichName))
-                .forEach(option -> embed.appendDescription(
-                        "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(guildData) + "`\n"));
+            .values()
+            .stream()
+            .sorted(Comparator.comparing(GuildConfigOption::getRichName))
+            .forEach(option -> embed.appendDescription(
+                "**" + option.getRichName() + "**: `" + option.getValueFromConfig().apply(guildData) + "`\n"));
         defaultChannel.sendMessageEmbeds(embed.build()).queue();
     }
 
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong()) {
+        if (!event.isFromGuild() || event.getGuild() == null || event.getMember() == null
+            || event.getUser().getIdLong() != event.getGuild().getOwnerIdLong()) {
             reply(event, "❌ You do not have permission to use this command here!", false, true);
             return;
         }
@@ -135,14 +136,15 @@ public class GuildConfigCommand extends CoreCommand {
             if (key == null) {
                 final var embed = new EmbedBuilder();
                 GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
-                        .values()
-                        .stream()
-                        .sorted(Comparator.comparing(GuildConfigOption::getRichName))
-                        .forEach(option -> {
-                            final String name = option.getRichName();
-                            final Object value = option.getValueFromConfig().apply(config);
-                            embed.appendDescription("**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n");
-                        });
+                    .values()
+                    .stream()
+                    .sorted(Comparator.comparing(GuildConfigOption::getRichName))
+                    .forEach(option -> {
+                        final String name = option.getRichName();
+                        final Object value = option.getValueFromConfig().apply(config);
+                        embed.appendDescription(
+                            "**" + name + "**:" + (String.valueOf(value).isBlank() ? "" : (" `" + value + "`")) + "\n");
+                    });
                 embed.setFooter(event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl());
                 embed.setColor(event.getMember().getColorRaw());
                 embed.setTitle("Server Config for: " + event.getGuild().getName(), event.getGuild().getVanityUrl());
@@ -155,10 +157,10 @@ public class GuildConfigCommand extends CoreCommand {
             // Get data by the given key
             final String copyKey = key.trim();
             final Optional<GuildConfigOption> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
-                    .values()
-                    .stream()
-                    .filter(guildConfigOption -> guildConfigOption.getSaveName().equals(copyKey))
-                    .findFirst();
+                .values()
+                .stream()
+                .filter(guildConfigOption -> guildConfigOption.getSaveName().equals(copyKey))
+                .findFirst();
 
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
@@ -176,11 +178,12 @@ public class GuildConfigCommand extends CoreCommand {
 
             final GuildData config = GuildData.getOrCreateGuildData(event.getGuild());
 
-            final Optional<Entry<String, GuildConfigOption>> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS.getRegistry()
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> entry.getValue().getSaveName().equals(key))
-                    .findFirst();
+            final Optional<Entry<String, GuildConfigOption>> found = GuildConfigRegistry.GUILD_CONFIG_OPTIONS
+                .getRegistry()
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getSaveName().equals(key))
+                .findFirst();
 
             if (found.isEmpty()) {
                 reply(event, "❌ `" + key + "` is not a valid option for the server config!", false, true);
@@ -190,9 +193,9 @@ public class GuildConfigCommand extends CoreCommand {
             final GuildConfigOption option = found.get().getValue();
             if (Boolean.FALSE.equals(option.getDataType().validator.apply(value))) {
                 reply(event,
-                        "❌ `" + value + "` is not the right data type! `" + option.getRichName() + "` requires a `"
-                                + WordUtils.capitalize(option.getDataType().name().toLowerCase().replace("_", " ")) + "`!",
-                        false, true);
+                    "❌ `" + value + "` is not the right data type! `" + option.getRichName() + "` requires a `"
+                        + WordUtils.capitalize(option.getDataType().name().toLowerCase().replace("_", " ")) + "`!",
+                    false, true);
                 return;
             }
 
@@ -202,13 +205,15 @@ public class GuildConfigCommand extends CoreCommand {
             }
 
             option.serialize(config, value);
-            UpdateResult result = Database.getDatabase().guildData.replaceOne(Filters.eq("guild", event.getGuild().getIdLong()), config);
+            UpdateResult result = Database.getDatabase().guildData
+                .replaceOne(Filters.eq("guild", event.getGuild().getIdLong()), config);
             if (result.getModifiedCount() == 0) {
                 reply(event, "❌ Failed to update the server config!", false, true);
                 return;
             }
 
-            reply(event, "✅ Successfully updated `" + option.getRichName() + "` to `" + option.getValueFromConfig().apply(config) + "`!");
+            reply(event, "✅ Successfully updated `" + option.getRichName() + "` to `"
+                + option.getValueFromConfig().apply(config) + "`!");
         }
     }
 }

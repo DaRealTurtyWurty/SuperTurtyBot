@@ -36,9 +36,9 @@ public final class ModmailTicketsService {
 
     private final JDA jda;
     private final HttpClient previewClient = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
     private final ConcurrentMap<String, ModmailLinkPreviewResponse> previewCache = new ConcurrentHashMap<>();
 
     public ModmailTicketsService(JDA jda) {
@@ -50,14 +50,15 @@ public final class ModmailTicketsService {
         boolean openOnly = "open".equalsIgnoreCase(status);
         boolean closedOnly = "closed".equalsIgnoreCase(status);
 
-        List<ModmailTicketSummaryResponse> tickets = Database.getDatabase().modmailTickets.find(Filters.eq("guild", guildId))
-                .sort(Sorts.descending("ticketNumber"))
-                .into(new ArrayList<>())
-                .stream()
-                .filter(ticket -> !openOnly || ticket.isOpen())
-                .filter(ticket -> !closedOnly || !ticket.isOpen())
-                .map(ticket -> toSummary(guild, ticket))
-                .toList();
+        List<ModmailTicketSummaryResponse> tickets = Database.getDatabase().modmailTickets
+            .find(Filters.eq("guild", guildId))
+            .sort(Sorts.descending("ticketNumber"))
+            .into(new ArrayList<>())
+            .stream()
+            .filter(ticket -> !openOnly || ticket.isOpen())
+            .filter(ticket -> !closedOnly || !ticket.isOpen())
+            .map(ticket -> toSummary(guild, ticket))
+            .toList();
 
         return new ModmailTicketsResponse(tickets);
     }
@@ -65,36 +66,32 @@ public final class ModmailTicketsService {
     public ModmailTicketDetailResponse getTicket(long guildId, long ticketNumber) {
         Guild guild = requireGuild(guildId);
         ModmailTicket ticket = Database.getDatabase().modmailTickets.find(
-                Filters.and(Filters.eq("guild", guildId), Filters.eq("ticketNumber", ticketNumber))
-        ).first();
+            Filters.and(Filters.eq("guild", guildId), Filters.eq("ticketNumber", ticketNumber))).first();
 
-        if (ticket == null) {
+        if (ticket == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "modmail_ticket_not_found",
-                    "The requested modmail ticket could not be found.");
-        }
+                "The requested modmail ticket could not be found.");
 
         List<ModmailTranscriptEntryResponse> transcript = Database.getDatabase().modmailTranscriptChunks.find(
-                        Filters.and(Filters.eq("guild", guildId), Filters.eq("ticketChannel", ticket.getChannel())))
-                .sort(Sorts.ascending("chunkIndex"))
-                .into(new ArrayList<>())
-                .stream()
-                .flatMap(chunk -> safeEntries(chunk).stream())
-                .map(entry -> toTranscriptEntry(guild, entry))
-                .toList();
+            Filters.and(Filters.eq("guild", guildId), Filters.eq("ticketChannel", ticket.getChannel())))
+            .sort(Sorts.ascending("chunkIndex"))
+            .into(new ArrayList<>())
+            .stream()
+            .flatMap(chunk -> safeEntries(chunk).stream())
+            .map(entry -> toTranscriptEntry(guild, entry))
+            .toList();
 
         return new ModmailTicketDetailResponse(
-                toSummary(guild, ticket),
-                ticket.getOpenerMessage(),
-                transcript
-        );
+            toSummary(guild, ticket),
+            ticket.getOpenerMessage(),
+            transcript);
     }
 
     private Guild requireGuild(long guildId) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         return guild;
     }
@@ -106,41 +103,39 @@ public final class ModmailTicketsService {
         String closedByName = ticket.getClosedBy() == 0L ? "" : resolveMemberName(guild, ticket.getClosedBy());
 
         return new ModmailTicketSummaryResponse(
-                ticket.getTicketNumber(),
-                Long.toString(ticket.getUser()),
-                userDisplayName,
-                resolveAvatarUrl(guild, ticket.getUser()),
-                Long.toString(ticket.getChannel()),
-                channelName,
-                Long.toString(ticket.getCategory()),
-                categoryName,
-                ticket.isOpen(),
-                ticket.getSource(),
-                ticket.getOpenedAt(),
-                ticket.getClosedAt(),
-                Long.toString(ticket.getClosedBy()),
-                closedByName,
-                ticket.getCloseReason(),
-                ticket.getTranscriptChunkCount(),
-                ticket.getTranscriptMessageCount()
-        );
+            ticket.getTicketNumber(),
+            Long.toString(ticket.getUser()),
+            userDisplayName,
+            resolveAvatarUrl(guild, ticket.getUser()),
+            Long.toString(ticket.getChannel()),
+            channelName,
+            Long.toString(ticket.getCategory()),
+            categoryName,
+            ticket.isOpen(),
+            ticket.getSource(),
+            ticket.getOpenedAt(),
+            ticket.getClosedAt(),
+            Long.toString(ticket.getClosedBy()),
+            closedByName,
+            ticket.getCloseReason(),
+            ticket.getTranscriptChunkCount(),
+            ticket.getTranscriptMessageCount());
     }
 
     private ModmailTranscriptEntryResponse toTranscriptEntry(Guild guild, ModmailTranscriptEntry entry) {
         return new ModmailTranscriptEntryResponse(
-                Long.toString(entry.getMessageId()),
-                Long.toString(entry.getAuthorId()),
-                entry.getAuthorTag(),
-                resolveAvatarUrl(guild, entry.getAuthorId()),
-                entry.isBot(),
-                entry.getContent(),
-                buildPreviews(entry),
-                copyList(entry.getAttachments()),
-                copyList(entry.getEmbeds()),
-                copyList(entry.getStickers()),
-                entry.getCreatedAt(),
-                entry.getEditedAt()
-        );
+            Long.toString(entry.getMessageId()),
+            Long.toString(entry.getAuthorId()),
+            entry.getAuthorTag(),
+            resolveAvatarUrl(guild, entry.getAuthorId()),
+            entry.isBot(),
+            entry.getContent(),
+            buildPreviews(entry),
+            copyList(entry.getAttachments()),
+            copyList(entry.getEmbeds()),
+            copyList(entry.getStickers()),
+            entry.getCreatedAt(),
+            entry.getEditedAt());
     }
 
     private List<ModmailLinkPreviewResponse> buildPreviews(ModmailTranscriptEntry entry) {
@@ -154,126 +149,110 @@ public final class ModmailTicketsService {
         }
 
         return urls.stream()
-                .limit(3)
-                .map(this::previewForUrl)
-                .filter(Objects::nonNull)
-                .toList();
+            .limit(3)
+            .map(this::previewForUrl)
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     private ModmailLinkPreviewResponse previewForUrl(String rawUrl) {
         String normalizedUrl = normalizeUrl(rawUrl);
-        if (normalizedUrl.isBlank()) {
+        if (normalizedUrl.isBlank())
             return null;
-        }
 
         return this.previewCache.computeIfAbsent(normalizedUrl, this::loadPreview);
     }
 
     private ModmailLinkPreviewResponse loadPreview(String url) {
         URI uri = parseSafeUri(url);
-        if (uri == null) {
+        if (uri == null)
             return fallbackLinkPreview(url, null);
-        }
 
-        if (isDirectImageUrl(uri)) {
+        if (isDirectImageUrl(uri))
             return new ModmailLinkPreviewResponse(
+                url,
+                fileNameFromUri(uri),
+                hostFromUri(uri),
+                hostFromUri(uri),
+                url,
+                "image");
+
+        try {
+            HttpResponse<Void> headResponse = this.previewClient.send(HttpRequest.newBuilder(uri)
+                .timeout(Duration.ofSeconds(5))
+                .header("User-Agent", "Mozilla/5.0 (compatible; TurtyBot/1.0)")
+                .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                .build(), HttpResponse.BodyHandlers.discarding());
+
+            String contentType = headResponse.headers().firstValue("content-type").orElse("");
+            if (contentType.toLowerCase(Locale.ROOT).startsWith("image/"))
+                return new ModmailLinkPreviewResponse(
                     url,
                     fileNameFromUri(uri),
                     hostFromUri(uri),
                     hostFromUri(uri),
                     url,
-                    "image"
-            );
-        }
-
-        try {
-            HttpResponse<Void> headResponse = this.previewClient.send(HttpRequest.newBuilder(uri)
-                    .timeout(Duration.ofSeconds(5))
-                    .header("User-Agent", "Mozilla/5.0 (compatible; TurtyBot/1.0)")
-                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
-                    .build(), HttpResponse.BodyHandlers.discarding());
-
-            String contentType = headResponse.headers().firstValue("content-type").orElse("");
-            if (contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
-                return new ModmailLinkPreviewResponse(
-                        url,
-                        fileNameFromUri(uri),
-                        hostFromUri(uri),
-                        hostFromUri(uri),
-                        url,
-                        "image"
-                );
-            }
+                    "image");
 
             if (!contentType.toLowerCase(Locale.ROOT).contains("html") && !contentType.isBlank()
-                    && headResponse.statusCode() < 400) {
+                && headResponse.statusCode() < 400)
                 return fallbackLinkPreview(url, uri);
-            }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             return fallbackLinkPreview(url, uri);
-        } catch (IOException | IllegalArgumentException ignored) {
+        } catch (IOException | IllegalArgumentException _) {
             return fallbackLinkPreview(url, uri);
         }
 
         try {
             HttpResponse<String> response = this.previewClient.send(HttpRequest.newBuilder(uri)
-                    .timeout(Duration.ofSeconds(6))
-                    .header("User-Agent", "Mozilla/5.0 (compatible; TurtyBot/1.0)")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .GET()
-                    .build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                .timeout(Duration.ofSeconds(6))
+                .header("User-Agent", "Mozilla/5.0 (compatible; TurtyBot/1.0)")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .GET()
+                .build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-            if (response.statusCode() < 200 || response.statusCode() >= 400) {
+            if (response.statusCode() < 200 || response.statusCode() >= 400)
                 return fallbackLinkPreview(url, uri);
-            }
 
             String html = response.body();
-            if (html == null || html.isBlank()) {
+            if (html == null || html.isBlank())
                 return fallbackLinkPreview(url, uri);
-            }
 
             String title = firstNonBlank(
-                    extractMetaContent(html, "og:title"),
-                    extractMetaContent(html, "twitter:title"),
-                    extractTitle(html),
-                    fileNameFromUri(uri),
-                    hostFromUri(uri)
-            );
+                extractMetaContent(html, "og:title"),
+                extractMetaContent(html, "twitter:title"),
+                extractTitle(html),
+                fileNameFromUri(uri),
+                hostFromUri(uri));
             String description = firstNonBlank(
-                    extractMetaContent(html, "og:description"),
-                    extractMetaContent(html, "twitter:description"),
-                    extractMetaContent(html, "description")
-            );
+                extractMetaContent(html, "og:description"),
+                extractMetaContent(html, "twitter:description"),
+                extractMetaContent(html, "description"));
             String siteName = firstNonBlank(
-                    extractMetaContent(html, "og:site_name"),
-                    hostFromUri(uri)
-            );
+                extractMetaContent(html, "og:site_name"),
+                hostFromUri(uri));
             String imageUrl = firstNonBlank(
-                    resolvePreviewUrl(uri, extractMetaContent(html, "og:image")),
-                    resolvePreviewUrl(uri, extractMetaContent(html, "twitter:image"))
-            );
+                resolvePreviewUrl(uri, extractMetaContent(html, "og:image")),
+                resolvePreviewUrl(uri, extractMetaContent(html, "twitter:image")));
             String type = firstNonBlank(
-                    extractMetaContent(html, "og:type"),
-                    "link"
-            );
+                extractMetaContent(html, "og:type"),
+                "link");
 
-            if (title == null && description == null && imageUrl == null) {
+            if (title == null && description == null && imageUrl == null)
                 return fallbackLinkPreview(url, uri);
-            }
 
             return new ModmailLinkPreviewResponse(
-                    url,
-                    title,
-                    description,
-                    siteName,
-                    imageUrl,
-                    type
-            );
-        } catch (InterruptedException ignored) {
+                url,
+                title,
+                description,
+                siteName,
+                imageUrl,
+                type);
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             return fallbackLinkPreview(url, uri);
-        } catch (IOException | IllegalArgumentException ignored) {
+        } catch (IOException | IllegalArgumentException _) {
             return fallbackLinkPreview(url, uri);
         }
     }
@@ -283,19 +262,17 @@ public final class ModmailTicketsService {
         String path = uri == null ? url : uri.getPath();
         String description = path == null || path.isBlank() ? null : path;
         return new ModmailLinkPreviewResponse(
-                url,
-                host,
-                description,
-                host,
-                null,
-                "link"
-        );
+            url,
+            host,
+            description,
+            host,
+            null,
+            "link");
     }
 
     private static List<String> extractUrls(String text) {
-        if (text == null || text.isBlank()) {
+        if (text == null || text.isBlank())
             return List.of();
-        }
 
         List<String> urls = new ArrayList<>();
         Matcher matcher = URL_PATTERN.matcher(text);
@@ -310,22 +287,19 @@ public final class ModmailTicketsService {
     }
 
     private static String parseAttachmentUrl(String attachment) {
-        if (attachment == null || attachment.isBlank()) {
+        if (attachment == null || attachment.isBlank())
             return "";
-        }
 
         int index = attachment.indexOf(" (");
-        if (index > 0) {
+        if (index > 0)
             return normalizeUrl(attachment.substring(0, index));
-        }
 
         return normalizeUrl(attachment);
     }
 
     private static String normalizeUrl(String value) {
-        if (value == null) {
+        if (value == null)
             return "";
-        }
 
         String result = value.trim();
         while (!result.isBlank() && ".,!?:;)]}".indexOf(result.charAt(result.length() - 1)) >= 0) {
@@ -337,83 +311,76 @@ public final class ModmailTicketsService {
 
     private static URI parseSafeUri(String url) {
         try {
-            URI uri = new URI(url);
-            if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
+            var uri = new URI(url);
+            if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme()))
                 return null;
-            }
 
             String host = uri.getHost();
-            if (host == null || host.isBlank()) {
+            if (host == null || host.isBlank())
                 return null;
-            }
 
-            if ("localhost".equalsIgnoreCase(host)) {
+            if ("localhost".equalsIgnoreCase(host))
                 return null;
-            }
 
             InetAddress[] addresses = InetAddress.getAllByName(host);
             for (InetAddress address : addresses) {
-                if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress() || address.isSiteLocalAddress() || address.isMulticastAddress()) {
+                if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress()
+                    || address.isSiteLocalAddress() || address.isMulticastAddress())
                     return null;
-                }
 
-                if (address instanceof Inet6Address inet6Address && inet6Address.isIPv4CompatibleAddress()) {
+                if (address instanceof Inet6Address inet6Address && inet6Address.isIPv4CompatibleAddress())
                     return null;
-                }
             }
 
             return uri;
-        } catch (URISyntaxException | UnknownHostException ignored) {
+        } catch (URISyntaxException | UnknownHostException _) {
             return null;
         }
     }
 
     private static boolean isDirectImageUrl(URI uri) {
         String path = uri.getPath();
-        if (path == null) {
+        if (path == null)
             return false;
-        }
 
         return path.matches("(?i).+\\.(png|jpe?g|gif|webp|bmp|avif)$");
     }
 
     private static String extractMetaContent(String html, String property) {
         String quotedProperty = Pattern.quote(property);
-        Pattern propertyFirst = Pattern.compile("(?is)<meta\\b[^>]*(?:property|name)=[\"']" + quotedProperty + "[\"'][^>]*content=[\"']([^\"']*)[\"'][^>]*>");
+        Pattern propertyFirst = Pattern.compile("(?is)<meta\\b[^>]*(?:property|name)=[\"']" + quotedProperty
+            + "[\"'][^>]*content=[\"']([^\"']*)[\"'][^>]*>");
         Matcher matcher = propertyFirst.matcher(html);
-        if (matcher.find()) {
+        if (matcher.find())
             return decodeHtml(matcher.group(1));
-        }
 
-        Pattern contentFirst = Pattern.compile("(?is)<meta\\b[^>]*content=[\"']([^\"']*)[\"'][^>]*(?:property|name)=[\"']" + quotedProperty + "[\"'][^>]*>");
+        Pattern contentFirst = Pattern
+            .compile("(?is)<meta\\b[^>]*content=[\"']([^\"']*)[\"'][^>]*(?:property|name)=[\"']" + quotedProperty
+                + "[\"'][^>]*>");
         matcher = contentFirst.matcher(html);
-        if (matcher.find()) {
+        if (matcher.find())
             return decodeHtml(matcher.group(1));
-        }
 
         return null;
     }
 
     private static String extractTitle(String html) {
         Matcher matcher = TITLE_PATTERN.matcher(html);
-        if (!matcher.find()) {
+        if (!matcher.find())
             return null;
-        }
 
         return decodeHtml(matcher.group(1)).replaceAll("\\s+", " ").trim();
     }
 
     private static String resolvePreviewUrl(URI base, String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.isBlank())
             return null;
-        }
 
         try {
-            URI uri = new URI(value);
-            if (uri.isAbsolute()) {
+            var uri = new URI(value);
+            if (uri.isAbsolute())
                 return uri.toString();
-            }
-        } catch (URISyntaxException ignored) {
+        } catch (URISyntaxException _) {
             return null;
         }
 
@@ -422,26 +389,23 @@ public final class ModmailTicketsService {
 
     private static String firstNonBlank(String... values) {
         for (String value : values) {
-            if (value != null && !value.isBlank()) {
+            if (value != null && !value.isBlank())
                 return value.trim();
-            }
         }
 
         return null;
     }
 
     private static String hostFromUri(URI uri) {
-        if (uri == null || uri.getHost() == null || uri.getHost().isBlank()) {
+        if (uri == null || uri.getHost() == null || uri.getHost().isBlank())
             return "Link";
-        }
 
         return uri.getHost().startsWith("www.") ? uri.getHost().substring(4) : uri.getHost();
     }
 
     private static String fileNameFromUri(URI uri) {
-        if (uri == null || uri.getPath() == null || uri.getPath().isBlank() || "/".equals(uri.getPath())) {
+        if (uri == null || uri.getPath() == null || uri.getPath().isBlank() || "/".equals(uri.getPath()))
             return hostFromUri(uri);
-        }
 
         String path = uri.getPath();
         int slash = path.lastIndexOf('/');
@@ -449,47 +413,42 @@ public final class ModmailTicketsService {
     }
 
     private static String decodeHtml(String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.isBlank())
             return value;
-        }
 
         return value
-                .replace("&amp;", "&")
-                .replace("&quot;", "\"")
-                .replace("&#39;", "'")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&nbsp;", " ")
-                .trim();
+            .replace("&amp;", "&")
+            .replace("&quot;", "\"")
+            .replace("&#39;", "'")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&nbsp;", " ")
+            .trim();
     }
 
     private static List<ModmailTranscriptEntry> safeEntries(ModmailTranscriptChunk chunk) {
-        if (chunk == null || chunk.getEntries() == null) {
+        if (chunk == null || chunk.getEntries() == null)
             return List.of();
-        }
 
         return chunk.getEntries();
     }
 
     private static <T> List<T> copyList(List<T> values) {
-        if (values == null || values.isEmpty()) {
+        if (values == null || values.isEmpty())
             return List.of();
-        }
 
         return List.copyOf(values);
     }
 
     private static String resolveMemberName(Guild guild, long userId) {
         Member member = guild.getMemberById(userId);
-        if (member != null) {
+        if (member != null)
             return member.getEffectiveName();
-        }
 
         var user = guild.getJDA().getUserById(userId);
         if (user != null) {
-            if (user.getGlobalName() != null && !user.getGlobalName().isBlank()) {
+            if (user.getGlobalName() != null && !user.getGlobalName().isBlank())
                 return user.getGlobalName();
-            }
 
             return user.getName();
         }
@@ -499,31 +458,27 @@ public final class ModmailTicketsService {
 
     private static String resolveChannelName(Guild guild, long channelId) {
         GuildChannel channel = guild.getGuildChannelById(channelId);
-        if (channel != null) {
+        if (channel != null)
             return "#" + channel.getName();
-        }
 
         return "";
     }
 
     private static String resolveCategoryName(Guild guild, long categoryId) {
-        if (categoryId == 0L) {
+        if (categoryId == 0L)
             return "No Category";
-        }
 
         var category = guild.getCategoryById(categoryId);
-        if (category != null) {
+        if (category != null)
             return category.getName();
-        }
 
         return "Deleted Category";
     }
 
     private String resolveAvatarUrl(Guild guild, long userId) {
         Member member = guild.getMemberById(userId);
-        if (member != null) {
+        if (member != null)
             return member.getEffectiveAvatarUrl();
-        }
 
         var user = this.jda.getUserById(userId);
         return user == null ? null : user.getEffectiveAvatarUrl();

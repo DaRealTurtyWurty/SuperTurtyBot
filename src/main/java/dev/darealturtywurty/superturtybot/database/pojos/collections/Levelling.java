@@ -14,14 +14,14 @@ import java.util.List;
 public class Levelling {
     private long guild;
     private long user;
-    
+
     private int level;
     private int xp;
     private long lastMessageTime;
-    
+
     private RankCard rankCard;
     private List<String> inventory;
-    
+
     public Levelling(long guildId, long userId) {
         this.guild = guildId;
         this.user = userId;

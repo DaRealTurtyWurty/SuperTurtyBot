@@ -63,17 +63,17 @@ public class RobloxCommand extends CoreCommand {
             var contents = new PaginatedEmbed.ContentsBuilder();
             for (RobloxPlayerData data : robloxData) {
                 contents.field(data.getName(), data.getId() +
-                        "\n**Display Name: **" + data.getDisplayName() +
-                        "\n**Has verified badge: **" + data.isHasVerifiedBadge() +
-                        "\n**Previous Names: **" + Arrays.toString(data.getPreviousUsernames()), false);
+                    "\n**Display Name: **" + data.getDisplayName() +
+                    "\n**Has verified badge: **" + data.isHasVerifiedBadge() +
+                    "\n**Previous Names: **" + Arrays.toString(data.getPreviousUsernames()), false);
             }
 
             var embed = new PaginatedEmbed.Builder(10, contents)
-                    .title("Roblox Username: " + username)
-                    .color(0xecbc4c)
-                    .authorOnly(event.getUser().getIdLong())
-                    .timestamp(Instant.now())
-                    .build(event.getJDA());
+                .title("Roblox Username: " + username)
+                .color(0xecbc4c)
+                .authorOnly(event.getUser().getIdLong())
+                .timestamp(Instant.now())
+                .build(event.getJDA());
 
             embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list roblox user!").queue());
         } catch (IOException exception) {
@@ -111,7 +111,7 @@ public class RobloxCommand extends CoreCommand {
 
             var playerProfile = RobloxPlayerProfile.fromJsonString(bodyString);
             PaginatedEmbed embed = createAvatarEmbed(playerProfile, robloxUserId, event.getUser().getIdLong())
-                    .build(event.getJDA());
+                .build(event.getJDA());
 
             embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to get response!").queue());
         } catch (IOException exception) {
@@ -157,21 +157,21 @@ public class RobloxCommand extends CoreCommand {
             var contents = new PaginatedEmbed.ContentsBuilder();
             for (RobloxFriendData data : friendData) {
                 contents.field(data.getName(), data.getId() +
-                        "\n**Display Name**: " + data.getDisplayName() +
-                        "\n**Has Verified Badge**: " + data.isHasVerifiedBadge() +
-                        "\n**Is Online**: " + data.isOnline() +
-                        "\n**Is Deleted**: " + data.isDeleted());
+                    "\n**Display Name**: " + data.getDisplayName() +
+                    "\n**Has Verified Badge**: " + data.isHasVerifiedBadge() +
+                    "\n**Is Online**: " + data.isOnline() +
+                    "\n**Is Deleted**: " + data.isDeleted());
             }
 
             var embed = new PaginatedEmbed.Builder(5, contents)
-                    .title("Roblox UserID: " + robloxUserId)
-                    .color(0xecbc4c)
-                    .authorOnly(event.getUser().getIdLong())
-                    .timestamp(Instant.now())
-                    .build(event.getJDA());
+                .title("Roblox UserID: " + robloxUserId)
+                .color(0xecbc4c)
+                .authorOnly(event.getUser().getIdLong())
+                .timestamp(Instant.now())
+                .build(event.getJDA());
 
             embed.send(event.getHook(),
-                    () -> event.getHook().editOriginal("❌ Failed to list roblox friends!").queue());
+                () -> event.getHook().editOriginal("❌ Failed to list roblox friends!").queue());
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ Failed to get response!").queue();
             Constants.LOGGER.error("Failed to get response!", exception);
@@ -215,20 +215,20 @@ public class RobloxCommand extends CoreCommand {
             var contents = new PaginatedEmbed.ContentsBuilder();
             for (RobloxFavouriteGameData data : favouriteGames) {
                 contents.field(data.getName(), data.getId() +
-                        "\n**Description**: " + StringUtils.truncateString(data.getDescription(), 128) +
-                        "\n**Creator**: " + data.getCreator() +
-                        "\n**Place Visits**: " + data.getPlaceVisits(), false);
+                    "\n**Description**: " + StringUtils.truncateString(data.getDescription(), 128) +
+                    "\n**Creator**: " + data.getCreator() +
+                    "\n**Place Visits**: " + data.getPlaceVisits(), false);
             }
 
             var embed = new PaginatedEmbed.Builder(5, contents)
-                    .title("Roblox UserID: " + robloxUserId)
-                    .color(0xecbc4c)
-                    .authorOnly(event.getUser().getIdLong())
-                    .timestamp(Instant.now())
-                    .build(event.getJDA());
+                .title("Roblox UserID: " + robloxUserId)
+                .color(0xecbc4c)
+                .authorOnly(event.getUser().getIdLong())
+                .timestamp(Instant.now())
+                .build(event.getJDA());
 
             embed.send(event.getHook(),
-                    () -> event.getHook().editOriginal("❌ Failed to list roblox favourite games!").queue());
+                () -> event.getHook().editOriginal("❌ Failed to list roblox favourite games!").queue());
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ Failed to get response!").queue();
             Constants.LOGGER.error("Failed to get response!", exception);
@@ -236,36 +236,39 @@ public class RobloxCommand extends CoreCommand {
     }
 
     @NotNull
-    private static PaginatedEmbed.Builder createAvatarEmbed(RobloxPlayerProfile robloxResponse, String robloxUserId, long userId) {
+    private static PaginatedEmbed.Builder createAvatarEmbed(
+        RobloxPlayerProfile robloxResponse,
+        String robloxUserId,
+        long userId
+    ) {
         var contents = new PaginatedEmbed.ContentsBuilder();
         for (RobloxPlayerProfile.Asset asset : robloxResponse.getAssets()) {
             contents.field(asset.getName(),
-                    "ID: " + asset.getId() + "\nAsset type: " + asset.getAssetType().getName(),
-                    false);
+                "ID: " + asset.getId() + "\nAsset type: " + asset.getAssetType().getName(),
+                false);
         }
 
         return new PaginatedEmbed.Builder(5, contents)
-                .title("User ID: " + robloxUserId)
-                .description("Player Animation Type: " + robloxResponse.getPlayerAvatarType() +
-                        "\n Default Shirt Applied: " + robloxResponse.isDefaultShirtApplied() +
-                        "\n Default Pants Applied: " + robloxResponse.isDefaultPantsApplied())
-                .color(0xf4dcb4)
-                .timestamp(Instant.now())
-                .authorOnly(userId);
+            .title("User ID: " + robloxUserId)
+            .description("Player Animation Type: " + robloxResponse.getPlayerAvatarType() +
+                "\n Default Shirt Applied: " + robloxResponse.isDefaultShirtApplied() +
+                "\n Default Pants Applied: " + robloxResponse.isDefaultPantsApplied())
+            .color(0xf4dcb4)
+            .timestamp(Instant.now())
+            .authorOnly(userId);
     }
 
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("username", "Returns the username information of a roblox user.")
-                        .addOption(OptionType.STRING, "username", "The roblox username", true),
-                new SubcommandData("avatar", "Returns the avatar of a roblox user.")
-                        .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true),
-                new SubcommandData("friends", "Returns the friends of a roblox user.")
-                        .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true),
-                new SubcommandData("favourite-games", "Returns the favourite games of a roblox user.")
-                        .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true)
-        );
+            new SubcommandData("username", "Returns the username information of a roblox user.")
+                .addOption(OptionType.STRING, "username", "The roblox username", true),
+            new SubcommandData("avatar", "Returns the avatar of a roblox user.")
+                .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true),
+            new SubcommandData("friends", "Returns the friends of a roblox user.")
+                .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true),
+            new SubcommandData("favourite-games", "Returns the favourite games of a roblox user.")
+                .addOption(OptionType.STRING, "userid", "The user id of the roblox user.", true));
     }
 
     @Override

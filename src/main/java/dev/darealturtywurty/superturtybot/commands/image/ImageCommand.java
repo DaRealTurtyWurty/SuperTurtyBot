@@ -23,7 +23,7 @@ public class ImageCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List
-                .of(new OptionData(OptionType.STRING, "type", "The image type to receive", true).setAutoComplete(true));
+            .of(new OptionData(OptionType.STRING, "type", "The image type to receive", true).setAutoComplete(true));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ImageCommand extends CoreCommand {
             return;
 
         final List<String> allowed = ImageCommandRegistry.getImageCommandTypes().getRegistry().keySet().stream()
-                .filter(str -> str.contains(event.getFocusedOption().getValue())).limit(25).toList();
+            .filter(str -> str.contains(event.getFocusedOption().getValue())).limit(25).toList();
         event.replyChoiceStrings(allowed).queue();
     }
 
@@ -66,7 +66,7 @@ public class ImageCommand extends CoreCommand {
     protected void runSlash(SlashCommandInteractionEvent event) {
         final String typeOption = event.getOption("type", "", OptionMapping::getAsString);
         final Optional<ImageCommandType> allowed = ImageCommandRegistry.getImageCommandTypes().getRegistry().entrySet()
-                .stream().filter(entry -> entry.getKey().equalsIgnoreCase(typeOption)).map(Entry::getValue).findFirst();
+            .stream().filter(entry -> entry.getKey().equalsIgnoreCase(typeOption)).map(Entry::getValue).findFirst();
         if (allowed.isEmpty()) {
             reply(event, "❌ `" + typeOption + "` is not a valid image type!", false, true);
             return;

@@ -86,9 +86,9 @@ public class StrawpollResultsCommand extends CoreCommand {
         final String id = event.getOption("id", OptionMapping::getAsString);
         if (id == null) {
             event.deferReply(true)
-                    .setContent("❌ You must provide a strawpoll ID!")
-                    .mentionRepliedUser(false)
-                    .queue();
+                .setContent("❌ You must provide a strawpoll ID!")
+                .mentionRepliedUser(false)
+                .queue();
             return;
         }
         final boolean is3D = event.getOption("is3d", false, OptionMapping::getAsBoolean);
@@ -98,8 +98,9 @@ public class StrawpollResultsCommand extends CoreCommand {
             event.deferReply().setFiles(FileUpload.fromData(stream, "chart.png")).mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException | IllegalStateException exception) {
             event.deferReply(true)
-                .setContent("❌ There has been an error with this command. Please report the following to the bot owner:\n"
-                    + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception))
+                .setContent(
+                    "❌ There has been an error with this command. Please report the following to the bot owner:\n"
+                        + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception))
                 .mentionRepliedUser(true).queue();
             Constants.LOGGER.error("Error getting strawpoll results!", exception);
         }
@@ -114,9 +115,8 @@ public class StrawpollResultsCommand extends CoreCommand {
         input.close();
 
         JsonObject jsonObject = Constants.GSON.fromJson(result, JsonObject.class);
-        if(!jsonObject.has("content")) {
+        if (!jsonObject.has("content"))
             throw new IllegalStateException("Invalid strawpoll ID!");
-        }
 
         final var response = jsonObject.get("content").getAsJsonObject()
             .get("poll").getAsJsonObject();

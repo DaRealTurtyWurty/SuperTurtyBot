@@ -41,16 +41,16 @@ public final class BirthdayManager {
             int month = now.getMonthValue();
 
             List<Birthday> birthdays = Database.getDatabase().birthdays.find()
-                    .filter(Filters.and(Filters.eq("day", day), Filters.eq("month", month)))
-                    .into(new ArrayList<>());
+                .filter(Filters.and(Filters.eq("day", day), Filters.eq("month", month)))
+                .into(new ArrayList<>());
             if (birthdays.isEmpty())
                 return;
 
             List<GuildData> enabledGuilds = Database.getDatabase().guildData.find(
-                    Filters.and(
-                            Filters.eq("announceBirthdays", true),
-                            Filters.ne("birthdayChannel", 0L)
-                    )).into(new ArrayList<>());
+                Filters.and(
+                    Filters.eq("announceBirthdays", true),
+                    Filters.ne("birthdayChannel", 0L)))
+                .into(new ArrayList<>());
             for (GuildData guildData : enabledGuilds) {
                 List<Long> guildBirthdayUsers = guildData.getEnabledBirthdayUsers();
                 long birthdayChannelId = guildData.getBirthdayChannel();
@@ -67,26 +67,27 @@ public final class BirthdayManager {
 
                 List<Long> toAnnounce = new ArrayList<>();
                 for (Birthday birthday : birthdays) {
-                    if (guildBirthdayUsers.contains(birthday.getUser()))
+                    if (guildBirthdayUsers.contains(birthday.getUser())) {
                         toAnnounce.add(birthday.getUser());
+                    }
                 }
 
                 guild.retrieveMembersByIds(toAnnounce).onSuccess(members -> {
                     for (Member member : members) {
                         Birthday birthday = birthdays.stream()
-                                .filter(b -> b.getUser() == member.getIdLong())
-                                .findFirst().orElse(null);
+                            .filter(b -> b.getUser() == member.getIdLong())
+                            .findFirst().orElse(null);
                         if (birthday == null)
                             continue;
 
-                        int age = TimeUtils.calculateCurrentAge(birthday.getYear(), birthday.getMonth(), birthday.getDay());
+                        int age = TimeUtils.calculateCurrentAge(birthday.getYear(), birthday.getMonth(),
+                            birthday.getDay());
 
                         birthdayChannel.sendMessageFormat(
-                                "🎉 %s is celebrating their %d%s birthday today! Happy birthday!",
-                                "<@" + birthday.getUser() + ">",
-                                age,
-                                StringUtils.getOrdinalSuffix(age)
-                        ).queue();
+                            "🎉 %s is celebrating their %d%s birthday today! Happy birthday!",
+                            "<@" + birthday.getUser() + ">",
+                            age,
+                            StringUtils.getOrdinalSuffix(age)).queue();
                     }
                 });
             }
@@ -118,6 +119,6 @@ public final class BirthdayManager {
         }
 
         Database.getDatabase().guildData.updateOne(Filters.eq("guild", guildId),
-                Updates.set("enabledBirthdayUsers", guildData.getEnabledBirthdayUsers()));
+            Updates.set("enabledBirthdayUsers", guildData.getEnabledBirthdayUsers()));
     }
 }

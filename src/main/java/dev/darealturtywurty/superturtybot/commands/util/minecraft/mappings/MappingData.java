@@ -14,8 +14,13 @@ public record MappingData(MappingTreeView tree, String version, String side, Map
         builds = Collections.unmodifiableMap(copy);
     }
 
-    private static void addResult(List<Result> results, ElementMappingView element, String owner,
-                                  String query, int namespace) {
+    private static void addResult(
+        List<Result> results,
+        ElementMappingView element,
+        String owner,
+        String query,
+        int namespace
+    ) {
         String name = element.getName(namespace);
         if (name == null)
             return;
@@ -24,22 +29,24 @@ public record MappingData(MappingTreeView tree, String version, String side, Map
         String qualified = member ? owner + "#" + name : name;
         String simpleOwner = owner.substring(owner.lastIndexOf('/') + 1);
         String simple = member ? simpleOwner + "#" + name : simpleOwner;
-        String descriptor = element instanceof MemberMappingView mapping ? Objects.toString(mapping.getDesc(namespace), "") : "";
+        String descriptor = element instanceof MemberMappingView mapping
+            ? Objects.toString(mapping.getDesc(namespace), "")
+            : "";
         String lowerQuery = query.toLowerCase(Locale.ROOT);
         int rank;
         if (query.equals(name) || query.equals(qualified) || query.equals(simple)
-                || query.equals(qualified + descriptor) || query.equals(simple + descriptor)
-                || query.equals(name + descriptor)) {
+            || query.equals(qualified + descriptor) || query.equals(simple + descriptor)
+            || query.equals(name + descriptor)) {
             rank = 0;
-        } else if (name.equalsIgnoreCase(query) || qualified.equalsIgnoreCase(query) || simple.equalsIgnoreCase(query)) {
+        } else if (name.equalsIgnoreCase(query) || qualified.equalsIgnoreCase(query)
+            || simple.equalsIgnoreCase(query)) {
             rank = 1;
         } else if (qualified.toLowerCase(Locale.ROOT).contains(lowerQuery)
-                || simple.toLowerCase(Locale.ROOT).contains(lowerQuery)
-                || (qualified + descriptor).toLowerCase(Locale.ROOT).contains(lowerQuery)) {
+            || simple.toLowerCase(Locale.ROOT).contains(lowerQuery)
+            || (qualified + descriptor).toLowerCase(Locale.ROOT).contains(lowerQuery)) {
             rank = 2;
-        } else {
+        } else
             return;
-        }
 
         results.add(new Result(element, rank));
     }
@@ -83,7 +90,13 @@ public record MappingData(MappingTreeView tree, String version, String side, Map
         return results;
     }
 
-    public List<String> suggest(String query, MappingChannel channel, boolean classes, boolean methods, boolean fields) {
+    public List<String> suggest(
+        String query,
+        MappingChannel channel,
+        boolean classes,
+        boolean methods,
+        boolean fields
+    ) {
         int namespace = namespace(channel);
         var suggestions = new TreeSet<String>();
         for (Result result : search(query.isBlank() ? "net.minecraft" : query, channel, classes, methods, fields)) {
@@ -113,7 +126,8 @@ public record MappingData(MappingTreeView tree, String version, String side, Map
     public record Result(ElementMappingView element, int rank) {
         public boolean hasName(int namespace) {
             return this.element.getName(namespace) != null
-                    && (!(this.element instanceof MemberMappingView member) || member.getOwner().getName(namespace) != null);
+                && (!(this.element instanceof MemberMappingView member)
+                    || member.getOwner().getName(namespace) != null);
         }
 
         public String qualifiedName(int namespace) {
@@ -124,10 +138,12 @@ public record MappingData(MappingTreeView tree, String version, String side, Map
         }
 
         public String format(int namespace) {
-            String kind = this.element instanceof MethodMappingView ? "Method"
-                    : this.element instanceof MemberMappingView ? "Field" : "Class";
+            String kind = this.element instanceof MethodMappingView
+                ? "Method"
+                : this.element instanceof MemberMappingView ? "Field" : "Class";
             String descriptor = this.element instanceof MemberMappingView member && member.getDesc(namespace) != null
-                    ? " " + member.getDesc(namespace) : "";
+                ? " " + member.getDesc(namespace)
+                : "";
             return kind + ": " + qualifiedName(namespace) + descriptor;
         }
     }

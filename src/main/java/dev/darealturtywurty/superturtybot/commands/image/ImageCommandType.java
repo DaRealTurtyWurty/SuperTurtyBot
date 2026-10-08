@@ -10,11 +10,11 @@ public class ImageCommandType implements Registerable {
     private String name;
     @Getter
     private final BiConsumer<SlashCommandInteractionEvent, ImageCommandType> runner;
-    
+
     public ImageCommandType(BiConsumer<SlashCommandInteractionEvent, ImageCommandType> runner) {
         this.runner = runner;
     }
-    
+
     @Override
     public String getName() {
         return this.name;

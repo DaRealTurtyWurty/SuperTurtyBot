@@ -30,7 +30,8 @@ public class ModmailCloseSubcommand extends ModmailSubcommand {
         }
 
         TextChannel channel = event.getChannel().asTextChannel();
-        Optional<ModmailTicket> ticket = ModmailManager.getOpenTicketByChannel(event.getGuild().getIdLong(), channel.getIdLong());
+        Optional<ModmailTicket> ticket = ModmailManager.getOpenTicketByChannel(event.getGuild().getIdLong(),
+            channel.getIdLong());
         if (ticket.isEmpty()) {
             reply(event, "❌ This channel is not an active ticket.", false, true);
             return;
@@ -39,20 +40,20 @@ public class ModmailCloseSubcommand extends ModmailSubcommand {
         String reason = event.getOption("reason", "", OptionMapping::getAsString).trim();
         event.deferReply(true).queue();
         CompletableFuture.supplyAsync(() -> ModmailManager.closeTicket(ticket.get(), member, reason))
-                .thenAccept(result -> event.getHook()
-                        .editOriginal("✅ Ticket #" + result.ticket().getTicketNumber() + " closed. Archived " + result.archivedMessageCount() + " messages.")
-                        .queue(
-                                success -> ModmailManager.deleteTicketChannel(member.getGuild(), result.ticket()),
-                                failure -> ModmailManager.deleteTicketChannel(member.getGuild(), result.ticket())
-                        ))
-                .exceptionally(throwable -> {
-                    Constants.LOGGER.error("Failed to close modmail ticket in guild {} channel {}",
-                            event.getGuild().getId(),
-                            event.getChannel().getId(),
-                            throwable);
-                    event.getHook().editOriginal(resolveError(throwable)).queue();
-                    return null;
-                });
+            .thenAccept(result -> event.getHook()
+                .editOriginal("✅ Ticket #" + result.ticket().getTicketNumber() + " closed. Archived "
+                    + result.archivedMessageCount() + " messages.")
+                .queue(
+                    success -> ModmailManager.deleteTicketChannel(member.getGuild(), result.ticket()),
+                    failure -> ModmailManager.deleteTicketChannel(member.getGuild(), result.ticket())))
+            .exceptionally(throwable -> {
+                Constants.LOGGER.error("Failed to close modmail ticket in guild {} channel {}",
+                    event.getGuild().getId(),
+                    event.getChannel().getId(),
+                    throwable);
+                event.getHook().editOriginal(resolveError(throwable)).queue();
+                return null;
+            });
     }
 
     private static String resolveError(Throwable throwable) {

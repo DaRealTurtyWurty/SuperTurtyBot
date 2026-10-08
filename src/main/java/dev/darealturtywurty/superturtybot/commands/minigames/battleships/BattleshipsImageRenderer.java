@@ -55,24 +55,36 @@ public final class BattleshipsImageRenderer {
         return createUpload(game, new String[0], viewerIds);
     }
 
-    public static FileUpload createUpload(BattleshipsCommand.Game game, String[] playerNames, long... viewerIds) throws IOException {
+    public static FileUpload createUpload(BattleshipsCommand.Game game, String[] playerNames, long... viewerIds)
+        throws IOException {
         BufferedImage image = createImage(game, playerNames, viewerIds, -1L, Collections.emptyList(), null);
         var baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         return FileUpload.fromData(baos.toByteArray(), "battleships.png");
     }
 
-    public static FileUpload createUploadWithHighlights(BattleshipsCommand.Game game, String[] playerNames, long viewerId,
-                                                        List<Point> highlights, Color highlightColor) throws IOException {
-        BufferedImage image = createImage(game, playerNames, new long[]{viewerId}, viewerId, highlights, highlightColor);
+    public static FileUpload createUploadWithHighlights(
+        BattleshipsCommand.Game game,
+        String[] playerNames,
+        long viewerId,
+        List<Point> highlights,
+        Color highlightColor
+    ) throws IOException {
+        BufferedImage image = createImage(game, playerNames, new long[]{viewerId}, viewerId, highlights,
+            highlightColor);
         var baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         return FileUpload.fromData(baos.toByteArray(), "battleships.png");
     }
 
-    private static BufferedImage createImage(BattleshipsCommand.Game game, String[] playerNames, long[] viewerIds,
-                                             long highlightOwnerId,
-                                             List<Point> highlights, Color highlightColor) {
+    private static BufferedImage createImage(
+        BattleshipsCommand.Game game,
+        String[] playerNames,
+        long[] viewerIds,
+        long highlightOwnerId,
+        List<Point> highlights,
+        Color highlightColor
+    ) {
         boolean showPlayer1Ships = hasViewer(viewerIds, game.getPlayer1().getUserId());
         boolean showPlayer2Ships = hasViewer(viewerIds, game.getPlayer2().getUserId());
 
@@ -109,10 +121,14 @@ public final class BattleshipsImageRenderer {
         String player1Label = resolveLabel(playerNames, 0, "Player 1");
         String player2Label = resolveLabel(playerNames, 1, "Player 2");
 
-        drawBoard(graphics, game, game.getPlayer1().getUserId(), player1Label, board1X, boardY, leftAxisWidth, topAxisHeight,
-                labelHeight, showPlayer1Ships, highlightOwnerId == game.getPlayer1().getUserId() ? highlights : null, highlightColor);
-        drawBoard(graphics, game, game.getPlayer2().getUserId(), player2Label, board2X, boardY, leftAxisWidth, topAxisHeight,
-                labelHeight, showPlayer2Ships, highlightOwnerId == game.getPlayer2().getUserId() ? highlights : null, highlightColor);
+        drawBoard(graphics, game, game.getPlayer1().getUserId(), player1Label, board1X, boardY, leftAxisWidth,
+            topAxisHeight,
+            labelHeight, showPlayer1Ships, highlightOwnerId == game.getPlayer1().getUserId() ? highlights : null,
+            highlightColor);
+        drawBoard(graphics, game, game.getPlayer2().getUserId(), player2Label, board2X, boardY, leftAxisWidth,
+            topAxisHeight,
+            labelHeight, showPlayer2Ships, highlightOwnerId == game.getPlayer2().getUserId() ? highlights : null,
+            highlightColor);
 
         graphics.dispose();
         return image;
@@ -145,9 +161,20 @@ public final class BattleshipsImageRenderer {
         return false;
     }
 
-    private static void drawBoard(Graphics2D graphics, BattleshipsCommand.Game game, long ownerId, String label,
-                                  int boardX, int boardY, int leftAxisWidth, int topAxisHeight, int labelHeight,
-                                  boolean showShips, List<Point> highlights, Color highlightColor) {
+    private static void drawBoard(
+        Graphics2D graphics,
+        BattleshipsCommand.Game game,
+        long ownerId,
+        String label,
+        int boardX,
+        int boardY,
+        int leftAxisWidth,
+        int topAxisHeight,
+        int labelHeight,
+        boolean showShips,
+        List<Point> highlights,
+        Color highlightColor
+    ) {
         int gridSize = BattleshipsCommand.BOARD_SIZE * CELL_SIZE;
         int labelY = boardY + labelHeight;
 
@@ -164,8 +191,9 @@ public final class BattleshipsImageRenderer {
         boolean[][] occupied = buildOccupiedGrid(ships);
 
         if (highlights != null && !highlights.isEmpty()) {
-            drawHighlights(graphics, highlights, highlightColor == null ? new Color(255, 120, 120, 160) : highlightColor,
-                    gridX, gridY);
+            drawHighlights(graphics, highlights,
+                highlightColor == null ? new Color(255, 120, 120, 160) : highlightColor,
+                gridX, gridY);
         }
 
         drawShips(graphics, ships, gridX, gridY, !showShips);
@@ -175,8 +203,13 @@ public final class BattleshipsImageRenderer {
         drawMarkers(graphics, game, attackerId, occupied, gridX, gridY);
     }
 
-    private static void drawHighlights(Graphics2D graphics, List<Point> highlights, Color color,
-                                       int gridX, int gridY) {
+    private static void drawHighlights(
+        Graphics2D graphics,
+        List<Point> highlights,
+        Color color,
+        int gridX,
+        int gridY
+    ) {
         graphics.setColor(color);
         for (Point point : highlights) {
             if (point == null)
@@ -202,8 +235,14 @@ public final class BattleshipsImageRenderer {
         graphics.drawString(text, x, y);
     }
 
-    private static void drawAxisLabels(Graphics2D graphics, int boardX, int axisTopY, int leftAxisWidth,
-                                       int gridX, int gridY) {
+    private static void drawAxisLabels(
+        Graphics2D graphics,
+        int boardX,
+        int axisTopY,
+        int leftAxisWidth,
+        int gridX,
+        int gridY
+    ) {
         graphics.setFont(AXIS_FONT);
         graphics.setColor(TEXT_COLOR);
         FontMetrics metrics = graphics.getFontMetrics();
@@ -242,8 +281,13 @@ public final class BattleshipsImageRenderer {
         }
     }
 
-    private static void drawShips(Graphics2D graphics, BattleshipsCommand.Battleship[] ships, int gridX, int gridY,
-                                  boolean onlySunk) {
+    private static void drawShips(
+        Graphics2D graphics,
+        BattleshipsCommand.Battleship[] ships,
+        int gridX,
+        int gridY,
+        boolean onlySunk
+    ) {
         for (BattleshipsCommand.Battleship ship : ships) {
             if (ship == null)
                 continue;
@@ -252,11 +296,11 @@ public final class BattleshipsImageRenderer {
 
             int length = ship.getType().getSize();
             int width = ship.getOrientation() == BattleshipsCommand.Orientation.HORIZONTAL
-                    ? length * CELL_SIZE
-                    : CELL_SIZE;
+                ? length * CELL_SIZE
+                : CELL_SIZE;
             int height = ship.getOrientation() == BattleshipsCommand.Orientation.HORIZONTAL
-                    ? CELL_SIZE
-                    : length * CELL_SIZE;
+                ? CELL_SIZE
+                : length * CELL_SIZE;
 
             int drawX = gridX + ship.getX() * CELL_SIZE + SHIP_INSET;
             int drawY = gridY + ship.getY() * CELL_SIZE + SHIP_INSET;
@@ -282,7 +326,7 @@ public final class BattleshipsImageRenderer {
                 continue;
 
             int[][] positions = BattleshipsCommand.Battleship.getPositions(
-                    ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
+                ship.getType(), ship.getOrientation(), ship.getX(), ship.getY());
             for (int[] position : positions) {
                 occupied[position[0]][position[1]] = true;
             }
@@ -291,8 +335,14 @@ public final class BattleshipsImageRenderer {
         return occupied;
     }
 
-    private static void drawMarkers(Graphics2D graphics, BattleshipsCommand.Game game, long attackerId,
-                                    boolean[][] occupied, int gridX, int gridY) {
+    private static void drawMarkers(
+        Graphics2D graphics,
+        BattleshipsCommand.Game game,
+        long attackerId,
+        boolean[][] occupied,
+        int gridX,
+        int gridY
+    ) {
         int markerSize = (int) (CELL_SIZE * 0.55f);
         for (int x = 0; x < BattleshipsCommand.BOARD_SIZE; x++) {
             for (int y = 0; y < BattleshipsCommand.BOARD_SIZE; y++) {
@@ -322,25 +372,31 @@ public final class BattleshipsImageRenderer {
         }
     }
 
-    private static BufferedImage getShipSprite(BattleshipsCommand.ShipType type,
-                                               BattleshipsCommand.Orientation orientation,
-                                               int width, int height) {
+    private static BufferedImage getShipSprite(
+        BattleshipsCommand.ShipType type,
+        BattleshipsCommand.Orientation orientation,
+        int width,
+        int height
+    ) {
         String key = type.name() + "_" + orientation.name() + "_" + width + "x" + height;
-        return SHIP_CACHE.computeIfAbsent(key, ignored -> loadShipSprite(type, orientation, width, height));
+        return SHIP_CACHE.computeIfAbsent(key, _ -> loadShipSprite(type, orientation, width, height));
     }
 
-    private static BufferedImage loadShipSprite(BattleshipsCommand.ShipType type,
-                                                BattleshipsCommand.Orientation orientation,
-                                                int width, int height) {
+    private static BufferedImage loadShipSprite(
+        BattleshipsCommand.ShipType type,
+        BattleshipsCommand.Orientation orientation,
+        int width,
+        int height
+    ) {
         String assetName = "battleships/ships/" + type.name().toLowerCase(Locale.ROOT)
-                + "_" + orientation.name().toLowerCase(Locale.ROOT) + ".png";
+            + "_" + orientation.name().toLowerCase(Locale.ROOT) + ".png";
         try (InputStream stream = TurtyBot.loadResource(assetName)) {
             if (stream != null) {
                 BufferedImage image = ImageIO.read(stream);
                 if (image != null)
                     return scaleImage(image, width, height);
             }
-        } catch (IOException ignored) {
+        } catch (IOException _) {
         }
 
         return createShipPlaceholder(type, width, height);
@@ -348,7 +404,7 @@ public final class BattleshipsImageRenderer {
 
     private static BufferedImage getMarkerSprite(String name, int size) {
         String key = name + "_" + size;
-        return MARKER_CACHE.computeIfAbsent(key, ignored -> loadMarkerSprite(name, size));
+        return MARKER_CACHE.computeIfAbsent(key, _ -> loadMarkerSprite(name, size));
     }
 
     private static BufferedImage loadMarkerSprite(String name, int size) {
@@ -359,7 +415,7 @@ public final class BattleshipsImageRenderer {
                 if (image != null)
                     return scaleImage(image, size, size);
             }
-        } catch (IOException ignored) {
+        } catch (IOException _) {
         }
 
         return null;

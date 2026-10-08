@@ -13,7 +13,7 @@ public final class GeographyStreakRule implements QuestRule<GeographyStreakConfi
     @Override
     public void apply(GeographyStreakConfig config, GeographyStreakState state, QuestEvent event) {
         if (!(event instanceof QuestEvent.GeographyAnswered(_, String gameType, boolean correct))
-                || !config.gameTypes().contains(gameType))
+            || !config.gameTypes().contains(gameType))
             return;
 
         if (correct) {

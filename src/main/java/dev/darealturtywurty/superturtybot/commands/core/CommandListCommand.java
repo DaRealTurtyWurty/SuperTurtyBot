@@ -45,16 +45,21 @@ public class CommandListCommand extends CoreCommand {
         embed.setColor(Color.BLUE);
         embed.setTimestamp(Instant.now());
         CommandCategory.getCategories().stream()
-                .filter(category -> category.isNSFW() && allowNSFW || !category.isNSFW())
-                .sorted(Comparator.comparing(CommandCategory::getName)).forEach(
-                        category -> embed.addField(category.getEmoji() + " " + category.getName(),
-                                (category.isNSFW() ? "⚠️Warning: NSFW⚠️\n" : "") + String.format("`/commands %s`",
-                                        category.getName().toLowerCase()), true));
+            .filter(category -> category.isNSFW() && allowNSFW || !category.isNSFW())
+            .sorted(Comparator.comparing(CommandCategory::getName)).forEach(
+                category -> embed.addField(category.getEmoji() + " " + category.getName(),
+                    (category.isNSFW() ? "⚠️Warning: NSFW⚠️\n" : "") + String.format("`/commands %s`",
+                        category.getName().toLowerCase()),
+                    true));
 
         return embed;
     }
 
-    private static CompletableFuture<EmbedBuilder> commandsEmbed(String categoryStr, boolean allowNSFW, @Nullable Guild guild) {
+    private static CompletableFuture<EmbedBuilder> commandsEmbed(
+        String categoryStr,
+        boolean allowNSFW,
+        @Nullable Guild guild
+    ) {
         final var category = CommandCategory.byName(categoryStr.toUpperCase(Locale.ROOT));
         if (category == null)
             return CompletableFuture.completedFuture(null);
@@ -68,23 +73,24 @@ public class CommandListCommand extends CoreCommand {
 
             CompletableFuture<List<CoreCommand>> cmds = new CompletableFuture<>();
             if (guild != null) {
-                guild.retrieveCommandPrivileges().queue(privilegeConfig ->
-                        cmds.complete(CommandHook.INSTANCE.getCommands()
-                                .stream()
-                                .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW)
-                                .filter(cmd -> {
-                                    List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(cmd.getCommandId());
-                                    return privileges == null || privileges.isEmpty() || privileges.stream()
-                                            .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
-                                })
-                                .sorted(Comparator.comparing(CoreCommand::getName))
-                                .toList()));
-            } else {
-                cmds.complete(CommandHook.INSTANCE.getCommands()
+                guild.retrieveCommandPrivileges()
+                    .queue(privilegeConfig -> cmds.complete(CommandHook.INSTANCE.getCommands()
                         .stream()
                         .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW)
+                        .filter(cmd -> {
+                            List<IntegrationPrivilege> privileges = privilegeConfig
+                                .getCommandPrivileges(cmd.getCommandId());
+                            return privileges == null || privileges.isEmpty() || privileges.stream()
+                                .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
+                        })
                         .sorted(Comparator.comparing(CoreCommand::getName))
-                        .toList());
+                        .toList()));
+            } else {
+                cmds.complete(CommandHook.INSTANCE.getCommands()
+                    .stream()
+                    .filter(cmd -> cmd.getCategory() == CommandCategory.NSFW)
+                    .sorted(Comparator.comparing(CoreCommand::getName))
+                    .toList());
             }
 
             cmds.thenAccept(list -> {
@@ -98,25 +104,25 @@ public class CommandListCommand extends CoreCommand {
                 guild.retrieveCommandPrivileges().queue(privilegeConfig -> {
                     var builder = new StringBuilder();
                     for (CoreCommand cmd : CommandHook.INSTANCE.getCommands()
-                            .stream()
-                            .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
-                            .filter(cmd -> {
-                                String commandId;
-                                if (cmd.isServerOnly()) {
-                                    commandId = cmd.getCommandId(guild.getIdLong());
-                                } else {
-                                    commandId = cmd.getCommandId();
-                                }
+                        .stream()
+                        .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
+                        .filter(cmd -> {
+                            String commandId;
+                            if (cmd.isServerOnly()) {
+                                commandId = cmd.getCommandId(guild.getIdLong());
+                            } else {
+                                commandId = cmd.getCommandId();
+                            }
 
-                                if (commandId == null)
-                                    return false;
+                            if (commandId == null)
+                                return false;
 
-                                List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(commandId);
-                                return privileges == null || privileges.isEmpty() || privileges.stream()
-                                        .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
-                            })
-                            .sorted(Comparator.comparing(CoreCommand::getName))
-                            .toList()) {
+                            List<IntegrationPrivilege> privileges = privilegeConfig.getCommandPrivileges(commandId);
+                            return privileges == null || privileges.isEmpty() || privileges.stream()
+                                .noneMatch(privilege -> privilege.targetsEveryone() && privilege.isDisabled());
+                        })
+                        .sorted(Comparator.comparing(CoreCommand::getName))
+                        .toList()) {
                         builder.append("`").append(cmd.getName()).append("`\n");
                     }
 
@@ -125,10 +131,10 @@ public class CommandListCommand extends CoreCommand {
             } else {
                 var builder = new StringBuilder();
                 for (CoreCommand cmd : CommandHook.INSTANCE.getCommands()
-                        .stream()
-                        .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
-                        .sorted(Comparator.comparing(CoreCommand::getName))
-                        .toList()) {
+                    .stream()
+                    .filter(cmd -> cmd.getCategory() == CommandCategory.byName(categoryStr))
+                    .sorted(Comparator.comparing(CoreCommand::getName))
+                    .toList()) {
                     builder.append("`").append(cmd.getName()).append("`\n");
                 }
 
@@ -161,18 +167,22 @@ public class CommandListCommand extends CoreCommand {
         }
     }
 
-    private static void createButtons(@Nullable CommandCategory category, User user,
-                                      @Nullable MessageEditCallbackAction messageEditAction, Message message) {
+    private static void createButtons(
+        @Nullable CommandCategory category,
+        User user,
+        @Nullable MessageEditCallbackAction messageEditAction,
+        Message message
+    ) {
         var trashButton = Button.danger("commandlist-trash", Emoji.fromUnicode("🗑️"));
         if (category != null) {
             if (messageEditAction == null) {
                 message.editMessageComponents(
-                                ActionRow.of(Button.primary("commandlist-back", Emoji.fromUnicode("⬅️")), trashButton))
-                        .queue(ignored -> createEventWaiter(user, message).build());
+                    ActionRow.of(Button.primary("commandlist-back", Emoji.fromUnicode("⬅️")), trashButton))
+                    .queue(_ -> createEventWaiter(user, message).build());
             } else {
                 messageEditAction.setComponents(
-                                ActionRow.of(Button.primary("commandlist-back", Emoji.fromUnicode("⬅️")), trashButton))
-                        .queue(ignored -> createEventWaiter(user, message).build());
+                    ActionRow.of(Button.primary("commandlist-back", Emoji.fromUnicode("⬅️")), trashButton))
+                    .queue(_ -> createEventWaiter(user, message).build());
             }
             return;
         }
@@ -194,8 +204,8 @@ public class CommandListCommand extends CoreCommand {
             }
 
             currentRow.add(Button.primary("commandlist-" + commandCategory.getName().toLowerCase(Locale.ROOT),
-                            commandCategory.getName())
-                    .withEmoji(Emoji.fromUnicode(commandCategory.getEmoji())));
+                commandCategory.getName())
+                .withEmoji(Emoji.fromUnicode(commandCategory.getEmoji())));
         }
 
         List<ActionRow> actionRows = new ArrayList<>();
@@ -208,77 +218,76 @@ public class CommandListCommand extends CoreCommand {
 
         if (messageEditAction == null) {
             message.editMessageComponents(actionRows)
-                    .queue(ignored -> createEventWaiter(user, message).build());
+                .queue(_ -> createEventWaiter(user, message).build());
         } else {
             messageEditAction.setComponents(actionRows)
-                    .queue(ignored -> createEventWaiter(user, message).build());
+                .queue(_ -> createEventWaiter(user, message).build());
         }
     }
 
     private static EventWaiter.Builder<ButtonInteractionEvent> createEventWaiter(User user, Message message) {
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .condition(event -> event.isFromGuild() == message.isFromGuild()
-                        && event.getChannelIdLong() == message.getChannelIdLong()
-                        && event.getMessageIdLong() == message.getIdLong()
-                        && event.getButton().getCustomId() != null
-                        && event.getButton().getCustomId().startsWith("commandlist-"))
-                .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> message.delete().queue())
-                .failure(() -> message.delete().queue())
-                .success(event -> {
-                    if (event.getUser().getIdLong() != user.getIdLong()) {
-                        event.deferEdit().queue();
-                        return;
-                    }
+            .condition(event -> event.isFromGuild() == message.isFromGuild()
+                && event.getChannelIdLong() == message.getChannelIdLong()
+                && event.getMessageIdLong() == message.getIdLong()
+                && event.getButton().getCustomId() != null
+                && event.getButton().getCustomId().startsWith("commandlist-"))
+            .timeout(1, TimeUnit.MINUTES)
+            .timeoutAction(() -> message.delete().queue())
+            .failure(() -> message.delete().queue())
+            .success(event -> {
+                if (event.getUser().getIdLong() != user.getIdLong()) {
+                    event.deferEdit().queue();
+                    return;
+                }
 
-                    String buttonId = event.getButton().getCustomId();
-                    switch (buttonId) {
-                        case "commandlist-trash" -> event.deferEdit().queue(hook -> hook.deleteOriginal().queue());
-                        case "commandlist-back" -> {
-                            EmbedBuilder embed = categoriesEmbed(
-                                    event.getGuild(),
-                                    event.getMember(),
-                                    NSFWCommand.isValidChannel(event.getChannel()));
+                String buttonId = event.getButton().getCustomId();
+                switch (buttonId) {
+                    case "commandlist-trash" -> event.deferEdit().queue(hook -> hook.deleteOriginal().queue());
+                    case "commandlist-back" -> {
+                        EmbedBuilder embed = categoriesEmbed(
+                            event.getGuild(),
+                            event.getMember(),
+                            NSFWCommand.isValidChannel(event.getChannel()));
+                        createButtons(
+                            null,
+                            event.getUser(),
+                            event.editMessageEmbeds(embed.build()),
+                            event.getMessage());
+                    }
+                    case null -> event.deferEdit().queue();
+                    default -> {
+                        String category = buttonId.split("-")[1];
+
+                        CompletableFuture<EmbedBuilder> embedFuture = commandsEmbed(
+                            category,
+                            NSFWCommand.isValidChannel(event.getChannel()),
+                            event.getGuild());
+                        embedFuture.thenAcceptAsync(embedBuilder -> {
+                            if (embedBuilder == null) {
+                                event.deferEdit().queue();
+                                return;
+                            }
+
                             createButtons(
-                                    null,
-                                    event.getUser(),
-                                    event.editMessageEmbeds(embed.build()),
-                                    event.getMessage());
-                        }
-                        case null -> event.deferEdit().queue();
-                        default -> {
-                            String category = buttonId.split("-")[1];
-
-                            CompletableFuture<EmbedBuilder> embedFuture = commandsEmbed(
-                                    category,
-                                    NSFWCommand.isValidChannel(event.getChannel()),
-                                    event.getGuild());
-                            embedFuture.thenAcceptAsync(embedBuilder -> {
-                                if (embedBuilder == null) {
-                                    event.deferEdit().queue();
-                                    return;
-                                }
-
-                                createButtons(
-                                        CommandCategory.byName(category.toUpperCase(Locale.ROOT)),
-                                        event.getUser(),
-                                        event.editMessageEmbeds(embedBuilder.build()),
-                                        event.getMessage());
-                            });
-                        }
+                                CommandCategory.byName(category.toUpperCase(Locale.ROOT)),
+                                event.getUser(),
+                                event.editMessageEmbeds(embedBuilder.build()),
+                                event.getMessage());
+                        });
                     }
-                });
+                }
+            });
     }
 
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(
-                OptionType.STRING,
-                "category",
-                "The category to get the list of commands from.",
-                false,
-                true
-        ));
+            OptionType.STRING,
+            "category",
+            "The category to get the list of commands from.",
+            false,
+            true));
     }
 
     @Override
@@ -308,21 +317,22 @@ public class CommandListCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals(getName())) return;
+        if (!event.getName().equals(getName()))
+            return;
 
         final String term = event.getFocusedOption().getValue();
         final List<String> categories = CommandCategory.getCategories().stream()
-                .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase(Locale.ROOT)))
-                .filter(category -> {
-                    if (!event.isFromGuild() || !category.isNSFW())
-                        return true;
+            .filter(category -> category.getName().toLowerCase().contains(term.trim().toLowerCase(Locale.ROOT)))
+            .filter(category -> {
+                if (!event.isFromGuild() || !category.isNSFW())
+                    return true;
 
-                    return NSFWCommand.isValidChannel(event.getChannel());
-                })
-                .limit(25)
-                .map(CommandCategory::getName)
-                .map(String::toLowerCase)
-                .toList();
+                return NSFWCommand.isValidChannel(event.getChannel());
+            })
+            .limit(25)
+            .map(CommandCategory::getName)
+            .map(String::toLowerCase)
+            .toList();
         event.replyChoiceStrings(categories).queue();
     }
 
@@ -333,12 +343,12 @@ public class CommandListCommand extends CoreCommand {
         final String category = event.getOption("category", OptionMapping::getAsString);
         if (category == null) {
             final EmbedBuilder embed = categoriesEmbed(
-                    event.isFromGuild() ? event.getGuild() : null,
-                    event.isFromGuild() ? event.getMember() : null,
-                    NSFWCommand.isValidChannel(event.getChannel()));
+                event.isFromGuild() ? event.getGuild() : null,
+                event.isFromGuild() ? event.getMember() : null,
+                NSFWCommand.isValidChannel(event.getChannel()));
             setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());
             event.getHook().editOriginalEmbeds(embed.build())
-                    .queue(message -> createButtons(null, event.getUser(), null, message));
+                .queue(message -> createButtons(null, event.getUser(), null, message));
             return;
         }
 
@@ -356,8 +366,8 @@ public class CommandListCommand extends CoreCommand {
 
             setAuthor(embed, event.isFromGuild(), event.getUser(), event.getMember());
             event.getHook()
-                    .editOriginalEmbeds(embed.build())
-                    .queue(message -> createButtons(commandCategory, event.getUser(), null, message));
+                .editOriginalEmbeds(embed.build())
+                .queue(message -> createButtons(commandCategory, event.getUser(), null, message));
         });
     }
 }

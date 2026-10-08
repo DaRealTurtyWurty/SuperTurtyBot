@@ -16,7 +16,7 @@ public final class PollVotesRule implements QuestRule<PollVotesConfig, PollVotes
     @Override
     public void apply(PollVotesConfig config, PollVotesState state, QuestEvent event) {
         if (event instanceof QuestEvent.PollActivity(String pollId, String voterId) && !voterId.isBlank()) {
-            state.votersByPoll.computeIfAbsent(pollId, ignored -> new HashSet<>()).add(voterId);
+            state.votersByPoll.computeIfAbsent(pollId, _ -> new HashSet<>()).add(voterId);
         }
     }
 

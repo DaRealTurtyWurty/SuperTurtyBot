@@ -38,9 +38,9 @@ public class ChangelogFetcher {
     private void fetchChangelog() {
         Path gitPath = Paths.get(".git");
         boolean deleteAfter = false;
-        if(Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
+        if (Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
             gitPath = Paths.get("../SuperTurtyBotGit");
-            if(Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
+            if (Files.notExists(gitPath) || !Files.isDirectory(gitPath)) {
                 try {
                     Files.createDirectories(gitPath);
                 } catch (IOException exception) {
@@ -50,10 +50,10 @@ public class ChangelogFetcher {
 
                 deleteAfter = true;
 
-                try(Git ignored = Git.cloneRepository()
-                        .setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git")
-                        .setDirectory(gitPath.toFile())
-                        .call()) {
+                try (Git _ = Git.cloneRepository()
+                    .setURI("https://github.com/DaRealTurtyWurty/SuperTurtyBot.git")
+                    .setDirectory(gitPath.toFile())
+                    .call()) {
                     Constants.LOGGER.info("Cloned git repository");
                 } catch (GitAPIException exception) {
                     Constants.LOGGER.error("Failed to clone git repository", exception);
@@ -62,8 +62,9 @@ public class ChangelogFetcher {
             }
         }
 
-        try(Git git = Git.open(gitPath.toFile())) {
-            Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(TurtyBot.getLastStartTime())).call();
+        try (Git git = Git.open(gitPath.toFile())) {
+            Iterable<RevCommit> logs = git.log().setRevFilter(CommitTimeRevFilter.after(TurtyBot.getLastStartTime()))
+                .call();
             for (RevCommit commit : logs) {
                 String message = commit.getShortMessage();
 
@@ -72,10 +73,10 @@ public class ChangelogFetcher {
                         Constants.LOGGER.debug("Found dependabot commit: {}", message);
 
                         String dependency = message.split("from")[0]
-                                .replace("Bumps ", "")
-                                .replace("Merges ", "")
-                                .replace("Updates ", "")
-                                .trim();
+                            .replace("Bumps ", "")
+                            .replace("Merges ", "")
+                            .replace("Updates ", "")
+                            .trim();
 
                         String fromVersion = message.split("from")[1].split("to")[0].trim();
                         String toVersion = message.split("to")[1].split("- ")[0].trim();
@@ -84,10 +85,12 @@ public class ChangelogFetcher {
                     } catch (IndexOutOfBoundsException exception) {
                         message = "Updated a dependency";
                     }
-                } else if (message.startsWith("Merge")) continue;
+                } else if (message.startsWith("Merge"))
+                    continue;
 
                 Instant instant = commit.getAuthorIdent().getWhenAsInstant();
-                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(instant), message.replace("\n-", "\\-").replace("\n*", "\\*"));
+                String commitMessage = "\\- %s: %s".formatted(TimeFormat.RELATIVE.format(instant),
+                    message.replace("\n-", "\\-").replace("\n*", "\\*"));
                 this.changelog.add(commitMessage);
             }
         } catch (GitAPIException exception) {
@@ -96,7 +99,7 @@ public class ChangelogFetcher {
             Constants.LOGGER.error("An IO error occurred fetching the changelog", exception);
         }
 
-        if(deleteAfter) {
+        if (deleteAfter) {
             try {
                 FileUtils.deleteDirectory(gitPath.toFile());
             } catch (IOException exception) {
@@ -114,7 +117,8 @@ public class ChangelogFetcher {
 
     private void saveLastStartTime() {
         try {
-            Files.writeString(TurtyBot.getLastStartTimePath(), String.valueOf(this.startTime), StandardOpenOption.WRITE);
+            Files.writeString(TurtyBot.getLastStartTimePath(), String.valueOf(this.startTime),
+                StandardOpenOption.WRITE);
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to save last start time", exception);
         }
@@ -126,10 +130,9 @@ public class ChangelogFetcher {
             // Check if adding the current entry would exceed the character limit
             if (sb.length() + entry.length() <= 1700) {
                 sb.append(entry.trim()).append(System.lineSeparator());
-            } else {
+            } else
                 // If adding the current entry would exceed the limit, break the loop
                 break;
-            }
         }
 
         return sb.toString();

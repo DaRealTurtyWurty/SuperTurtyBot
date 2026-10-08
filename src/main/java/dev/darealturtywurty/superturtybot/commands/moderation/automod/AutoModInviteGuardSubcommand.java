@@ -16,10 +16,11 @@ public class AutoModInviteGuardSubcommand extends AutoModSubcommand {
     public AutoModInviteGuardSubcommand() {
         super("invite_guard", "Configures Discord invite filtering");
         addOption(new OptionData(OptionType.BOOLEAN, "enabled", "Whether invite guard should be enabled", true));
-        addOption(new OptionData(OptionType.BOOLEAN, "clear_whitelist", "Clears the whitelist instead of replacing it", false));
+        addOption(new OptionData(OptionType.BOOLEAN, "clear_whitelist", "Clears the whitelist instead of replacing it",
+            false));
         for (int index = 1; index <= MAX_INVITE_WHITELIST_CHANNELS; index++) {
             addOption(new OptionData(OptionType.CHANNEL, "channel_" + index,
-                    "A channel where invite links are blocked", false));
+                "A channel where invite links are blocked", false));
         }
     }
 
@@ -47,7 +48,7 @@ public class AutoModInviteGuardSubcommand extends AutoModSubcommand {
         }
 
         if (enabled && !clearWhitelist && whitelist.isEmpty()
-                && GuildData.getLongs(config.getDiscordInviteWhitelistChannels()).isEmpty()) {
+            && GuildData.getLongs(config.getDiscordInviteWhitelistChannels()).isEmpty()) {
             reply(event, "❌ Invite guard needs at least one whitelist channel before it can be enabled.", false, true);
             return;
         }
@@ -65,10 +66,11 @@ public class AutoModInviteGuardSubcommand extends AutoModSubcommand {
         }
 
         reply(event, """
-                ✅ Updated invite guard.
-                Enabled: `%s`
-                Whitelist: %s""".formatted(
-                enabled,
-                formatChannelList(event.getGuild(), GuildData.getLongs(config.getDiscordInviteWhitelistChannels()))), false, true);
+            ✅ Updated invite guard.
+            Enabled: `%s`
+            Whitelist: %s""".formatted(
+            enabled,
+            formatChannelList(event.getGuild(), GuildData.getLongs(config.getDiscordInviteWhitelistChannels()))), false,
+            true);
     }
 }

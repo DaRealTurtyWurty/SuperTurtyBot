@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
-abstract class PropertySubcommand extends SubcommandCommand {
+public abstract class PropertySubcommand extends SubcommandCommand {
     protected PropertySubcommand(String name, String description) {
         super(name, description);
     }
@@ -31,8 +31,11 @@ abstract class PropertySubcommand extends SubcommandCommand {
 
         Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot access your properties! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat(
+                    "❌ You are currently imprisoned and cannot access your properties! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 

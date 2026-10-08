@@ -48,7 +48,7 @@ public class PaginatedEmbed extends ListenerAdapter {
     private final long authorId;
 
     @Setter
-    private Consumer<Message> onMessageUpdate = ignored -> {
+    private Consumer<Message> onMessageUpdate = _ -> {
     };
     private int page;
 
@@ -88,11 +88,11 @@ public class PaginatedEmbed extends ListenerAdapter {
 
         MessageEmbed embed = createEmbed();
         channel.sendMessageEmbeds(embed).queue(msg -> {
-            Optional<ActionRow> optional = createActionRow(msg.getGuild().getIdLong(), msg.getChannel().getIdLong(), msg.getIdLong());
+            Optional<ActionRow> optional = createActionRow(msg.getGuild().getIdLong(), msg.getChannel().getIdLong(),
+                msg.getIdLong());
             optional.ifPresentOrElse(
-                    row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
-                    () -> this.onMessageUpdate.accept(msg)
-            );
+                row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
+                () -> this.onMessageUpdate.accept(msg));
         });
     }
 
@@ -106,11 +106,11 @@ public class PaginatedEmbed extends ListenerAdapter {
 
         MessageEmbed embed = createEmbed();
         hook.sendMessageEmbeds(embed).queue(msg -> {
-            Optional<ActionRow> optional = createActionRow(msg.getGuild().getIdLong(), msg.getChannel().getIdLong(), msg.getIdLong());
+            Optional<ActionRow> optional = createActionRow(msg.getGuild().getIdLong(), msg.getChannel().getIdLong(),
+                msg.getIdLong());
             optional.ifPresentOrElse(
-                    row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
-                    () -> this.onMessageUpdate.accept(msg)
-            );
+                row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
+                () -> this.onMessageUpdate.accept(msg));
         });
     }
 
@@ -141,14 +141,14 @@ public class PaginatedEmbed extends ListenerAdapter {
         List<Consumer<EmbedBuilder>> pageContents = contents.subList(fromIndex, toIndex);
 
         var builder = new EmbedBuilder()
-                .setTitle(this.title, this.url)
-                .setDescription(this.description)
-                .setFooter(this.footer, this.footerIconUrl)
-                .setThumbnail(this.thumbnail)
-                .setAuthor(this.author, this.authorUrl, this.authorIcon)
-                .setColor(this.color)
-                .setImage(this.imageUrl)
-                .setTimestamp(this.timestamp);
+            .setTitle(this.title, this.url)
+            .setDescription(this.description)
+            .setFooter(this.footer, this.footerIconUrl)
+            .setThumbnail(this.thumbnail)
+            .setAuthor(this.author, this.authorUrl, this.authorIcon)
+            .setColor(this.color)
+            .setImage(this.imageUrl)
+            .setTimestamp(this.timestamp);
 
         pageContents.forEach(builderConsumer -> builderConsumer.accept(builder));
 
@@ -162,10 +162,15 @@ public class PaginatedEmbed extends ListenerAdapter {
             this.messageId = messageId;
         }
 
-        Button first = Button.primary("pagination_first-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("⏮"));
-        Button previous = Button.primary("pagination_previous-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("◀"));
-        Button next = Button.primary("pagination_next-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("▶"));
-        Button last = Button.primary("pagination_last-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId), Emoji.fromUnicode("⏭"));
+        Button first = Button.primary("pagination_first-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId),
+            Emoji.fromUnicode("⏮"));
+        Button previous = Button.primary(
+            "pagination_previous-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId),
+            Emoji.fromUnicode("◀"));
+        Button next = Button.primary("pagination_next-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId),
+            Emoji.fromUnicode("▶"));
+        Button last = Button.primary("pagination_last-%d-%d-%d-%d".formatted(guildId, channelId, messageId, authorId),
+            Emoji.fromUnicode("⏭"));
 
         boolean disabled = contents.size() <= pageSize;
         if (disabled)
@@ -190,7 +195,8 @@ public class PaginatedEmbed extends ListenerAdapter {
         String[] split = id.split("-");
 
         String description = split[0];
-        if (!description.startsWith("pagination_")) return;
+        if (!description.startsWith("pagination_"))
+            return;
 
         String action = description.replace("pagination_", "").trim().toLowerCase(Locale.ROOT);
         long guildId = Long.parseLong(split[1]);
@@ -199,10 +205,14 @@ public class PaginatedEmbed extends ListenerAdapter {
         long authorId = Long.parseLong(split[4]);
 
         Guild guild = event.getGuild();
-        if (guildId == 0 && guild != null) return;
-        if (guildId != 0 && guild != null && guild.getIdLong() != guildId || this.guildId != guildId) return;
-        if (event.getChannel().getIdLong() != channelId || this.channelId != channelId) return;
-        if (event.getMessageIdLong() != messageId || this.messageId != messageId) return;
+        if (guildId == 0 && guild != null)
+            return;
+        if (guildId != 0 && guild != null && guild.getIdLong() != guildId || this.guildId != guildId)
+            return;
+        if (event.getChannel().getIdLong() != channelId || this.channelId != channelId)
+            return;
+        if (event.getMessageIdLong() != messageId || this.messageId != messageId)
+            return;
         if (this.authorId > 0 && event.getUser().getIdLong() != authorId) {
             event.deferEdit().queue();
             return;
@@ -221,18 +231,21 @@ public class PaginatedEmbed extends ListenerAdapter {
         event.getHook().editOriginalEmbeds(embed).queue(msg -> {
             Optional<ActionRow> optional = createActionRow(guildId, channelId, messageId);
             optional.ifPresentOrElse(
-                    row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
-                    () -> this.onMessageUpdate.accept(msg)
-            );
+                row -> msg.editMessageComponents(row).queue(this.onMessageUpdate),
+                () -> this.onMessageUpdate.accept(msg));
         });
     }
 
     @Override
     public void onMessageDelete(@NotNull MessageDeleteEvent event) {
-        if (!event.isFromGuild()) return;
-        if (event.getGuild().getIdLong() != this.guildId) return;
-        if (event.getChannel().getIdLong() != this.channelId) return;
-        if (event.getMessageIdLong() != this.messageId) return;
+        if (!event.isFromGuild())
+            return;
+        if (event.getGuild().getIdLong() != this.guildId)
+            return;
+        if (event.getChannel().getIdLong() != this.channelId)
+            return;
+        if (event.getMessageIdLong() != this.messageId)
+            return;
 
         finish();
     }
@@ -376,7 +389,8 @@ public class PaginatedEmbed extends ListenerAdapter {
         public ContentsBuilder field(String name, String value, boolean inline) {
             String safeName = sanitizeFieldName(name);
             String safeValue = sanitizeFieldValue(value);
-            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(safeName, safeValue, inline)));
+            this.contents
+                .add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(safeName, safeValue, inline)));
             return this;
         }
 
@@ -393,30 +407,27 @@ public class PaginatedEmbed extends ListenerAdapter {
         }
 
         public ContentsBuilder field(boolean inline) {
-            this.contents.add(embedBuilder -> embedBuilder.addField(new MessageEmbed.Field(ZERO_WIDTH_SPACE, ZERO_WIDTH_SPACE, inline)));
+            this.contents.add(embedBuilder -> embedBuilder
+                .addField(new MessageEmbed.Field(ZERO_WIDTH_SPACE, ZERO_WIDTH_SPACE, inline)));
             return this;
         }
 
         private static String sanitizeFieldName(String name) {
-            if (name == null || name.isBlank()) {
+            if (name == null || name.isBlank())
                 return ZERO_WIDTH_SPACE;
-            }
 
-            if (name.length() > FIELD_NAME_MAX) {
+            if (name.length() > FIELD_NAME_MAX)
                 return name.substring(0, FIELD_NAME_MAX - 3) + "...";
-            }
 
             return name;
         }
 
         private static String sanitizeFieldValue(String value) {
-            if (value == null || value.isBlank()) {
+            if (value == null || value.isBlank())
                 return ZERO_WIDTH_SPACE;
-            }
 
-            if (value.length() > FIELD_VALUE_MAX) {
+            if (value.length() > FIELD_VALUE_MAX)
                 return value.substring(0, FIELD_VALUE_MAX - 3) + "...";
-            }
 
             return value;
         }

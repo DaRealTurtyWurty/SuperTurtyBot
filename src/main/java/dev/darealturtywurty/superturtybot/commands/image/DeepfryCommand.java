@@ -37,8 +37,7 @@ public class DeepfryCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.STRING, "image", "The image to deepfry", true)
-        );
+            new OptionData(OptionType.STRING, "image", "The image to deepfry", true));
     }
 
     @Override
@@ -75,7 +74,7 @@ public class DeepfryCommand extends CoreCommand {
             BufferedImage deepfried = deepfry(url);
             FileUpload upload = FileUpload.fromData(toInputStream(deepfried), "deepfried.png");
             event.getHook().editOriginal("🔥 Deepfried Image 🔥").setFiles(upload).mentionRepliedUser(false).queue();
-        } catch(IOException | URISyntaxException exception) {
+        } catch (IOException | URISyntaxException exception) {
             event.getHook().editOriginal("❌ Failed to deepfry image!").mentionRepliedUser(false).queue();
             Constants.LOGGER.error("Failed to deepfry image", exception);
         }
@@ -84,16 +83,16 @@ public class DeepfryCommand extends CoreCommand {
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
         Message message = event.getTarget();
-        if(message.getAttachments().isEmpty()) {
+        if (message.getAttachments().isEmpty()) {
             event.reply("❌ You must provide an image to deepfry!").mentionRepliedUser(false).queue();
             return;
         }
 
-        try(Message.Attachment attachment = message.getAttachments()
-                .stream()
-                .filter(Message.Attachment::isImage)
-                .findFirst()
-                .orElse(null)) {
+        try (Message.Attachment attachment = message.getAttachments()
+            .stream()
+            .filter(Message.Attachment::isImage)
+            .findFirst()
+            .orElse(null)) {
             if (attachment == null) {
                 event.reply("❌ You must provide an image to deepfry!").mentionRepliedUser(false).queue();
                 return;
@@ -104,7 +103,8 @@ public class DeepfryCommand extends CoreCommand {
             try {
                 BufferedImage deepfried = deepfry(attachment.getUrl());
                 FileUpload upload = FileUpload.fromData(toInputStream(deepfried), "deepfried.png");
-                event.getHook().editOriginal("🔥 Deepfried Image 🔥").setFiles(upload).mentionRepliedUser(false).queue();
+                event.getHook().editOriginal("🔥 Deepfried Image 🔥").setFiles(upload).mentionRepliedUser(false)
+                    .queue();
             } catch (IOException | URISyntaxException exception) {
                 event.getHook().editOriginal("❌ Failed to deepfry image!").mentionRepliedUser(false).queue();
                 Constants.LOGGER.error("Failed to deepfry image", exception);
@@ -115,7 +115,9 @@ public class DeepfryCommand extends CoreCommand {
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
         Member member = event.getTargetMember();
-        String url = member != null ? member.getEffectiveAvatar().getUrl() : event.getTarget().getEffectiveAvatar().getUrl();
+        String url = member != null
+            ? member.getEffectiveAvatar().getUrl()
+            : event.getTarget().getEffectiveAvatar().getUrl();
 
         event.deferReply().queue();
 
@@ -123,7 +125,7 @@ public class DeepfryCommand extends CoreCommand {
             BufferedImage deepfried = deepfry(url);
             FileUpload upload = FileUpload.fromData(toInputStream(deepfried), "deepfried.png");
             event.getHook().editOriginal("🔥 Deepfried Image 🔥").setFiles(upload).mentionRepliedUser(false).queue();
-        } catch(IOException | URISyntaxException exception) {
+        } catch (IOException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to deepfry image", exception);
             event.getHook().editOriginal("❌ Failed to deepfry image!").mentionRepliedUser(false).queue();
         }
@@ -134,7 +136,7 @@ public class DeepfryCommand extends CoreCommand {
         InputStream stream = new URI(reqUrl).toURL().openStream();
         JsonObject json = Constants.GSON.fromJson(IOUtils.toString(stream, StandardCharsets.UTF_8), JsonObject.class);
         String message = json.has("message") ? json.get("message").getAsString() : null;
-        if(message == null) {
+        if (message == null) {
             Constants.LOGGER.error("Failed to deepfry image: {}", json);
             throw new IOException("No message present");
         }

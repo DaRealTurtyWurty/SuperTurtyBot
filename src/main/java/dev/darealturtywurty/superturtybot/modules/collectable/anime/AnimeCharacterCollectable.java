@@ -21,13 +21,13 @@ public final class AnimeCharacterCollectable extends Collectable {
     private final CollectableRarity rarity;
     private final String note;
 
-    AnimeCharacterCollectable(String name, String richName, Path imagePath) {
+    public AnimeCharacterCollectable(String name, String richName, Path imagePath) {
         super(name, imagePath);
         this.richName = richName;
         this.question = "What is the name of this anime character?";
         this.answer = new Answer.Builder<>()
-                .or(richName, name)
-                .build();
+            .or(richName, name)
+            .build();
         this.rarity = CollectableRarity.COMMON;
         this.note = null;
     }

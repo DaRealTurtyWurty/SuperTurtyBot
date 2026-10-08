@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.ZonedDateTime;
 
 public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifier> {
     private static final String NEWS_URL = "https://www.ubisoft.com/en-us/game/rainbow-six/siege/news-updates";
@@ -98,21 +99,23 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
     protected List<ScrapedArticle> readRelevantArticles() {
         try {
             Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
-                    request -> GameNewsProxyClient.execute(request, sourceName()));
+                request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
                 return List.of();
 
             String html = document.html();
             int startIndex = html.indexOf("window.__INITIAL_STATE__ = {");
-            if (startIndex == -1) return List.of();
-            
+            if (startIndex == -1)
+                return List.of();
+
             startIndex += 27;
             int endIndex = html.indexOf("};</script>", startIndex);
-            if (endIndex == -1) return List.of();
-            
+            if (endIndex == -1)
+                return List.of();
+
             String jsonString = html.substring(startIndex, endIndex + 1);
             JsonElement root = Constants.GSON.fromJson(jsonString, JsonElement.class);
-            
+
             List<ScrapedArticle> articles = new ArrayList<>();
             collectSiegeArticles(root, articles);
             return articles;
@@ -123,15 +126,17 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
     }
 
     private void collectSiegeArticles(JsonElement element, List<ScrapedArticle> articles) {
-        if (element == null || element.isJsonNull()) return;
+        if (element == null || element.isJsonNull())
+            return;
         if (element.isJsonArray()) {
             for (JsonElement child : element.getAsJsonArray()) {
                 collectSiegeArticles(child, articles);
             }
             return;
         }
-        if (!element.isJsonObject()) return;
-        
+        if (!element.isJsonObject())
+            return;
+
         JsonObject object = element.getAsJsonObject();
         if (object.has("id") && object.has("title") && object.has("date")) {
             String title = object.get("title").getAsString();
@@ -139,23 +144,28 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
                 String id = object.get("id").getAsString();
                 String dateStr = object.get("date").getAsString();
                 Instant publishedAt = parseDate(dateStr);
-                if (publishedAt == null) publishedAt = Instant.now();
-                
-                String abstractText = object.has("abstract") ? object.get("abstract").getAsString() : defaultDescription();
+                if (publishedAt == null) {
+                    publishedAt = Instant.now();
+                }
+
+                String abstractText = object.has("abstract")
+                    ? object.get("abstract").getAsString()
+                    : defaultDescription();
                 String url = newsUrl();
                 if (object.has("button") && object.getAsJsonObject("button").has("buttonUrl")) {
-                    url = "https://www.ubisoft.com/en-us/game/rainbow-six/siege/news-updates" + object.getAsJsonObject("button").get("buttonUrl").getAsString();
+                    url = "https://www.ubisoft.com/en-us/game/rainbow-six/siege/news-updates"
+                        + object.getAsJsonObject("button").get("buttonUrl").getAsString();
                 }
-                
+
                 String imageUrl = "";
                 if (object.has("thumbnail") && object.getAsJsonObject("thumbnail").has("url")) {
                     imageUrl = object.getAsJsonObject("thumbnail").get("url").getAsString();
                 }
-                
+
                 articles.add(new ScrapedArticle(id, title, url, imageUrl, publishedAt, abstractText));
             }
         }
-        
+
         for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
             collectSiegeArticles(entry.getValue(), articles);
         }
@@ -201,10 +211,10 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
                 int gmtIndex = value.indexOf("GMT");
                 String toParse = value.substring(0, gmtIndex + 8).trim();
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.ENGLISH);
-                return java.time.ZonedDateTime.parse(toParse, dtf).toInstant();
+                return ZonedDateTime.parse(toParse, dtf).toInstant();
             }
             return LocalDate.parse(value, DATE_FORMATTER).atStartOfDay().toInstant(ZoneOffset.UTC);
-        } catch (Exception ignored) {
+        } catch (Exception _) {
             return null;
         }
     }

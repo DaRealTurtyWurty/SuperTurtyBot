@@ -7,7 +7,7 @@ public abstract sealed class JsonBuilder permits JsonBuilder.ArrayBuilder, JsonB
         }
 
         @Override
-        void finish() {
+        protected void finish() {
             this.builder.append("]");
             this.builder.deleteCharAt(this.builder.lastIndexOf(","));
         }
@@ -64,7 +64,7 @@ public abstract sealed class JsonBuilder permits JsonBuilder.ArrayBuilder, JsonB
         }
 
         @Override
-        void finish() {
+        protected void finish() {
             this.builder.append("}");
             this.builder.deleteCharAt(this.builder.lastIndexOf(","));
         }
@@ -213,14 +213,15 @@ public abstract sealed class JsonBuilder permits JsonBuilder.ArrayBuilder, JsonB
         return new ObjectBuilder();
     }
 
-    final StringBuilder builder = new StringBuilder();
+    protected final StringBuilder builder = new StringBuilder();
 
-    private JsonBuilder() {}
+    private JsonBuilder() {
+    }
 
     public final String toJson() {
         finish();
         return this.builder.toString();
     }
 
-    abstract void finish();
+    protected abstract void finish();
 }

@@ -45,7 +45,8 @@ public class PokerCheckCommand extends PokerSubcommand {
             return;
         }
 
-        final List<PokerCommand.Game> games = PokerCommand.GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
+        final List<PokerCommand.Game> games = PokerCommand.GAMES.computeIfAbsent(guild.getIdLong(),
+            _ -> new ArrayList<>());
 
         synchronized (game) {
             try {

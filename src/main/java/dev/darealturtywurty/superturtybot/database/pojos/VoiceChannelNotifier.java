@@ -46,35 +46,36 @@ public class VoiceChannelNotifier {
             return;
 
         String mentionRolesString = mentionRoles.stream()
-                .map(roleId -> "<@&" + roleId + ">")
-                .reduce((a, b) -> a + " " + b)
-                .orElse("");
+            .map(roleId -> "<@&" + roleId + ">")
+            .reduce((a, b) -> a + " " + b)
+            .orElse("");
 
         String action = left ? "left" : "joined";
         String finalMessage = message.replace("{user}", member.getAsMention())
-                .replace("{channel}", channel.getAsMention())
-                .replace("{mentions}", mentionRolesString)
-                .replace("{action}", action);
+            .replace("{channel}", channel.getAsMention())
+            .replace("{mentions}", mentionRolesString)
+            .replace("{action}", action);
 
         long usersInChannel = guild.getVoiceStates().stream()
-                .filter(voiceState -> voiceState.inAudioChannel()
-                        && voiceState.getChannel() != null
-                        && voiceState.getChannel().getIdLong() == channel.getIdLong())
-                .count();
+            .filter(voiceState -> voiceState.inAudioChannel()
+                && voiceState.getChannel() != null
+                && voiceState.getChannel().getIdLong() == channel.getIdLong())
+            .count();
 
         var embed = new EmbedBuilder()
-                .setTitle("Voice Channel Notification")
-                .addField("User", member.getEffectiveName(), true)
-                .addField("Channel", channel.getAsMention(), true)
-                .addField("Action", action.toUpperCase(), true)
-                .addField("Users in Channel", usersInChannel + " / " + channel.getUserLimit(), true)
-                .setColor(left ? 0xFF0000 : 0x00FF00)
-                .setTimestamp(Instant.now())
-                .build();
+            .setTitle("Voice Channel Notification")
+            .addField("User", member.getEffectiveName(), true)
+            .addField("Channel", channel.getAsMention(), true)
+            .addField("Action", action.toUpperCase(), true)
+            .addField("Users in Channel", usersInChannel + " / " + channel.getUserLimit(), true)
+            .setColor(left ? 0xFF0000 : 0x00FF00)
+            .setTimestamp(Instant.now())
+            .build();
         textChannel.sendMessageEmbeds(embed)
-                .setContent(finalMessage)
-                .setAllowedMentions(EnumSet.complementOf(EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE)))
-                .queue(afterSend, _ -> {
-                });
+            .setContent(finalMessage)
+            .setAllowedMentions(
+                EnumSet.complementOf(EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE)))
+            .queue(afterSend, _ -> {
+            });
     }
 }

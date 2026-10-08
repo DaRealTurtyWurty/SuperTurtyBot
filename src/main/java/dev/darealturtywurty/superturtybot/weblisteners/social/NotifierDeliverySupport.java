@@ -24,22 +24,22 @@ public final class NotifierDeliverySupport {
         StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class, channelId);
         if (channel == null) {
             logFailure(sourceName, guild.getIdLong(), channelId, "missing-channel", null,
-                    "Skipping {} notifier for guild {} because channel {} is not a text or announcement channel, or no longer exists.",
-                    sourceName, guild.getIdLong(), channelId);
+                "Skipping {} notifier for guild {} because channel {} is not a text or announcement channel, or no longer exists.",
+                sourceName, guild.getIdLong(), channelId);
             return null;
         }
 
         if (!channel.canTalk()) {
             logFailure(sourceName, guild.getIdLong(), channelId, "cannot-talk", null,
-                    "Skipping {} notifier for guild {} because the bot cannot send messages in channel {}.",
-                    sourceName, guild.getIdLong(), channelId);
+                "Skipping {} notifier for guild {} because the bot cannot send messages in channel {}.",
+                sourceName, guild.getIdLong(), channelId);
             return null;
         }
 
         if (!guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
             logFailure(sourceName, guild.getIdLong(), channelId, "missing-embed-links", null,
-                    "Skipping {} notifier for guild {} because the bot is missing {} in channel {}.",
-                    sourceName, guild.getIdLong(), Permission.MESSAGE_EMBED_LINKS, channelId);
+                "Skipping {} notifier for guild {} because the bot is missing {} in channel {}.",
+                sourceName, guild.getIdLong(), Permission.MESSAGE_EMBED_LINKS, channelId);
             return null;
         }
 
@@ -53,19 +53,26 @@ public final class NotifierDeliverySupport {
         } catch (CompletionException exception) {
             Throwable cause = exception.getCause() == null ? exception : exception.getCause();
             logFailure(sourceName, channel.getGuild().getIdLong(), channel.getIdLong(), "send-failure", cause,
-                    "Failed to send {} notifier update for guild {} in channel {}.",
-                    sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
+                "Failed to send {} notifier update for guild {} in channel {}.",
+                sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
             return false;
         } catch (Exception exception) {
             logFailure(sourceName, channel.getGuild().getIdLong(), channel.getIdLong(), "send-failure", exception,
-                    "Failed to send {} notifier update for guild {} in channel {}.",
-                    sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
+                "Failed to send {} notifier update for guild {} in channel {}.",
+                sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
             return false;
         }
     }
 
-    private static void logFailure(String sourceName, long guildId, long channelId, String reason, Throwable throwable,
-                                   String message, Object... arguments) {
+    private static void logFailure(
+        String sourceName,
+        long guildId,
+        long channelId,
+        String reason,
+        Throwable throwable,
+        String message,
+        Object... arguments
+    ) {
         String key = sourceName + "|" + guildId + "|" + channelId + "|" + reason;
         Instant now = Instant.now();
         Instant previous = RECENT_FAILURE_LOGS.get(key);

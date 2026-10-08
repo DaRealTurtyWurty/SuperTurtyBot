@@ -36,7 +36,8 @@ public class RocketLeagueNotifierSubcommand extends SingleGuildNotifierSubcomman
 
     @Override
     protected boolean delete(long guildId) {
-        return Database.getDatabase().rocketLeagueNotifier.deleteOne(Filters.eq("guild", guildId)).getDeletedCount() != 0;
+        return Database.getDatabase().rocketLeagueNotifier.deleteOne(Filters.eq("guild", guildId))
+            .getDeletedCount() != 0;
     }
 
     @Override

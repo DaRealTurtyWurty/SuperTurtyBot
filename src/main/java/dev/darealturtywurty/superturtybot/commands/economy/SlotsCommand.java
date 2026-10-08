@@ -108,7 +108,7 @@ public class SlotsCommand extends EconomyCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.STRING, "bet-amount", "The amount of money to bet on the slots.", true));
+            new OptionData(OptionType.STRING, "bet-amount", "The amount of money to bet on the slots.", true));
     }
 
     @Override
@@ -120,7 +120,8 @@ public class SlotsCommand extends EconomyCommand {
         }
 
         if (amount.signum() <= 0) {
-            event.getHook().editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency())).queue();
+            event.getHook().editOriginal("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency()))
+                .queue();
             return;
         }
 
@@ -137,11 +138,11 @@ public class SlotsCommand extends EconomyCommand {
         embed.addField("Slots", outcome.getEmojiDisplay(), false);
 
         embed.addField("Outcome", WordUtils.capitalize(
-                        outcome.getType()
-                                .name()
-                                .replace("_", " ")
-                                .toLowerCase(Locale.ROOT)),
-                false);
+            outcome.getType()
+                .name()
+                .replace("_", " ")
+                .toLowerCase(Locale.ROOT)),
+            false);
 
         embed.addField("Winnings", StringUtils.numberFormat(outcome.getAmount(), config), false);
 
@@ -157,7 +158,14 @@ public class SlotsCommand extends EconomyCommand {
         return createEmbed(outcome, member, config, "Slots");
     }
 
-    private static void play(Consumer<String> editText, Function<MessageEmbed, RestAction<Message>> editEmbeds, Member member, Guild guild, GuildData config, BigInteger betAmount) {
+    private static void play(
+        Consumer<String> editText,
+        Function<MessageEmbed, RestAction<Message>> editEmbeds,
+        Member member,
+        Guild guild,
+        GuildData config,
+        BigInteger betAmount
+    ) {
         if (betAmount.signum() <= 0) {
             editText.accept("❌ You cannot bet less than %s1!".formatted(config.getEconomyCurrency()));
             return;
@@ -166,7 +174,7 @@ public class SlotsCommand extends EconomyCommand {
         final Economy account = EconomyManager.getOrCreateAccount(guild, member.getUser());
         if (account.isImprisoned()) {
             editText.accept("❌ You are currently imprisoned and cannot gamble! You will be released %s.".formatted(
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
+                TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
             return;
         }
 
@@ -192,7 +200,7 @@ public class SlotsCommand extends EconomyCommand {
                 if (account.getWallet().compareTo(finalBetAmount) >= 0) {
                     message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
                     createButtonWaiter(message, member, guild, message.getChannel().getIdLong(),
-                            message.getIdLong(), config, finalBetAmount).build();
+                        message.getIdLong(), config, finalBetAmount).build();
                 }
             }
         });
@@ -214,9 +222,10 @@ public class SlotsCommand extends EconomyCommand {
                 int finalI = i;
                 editEmbeds.apply(freeSpinEmbed.build()).queue(message -> {
                     if (finalI == outcomes.size() - 1 && account.getWallet().compareTo(finalBetAmount) >= 0) {
-                        message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay"))).queue();
+                        message.editMessageComponents(ActionRow.of(Button.primary("slots-play-again", "Replay")))
+                            .queue();
                         createButtonWaiter(message, member, guild, message.getChannel().getIdLong(),
-                                message.getIdLong(), config, finalBetAmount).build();
+                            message.getIdLong(), config, finalBetAmount).build();
                     }
                 });
 
@@ -240,30 +249,38 @@ public class SlotsCommand extends EconomyCommand {
         play(str -> message.editMessage(str).queue(), message::editMessageEmbeds, member, guild, config, betAmount);
     }
 
-    private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(Message message, Member member, Guild guild, long channelId, long messageId, GuildData config, BigInteger betAmount) {
-        //noinspection DataFlowIssue - This is a false positive
+    private static EventWaiter.Builder<ButtonInteractionEvent> createButtonWaiter(
+        Message message,
+        Member member,
+        Guild guild,
+        long channelId,
+        long messageId,
+        GuildData config,
+        BigInteger betAmount
+    ) {
+        // noinspection DataFlowIssue - This is a false positive
         return TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                .timeout(1, TimeUnit.MINUTES)
-                .timeoutAction(() -> message.editMessageComponents().queue())
-                .condition(event -> event.getUser().getIdLong() == member.getIdLong() &&
-                        event.getMessageIdLong() == messageId &&
-                        event.getComponentId().equals("slots-play-again") &&
-                        event.isFromGuild() &&
-                        event.getGuild().getIdLong() == guild.getIdLong() &&
-                        event.getChannel().getIdLong() == channelId)
-                .failure(() -> message.editMessageComponents().queue())
-                .success(event ->
-                        message.editMessageComponents()
-                                .flatMap(msg -> msg.reply("Playing again..."))
-                                .queue(msg -> play(msg, member, guild, config, betAmount)));
+            .timeout(1, TimeUnit.MINUTES)
+            .timeoutAction(() -> message.editMessageComponents().queue())
+            .condition(event -> event.getUser().getIdLong() == member.getIdLong() &&
+                event.getMessageIdLong() == messageId &&
+                event.getComponentId().equals("slots-play-again") &&
+                event.isFromGuild() &&
+                event.getGuild().getIdLong() == guild.getIdLong() &&
+                event.getChannel().getIdLong() == channelId)
+            .failure(() -> message.editMessageComponents().queue())
+            .success(event -> message.editMessageComponents()
+                .flatMap(msg -> msg.reply("Playing again..."))
+                .queue(msg -> play(msg, member, guild, config, betAmount)));
     }
 
     private static List<Outcome> handleFreeSpins(BigInteger betAmount, int freeSpins) {
         List<Outcome> outcomes = new ArrayList<>();
         for (int spin = 0; spin < freeSpins; spin++) {
             Outcome freeSpinOutcome = spin(betAmount, true).getFirst();
-            if (freeSpinOutcome.getAmount().signum() < 0)
+            if (freeSpinOutcome.getAmount().signum() < 0) {
                 freeSpinOutcome.amount = BigInteger.ZERO;
+            }
             outcomes.add(freeSpinOutcome);
         }
         return outcomes;
@@ -311,23 +328,27 @@ public class SlotsCommand extends EconomyCommand {
         return outcomes;
     }
 
-    private static Outcome fetchOutcome(WeightedRandomBag<String>.Entry entry1, WeightedRandomBag<String>.Entry entry2, WeightedRandomBag<String>.Entry entry3, BigInteger betAmount) {
-        if (!Objects.equals(entry1, entry2) || !Objects.equals(entry2, entry3)) {
+    private static Outcome fetchOutcome(
+        WeightedRandomBag<String>.Entry entry1,
+        WeightedRandomBag<String>.Entry entry2,
+        WeightedRandomBag<String>.Entry entry3,
+        BigInteger betAmount
+    ) {
+        if (!Objects.equals(entry1, entry2) || !Objects.equals(entry2, entry3))
             return new Outcome(Outcome.OutcomeType.LOSS, BigInteger.ZERO);
-        }
         BigInteger winnings;
         String fullString = entry1.getObject() + entry2.getObject() + entry3.getObject();
         for (Map.Entry<String, Outcome> outcomeEntry : WINNING_FORMATS.entrySet()) {
             String pattern = outcomeEntry.getKey();
             Outcome outcome = outcomeEntry.getValue();
 
-            if (!fullString.contains(pattern)) continue;
+            if (!fullString.contains(pattern))
+                continue;
             winnings = outcome.getAmount();
-            if (outcome.getType() == Outcome.OutcomeType.WIN) {
+            if (outcome.getType() == Outcome.OutcomeType.WIN)
                 return new Outcome(Outcome.OutcomeType.WIN, winnings.multiply(betAmount));
-            } else if (outcome.getType() == Outcome.OutcomeType.FREE_SPIN) {
+            else if (outcome.getType() == Outcome.OutcomeType.FREE_SPIN)
                 return new Outcome(Outcome.OutcomeType.FREE_SPIN, betAmount);
-            }
         }
 
         return new Outcome(Outcome.OutcomeType.FREE_SPIN, BigInteger.ZERO);

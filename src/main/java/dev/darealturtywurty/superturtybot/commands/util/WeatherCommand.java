@@ -97,32 +97,29 @@ public class WeatherCommand extends CoreCommand {
 
     private static EmbedBuilder getForecast(String location) {
         Either<String, GeocodeResult> errorOrGeocode = geocode(location);
-        if (errorOrGeocode.isLeft()) {
+        if (errorOrGeocode.isLeft())
             return new EmbedBuilder()
-                    .setTitle("❌ An error occurred!")
-                    .setDescription(errorOrGeocode.getLeft())
-                    .setColor(Color.RED);
-        }
+                .setTitle("❌ An error occurred!")
+                .setDescription(errorOrGeocode.getLeft())
+                .setColor(Color.RED);
 
         GeocodeResult result = errorOrGeocode.getRight();
 
         String url = String.format(FORECAST_URL, result.getLatitude(), result.getLongitude());
         Request request = new Request.Builder().url(url).get().build();
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
+            if (!response.isSuccessful())
                 return new EmbedBuilder()
-                        .setTitle("❌ An error occurred!")
-                        .setDescription("An error occurred while getting the weather!")
-                        .setColor(Color.RED);
-            }
+                    .setTitle("❌ An error occurred!")
+                    .setDescription("An error occurred while getting the weather!")
+                    .setColor(Color.RED);
 
             ResponseBody body = response.body();
-            if (body == null) {
+            if (body == null)
                 return new EmbedBuilder()
-                        .setTitle("❌ An error occurred!")
-                        .setDescription("An error occurred while getting the weather!")
-                        .setColor(Color.RED);
-            }
+                    .setTitle("❌ An error occurred!")
+                    .setDescription("An error occurred while getting the weather!")
+                    .setColor(Color.RED);
 
             String json = body.string();
             OpenMeteoWeatherForecast forecast = Constants.GSON.fromJson(json, OpenMeteoWeatherForecast.class);
@@ -141,32 +138,32 @@ public class WeatherCommand extends CoreCommand {
             for (int dayNumber = 0; dayNumber < days; dayNumber++) {
                 ByDay dayForecast = dailyForecast.getByDay(dayNumber);
                 String forecastString = """
-                        Temperature: %.2f%s - %.2f%s
-                        Apparent Temperature: %.2f%s - %.2f%s
-                        Precipitation: %.2f %s
-                        Rain: %.2f %s
-                        Showers: %.2f %s
-                        Snowfall: %.2f %s
-                        Wind Speed: %.2f %s
-                        Wind Gusts: %.2f %s
-                        """.formatted(dayForecast.temperature_2m_min(), dailyUnits.getTemperature_2m_min(),
-                        dayForecast.temperature_2m_max(), dailyUnits.getTemperature_2m_max(),
-                        dayForecast.apparent_temperature_min(), dailyUnits.getApparent_temperature_min(),
-                        dayForecast.apparent_temperature_max(), dailyUnits.getApparent_temperature_max(),
-                        dayForecast.precipitation_sum(), dailyUnits.getPrecipitation_sum(),
-                        dayForecast.rain_sum(), dailyUnits.getRain_sum(),
-                        dayForecast.showers_sum(), dailyUnits.getShowers_sum(),
-                        dayForecast.snowfall_sum(), dailyUnits.getSnowfall_sum(),
-                        dayForecast.windspeed_10m_max(), dailyUnits.getWindspeed_10m_max(),
-                        dayForecast.windgusts_10m_max(), dailyUnits.getWindgusts_10m_max());
+                    Temperature: %.2f%s - %.2f%s
+                    Apparent Temperature: %.2f%s - %.2f%s
+                    Precipitation: %.2f %s
+                    Rain: %.2f %s
+                    Showers: %.2f %s
+                    Snowfall: %.2f %s
+                    Wind Speed: %.2f %s
+                    Wind Gusts: %.2f %s
+                    """.formatted(dayForecast.temperature_2m_min(), dailyUnits.getTemperature_2m_min(),
+                    dayForecast.temperature_2m_max(), dailyUnits.getTemperature_2m_max(),
+                    dayForecast.apparent_temperature_min(), dailyUnits.getApparent_temperature_min(),
+                    dayForecast.apparent_temperature_max(), dailyUnits.getApparent_temperature_max(),
+                    dayForecast.precipitation_sum(), dailyUnits.getPrecipitation_sum(),
+                    dayForecast.rain_sum(), dailyUnits.getRain_sum(),
+                    dayForecast.showers_sum(), dailyUnits.getShowers_sum(),
+                    dayForecast.snowfall_sum(), dailyUnits.getSnowfall_sum(),
+                    dayForecast.windspeed_10m_max(), dailyUnits.getWindspeed_10m_max(),
+                    dayForecast.windgusts_10m_max(), dailyUnits.getWindgusts_10m_max());
 
                 // get the day as a week day
                 String day = LocalDate.from(
-                        Instant.now()
-                                .plus(dayNumber, ChronoUnit.DAYS)
-                                .atZone(ZoneId.of(forecast.getTimezone())))
-                        .getDayOfWeek()
-                        .getDisplayName(TextStyle.FULL, Locale.ROOT);
+                    Instant.now()
+                        .plus(dayNumber, ChronoUnit.DAYS)
+                        .atZone(ZoneId.of(forecast.getTimezone())))
+                    .getDayOfWeek()
+                    .getDisplayName(TextStyle.FULL, Locale.ROOT);
                 embed.addField(day, forecastString, false);
             }
 
@@ -175,9 +172,9 @@ public class WeatherCommand extends CoreCommand {
             Constants.LOGGER.error("An error occurred while getting the weather!", exception);
 
             return new EmbedBuilder()
-                    .setTitle("❌ An error occurred!")
-                    .setDescription("An error occurred while getting the weather!")
-                    .setColor(Color.RED);
+                .setTitle("❌ An error occurred!")
+                .setDescription("An error occurred while getting the weather!")
+                .setColor(Color.RED);
         }
     }
 
@@ -286,22 +283,32 @@ public class WeatherCommand extends CoreCommand {
             int winddirection_10m = this.winddirection_10m.get(hour);
 
             return new ByHour(time,
-                    temperature_2m,
-                    relativehumidity_2m,
-                    apparent_temperature,
-                    precipitation_probability,
-                    precipitation,
-                    rain,
-                    showers,
-                    snowfall,
-                    windspeed_10m,
-                    winddirection_10m);
+                temperature_2m,
+                relativehumidity_2m,
+                apparent_temperature,
+                precipitation_probability,
+                precipitation,
+                rain,
+                showers,
+                snowfall,
+                windspeed_10m,
+                winddirection_10m);
         }
     }
 
-    public record ByHour(String time, float temperature_2m, int relativehumidity_2m, float apparent_temperature,
-                         int precipitation_probability, float precipitation, float rain, float showers, float snowfall,
-                         float windspeed_10m, int winddirection_10m) {
+    public record ByHour(
+        String time,
+        float temperature_2m,
+        int relativehumidity_2m,
+        float apparent_temperature,
+        int precipitation_probability,
+        float precipitation,
+        float rain,
+        float showers,
+        float snowfall,
+        float windspeed_10m,
+        int winddirection_10m
+    ) {
     }
 
     @Data
@@ -353,16 +360,16 @@ public class WeatherCommand extends CoreCommand {
             float windgusts_10m_max = this.windgusts_10m_max.get(day);
 
             return new ByDay(time,
-                    temperature_2m_max,
-                    temperature_2m_min,
-                    apparent_temperature_max,
-                    apparent_temperature_min,
-                    precipitation_sum,
-                    rain_sum,
-                    showers_sum,
-                    snowfall_sum,
-                    windspeed_10m_max,
-                    windgusts_10m_max);
+                temperature_2m_max,
+                temperature_2m_min,
+                apparent_temperature_max,
+                apparent_temperature_min,
+                precipitation_sum,
+                rain_sum,
+                showers_sum,
+                snowfall_sum,
+                windspeed_10m_max,
+                windgusts_10m_max);
         }
 
         /**
@@ -371,35 +378,56 @@ public class WeatherCommand extends CoreCommand {
         public int getDays() {
             int days = 100;
 
-            if(days > time.size())
+            if (days > time.size()) {
                 days = time.size();
-            if (days > temperature_2m_max.size())
+            }
+            if (days > temperature_2m_max.size()) {
                 days = temperature_2m_max.size();
-            if (days > temperature_2m_min.size())
+            }
+            if (days > temperature_2m_min.size()) {
                 days = temperature_2m_min.size();
-            if (days > apparent_temperature_max.size())
+            }
+            if (days > apparent_temperature_max.size()) {
                 days = apparent_temperature_max.size();
-            if (days > apparent_temperature_min.size())
+            }
+            if (days > apparent_temperature_min.size()) {
                 days = apparent_temperature_min.size();
-            if (days > precipitation_sum.size())
+            }
+            if (days > precipitation_sum.size()) {
                 days = precipitation_sum.size();
-            if (days > rain_sum.size())
+            }
+            if (days > rain_sum.size()) {
                 days = rain_sum.size();
-            if (days > showers_sum.size())
+            }
+            if (days > showers_sum.size()) {
                 days = showers_sum.size();
-            if (days > snowfall_sum.size())
+            }
+            if (days > snowfall_sum.size()) {
                 days = snowfall_sum.size();
-            if (days > windspeed_10m_max.size())
+            }
+            if (days > windspeed_10m_max.size()) {
                 days = windspeed_10m_max.size();
-            if (days > windgusts_10m_max.size())
+            }
+            if (days > windgusts_10m_max.size()) {
                 days = windgusts_10m_max.size();
+            }
 
             return days;
         }
     }
 
-    public record ByDay(String time, float temperature_2m_max, float temperature_2m_min, float apparent_temperature_max,
-                        float apparent_temperature_min, float precipitation_sum, float rain_sum, float showers_sum,
-                        float snowfall_sum, float windspeed_10m_max, float windgusts_10m_max) {
+    public record ByDay(
+        String time,
+        float temperature_2m_max,
+        float temperature_2m_min,
+        float apparent_temperature_max,
+        float apparent_temperature_min,
+        float precipitation_sum,
+        float rain_sum,
+        float showers_sum,
+        float snowfall_sum,
+        float windspeed_10m_max,
+        float windgusts_10m_max
+    ) {
     }
 }

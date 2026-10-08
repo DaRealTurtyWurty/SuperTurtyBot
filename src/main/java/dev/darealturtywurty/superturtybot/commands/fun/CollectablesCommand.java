@@ -31,7 +31,8 @@ public class CollectablesCommand extends CoreCommand {
 
     @Override
     public List<OptionData> createOptions() {
-        List<CollectableGameCollector<?>> collectors = new ArrayList<>(CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().values());
+        List<CollectableGameCollector<?>> collectors = new ArrayList<>(
+            CollectableGameCollectorRegistry.COLLECTOR_REGISTRY.getRegistry().values());
         if (collectors.isEmpty())
             return List.of();
 
@@ -83,7 +84,8 @@ public class CollectablesCommand extends CoreCommand {
 
         event.deferReply().queue();
 
-        UserCollectables userCollectables = Database.getDatabase().userCollectables.find(Filters.eq("user", event.getUser().getIdLong())).first();
+        UserCollectables userCollectables = Database.getDatabase().userCollectables
+            .find(Filters.eq("user", event.getUser().getIdLong())).first();
         if (userCollectables == null) {
             event.getHook().sendMessage("❌ You do not have any collectables!").queue();
             return;
@@ -127,8 +129,9 @@ public class CollectablesCommand extends CoreCommand {
             List<String> formattedCollectables = new ArrayList<>(rares.size());
             for (Collectable collectable : rares) {
                 var formatted = new StringBuilder();
-                if (collector.getPresentation() == CollectablePresentation.EMOJI)
+                if (collector.getPresentation() == CollectablePresentation.EMOJI) {
                     formatted.append(collectable.getEmoji()).append(" ");
+                }
 
                 formatted.append(collectable.getRichName());
                 formattedCollectables.add(formatted.toString());
@@ -137,8 +140,9 @@ public class CollectablesCommand extends CoreCommand {
             List<String> fieldValues = createFieldValues(formattedCollectables);
             for (int index = 0; index < fieldValues.size(); index++) {
                 String fieldName = rarity.getName() + " (" + rares.size() + ")";
-                if (index > 0)
+                if (index > 0) {
                     fieldName += " (continued)";
+                }
 
                 contents.field(fieldName, fieldValues.get(index));
             }
@@ -146,22 +150,24 @@ public class CollectablesCommand extends CoreCommand {
 
         int highestOrdinal = 0;
         for (var rarity : collectables.keySet()) {
-            if (rarity.ordinal() > highestOrdinal)
+            if (rarity.ordinal() > highestOrdinal) {
                 highestOrdinal = rarity.ordinal();
+            }
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(FIELDS_PER_PAGE, contents)
-                .title(event.getUser().getEffectiveName() + "'s " + collector.getDisplayName() + " Collection (" + userCollection.getCollectables().size() + ")")
-                .timestamp(Instant.now())
-                .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
-                .color(CollectableRarity.values()[highestOrdinal].getColor())
-                .authorOnly(event.getUser().getIdLong())
-                .build(event.getJDA());
+            .title(event.getUser().getEffectiveName() + "'s " + collector.getDisplayName() + " Collection ("
+                + userCollection.getCollectables().size() + ")")
+            .timestamp(Instant.now())
+            .footer("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl())
+            .color(CollectableRarity.values()[highestOrdinal].getColor())
+            .authorOnly(event.getUser().getIdLong())
+            .build(event.getJDA());
 
         embed.send(event.getHook());
     }
 
-    static List<String> createFieldValues(List<String> collectables) {
+    private static List<String> createFieldValues(List<String> collectables) {
         List<String> fields = new ArrayList<>();
         var current = new StringBuilder();
 
@@ -176,7 +182,7 @@ public class CollectablesCommand extends CoreCommand {
                 while (collectable.length() - start > FIELD_VALUE_MAX_LENGTH) {
                     int end = start + FIELD_VALUE_MAX_LENGTH;
                     if (Character.isHighSurrogate(collectable.charAt(end - 1))
-                            && Character.isLowSurrogate(collectable.charAt(end))) {
+                        && Character.isLowSurrogate(collectable.charAt(end))) {
                         end--;
                     }
 
@@ -194,14 +200,16 @@ public class CollectablesCommand extends CoreCommand {
                 current.setLength(0);
             }
 
-            if (!current.isEmpty())
+            if (!current.isEmpty()) {
                 current.append(", ");
+            }
 
             current.append(collectable);
         }
 
-        if (!current.isEmpty())
+        if (!current.isEmpty()) {
             fields.add(current.toString());
+        }
 
         return fields;
     }

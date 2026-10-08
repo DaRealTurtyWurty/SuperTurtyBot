@@ -31,7 +31,7 @@ public class Property implements Registerable {
     private List<Long> previousOwners;
     private BigInteger estateTax;
     private int upgradeLevel;
-    
+
     private Property(Builder builder) {
         this.name = builder.name;
         this.owner = builder.owner;
@@ -63,15 +63,15 @@ public class Property implements Registerable {
     public boolean isPaidOff() {
         return !isMortgaged() || this.mortgage.isPaidOff();
     }
-    
+
     public boolean hasRent() {
         return this.rent != null;
     }
-    
+
     public boolean hasPreviousOwners() {
         return this.previousOwners != null && !this.previousOwners.isEmpty();
     }
-    
+
     public boolean hasOwner() {
         return this.owner != -1;
     }
@@ -109,7 +109,8 @@ public class Property implements Registerable {
 
         long daysOwned = Math.max(0, (System.currentTimeMillis() - this.buyDate) / 86_400_000L);
         if (daysOwned > 0) {
-            worth = worth.add(this.originalPrice.multiply(BigInteger.valueOf(daysOwned)).divide(BigInteger.valueOf(1000)));
+            worth = worth
+                .add(this.originalPrice.multiply(BigInteger.valueOf(daysOwned)).divide(BigInteger.valueOf(1000)));
         }
 
         if (this.mortgage != null && !this.mortgage.isPaidOff()) {

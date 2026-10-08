@@ -32,12 +32,12 @@ public class ShopCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("view", "View the shop").addOption(OptionType.USER, "user",
-                        "The user to view the shop of", false),
-                new SubcommandData("buy", "Buy an item from the shop").addOption(OptionType.INTEGER, "item_id",
-                        "The ID of the item you want to buy", true),
-                new SubcommandData("sell", "Sell an item to the shop").addOption(OptionType.INTEGER, "item_id",
-                        "The ID of the item you want to sell", true).addOption(OptionType.INTEGER, "amount",
-                        "The amount of money that you want to sell this item for", true));
+            "The user to view the shop of", false),
+            new SubcommandData("buy", "Buy an item from the shop").addOption(OptionType.INTEGER, "item_id",
+                "The ID of the item you want to buy", true),
+            new SubcommandData("sell", "Sell an item to the shop").addOption(OptionType.INTEGER, "item_id",
+                "The ID of the item you want to sell", true).addOption(OptionType.INTEGER, "amount",
+                    "The amount of money that you want to sell this item for", true));
     }
 
     @Override
@@ -88,16 +88,16 @@ public class ShopCommand extends EconomyCommand {
                     var contents = new PaginatedEmbed.ContentsBuilder();
                     for (ShopItem item : shop) {
                         contents.field(item.getImage() + " " + item.getName(),
-                                "ID: " + item.getId() + "\nPrice: " + StringUtils.numberFormat(item.getPrice(), config));
+                            "ID: " + item.getId() + "\nPrice: " + StringUtils.numberFormat(item.getPrice(), config));
                     }
 
                     PaginatedEmbed paginatedEmbed = new PaginatedEmbed.Builder(10, contents)
-                            .timestamp(Instant.now())
-                            .title("Shop for " + user.getName())
-                            .color(member.getColorRaw())
-                            .footer(user.getEffectiveName(), member.getEffectiveAvatarUrl())
-                            .authorOnly(event.getUser().getIdLong())
-                            .build(event.getJDA());
+                        .timestamp(Instant.now())
+                        .title("Shop for " + user.getName())
+                        .color(member.getColorRaw())
+                        .footer(user.getEffectiveName(), member.getEffectiveAvatarUrl())
+                        .authorOnly(event.getUser().getIdLong())
+                        .build(event.getJDA());
 
                     paginatedEmbed.send(event.getHook());
                     return;
@@ -105,7 +105,7 @@ public class ShopCommand extends EconomyCommand {
 
                 PublicShop shop = EconomyManager.getPublicShop();
                 if (shop.getDiscountItems().isEmpty() && shop.getFeaturedItems().isEmpty() && shop.getNewItems()
-                        .isEmpty()) {
+                    .isEmpty()) {
                     event.getHook().editOriginal("❌ The shop is currently empty, please come back later!").queue();
                     return;
                 }
@@ -156,13 +156,13 @@ public class ShopCommand extends EconomyCommand {
         for (ShopItem item : newItems) {
             String name = item.getName();
             BufferedImage img = ImageIO.read(
-                    Objects.requireNonNull(TurtyBot.class.getResourceAsStream(item.getImage())));
+                Objects.requireNonNull(TurtyBot.class.getResourceAsStream(item.getImage())));
 
             g2d.setColor(Color.BLACK);
             g2d.fillRect(x - 5,
-                    545,
-                    Math.max(g2d.getFontMetrics().stringWidth(name) + 5, 755),
-                    805 + g2d.getFontMetrics().getHeight());
+                545,
+                Math.max(g2d.getFontMetrics().stringWidth(name) + 5, 755),
+                805 + g2d.getFontMetrics().getHeight());
 
             g2d.drawImage(img, x, 550, 750, 750, null);
 

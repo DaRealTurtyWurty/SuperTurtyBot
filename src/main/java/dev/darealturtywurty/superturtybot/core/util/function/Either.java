@@ -42,8 +42,8 @@ public final class Either<L, R> {
      * The left side of a disjoint union, as opposed to the right side.
      *
      * @param value instance of type L to be contained
-     * @param <L>   the type of the left value to be contained
-     * @param <R>   the type of the right value to be contained
+     * @param <L> the type of the left value to be contained
+     * @param <R> the type of the right value to be contained
      * @return an instance of {@link Either} well-defined for the left side
      */
     public static <L, R> Either<L, R> left(L value) {
@@ -54,8 +54,8 @@ public final class Either<L, R> {
      * The right side of a disjoint union, as opposed to the left side.
      *
      * @param value instance of type R to be contained
-     * @param <L>   the type of the left value to be contained
-     * @param <R>   the type of the right value to be contained
+     * @param <L> the type of the left value to be contained
+     * @param <R> the type of the right value to be contained
      * @return an instance of {@link Either} well-defined for the right side
      */
     public static <L, R> Either<L, R> right(R value) {
@@ -67,26 +67,25 @@ public final class Either<L, R> {
      * of the {@link Either}, or else use the {@link Supplier} to define the left side of the
      * {@link Either}.
      *
-     * @param leftSupplier  function invoked (only if rightOptional.isEmpty() returns true) to place
-     *                      the returned value for the left side of the {@link Either}
+     * @param leftSupplier function invoked (only if rightOptional.isEmpty() returns true) to place
+     *            the returned value for the left side of the {@link Either}
      * @param rightOptional the contained value is placed into the right side of the {@link Either}
-     * @param <L>           type of the instance provided by the {@link Supplier}
-     * @param <R>           type of the value in the instance of the {@link Optional}
+     * @param <L> type of the instance provided by the {@link Supplier}
+     * @param <R> type of the value in the instance of the {@link Optional}
      * @return a well-defined instance of {@link Either}
      */
     public static <L, R> Either<L, R> from(Supplier<L> leftSupplier, Optional<R> rightOptional) {
         return rightOptional
-                .map(Either::<L, R>right)
-                .orElseGet(() -> Either.left(leftSupplier.get()));
+            .map(Either::<L, R>right)
+            .orElseGet(() -> Either.left(leftSupplier.get()));
     }
 
     private final Optional<L> left;
     private final Optional<R> right;
 
     private Either(Optional<L> left, Optional<R> right) {
-        if (left.isEmpty() == right.isEmpty()) {
+        if (left.isEmpty() == right.isEmpty())
             throw new IllegalArgumentException("left.isEmpty() must not be equal to right.isEmpty()");
-        }
         this.left = left;
         this.right = right;
     }
@@ -100,9 +99,9 @@ public final class Either<L, R> {
     @Override
     public boolean equals(Object o) {
         return (this == o) ||
-                ((o instanceof Either<?, ?> that)
-                        && Objects.equals(this.left, that.left)
-                        && Objects.equals(this.right, that.right));
+            ((o instanceof Either<?, ?> that)
+                && Objects.equals(this.left, that.left)
+                && Objects.equals(this.right, that.right));
     }
 
     /**
@@ -158,7 +157,7 @@ public final class Either<L, R> {
      * an {@link Optional#of}, or else returns {@link Optional#empty}.
      *
      * @return an {@link Optional} containing the right side if defined, or else returns
-     * {@link Optional#empty}
+     *         {@link Optional#empty}
      */
     public Optional<R> toOptional() {
         return this.right;
@@ -169,7 +168,7 @@ public final class Either<L, R> {
      * {@link Either#mapRight}.
      *
      * @param rightFunction given function which is only applied if right is defined
-     * @param <T>           target type to which R is translated
+     * @param <T> target type to which R is translated
      * @return result of the function translation, replacing type R with type T
      */
     public <T> Either<L, T> map(Function<? super R, ? extends T> rightFunction) {
@@ -181,11 +180,12 @@ public final class Either<L, R> {
      * {@link Either#flatMapRight}.
      *
      * @param rightFunction given function which is only applied if right is defined
-     * @param <T>           target type to which R is translated
+     * @param <T> target type to which R is translated
      * @return result of the function translation, replacing type R with type T
      */
     public <T> Either<L, T> flatMap(
-            Function<? super R, ? extends Either<L, ? extends T>> rightFunction) {
+        Function<? super R, ? extends Either<L, ? extends T>> rightFunction
+    ) {
         return flatMapRight(rightFunction);
     }
 
@@ -193,95 +193,96 @@ public final class Either<L, R> {
      * If left is defined, the given map translation function is applied.
      *
      * @param leftFunction given function which is only applied if left is defined
-     * @param <T>          target type to which L is translated
+     * @param <T> target type to which L is translated
      * @return result of the function translation, replacing type L with type T
      */
     public <T> Either<T, R> mapLeft(Function<? super L, ? extends T> leftFunction) {
         Objects.requireNonNull(leftFunction);
         return new Either<>(this.left.map(l -> Objects.requireNonNull(leftFunction.apply(l))),
-                this.right);
+            this.right);
     }
 
     /**
      * If right is defined, the given map translation function is applied.
      *
      * @param rightFunction given function which is only applied if right is defined
-     * @param <T>           target type to which R is translated
+     * @param <T> target type to which R is translated
      * @return result of the function translation, replacing type R with type T
      */
     public <T> Either<L, T> mapRight(Function<? super R, ? extends T> rightFunction) {
         Objects.requireNonNull(rightFunction);
         return new Either<>(this.left,
-                this.right.map(r -> Objects.requireNonNull(rightFunction.apply(r))));
+            this.right.map(r -> Objects.requireNonNull(rightFunction.apply(r))));
     }
 
     /**
      * If left is defined, the given flatMap translation function is applied.
      *
      * @param leftFunction given function which is only applied if left is defined
-     * @param <T>          target type to which L is translated
+     * @param <T> target type to which L is translated
      * @return result of the function translation, replacing type L with type T
      */
     public <T> Either<T, R> flatMapLeft(
-            Function<? super L, ? extends Either<? extends T, R>> leftFunction) {
+        Function<? super L, ? extends Either<? extends T, R>> leftFunction
+    ) {
         Objects.requireNonNull(leftFunction);
         return this.left
-                .<Either<T, R>>map(
-                        l -> Either.left(Objects.requireNonNull(leftFunction.apply(l)).getLeft()))
-                .orElse(
-                        new Either<>(
-                                Optional.empty(),
-                                this.right));
+            .<Either<T, R>>map(
+                l -> Either.left(Objects.requireNonNull(leftFunction.apply(l)).getLeft()))
+            .orElse(
+                new Either<>(
+                    Optional.empty(),
+                    this.right));
     }
 
     /**
      * If right is defined, the given flatMap translation function is applied.
      *
      * @param rightFunction given function which is only applied if right is defined
-     * @param <T>           target type to which R is translated
+     * @param <T> target type to which R is translated
      * @return result of the function translation, replacing type R with type T
      */
     public <T> Either<L, T> flatMapRight(
-            Function<? super R, ? extends Either<L, ? extends T>> rightFunction) {
+        Function<? super R, ? extends Either<L, ? extends T>> rightFunction
+    ) {
         Objects.requireNonNull(rightFunction);
         return this.right
-                .<Either<L, T>>map(
-                        r -> Either.right(Objects.requireNonNull(rightFunction.apply(r)).getRight()))
-                .orElse(
-                        new Either<>(
-                                this.left,
-                                Optional.empty()));
+            .<Either<L, T>>map(
+                r -> Either.right(Objects.requireNonNull(rightFunction.apply(r)).getRight()))
+            .orElse(
+                new Either<>(
+                    this.left,
+                    Optional.empty()));
     }
 
     /**
      * Converge the distinct types, L and R, to a common type, T. This method's implementation is
      * right-biased.
      *
-     * @param leftFunction  given function which is only applied if left is defined
+     * @param leftFunction given function which is only applied if left is defined
      * @param rightFunction given function which is only applied if right is defined
-     * @param <T>           type of the returned instance
+     * @param <T> type of the returned instance
      * @return an instance of T
      */
     public <T> T converge(
-            Function<? super L, ? extends T> leftFunction,
-            Function<? super R, ? extends T> rightFunction
+        Function<? super L, ? extends T> leftFunction,
+        Function<? super R, ? extends T> rightFunction
     ) {
         Objects.requireNonNull(leftFunction);
         Objects.requireNonNull(rightFunction);
 
         return this.right
-                .<T>map(r -> Objects.requireNonNull(rightFunction.apply(r)))
-                .orElseGet(() ->
-                        this.left
-                                .map(l -> Objects.requireNonNull(leftFunction.apply(l)))
-                                .orElseThrow(() -> new IllegalStateException("should never get here")));
+            .<T>map(r -> Objects.requireNonNull(rightFunction.apply(r)))
+            .orElseGet(() -> this.left
+                .map(l -> Objects.requireNonNull(leftFunction.apply(l)))
+                .orElseThrow(() -> new IllegalStateException("should never get here")));
     }
 
     /**
      * Execute the given side-effecting function depending upon which side is defined. This method's
      * implementation is right-biased.
      *
-     * @param leftAction  given function is only executed if left is defined
+     * @param leftAction given function is only executed if left is defined
      * @param rightAction given function is only executed if right is defined
      */
     public void forEach(Consumer<? super L> leftAction, Consumer<? super R> rightAction) {

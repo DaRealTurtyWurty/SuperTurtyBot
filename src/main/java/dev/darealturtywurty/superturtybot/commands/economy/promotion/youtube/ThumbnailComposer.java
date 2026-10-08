@@ -46,7 +46,7 @@ public class ThumbnailComposer {
         graphics.setColor(Color.WHITE);
         graphics.fillRect(0, 0, width, height);
         graphics.setColor(new Color(220, 20, 60));
-        Font baseFont = new Font("Dialog", Font.BOLD, 14);
+        var baseFont = new Font("Dialog", Font.BOLD, 14);
         graphics.setFont(baseFont);
 
         int rightX = padding * 2 + thumbWidth;
@@ -77,7 +77,7 @@ public class ThumbnailComposer {
                                 var scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                                 Graphics2D graphics = scaled.createGraphics();
                                 graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                                 graphics.drawImage(image, 0, 0, width, height, null);
                                 graphics.dispose();
                                 return scaled;
@@ -105,8 +105,15 @@ public class ThumbnailComposer {
         return placeholder;
     }
 
-    private static void drawWrappedTitle(Graphics2D graphics, Font baseFont, String title, int x, int y, int width,
-                                         int height) {
+    private static void drawWrappedTitle(
+        Graphics2D graphics,
+        Font baseFont,
+        String title,
+        int x,
+        int y,
+        int width,
+        int height
+    ) {
         Font font = baseFont;
         if (baseFont.canDisplayUpTo(title) != -1) {
             font = new Font("Dialog", baseFont.getStyle(), baseFont.getSize());
@@ -141,8 +148,9 @@ public class ThumbnailComposer {
             }
         }
 
-        if (!current.isEmpty())
+        if (!current.isEmpty()) {
             lines.add(current.toString());
+        }
         return lines;
     }
 }

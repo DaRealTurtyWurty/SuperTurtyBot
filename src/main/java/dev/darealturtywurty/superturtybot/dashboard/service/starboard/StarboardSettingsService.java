@@ -28,10 +28,9 @@ public final class StarboardSettingsService {
 
     public StarboardSettingsResponse updateSettings(long guildId, StarboardSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         validateRequest(guild, request);
 
@@ -50,54 +49,49 @@ public final class StarboardSettingsService {
 
     private static StarboardSettingsResponse toResponse(GuildData guildData) {
         return new StarboardSettingsResponse(
-                guildData.isStarboardEnabled(),
-                guildData.getStarboard() == 0L ? null : Long.toString(guildData.getStarboard()),
-                guildData.getMinimumStars(),
-                guildData.isBotStarsCount(),
-                GuildData.getLongs(guildData.getShowcaseChannels()).stream().map(String::valueOf).toList(),
-                guildData.isStarboardMediaOnly(),
-                guildData.getStarEmoji()
-        );
+            guildData.isStarboardEnabled(),
+            guildData.getStarboard() == 0L ? null : Long.toString(guildData.getStarboard()),
+            guildData.getMinimumStars(),
+            guildData.isBotStarsCount(),
+            GuildData.getLongs(guildData.getShowcaseChannels()).stream().map(String::valueOf).toList(),
+            guildData.isStarboardMediaOnly(),
+            guildData.getStarEmoji());
     }
 
     private static void validateRequest(Guild guild, StarboardSettingsRequest request) {
-        if (request.getMinimumStars() < 1 || request.getMinimumStars() > Math.max(1, guild.getMemberCount())) {
+        if (request.getMinimumStars() < 1 || request.getMinimumStars() > Math.max(1, guild.getMemberCount()))
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_minimum_stars",
-                    "Minimum stars must be between 1 and the guild member count.");
-        }
+                "Minimum stars must be between 1 and the guild member count.");
 
-        if (request.isStarboardEnabled() && parseChannelId(request.getStarboardChannelId()) == 0L) {
+        if (request.isStarboardEnabled() && parseChannelId(request.getStarboardChannelId()) == 0L)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "missing_starboard_channel",
-                    "A starboard channel is required while starboard is enabled.");
-        }
+                "A starboard channel is required while starboard is enabled.");
 
-        if (parseChannelId(request.getStarboardChannelId()) != 0L && guild.getTextChannelById(parseChannelId(request.getStarboardChannelId())) == null) {
+        if (parseChannelId(request.getStarboardChannelId()) != 0L
+            && guild.getTextChannelById(parseChannelId(request.getStarboardChannelId())) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_starboard_channel",
-                    "The supplied starboard channel was not a text channel in this guild.");
-        }
+                "The supplied starboard channel was not a text channel in this guild.");
 
         for (String showcaseChannelId : normalizeChannelIds(request.getShowcaseChannelIds())) {
             TextChannel channel = guild.getTextChannelById(showcaseChannelId);
-            if (channel == null) {
+            if (channel == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_showcase_channel",
-                        "One or more showcase channels were not valid text channels in this guild.");
-            }
+                    "One or more showcase channels were not valid text channels in this guild.");
         }
 
         String starEmoji = request.getStarEmoji() == null ? "" : request.getStarEmoji().trim();
-        if (starEmoji.isBlank()) {
+        if (starEmoji.isBlank())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_star_emoji",
-                    "A star emoji is required.");
-        }
+                "A star emoji is required.");
 
         try {
             Emoji.fromFormatted(starEmoji);
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             try {
                 Emoji.fromUnicode(starEmoji);
             } catch (IllegalArgumentException exception) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_star_emoji",
-                        "The supplied star emoji was not recognized as a Discord or Unicode emoji.");
+                    "The supplied star emoji was not recognized as a Discord or Unicode emoji.");
             }
         }
     }
@@ -111,7 +105,7 @@ public final class StarboardSettingsService {
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_channel_id",
-                    "One of the supplied channel IDs was not a valid Discord snowflake.");
+                "One of the supplied channel IDs was not a valid Discord snowflake.");
         }
     }
 
@@ -120,8 +114,8 @@ public final class StarboardSettingsService {
             return List.of();
 
         return new ArrayList<>(new LinkedHashSet<>(channelIds.stream()
-                .map(String::trim)
-                .filter(value -> !value.isEmpty())
-                .toList()));
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .toList()));
     }
 }

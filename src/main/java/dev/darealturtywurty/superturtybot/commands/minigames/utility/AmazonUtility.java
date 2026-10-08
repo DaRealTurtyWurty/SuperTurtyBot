@@ -58,9 +58,9 @@ public class AmazonUtility {
             var details = new StringBuilder();
             Element detailsElem;
             while (!(detailsElem = dataTable.child(nextIndex)).child(0).text()
-                    .equalsIgnoreCase("Issuing Country")) {
+                .equalsIgnoreCase("Issuing Country")) {
                 details.append(detailsElem.child(0).text()).append(":")
-                        .append(detailsElem.select("td").get(2).text()).append("\n");
+                    .append(detailsElem.select("td").get(2).text()).append("\n");
                 nextIndex++;
             }
 
@@ -74,8 +74,8 @@ public class AmazonUtility {
             int pendingRequests = Integer.parseInt(dataTable.child(nextIndex).child(2).text());
 
             return new UPCInformation(upcE, upcA, ucc13, productTitle,
-                    details.isEmpty() ? Optional.empty() : Optional.of(details.toString()), issuingCountry,
-                    lastModifiedDate, lastModifiedBy, pendingRequests);
+                details.isEmpty() ? Optional.empty() : Optional.of(details.toString()), issuingCountry,
+                lastModifiedDate, lastModifiedBy, pendingRequests);
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to get random UPC!", exception);
         }
@@ -86,14 +86,12 @@ public class AmazonUtility {
         var request = new Request.Builder().url(AMAZON_CATALOG_SEARCH_URL.formatted(keywords)).build();
 
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
+            if (!response.isSuccessful())
                 throw new IllegalStateException("Unable to get Amazon item info!");
-            }
 
             ResponseBody body = response.body();
-            if (body == null) {
+            if (body == null)
                 throw new IllegalStateException("Unable to get Amazon item info!");
-            }
 
             return Constants.GSON.fromJson(body.string(), JsonObject.class);
         } catch (IOException exception) {
@@ -113,9 +111,17 @@ public class AmazonUtility {
     public record AmazonItem(UPCInformation upcInformation) {
     }
 
-    public record UPCInformation(Optional<String> upcE, Optional<String> upcA, Optional<String> ucc13,
-                                 String productTitle, Optional<String> details, String issuingCountry,
-                                 String lastModifiedDate, Optional<String> lastModifiedBy, int pendingRequests) {
+    public record UPCInformation(
+        Optional<String> upcE,
+        Optional<String> upcA,
+        Optional<String> ucc13,
+        String productTitle,
+        Optional<String> details,
+        String issuingCountry,
+        String lastModifiedDate,
+        Optional<String> lastModifiedBy,
+        int pendingRequests
+    ) {
 
     }
 

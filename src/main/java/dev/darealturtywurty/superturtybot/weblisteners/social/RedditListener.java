@@ -70,8 +70,9 @@ public class RedditListener {
                         Integer status = extractHttpStatus(exception);
                         if (status != null && status >= 500 && status < 600) {
                             SUBREDDIT_BACKOFF_UNTIL.put(subreddit, now + TimeUnit.MINUTES.toMillis(5));
-                            Constants.LOGGER.warn("Reddit RSS feed returned HTTP {} for r/{}. Backing off for 5 minutes.",
-                                    status, subreddit);
+                            Constants.LOGGER.warn(
+                                "Reddit RSS feed returned HTTP {} for r/{}. Backing off for 5 minutes.",
+                                status, subreddit);
                             continue;
                         }
 
@@ -87,8 +88,9 @@ public class RedditListener {
                             String author = item.getAuthor().orElse("");
                             Instant time = new DateTime().toInstant(item.getPubDate().orElse(""));
                             String guid = item.getGuid().orElse("");
-                            if (guid.isBlank())
+                            if (guid.isBlank()) {
                                 guid = link;
+                            }
                             if (guid.isBlank())
                                 return;
 
@@ -96,14 +98,14 @@ public class RedditListener {
                                 return;
 
                             if (mediaUrl.endsWith(".jpg") || mediaUrl.endsWith("jpeg") || mediaUrl.endsWith(".png")
-                                    || mediaUrl.endsWith(".gif")) {
+                                || mediaUrl.endsWith(".gif")) {
                                 var embed = new EmbedBuilder()
-                                        .setTitle(title, link)
-                                        .setAuthor(author)
-                                        .setTimestamp(time)
-                                        .setColor(0xFF4500)
-                                        .setImage(mediaUrl)
-                                        .build();
+                                    .setTitle(title, link)
+                                    .setAuthor(author)
+                                    .setTimestamp(time)
+                                    .setColor(0xFF4500)
+                                    .setImage(mediaUrl)
+                                    .build();
 
                                 for (RedditNotifier redditNotifier : subredditNotifiers) {
                                     Guild guild = jda.getGuildById(redditNotifier.getGuild());
@@ -127,9 +129,9 @@ public class RedditListener {
                                         continue;
 
                                     channel.sendMessage(
-                                            String.format("%s [%s](<%s>) by %s at %s\n%s",
-                                                    redditNotifier.getMention(), title, link, author, time, mediaUrl)
-                                    ).queue();
+                                        String.format("%s [%s](<%s>) by %s at %s\n%s",
+                                            redditNotifier.getMention(), title, link, author, time, mediaUrl))
+                                        .queue();
                                 }
                             }
                         } catch (final Exception exception) {
@@ -179,7 +181,7 @@ public class RedditListener {
                     if (!digits.isEmpty()) {
                         try {
                             return Integer.parseInt(digits.toString());
-                        } catch (NumberFormatException ignored) {
+                        } catch (NumberFormatException _) {
                             return null;
                         }
                     }
@@ -199,9 +201,9 @@ public class RedditListener {
     private static boolean markAsSeen(String subreddit, String guid) {
         try {
             Database.getDatabase().redditPostCache.insertOne(new RedditPostCache(
-                    subreddit,
-                    guid,
-                    System.currentTimeMillis()));
+                subreddit,
+                guid,
+                System.currentTimeMillis()));
             return true;
         } catch (MongoWriteException exception) {
             if (exception.getError() != null && exception.getError().getCode() == 11000)
@@ -212,22 +214,23 @@ public class RedditListener {
     }
 
     private static void pruneSubredditCache(String subreddit) {
-        List<RedditPostCache> cachedPosts = Database.getDatabase().redditPostCache.find(Filters.eq("subreddit", subreddit))
-                .sort(Sorts.descending("createdAt"))
-                .into(new ArrayList<>());
+        List<RedditPostCache> cachedPosts = Database.getDatabase().redditPostCache
+            .find(Filters.eq("subreddit", subreddit))
+            .sort(Sorts.descending("createdAt"))
+            .into(new ArrayList<>());
         if (cachedPosts.size() <= 30)
             return;
 
         List<String> staleGuids = cachedPosts.stream()
-                .skip(30)
-                .map(RedditPostCache::getGuid)
-                .filter(guid -> guid != null && !guid.isBlank())
-                .toList();
+            .skip(30)
+            .map(RedditPostCache::getGuid)
+            .filter(guid -> guid != null && !guid.isBlank())
+            .toList();
         if (staleGuids.isEmpty())
             return;
 
         Database.getDatabase().redditPostCache.deleteMany(Filters.and(
-                Filters.eq("subreddit", subreddit),
-                Filters.in("guid", staleGuids)));
+            Filters.eq("subreddit", subreddit),
+            Filters.in("guid", staleGuids)));
     }
 }

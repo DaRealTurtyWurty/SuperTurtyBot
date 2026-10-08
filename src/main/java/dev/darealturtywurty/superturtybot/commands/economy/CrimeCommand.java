@@ -76,15 +76,14 @@ public class CrimeCommand extends EconomyCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("beginner", "Commit a beginner crime"),
-                new SubcommandData("intermediate", "Commit an intermediate crime"),
-                new SubcommandData("advanced", "Commit an advanced crime"),
-                new SubcommandData("expert", "Commit an expert crime"),
-                new SubcommandData("master", "Commit a master crime"),
-                new SubcommandData("profile", "Info about your crime level")
-                        .addOptions(new OptionData(OptionType.INTEGER, "level", "Optionally define a crime level", false)
-                                .setRequiredRange(0, Integer.MAX_VALUE))
-        );
+            new SubcommandData("beginner", "Commit a beginner crime"),
+            new SubcommandData("intermediate", "Commit an intermediate crime"),
+            new SubcommandData("advanced", "Commit an advanced crime"),
+            new SubcommandData("expert", "Commit an expert crime"),
+            new SubcommandData("master", "Commit a master crime"),
+            new SubcommandData("profile", "Info about your crime level")
+                .addOptions(new OptionData(OptionType.INTEGER, "level", "Optionally define a crime level", false)
+                    .setRequiredRange(0, Integer.MAX_VALUE)));
     }
 
     @Override
@@ -102,9 +101,11 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
-        if(account.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot commit crimes! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+        if (account.isImprisoned()) {
+            event.getHook()
+                .editOriginalFormat("❌ You are currently imprisoned and cannot commit crimes! You will be released %s.",
+                    TimeFormat.RELATIVE.format(account.getImprisonedUntil()))
+                .queue();
             return;
         }
 
@@ -115,7 +116,8 @@ public class CrimeCommand extends EconomyCommand {
             embed.setTimestamp(Instant.now());
             embed.setFooter(member.getEffectiveName(), member.getEffectiveAvatarUrl());
 
-            embed.setDescription("Crime Level: %d%nHere are the chances, earnings and losses for each crime level:".formatted(crimeLevel));
+            embed.setDescription("Crime Level: %d%nHere are the chances, earnings and losses for each crime level:"
+                .formatted(crimeLevel));
             float promotionChance = EconomyManager.getCrimePromotionChance();
             String promotionChanceDisplay = String.format(Locale.ROOT, "%.1f", promotionChance * 100);
             for (var level : CrimeType.values()) {
@@ -127,14 +129,16 @@ public class CrimeCommand extends EconomyCommand {
 
                 BigInteger minLoss = minAmount.divide(BigInteger.TWO);
                 BigInteger maxLoss = maxAmount.divide(BigInteger.TWO);
-                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()), "Chance: %s%%\nPromotion (on success): %s%% (%s%% total)\nEarnings: %s-%s\nLosses: %s-%s".formatted(
+                embed.addField(StringUtils.upperSnakeToSpacedPascal(level.name()),
+                    "Chance: %s%%\nPromotion (on success): %s%% (%s%% total)\nEarnings: %s-%s\nLosses: %s-%s".formatted(
                         (int) (chance * 100),
                         promotionChanceDisplay,
                         combinedPromotionDisplay,
                         StringUtils.numberFormat(minAmount, config),
                         StringUtils.numberFormat(maxAmount, config),
                         StringUtils.numberFormat(minLoss, config),
-                        StringUtils.numberFormat(maxLoss, config)), false);
+                        StringUtils.numberFormat(maxLoss, config)),
+                    false);
             }
 
             event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -149,7 +153,7 @@ public class CrimeCommand extends EconomyCommand {
 
         if (account.getNextCrime() > System.currentTimeMillis() && !Environment.INSTANCE.isDevelopment()) {
             event.getHook().editOriginalFormat("❌ You can commit a crime again %s!",
-                    TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
+                TimeFormat.RELATIVE.format(account.getNextCrime())).queue();
             return;
         }
 
@@ -172,7 +176,7 @@ public class CrimeCommand extends EconomyCommand {
             var content = new StringBuilder(getSuccess(config, event.getUser(), amount));
             if (promoted) {
                 content.append("\n\n✅ You have been promoted, by %d level%s. You are now a %d level criminal!"
-                        .formatted(newCrimeLevel - crimeLevel, newCrimeLevel - crimeLevel == 1 ? "" : "s", newCrimeLevel));
+                    .formatted(newCrimeLevel - crimeLevel, newCrimeLevel - crimeLevel == 1 ? "" : "s", newCrimeLevel));
             }
 
             embed.setDescription(content.toString());
@@ -186,7 +190,7 @@ public class CrimeCommand extends EconomyCommand {
             var content = new StringBuilder(getFail(config, event.getUser(), amount));
             if (demoted) {
                 content.append("\n\n❌ You have been demoted, by %d level%s, to level %d in your current job."
-                        .formatted(prevJobLevel - newJobLevel, prevJobLevel - newJobLevel == 1 ? "" : "s", newJobLevel));
+                    .formatted(prevJobLevel - newJobLevel, prevJobLevel - newJobLevel == 1 ? "" : "s", newJobLevel));
             }
 
             // 5% chance to be imprisoned
@@ -195,14 +199,15 @@ public class CrimeCommand extends EconomyCommand {
                 long imprisonDurationMillis = TimeUnit.MINUTES.toMillis(ThreadLocalRandom.current().nextLong(5, 60));
                 account.setImprisonedUntil(System.currentTimeMillis() + imprisonDurationMillis);
                 content.append("\n\n🚨 You have been been imprisoned! You will be released %s."
-                        .formatted(TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
+                    .formatted(TimeFormat.RELATIVE.format(account.getImprisonedUntil())));
             }
 
             embed.setDescription(content.toString());
             embed.setColor(0xAA0000);
         }
 
-        embed.appendDescription("\n\nYou can commit a crime again %s!".formatted(TimeFormat.RELATIVE.format(account.getNextCrime())));
+        embed.appendDescription(
+            "\n\nYou can commit a crime again %s!".formatted(TimeFormat.RELATIVE.format(account.getNextCrime())));
 
         event.getHook().editOriginalEmbeds(embed.build()).queue();
         EconomyManager.updateAccount(account);
@@ -210,14 +215,14 @@ public class CrimeCommand extends EconomyCommand {
 
     private static String getSuccess(GuildData config, User user, BigInteger amount) {
         return "✅ " + RESPONSES.success().get(ThreadLocalRandom.current().nextInt(RESPONSES.success().size()))
-                .replace("{user}", user.getAsMention())
-                .replace("{amount}", StringUtils.numberFormat(amount, config));
+            .replace("{user}", user.getAsMention())
+            .replace("{amount}", StringUtils.numberFormat(amount, config));
     }
 
     private static String getFail(GuildData config, User user, BigInteger amount) {
         return "❌ " + RESPONSES.fail().get(ThreadLocalRandom.current().nextInt(RESPONSES.fail().size()))
-                .replace("{user}", user.getAsMention())
-                .replace("{amount}", StringUtils.numberFormat(amount, config));
+            .replace("{user}", user.getAsMention())
+            .replace("{amount}", StringUtils.numberFormat(amount, config));
     }
 
     private record Responses(List<String> success, List<String> fail) {
@@ -242,15 +247,18 @@ public class CrimeCommand extends EconomyCommand {
         }
 
         public BigInteger getMinAmountForLevel(int level) {
-            return BigDecimal.valueOf(this.minBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
+            return BigDecimal.valueOf(this.minBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level)))
+                .toBigInteger();
         }
 
         public BigInteger getMaxAmountForLevel(int level) {
-            return BigDecimal.valueOf(this.maxBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
+            return BigDecimal.valueOf(this.maxBaseAmount).multiply(BigDecimal.valueOf(Math.pow(1.02, level)))
+                .toBigInteger();
         }
 
         public BigInteger getRandomAmountForLevel(int level) {
-            return BigDecimal.valueOf(getRandomBaseAmount()).multiply(BigDecimal.valueOf(Math.pow(1.02, level))).toBigInteger();
+            return BigDecimal.valueOf(getRandomBaseAmount()).multiply(BigDecimal.valueOf(Math.pow(1.02, level)))
+                .toBigInteger();
         }
 
         public float getChanceForLevel(int level) {

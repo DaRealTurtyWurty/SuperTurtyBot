@@ -44,10 +44,9 @@ public final class GuildSettingsService {
         }
 
         return new DashboardGuildConfigSnapshot(
-                createGuildInfo(guildId),
-                persisted,
-                this.catalogService.extractValues(guildData)
-        );
+            createGuildInfo(guildId),
+            persisted,
+            this.catalogService.extractValues(guildData));
     }
 
     public DashboardGuildChannelsResponse getGuildChannels(long guildId, long userId) {
@@ -60,30 +59,29 @@ public final class GuildSettingsService {
             return new DashboardGuildChannelsResponse(List.of());
 
         List<GuildChannel> visibleChannels = guild.getChannels().stream()
-                .filter(channel -> channel.getType() == ChannelType.CATEGORY || member.hasAccess(channel))
-                .toList();
+            .filter(channel -> channel.getType() == ChannelType.CATEGORY || member.hasAccess(channel))
+            .toList();
 
         Set<String> visibleChannelIds = visibleChannels.stream()
-                .filter(channel -> channel.getType() != ChannelType.CATEGORY)
-                .map(GuildChannel::getId)
-                .collect(Collectors.toSet());
+            .filter(channel -> channel.getType() != ChannelType.CATEGORY)
+            .map(GuildChannel::getId)
+            .collect(Collectors.toSet());
 
         List<DashboardGuildChannelInfo> channels = new ArrayList<>();
         for (GuildChannel channel : visibleChannels) {
             if (channel.getType() == ChannelType.CATEGORY
-                    && ((Category) channel).getChannels().stream().noneMatch(child -> visibleChannelIds.contains(child.getId()))) {
+                && ((Category) channel).getChannels().stream()
+                    .noneMatch(child -> visibleChannelIds.contains(child.getId())))
                 continue;
-            }
 
             channels.add(new DashboardGuildChannelInfo(
-                    channel.getId(),
-                    channel.getName(),
-                    mapChannelType(channel),
-                    channel instanceof ICategorizableChannel categorizable && categorizable.getParentCategory() != null
-                            ? categorizable.getParentCategory().getId()
-                            : null,
-                    channels.size()
-            ));
+                channel.getId(),
+                channel.getName(),
+                mapChannelType(channel),
+                channel instanceof ICategorizableChannel categorizable && categorizable.getParentCategory() != null
+                    ? categorizable.getParentCategory().getId()
+                    : null,
+                channels.size()));
         }
 
         return new DashboardGuildChannelsResponse(channels);
@@ -99,16 +97,15 @@ public final class GuildSettingsService {
             return new DashboardGuildRolesResponse(List.of());
 
         List<DashboardGuildRoleInfo> roles = guild.getRoles().stream()
-                .filter(role -> !role.isPublicRole() && !role.isManaged())
-                .filter(member::canInteract)
-                .sorted(Comparator.comparingInt(Role::getPosition).reversed().thenComparing(Role::getName))
-                .map(role -> new DashboardGuildRoleInfo(
-                        role.getId(),
-                        role.getName(),
-                        role.getColorRaw(),
-                        role.getPosition()
-                ))
-                .toList();
+            .filter(role -> !role.isPublicRole() && !role.isManaged())
+            .filter(member::canInteract)
+            .sorted(Comparator.comparingInt(Role::getPosition).reversed().thenComparing(Role::getName))
+            .map(role -> new DashboardGuildRoleInfo(
+                role.getId(),
+                role.getName(),
+                role.getColorRaw(),
+                role.getPosition()))
+            .toList();
 
         return new DashboardGuildRolesResponse(roles);
     }
@@ -125,23 +122,22 @@ public final class GuildSettingsService {
         String normalizedQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
 
         List<DashboardGuildMemberInfo> members = guild.getMembers().stream()
-                .map(guildMember -> {
-                    String username = guildMember.getUser().getName();
-                    String displayName = guildMember.getEffectiveName();
-                    return new DashboardGuildMemberInfo(
-                            guildMember.getId(),
-                            username,
-                            displayName,
-                            guildMember.getEffectiveAvatarUrl()
-                    );
-                })
-                .filter(info -> matchesMember(info, normalizedQuery))
-                .sorted(Comparator
-                        .comparingInt((DashboardGuildMemberInfo info) -> scoreMember(info, normalizedQuery))
-                        .thenComparing(DashboardGuildMemberInfo::displayName, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(DashboardGuildMemberInfo::username, String.CASE_INSENSITIVE_ORDER))
-                .limit(25)
-                .toList();
+            .map(guildMember -> {
+                String username = guildMember.getUser().getName();
+                String displayName = guildMember.getEffectiveName();
+                return new DashboardGuildMemberInfo(
+                    guildMember.getId(),
+                    username,
+                    displayName,
+                    guildMember.getEffectiveAvatarUrl());
+            })
+            .filter(info -> matchesMember(info, normalizedQuery))
+            .sorted(Comparator
+                .comparingInt((DashboardGuildMemberInfo info) -> scoreMember(info, normalizedQuery))
+                .thenComparing(DashboardGuildMemberInfo::displayName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(DashboardGuildMemberInfo::username, String.CASE_INSENSITIVE_ORDER))
+            .limit(25)
+            .toList();
 
         return new DashboardGuildMembersResponse(members);
     }
@@ -152,12 +148,11 @@ public final class GuildSettingsService {
             return new DashboardGuildInfo(Long.toString(guildId), "Unknown Guild", null, 0, false);
 
         return new DashboardGuildInfo(
-                guild.getId(),
-                guild.getName(),
-                guild.getIconUrl(),
-                guild.getMemberCount(),
-                true
-        );
+            guild.getId(),
+            guild.getName(),
+            guild.getIconUrl(),
+            guild.getMemberCount(),
+            true);
     }
 
     private static String mapChannelType(GuildChannel channel) {
@@ -175,36 +170,31 @@ public final class GuildSettingsService {
     }
 
     private static boolean matchesMember(DashboardGuildMemberInfo info, String query) {
-        if (query.isBlank()) {
+        if (query.isBlank())
             return true;
-        }
 
         String id = info.id();
         String username = info.username().toLowerCase(Locale.ROOT);
         String displayName = info.displayName().toLowerCase(Locale.ROOT);
         return id.equals(query)
-                || username.contains(query)
-                || displayName.contains(query);
+            || username.contains(query)
+            || displayName.contains(query);
     }
 
     private static int scoreMember(DashboardGuildMemberInfo info, String query) {
-        if (query.isBlank()) {
+        if (query.isBlank())
             return 0;
-        }
 
-        if (info.id().equals(query)) {
+        if (info.id().equals(query))
             return 0;
-        }
 
         String username = info.username().toLowerCase(Locale.ROOT);
         String displayName = info.displayName().toLowerCase(Locale.ROOT);
-        if (username.startsWith(query) || displayName.startsWith(query)) {
+        if (username.startsWith(query) || displayName.startsWith(query))
             return 1;
-        }
 
-        if (username.contains(query) || displayName.contains(query)) {
+        if (username.contains(query) || displayName.contains(query))
             return 2;
-        }
 
         return 3;
     }

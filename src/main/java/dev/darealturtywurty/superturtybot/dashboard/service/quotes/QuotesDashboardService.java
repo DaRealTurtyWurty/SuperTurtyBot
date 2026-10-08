@@ -33,50 +33,46 @@ public final class QuotesDashboardService {
         long offset = (long) (safePage - 1) * safePageSize;
 
         return new DashboardQuotesPageResponse(
-                safePage,
-                safePageSize,
-                totalCount,
-                totalPages,
-                listQuotes(guild, offset, safePageSize, totalCount)
-        );
+            safePage,
+            safePageSize,
+            totalCount,
+            totalPages,
+            listQuotes(guild, offset, safePageSize, totalCount));
     }
 
     public DashboardQuotesPageResponse deleteQuote(long guildId, int quoteNumber, int page, int pageSize) {
         Guild guild = requireGuild(guildId);
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guildId))
-                .sort(Sorts.ascending("timestamp"))
-                .into(new ArrayList<>());
+            .sort(Sorts.ascending("timestamp"))
+            .into(new ArrayList<>());
 
-        if (quoteNumber < 1 || quoteNumber > quotes.size()) {
+        if (quoteNumber < 1 || quoteNumber > quotes.size())
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "quote_not_found",
-                    "That quote could not be found.");
-        }
+                "That quote could not be found.");
 
         Quote quote = quotes.get(quoteNumber - 1);
         DeleteResult result = Database.getDatabase().quotes.deleteOne(Filters.and(
-                Filters.eq("guild", guildId),
-                Filters.eq("timestamp", quote.getTimestamp()),
-                Filters.eq("addedBy", quote.getAddedBy()),
-                Filters.eq("text", quote.getText()),
-                Filters.eq("user", quote.getUser()),
-                Filters.eq("channel", quote.getChannel()),
-                Filters.eq("message", quote.getMessage())
-        ));
+            Filters.eq("guild", guildId),
+            Filters.eq("timestamp", quote.getTimestamp()),
+            Filters.eq("addedBy", quote.getAddedBy()),
+            Filters.eq("text", quote.getText()),
+            Filters.eq("user", quote.getUser()),
+            Filters.eq("channel", quote.getChannel()),
+            Filters.eq("message", quote.getMessage())));
 
-        if (result.getDeletedCount() == 0) {
+        if (result.getDeletedCount() == 0)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "quote_not_found",
-                    "That quote could not be found.");
-        }
+                "That quote could not be found.");
 
         return getQuotes(guildId, page, pageSize);
     }
 
     private List<DashboardQuoteRecord> listQuotes(Guild guild, long offset, int pageSize, long totalCount) {
         List<Quote> quotes = Database.getDatabase().quotes.find(Filters.eq("guild", guild.getIdLong()))
-                .sort(Sorts.ascending("timestamp"))
-                .skip((int) offset)
-                .limit(pageSize)
-                .into(new ArrayList<>());
+            .sort(Sorts.ascending("timestamp"))
+            .skip((int) offset)
+            .limit(pageSize)
+            .into(new ArrayList<>());
 
         List<DashboardQuoteRecord> records = new ArrayList<>(quotes.size());
         for (int index = 0; index < quotes.size(); index++) {
@@ -93,40 +89,37 @@ public final class QuotesDashboardService {
         String channelId = quote.getChannel() > 0L ? Long.toString(quote.getChannel()) : null;
         String messageId = quote.getMessage() > 0L ? Long.toString(quote.getMessage()) : null;
         String messageUrl = channelId == null || messageId == null
-                ? null
-                : "https://discord.com/channels/%d/%s/%s".formatted(guild.getIdLong(), channelId, messageId);
+            ? null
+            : "https://discord.com/channels/%d/%s/%s".formatted(guild.getIdLong(), channelId, messageId);
 
         return new DashboardQuoteRecord(
-                number,
-                quote.getText(),
-                Long.toString(quote.getUser()),
-                saidBy.displayName(),
-                saidBy.avatarUrl(),
-                Long.toString(quote.getAddedBy()),
-                addedBy.displayName(),
-                addedBy.avatarUrl(),
-                channelId,
-                messageId,
-                messageUrl,
-                quote.getTimestamp()
-        );
+            number,
+            quote.getText(),
+            Long.toString(quote.getUser()),
+            saidBy.displayName(),
+            saidBy.avatarUrl(),
+            Long.toString(quote.getAddedBy()),
+            addedBy.displayName(),
+            addedBy.avatarUrl(),
+            channelId,
+            messageId,
+            messageUrl,
+            quote.getTimestamp());
     }
 
     private ResolvedUser resolveUser(long userId) {
         User user = this.jda.getUserById(userId);
-        if (user == null) {
+        if (user == null)
             return new ResolvedUser("Unknown User", null);
-        }
 
         return new ResolvedUser(user.getEffectiveName(), user.getEffectiveAvatarUrl());
     }
 
     private Guild requireGuild(long guildId) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         return guild;
     }

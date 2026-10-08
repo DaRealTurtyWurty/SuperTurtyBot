@@ -52,15 +52,18 @@ public class BlackjackPlayCommand extends BlackjackSubcommand {
             return;
         }
 
-        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
-        if (!games.isEmpty() && games.stream().anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
+        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(),
+            _ -> new ArrayList<>());
+        if (!games.isEmpty() && games.stream()
+            .anyMatch(game -> game.getGuild() == guild.getIdLong() && game.getUser() == event.getUser().getIdLong())) {
             event.getHook().editOriginal("❌ You are already in a game of Blackjack!").queue();
             return;
         }
 
         if (!Environment.INSTANCE.isDevelopment()) {
             if (account.getNextBlackjack() > System.currentTimeMillis()) {
-                event.getHook().editOriginalFormat("❌ You may play Blackjack again %s!", TimeFormat.RELATIVE.format(account.getNextBlackjack())).queue();
+                event.getHook().editOriginalFormat("❌ You may play Blackjack again %s!",
+                    TimeFormat.RELATIVE.format(account.getNextBlackjack())).queue();
                 return;
             }
 
@@ -71,64 +74,72 @@ public class BlackjackPlayCommand extends BlackjackSubcommand {
         EconomyManager.updateAccount(account);
 
         event.getHook().editOriginalFormat("✅ You have started a game of Blackjack with a bet of %s!",
-                StringUtils.numberFormat(amount, config.getEconomyCurrency())).flatMap(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s Blackjack Game")).queue(thread -> {
-            thread.addThreadMember(event.getUser()).queue();
+            StringUtils.numberFormat(amount, config.getEconomyCurrency()))
+            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Blackjack Game"))
+            .queue(thread -> {
+                thread.addThreadMember(event.getUser()).queue();
 
-            thread.sendMessageFormat("%s, your game of Blackjack has started! Your bet: %s",
+                thread.sendMessageFormat("%s, your game of Blackjack has started! Your bet: %s",
                     event.getUser().getAsMention(),
-                    StringUtils.numberFormat(amount, config.getEconomyCurrency())).queue(ignored -> {
-                var game = new BlackjackCommand.Game(guild.getIdLong(), thread.getIdLong(), event.getUser().getIdLong(), amount);
-                games.add(game);
+                    StringUtils.numberFormat(amount, config.getEconomyCurrency())).queue(_ -> {
+                        var game = new BlackjackCommand.Game(guild.getIdLong(), thread.getIdLong(),
+                            event.getUser().getIdLong(), amount);
+                        games.add(game);
 
-                game.start();
-                if (game.isFinished()) {
-                    games.remove(game);
-                    BlackjackCommand.Game.Settlement settlement = game.getSettlement().orElseThrow();
-                    applySettlement(account, settlement);
-                    thread.sendMessageFormat("%s, your game of Blackjack has ended! %s",
-                            event.getUser().getAsMention(),
-                            game.getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()))).queue();
-                    thread.getManager().setArchived(true).setLocked(true).queueAfter(5, TimeUnit.SECONDS);
-                    return;
-                }
-
-                try (FileUpload upload = BlackjackImageRenderer.createUpload(game, false)) {
-                    thread.sendMessage("Use /blackjack hit to draw a card or /blackjack stand to end your turn.")
-                            .setFiles(upload)
-                            .queue();
-                } catch (Exception exception) {
-                    Constants.LOGGER.error("Failed to create blackjack image!", exception);
-                    thread.sendMessage("❌ An error occurred while creating the blackjack image!").queue();
-                }
-
-                AtomicReference<ScheduledFuture<?>> checkerRef = new AtomicReference<>();
-                ScheduledFuture<?> future = SCHEDULER.scheduleAtFixedRate(() -> {
-                    if (game.isFinished()) {
-                        ScheduledFuture<?> checker = checkerRef.get();
-                        if (checker != null) {
-                            checker.cancel(false);
-                        }
-
-                        return;
-                    }
-
-                    long now = System.currentTimeMillis();
-                    if (now - game.getLastActionTime() >= TimeUnit.MINUTES.toMillis(5)) {
-                        if (games.remove(game)) {
-                            game.timeout();
+                        game.start();
+                        if (game.isFinished()) {
+                            games.remove(game);
                             BlackjackCommand.Game.Settlement settlement = game.getSettlement().orElseThrow();
                             applySettlement(account, settlement);
-                            thread.sendMessageFormat("%s, %s",
-                                    event.getUser().getAsMention(),
-                                    game.getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()))).queue();
+                            thread.sendMessageFormat("%s, your game of Blackjack has ended! %s",
+                                event.getUser().getAsMention(),
+                                game.getResultMessage(
+                                    number -> StringUtils.numberFormat(number, config.getEconomyCurrency())))
+                                .queue();
                             thread.getManager().setArchived(true).setLocked(true).queueAfter(5, TimeUnit.SECONDS);
+                            return;
                         }
-                    }
-                }, 0, 5, TimeUnit.SECONDS);
 
-                checkerRef.set(future);
+                        try (FileUpload upload = BlackjackImageRenderer.createUpload(game, false)) {
+                            thread
+                                .sendMessage("Use /blackjack hit to draw a card or /blackjack stand to end your turn.")
+                                .setFiles(upload)
+                                .queue();
+                        } catch (Exception exception) {
+                            Constants.LOGGER.error("Failed to create blackjack image!", exception);
+                            thread.sendMessage("❌ An error occurred while creating the blackjack image!").queue();
+                        }
+
+                        AtomicReference<ScheduledFuture<?>> checkerRef = new AtomicReference<>();
+                        ScheduledFuture<?> future = SCHEDULER.scheduleAtFixedRate(() -> {
+                            if (game.isFinished()) {
+                                ScheduledFuture<?> checker = checkerRef.get();
+                                if (checker != null) {
+                                    checker.cancel(false);
+                                }
+
+                                return;
+                            }
+
+                            long now = System.currentTimeMillis();
+                            if (now - game.getLastActionTime() >= TimeUnit.MINUTES.toMillis(5)) {
+                                if (games.remove(game)) {
+                                    game.timeout();
+                                    BlackjackCommand.Game.Settlement settlement = game.getSettlement().orElseThrow();
+                                    applySettlement(account, settlement);
+                                    thread.sendMessageFormat("%s, %s",
+                                        event.getUser().getAsMention(),
+                                        game.getResultMessage(
+                                            number -> StringUtils.numberFormat(number, config.getEconomyCurrency())))
+                                        .queue();
+                                    thread.getManager().setArchived(true).setLocked(true).queueAfter(5,
+                                        TimeUnit.SECONDS);
+                                }
+                            }
+                        }, 0, 5, TimeUnit.SECONDS);
+
+                        checkerRef.set(future);
+                    });
             });
-        });
     }
 }

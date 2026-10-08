@@ -19,16 +19,16 @@ public class RankCard {
     private Color percentTextColor;
     private Color xpTextColor;
     private Color nameTextColor;
-    
+
     private String backgroundImage;
     private String outlineImage;
     private String xpEmptyImage;
     private String xpOutlineImage;
     private String xpFillImage;
     private String avatarOutlineImage;
-    
+
     private float outlineOpacity;
-    
+
     public RankCard() {
         this.backgroundColor = new Color(46, 67, 71);
         this.outlineColor = new Color(28, 33, 48);
@@ -41,14 +41,14 @@ public class RankCard {
         this.percentTextColor = new Color(190, 242, 2);
         this.xpTextColor = new Color(255, 184, 132);
         this.nameTextColor = new Color(192, 209, 194);
-        
+
         this.backgroundImage = "";
         this.outlineImage = "";
         this.xpEmptyImage = "";
         this.xpOutlineImage = "";
         this.xpFillImage = "";
         this.avatarOutlineImage = "";
-        
+
         this.outlineOpacity = 1.0f;
     }
 }

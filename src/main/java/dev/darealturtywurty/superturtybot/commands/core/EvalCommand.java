@@ -24,10 +24,10 @@ public class EvalCommand extends CoreCommand {
     static {
         new Thread(() -> {
             ENGINE = Engine.newBuilder("js")
-                    .option("js.ecmascript-version", "2022")
-                    .option("js.console", "true")
-                    .option("log.level", "OFF")
-                    .build();
+                .option("js.ecmascript-version", "2022")
+                .option("js.console", "true")
+                .option("log.level", "OFF")
+                .build();
             ShutdownHooks.register(ENGINE::close);
         }).start();
     }
@@ -63,14 +63,14 @@ public class EvalCommand extends CoreCommand {
 
     private static ProxyObject emojiStatic() {
         return ProxyObject.fromMap(Map.of(
-                "fromUnicode", function(values -> Emoji.fromUnicode(values.getFirst().asString())),
-                "fromFormatted", function(values -> Emoji.fromFormatted(values.getFirst().asString()))
-        ));
+            "fromUnicode", function(values -> Emoji.fromUnicode(values.getFirst().asString())),
+            "fromFormatted", function(values -> Emoji.fromFormatted(values.getFirst().asString()))));
     }
 
     @Override
     protected void runNormalMessage(MessageReceivedEvent event) {
-        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId().orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
+        if (event.getAuthor().getIdLong() != Environment.INSTANCE.ownerId()
+            .orElseThrow(() -> new IllegalStateException("Owner ID is not set!")))
             return;
 
         String content = event.getMessage().getContentRaw();
@@ -90,7 +90,7 @@ public class EvalCommand extends CoreCommand {
         try (Context context = createContext(bindings)) {
             Value value = context.eval("js", code);
             if (value.hasArrayElements()) {
-                StringBuilder builder = new StringBuilder();
+                var builder = new StringBuilder();
                 for (int i = 0; i < value.getArraySize(); i++) {
                     builder.append(value.getArrayElement(i).toString()).append("\n");
                 }
@@ -100,8 +100,8 @@ public class EvalCommand extends CoreCommand {
             }
 
             if (value.toString().equals("undefined") || value.toString().equals("null")) {
-                event.getMessage().addReaction(Emoji.fromUnicode("✅")).
-                        queue(ignored -> event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS));
+                event.getMessage().addReaction(Emoji.fromUnicode("✅"))
+                    .queue(_ -> event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS));
                 return;
             } else if (value.toString().equals("delete me!")) {
                 event.getMessage().delete().queue();
@@ -116,11 +116,11 @@ public class EvalCommand extends CoreCommand {
 
     private static Context createContext(Map<String, Object> additionalBindings) {
         Context ctx = Context.newBuilder("js")
-                .engine(ENGINE)
-                .allowEnvironmentAccess(EnvironmentAccess.NONE)
-                .allowValueSharing(true)
-                .allowHostAccess(HostAccess.ALL)
-                .build();
+            .engine(ENGINE)
+            .allowEnvironmentAccess(EnvironmentAccess.NONE)
+            .allowValueSharing(true)
+            .allowHostAccess(HostAccess.ALL)
+            .build();
 
         Value bindings = ctx.getBindings("js");
         bindings.removeMember("load");

@@ -20,9 +20,10 @@ public enum MappingChannel {
 
     public static MappingChannel fromName(String name) {
         return Arrays.stream(values())
-                .filter(channel -> channel.name().equalsIgnoreCase(name))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Choose Mojmap, MCP, SRG, Yarn, Intermediary, or obfuscated."));
+            .filter(channel -> channel.name().equalsIgnoreCase(name))
+            .findFirst()
+            .orElseThrow(
+                () -> new IllegalArgumentException("Choose Mojmap, MCP, SRG, Yarn, Intermediary, or obfuscated."));
     }
 
     public String namespace() {

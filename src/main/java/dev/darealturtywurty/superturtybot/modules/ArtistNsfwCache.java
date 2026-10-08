@@ -29,10 +29,10 @@ public final class ArtistNsfwCache {
         loadCache();
         ensureExecutor();
         CompletableFuture.runAsync(ArtistNsfwCache::refreshCache, executor)
-                .exceptionally(error -> {
-                    Constants.LOGGER.error("Failed to refresh artist NSFW cache.", error);
-                    return null;
-                });
+            .exceptionally(error -> {
+                Constants.LOGGER.error("Failed to refresh artist NSFW cache.", error);
+                return null;
+            });
     }
 
     public static Optional<Path> pickRandomSafeImage(boolean isAi) {
@@ -68,14 +68,14 @@ public final class ArtistNsfwCache {
 
         CachePayload existing = loadCache();
         Map<String, CacheEntry> existingEntries = existing.entries().stream()
-                .collect(Collectors.toMap(CacheEntry::relativePath, Function.identity(), (first, second) -> first));
+            .collect(Collectors.toMap(CacheEntry::relativePath, Function.identity(), (first, second) -> first));
 
         List<CacheEntry> refreshedEntries = new ArrayList<>();
         for (Path root : datasetSplits()) {
             try (Stream<Path> stream = Files.walk(root)) {
                 stream.filter(Files::isRegularFile)
-                        .filter(ArtistNsfwCache::isSupportedImage)
-                        .forEach(path -> refreshedEntries.add(buildEntry(existingEntries, path)));
+                    .filter(ArtistNsfwCache::isSupportedImage)
+                    .forEach(path -> refreshedEntries.add(buildEntry(existingEntries, path)));
             } catch (IOException exception) {
                 Constants.LOGGER.error("Failed to scan artist dataset at {}.", root, exception);
             }
@@ -83,11 +83,10 @@ public final class ArtistNsfwCache {
 
         scoreUnlabeledEntries(refreshedEntries);
 
-        CachePayload payload = new CachePayload(
-                CACHE_VERSION,
-                System.currentTimeMillis(),
-                refreshedEntries
-        );
+        var payload = new CachePayload(
+            CACHE_VERSION,
+            System.currentTimeMillis(),
+            refreshedEntries);
         saveCache(payload);
         STATE.set(buildState(payload));
         Constants.LOGGER.info("Artist NSFW cache refreshed: {} entries.", refreshedEntries.size());
@@ -102,8 +101,9 @@ public final class ArtistNsfwCache {
 
         List<Integer> indices = new ArrayList<>();
         for (int i = 0; i < entries.size(); i++) {
-            if (entries.get(i).nsfwScore() == null)
+            if (entries.get(i).nsfwScore() == null) {
                 indices.add(i);
+            }
         }
 
         if (indices.isEmpty())
@@ -150,28 +150,29 @@ public final class ArtistNsfwCache {
                 if (result.score() != null) {
                     CacheEntry entry = result.entry();
                     entries.set(result.index(), new CacheEntry(entry.relativePath(), entry.isAi(), entry.lastModified(),
-                            result.score()));
+                        result.score()));
                 }
 
                 if (processed % 1000 == 0) {
-                    CachePayload partialPayload = new CachePayload(
-                            CACHE_VERSION,
-                            System.currentTimeMillis(),
-                            entries
-                    );
+                    var partialPayload = new CachePayload(
+                        CACHE_VERSION,
+                        System.currentTimeMillis(),
+                        entries);
                     saveCache(partialPayload);
                 }
 
                 int percent = (int) Math.floor((processed * 100.0) / total);
                 if (percent >= nextLogPercent) {
                     String eta = formatEta(startTime, processed, total);
-                    Constants.LOGGER.info("Artist NSFW scan progress: {}% ({}/{}) ETA {}", percent, processed, total, eta);
+                    Constants.LOGGER.info("Artist NSFW scan progress: {}% ({}/{}) ETA {}", percent, processed, total,
+                        eta);
                     nextLogPercent += 5;
                 }
             }
         } finally {
-            if (pool != null)
+            if (pool != null) {
                 pool.shutdown();
+            }
             classifier.close();
         }
     }
@@ -243,9 +244,8 @@ public final class ArtistNsfwCache {
 
     private static List<Path> datasetSplits() {
         return List.of(
-                datasetRoot.resolve("train"),
-                datasetRoot.resolve("test")
-        );
+            datasetRoot.resolve("train"),
+            datasetRoot.resolve("test"));
     }
 
     private static Path cachePath() {
@@ -280,8 +280,8 @@ public final class ArtistNsfwCache {
     private static int resolveWorkerThreads() {
         int fallback = Math.max(1, Runtime.getRuntime().availableProcessors());
         return Environment.INSTANCE.artistNsfwThreads()
-                .filter(value -> value > 0)
-                .orElse(fallback);
+            .filter(value -> value > 0)
+            .orElse(fallback);
     }
 
     private static String formatEta(long startTimeNanos, int processed, int total) {

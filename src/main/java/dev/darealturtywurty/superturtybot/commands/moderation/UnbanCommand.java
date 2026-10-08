@@ -29,7 +29,7 @@ public class UnbanCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to unban!", true));
     }
-    
+
     @Override
     public String getAccess() {
         return "Moderators (Ban Permission)";
@@ -44,7 +44,7 @@ public class UnbanCommand extends CoreCommand {
     public String getDescription() {
         return "Unbans a user";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/unban [user]";
@@ -93,7 +93,8 @@ public class UnbanCommand extends CoreCommand {
                     } else {
                         final var embed = new EmbedBuilder();
                         embed.setTitle("Please report this to TurtyWurty!", "https://discord.gg/BAYB3A38wn");
-                        embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed
+                            .setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                         embed.setTimestamp(Instant.now());
                         embed.setColor(Color.red);
                         reply(event, embed, true, true);

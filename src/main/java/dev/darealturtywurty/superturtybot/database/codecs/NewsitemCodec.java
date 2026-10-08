@@ -12,15 +12,15 @@ public class NewsitemCodec implements Codec<Newsitem> {
     public Newsitem decode(BsonReader reader, DecoderContext decoderContext) {
         reader.readStartDocument();
         Newsitem newsitem = new Newsitem()
-                .withAuthor(reader.readString("author"))
-                .withContents(reader.readString("contents"))
-                .withDate(reader.readInt64("date"))
-                .withFeedlabel(reader.readString("feedlabel"))
-                .withFeedname(reader.readString("feedname"))
-                .withGid(reader.readString("gid"))
-                .withIsExternalUrl(reader.readBoolean("is_external_url"))
-                .withTitle(reader.readString("title"))
-                .withUrl(reader.readString("url"));
+            .withAuthor(reader.readString("author"))
+            .withContents(reader.readString("contents"))
+            .withDate(reader.readInt64("date"))
+            .withFeedlabel(reader.readString("feedlabel"))
+            .withFeedname(reader.readString("feedname"))
+            .withGid(reader.readString("gid"))
+            .withIsExternalUrl(reader.readBoolean("is_external_url"))
+            .withTitle(reader.readString("title"))
+            .withUrl(reader.readString("url"));
         reader.readEndDocument();
         return newsitem;
     }

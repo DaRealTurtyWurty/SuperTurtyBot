@@ -48,14 +48,16 @@ public class PropertyRentSubcommand extends PropertySubcommand {
         }
 
         PropertyCommand.normalizeRent(property);
-        if (property.getRent() == null || property.getRent().isPaused() || PropertyCommand.calculateRent(property).signum() <= 0) {
+        if (property.getRent() == null || property.getRent().isPaused()
+            || PropertyCommand.calculateRent(property).signum() <= 0) {
             PropertyCommand.hookReply(event, "❌ This property is not available to rent out.");
             return;
         }
 
         if (property.isRentActive()) {
             PropertyCommand.hookReply(event, "❌ This property is already rented to %s until %s."
-                    .formatted(PropertyCommand.formatRenter(property, guild), TimeFormat.RELATIVE.format(property.getRentEndsAt())));
+                .formatted(PropertyCommand.formatRenter(property, guild),
+                    TimeFormat.RELATIVE.format(property.getRentEndsAt())));
             return;
         }
 
@@ -83,40 +85,40 @@ public class PropertyRentSubcommand extends PropertySubcommand {
         for (int i = 0; i < offers.size(); i++) {
             RenterOffer offer = offers.get(i);
             builder.append("`").append(i + 1).append("` ")
-                    .append(offer.getName())
-                    .append(" — ")
-                    .append(StringUtils.numberFormat(offer.getOffer(), config))
-                    .append('\n');
+                .append(offer.getName())
+                .append(" — ")
+                .append(StringUtils.numberFormat(offer.getOffer(), config))
+                .append('\n');
         }
 
         var rerollCost = PropertyCommand.calculateRerollCost(property);
         builder.append("\nOffers refresh ")
-                .append(TimeFormat.RELATIVE.format(property.getNextBestRenterAt()))
-                .append(".\n");
+            .append(TimeFormat.RELATIVE.format(property.getNextBestRenterAt()))
+            .append(".\n");
 
         builder.append("Re-roll cost: ")
-                .append(StringUtils.numberFormat(rerollCost, config))
-                .append(". Use `/property rent-reroll`.\n")
-                .append("Choose an offer with `/property rent-choose <property> <offer>`.");
+            .append(StringUtils.numberFormat(rerollCost, config))
+            .append(". Use `/property rent-reroll`.\n")
+            .append("Choose an offer with `/property rent-choose <property> <offer>`.");
 
         PropertyCommand.hookReply(event, builder.toString());
     }
 
-    static List<RenterOffer> generateRenterOffers(Property property) {
+    public static List<RenterOffer> generateRenterOffers(Property property) {
         List<RenterOffer> offers = new ArrayList<>();
         BigInteger baseRent = PropertyCommand.calculateRent(property);
         for (int i = 0; i < 3; i++) {
             int percent = ThreadLocalRandom.current().nextInt(80, 121);
             BigInteger offerAmount = baseRent
-                    .multiply(BigInteger.valueOf(percent))
-                    .divide(BigInteger.valueOf(100));
+                .multiply(BigInteger.valueOf(percent))
+                .divide(BigInteger.valueOf(100));
             offers.add(new RenterOffer(generateRenterName(), offerAmount));
         }
 
         return offers;
     }
 
-    static String generateRenterName() {
+    private static String generateRenterName() {
         String apiName = fetchRemoteRenterName();
         if (apiName != null)
             return apiName;
@@ -125,12 +127,12 @@ public class PropertyRentSubcommand extends PropertySubcommand {
         return "Renter#" + suffix;
     }
 
-    static String fetchRemoteRenterName() {
+    private static String fetchRemoteRenterName() {
         Request request = new Request.Builder()
-                .url(RENTER_NAME_API_URL)
-                .get()
-                .header("User-Agent", "SuperTurtyBot")
-                .build();
+            .url(RENTER_NAME_API_URL)
+            .get()
+            .header("User-Agent", "SuperTurtyBot")
+            .build();
 
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful())
@@ -150,7 +152,7 @@ public class PropertyRentSubcommand extends PropertySubcommand {
 
             String name = object.get("name").getAsString();
             return name == null || name.isBlank() ? null : name.trim();
-        } catch (JsonSyntaxException | IllegalStateException | IOException ignored) {
+        } catch (JsonSyntaxException | IllegalStateException | IOException _) {
             return null;
         }
     }

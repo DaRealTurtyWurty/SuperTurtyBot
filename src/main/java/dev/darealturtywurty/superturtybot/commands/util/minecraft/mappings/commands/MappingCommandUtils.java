@@ -30,9 +30,9 @@ public final class MappingCommandUtils {
             hook.editOriginal(header + "\n```\n" + body + "```").setAllowedMentions(List.of()).queue();
         } else {
             hook.editOriginal(header)
-                    .setAttachments(FileUpload.fromData(body.getBytes(StandardCharsets.UTF_8), "mappings.txt"))
-                    .setAllowedMentions(List.of())
-                    .queue();
+                .setAttachments(FileUpload.fromData(body.getBytes(StandardCharsets.UTF_8), "mappings.txt"))
+                .setAllowedMentions(List.of())
+                .queue();
         }
     }
 

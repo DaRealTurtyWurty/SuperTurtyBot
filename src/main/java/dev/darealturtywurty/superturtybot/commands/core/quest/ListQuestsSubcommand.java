@@ -19,8 +19,13 @@ public class ListQuestsSubcommand extends QuestSubcommand {
     }
 
     @Override
-    protected void execute(SlashCommandInteractionEvent event, Guild guild, Member member, QuestPlayer player,
-                           List<QuestEvent> events) {
+    protected void execute(
+        SlashCommandInteractionEvent event,
+        Guild guild,
+        Member member,
+        QuestPlayer player,
+        List<QuestEvent> events
+    ) {
         List<MessageEmbed> embeds = new ArrayList<>();
         for (String questId : player.getAssignedQuestIds()) {
             Quest<?, ?> quest = QuestManager.QUESTS.get(questId);

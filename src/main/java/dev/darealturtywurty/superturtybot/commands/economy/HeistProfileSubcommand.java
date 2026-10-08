@@ -30,12 +30,12 @@ public class HeistProfileSubcommand extends HeistSubcommand {
         long totalHeists = account.getTotalHeists();
         long remaining = Math.max(0, crimeLevel - totalHeists);
         String nextHeist = account.getNextHeist() > System.currentTimeMillis()
-                ? TimeFormat.RELATIVE.format(account.getNextHeist())
-                : "Now";
+            ? TimeFormat.RELATIVE.format(account.getNextHeist())
+            : "Now";
         int heistLevel = account.getHeistLevel() + 1;
         BigInteger maxPayout = BigInteger.valueOf(500_000L)
-                .multiply(BigInteger.valueOf(heistLevel))
-                .multiply(BigInteger.valueOf(heistLevel));
+            .multiply(BigInteger.valueOf(heistLevel))
+            .multiply(BigInteger.valueOf(heistLevel));
         BigInteger setupCost = BigInteger.valueOf(EconomyManager.determineHeistSetupCost(account));
 
         var embed = new EmbedBuilder();

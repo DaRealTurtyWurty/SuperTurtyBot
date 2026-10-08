@@ -18,17 +18,22 @@ public class RerollQuestsSubcommand extends QuestSubcommand {
     }
 
     @Override
-    protected void execute(SlashCommandInteractionEvent event, Guild guild, Member member, QuestPlayer player,
-                           List<QuestEvent> events) {
+    protected void execute(
+        SlashCommandInteractionEvent event,
+        Guild guild,
+        Member member,
+        QuestPlayer player,
+        List<QuestEvent> events
+    ) {
         if (player.isRerollUsed()) {
             reply(event, "You have already used your quest reroll this week.", false, true);
             return;
         }
 
         boolean hasCompletedQuest = player.getAssignedQuestIds().stream()
-                .map(QuestManager.QUESTS::get)
-                .filter(Objects::nonNull)
-                .anyMatch(quest -> player.hasBeenRewarded(quest.getId()) || quest.evaluate(events).complete());
+            .map(QuestManager.QUESTS::get)
+            .filter(Objects::nonNull)
+            .anyMatch(quest -> player.hasBeenRewarded(quest.getId()) || quest.evaluate(events).complete());
         if (hasCompletedQuest) {
             reply(event, "You cannot reroll after completing one of this week's quests.", false, true);
             return;
@@ -37,12 +42,12 @@ public class RerollQuestsSubcommand extends QuestSubcommand {
         try {
             List<Quest<?, ?>> replacements = QuestManager.INSTANCE.rerollQuests(guild, member, player);
             List<MessageEmbed> embeds = replacements.stream()
-                    .map(quest -> createQuestEmbed(quest, quest.evaluate(events), player).build())
-                    .toList();
+                .map(quest -> createQuestEmbed(quest, quest.evaluate(events), player).build())
+                .toList();
             event.reply("Rerolled all three of your weekly quests.")
-                    .addEmbeds(embeds)
-                    .setEphemeral(true)
-                    .queue();
+                .addEmbeds(embeds)
+                .setEphemeral(true)
+                .queue();
         } catch (IllegalStateException exception) {
             reply(event, exception.getMessage(), false, true);
         }

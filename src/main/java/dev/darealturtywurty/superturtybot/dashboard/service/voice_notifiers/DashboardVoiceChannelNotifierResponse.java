@@ -5,7 +5,7 @@ import dev.darealturtywurty.superturtybot.dashboard.service.discord.DashboardGui
 import java.util.List;
 
 public record DashboardVoiceChannelNotifierResponse(
-        DashboardGuildInfo guild,
-        List<DashboardVoiceChannelNotifierEntry> entries
+    DashboardGuildInfo guild,
+    List<DashboardVoiceChannelNotifierEntry> entries
 ) {
 }

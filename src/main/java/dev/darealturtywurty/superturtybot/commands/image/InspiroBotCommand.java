@@ -29,7 +29,7 @@ public class InspiroBotCommand extends CoreCommand {
     public String getDescription() {
         return "Gets an artificially generated inspirational quote";
     }
-    
+
     @Override
     public String getName() {
         return "inspirobot";
@@ -44,25 +44,26 @@ public class InspiroBotCommand extends CoreCommand {
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 5L);
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         final CompletableFuture<String> quote = getInspiroQuote();
         reply(event, "Loading InspiroBot quote...", false);
         quote.thenAccept(result -> event.getHook().editOriginal(result).queue());
     }
-    
+
     private static CompletableFuture<String> getInspiroQuote() {
         final var future = new CompletableFuture<String>();
         try {
-            final URLConnection connection = new URI("https://inspirobot.me/api/?generate=true").toURL().openConnection();
+            final URLConnection connection = new URI("https://inspirobot.me/api/?generate=true").toURL()
+                .openConnection();
             final String body = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
             future.complete(body);
         } catch (final IOException | URISyntaxException exception) {
             future.complete("There has been an issue processing this command. Please try again later!");
             Constants.LOGGER.error("Error getting InspiroBot quote!", exception);
         }
-        
+
         return future;
     }
 }

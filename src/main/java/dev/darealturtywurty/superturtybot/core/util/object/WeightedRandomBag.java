@@ -11,10 +11,10 @@ import java.util.Random;
 @Getter
 public class WeightedRandomBag<T> {
     private final List<Entry> entries = new ArrayList<>();
-    
+
     private double accumulatedWeight;
     private final Random rand = new Random();
-    
+
     public void addEntry(final T object, final double weight) {
         this.accumulatedWeight += weight;
 
@@ -58,7 +58,7 @@ public class WeightedRandomBag<T> {
 
         return null;
     }
-    
+
     @Getter
     public class Entry {
         private double accumulatedWeight;

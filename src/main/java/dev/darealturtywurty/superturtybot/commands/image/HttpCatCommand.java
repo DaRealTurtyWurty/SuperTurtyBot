@@ -90,11 +90,11 @@ public class HttpCatCommand extends CoreCommand {
         STATUS_CODES.put(525, "SSL Handshake Failed");
         STATUS_CODES.put(599, "Network Connect Timeout Error");
     }
-    
+
     public HttpCatCommand() {
         super(new Types(true, false, false, false));
     }
-    
+
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.INTEGER, "status_code", "The HTTP status code", true));
@@ -114,12 +114,12 @@ public class HttpCatCommand extends CoreCommand {
     public String getHowToUse() {
         return "/httpcat [statusCode]";
     }
-    
+
     @Override
     public String getName() {
         return "httpcat";
     }
-    
+
     @Override
     public String getRichName() {
         return "HTTP Cat";
@@ -129,14 +129,14 @@ public class HttpCatCommand extends CoreCommand {
     public Pair<TimeUnit, Long> getRatelimit() {
         return Pair.of(TimeUnit.SECONDS, 5L);
     }
-    
+
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         int statusCode = event.getOption("status_code", -1, OptionMapping::getAsInt);
         if (!STATUS_CODES.containsKey(statusCode)) {
             statusCode = 404;
         }
-        
+
         try {
             final URLConnection connection = new URI("https://http.cat/" + statusCode).toURL().openConnection();
             event.deferReply().setFiles(FileUpload.fromData(connection.getInputStream(), statusCode + ".png"))

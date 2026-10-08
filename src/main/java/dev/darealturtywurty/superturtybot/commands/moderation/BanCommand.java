@@ -41,7 +41,7 @@ public class BanCommand extends CoreCommand {
     public String getAccess() {
         return "Moderators (Ban Permission)";
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
@@ -78,7 +78,7 @@ public class BanCommand extends CoreCommand {
             reply(event, "❌ You must be in a server to use this command!", false, true);
             return;
         }
-        
+
         final User user = event.getOption("user", OptionMapping::getAsUser);
         if (user == null) {
             reply(event, "❌ You must provide a user to ban!", false, true);
@@ -95,14 +95,14 @@ public class BanCommand extends CoreCommand {
                 if (reason.length() > 512) {
                     reason = reason.substring(0, 512);
                 }
-                
+
                 final String finalReason = reason;
                 user.openPrivateChannel().queue(channel -> channel.sendMessage(
                     "You have been banned from `" + event.getGuild().getName() + "` for reason: `" + finalReason + "`!")
                     .queue(success -> {
                     }, error -> {
                     }));
-                
+
                 event.getGuild().ban(user, deleteDays, TimeUnit.DAYS).reason(finalReason).queue(success -> {
                     TempBanManager.clearTempBan(event.getGuild().getIdLong(), user.getIdLong());
                     reply(event, "✅ Successfully banned " + user.getAsMention() + "!", false);
@@ -117,7 +117,8 @@ public class BanCommand extends CoreCommand {
                     } else {
                         final var embed = new EmbedBuilder();
                         embed.setTitle("Please report this to TurtyWurty#5690!", "https://discord.gg/d5cGhKQ");
-                        embed.setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
+                        embed
+                            .setDescription("❌ **" + error.getMessage() + "**\n" + ExceptionUtils.getStackTrace(error));
                         embed.setTimestamp(Instant.now());
                         embed.setColor(Color.red);
                         reply(event, embed, true, true);
@@ -129,7 +130,7 @@ public class BanCommand extends CoreCommand {
 
         reply(event, "❌ You do not have permission to ban " + user.getAsMention(), false, true);
     }
-    
+
     public static Pair<Boolean, TextChannel> canLog(Guild guild) {
         final GuildData config = GuildData.getOrCreateGuildData(guild);
 
@@ -144,17 +145,17 @@ public class BanCommand extends CoreCommand {
         embed.setTimestamp(Instant.now());
         embed.setDescription(positive ? "✅ " : "❌ ");
         embed.appendDescription(message);
-        
+
         channel.sendMessageEmbeds(embed.build()).queue();
     }
-    
+
     public static void logSlowmode(TextChannel channel, String message, int time) {
         final var embed = new EmbedBuilder();
         embed.setColor(time <= 0 ? Color.GREEN : Color.RED);
         embed.setTimestamp(Instant.now());
         embed.setDescription(time <= 0 ? "✅ " : "⏳ ");
         embed.appendDescription(message);
-        
+
         channel.sendMessageEmbeds(embed.build()).queue();
     }
 }

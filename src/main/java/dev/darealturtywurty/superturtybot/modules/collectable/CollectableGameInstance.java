@@ -1,6 +1,11 @@
 package dev.darealturtywurty.superturtybot.modules.collectable;
 
-public record CollectableGameInstance<T extends Collectable>(long guildId, long channelId, long messageId, T collectable) {
+public record CollectableGameInstance<T extends Collectable>(
+    long guildId,
+    long channelId,
+    long messageId,
+    T collectable
+) {
     public CollectableGameInstance {
         if (guildId <= 0 || channelId <= 0 || messageId <= 0)
             throw new IllegalArgumentException("Guild ID, Channel ID, and Message ID must be greater than 0!");

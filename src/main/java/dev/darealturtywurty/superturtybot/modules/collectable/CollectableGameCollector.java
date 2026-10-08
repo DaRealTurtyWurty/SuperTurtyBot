@@ -67,8 +67,12 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         this(registry, name, displayName, CollectablePresentation.EMOJI);
     }
 
-    protected CollectableGameCollector(Registry<T> registry, String name, String displayName,
-                                       CollectablePresentation presentation) {
+    protected CollectableGameCollector(
+        Registry<T> registry,
+        String name,
+        String displayName,
+        CollectablePresentation presentation
+    ) {
         this.registry = registry;
         this.name = name;
         this.displayName = displayName;
@@ -96,7 +100,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         GuildData data = GuildData.getOrCreateGuildData(guild);
 
         long collectorChannel = data.getCollectorChannel();
-        if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong() || !data.isCollectableTypeEnabled(getName()))
+        if (!data.isCollectingEnabled() || collectorChannel != event.getChannel().getIdLong()
+            || !data.isCollectableTypeEnabled(getName()))
             return;
 
         List<Long> messageTimes = guildMessageMap.computeIfAbsent(guild.getIdLong(), k -> new ArrayList<>());
@@ -110,21 +115,25 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
     private void handleAnswer(MessageReceivedEvent event, Guild guild) {
         MessageChannelUnion channel = event.getChannel();
         MessageReference reference = event.getMessage().getMessageReference();
-        if (reference == null || reference.getGuildIdLong() != guild.getIdLong() || reference.getChannelIdLong() != channel.getIdLong() || reference.getMessageIdLong() == 0L)
+        if (reference == null || reference.getGuildIdLong() != guild.getIdLong()
+            || reference.getChannelIdLong() != channel.getIdLong() || reference.getMessageIdLong() == 0L)
             return;
 
         reference.resolve().queue(message -> {
             if (message.getAuthor().getIdLong() != event.getJDA().getSelfUser().getIdLong())
                 return;
 
-            CollectableGameInstance<T> instance = gameInstances.stream().filter(gameInstance -> gameInstance.isSameMessage(guild.getIdLong(), channel.getIdLong(), message.getIdLong())).findFirst().orElse(null);
+            CollectableGameInstance<T> instance = gameInstances.stream().filter(
+                gameInstance -> gameInstance.isSameMessage(guild.getIdLong(), channel.getIdLong(), message.getIdLong()))
+                .findFirst().orElse(null);
             if (instance == null)
                 return;
 
             T collectable = instance.collectable();
             User user = event.getAuthor();
 
-            UserCollectables userCollectables = Database.getDatabase().userCollectables.find(Filters.eq("user", user.getIdLong())).first();
+            UserCollectables userCollectables = Database.getDatabase().userCollectables
+                .find(Filters.eq("user", user.getIdLong())).first();
             if (userCollectables == null) {
                 userCollectables = new UserCollectables(user.getIdLong());
                 Database.getDatabase().userCollectables.insertOne(userCollectables);
@@ -133,33 +142,42 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             Answer answer = collectable.getAnswer();
             String content = event.getMessage().getContentRaw();
 
-            UserCollectables.Collectables userCollectablesOfType = userCollectables.getCollectables(collectable.getCollectionType());
+            UserCollectables.Collectables userCollectablesOfType = userCollectables
+                .getCollectables(collectable.getCollectionType());
             if (userCollectablesOfType.hasCollectable(collectable)) {
-                message.reply("❌ You have already collected " + formatCollectableName(collectable) + "!").mentionRepliedUser(true)
-                        .queue(message1 -> message1.delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS));
-                event.getMessage().delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS, success -> {}, failure -> {});
+                message.reply("❌ You have already collected " + formatCollectableName(collectable) + "!")
+                    .mentionRepliedUser(true)
+                    .queue(message1 -> message1.delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS,
+                        TimeUnit.SECONDS));
+                event.getMessage().delete().queueAfter(DUPLICATE_REPLY_DELETE_DELAY_SECONDS, TimeUnit.SECONDS,
+                    success -> {
+                    }, failure -> {
+                    });
                 return;
             }
 
             if (answer.matches(content)) {
                 userCollectablesOfType.collect(collectable);
-                Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()), userCollectables);
+                Database.getDatabase().userCollectables.replaceOne(Filters.eq("user", user.getIdLong()),
+                    userCollectables);
                 QuestManager.INSTANCE.recordCollectableEarned(
-                        guild,
-                        user,
-                        message.getIdLong(),
-                        collectable.getCollectionType().getName(),
-                        collectable.getName(),
-                        collectable.getRarity().ordinal(),
-                        message.getTimeCreated().toInstant().toEpochMilli(),
-                        event.getMessage().getTimeCreated().toInstant().toEpochMilli()
-                );
-                CoreCommand.reply(event, "✅ You have successfully collected " + formatCollectableName(collectable) + "!");
+                    guild,
+                    user,
+                    message.getIdLong(),
+                    collectable.getCollectionType().getName(),
+                    collectable.getName(),
+                    collectable.getRarity().ordinal(),
+                    message.getTimeCreated().toInstant().toEpochMilli(),
+                    event.getMessage().getTimeCreated().toInstant().toEpochMilli());
+                CoreCommand.reply(event,
+                    "✅ You have successfully collected " + formatCollectableName(collectable) + "!");
 
                 gameInstances.remove(instance);
-                message.editMessage("\n\n**This collectable has been collected by " + user.getAsMention() + "!**").queue();
+                message.editMessage("\n\n**This collectable has been collected by " + user.getAsMention() + "!**")
+                    .queue();
 
-                guildMessageMap.get(guild.getIdLong()).removeIf(time -> time < message.getTimeCreated().toInstant().toEpochMilli());
+                guildMessageMap.get(guild.getIdLong())
+                    .removeIf(time -> time < message.getTimeCreated().toInstant().toEpochMilli());
             }
         });
     }
@@ -169,19 +187,18 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
             return null;
 
         List<String> disabledCollectables = data == null
-                ? List.of()
-                : data.getDisabledCollectables(getName());
+            ? List.of()
+            : data.getDisabledCollectables(getName());
         if (disabledCollectables.isEmpty())
             return getDefaultWeightedBag().getRandom();
 
         var disabledCollectableSet = new HashSet<>(disabledCollectables);
         List<T> collectables = this.registry.values().stream()
-                .filter(collectable -> !disabledCollectableSet.contains(collectable.getName()))
-                .toList();
+            .filter(collectable -> !disabledCollectableSet.contains(collectable.getName()))
+            .toList();
 
-        if (collectables.isEmpty()) {
+        if (collectables.isEmpty())
             return null;
-        }
 
         WeightedRandomBag<T> bag = new WeightedRandomBag<>();
 
@@ -204,8 +221,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                 return this.sortedCollectables;
 
             this.sortedCollectables = this.registry.values().stream()
-                    .sorted(Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
-                    .toList();
+                .sorted(Comparator.comparing(Collectable::getRichName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
             this.sortedCollectablesSize = registrySize;
             return this.sortedCollectables;
         }
@@ -235,7 +252,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         if (scheduledGuilds.getOrDefault(guild.getIdLong(), false))
             return;
 
-        if (gameInstances.stream().anyMatch(gameInstance -> gameInstance.isSameChannel(guild.getIdLong(), event.getChannel().getIdLong())))
+        if (gameInstances.stream()
+            .anyMatch(gameInstance -> gameInstance.isSameChannel(guild.getIdLong(), event.getChannel().getIdLong())))
             return;
 
         if (!hasDoneInitialLoad) {
@@ -244,7 +262,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
                 try {
                     scheduleCollectable(event.getChannel(), guild, event.getJDA());
                 } catch (Exception exception) {
-                    Constants.LOGGER.error("Error scheduling initial collectable in guild {}", guild.getIdLong(), exception);
+                    Constants.LOGGER.error("Error scheduling initial collectable in guild {}", guild.getIdLong(),
+                        exception);
                 } finally {
                     scheduledGuilds.put(guild.getIdLong(), false);
                 }
@@ -279,15 +298,18 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         GuildData data = GuildData.getOrCreateGuildData(guild);
         T collectable = getRandomWeightedCollectable(data);
         if (collectable == null) {
-            Constants.LOGGER.warn("No enabled collectables available for guild {} collection {}", guild.getIdLong(), getName());
+            Constants.LOGGER.warn("No enabled collectables available for guild {} collection {}", guild.getIdLong(),
+                getName());
             return;
         }
         var embed = new EmbedBuilder()
-                .setTitle("🎉 A " + collectable.getRarity().getName() + " " + formatCollectableTitle(collectable) + " has appeared!")
-                .setDescription("Reply to this message with the answer to the following question to collect it:\n**" + collectable.getQuestion() + "**")
-                .setTimestamp(Instant.now())
-                .setAuthor("Part of the " + displayName + " Collection", null, jda.getSelfUser().getAvatarUrl())
-                .setColor(collectable.getRarity().getColor());
+            .setTitle("🎉 A " + collectable.getRarity().getName() + " " + formatCollectableTitle(collectable)
+                + " has appeared!")
+            .setDescription("Reply to this message with the answer to the following question to collect it:\n**"
+                + collectable.getQuestion() + "**")
+            .setTimestamp(Instant.now())
+            .setAuthor("Part of the " + displayName + " Collection", null, jda.getSelfUser().getAvatarUrl())
+            .setColor(collectable.getRarity().getColor());
 
         if (collectable.getNote() != null) {
             embed.addField("Note", collectable.getNote(), false);
@@ -297,26 +319,27 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         if (this.presentation == CollectablePresentation.IMAGE) {
             Path imagePath = collectable.getImagePath();
             if (imagePath == null) {
-                Constants.LOGGER.error("Image collection {} contains an item without an image: {}", getName(), collectable.getName());
+                Constants.LOGGER.error("Image collection {} contains an item without an image: {}", getName(),
+                    collectable.getName());
                 return;
             }
 
             String attachmentName = imagePath.getFileName().toString();
             embed.setImage("attachment://" + attachmentName);
             action = channel.sendMessageEmbeds(embed.build())
-                    .addFiles(FileUpload.fromData(imagePath, attachmentName));
+                .addFiles(FileUpload.fromData(imagePath, attachmentName));
         }
 
         action.queue(message -> {
             CollectableGameInstance<T> instance = new CollectableGameInstance<>(
-                    guild.getIdLong(), channel.getIdLong(), message.getIdLong(),
-                    collectable);
+                guild.getIdLong(), channel.getIdLong(), message.getIdLong(),
+                collectable);
             gameInstances.add(instance);
 
             executor.schedule(() -> expireCollectable(instance, message),
-                    COLLECTABLE_EXPIRY_MINUTES, TimeUnit.MINUTES);
+                COLLECTABLE_EXPIRY_MINUTES, TimeUnit.MINUTES);
         }, failure -> Constants.LOGGER.error("Failed to send collectable {} in guild {}",
-                collectable.getName(), guild.getIdLong(), failure));
+            collectable.getName(), guild.getIdLong(), failure));
     }
 
     private String formatCollectableName(Collectable collectable) {
@@ -337,7 +360,8 @@ public class CollectableGameCollector<T extends Collectable> extends ListenerAda
         if (!gameInstances.remove(instance))
             return;
 
-        message.delete().queue(success -> {}, failure -> {});
+        message.delete().queue(success -> {
+        }, failure -> {
+        });
     }
 }
-

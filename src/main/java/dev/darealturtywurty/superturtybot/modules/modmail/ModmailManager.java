@@ -37,29 +37,26 @@ public final class ModmailManager extends ListenerAdapter {
     private static final EnumSet<Permission> CATEGORY_DENIED = EnumSet.of(Permission.VIEW_CHANNEL);
     private static final EnumSet<Permission> NONE = EnumSet.noneOf(Permission.class);
     private static final EnumSet<Permission> BOT_ALLOWED = EnumSet.of(
-            Permission.VIEW_CHANNEL,
-            Permission.MESSAGE_SEND,
-            Permission.MESSAGE_HISTORY,
-            Permission.MESSAGE_ATTACH_FILES,
-            Permission.MESSAGE_EMBED_LINKS,
-            Permission.MESSAGE_MANAGE,
-            Permission.MANAGE_CHANNEL,
-            Permission.MANAGE_PERMISSIONS
-    );
+        Permission.VIEW_CHANNEL,
+        Permission.MESSAGE_SEND,
+        Permission.MESSAGE_HISTORY,
+        Permission.MESSAGE_ATTACH_FILES,
+        Permission.MESSAGE_EMBED_LINKS,
+        Permission.MESSAGE_MANAGE,
+        Permission.MANAGE_CHANNEL,
+        Permission.MANAGE_PERMISSIONS);
     private static final EnumSet<Permission> MODERATOR_ALLOWED = EnumSet.of(
-            Permission.VIEW_CHANNEL,
-            Permission.MESSAGE_SEND,
-            Permission.MESSAGE_HISTORY,
-            Permission.MESSAGE_ATTACH_FILES,
-            Permission.MESSAGE_EMBED_LINKS
-    );
+        Permission.VIEW_CHANNEL,
+        Permission.MESSAGE_SEND,
+        Permission.MESSAGE_HISTORY,
+        Permission.MESSAGE_ATTACH_FILES,
+        Permission.MESSAGE_EMBED_LINKS);
     private static final EnumSet<Permission> USER_ALLOWED = EnumSet.of(
-            Permission.VIEW_CHANNEL,
-            Permission.MESSAGE_SEND,
-            Permission.MESSAGE_HISTORY,
-            Permission.MESSAGE_ATTACH_FILES,
-            Permission.MESSAGE_EMBED_LINKS
-    );
+        Permission.VIEW_CHANNEL,
+        Permission.MESSAGE_SEND,
+        Permission.MESSAGE_HISTORY,
+        Permission.MESSAGE_ATTACH_FILES,
+        Permission.MESSAGE_EMBED_LINKS);
 
     private ModmailManager() {
     }
@@ -68,7 +65,7 @@ public final class ModmailManager extends ListenerAdapter {
         Objects.requireNonNull(creator, "creator");
 
         Guild guild = creator.getGuild();
-        ReentrantLock lock = GUILD_LOCKS.computeIfAbsent(guild.getIdLong(), ignored -> new ReentrantLock());
+        ReentrantLock lock = GUILD_LOCKS.computeIfAbsent(guild.getIdLong(), _ -> new ReentrantLock());
         lock.lock();
         try {
             if (isModerator(creator))
@@ -82,7 +79,8 @@ public final class ModmailManager extends ListenerAdapter {
 
             List<Role> moderatorRoles = getConfiguredModeratorRoles(guild);
             if (moderatorRoles.isEmpty())
-                throw new ModmailException("❌ No modmail moderator roles are configured. Ask the server owner to set `/serverconfig set modmail_moderator_roles <roles>` first.");
+                throw new ModmailException(
+                    "❌ No modmail moderator roles are configured. Ask the server owner to set `/serverconfig set modmail_moderator_roles <roles>` first.");
 
             validateBotPermissions(guild, moderatorRoles);
 
@@ -91,25 +89,24 @@ public final class ModmailManager extends ListenerAdapter {
             String channelName = buildChannelName(ticketNumber, creator.getUser().getName());
 
             TextChannel channel = guild.createTextChannel(channelName, category)
-                    .setTopic("Modmail ticket #" + ticketNumber + " for user " + creator.getIdLong())
-                    .addPermissionOverride(guild.getPublicRole(), NONE, CATEGORY_DENIED)
-                    .addPermissionOverride(guild.getSelfMember(), BOT_ALLOWED, NONE)
-                    .addPermissionOverride(creator, USER_ALLOWED, NONE)
-                    .complete();
+                .setTopic("Modmail ticket #" + ticketNumber + " for user " + creator.getIdLong())
+                .addPermissionOverride(guild.getPublicRole(), NONE, CATEGORY_DENIED)
+                .addPermissionOverride(guild.getSelfMember(), BOT_ALLOWED, NONE)
+                .addPermissionOverride(creator, USER_ALLOWED, NONE)
+                .complete();
 
             for (Role role : moderatorRoles) {
                 channel.upsertPermissionOverride(role).setAllowed(MODERATOR_ALLOWED).complete();
             }
 
             var ticket = new ModmailTicket(
-                    guild.getIdLong(),
-                    creator.getIdLong(),
-                    channel.getIdLong(),
-                    category.getIdLong(),
-                    ticketNumber,
-                    source,
-                    initialMessage
-            );
+                guild.getIdLong(),
+                creator.getIdLong(),
+                channel.getIdLong(),
+                category.getIdLong(),
+                ticketNumber,
+                source,
+                initialMessage);
             Database.getDatabase().modmailTickets.insertOne(ticket);
 
             sendOpeningMessage(channel, creator, moderatorRoles, initialMessage, ticketNumber);
@@ -125,7 +122,7 @@ public final class ModmailManager extends ListenerAdapter {
         Objects.requireNonNull(closedBy, "closedBy");
 
         var guild = closedBy.getGuild();
-        var lock = GUILD_LOCKS.computeIfAbsent(guild.getIdLong(), ignored -> new ReentrantLock());
+        var lock = GUILD_LOCKS.computeIfAbsent(guild.getIdLong(), _ -> new ReentrantLock());
         lock.lock();
         try {
             if (!ticket.isOpen())
@@ -144,10 +141,10 @@ public final class ModmailManager extends ListenerAdapter {
             ticket.setTranscriptMessageCount(archiveResult.messageCount());
 
             Database.getDatabase().modmailTickets.replaceOne(
-                    Filters.and(Filters.eq("guild", ticket.getGuild()),
-                            Filters.eq("channel", ticket.getChannel())),
-                    ticket,
-                    new ReplaceOptions().upsert(true));
+                Filters.and(Filters.eq("guild", ticket.getGuild()),
+                    Filters.eq("channel", ticket.getChannel())),
+                ticket,
+                new ReplaceOptions().upsert(true));
             return new TicketCloseResult(ticket, archiveResult.messageCount());
         } finally {
             lock.unlock();
@@ -166,23 +163,23 @@ public final class ModmailManager extends ListenerAdapter {
 
     public static boolean blockUser(long guildId, long userId, long blockedBy, String reason) {
         var blockedUser = new ModmailBlockedUser(
-                guildId,
-                userId,
-                blockedBy,
-                reason == null ? "" : reason.trim(),
-                System.currentTimeMillis()
-        );
+            guildId,
+            userId,
+            blockedBy,
+            reason == null ? "" : reason.trim(),
+            System.currentTimeMillis());
         return Database.getDatabase().modmailBlockedUsers.replaceOne(
-                Filters.and(Filters.eq("guild", guildId),
-                        Filters.eq("user", userId)),
-                blockedUser,
-                new ReplaceOptions().upsert(true)).wasAcknowledged();
+            Filters.and(Filters.eq("guild", guildId),
+                Filters.eq("user", userId)),
+            blockedUser,
+            new ReplaceOptions().upsert(true)).wasAcknowledged();
     }
 
     public static boolean unblockUser(long guildId, long userId) {
         return Database.getDatabase().modmailBlockedUsers.deleteOne(
-                Filters.and(Filters.eq("guild", guildId),
-                        Filters.eq("user", userId))).getDeletedCount() > 0;
+            Filters.and(Filters.eq("guild", guildId),
+                Filters.eq("user", userId)))
+            .getDeletedCount() > 0;
     }
 
     public static boolean isBlocked(long guildId, long userId) {
@@ -191,26 +188,27 @@ public final class ModmailManager extends ListenerAdapter {
 
     public static Optional<ModmailBlockedUser> getBlockedUser(long guildId, long userId) {
         return Optional.ofNullable(Database.getDatabase().modmailBlockedUsers.find(
-                Filters.and(Filters.eq("guild", guildId),
-                        Filters.eq("user", userId))).first());
+            Filters.and(Filters.eq("guild", guildId),
+                Filters.eq("user", userId)))
+            .first());
     }
 
     public static Optional<ModmailTicket> getOpenTicketByUser(long guildId, long userId) {
         return Optional.ofNullable(Database.getDatabase().modmailTickets.find(
-                Filters.and(
-                        Filters.eq("guild", guildId),
-                        Filters.eq("user", userId),
-                        Filters.eq("open", true)
-                )).first());
+            Filters.and(
+                Filters.eq("guild", guildId),
+                Filters.eq("user", userId),
+                Filters.eq("open", true)))
+            .first());
     }
 
     public static Optional<ModmailTicket> getOpenTicketByChannel(long guildId, long channelId) {
         return Optional.ofNullable(Database.getDatabase().modmailTickets.find(
-                Filters.and(
-                        Filters.eq("guild", guildId),
-                        Filters.eq("channel", channelId),
-                        Filters.eq("open", true)
-                )).first());
+            Filters.and(
+                Filters.eq("guild", guildId),
+                Filters.eq("channel", channelId),
+                Filters.eq("open", true)))
+            .first());
     }
 
     public static boolean isModerator(Member member) {
@@ -220,7 +218,8 @@ public final class ModmailManager extends ListenerAdapter {
         if (member.isOwner() || member.hasPermission(Permission.MANAGE_SERVER))
             return true;
 
-        List<Long> configuredRoles = GuildData.getLongs(GuildData.getOrCreateGuildData(member.getGuild()).getModmailModeratorRoles());
+        List<Long> configuredRoles = GuildData
+            .getLongs(GuildData.getOrCreateGuildData(member.getGuild()).getModmailModeratorRoles());
         if (configuredRoles.isEmpty())
             return false;
 
@@ -230,10 +229,10 @@ public final class ModmailManager extends ListenerAdapter {
     public static List<Role> getConfiguredModeratorRoles(Guild guild) {
         GuildData guildData = GuildData.getOrCreateGuildData(guild);
         return GuildData.getLongs(guildData.getModmailModeratorRoles()).stream()
-                .map(guild::getRoleById)
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+            .map(guild::getRoleById)
+            .filter(Objects::nonNull)
+            .distinct()
+            .toList();
     }
 
     public static String missingConfigurationMessage() {
@@ -243,15 +242,15 @@ public final class ModmailManager extends ListenerAdapter {
     private static void validateBotPermissions(Guild guild, List<Role> moderatorRoles) {
         var self = guild.getSelfMember();
         EnumSet<Permission> requiredPermissions = EnumSet.of(
-                Permission.VIEW_CHANNEL,
-                Permission.MESSAGE_SEND,
-                Permission.MESSAGE_HISTORY,
-                Permission.MANAGE_CHANNEL,
-                Permission.MANAGE_PERMISSIONS
-        );
+            Permission.VIEW_CHANNEL,
+            Permission.MESSAGE_SEND,
+            Permission.MESSAGE_HISTORY,
+            Permission.MANAGE_CHANNEL,
+            Permission.MANAGE_PERMISSIONS);
 
         if (!self.hasPermission(requiredPermissions))
-            throw new ModmailException("❌ I need `View Channel`, `Send Messages`, `Read Message History`, `Manage Channels`, and `Manage Permissions` to run modmail.");
+            throw new ModmailException(
+                "❌ I need `View Channel`, `Send Messages`, `Read Message History`, `Manage Channels`, and `Manage Permissions` to run modmail.");
 
         if (moderatorRoles.isEmpty())
             throw new ModmailException(missingConfigurationMessage());
@@ -259,17 +258,17 @@ public final class ModmailManager extends ListenerAdapter {
 
     private static long getNextTicketNumber(long guildId) {
         ModmailTicket latestTicket = Database.getDatabase().modmailTickets.find(Filters.eq("guild", guildId))
-                .sort(Sorts.descending("ticketNumber"))
-                .limit(1)
-                .first();
+            .sort(Sorts.descending("ticketNumber"))
+            .limit(1)
+            .first();
         return latestTicket == null ? 1L : latestTicket.getTicketNumber() + 1L;
     }
 
     private static Category findOrCreateCategory(Guild guild, List<Role> moderatorRoles) {
         List<Category> categories = guild.getCategories().stream()
-                .filter(category -> isManagedModmailCategory(category.getName()))
-                .sorted(Comparator.comparingInt(left -> parseCategoryIndex(left.getName())))
-                .collect(Collectors.toCollection(ArrayList::new));
+            .filter(category -> isManagedModmailCategory(category.getName()))
+            .sorted(Comparator.comparingInt(left -> parseCategoryIndex(left.getName())))
+            .collect(Collectors.toCollection(ArrayList::new));
 
         for (Category category : categories) {
             syncCategoryPermissions(category, guild, moderatorRoles);
@@ -280,9 +279,9 @@ public final class ModmailManager extends ListenerAdapter {
 
         String nextName = CATEGORY_NAME_PREFIX + "-" + (categories.size() + 1);
         Category category = guild.createCategory(nextName)
-                .addPermissionOverride(guild.getPublicRole(), NONE, CATEGORY_DENIED)
-                .addPermissionOverride(guild.getSelfMember(), BOT_ALLOWED, NONE)
-                .complete();
+            .addPermissionOverride(guild.getPublicRole(), NONE, CATEGORY_DENIED)
+            .addPermissionOverride(guild.getSelfMember(), BOT_ALLOWED, NONE)
+            .complete();
         syncCategoryPermissions(category, guild, moderatorRoles);
         return category;
     }
@@ -318,38 +317,46 @@ public final class ModmailManager extends ListenerAdapter {
 
     private static String buildChannelName(long ticketNumber, String username) {
         String sanitizedName = username.toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("^-+|-+$", "");
-        if (sanitizedName.isBlank())
+            .replaceAll("[^a-z0-9]+", "-")
+            .replaceAll("^-+|-+$", "");
+        if (sanitizedName.isBlank()) {
             sanitizedName = "user";
+        }
 
         String prefix = "ticket-" + ticketNumber + "-";
         int maxNameLength = 100;
         int maxUserLength = Math.max(1, maxNameLength - prefix.length());
-        if (sanitizedName.length() > maxUserLength)
+        if (sanitizedName.length() > maxUserLength) {
             sanitizedName = sanitizedName.substring(0, maxUserLength);
+        }
 
         return prefix + sanitizedName;
     }
 
-    private static void sendOpeningMessage(TextChannel channel, Member creator, List<Role> moderatorRoles, String initialMessage, long ticketNumber) {
+    private static void sendOpeningMessage(
+        TextChannel channel,
+        Member creator,
+        List<Role> moderatorRoles,
+        String initialMessage,
+        long ticketNumber
+    ) {
         var embed = new EmbedBuilder()
-                .setTitle("Modmail Ticket #" + ticketNumber)
-                .setColor(Color.CYAN)
-                .setTimestamp(Instant.now())
-                .setDescription(initialMessage)
-                .addField("Opened By", creator.getAsMention(), false)
-                .addField("User ID", String.valueOf(creator.getIdLong()), false)
-                .setFooter("Moderators can close this ticket with /modmail close");
+            .setTitle("Modmail Ticket #" + ticketNumber)
+            .setColor(Color.CYAN)
+            .setTimestamp(Instant.now())
+            .setDescription(initialMessage)
+            .addField("Opened By", creator.getAsMention(), false)
+            .addField("User ID", String.valueOf(creator.getIdLong()), false)
+            .setFooter("Moderators can close this ticket with /modmail close");
 
         String moderatorMentions = moderatorRoles.stream()
-                .map(Role::getAsMention)
-                .distinct()
-                .collect(Collectors.joining(" "));
+            .map(Role::getAsMention)
+            .distinct()
+            .collect(Collectors.joining(" "));
 
-        String content = moderatorMentions.isBlank() ?
-                creator.getAsMention() :
-                moderatorMentions + " " + creator.getAsMention();
+        String content = moderatorMentions.isBlank()
+            ? creator.getAsMention()
+            : moderatorMentions + " " + creator.getAsMention();
 
         channel.sendMessage(content).setEmbeds(embed.build()).queue();
     }
@@ -365,9 +372,8 @@ public final class ModmailManager extends ListenerAdapter {
 
     private static TranscriptArchiveResult archiveTranscript(TextChannel channel) {
         Database.getDatabase().modmailTranscriptChunks.deleteMany(Filters.and(
-                Filters.eq("guild", channel.getGuild().getIdLong()),
-                Filters.eq("ticketChannel", channel.getIdLong())
-        ));
+            Filters.eq("guild", channel.getGuild().getIdLong()),
+            Filters.eq("ticketChannel", channel.getIdLong())));
 
         var history = new MessageHistory(channel);
         int chunkIndex = 0;
@@ -378,15 +384,14 @@ public final class ModmailManager extends ListenerAdapter {
                 break;
 
             List<ModmailTranscriptEntry> entries = batch.stream()
-                    .map(ModmailManager::toTranscriptEntry)
-                    .collect(Collectors.toCollection(ArrayList::new));
+                .map(ModmailManager::toTranscriptEntry)
+                .collect(Collectors.toCollection(ArrayList::new));
             Collections.reverse(entries);
             Database.getDatabase().modmailTranscriptChunks.insertOne(new ModmailTranscriptChunk(
-                    channel.getGuild().getIdLong(),
-                    channel.getIdLong(),
-                    chunkIndex++,
-                    entries
-            ));
+                channel.getGuild().getIdLong(),
+                channel.getIdLong(),
+                chunkIndex++,
+                entries));
             messageCount += entries.size();
 
             if (batch.size() < 100)
@@ -399,27 +404,28 @@ public final class ModmailManager extends ListenerAdapter {
     private static ModmailTranscriptEntry toTranscriptEntry(Message message) {
         User author = message.getAuthor();
         List<String> attachments = message.getAttachments().stream()
-                .map(attachment -> attachment.getUrl() + " (" + attachment.getFileName() + ")")
-                .toList();
+            .map(attachment -> attachment.getUrl() + " (" + attachment.getFileName() + ")")
+            .toList();
         List<String> embeds = message.getEmbeds().stream()
-                .map(ModmailManager::describeEmbed)
-                .toList();
+            .map(ModmailManager::describeEmbed)
+            .toList();
         List<String> stickers = message.getStickers().stream()
-                .map(sticker -> sticker.getName() + " (" + sticker.getId() + ")")
-                .toList();
+            .map(sticker -> sticker.getName() + " (" + sticker.getId() + ")")
+            .toList();
 
         return new ModmailTranscriptEntry(
-                message.getIdLong(),
-                author.getIdLong(),
-                author.getName() + " (" + author.getId() + ")",
-                author.isBot(),
-                message.getContentRaw(),
-                new ArrayList<>(attachments),
-                new ArrayList<>(embeds),
-                new ArrayList<>(stickers),
-                message.getTimeCreated().toInstant().toEpochMilli(),
-                message.isEdited() && message.getTimeEdited() != null ? message.getTimeEdited().toInstant().toEpochMilli() : 0L
-        );
+            message.getIdLong(),
+            author.getIdLong(),
+            author.getName() + " (" + author.getId() + ")",
+            author.isBot(),
+            message.getContentRaw(),
+            new ArrayList<>(attachments),
+            new ArrayList<>(embeds),
+            new ArrayList<>(stickers),
+            message.getTimeCreated().toInstant().toEpochMilli(),
+            message.isEdited() && message.getTimeEdited() != null
+                ? message.getTimeEdited().toInstant().toEpochMilli()
+                : 0L);
     }
 
     private static String describeEmbed(MessageEmbed embed) {

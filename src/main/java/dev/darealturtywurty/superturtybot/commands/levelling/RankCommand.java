@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("DataFlowIssue") // TODO: Possibly hold the images in memory to avoid reading them every time and that way this is irrelevant
+@SuppressWarnings("DataFlowIssue") // TODO: Possibly hold the images in memory to avoid reading them every time and that
+                                   // way this is irrelevant
 public class RankCommand extends CoreCommand {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##.#");
     private final Font usedFont;
@@ -44,7 +45,7 @@ public class RankCommand extends CoreCommand {
     public RankCommand() {
         super(new Types(true, false, false, false));
         final var graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        try(final InputStream stream = TurtyBot.loadResource("fonts/Code New Roman.otf")) {
+        try (final InputStream stream = TurtyBot.loadResource("fonts/Code New Roman.otf")) {
             if (stream == null)
                 throw new IllegalStateException("Unable to load font");
 
@@ -77,7 +78,7 @@ public class RankCommand extends CoreCommand {
     public String getDescription() {
         return "Gets the rank of yourself or the provided member";
     }
-    
+
     @Override
     public String getHowToUse() {
         return "/rank\n/rank [user]";
@@ -95,9 +96,9 @@ public class RankCommand extends CoreCommand {
         final Bson filter = Filters.eq("guild", member.getGuild().getIdLong());
         List<Levelling> profiles = Database.getDatabase().levelling.find(filter).into(new ArrayList<>());
         profiles = profiles.stream()
-                .filter(profile -> member.getGuild().getMemberById(profile.getUser()) != null)
-                .sorted(Comparator.comparing(Levelling::getXp).reversed())
-                .toList();
+            .filter(profile -> member.getGuild().getMemberById(profile.getUser()) != null)
+            .sorted(Comparator.comparing(Levelling::getXp).reversed())
+            .toList();
 
         final Optional<Levelling> found = profiles.stream().filter(profile -> profile.getUser() == member.getIdLong())
             .findFirst();
@@ -131,10 +132,12 @@ public class RankCommand extends CoreCommand {
             option -> event.getGuild().getMember(option.getAsUser()));
 
         if (member == null) {
-            reply(event, "❌ You must supply a valid member of this server if you are going to provide the `member` option!", false, true);
+            reply(event,
+                "❌ You must supply a valid member of this server if you are going to provide the `member` option!",
+                false, true);
             return;
         }
-        
+
         if (member.getUser().isBot()) {
             reply(event, "❌ Bots cannot level up. Silly!");
             return;
@@ -165,7 +168,7 @@ public class RankCommand extends CoreCommand {
         event.deferReply().mentionRepliedUser(false).queue();
         try {
             final BufferedImage card = makeRankCard(member, profile.getRankCard(), level, xp, forLevel, percentage);
-            if(card == null) {
+            if (card == null) {
                 event.getHook().editOriginal("❌ There has been an issue getting your rank card!").queue();
                 return;
             }
@@ -180,8 +183,14 @@ public class RankCommand extends CoreCommand {
     }
 
     @Nullable
-    private BufferedImage makeRankCard(final Member member, RankCard card, int level, int xp, int nextLevelXp,
-        float xpPercent) {
+    private BufferedImage makeRankCard(
+        final Member member,
+        RankCard card,
+        int level,
+        int xp,
+        int nextLevelXp,
+        float xpPercent
+    ) {
         try {
             final BufferedImage base = ImageIO
                 .read(TurtyBot.class.getResourceAsStream("/levels/background/default.png"));
@@ -245,7 +254,9 @@ public class RankCommand extends CoreCommand {
             graphics.setColor(card.getNameTextColor());
 
             final String name = member.getEffectiveName();
-            final float nameFontSize = name.length() <= 12 ? 200f : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
+            final float nameFontSize = name.length() <= 12
+                ? 200f
+                : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
             graphics.setFont(this.usedFont.deriveFont(nameFontSize));
             graphics.drawString(name.length() > 26 ? name.substring(0, 26) + "..." : name, 700, 270);
 
@@ -373,13 +384,17 @@ public class RankCommand extends CoreCommand {
         final Ellipse2D inner = new Ellipse2D.Double(centerX - outerRadius + thickness,
             centerY - outerRadius + thickness, outerRadius + outerRadius - thickness - thickness,
             outerRadius + outerRadius - thickness - thickness);
-        final Area area = new Area(outer);
+        final var area = new Area(outer);
         area.subtract(new Area(inner));
         return area;
     }
 
-    public static BufferedImage cutoutImageMiddle(final BufferedImage image, final int baseWidth, final int baseHeight,
-        final int cornerRadius) {
+    public static BufferedImage cutoutImageMiddle(
+        final BufferedImage image,
+        final int baseWidth,
+        final int baseHeight,
+        final int cornerRadius
+    ) {
         final var output = new BufferedImage(baseWidth, baseHeight, BufferedImage.TYPE_INT_ARGB);
 
         final var g2 = output.createGraphics();
@@ -431,8 +446,14 @@ public class RankCommand extends CoreCommand {
         return output;
     }
 
-    public static void paintTextWithOutline(final Graphics g, final String text, final Font font,
-        final Color outlineColor, final Color fillColor, final float outlineWidth) {
+    public static void paintTextWithOutline(
+        final Graphics g,
+        final String text,
+        final Font font,
+        final Color outlineColor,
+        final Color fillColor,
+        final float outlineWidth
+    ) {
         final var outlineStroke = new BasicStroke(outlineWidth);
 
         if (g instanceof final Graphics2D g2) {
@@ -461,7 +482,7 @@ public class RankCommand extends CoreCommand {
             g2.setRenderingHints(originalHints);
         }
     }
-    
+
     private static void drawAvatar(final BufferedImage userAvatar, final Graphics2D graphics) {
         graphics.setStroke(new BasicStroke(4));
         final var circleBuffer = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),

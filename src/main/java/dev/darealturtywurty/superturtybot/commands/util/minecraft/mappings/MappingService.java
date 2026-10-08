@@ -22,23 +22,28 @@ import java.util.concurrent.TimeUnit;
 public final class MappingService {
     public static final ExecutorService EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     private static final Cache<Request, CompletableFuture<MappingData>> CACHE = CacheBuilder.newBuilder()
-            .maximumSize(8)
-            .expireAfterAccess(30, TimeUnit.MINUTES)
-            .build();
+        .maximumSize(8)
+        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .build();
 
     private MappingService() {
     }
 
-    public static CompletableFuture<MappingData> get(String version, String side, MappingChannel from, MappingChannel to) {
+    public static CompletableFuture<MappingData> get(
+        String version,
+        String side,
+        MappingChannel from,
+        MappingChannel to
+    ) {
         var request = new Request(version, side, Set.copyOf(EnumSet.of(from, to)));
         CompletableFuture<MappingData> future = CACHE.asMap().computeIfAbsent(request,
-                key -> CompletableFuture.supplyAsync(() -> {
-                    try {
-                        return load(key);
-                    } catch (IOException exception) {
-                        throw new IllegalStateException("Unable to download mappings", exception);
-                    }
-                }, EXECUTOR));
+            key -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    return load(key);
+                } catch (IOException exception) {
+                    throw new IllegalStateException("Unable to download mappings", exception);
+                }
+            }, EXECUTOR));
         future.whenComplete((result, error) -> {
             if (error != null) {
                 CACHE.asMap().remove(request, future);
@@ -75,9 +80,9 @@ public final class MappingService {
 
         var sideMappings = MojmapMappings.loadIfAvailable(version, request.side());
         if (sideMappings == null && (request.channels().contains(MappingChannel.MOJMAP)
-                || tree.getClasses().isEmpty() || request.side().equals("server"))) {
-            throw new IllegalArgumentException("Mojmap " + request.side() + " mappings are not available for Minecraft " + version.id() + ".");
-        }
+            || tree.getClasses().isEmpty() || request.side().equals("server")))
+            throw new IllegalArgumentException(
+                "Mojmap " + request.side() + " mappings are not available for Minecraft " + version.id() + ".");
 
         if (sideMappings != null) {
             sideMappings.accept(tree);

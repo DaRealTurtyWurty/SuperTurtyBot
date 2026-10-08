@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit;
 public class BattleshipsAttackCommand extends BattleshipsSubcommand {
     public BattleshipsAttackCommand() {
         super("attack", "Attack a position on your opponent's board", false);
-        addOption(OptionType.STRING, BattleshipsCommand.OPTION_GRID_POSITION, "The grid position to attack (e.g., A5)", true);
+        addOption(OptionType.STRING, BattleshipsCommand.OPTION_GRID_POSITION, "The grid position to attack (e.g., A5)",
+            true);
     }
 
     @Override
@@ -24,7 +25,8 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
         User user = event.getUser();
         BattleshipsCommand.Game game = BattleshipsCommand.getGame(guild.getIdLong(), user.getIdLong()).orElse(null);
         if (game == null) {
-            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.").queue();
+            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.")
+                .queue();
             return;
         }
 
@@ -49,11 +51,13 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
         }
 
         if (!game.isTurn(user.getIdLong())) {
-            replyBattleships(event, "❌ It's not your turn! It's currently <@" + game.getCurrentTurn() + ">'s turn.").queue();
+            replyBattleships(event, "❌ It's not your turn! It's currently <@" + game.getCurrentTurn() + ">'s turn.")
+                .queue();
             return;
         }
 
-        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null, OptionMapping::getAsString);
+        String gridPosition = event.getOption(BattleshipsCommand.OPTION_GRID_POSITION, null,
+            OptionMapping::getAsString);
         if (gridPosition == null || gridPosition.isBlank()) {
             replyBattleships(event, "❌ You must specify a valid grid position to attack.").queue();
             return;
@@ -77,42 +81,42 @@ public class BattleshipsAttackCommand extends BattleshipsSubcommand {
         var response = new StringBuilder();
         if (attackResult.hit()) {
             response.append("💥 ").append(user.getAsMention())
-                    .append(" hit a ship at ").append(normalizedGridPosition).append('!');
+                .append(" hit a ship at ").append(normalizedGridPosition).append('!');
             if (attackResult.sunk()) {
                 response.append(" They sunk a ")
-                        .append(attackResult.sunkType().name().toLowerCase(Locale.ROOT).replace('_', ' '))
-                        .append('!');
-            if (game.isPowerUpsEnabled()) {
+                    .append(attackResult.sunkType().name().toLowerCase(Locale.ROOT).replace('_', ' '))
+                    .append('!');
+                if (game.isPowerUpsEnabled()) {
                     BattleshipsCommand.PowerUp powerUp = game.grantRandomPowerUp(user.getIdLong());
                     if (powerUp != null) {
                         response.append(" ").append(user.getAsMention())
-                                .append(" received a power-up: **").append(powerUp.getDisplayName()).append("**!");
+                            .append(" received a power-up: **").append(powerUp.getDisplayName()).append("**!");
                     }
                 }
             }
         } else {
             response.append("🌊 ").append(user.getAsMention())
-                    .append(" missed at ").append(normalizedGridPosition).append('.');
+                .append(" missed at ").append(normalizedGridPosition).append('.');
         }
 
         if (attackResult.gameOver()) {
             response.append("\n🏆 ").append(user.getAsMention()).append(" wins! Game over.");
             if (game.isPvP()) {
                 QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                        guild,
-                        "battleships",
-                        game.getThreadId(),
-                        game.getPlayer1().getUserId(),
-                        game.getPlayer2().getUserId(),
-                        user.getIdLong()
-                );
+                    guild,
+                    "battleships",
+                    game.getThreadId(),
+                    game.getPlayer1().getUserId(),
+                    game.getPlayer2().getUserId(),
+                    user.getIdLong());
             }
             BattleshipsCommand.GAMES.remove(game.getThreadId(), game);
-            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5, TimeUnit.SECONDS);
+            event.getChannel().asThreadChannel().getManager().setLocked(true).setArchived(true).queueAfter(5,
+                TimeUnit.SECONDS);
             try {
                 String[] names = BattleshipsCommand.buildNames(event, game);
                 FileUpload upload = BattleshipsImageRenderer.createUpload(
-                        game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
+                    game, names, game.getPlayer1().getUserId(), game.getPlayer2().getUserId());
                 replyBattleships(event, response.toString()).setFiles(upload).queue();
             } catch (Exception exception) {
                 replyBattleships(event, response.toString()).queue();

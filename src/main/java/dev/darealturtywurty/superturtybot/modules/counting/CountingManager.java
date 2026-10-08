@@ -33,14 +33,15 @@ public class CountingManager extends ListenerAdapter {
 
     public boolean isCountingChannel(Guild guild, TextChannel channel) {
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("channel", channel.getIdLong()));
+            Filters.eq("channel", channel.getIdLong()));
         final Counting profile = Database.getDatabase().counting.find(filter).first();
         return profile != null;
     }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (shouldIgnore(event)) return;
+        if (shouldIgnore(event))
+            return;
 
         final TextChannel channel = event.getChannel().asTextChannel();
 
@@ -54,9 +55,10 @@ public class CountingManager extends ListenerAdapter {
         int maxSuccession = guildData.getMaxCountingSuccession();
 
         final Bson filter = Filters.and(Filters.eq("guild", event.getGuild().getIdLong()),
-                Filters.eq("channel", channel.getIdLong()));
+            Filters.eq("channel", channel.getIdLong()));
         final Counting profile = Database.getDatabase().counting.find(filter).first();
-        if (profile == null) return;
+        if (profile == null)
+            return;
 
         final CountingMode mode = CountingMode.valueOf(profile.getCountingMode());
 
@@ -68,7 +70,8 @@ public class CountingManager extends ListenerAdapter {
         final float given = CountingMode.parse(mode, content);
 
         // If the provided value is not valid
-        if (Float.isNaN(given)) return;
+        if (Float.isNaN(given))
+            return;
 
         UserData data;
         if (profile.getLatestCounter() == user.getIdLong()) {
@@ -84,8 +87,9 @@ public class CountingManager extends ListenerAdapter {
                     final float starting = CountingMode.getStartingNumber(mode);
                     final float next = CountingMode.getNextNumber(mode, starting);
                     failChannel(profile, mode, message, filter, updates,
-                            "❌ You cannot count more than %s times in a row! The next number is: %s".formatted(
-                                    maxSuccession, CountingMode.parse(mode, starting, next)), starting, next);
+                        "❌ You cannot count more than %s times in a row! The next number is: %s".formatted(
+                            maxSuccession, CountingMode.parse(mode, starting, next)),
+                        starting, next);
                     return;
                 }
             } else {
@@ -129,7 +133,7 @@ public class CountingManager extends ListenerAdapter {
         final float currentNext = profile.getNextNumber();
         if (MathHandler.to1DecimalPlace(currentNext) == MathHandler.to1DecimalPlace(given)) {
             message.addReaction(Emoji.fromUnicode(data.getCurrentCountSuccession() < maxSuccession ? "✅" : "🚫"))
-                    .queue();
+                .queue();
 
             profile.setCurrentNumber(currentNext);
             updates.add(Updates.set("currentNumber", profile.getCurrentNumber()));
@@ -146,10 +150,10 @@ public class CountingManager extends ListenerAdapter {
 
                 if (mode.shouldNotify()) {
                     channel.sendMessage(
-                                    profile.getCurrentCount() + ". The next number is: " + MathHandler.parse(maths.getLeft(),
-                                            currentNext, profile.getNextNumber()))
-                            .queue(msg -> profile.setLastCountingMessageMillis(
-                                    msg.getTimeCreated().toInstant().toEpochMilli()));
+                        profile.getCurrentCount() + ". The next number is: " + MathHandler.parse(maths.getLeft(),
+                            currentNext, profile.getNextNumber()))
+                        .queue(msg -> profile.setLastCountingMessageMillis(
+                            msg.getTimeCreated().toInstant().toEpochMilli()));
                 }
             } else {
                 profile.setNextNumber(CountingMode.getNextNumber(mode, currentNext));
@@ -157,8 +161,9 @@ public class CountingManager extends ListenerAdapter {
 
                 if (mode.shouldNotify()) {
                     channel.sendMessage(
-                            profile.getCurrentCount() + ". The next number is: " + CountingMode.parse(mode, currentNext,
-                                    profile.getNextNumber())).queue(msg -> profile.setLastCountingMessageMillis(
+                        profile.getCurrentCount() + ". The next number is: " + CountingMode.parse(mode, currentNext,
+                            profile.getNextNumber()))
+                        .queue(msg -> profile.setLastCountingMessageMillis(
                             msg.getTimeCreated().toInstant().toEpochMilli()));
                 }
             }
@@ -166,14 +171,14 @@ public class CountingManager extends ListenerAdapter {
             updates.add(Updates.set("users", profile.getUsers()));
             Database.getDatabase().counting.updateOne(filter, updates);
             QuestManager.INSTANCE.recordValidCount(
-                    guild,
-                    user,
-                    message.getIdLong(),
-                    message.getTimeCreated().toInstant()
-            );
+                guild,
+                user,
+                message.getIdLong(),
+                message.getTimeCreated().toInstant());
 
             if (data.getCurrentCountSuccession() == maxSuccession) {
-                channel.upsertPermissionOverride(member).setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();
+                channel.upsertPermissionOverride(member)
+                    .setDenied(Permission.MESSAGE_SEND, Permission.CREATE_INSTANT_INVITE).queue();
             }
 
             return;
@@ -190,8 +195,11 @@ public class CountingManager extends ListenerAdapter {
             should = String.format("%.1f", Float.parseFloat(should));
 
             failChannel(profile, mode, message, filter, updates,
-                    "❌ `" + content + "` is not the correct number! It should have been `" + should + "`. The next number is: **" + MathHandler.parse(
-                            next.getLeft(), starting, next.getRight()) + "**.", starting, next.getRight());
+                "❌ `" + content + "` is not the correct number! It should have been `" + should
+                    + "`. The next number is: **" + MathHandler.parse(
+                        next.getLeft(), starting, next.getRight())
+                    + "**.",
+                starting, next.getRight());
             return;
         }
 
@@ -199,8 +207,11 @@ public class CountingManager extends ListenerAdapter {
         String should = CountingMode.parse(mode, starting, currentNext);
 
         failChannel(profile, mode, message, filter, updates,
-                "❌ `" + content + "` is not the correct number! It should have been `" + should + "`. The next number is: **" + CountingMode.parse(
-                        mode, starting, next) + "**.", starting, next);
+            "❌ `" + content + "` is not the correct number! It should have been `" + should
+                + "`. The next number is: **" + CountingMode.parse(
+                    mode, starting, next)
+                + "**.",
+            starting, next);
     }
 
     public void removeCountingChannel(Guild guild, TextChannel channel) {
@@ -208,7 +219,7 @@ public class CountingManager extends ListenerAdapter {
             return;
 
         final Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("channel", channel.getIdLong()));
+            Filters.eq("channel", channel.getIdLong()));
         Database.getDatabase().counting.deleteOne(filter).getDeletedCount();
     }
 
@@ -230,13 +241,23 @@ public class CountingManager extends ListenerAdapter {
         }
 
         channel.sendMessage("The next number is: " + parsed)
-                .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli()));
+            .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli()));
 
         Database.getDatabase().counting.insertOne(profile).getInsertedId();
     }
 
-    private void failChannel(final Counting profile, final CountingMode mode, final Message message, final Bson filter, final List<Bson> updates, String response, float startAt, float nextNumber) {
-        if (message.getTimeCreated().toInstant().toEpochMilli() < profile.getLastCountingMessageMillis()) return;
+    private void failChannel(
+        final Counting profile,
+        final CountingMode mode,
+        final Message message,
+        final Bson filter,
+        final List<Bson> updates,
+        String response,
+        float startAt,
+        float nextNumber
+    ) {
+        if (message.getTimeCreated().toInstant().toEpochMilli() < profile.getLastCountingMessageMillis())
+            return;
 
         final List<UserData> users = profile.getUsers();
         users.forEach(u -> u.setCurrentCountSuccession(0));
@@ -260,11 +281,12 @@ public class CountingManager extends ListenerAdapter {
         Database.getDatabase().counting.updateOne(filter, updates);
 
         message.addReaction(Emoji.fromUnicode("💀")).queue(success -> message.reply(response).mentionRepliedUser(false)
-                .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli())));
+            .queue(msg -> profile.setLastCountingMessageMillis(msg.getTimeCreated().toInstant().toEpochMilli())));
     }
 
     private boolean shouldIgnore(MessageReceivedEvent event) {
         return !event.isFromGuild() || event.isFromThread() || event.isWebhookMessage() || event.getAuthor()
-                .isBot() || event.getAuthor().isSystem() || event.getChannelType() != ChannelType.TEXT || event.getMember() == null;
+            .isBot() || event.getAuthor().isSystem() || event.getChannelType() != ChannelType.TEXT
+            || event.getMember() == null;
     }
 }

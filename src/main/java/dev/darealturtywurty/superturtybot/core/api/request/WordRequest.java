@@ -23,7 +23,7 @@ public class WordRequest {
         private Integer amount = null;
 
         public Builder length(int length) {
-            if(length < 0)
+            if (length < 0)
                 throw new IllegalArgumentException("Length must be greater than 0!");
 
             this.length = length;
@@ -34,7 +34,7 @@ public class WordRequest {
             if (startsWith.isBlank())
                 throw new IllegalArgumentException("Starts with cannot be blank!");
 
-            if(!startsWith.matches("[a-zA-Z]+"))
+            if (!startsWith.matches("[a-zA-Z]+"))
                 throw new IllegalArgumentException("Starts with must only contain letters!");
 
             this.startsWith = startsWith;
@@ -42,7 +42,7 @@ public class WordRequest {
         }
 
         public Builder amount(int amount) {
-            if(amount < 0)
+            if (amount < 0)
                 throw new IllegalArgumentException("Amount must be greater than 0!");
 
             this.amount = amount;

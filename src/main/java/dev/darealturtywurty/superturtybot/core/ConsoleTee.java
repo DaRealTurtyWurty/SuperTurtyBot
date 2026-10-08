@@ -21,7 +21,7 @@ public class ConsoleTee implements AutoCloseable {
     /**
      * Start teeing both stdout and stderr into the same file.
      *
-     * @param path   log file path
+     * @param path log file path
      * @param append true to append, false to overwrite
      */
     public static ConsoleTee toFile(Path path, boolean append) throws IOException {
@@ -29,12 +29,12 @@ public class ConsoleTee implements AutoCloseable {
         var bos = new BufferedOutputStream(fos);
 
         var teeOut = new PrintStream(
-                new MultiOutputStream(new NonClosingOutputStream(bos), System.out),
-                true, StandardCharsets.UTF_8);
+            new MultiOutputStream(new NonClosingOutputStream(bos), System.out),
+            true, StandardCharsets.UTF_8);
 
         var teeErr = new PrintStream(
-                new MultiOutputStream(new NonClosingOutputStream(bos), System.err),
-                true, StandardCharsets.UTF_8);
+            new MultiOutputStream(new NonClosingOutputStream(bos), System.err),
+            true, StandardCharsets.UTF_8);
 
         var ctl = new ConsoleTee(System.out, System.err);
         ctl.toClose.add(teeOut);
@@ -57,14 +57,15 @@ public class ConsoleTee implements AutoCloseable {
         for (int index = toClose.size() - 1; index >= 0; index--) {
             try {
                 toClose.get(index).close();
-            } catch (IOException ignored) {}
+            } catch (IOException _) {
+            }
         }
     }
 
     private static final class NonClosingOutputStream extends OutputStream {
         private final OutputStream delegate;
 
-        NonClosingOutputStream(OutputStream delegate) {
+        private NonClosingOutputStream(OutputStream delegate) {
             this.delegate = delegate;
         }
 
@@ -84,6 +85,7 @@ public class ConsoleTee implements AutoCloseable {
         }
 
         @Override
-        public void close() { /* no-op: underlying stream closed later by ConsoleTee */ }
+        public void close() {
+            /* no-op: underlying stream closed later by ConsoleTee */ }
     }
 }

@@ -114,45 +114,45 @@ public final class DashboardServer {
         });
 
         new DashboardRoutes(
-                this.config,
-                this.jda,
-                catalogService,
-                guildSettingsService,
-                sessionService,
-                userProfileService,
-                starboardSettingsService,
-                levellingSettingsService,
-                loggingSettingsService,
-                warningsSettingsService,
-                economySettingsService,
-                welcomeSettingsService,
-                birthdaySettingsService,
-                suggestionsSettingsService,
-                collectablesSettingsService,
-                optInChannelsSettingsService,
-                suggestionsDashboardService,
-                aiSettingsService,
-                chatRevivalSettingsService,
-                nsfwSettingsService,
-                threadSettingsService,
-                miscSettingsService,
-                countingSettingsService,
-                quotesDashboardService,
-                tagsDashboardService,
-                automodSettingsService,
-                modmailSettingsService,
-                modmailTicketsService,
-                notifiersService,
-                reportsService,
-                stickyMessagesService,
-                voiceChannelNotifierDashboardService
-        ).register(this.app);
+            this.config,
+            this.jda,
+            catalogService,
+            guildSettingsService,
+            sessionService,
+            userProfileService,
+            starboardSettingsService,
+            levellingSettingsService,
+            loggingSettingsService,
+            warningsSettingsService,
+            economySettingsService,
+            welcomeSettingsService,
+            birthdaySettingsService,
+            suggestionsSettingsService,
+            collectablesSettingsService,
+            optInChannelsSettingsService,
+            suggestionsDashboardService,
+            aiSettingsService,
+            chatRevivalSettingsService,
+            nsfwSettingsService,
+            threadSettingsService,
+            miscSettingsService,
+            countingSettingsService,
+            quotesDashboardService,
+            tagsDashboardService,
+            automodSettingsService,
+            modmailSettingsService,
+            modmailTicketsService,
+            notifiersService,
+            reportsService,
+            stickyMessagesService,
+            voiceChannelNotifierDashboardService).register(this.app);
         this.app.start(this.config.host(), this.config.port());
 
         if (this.config.publicUrl() == null) {
             Constants.LOGGER.info("Dashboard service started on {}.", this.config.bindAddress());
         } else {
-            Constants.LOGGER.info("Dashboard service started on {} ({})", this.config.bindAddress(), this.config.publicUrl());
+            Constants.LOGGER.info("Dashboard service started on {} ({})", this.config.bindAddress(),
+                this.config.publicUrl());
         }
     }
 

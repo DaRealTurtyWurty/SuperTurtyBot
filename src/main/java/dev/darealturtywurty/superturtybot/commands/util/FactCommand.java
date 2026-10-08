@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 public class FactCommand extends CoreCommand {
     private static final String ENDPOINT = "https://api.popcat.xyz/fact";
-    
+
     public FactCommand() {
         super(new Types(true, false, false, false));
     }
@@ -35,7 +35,7 @@ public class FactCommand extends CoreCommand {
     public String getName() {
         return "fact";
     }
-    
+
     @Override
     public String getRichName() {
         return "Fact";
@@ -59,7 +59,7 @@ public class FactCommand extends CoreCommand {
                 event.getHook().sendMessage("❌ " + error).queue();
                 return;
             }
-            
+
             final String fact = json.get("fact").getAsString();
             event.getHook().sendMessage(fact).queue();
         } catch (final IOException | URISyntaxException exception) {

@@ -52,10 +52,15 @@ public class UserConfig {
     }
 
     public enum LevelUpMessageType {
-        EMBED, NORMAL, DM, NONE
+        EMBED,
+        NORMAL,
+        DM,
+        NONE
     }
 
     public enum TaxMessageType {
-        ON, SILENT, OFF
+        ON,
+        SILENT,
+        OFF
     }
 }

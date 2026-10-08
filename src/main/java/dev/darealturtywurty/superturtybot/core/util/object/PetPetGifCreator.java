@@ -36,7 +36,8 @@ public class PetPetGifCreator {
         this.inputImage = inputImage;
 
         try {
-            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()), BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so I set it to be used here
+            this.writer = new GifSequenceWriter(new FileImageOutputStream(outputPath.toFile()),
+                BufferedImage.TYPE_INT_ARGB, DELAY, true); // delay was not being used so I set it to be used here
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create GifSequenceWriter!", exception);
         }
@@ -47,8 +48,11 @@ public class PetPetGifCreator {
             for (int index = 0; index < PET_PET_FRAMES.size() * 2; index++) {
                 BufferedImage frame = PET_PET_FRAMES.get(index % PET_PET_FRAMES.size());
 
-                BufferedImage image = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                int j = index < PET_PET_FRAMES.size() ? index : PET_PET_FRAMES.size() - (index % PET_PET_FRAMES.size()) - 1;
+                var image = new BufferedImage(inputImage.getWidth(), inputImage.getHeight(),
+                    BufferedImage.TYPE_INT_ARGB);
+                int j = index < PET_PET_FRAMES.size()
+                    ? index
+                    : PET_PET_FRAMES.size() - (index % PET_PET_FRAMES.size()) - 1;
                 float widthMultiplier = 0.8f + j * 0.02f;
                 float heightMultiplier = 0.8f - j * 0.05f;
                 float offsetX = (1 - widthMultiplier) * 0.5f + 0.1f;

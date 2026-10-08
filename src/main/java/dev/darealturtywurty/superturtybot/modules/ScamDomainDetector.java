@@ -45,7 +45,8 @@ public class ScamDomainDetector {
     private static final Duration WEBSOCKET_RECONNECT_MAX_DELAY = Duration.ofMinutes(5);
     private static final String USER_AGENT = "SuperTurtyBot/1.0 (https://github.com/darealturtywurty/SuperTurtyBot)";
     private static final Path CACHE_FILE = Path.of("cache", "scam_domains_cache.json");
-    private static final Pattern URL_PATTERN = Pattern.compile("(?i)\\b((?:https?://)?[\\w.-]+\\.[a-z]{2,})(?:/[^\\s]*)?");
+    private static final Pattern URL_PATTERN = Pattern
+        .compile("(?i)\\b((?:https?://)?[\\w.-]+\\.[a-z]{2,})(?:/[^\\s]*)?");
 
     private final Set<String> scamDomains = ConcurrentHashMap.newKeySet();
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -79,7 +80,8 @@ public class ScamDomainDetector {
         if (!message.isFromGuild())
             return;
 
-        final GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", message.getGuild().getIdLong())).first();
+        final GuildData config = Database.getDatabase().guildData
+            .find(Filters.eq("guild", message.getGuild().getIdLong())).first();
         if (config == null || !config.isScamDetectionEnabled())
             return;
 
@@ -88,11 +90,12 @@ public class ScamDomainDetector {
             return;
 
         if (containsScamDomain(content)) {
-            message.delete().flatMap(success ->
-                    message.getChannel().sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
-                            "If this was not you, then your account has been compromised. " +
-                            "Please make sure to reset your login details to get your token changed. " +
-                            "In the future, be more careful what URLs you are opening, always check that it's the real one.")).queue();
+            message.delete().flatMap(success -> message.getChannel()
+                .sendMessage(message.getAuthor().getAsMention() + ", do NOT send scam links! " +
+                    "If this was not you, then your account has been compromised. " +
+                    "Please make sure to reset your login details to get your token changed. " +
+                    "In the future, be more careful what URLs you are opening, always check that it's the real one."))
+                .queue();
         }
     }
 
@@ -115,10 +118,10 @@ public class ScamDomainDetector {
     private void fetchAllDomains() {
         try {
             final HttpRequest request = HttpRequest.newBuilder(URI.create(ALL_URL))
-                    .header("User-Agent", USER_AGENT)
-                    .header("X-Identity", USER_AGENT)
-                    .GET()
-                    .build();
+                .header("User-Agent", USER_AGENT)
+                .header("X-Identity", USER_AGENT)
+                .GET()
+                .build();
             final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 Constants.LOGGER.warn("Failed to fetch scam domains. Status: {}", response.statusCode());
@@ -157,10 +160,10 @@ public class ScamDomainDetector {
         try {
             final String url = RECENT_URL_TEMPLATE.formatted(this.lastUpdatedEpochSecond);
             final HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-                    .header("User-Agent", USER_AGENT)
-                    .header("X-Identity", USER_AGENT)
-                    .GET()
-                    .build();
+                .header("User-Agent", USER_AGENT)
+                .header("X-Identity", USER_AGENT)
+                .GET()
+                .build();
             final HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 Constants.LOGGER.warn("Failed to fetch recent scam domains. Status: {}", response.statusCode());
@@ -192,89 +195,90 @@ public class ScamDomainDetector {
 
             if ("delete".equalsIgnoreCase(update.type())) {
                 update.domains().stream()
-                        .map(this::normalizeDomain)
-                        .filter(Objects::nonNull)
-                        .forEach(this.scamDomains::remove);
+                    .map(this::normalizeDomain)
+                    .filter(Objects::nonNull)
+                    .forEach(this.scamDomains::remove);
             } else {
                 update.domains().stream()
-                        .map(this::normalizeDomain)
-                        .filter(Objects::nonNull)
-                        .forEach(this.scamDomains::add);
+                    .map(this::normalizeDomain)
+                    .filter(Objects::nonNull)
+                    .forEach(this.scamDomains::add);
             }
         }
     }
 
     private void startWebSocket() {
         this.httpClient.newWebSocketBuilder()
-                .header("User-Agent", USER_AGENT)
-                .header("X-Identity", USER_AGENT)
-                .buildAsync(URI.create(WEBSOCKET_URL), new WebSocket.Listener() {
-                    @Override
-                    public void onOpen(WebSocket webSocket) {
-                        final WebSocket previousWebSocket = activeWebSocket.getAndSet(webSocket);
-                        if (previousWebSocket != null && previousWebSocket != webSocket) {
-                            previousWebSocket.abort();
+            .header("User-Agent", USER_AGENT)
+            .header("X-Identity", USER_AGENT)
+            .buildAsync(URI.create(WEBSOCKET_URL), new WebSocket.Listener() {
+                @Override
+                public void onOpen(WebSocket webSocket) {
+                    final WebSocket previousWebSocket = activeWebSocket.getAndSet(webSocket);
+                    if (previousWebSocket != null && previousWebSocket != webSocket) {
+                        previousWebSocket.abort();
+                    }
+
+                    webSocket.request(1);
+                    consecutiveWebSocketFailures.set(0);
+                    startPing(webSocket);
+                    // Constants.LOGGER.info("Connected to scam-domain websocket feed.");
+                }
+
+                @Override
+                public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+                    try {
+                        ScamUpdate[] updates = Constants.GSON.fromJson(data.toString(), ScamUpdate[].class);
+                        if ((updates == null || updates.length == 0)) {
+                            final ScamUpdate single = Constants.GSON.fromJson(data.toString(), ScamUpdate.class);
+                            if (single != null) {
+                                updates = new ScamUpdate[]{single};
+                            }
                         }
 
+                        if (updates != null && updates.length > 0) {
+                            applyUpdates(updates);
+                            lastUpdatedEpochSecond = Instant.now().getEpochSecond();
+                            saveCache();
+                        }
+                    } catch (final Exception exception) {
+                        Constants.LOGGER.error("Failed to process scam-domain websocket payload!", exception);
+                    } finally {
                         webSocket.request(1);
-                        consecutiveWebSocketFailures.set(0);
-                        startPing(webSocket);
-                        // Constants.LOGGER.info("Connected to scam-domain websocket feed.");
                     }
 
-                    @Override
-                    public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                        try {
-                            ScamUpdate[] updates = Constants.GSON.fromJson(data.toString(), ScamUpdate[].class);
-                            if ((updates == null || updates.length == 0)) {
-                                final ScamUpdate single = Constants.GSON.fromJson(data.toString(), ScamUpdate.class);
-                                if (single != null)
-                                    updates = new ScamUpdate[]{single};
-                            }
+                    return null;
+                }
 
-                            if (updates != null && updates.length > 0) {
-                                applyUpdates(updates);
-                                lastUpdatedEpochSecond = Instant.now().getEpochSecond();
-                                saveCache();
-                            }
-                        } catch (final Exception exception) {
-                            Constants.LOGGER.error("Failed to process scam-domain websocket payload!", exception);
-                        } finally {
-                            webSocket.request(1);
-                        }
-
+                @Override
+                public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+                    if (!activeWebSocket.compareAndSet(webSocket, null))
                         return null;
+
+                    cancelPing();
+                    if (statusCode == 1000) {
+                        Constants.LOGGER.info("Scam-domain websocket closed normally: {} - {}", statusCode, reason);
+                    } else if (statusCode != 1006) {
+                        Constants.LOGGER.warn("Scam-domain websocket closed unexpectedly: {} - {}", statusCode, reason);
                     }
-
-                    @Override
-                    public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                        if (!activeWebSocket.compareAndSet(webSocket, null))
-                            return null;
-
-                        cancelPing();
-                        if (statusCode == 1000) {
-                            Constants.LOGGER.info("Scam-domain websocket closed normally: {} - {}", statusCode, reason);
-                        } else if(statusCode != 1006) {
-                            Constants.LOGGER.warn("Scam-domain websocket closed unexpectedly: {} - {}", statusCode, reason);
-                        }
-                        scheduleReconnect();
-                        return null;
-                    }
-
-                    @Override
-                    public void onError(WebSocket webSocket, Throwable error) {
-                        if (!activeWebSocket.compareAndSet(webSocket, null))
-                            return;
-
-                        cancelPing();
-                        logWebSocketFailure("Scam-domain websocket disconnected", error);
-                        scheduleReconnect();
-                    }
-                }).exceptionally(error -> {
-                    logWebSocketFailure("Failed to connect to scam-domain websocket feed", error);
                     scheduleReconnect();
                     return null;
-                });
+                }
+
+                @Override
+                public void onError(WebSocket webSocket, Throwable error) {
+                    if (!activeWebSocket.compareAndSet(webSocket, null))
+                        return;
+
+                    cancelPing();
+                    logWebSocketFailure("Scam-domain websocket disconnected", error);
+                    scheduleReconnect();
+                }
+            }).exceptionally(error -> {
+                logWebSocketFailure("Failed to connect to scam-domain websocket feed", error);
+                scheduleReconnect();
+                return null;
+            });
     }
 
     private void scheduleReconnect() {
@@ -283,7 +287,7 @@ public class ScamDomainDetector {
 
         final int attempt = this.consecutiveWebSocketFailures.incrementAndGet();
         final long exponentialDelaySeconds = WEBSOCKET_RECONNECT_BASE_DELAY.getSeconds()
-                * (1L << Math.min(attempt - 1, 6)); // cap exponent to avoid overflow
+            * (1L << Math.min(attempt - 1, 6)); // cap exponent to avoid overflow
         final long delaySeconds = Math.min(exponentialDelaySeconds, WEBSOCKET_RECONNECT_MAX_DELAY.getSeconds());
         this.scheduler.schedule(() -> {
             this.reconnectScheduled.set(false);
@@ -303,7 +307,7 @@ public class ScamDomainDetector {
     private static Throwable unwrapCompletionException(Throwable error) {
         Throwable cause = error;
         while ((cause instanceof CompletionException || cause instanceof ExecutionException)
-                && cause.getCause() != null) {
+            && cause.getCause() != null) {
             cause = cause.getCause();
         }
 
@@ -331,11 +335,12 @@ public class ScamDomainDetector {
                 return;
 
             this.scamDomains.clear();
-            if (payload.domains() != null)
+            if (payload.domains() != null) {
                 payload.domains().stream()
-                        .map(this::normalizeDomain)
-                        .filter(Objects::nonNull)
-                        .forEach(this.scamDomains::add);
+                    .map(this::normalizeDomain)
+                    .filter(Objects::nonNull)
+                    .forEach(this.scamDomains::add);
+            }
 
             this.lastUpdatedEpochSecond = payload.lastUpdatedEpochSecond();
             Constants.LOGGER.info("Loaded {} scam domains from cache.", this.scamDomains.size());
@@ -345,7 +350,7 @@ public class ScamDomainDetector {
     }
 
     private void saveCache() {
-        final CachePayload payload = new CachePayload(this.lastUpdatedEpochSecond, this.scamDomains);
+        final var payload = new CachePayload(this.lastUpdatedEpochSecond, this.scamDomains);
         try (Writer writer = Files.newBufferedWriter(CACHE_FILE, StandardCharsets.UTF_8)) {
             Constants.GSON.toJson(payload, writer);
         } catch (final IOException exception) {
@@ -395,7 +400,7 @@ public class ScamDomainDetector {
             final String normalized = url.startsWith("http") ? url : "https://" + url;
             final URI uri = URI.create(normalized);
             return uri.getHost();
-        } catch (final Exception ignored) {
+        } catch (final Exception _) {
             return null;
         }
     }

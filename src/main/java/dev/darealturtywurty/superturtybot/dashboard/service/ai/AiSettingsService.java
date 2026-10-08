@@ -28,10 +28,9 @@ public final class AiSettingsService {
 
     public AiSettingsResponse updateSettings(long guildId, AiSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         List<String> channelWhitelist = normalizeSnowflakes(request.getAiChannelWhitelist());
         List<String> userBlacklist = normalizeSnowflakes(request.getAiUserBlacklist());
@@ -48,27 +47,24 @@ public final class AiSettingsService {
 
     private static AiSettingsResponse toResponse(GuildData guildData) {
         return new AiSettingsResponse(
-                guildData.isAiEnabled(),
-                GuildData.getLongs(guildData.getAiChannelWhitelist()).stream().map(String::valueOf).toList(),
-                GuildData.getLongs(guildData.getAiUserBlacklist()).stream().map(String::valueOf).toList()
-        );
+            guildData.isAiEnabled(),
+            GuildData.getLongs(guildData.getAiChannelWhitelist()).stream().map(String::valueOf).toList(),
+            GuildData.getLongs(guildData.getAiUserBlacklist()).stream().map(String::valueOf).toList());
     }
 
     private static void validateRequest(Guild guild, List<String> channelWhitelist, List<String> userBlacklist) {
         for (String channelId : channelWhitelist) {
             TextChannel channel = guild.getTextChannelById(channelId);
-            if (channel == null) {
+            if (channel == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_ai_channel",
-                        "One or more AI whitelist channels were not valid text channels in this guild.");
-            }
+                    "One or more AI whitelist channels were not valid text channels in this guild.");
         }
 
         for (String userId : userBlacklist) {
             Member member = guild.getMemberById(userId);
-            if (member == null) {
+            if (member == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_ai_user",
-                        "One or more AI blacklisted users were not members of this guild.");
-            }
+                    "One or more AI blacklisted users were not members of this guild.");
         }
     }
 
@@ -90,7 +86,7 @@ public final class AiSettingsService {
                 normalized.add(Long.toString(parsed));
             } catch (NumberFormatException exception) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_snowflake_id",
-                        "One of the supplied IDs was not a valid Discord snowflake.");
+                    "One of the supplied IDs was not a valid Discord snowflake.");
             }
         }
 

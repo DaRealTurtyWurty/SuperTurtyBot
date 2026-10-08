@@ -47,8 +47,8 @@ public final class TempBanManager {
         ShutdownHooks.register(SCHEDULER::shutdown);
 
         var tempBans = Database.getDatabase().tempBans.find()
-                .sort(Sorts.ascending("expiresAt"))
-                .into(new ArrayList<>());
+            .sort(Sorts.ascending("expiresAt"))
+            .into(new ArrayList<>());
         for (TempBan tempBan : tempBans) {
             if (!isValid(tempBan)) {
                 deleteRecord(tempBan);
@@ -59,14 +59,20 @@ public final class TempBanManager {
         }
     }
 
-    public static TempBan createOrUpdateTempBan(long guildId, long userId, long moderatorId, String reason, int deleteDays,
-                                                long expiresAt) {
-        TempBan tempBan = new TempBan(createId(guildId, userId), guildId, userId, moderatorId, reason, deleteDays,
-                expiresAt, System.currentTimeMillis());
+    public static TempBan createOrUpdateTempBan(
+        long guildId,
+        long userId,
+        long moderatorId,
+        String reason,
+        int deleteDays,
+        long expiresAt
+    ) {
+        var tempBan = new TempBan(createId(guildId, userId), guildId, userId, moderatorId, reason, deleteDays,
+            expiresAt, System.currentTimeMillis());
         Database.getDatabase().tempBans.replaceOne(
-                Filters.eq("_id", tempBan.getId()),
-                tempBan,
-                new ReplaceOptions().upsert(true));
+            Filters.eq("_id", tempBan.getId()),
+            tempBan,
+            new ReplaceOptions().upsert(true));
         scheduleUnban(tempBan);
         return tempBan;
     }
@@ -79,17 +85,17 @@ public final class TempBanManager {
 
     private static boolean isValid(TempBan tempBan) {
         return tempBan != null
-                && tempBan.getId() != null
-                && !tempBan.getId().isBlank()
-                && tempBan.getGuild() != 0L
-                && tempBan.getUser() != 0L
-                && tempBan.getModerator() != 0L
-                && tempBan.getReason() != null
-                && !tempBan.getReason().isBlank()
-                && tempBan.getDeleteDays() >= 0
-                && tempBan.getDeleteDays() <= 7
-                && tempBan.getExpiresAt() > 0L
-                && tempBan.getCreatedAt() > 0L;
+            && tempBan.getId() != null
+            && !tempBan.getId().isBlank()
+            && tempBan.getGuild() != 0L
+            && tempBan.getUser() != 0L
+            && tempBan.getModerator() != 0L
+            && tempBan.getReason() != null
+            && !tempBan.getReason().isBlank()
+            && tempBan.getDeleteDays() >= 0
+            && tempBan.getDeleteDays() <= 7
+            && tempBan.getExpiresAt() > 0L
+            && tempBan.getCreatedAt() > 0L;
     }
 
     private static void scheduleUnban(TempBan tempBan) {
@@ -138,31 +144,31 @@ public final class TempBanManager {
         }
 
         guild.unban(UserSnowflake.fromId(userId)).reason("Temporary ban expired").queue(
-                success -> {
-                    notifyUserAndLog(tempBan, guild);
-                    deleteRecord(tempBan);
-                },
-                failure -> {
-                    Constants.LOGGER.warn("Failed to unban {} in {} after tempban expiry", userId, guildId, failure);
-                    deleteRecord(tempBan);
-                });
+            success -> {
+                notifyUserAndLog(tempBan, guild);
+                deleteRecord(tempBan);
+            },
+            failure -> {
+                Constants.LOGGER.warn("Failed to unban {} in {} after tempban expiry", userId, guildId, failure);
+                deleteRecord(tempBan);
+            });
     }
 
     private static void notifyUserAndLog(TempBan tempBan, Guild guild) {
         jda.retrieveUserById(tempBan.getUser()).queue(
-                user -> {
-                    user.openPrivateChannel().queue(
-                            channel -> channel.sendMessage("You have been unbanned from `" + guild.getName()
-                                    + "` because your temporary ban expired!").queue(
-                                            ignored -> {
-                                            },
-                                            ignored -> {
-                                            }),
-                            ignored -> {
-                            });
-                    logExpiry(tempBan, guild, user);
-                },
-                failure -> logExpiry(tempBan, guild, null));
+            user -> {
+                user.openPrivateChannel().queue(
+                    channel -> channel.sendMessage("You have been unbanned from `" + guild.getName()
+                        + "` because your temporary ban expired!").queue(
+                            _ -> {
+                            },
+                            _ -> {
+                            }),
+                    _ -> {
+                    });
+                logExpiry(tempBan, guild, user);
+            },
+            failure -> logExpiry(tempBan, guild, null));
     }
 
     private static void logExpiry(TempBan tempBan, Guild guild, User user) {
@@ -173,8 +179,8 @@ public final class TempBanManager {
         String target = user != null ? user.getAsMention() : "<@" + tempBan.getUser() + ">";
         String moderator = "<@" + tempBan.getModerator() + ">";
         BanCommand.log(logging.getValue(),
-                target + "'s temporary ban set by " + moderator + " has expired and they have been unbanned!",
-                true);
+            target + "'s temporary ban set by " + moderator + " has expired and they have been unbanned!",
+            true);
     }
 
     private static void deleteRecord(TempBan tempBan) {

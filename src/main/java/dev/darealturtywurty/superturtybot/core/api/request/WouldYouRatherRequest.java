@@ -24,8 +24,8 @@ public class WouldYouRatherRequest {
 
     public static WouldYouRatherRequest randomlyNsfw() {
         return new WouldYouRatherRequest(
-                ThreadLocalRandom.current().nextDouble() < 0.2D,
-                false);
+            ThreadLocalRandom.current().nextDouble() < 0.2D,
+            false);
     }
 
     public static class Builder {

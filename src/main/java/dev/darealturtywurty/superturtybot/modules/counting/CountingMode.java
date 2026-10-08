@@ -99,7 +99,7 @@ public enum CountingMode {
                 final int leftover = (int) result % 9;
 
                 yield "0." + "0".repeat(Math.max(0, decimalPlaces)) +
-                        leftover;
+                    leftover;
             }
             case BINARY -> Integer.toBinaryString((int) result);
             case TERNARY -> Integer.toString((int) result, 3);
@@ -123,9 +123,8 @@ public enum CountingMode {
     public static float parse(CountingMode mode, String str) {
         return switch (mode) {
             case DECIMAL -> {
-                if (!str.startsWith("0.")) {
+                if (!str.startsWith("0."))
                     yield Float.NaN;
-                }
 
                 final String decimalOnly = str.replace("0.", "");
                 final int decimalPlaces = StringUtils.countMatches(decimalOnly, '0');

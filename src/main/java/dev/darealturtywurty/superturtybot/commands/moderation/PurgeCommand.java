@@ -26,7 +26,7 @@ public class PurgeCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(
             new OptionData(OptionType.INTEGER, "amount", "The number of messages to delete.", false)
-                    .setRequiredRange(1, 500),
+                .setRequiredRange(1, 500),
             new OptionData(OptionType.USER, "user", "The user to delete messages from.", false),
             new OptionData(OptionType.STRING, "reason", "The reason for the purging", false));
     }
@@ -35,7 +35,7 @@ public class PurgeCommand extends CoreCommand {
     public String getAccess() {
         return "Moderators (Manage Messages Permission)";
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
@@ -98,7 +98,7 @@ public class PurgeCommand extends CoreCommand {
         } else {
             messages = getMessages(event.getMessageChannel(), amount);
         }
-        
+
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
 
         messages.thenAccept(msgs -> {
@@ -106,7 +106,8 @@ public class PurgeCommand extends CoreCommand {
 
             CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
                 .thenAccept(action -> event.getMessageChannel().sendMessage(
-                    "✅ " + event.getMember().getAsMention() + " I have successfully purged " + msgs.size() + " messages!")
+                    "✅ " + event.getMember().getAsMention() + " I have successfully purged " + msgs.size()
+                        + " messages!")
                     .queue(success -> {
                         final Pair<Boolean, TextChannel> logging = BanCommand.canLog(event.getGuild());
                         if (Boolean.TRUE.equals(logging.getKey())) {

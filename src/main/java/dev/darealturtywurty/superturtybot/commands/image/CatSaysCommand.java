@@ -26,8 +26,7 @@ public class CatSaysCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.STRING, "text", "The text to make the cat say", true)
-        );
+            new OptionData(OptionType.STRING, "text", "The text to make the cat say", true));
     }
 
     @Override
@@ -58,7 +57,8 @@ public class CatSaysCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         String text = event.getOption("text", "how tf did you manage this?", OptionMapping::getAsString);
-        String url = "https://cataas.com/cat/says/" + URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
+        String url = "https://cataas.com/cat/says/"
+            + URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
 
         event.deferReply().queue();
 

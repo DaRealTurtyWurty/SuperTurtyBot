@@ -28,8 +28,15 @@ public final class MarketplaceService {
     private MarketplaceService() {
     }
 
-    public static MarketplaceListing list(long guild, long seller, String type, String collection,
-                                          String item, BigInteger price, int days) {
+    public static MarketplaceListing list(
+        long guild,
+        long seller,
+        String type,
+        String collection,
+        String item,
+        BigInteger price,
+        int days
+    ) {
         if (price == null || price.signum() <= 0)
             throw new IllegalArgumentException("Price must be positive.");
 
@@ -56,7 +63,7 @@ public final class MarketplaceService {
                             throw new IllegalArgumentException("You do not own that collectable.");
 
                         UserCollectables.Collectables group = owned.getCollectables().stream()
-                                .filter(value -> collection.equals(value.getType())).findFirst().orElse(null);
+                            .filter(value -> collection.equals(value.getType())).findFirst().orElse(null);
                         if (group == null || group.getCollectables() == null || !group.getCollectables().remove(item))
                             throw new IllegalArgumentException("You do not own that collectable.");
 
@@ -75,7 +82,7 @@ public final class MarketplaceService {
                             throw new IllegalArgumentException("You do not own that economy item.");
 
                         escrowItem = account.getShopItems().stream()
-                                .filter(value -> item.equals(String.valueOf(value.getId()))).findFirst().orElse(null);
+                            .filter(value -> item.equals(String.valueOf(value.getId()))).findFirst().orElse(null);
                         if (escrowItem == null)
                             throw new IllegalArgumentException("You do not own that economy item.");
 
@@ -85,13 +92,14 @@ public final class MarketplaceService {
                     case RENTAL -> {
                         Economy account = account(session, db, guild, seller);
                         Property property = property(account, item);
-                        if (property == null || property.isRentActive() || property.getRent() == null || property.getRent().isPaused())
+                        if (property == null || property.isRentActive() || property.getRent() == null
+                            || property.getRent().isPaused())
                             throw new IllegalArgumentException("That property is not available to rent.");
                     }
                     default -> throw new IllegalArgumentException("Unknown listing type.");
                 }
                 var listing = new MarketplaceListing(UUID.randomUUID().toString(), guild, seller,
-                        type, item, collection == null ? "" : collection, price, days, escrowItem);
+                    type, item, collection == null ? "" : collection, price, days, escrowItem);
                 db.marketplaceListings.insertOne(session, listing);
                 return listing;
             });
@@ -103,7 +111,7 @@ public final class MarketplaceService {
         try (ClientSession session = db.startSession()) {
             return session.withTransaction(() -> {
                 MarketplaceListing listing = db.marketplaceListings.find(session, Filters.and(
-                        Filters.eq("_id", id), Filters.eq("guild", guild), Filters.eq("seller", seller))).first();
+                    Filters.eq("_id", id), Filters.eq("guild", guild), Filters.eq("seller", seller))).first();
                 if (listing == null)
                     throw new IllegalArgumentException("Listing not found or not yours.");
 
@@ -121,7 +129,7 @@ public final class MarketplaceService {
         try (ClientSession session = db.startSession()) {
             return session.withTransaction(() -> {
                 MarketplaceListing listing = db.marketplaceListings.find(session, Filters.and(
-                        Filters.eq("_id", id), Filters.eq("guild", guild))).first();
+                    Filters.eq("_id", id), Filters.eq("guild", guild))).first();
                 if (listing == null)
                     throw new IllegalArgumentException("Listing not found.");
 
@@ -150,7 +158,8 @@ public final class MarketplaceService {
 
                 if (RENTAL.equals(listing.getType())) {
                     Property property = property(sellerAccount, listing.getItem());
-                    if (property == null || property.isRentActive() || property.getRent() == null || property.getRent().isPaused())
+                    if (property == null || property.isRentActive() || property.getRent() == null
+                        || property.getRent().isPaused())
                         throw new IllegalArgumentException("That property is no longer available to rent.");
 
                     property.setRenter(buyer);
@@ -179,18 +188,19 @@ public final class MarketplaceService {
     }
 
     public static List<MarketplaceListing> browse(long guild, String type, int limit) {
-        Bson filter = type == null ? Filters.eq("guild", guild)
-                : Filters.and(Filters.eq("guild", guild), Filters.eq("type", type));
+        Bson filter = type == null
+            ? Filters.eq("guild", guild)
+            : Filters.and(Filters.eq("guild", guild), Filters.eq("type", type));
         return Database.getDatabase().marketplaceListings.find(filter)
-                .sort(Sorts.descending("createdAt"))
-                .limit(limit).into(new ArrayList<>());
+            .sort(Sorts.descending("createdAt"))
+            .limit(limit).into(new ArrayList<>());
     }
 
     public static List<MarketplaceListing> browseSeller(long guild, long seller, int limit) {
         return Database.getDatabase().marketplaceListings.find(Filters.and(
-                        Filters.eq("guild", guild), Filters.eq("seller", seller)))
-                .sort(Sorts.descending("createdAt"))
-                .limit(limit).into(new ArrayList<>());
+            Filters.eq("guild", guild), Filters.eq("seller", seller)))
+            .sort(Sorts.descending("createdAt"))
+            .limit(limit).into(new ArrayList<>());
     }
 
     private static void deliver(ClientSession session, Database db, MarketplaceListing listing, long recipient) {
@@ -208,7 +218,7 @@ public final class MarketplaceService {
 
                 String collection = listing.getCollection();
                 UserCollectables.Collectables group = owned.getCollectables().stream()
-                        .filter(value -> collection.equals(value.getType())).findFirst().orElse(null);
+                    .filter(value -> collection.equals(value.getType())).findFirst().orElse(null);
                 if (group == null) {
                     group = new UserCollectables.Collectables(collection);
                     owned.getCollectables().add(group);
@@ -267,8 +277,9 @@ public final class MarketplaceService {
     private static Economy createAccount(ClientSession session, Database db, long guild, long user) {
         GuildData settings = db.guildData.find(session, Filters.eq("guild", guild)).first();
         BigInteger startingBalance = settings == null || settings.getDefaultEconomyBalance() == null
-                ? BigInteger.ZERO : settings.getDefaultEconomyBalance();
-        Economy account = new Economy(guild, user);
+            ? BigInteger.ZERO
+            : settings.getDefaultEconomyBalance();
+        var account = new Economy(guild, user);
         account.setBank(startingBalance);
         account.addTransaction(startingBalance, MoneyTransaction.CREATE_ACCOUNT);
         db.economy.insertOne(session, account);
@@ -280,7 +291,9 @@ public final class MarketplaceService {
     }
 
     private static Property property(Economy account, String name) {
-        return account == null || account.getProperties() == null ? null : account.getProperties().stream()
+        return account == null || account.getProperties() == null
+            ? null
+            : account.getProperties().stream()
                 .filter(value -> name.equalsIgnoreCase(value.getName()) && value.getOwner() == account.getUser())
                 .findFirst().orElse(null);
     }

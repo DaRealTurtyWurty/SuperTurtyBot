@@ -22,16 +22,14 @@ public final class BirthdaySettingsService {
 
     public BirthdaySettingsResponse updateSettings(long guildId, BirthdaySettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         long birthdayChannelId = parseChannelId(request.getBirthdayChannelId());
-        if (birthdayChannelId != 0L && guild.getTextChannelById(birthdayChannelId) == null) {
+        if (birthdayChannelId != 0L && guild.getTextChannelById(birthdayChannelId) == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_birthday_channel",
-                    "The supplied birthday channel was not a text channel in this guild.");
-        }
+                "The supplied birthday channel was not a text channel in this guild.");
 
         GuildData guildData = GuildData.getOrCreateGuildData(guildId);
         guildData.setBirthdayChannel(birthdayChannelId);
@@ -43,22 +41,20 @@ public final class BirthdaySettingsService {
 
     private static BirthdaySettingsResponse toResponse(GuildData guildData) {
         return new BirthdaySettingsResponse(
-                guildData.getBirthdayChannel() == 0L ? null : Long.toString(guildData.getBirthdayChannel()),
-                guildData.isAnnounceBirthdays()
-        );
+            guildData.getBirthdayChannel() == 0L ? null : Long.toString(guildData.getBirthdayChannel()),
+            guildData.isAnnounceBirthdays());
     }
 
     private static long parseChannelId(String channelId) {
-        if (channelId == null || channelId.isBlank()) {
+        if (channelId == null || channelId.isBlank())
             return 0L;
-        }
 
         try {
             long parsed = Long.parseLong(channelId.trim());
             return Math.max(parsed, 0L);
         } catch (NumberFormatException exception) {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_channel_id",
-                    "One of the supplied channel IDs was not a valid Discord snowflake.");
+                "One of the supplied channel IDs was not a valid Discord snowflake.");
         }
     }
 }

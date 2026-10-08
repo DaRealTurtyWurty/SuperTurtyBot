@@ -33,7 +33,7 @@ public class WarningsCommand extends CoreCommand {
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to clear warns from", true));
     }
-    
+
     @Override
     public CommandCategory getCategory() {
         return CommandCategory.MODERATION;
@@ -80,7 +80,8 @@ public class WarningsCommand extends CoreCommand {
 
         Guild guild = event.getGuild();
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
-        if(config != null && config.isWarningsModeratorOnly() && !event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
+        if (config != null && config.isWarningsModeratorOnly()
+            && !event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
             reply(event, "❌ You must be a moderator to use this command!", false, true);
             return;
         }
@@ -104,25 +105,25 @@ public class WarningsCommand extends CoreCommand {
 
             int finalIndex = index;
             event.getJDA().retrieveUserById(warning.getWarner()).queue(warner -> {
-                contents.field("Warn #" + finalIndex, "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                contents.field("Warn #" + finalIndex,
+                    "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
                         expiryLabel,
                         warning.getReason(),
                         warning.getUuid(),
                         warner.getAsMention(),
-                        TimeFormat.RELATIVE.format(warning.getWarnedAt()))
-                );
+                        TimeFormat.RELATIVE.format(warning.getWarnedAt())));
 
                 if (finalIndex == warns.size() - 1) {
                     completed.complete(null);
                 }
             }, error -> {
-                contents.field("Warn #" + finalIndex, "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
+                contents.field("Warn #" + finalIndex,
+                    "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
                         expiryLabel,
                         warning.getReason(),
                         warning.getUuid(),
                         "Unknown",
-                        TimeFormat.RELATIVE.format(warning.getWarnedAt()))
-                );
+                        TimeFormat.RELATIVE.format(warning.getWarnedAt())));
 
                 if (finalIndex == warns.size() - 1) {
                     completed.complete(null);
@@ -132,14 +133,15 @@ public class WarningsCommand extends CoreCommand {
 
         completed.thenRun(() -> {
             PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                    .title(user.getName() + "'s warnings!")
-                    .description("This user has " + activeWarns + " active warning(s) and " + warns.size() + " total warning(s).")
-                    .color(Color.BLUE)
-                    .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
-                    .timestamp(Instant.now())
-                    .thumbnail(user.getEffectiveAvatarUrl())
-                    .authorOnly(event.getUser().getIdLong())
-                    .build(event.getJDA());
+                .title(user.getName() + "'s warnings!")
+                .description(
+                    "This user has " + activeWarns + " active warning(s) and " + warns.size() + " total warning(s).")
+                .color(Color.BLUE)
+                .footer("Requested by " + event.getUser().getName(), event.getMember().getEffectiveAvatarUrl())
+                .timestamp(Instant.now())
+                .thumbnail(user.getEffectiveAvatarUrl())
+                .authorOnly(event.getUser().getIdLong())
+                .build(event.getJDA());
 
             embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ This user has no warnings!").queue());
         });

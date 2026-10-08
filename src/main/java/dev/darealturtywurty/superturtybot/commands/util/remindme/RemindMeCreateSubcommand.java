@@ -12,10 +12,9 @@ public class RemindMeCreateSubcommand extends RemindMeSubcommand {
     public RemindMeCreateSubcommand() {
         super("create", "Creates a reminder");
         addOptions(
-                new OptionData(OptionType.STRING, "duration", "When to remind you, like 10m, 2h30m, or 3d", true)
-                        .setAutoComplete(true),
-                new OptionData(OptionType.STRING, "reminder", "What to remind you about", true)
-        );
+            new OptionData(OptionType.STRING, "duration", "When to remind you, like 10m, 2h30m, or 3d", true)
+                .setAutoComplete(true),
+            new OptionData(OptionType.STRING, "reminder", "What to remind you about", true));
     }
 
     @Override
@@ -43,19 +42,19 @@ public class RemindMeCreateSubcommand extends RemindMeSubcommand {
         long guildId = event.getGuild() == null ? 0L : event.getGuild().getIdLong();
         long channelId = event.getGuild() == null ? 0L : event.getChannel().getIdLong();
         Reminder reminder = ReminderManager.createReminder(
-                guildId,
-                event.getUser().getIdLong(),
-                channelId,
-                reminderText,
-                System.currentTimeMillis() + durationMillis);
+            guildId,
+            event.getUser().getIdLong(),
+            channelId,
+            reminderText,
+            System.currentTimeMillis() + durationMillis);
 
         String destination = event.getGuild() == null ? "your DMs" : event.getChannel().getAsMention();
         reply(event,
-                "✅ Reminder `%s` set for %s. I'll remind you in %s.".formatted(
-                        reminder.getId(),
-                        TimeFormat.RELATIVE.format(reminder.getTime()),
-                        destination),
-                false,
-                true);
+            "✅ Reminder `%s` set for %s. I'll remind you in %s.".formatted(
+                reminder.getId(),
+                TimeFormat.RELATIVE.format(reminder.getTime()),
+                destination),
+            false,
+            true);
     }
 }

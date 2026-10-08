@@ -40,11 +40,14 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         super("border", "Guess the region that has the border shown.");
 
         addOptions(List.of(
-                new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.", false),
-                new OptionData(OptionType.BOOLEAN, "exclude-mainland", "Whether or not to exclude mainland regions from the game.", false),
-                new OptionData(OptionType.BOOLEAN, "exclude-countries", "Whether or not to exclude countries from the game.", false),
-                new OptionData(OptionType.BOOLEAN, "include-territories", "Whether or not to include territories from the game.", false)
-        ));
+            new OptionData(OptionType.BOOLEAN, "exclude-islands", "Whether or not to exclude islands from the game.",
+                false),
+            new OptionData(OptionType.BOOLEAN, "exclude-mainland",
+                "Whether or not to exclude mainland regions from the game.", false),
+            new OptionData(OptionType.BOOLEAN, "exclude-countries",
+                "Whether or not to exclude countries from the game.", false),
+            new OptionData(OptionType.BOOLEAN, "include-territories",
+                "Whether or not to include territories from the game.", false)));
     }
 
     @Override
@@ -60,7 +63,7 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         }
 
         if (GAMES.values().stream().anyMatch(
-                game -> game.guildId == event.getGuild().getIdLong() && game.userId == event.getUser().getIdLong())) {
+            game -> game.guildId == event.getGuild().getIdLong() && game.userId == event.getUser().getIdLong())) {
             reply(event, "❌ You already have a game running in this server!", false, true);
             return;
         }
@@ -87,7 +90,7 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
 
         event.deferReply().queue();
 
-        RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
+        var builder = new RegionExcludeRequestData.Builder();
         if (excludeIslands) {
             builder.excludeIslands();
         } else if (excludeMainland) {
@@ -119,50 +122,55 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         }
 
         var upload = FileUpload.fromData(baos.toByteArray(), "border.png");
-        event.getHook().editOriginal("Guess the region that has the border shown!").setFiles(upload).queue(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                    Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
-                    if (matchingRegions.isRight()) {
-                        Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
-                                matchingRegions.getRight().getCode());
-                        event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
-                        return;
-                    }
+        event.getHook().editOriginal("Guess the region that has the border shown!").setFiles(upload)
+            .queue(message -> message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
+                Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(builder.build());
+                if (matchingRegions.isRight()) {
+                    Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
+                        matchingRegions.getRight().getCode());
+                    event.getHook().sendMessage("❌ An error occurred while trying to get all regions!")
+                        .queue(_ -> thread.delete().queue());
+                    return;
+                }
 
-                    final var game = new Game(region.getValue(), event.getGuild().getIdLong(),
-                            event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
-                            event.getUser().getIdLong(), matchingRegions.getLeft());
-                    GAMES.put(message.getIdLong(), game);
+                final var game = new Game(region.getValue(), event.getGuild().getIdLong(),
+                    event.getChannel().getIdLong(), thread.getIdLong(), message.getIdLong(),
+                    event.getUser().getIdLong(), matchingRegions.getLeft());
+                GAMES.put(message.getIdLong(), game);
 
-                    message.editMessageComponents(
-                                    ActionRow.of(Button.danger("region-border-" + message.getId(), Emoji.fromFormatted("❌"))))
-                            .queue();
+                message.editMessageComponents(
+                    ActionRow.of(Button.danger("region-border-" + message.getId(), Emoji.fromFormatted("❌"))))
+                    .queue();
 
-                    thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
+                thread.sendMessage("Game started! " + event.getUser().getAsMention()).queue();
 
-                    try {
-                        baos.close();
-                        upload.close();
-                    } catch (IOException exception) {
-                        Constants.LOGGER.error(
-                                "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
-                                exception);
-                    }
-                }));
+                try {
+                    baos.close();
+                    upload.close();
+                } catch (IOException exception) {
+                    Constants.LOGGER.error(
+                        "An error occurred while trying to close the ByteArrayOutputStream or FileUpload!",
+                        exception);
+                }
+            }));
     }
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) return;
+        if (!event.isFromGuild() || event.getGuild() == null)
+            return;
 
-        if (event.getButton().getCustomId() == null) return;
+        if (event.getButton().getCustomId() == null)
+            return;
 
-        if (!event.getButton().getCustomId().startsWith("region-border-")) return;
+        if (!event.getButton().getCustomId().startsWith("region-border-"))
+            return;
 
         long messageId = Long.parseLong(event.getButton().getCustomId().replace("region-border-", ""));
 
         Game game = GAMES.get(messageId);
-        if (game == null) return;
+        if (game == null)
+            return;
 
         if (game.getUserId() != event.getUser().getIdLong()) {
             event.deferEdit().setComponents(event.getMessage().getComponents()).queue();
@@ -172,69 +180,75 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         GAMES.remove(messageId, game);
 
         ThreadChannel thread = event.getGuild().getThreadChannelById(game.getChannelId());
-        if (thread == null) return;
+        if (thread == null)
+            return;
 
-        thread.sendMessage(String.format("Game cancelled! The region was: %s", game.getRegion().getName())).setComponents()
-                .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
+        thread.sendMessage(String.format("Game cancelled! The region was: %s", game.getRegion().getName()))
+            .setComponents()
+            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
         event.editComponents().queue();
     }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (!event.isFromGuild()) return;
+        if (!event.isFromGuild())
+            return;
 
         // check if the user has a game running
         Game game = GAMES.values().stream()
-                .filter(g -> g.getUserId() == event.getAuthor().getIdLong() && g.getGuildId() == event.getGuild()
-                        .getIdLong() && g.getChannelId() == event.getChannel().getIdLong()).findFirst().orElse(null);
-        if (game == null) return;
+            .filter(g -> g.getUserId() == event.getAuthor().getIdLong() && g.getGuildId() == event.getGuild()
+                .getIdLong() && g.getChannelId() == event.getChannel().getIdLong())
+            .findFirst().orElse(null);
+        if (game == null)
+            return;
 
         // check if the message is a valid region
         String region = event.getMessage().getContentRaw().trim();
-        if (game.getPossibleRegions().stream().noneMatch(region1 -> region1.getName().equalsIgnoreCase(region))) return;
+        if (game.getPossibleRegions().stream().noneMatch(region1 -> region1.getName().equalsIgnoreCase(region)))
+            return;
 
         // check if the region is correct
         if (game.guess(region)) {
             QuestManager.INSTANCE.recordGeographyAnswer(
-                    event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), true
-            );
+                event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), true);
             QuestManager.INSTANCE.recordGeographyGameCompleted(
-                    event.getGuild(), event.getAuthor(), "region_border",
-                    game.getMessageId(), 1, game.getGuesses().size()
-            );
+                event.getGuild(), event.getAuthor(), "region_border",
+                game.getMessageId(), 1, game.getGuesses().size());
             var thread = (ThreadChannel) event.getChannel();
             thread.sendMessage(String.format("Correct! The region was: %s", game.getRegion().getName()))
-                    .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             GAMES.remove(game.getMessageId(), game);
 
             // remove components on original message
             TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
-            if (channel == null) return;
+            if (channel == null)
+                return;
 
             channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
 
             return;
         } else {
             QuestManager.INSTANCE.recordGeographyAnswer(
-                    event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), false
-            );
+                event.getGuild(), event.getAuthor(), "region_border", event.getMessageIdLong(), false);
             event.getChannel()
-                    .sendMessage(String.format("Incorrect! You have %d guesses left.", 9 - game.getGuesses().size()))
-                    .queue();
+                .sendMessage(String.format("Incorrect! You have %d guesses left.", 9 - game.getGuesses().size()))
+                .queue();
         }
 
         if (game.getGuesses().size() >= 9) {
             var thread = (ThreadChannel) event.getChannel();
-            thread.sendMessage(String.format("Game over! The region was: %s", game.getRegion().getName())).setComponents()
-                    .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
+            thread.sendMessage(String.format("Game over! The region was: %s", game.getRegion().getName()))
+                .setComponents()
+                .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
             GAMES.remove(game.getMessageId(), game);
 
             // remove components on original message
             TextChannel channel = event.getJDA().getTextChannelById(game.getOwnerChannelId());
-            if (channel == null) return;
+            if (channel == null)
+                return;
 
             channel.retrieveMessageById(game.getMessageId()).queue(message -> message.editMessageComponents().queue());
         }
@@ -247,7 +261,15 @@ public class GuessRegionBorderCommand extends SubcommandCommand {
         private final List<Region> guesses = new ArrayList<>();
         private final List<Region> possibleRegions;
 
-        public Game(Region region, long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> possibleRegions) {
+        public Game(
+            Region region,
+            long guildId,
+            long ownerChannelId,
+            long channelId,
+            long messageId,
+            long userId,
+            List<Region> possibleRegions
+        ) {
             this.region = region;
             this.guildId = guildId;
             this.ownerChannelId = ownerChannelId;

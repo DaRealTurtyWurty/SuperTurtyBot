@@ -7,7 +7,8 @@ import dev.darealturtywurty.superturtybot.modules.quest.QuestStatus;
 import java.util.Set;
 
 public final class MinigameCompletionsRule
-        implements QuestRule<MinigameCompletionsConfig, MinigameCompletionsState> {
+    implements
+        QuestRule<MinigameCompletionsConfig, MinigameCompletionsState> {
     @Override
     public MinigameCompletionsState createState() {
         return new MinigameCompletionsState();
@@ -16,7 +17,7 @@ public final class MinigameCompletionsRule
     @Override
     public void apply(MinigameCompletionsConfig config, MinigameCompletionsState state, QuestEvent event) {
         if (event instanceof QuestEvent.MinigameCompleted(String sourceId, String gameType)
-                && config.requiredCompletions().containsKey(gameType)) {
+            && config.requiredCompletions().containsKey(gameType)) {
             state.add(gameType, sourceId);
         }
     }
@@ -24,10 +25,10 @@ public final class MinigameCompletionsRule
     @Override
     public QuestStatus status(MinigameCompletionsConfig config, MinigameCompletionsState state) {
         int progress = config.requiredCompletions().entrySet().stream()
-                .mapToInt(entry -> Math.min(
-                        state.completionIdsByGameType.getOrDefault(entry.getKey(), Set.of()).size(),
-                        entry.getValue()))
-                .sum();
+            .mapToInt(entry -> Math.min(
+                state.completionIdsByGameType.getOrDefault(entry.getKey(), Set.of()).size(),
+                entry.getValue()))
+            .sum();
         int target = config.requiredCompletions().values().stream().mapToInt(Integer::intValue).sum();
         return new QuestStatus(progress, target, progress >= target);
     }

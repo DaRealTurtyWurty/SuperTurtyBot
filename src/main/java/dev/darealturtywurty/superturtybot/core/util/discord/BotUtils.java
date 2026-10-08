@@ -32,13 +32,13 @@ public final class BotUtils {
         final var luminance = 0.9f;
         return Color.getHSBColor(hue, saturation, luminance);
     }
-    
+
     /**
      * Takes a BufferedImage and resizes it according to the provided targetSize
      *
-     * @param  src        the source BufferedImage
-     * @param  targetSize maximum height (if portrait) or width (if landscape)
-     * @return            a resized version of the provided BufferedImage
+     * @param src the source BufferedImage
+     * @param targetSize maximum height (if portrait) or width (if landscape)
+     * @return a resized version of the provided BufferedImage
      */
     public static BufferedImage resize(final BufferedImage src, final int targetSize) {
         if (targetSize <= 0)
@@ -51,8 +51,8 @@ public final class BotUtils {
         } else { // portrait image
             targetWidth = Math.round(targetHeight / ratio);
         }
-        
-        final BufferedImage retImg = new BufferedImage(targetWidth, targetHeight,
+
+        final var retImg = new BufferedImage(targetWidth, targetHeight,
             src.getTransparency() == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g2d = retImg.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);

@@ -42,9 +42,9 @@ import java.util.stream.Collectors;
 
 public class ChessCommand extends CoreCommand {
     private static final BufferedImage[] PIECE_IMAGES = Arrays.stream(Piece.allPieces)
-            .filter(piece -> piece != Piece.NONE)
-            .map(piece -> TurtyBot.loadImage("chess/" + piece.name().toLowerCase() + ".png"))
-            .toArray(BufferedImage[]::new);
+        .filter(piece -> piece != Piece.NONE)
+        .map(piece -> TurtyBot.loadImage("chess/" + piece.name().toLowerCase() + ".png"))
+        .toArray(BufferedImage[]::new);
     private static final BufferedImage BACKGROUND_IMAGE = createBackgroundImage();
 
     private static BufferedImage createBackgroundImage() {
@@ -69,9 +69,7 @@ public class ChessCommand extends CoreCommand {
         for (int row = 0; row < 8; row++) {
             for (int column = 0; column < 8; column++) {
                 Square square = Square.squareAt(row * 8 + column);
-                graphics.setColor(square.isLightSquare() ?
-                        new Color(0xffce9e) :
-                        new Color(0xd18b47));
+                graphics.setColor(square.isLightSquare() ? new Color(0xffce9e) : new Color(0xd18b47));
 
                 graphics.fillRect(column * 100 + 100, (7 - row) * 100, 100, 100);
             }
@@ -118,9 +116,8 @@ public class ChessCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.USER, "opponent", "The opponent you want to play against", true),
-                new OptionData(OptionType.STRING, "fen", "The FEN string to start the game with", false)
-        );
+            new OptionData(OptionType.USER, "opponent", "The opponent you want to play against", true),
+            new OptionData(OptionType.STRING, "fen", "The FEN string to start the game with", false));
     }
 
     @Override
@@ -134,7 +131,11 @@ public class ChessCommand extends CoreCommand {
         challengeOpponent(event, event.getTargetMember(), null);
     }
 
-    private static void challengeOpponent(GenericCommandInteractionEvent event, Member opponent, @Nullable String startingFen) {
+    private static void challengeOpponent(
+        GenericCommandInteractionEvent event,
+        Member opponent,
+        @Nullable String startingFen
+    ) {
         Guild guild = event.getGuild();
         if (guild == null) {
             reply(event, "❌ You must be in a server to use this command!", false, true);
@@ -146,7 +147,8 @@ public class ChessCommand extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
@@ -178,60 +180,62 @@ public class ChessCommand extends CoreCommand {
         }
 
         event.reply("✅ Waiting for %s to accept the game of Chess...%s".formatted(
-                opponent.getAsMention(), startingFen != null ? "\nStarting FEN: `%s`".formatted(startingFen) : ""))
-                .setComponents(ActionRow.of(Button.success("chess:accept", "Accept")))
-                .flatMap(InteractionHook::retrieveOriginal)
-                .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
-                        .condition(buttonEvent ->
-                                buttonEvent.getChannelIdLong() == message.getChannel().getIdLong() &&
-                                buttonEvent.getMessageIdLong() == message.getIdLong() &&
-                                buttonEvent.getUser().getIdLong() == opponent.getUser().getIdLong())
-                        .timeout(2, TimeUnit.MINUTES)
-                        .timeoutAction(() -> message.editMessage("❌ %s did not accept in time!".formatted(opponent.getAsMention())).setComponents().queue())
-                        .success(buttonEvent -> {
-                            if ("chess:accept".equals(buttonEvent.getButton().getCustomId())) {
-                                startGame(event, game, opponent);
-                            }
-                        })
-                        .build());
+            opponent.getAsMention(), startingFen != null ? "\nStarting FEN: `%s`".formatted(startingFen) : ""))
+            .setComponents(ActionRow.of(Button.success("chess:accept", "Accept")))
+            .flatMap(InteractionHook::retrieveOriginal)
+            .queue(message -> TurtyBot.EVENT_WAITER.builder(ButtonInteractionEvent.class)
+                .condition(buttonEvent -> buttonEvent.getChannelIdLong() == message.getChannel().getIdLong() &&
+                    buttonEvent.getMessageIdLong() == message.getIdLong() &&
+                    buttonEvent.getUser().getIdLong() == opponent.getUser().getIdLong())
+                .timeout(2, TimeUnit.MINUTES)
+                .timeoutAction(
+                    () -> message.editMessage("❌ %s did not accept in time!".formatted(opponent.getAsMention()))
+                        .setComponents().queue())
+                .success(buttonEvent -> {
+                    if ("chess:accept".equals(buttonEvent.getButton().getCustomId())) {
+                        startGame(event, game, opponent);
+                    }
+                })
+                .build());
     }
 
     private static void startGame(GenericCommandInteractionEvent event, Game game, Member opponent) {
         final String threadName = "Chess - %s vs %s".formatted(event.getUser().getName(), opponent.getUser().getName());
         event.getHook().editOriginal("✅ Successfully created a game of Chess!")
-                .setComponents()
-                .flatMap(message ->
-                        message.createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
-                .queue(thread -> {
-                    game.setThreadId(thread.getIdLong());
-                    thread.addThreadMember(event.getUser()).queue();
-                    thread.addThreadMember(opponent).queue();
-                    thread.sendMessageFormat("✅ %s and %s have started a game of Chess! It is <@%d>'s turn!",
-                            event.getUser().getAsMention(), opponent.getUser().getAsMention(), game.getCurrentTurnId()).queue(message -> {
+            .setComponents()
+            .flatMap(message -> message
+                .createThreadChannel(threadName.length() > 100 ? threadName.substring(0, 100) : threadName))
+            .queue(thread -> {
+                game.setThreadId(thread.getIdLong());
+                thread.addThreadMember(event.getUser()).queue();
+                thread.addThreadMember(opponent).queue();
+                thread.sendMessageFormat("✅ %s and %s have started a game of Chess! It is <@%d>'s turn!",
+                    event.getUser().getAsMention(), opponent.getUser().getAsMention(), game.getCurrentTurnId())
+                    .queue(message -> {
                         game.setMessageId(message.getIdLong());
                         message.editMessage("Select a piece to move!")
-                                .setFiles(createFileUpload(game, thread))
-                                .flatMap(ignored -> message.pin())
-                                .queue(ignored -> createEventWaiter(game, thread).build());
+                            .setFiles(createFileUpload(game, thread))
+                            .flatMap(_ -> message.pin())
+                            .queue(_ -> createEventWaiter(game, thread).build());
                     });
-                });
+            });
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Game game, ThreadChannel channel) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event ->
-                        event.isFromGuild() &&
-                        event.getGuild().getIdLong() == game.guildId &&
-                        event.getChannel().getIdLong() == game.threadId &&
-                        !event.getAuthor().isBot() &&
-                        !event.getAuthor().isSystem() &&
-                        !event.isWebhookMessage() && game.isTurn(event.getAuthor().getIdLong()))
-                .timeout(10, TimeUnit.MINUTES)
-                .timeoutAction(() -> channel.sendMessageFormat("❌ <@%d> did not make a move in time!", game.getCurrentTurnId()).queue(
-                        ignored -> channel.getManager().setArchived(true).setLocked(true).queue()))
-                .failure(() -> channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                        ignored -> channel.getManager().setArchived(true).setLocked(true).queue()))
-                .success(event -> handleMessageReceived(event, game, channel));
+            .condition(event -> event.isFromGuild() &&
+                event.getGuild().getIdLong() == game.guildId &&
+                event.getChannel().getIdLong() == game.threadId &&
+                !event.getAuthor().isBot() &&
+                !event.getAuthor().isSystem() &&
+                !event.isWebhookMessage() && game.isTurn(event.getAuthor().getIdLong()))
+            .timeout(10, TimeUnit.MINUTES)
+            .timeoutAction(
+                () -> channel.sendMessageFormat("❌ <@%d> did not make a move in time!", game.getCurrentTurnId()).queue(
+                    _ -> channel.getManager().setArchived(true).setLocked(true).queue()))
+            .failure(() -> channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue()))
+            .success(event -> handleMessageReceived(event, game, channel));
     }
 
     private static void handleMessageReceived(MessageReceivedEvent event, Game game, ThreadChannel channel) {
@@ -241,19 +245,21 @@ public class ChessCommand extends CoreCommand {
             case "cancel" -> {
                 if (game.selectedSquare == null) {
                     channel.sendMessage("❌ You do not currently have a piece selected!")
-                            .queue(ignored -> createEventWaiter(game, channel).build());
+                        .queue(_ -> createEventWaiter(game, channel).build());
                     return;
                 }
 
                 game.selectedSquare = null;
                 channel.sendMessage("✅ Successfully cancelled the selected piece!")
-                        .setFiles(createFileUpload(game, channel))
-                        .queue(ignored -> createEventWaiter(game, channel).build());
+                    .setFiles(createFileUpload(game, channel))
+                    .queue(_ -> createEventWaiter(game, channel).build());
                 return;
             }
             case "give up", "resign" -> {
-                channel.sendMessageFormat("✅ <@%d> has given up! <@%d> has won the game!", event.getAuthor().getIdLong(), game.getUserIdFromSide(game.board.getSideToMove().flip()))
-                        .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                channel
+                    .sendMessageFormat("✅ <@%d> has given up! <@%d> has won the game!", event.getAuthor().getIdLong(),
+                        game.getUserIdFromSide(game.board.getSideToMove().flip()))
+                    .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
                 return;
             }
             case "getfen" -> {
@@ -262,8 +268,7 @@ public class ChessCommand extends CoreCommand {
                 return;
             }
             case "getmoves" -> {
-                reply(event, "✅ This game's moves are:\n%s".formatted(game.getMovesText()
-                ), true);
+                reply(event, "✅ This game's moves are:\n%s".formatted(game.getMovesText()), true);
                 createEventWaiter(game, channel).build();
                 return;
             }
@@ -273,19 +278,20 @@ public class ChessCommand extends CoreCommand {
             Square square = null;
             try {
                 square = Square.fromValue(messageContent.toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException ignored) {
+            } catch (IllegalArgumentException _) {
             }
             if (square != null) {
                 if (square == game.selectedSquare) {
                     game.selectedSquare = null;
                     channel.sendMessage("✅ Successfully cancelled the selected piece!")
-                            .setFiles(createFileUpload(game, channel))
-                            .queue(ignored -> createEventWaiter(game, channel).build());
+                        .setFiles(createFileUpload(game, channel))
+                        .queue(_ -> createEventWaiter(game, channel).build());
                     return;
                 }
 
-                Move move = new Move(game.selectedSquare, square);
-                if (tryToMakeMoveAndSendMessage(event, game, channel, move)) return;
+                var move = new Move(game.selectedSquare, square);
+                if (tryToMakeMoveAndSendMessage(event, game, channel, move))
+                    return;
             }
         }
 
@@ -293,19 +299,21 @@ public class ChessCommand extends CoreCommand {
             if (!messageContent.equals("Z0") && game.board.doMove(messageContent)) {
                 Move move = game.board.undoMove();
                 if (move != null) {
-                    if (tryToMakeMoveAndSendMessage(event, game, channel, move)) return;
+                    if (tryToMakeMoveAndSendMessage(event, game, channel, move))
+                        return;
                 }
             }
-        } catch (MoveConversionException | IllegalArgumentException ignored) {
+        } catch (MoveConversionException | IllegalArgumentException _) {
         }
 
         Square square = null;
         try {
             square = Square.fromValue(messageContent.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
         }
 
-        if (square != null && game.selectedSquare == null && game.board.getPiece(square).getPieceSide() == game.board.getSideToMove()) {
+        if (square != null && game.selectedSquare == null
+            && game.board.getPiece(square).getPieceSide() == game.board.getSideToMove()) {
             if (game.getAvailableMoves(square).isEmpty()) {
                 event.getMessage().replyFormat("❌ There are no moves available from %s!", square.value()).queue();
                 createEventWaiter(game, channel).build();
@@ -313,42 +321,49 @@ public class ChessCommand extends CoreCommand {
             }
             game.selectedSquare = square;
 
-            event.getMessage().replyFormat("✅ Selected piece at %s!\nPlease select where you would like to move to.", square.value())
-                    .setFiles(createFileUpload(game, channel))
-                    .queue(ignored -> createEventWaiter(game, channel).build());
+            event.getMessage()
+                .replyFormat("✅ Selected piece at %s!\nPlease select where you would like to move to.", square.value())
+                .setFiles(createFileUpload(game, channel))
+                .queue(_ -> createEventWaiter(game, channel).build());
             return;
         }
 
         createEventWaiter(game, channel).build();
     }
 
-    private static boolean tryToMakeMoveAndSendMessage(MessageReceivedEvent event, Game game, ThreadChannel channel, Move move) {
+    private static boolean tryToMakeMoveAndSendMessage(
+        MessageReceivedEvent event,
+        Game game,
+        ThreadChannel channel,
+        Move move
+    ) {
         if (!game.makeMove(move))
             return false;
 
         game.selectedSquare = null;
         String from = move.getFrom().value();
         String to = move.getTo().value();
-        channel.sendMessageFormat("✅ %s has moved %s to %s! It is now <@%d>'s turn!", event.getAuthor().getAsMention(), from, to, game.getCurrentTurnId())
-                .setFiles(createFileUpload(game, channel))
-                .queue();
+        channel
+            .sendMessageFormat("✅ %s has moved %s to %s! It is now <@%d>'s turn!", event.getAuthor().getAsMention(),
+                from, to, game.getCurrentTurnId())
+            .setFiles(createFileUpload(game, channel))
+            .queue();
 
         if (game.board.isMated()) {
-            channel.sendMessageFormat("✅ %s has won the game!\nThe ending board's FEN is: `%s`\nThe games moves are: %s",
-                            event.getAuthor().getAsMention(),
-                            game.board.getFen(),
-                            game.getMovesText()
-                    )
-                    .queue(ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+            channel
+                .sendMessageFormat("✅ %s has won the game!\nThe ending board's FEN is: `%s`\nThe games moves are: %s",
+                    event.getAuthor().getAsMention(),
+                    game.board.getFen(),
+                    game.getMovesText())
+                .queue(_ -> channel.getManager().setArchived(true).setLocked(true).queue());
 
             QuestManager.INSTANCE.recordCompletedMultiplayerMatch(
-                    channel.getGuild(),
-                    "chess",
-                    game.threadId,
-                    game.userId,
-                    game.opponentId,
-                    event.getAuthor().getIdLong()
-            );
+                channel.getGuild(),
+                "chess",
+                game.threadId,
+                game.userId,
+                game.opponentId,
+                event.getAuthor().getIdLong());
 
             return true;
         }
@@ -356,7 +371,6 @@ public class ChessCommand extends CoreCommand {
         createEventWaiter(game, channel).build();
         return true;
     }
-
 
     private static FileUpload createFileUpload(Game game, ThreadChannel channel) {
         BufferedImage image = createImage(game);
@@ -367,7 +381,7 @@ public class ChessCommand extends CoreCommand {
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to write image!", exception);
             channel.sendMessageFormat("❌ Something went wrong! The game has been cancelled!").queue(
-                    ignored -> channel.getManager().setArchived(true).setLocked(true).queue());
+                _ -> channel.getManager().setArchived(true).setLocked(true).queue());
             return null;
         }
 
@@ -406,7 +420,8 @@ public class ChessCommand extends CoreCommand {
                     graphics.fillRect(column * 100 + 100, (7 - row) * 100, 100, 100);
                 }
 
-                if (piece == Piece.NONE) continue;
+                if (piece == Piece.NONE)
+                    continue;
                 BufferedImage pieceImage = PIECE_IMAGES[piece.ordinal()];
                 graphics.drawImage(pieceImage, column * 100 + 100, (7 - row) * 100, 100, 100, null);
             }
@@ -432,12 +447,11 @@ public class ChessCommand extends CoreCommand {
 
         public String getMovesText() {
             return board.getBackup()
-                    .stream()
-                    .map(moveBackup -> "%s%s".formatted(
-                            moveBackup.getMove().getFrom().value().toLowerCase(Locale.ROOT),
-                            moveBackup.getMove().getTo().value().toLowerCase(Locale.ROOT)
-                    ))
-                    .collect(Collectors.joining(" "));
+                .stream()
+                .map(moveBackup -> "%s%s".formatted(
+                    moveBackup.getMove().getFrom().value().toLowerCase(Locale.ROOT),
+                    moveBackup.getMove().getTo().value().toLowerCase(Locale.ROOT)))
+                .collect(Collectors.joining(" "));
         }
 
         public Side getSideFromUserId(long userId) {

@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit;
 
 public class MinecraftVersions {
     private static final Cache<String, List<PistonMetaVersion>> VERSIONS = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
-            .build();
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build();
     private static final Cache<PistonMetaVersion, VersionPackage> PACKAGES = CacheBuilder.newBuilder()
-            .maximumSize(50)
-            .build();
+        .maximumSize(50)
+        .build();
 
     public static List<String> getPistonVersions() {
         return versions().stream().map(PistonMetaVersion::id).toList();
@@ -26,16 +26,17 @@ public class MinecraftVersions {
 
     public static PistonMetaVersion getVersion(String name) {
         return versions().stream()
-                .filter(version -> version.id().equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(null);
+            .filter(version -> version.id().equalsIgnoreCase(name))
+            .findFirst()
+            .orElse(null);
     }
 
     private static List<PistonMetaVersion> versions() {
         try {
             return VERSIONS.get("manifest", () -> {
                 var json = MappingDownloads.json(PistonMeta.META_URL).getAsJsonObject();
-                return List.copyOf(Arrays.asList(Constants.GSON.fromJson(json.get("versions"), PistonMetaVersion[].class)));
+                return List
+                    .copyOf(Arrays.asList(Constants.GSON.fromJson(json.get("versions"), PistonMetaVersion[].class)));
             });
         } catch (ExecutionException exception) {
             throw new IllegalStateException("Unable to load Minecraft versions", exception.getCause());
@@ -45,7 +46,7 @@ public class MinecraftVersions {
     public static VersionPackage getVersionPackage(PistonMetaVersion version) {
         try {
             return PACKAGES.get(version, () -> VersionPackage.fromJson(
-                    MappingDownloads.json(version.url()).getAsJsonObject()));
+                MappingDownloads.json(version.url()).getAsJsonObject()));
         } catch (ExecutionException exception) {
             throw new IllegalStateException("Unable to load Minecraft version " + version.id(), exception.getCause());
         }

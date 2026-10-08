@@ -13,7 +13,7 @@ public class AutoModImageSpamSubcommand extends AutoModSubcommand {
         addOption(new OptionData(OptionType.INTEGER, "window_seconds", "How long the detection window lasts", false));
         addOption(new OptionData(OptionType.INTEGER, "min_images", "Minimum images per qualifying message", false));
         addOption(new OptionData(OptionType.INTEGER, "new_member_threshold_hours",
-                "Only members newer than this many hours are checked", false));
+            "Only members newer than this many hours are checked", false));
     }
 
     @Override
@@ -61,14 +61,14 @@ public class AutoModImageSpamSubcommand extends AutoModSubcommand {
         }
 
         reply(event, """
-                ✅ Updated image spam automod.
-                Enabled: `%s`
-                Window: `%d` seconds
-                Min images: `%d`
-                New member threshold: `%d` hours""".formatted(
-                enabled,
-                config.getImageSpamWindowSeconds(),
-                config.getImageSpamMinImages(),
-                config.getImageSpamNewMemberThresholdHours()), false, true);
+            ✅ Updated image spam automod.
+            Enabled: `%s`
+            Window: `%d` seconds
+            Min images: `%d`
+            New member threshold: `%d` hours""".formatted(
+            enabled,
+            config.getImageSpamWindowSeconds(),
+            config.getImageSpamMinImages(),
+            config.getImageSpamNewMemberThresholdHours()), false, true);
     }
 }

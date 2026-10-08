@@ -27,10 +27,9 @@ public final class ModmailSettingsService {
 
     public ModmailSettingsResponse updateSettings(long guildId, ModmailSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         validateRequest(guild, request);
 
@@ -44,36 +43,31 @@ public final class ModmailSettingsService {
 
     private static ModmailSettingsResponse toResponse(GuildData guildData) {
         return new ModmailSettingsResponse(
-                GuildData.getLongs(guildData.getModmailModeratorRoles()).stream().map(String::valueOf).toList(),
-                guildData.getModmailTicketCreatedMessage()
-        );
+            GuildData.getLongs(guildData.getModmailModeratorRoles()).stream().map(String::valueOf).toList(),
+            guildData.getModmailTicketCreatedMessage());
     }
 
     private static void validateRequest(Guild guild, ModmailSettingsRequest request) {
         List<String> roleIds = normalizeRoleIds(request.getModeratorRoleIds());
-        if (roleIds.isEmpty()) {
+        if (roleIds.isEmpty())
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "missing_modmail_roles",
-                    "Modmail requires at least one moderator role.");
-        }
+                "Modmail requires at least one moderator role.");
 
         for (String roleId : roleIds) {
             Role role = guild.getRoleById(roleId);
-            if (role == null || role.isManaged() || role.isPublicRole()) {
+            if (role == null || role.isManaged() || role.isPublicRole())
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_modmail_role",
-                        "One or more modmail roles were not valid roles in this guild.");
-            }
+                    "One or more modmail roles were not valid roles in this guild.");
         }
 
         String message = normalizeMessage(request.getTicketCreatedMessage());
-        if (message.length() > 2000) {
+        if (message.length() > 2000)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_modmail_message",
-                    "The ticket created message must be 2000 characters or fewer.");
-        }
+                "The ticket created message must be 2000 characters or fewer.");
 
-        if (message.contains("@everyone") || message.contains("@here")) {
+        if (message.contains("@everyone") || message.contains("@here"))
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_modmail_message",
-                    "The ticket created message cannot mention everyone or here.");
-        }
+                "The ticket created message cannot mention everyone or here.");
     }
 
     private static String normalizeMessage(String message) {
@@ -81,13 +75,12 @@ public final class ModmailSettingsService {
     }
 
     private static List<String> normalizeRoleIds(List<String> roleIds) {
-        if (roleIds == null || roleIds.isEmpty()) {
+        if (roleIds == null || roleIds.isEmpty())
             return List.of();
-        }
 
         return new ArrayList<>(new LinkedHashSet<>(roleIds.stream()
-                .map(String::trim)
-                .filter(value -> !value.isEmpty())
-                .toList()));
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .toList()));
     }
 }

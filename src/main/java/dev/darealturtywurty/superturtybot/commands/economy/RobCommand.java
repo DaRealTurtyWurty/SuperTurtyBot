@@ -34,36 +34,35 @@ import java.util.concurrent.TimeUnit;
 public class RobCommand extends EconomyCommand {
     private static final Responses RESPONSES;
     private static final List<String> SELF_ROB_MESSAGES = List.of(
-            "❌ Nice try, {user}. Stealing from yourself is just a withdrawal.",
-            "❌ {user}, you can't rob yourself. That's called \"spending.\"",
-            "❌ {user}, please don't turn this into a solo heist. It won't end well.",
-            "❌ {user}, robbing yourself is peak chaos, but still a no.",
-            "❌ {user}, you are both the robber and the robbed. Pick a side.",
-            "❌ {user}, mirror heists are not a thing.",
-            "❌ {user}, try someone else's pockets, not your own.",
-            "❌ {user}, self-robbery is just negative budgeting.",
-            "❌ {user}, you can't mug yourself and call it a win.",
-            "❌ {user}, the vault is you. That is not a robbery.",
-            "❌ {user}, stop it. Go bother someone richer.",
-            "❌ {user}, your wallet called. It wants a restraining order.",
-            "❌ {user}, you cannot pickpocket your own pants.",
-            "❌ {user}, this is not how to farm crime stats.",
-            "❌ {user}, you just attempted a zero-sum heist.",
-            "❌ {user}, how are you both victim and suspect?",
-            "❌ {user}, even the police are confused by this one.",
-            "❌ {user}, self-checkout is not robbery.",
-            "❌ {user}, crime tip: you need a target that is not you.",
-            "❌ {user}, you tried to rob yourself and still missed.",
-            "❌ {user}, this is why we can't have nice crimes.",
-            "❌ {user}, you just attempted a refund, not a robbery.",
-            "❌ {user}, if you split the loot, you still end up broke.",
-            "❌ {user}, look away from the mirror and pick a real target.",
-            "❌ {user}, you are trying to rob the most guarded person: you.",
-            "❌ {user}, your own account has an unbeatable defense: you.",
-            "❌ {user}, I admire the ambition, not the logic.",
-            "❌ {user}, this is a robbery, not a magic trick.",
-            "❌ {user}, stop trying to speedrun shame."
-    );
+        "❌ Nice try, {user}. Stealing from yourself is just a withdrawal.",
+        "❌ {user}, you can't rob yourself. That's called \"spending.\"",
+        "❌ {user}, please don't turn this into a solo heist. It won't end well.",
+        "❌ {user}, robbing yourself is peak chaos, but still a no.",
+        "❌ {user}, you are both the robber and the robbed. Pick a side.",
+        "❌ {user}, mirror heists are not a thing.",
+        "❌ {user}, try someone else's pockets, not your own.",
+        "❌ {user}, self-robbery is just negative budgeting.",
+        "❌ {user}, you can't mug yourself and call it a win.",
+        "❌ {user}, the vault is you. That is not a robbery.",
+        "❌ {user}, stop it. Go bother someone richer.",
+        "❌ {user}, your wallet called. It wants a restraining order.",
+        "❌ {user}, you cannot pickpocket your own pants.",
+        "❌ {user}, this is not how to farm crime stats.",
+        "❌ {user}, you just attempted a zero-sum heist.",
+        "❌ {user}, how are you both victim and suspect?",
+        "❌ {user}, even the police are confused by this one.",
+        "❌ {user}, self-checkout is not robbery.",
+        "❌ {user}, crime tip: you need a target that is not you.",
+        "❌ {user}, you tried to rob yourself and still missed.",
+        "❌ {user}, this is why we can't have nice crimes.",
+        "❌ {user}, you just attempted a refund, not a robbery.",
+        "❌ {user}, if you split the loot, you still end up broke.",
+        "❌ {user}, look away from the mirror and pick a real target.",
+        "❌ {user}, you are trying to rob the most guarded person: you.",
+        "❌ {user}, your own account has an unbeatable defense: you.",
+        "❌ {user}, I admire the ambition, not the logic.",
+        "❌ {user}, this is a robbery, not a magic trick.",
+        "❌ {user}, stop trying to speedrun shame.");
 
     static {
         JsonObject json;
@@ -115,14 +114,14 @@ public class RobCommand extends EconomyCommand {
         final Economy account = EconomyManager.getOrCreateAccount(guild, event.getUser());
         if (account.getNextRob() > System.currentTimeMillis()) {
             event.getHook().editOriginal("❌ You can rob again %s!"
-                    .formatted(TimeFormat.RELATIVE.format(account.getNextRob()))).queue();
+                .formatted(TimeFormat.RELATIVE.format(account.getNextRob()))).queue();
             return;
         }
 
         final User user = Objects.requireNonNull(event.getOption("user")).getAsUser();
         if (user.getIdLong() == event.getUser().getIdLong()) {
             String message = SELF_ROB_MESSAGES.get(ThreadLocalRandom.current().nextInt(SELF_ROB_MESSAGES.size()))
-                    .replace("{user}", user.getAsMention());
+                .replace("{user}", user.getAsMention());
             event.getHook().editOriginal(message).queue();
             return;
         }
@@ -139,13 +138,16 @@ public class RobCommand extends EconomyCommand {
 
         final Economy robAccount = EconomyManager.getOrCreateAccount(guild, user);
         if (account.isImprisoned() && !robAccount.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You are currently imprisoned and cannot rob users that are not also in prison! You will be released %s.",
-                    TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
+            event.getHook().editOriginalFormat(
+                "❌ You are currently imprisoned and cannot rob users that are not also in prison! You will be released %s.",
+                TimeFormat.RELATIVE.format(account.getImprisonedUntil())).queue();
 
             return;
         } else if (!account.isImprisoned() && robAccount.isImprisoned()) {
-            event.getHook().editOriginalFormat("❌ You cannot rob a user who is currently imprisoned! They will be released %s.",
-                    TimeFormat.RELATIVE.format(robAccount.getImprisonedUntil())).queue();
+            event.getHook()
+                .editOriginalFormat("❌ You cannot rob a user who is currently imprisoned! They will be released %s.",
+                    TimeFormat.RELATIVE.format(robAccount.getImprisonedUntil()))
+                .queue();
 
             return;
         }
@@ -160,7 +162,8 @@ public class RobCommand extends EconomyCommand {
 
         final Random random = ThreadLocalRandom.current();
         if (random.nextBoolean()) {
-            final BigInteger robbedAmount = MathUtils.getRandomBigInteger(BigInteger.ONE, robAccount.getWallet().divide(BigInteger.valueOf(4)));
+            final BigInteger robbedAmount = MathUtils.getRandomBigInteger(BigInteger.ONE,
+                robAccount.getWallet().divide(BigInteger.valueOf(4)));
 
             EconomyManager.addMoney(account, robbedAmount, false);
             account.addTransaction(robbedAmount, MoneyTransaction.ROB);
@@ -169,11 +172,11 @@ public class RobCommand extends EconomyCommand {
             robAccount.addTransaction(robbedAmount.negate(), MoneyTransaction.ROB);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setTimestamp(Instant.now())
-                            .setColor(Color.GREEN)
-                            .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount))
-                            .build())
-                    .queue();
+                .setTimestamp(Instant.now())
+                .setColor(Color.GREEN)
+                .setDescription(RESPONSES.getSuccess(config, event.getUser(), user, robbedAmount))
+                .build())
+                .queue();
         } else {
             int crimeLevel = Math.max(1, account.getCrimeLevel());
             BigInteger bank = account.getBank();
@@ -192,8 +195,8 @@ public class RobCommand extends EconomyCommand {
                 }
 
                 fineAmount = maxFine.compareTo(minFine) <= 0
-                        ? maxFine
-                        : MathUtils.getRandomBigInteger(minFine, maxFine.add(BigInteger.ONE));
+                    ? maxFine
+                    : MathUtils.getRandomBigInteger(minFine, maxFine.add(BigInteger.ONE));
             }
 
             BigInteger fromBank = fineAmount.min(bank);
@@ -212,11 +215,11 @@ public class RobCommand extends EconomyCommand {
             robAccount.addTransaction(fineAmount, MoneyTransaction.ROB);
 
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setTimestamp(Instant.now())
-                            .setColor(Color.RED)
-                            .setDescription(RESPONSES.getFail(config, event.getUser(), user, fineAmount))
-                            .build())
-                    .queue();
+                .setTimestamp(Instant.now())
+                .setColor(Color.RED)
+                .setDescription(RESPONSES.getFail(config, event.getUser(), user, fineAmount))
+                .build())
+                .queue();
         }
 
         EconomyManager.updateAccount(account);
@@ -226,14 +229,14 @@ public class RobCommand extends EconomyCommand {
     public record Responses(List<String> success, List<String> fail) {
         public String getSuccess(GuildData config, User robber, User robbed, BigInteger amount) {
             return "✅ " + success().get(ThreadLocalRandom.current().nextInt(success().size()))
-                    .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", StringUtils.numberFormat(amount, config));
+                .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
+                .replace("{amount}", StringUtils.numberFormat(amount, config));
         }
 
         public String getFail(GuildData config, User robber, User robbed, BigInteger amount) {
             return "❌ " + fail().get(ThreadLocalRandom.current().nextInt(fail().size()))
-                    .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
-                    .replace("{amount}", StringUtils.numberFormat(amount, config));
+                .replace("{robber}", robber.getAsMention()).replace("{robbed}", robbed.getAsMention())
+                .replace("{amount}", StringUtils.numberFormat(amount, config));
         }
     }
 }

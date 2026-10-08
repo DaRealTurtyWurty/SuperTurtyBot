@@ -45,7 +45,7 @@ public final class QuestManager {
         QuestRegistry.registerQuests();
     }
 
-    void awardXP(QuestPlayer player, int amount) {
+    public void awardXP(QuestPlayer player, int amount) {
         Guild guild = TurtyBot.getJDA().getGuildById(player.getGuild());
         if (guild == null)
             throw new IllegalStateException("Quest guild no longer exists.");
@@ -60,8 +60,8 @@ public final class QuestManager {
 
     public static long currentWeekStart() {
         return Instant.now().atZone(ZoneOffset.UTC)
-                .toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+            .toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
     public QuestPlayer getOrCreateWeeklyQuests(Guild guild, Member member) {
@@ -73,14 +73,14 @@ public final class QuestManager {
 
         long weekStart = currentWeekStart();
         QuestPlayer previous = Database.getDatabase().questPlayers.find(Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", member.getIdLong()),
-                        Filters.lt("weekStart", weekStart)
-                ))
-                .sort(Sorts.descending("weekStart"))
-                .first();
-        if (previous != null)
+            Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("user", member.getIdLong()),
+            Filters.lt("weekStart", weekStart)))
+            .sort(Sorts.descending("weekStart"))
+            .first();
+        if (previous != null) {
             rewardCompletedQuests(guild, member, previous);
+        }
 
         Bson filter = playerFilter(guild.getIdLong(), member.getIdLong(), weekStart);
         QuestPlayer existing = Database.getDatabase().questPlayers.find(filter).first();
@@ -90,18 +90,17 @@ public final class QuestManager {
         }
 
         List<String> assignedQuestIds = generateWeeklyQuestsForPlayer(guild, member, Set.of())
-                .stream()
-                .map(Quest::getId)
-                .toList();
+            .stream()
+            .map(Quest::getId)
+            .toList();
 
         Database.getDatabase().questPlayers.updateOne(filter, Updates.combine(
-                Updates.setOnInsert("guild", guild.getIdLong()),
-                Updates.setOnInsert("user", member.getIdLong()),
-                Updates.setOnInsert("weekStart", weekStart),
-                Updates.setOnInsert("assignedQuestIds", assignedQuestIds),
-                Updates.setOnInsert("rewardedQuestIds", List.of()),
-                Updates.setOnInsert("rerollUsed", false)
-        ), new UpdateOptions().upsert(true));
+            Updates.setOnInsert("guild", guild.getIdLong()),
+            Updates.setOnInsert("user", member.getIdLong()),
+            Updates.setOnInsert("weekStart", weekStart),
+            Updates.setOnInsert("assignedQuestIds", assignedQuestIds),
+            Updates.setOnInsert("rewardedQuestIds", List.of()),
+            Updates.setOnInsert("rerollUsed", false)), new UpdateOptions().upsert(true));
 
         QuestPlayer player = Database.getDatabase().questPlayers.find(filter).first();
         rewardCompletedQuests(guild, member, player);
@@ -111,11 +110,10 @@ public final class QuestManager {
     public void saveProgress(QuestPlayer player) {
         Bson filter = playerFilter(player.getGuild(), player.getUser(), player.getWeekStart());
         if (Database.getDatabase().questPlayers.updateOne(filter, Updates.combine(
-                        Updates.set("assignedQuestIds", player.getAssignedQuestIds()),
-                        Updates.set("rewardedQuestIds", player.getRewardedQuestIds()),
-                        Updates.set("rerollUsed", player.isRerollUsed())
-                ))
-                .getMatchedCount() == 0)
+            Updates.set("assignedQuestIds", player.getAssignedQuestIds()),
+            Updates.set("rewardedQuestIds", player.getRewardedQuestIds()),
+            Updates.set("rerollUsed", player.isRerollUsed())))
+            .getMatchedCount() == 0)
             throw new IllegalStateException("Weekly quest assignment no longer exists.");
     }
 
@@ -128,15 +126,13 @@ public final class QuestManager {
         List<String> updatedQuestIds = replacements.stream().map(Quest::getId).toList();
 
         Bson filter = Filters.and(
-                playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
-                Filters.ne("rerollUsed", true),
-                Filters.eq("assignedQuestIds", player.getAssignedQuestIds()),
-                Filters.nin("rewardedQuestIds", previousQuestIds)
-        );
+            playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
+            Filters.ne("rerollUsed", true),
+            Filters.eq("assignedQuestIds", player.getAssignedQuestIds()),
+            Filters.nin("rewardedQuestIds", previousQuestIds));
         if (Database.getDatabase().questPlayers.updateOne(filter, Updates.combine(
-                Updates.set("assignedQuestIds", updatedQuestIds),
-                Updates.set("rerollUsed", true)
-        )).getModifiedCount() == 0)
+            Updates.set("assignedQuestIds", updatedQuestIds),
+            Updates.set("rerollUsed", true))).getModifiedCount() == 0)
             throw new IllegalStateException("Your weekly quests changed before the reroll could be completed.");
 
         player.setAssignedQuestIds(updatedQuestIds);
@@ -147,28 +143,26 @@ public final class QuestManager {
 
     private boolean rewardQuest(QuestPlayer player, Quest<?, ?> quest) {
         Bson filter = Filters.and(
-                playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
-                Filters.eq("assignedQuestIds", quest.getId()),
-                Filters.ne("rewardedQuestIds", quest.getId())
-        );
+            playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
+            Filters.eq("assignedQuestIds", quest.getId()),
+            Filters.ne("rewardedQuestIds", quest.getId()));
         if (Database.getDatabase().questPlayers.updateOne(
-                filter,
-                Updates.addToSet("rewardedQuestIds", quest.getId())
-        ).getModifiedCount() == 0)
+            filter,
+            Updates.addToSet("rewardedQuestIds", quest.getId())).getModifiedCount() == 0)
             return false;
 
         try {
             quest.getReward().giveReward(quest, player);
         } catch (RuntimeException exception) {
             Database.getDatabase().questPlayers.updateOne(
-                    playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
-                    Updates.pull("rewardedQuestIds", quest.getId())
-            );
+                playerFilter(player.getGuild(), player.getUser(), player.getWeekStart()),
+                Updates.pull("rewardedQuestIds", quest.getId()));
             throw exception;
         }
 
-        if (player.getRewardedQuestIds() == null)
+        if (player.getRewardedQuestIds() == null) {
             player.setRewardedQuestIds(new ArrayList<>());
+        }
 
         player.getRewardedQuestIds().add(quest.getId());
         return true;
@@ -184,8 +178,7 @@ public final class QuestManager {
             return;
 
         QuestPlayer player = Database.getDatabase().questPlayers.find(
-                playerFilter(activity.getGuild(), activity.getUser(), activity.getWeekStart())
-        ).first();
+            playerFilter(activity.getGuild(), activity.getUser(), activity.getWeekStart())).first();
         if (player == null)
             return;
 
@@ -203,38 +196,39 @@ public final class QuestManager {
             if (quest == null || !quest.evaluate(events).complete())
                 continue;
 
-            if (rewardQuest(player, quest))
+            if (rewardQuest(player, quest)) {
                 rewardedQuests.add("**" + quest.getDisplayName() + "** ("
-                        + quest.getReward().getDescription() + ")");
+                    + quest.getReward().getDescription() + ")");
+            }
         }
 
-        if (!rewardedQuests.isEmpty())
+        if (!rewardedQuests.isEmpty()) {
             sendRewardMessage(guild, member, rewardedQuests);
+        }
     }
 
     private void sendRewardMessage(Guild guild, Member member, List<String> rewardedQuests) {
         String questNames = String.join(", ", rewardedQuests);
         String message = member.getAsMention() + " completed " + questNames
-                + " and received the quest rewards!";
+            + " and received the quest rewards!";
 
         GuildData guildData = GuildData.getOrCreateGuildData(guild);
         TextChannel levelUpChannel = guildData.isHasLevelUpChannel()
-                ? guild.getTextChannelById(guildData.getLevelUpMessageChannel())
-                : null;
+            ? guild.getTextChannelById(guildData.getLevelUpMessageChannel())
+            : null;
         if (levelUpChannel != null) {
             levelUpChannel.sendMessage(message).queue();
             return;
         }
 
         member.getUser().openPrivateChannel()
-                .flatMap(channel -> channel.sendMessage("In **" + guild.getName() + "**, you completed "
-                        + questNames + " and received the quest rewards!"))
-                .queue(null, exception -> Constants.LOGGER.debug(
-                        "Unable to notify user {} about completed quests in guild {}.",
-                        member.getId(),
-                        guild.getId(),
-                        exception
-                ));
+            .flatMap(channel -> channel.sendMessage("In **" + guild.getName() + "**, you completed "
+                + questNames + " and received the quest rewards!"))
+            .queue(null, exception -> Constants.LOGGER.debug(
+                "Unable to notify user {} about completed quests in guild {}.",
+                member.getId(),
+                guild.getId(),
+                exception));
     }
 
     public void recordTriviaAnswer(Guild guild, User user, String sourceId, boolean correct) {
@@ -242,44 +236,40 @@ public final class QuestManager {
             return;
 
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "trivia_answered",
-                sourceId,
-                System.currentTimeMillis(),
-                new Document("correct", correct)
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "trivia_answered",
+            sourceId,
+            System.currentTimeMillis(),
+            new Document("correct", correct));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     public void recordCompletedMultiplayerMatch(
-            Guild guild,
-            String gameType,
-            long matchId,
-            long player1Id,
-            long player2Id,
-            long winnerId
+        Guild guild,
+        String gameType,
+        long matchId,
+        long player1Id,
+        long player2Id,
+        long winnerId
     ) {
         if (!GuildData.getOrCreateGuildData(guild).isQuestEnabled())
             return;
@@ -287,107 +277,99 @@ public final class QuestManager {
         String sourceId = gameType + ":" + matchId;
 
         recordCompletedMultiplayerMatch(
-                guild.getIdLong(),
-                player1Id,
-                gameType,
-                sourceId,
-                player2Id,
-                player1Id == winnerId
-        );
+            guild.getIdLong(),
+            player1Id,
+            gameType,
+            sourceId,
+            player2Id,
+            player1Id == winnerId);
 
         recordCompletedMultiplayerMatch(
-                guild.getIdLong(),
-                player2Id,
-                gameType,
-                sourceId,
-                player1Id,
-                player2Id == winnerId
-        );
+            guild.getIdLong(),
+            player2Id,
+            gameType,
+            sourceId,
+            player1Id,
+            player2Id == winnerId);
     }
 
     private void recordCompletedMultiplayerMatch(
-            long guildId,
-            long userId,
-            String gameType,
-            String sourceId,
-            long opponentId,
-            boolean won
+        long guildId,
+        long userId,
+        String gameType,
+        String sourceId,
+        long opponentId,
+        boolean won
     ) {
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                currentWeekStart(),
-                "multiplayer_match_completed",
-                sourceId,
-                System.currentTimeMillis(),
-                new Document("gameType", gameType)
-                        .append("opponentId", Long.toString(opponentId))
-                        .append("won", won)
-        );
+            guildId,
+            userId,
+            currentWeekStart(),
+            "multiplayer_match_completed",
+            sourceId,
+            System.currentTimeMillis(),
+            new Document("gameType", gameType)
+                .append("opponentId", Long.toString(opponentId))
+                .append("won", won));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     public void recordMinigameCompletion(
-            long guildId,
-            long userId,
-            String gameType,
-            long sourceId
+        long guildId,
+        long userId,
+        String gameType,
+        long sourceId
     ) {
         if (guildId == 0L || !GuildData.getOrCreateGuildData(guildId).isQuestEnabled())
             return;
 
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                currentWeekStart(),
-                "minigame_completed",
-                gameType + ":" + sourceId,
-                System.currentTimeMillis(),
-                new Document("gameType", gameType)
-        );
+            guildId,
+            userId,
+            currentWeekStart(),
+            "minigame_completed",
+            gameType + ":" + sourceId,
+            System.currentTimeMillis(),
+            new Document("gameType", gameType));
         insertActivity(activity);
     }
 
     public void record2048Progress(
-            Guild guild,
-            User user,
-            long gameId,
-            int highestTile,
-            boolean finished
+        Guild guild,
+        User user,
+        long gameId,
+        int highestTile,
+        boolean finished
     ) {
         if (guild == null || !GuildData.getOrCreateGuildData(guild).isQuestEnabled())
             return;
 
         String sourceId = gameId + (finished ? ":finished" : ":tile:" + highestTile);
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "2048_progress",
-                sourceId,
-                System.currentTimeMillis(),
-                new Document("highestTile", highestTile).append("finished", finished)
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "2048_progress",
+            sourceId,
+            System.currentTimeMillis(),
+            new Document("highestTile", highestTile).append("finished", finished));
         insertActivity(activity);
     }
 
@@ -404,11 +386,10 @@ public final class QuestManager {
             return;
 
         recordCommunityActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                "conversation_prompt",
-                Long.toString(interactionId)
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            "conversation_prompt",
+            Long.toString(interactionId));
     }
 
     private void recordCommunityActivity(long guildId, long userId, String activityType, String sourceId) {
@@ -417,14 +398,13 @@ public final class QuestManager {
 
         LocalDate activityDate = Instant.now().atZone(ZoneOffset.UTC).toLocalDate();
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                currentWeekStart(),
-                "community_activity_completed",
-                activityType + ":" + sourceId,
-                System.currentTimeMillis(),
-                new Document("activityType", activityType).append("date", activityDate.toString())
-        );
+            guildId,
+            userId,
+            currentWeekStart(),
+            "community_activity_completed",
+            activityType + ":" + sourceId,
+            System.currentTimeMillis(),
+            new Document("activityType", activityType).append("date", activityDate.toString()));
         insertActivity(activity);
     }
 
@@ -434,14 +414,13 @@ public final class QuestManager {
 
         String pollId = Long.toString(pollMessageId);
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                creator.getIdLong(),
-                currentWeekStart(),
-                "poll_activity",
-                pollId + ":created",
-                System.currentTimeMillis(),
-                new Document("pollId", pollId).append("voterId", "")
-        );
+            guild.getIdLong(),
+            creator.getIdLong(),
+            currentWeekStart(),
+            "poll_activity",
+            pollId + ":created",
+            System.currentTimeMillis(),
+            new Document("pollId", pollId).append("voterId", ""));
         insertActivity(activity);
     }
 
@@ -451,24 +430,22 @@ public final class QuestManager {
 
         String pollId = Long.toString(pollMessageId);
         QuestActivity pollCreation = Database.getDatabase().questActivities.find(Filters.and(
-                Filters.eq("guild", guild.getIdLong()),
-                Filters.eq("weekStart", currentWeekStart()),
-                Filters.eq("type", "poll_activity"),
-                Filters.eq("sourceId", pollId + ":created")
-        )).first();
+            Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("weekStart", currentWeekStart()),
+            Filters.eq("type", "poll_activity"),
+            Filters.eq("sourceId", pollId + ":created"))).first();
         if (pollCreation == null || pollCreation.getUser() == voter.getIdLong())
             return;
 
         String voterId = voter.getId();
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                pollCreation.getUser(),
-                currentWeekStart(),
-                "poll_activity",
-                pollId + ":voter:" + voterId,
-                System.currentTimeMillis(),
-                new Document("pollId", pollId).append("voterId", voterId)
-        );
+            guild.getIdLong(),
+            pollCreation.getUser(),
+            currentWeekStart(),
+            "poll_activity",
+            pollId + ":voter:" + voterId,
+            System.currentTimeMillis(),
+            new Document("pollId", pollId).append("voterId", voterId));
         insertActivity(activity);
     }
 
@@ -485,37 +462,33 @@ public final class QuestManager {
             return;
 
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                currentWeekStart(),
-                activityType,
-                reminderId,
-                System.currentTimeMillis(),
-                new Document()
-        );
+            guildId,
+            userId,
+            currentWeekStart(),
+            activityType,
+            reminderId,
+            System.currentTimeMillis(),
+            new Document());
         insertActivity(activity);
     }
 
     private void insertActivity(QuestActivity activity) {
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
@@ -524,69 +497,64 @@ public final class QuestManager {
             return;
 
         long weekStart = completedOn
-                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli();
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli();
         String completedDate = completedOn.toString();
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                weekStart,
-                "wordle_completed",
-                completedDate,
-                System.currentTimeMillis(),
-                new Document("date", completedDate)
-        );
+            guildId,
+            userId,
+            weekStart,
+            "wordle_completed",
+            completedDate,
+            System.currentTimeMillis(),
+            new Document("date", completedDate));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     public void recordCollectableEarned(
-            Guild guild,
-            User user,
-            long questionMessageId,
-            String collectionType,
-            String collectableId,
-            int rarityOrdinal,
-            long questionAppearedAt,
-            long earnedAt
+        Guild guild,
+        User user,
+        long questionMessageId,
+        String collectionType,
+        String collectableId,
+        int rarityOrdinal,
+        long questionAppearedAt,
+        long earnedAt
     ) {
         if (!GuildData.getOrCreateGuildData(guild).isQuestEnabled())
             return;
 
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "collectable_earned",
-                Long.toString(questionMessageId),
-                earnedAt,
-                new Document()
-                        .append("collectionType", collectionType)
-                        .append("collectableId", collectableId)
-                        .append("rarityOrdinal", rarityOrdinal)
-                        .append("responseTimeMillis", Math.max(0, earnedAt - questionAppearedAt))
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "collectable_earned",
+            Long.toString(questionMessageId),
+            earnedAt,
+            new Document()
+                .append("collectionType", collectionType)
+                .append("collectableId", collectableId)
+                .append("rarityOrdinal", rarityOrdinal)
+                .append("responseTimeMillis", Math.max(0, earnedAt - questionAppearedAt)));
         insertActivity(activity);
     }
 
@@ -604,34 +572,30 @@ public final class QuestManager {
 
         LocalDate date = Instant.now().atZone(ZoneOffset.UTC).toLocalDate();
         var activity = new QuestActivity(
-                guildId,
-                userId,
-                currentWeekStart(),
-                "economy_action",
-                sourceId,
-                System.currentTimeMillis(),
-                new Document("actionType", actionType).append("date", date.toString())
-        );
+            guildId,
+            userId,
+            currentWeekStart(),
+            "economy_action",
+            sourceId,
+            System.currentTimeMillis(),
+            new Document("actionType", actionType).append("date", date.toString()));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
@@ -644,17 +608,16 @@ public final class QuestManager {
 
         LocalDate date = Instant.now().atZone(ZoneOffset.UTC).toLocalDate();
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "command_used",
-                commandType + ":" + date,
-                System.currentTimeMillis(),
-                new Document()
-                        .append("commandType", commandType)
-                        .append("category", category)
-                        .append("date", date.toString())
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "command_used",
+            commandType + ":" + date,
+            System.currentTimeMillis(),
+            new Document()
+                .append("commandType", commandType)
+                .append("category", category)
+                .append("date", date.toString()));
         insertActivity(activity);
     }
 
@@ -663,34 +626,30 @@ public final class QuestManager {
             return;
 
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                userId,
-                currentWeekStart(),
-                type,
-                listingId,
-                System.currentTimeMillis(),
-                new Document()
-        );
+            guild.getIdLong(),
+            userId,
+            currentWeekStart(),
+            type,
+            listingId,
+            System.currentTimeMillis(),
+            new Document());
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
@@ -700,146 +659,136 @@ public final class QuestManager {
 
         LocalDate countDate = countedAt.atZone(ZoneOffset.UTC).toLocalDate();
         long weekStart = countDate
-                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli();
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli();
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                weekStart,
-                "valid_count",
-                Long.toString(messageId),
-                countedAt.toEpochMilli(),
-                new Document("date", countDate.toString())
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            weekStart,
+            "valid_count",
+            Long.toString(messageId),
+            countedAt.toEpochMilli(),
+            new Document("date", countDate.toString()));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     public void recordGeographyAnswer(
-            Guild guild,
-            User user,
-            String gameType,
-            long sourceId,
-            boolean correct
+        Guild guild,
+        User user,
+        String gameType,
+        long sourceId,
+        boolean correct
     ) {
         if (!GuildData.getOrCreateGuildData(guild).isQuestEnabled())
             return;
 
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "geography_answered",
-                Long.toString(sourceId),
-                System.currentTimeMillis(),
-                new Document()
-                        .append("gameType", gameType)
-                        .append("correct", correct)
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "geography_answered",
+            Long.toString(sourceId),
+            System.currentTimeMillis(),
+            new Document()
+                .append("gameType", gameType)
+                .append("correct", correct));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     public void recordGeographyGameCompleted(
-            Guild guild,
-            User user,
-            String gameType,
-            long sourceId,
-            int gameSize,
-            int attempts
+        Guild guild,
+        User user,
+        String gameType,
+        long sourceId,
+        int gameSize,
+        int attempts
     ) {
         if (!GuildData.getOrCreateGuildData(guild).isQuestEnabled())
             return;
 
         var activity = new QuestActivity(
-                guild.getIdLong(),
-                user.getIdLong(),
-                currentWeekStart(),
-                "geography_game_completed",
-                Long.toString(sourceId),
-                System.currentTimeMillis(),
-                new Document()
-                        .append("gameType", gameType)
-                        .append("gameSize", gameSize)
-                        .append("attempts", attempts)
-        );
+            guild.getIdLong(),
+            user.getIdLong(),
+            currentWeekStart(),
+            "geography_game_completed",
+            Long.toString(sourceId),
+            System.currentTimeMillis(),
+            new Document()
+                .append("gameType", gameType)
+                .append("gameSize", gameSize)
+                .append("attempts", attempts));
 
         Database.getDatabase().questActivities.updateOne(
-                Filters.and(
-                        Filters.eq("guild", activity.getGuild()),
-                        Filters.eq("user", activity.getUser()),
-                        Filters.eq("weekStart", activity.getWeekStart()),
-                        Filters.eq("type", activity.getType()),
-                        Filters.eq("sourceId", activity.getSourceId())
-                ),
-                Updates.combine(
-                        Updates.setOnInsert("guild", activity.getGuild()),
-                        Updates.setOnInsert("user", activity.getUser()),
-                        Updates.setOnInsert("weekStart", activity.getWeekStart()),
-                        Updates.setOnInsert("type", activity.getType()),
-                        Updates.setOnInsert("sourceId", activity.getSourceId()),
-                        Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
-                        Updates.setOnInsert("details", activity.getDetails())
-                ),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.and(
+                Filters.eq("guild", activity.getGuild()),
+                Filters.eq("user", activity.getUser()),
+                Filters.eq("weekStart", activity.getWeekStart()),
+                Filters.eq("type", activity.getType()),
+                Filters.eq("sourceId", activity.getSourceId())),
+            Updates.combine(
+                Updates.setOnInsert("guild", activity.getGuild()),
+                Updates.setOnInsert("user", activity.getUser()),
+                Updates.setOnInsert("weekStart", activity.getWeekStart()),
+                Updates.setOnInsert("type", activity.getType()),
+                Updates.setOnInsert("sourceId", activity.getSourceId()),
+                Updates.setOnInsert("occurredAt", activity.getOccurredAt()),
+                Updates.setOnInsert("details", activity.getDetails())),
+            new UpdateOptions().upsert(true));
         rewardCompletedQuests(activity);
     }
 
     private static Bson playerFilter(long guild, long user, long weekStart) {
         return Filters.and(
-                Filters.eq("guild", guild),
-                Filters.eq("user", user),
-                Filters.eq("weekStart", weekStart)
-        );
+            Filters.eq("guild", guild),
+            Filters.eq("user", user),
+            Filters.eq("weekStart", weekStart));
     }
 
-    private List<Quest<?, ?>> generateWeeklyQuestsForPlayer(Guild guild, Member member,
-                                                            Set<String> excludedQuestIds) {
+    private List<Quest<?, ?>> generateWeeklyQuestsForPlayer(
+        Guild guild,
+        Member member,
+        Set<String> excludedQuestIds
+    ) {
         List<Quest<?, ?>> availableQuests = QUESTS.values().stream()
-                .filter(quest -> quest.isAvailableFor(guild, member))
-                .filter(quest -> !excludedQuestIds.contains(quest.getId()))
-                .collect(Collectors.toList());
+            .filter(quest -> quest.isAvailableFor(guild, member))
+            .filter(quest -> !excludedQuestIds.contains(quest.getId()))
+            .collect(Collectors.toList());
 
         Collections.shuffle(availableQuests);
         List<Quest<?, ?>> selectedQuests = new ArrayList<>();
@@ -849,8 +798,12 @@ public final class QuestManager {
         return List.copyOf(selectedQuests);
     }
 
-    private boolean selectCompatibleQuests(List<Quest<?, ?>> availableQuests, List<Quest<?, ?>> selectedQuests,
-                                           int index, int target) {
+    private boolean selectCompatibleQuests(
+        List<Quest<?, ?>> availableQuests,
+        List<Quest<?, ?>> selectedQuests,
+        int index,
+        int target
+    ) {
         if (selectedQuests.size() == target)
             return true;
 
@@ -871,109 +824,94 @@ public final class QuestManager {
 
     public List<QuestActivity> getQuestActivityDuringWeek(Guild guild, Member member, long weekStart) {
         return Database.getDatabase().questActivities.find(
-                Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", member.getIdLong()),
-                        Filters.eq("weekStart", weekStart)
-                )
-        ).into(new ArrayList<>());
+            Filters.and(
+                Filters.eq("guild", guild.getIdLong()),
+                Filters.eq("user", member.getIdLong()),
+                Filters.eq("weekStart", weekStart)))
+            .into(new ArrayList<>());
     }
 
     private QuestEvent toEvent(QuestActivity activity) {
         return switch (activity.getType()) {
             case "trivia_answered" -> new QuestEvent.TriviaAnswered(
-                    activity.getSourceId(),
-                    activity.getDetails().getBoolean("correct", false)
-            );
+                activity.getSourceId(),
+                activity.getDetails().getBoolean("correct", false));
             case "multiplayer_match_completed" -> new QuestEvent.MultiplayerMatchCompleted(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("gameType"),
-                    activity.getDetails().getString("opponentId"),
-                    activity.getDetails().getBoolean("won", false)
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("gameType"),
+                activity.getDetails().getString("opponentId"),
+                activity.getDetails().getBoolean("won", false));
             case "minigame_completed" -> new QuestEvent.MinigameCompleted(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("gameType")
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("gameType"));
             case "2048_progress" -> new QuestEvent.Game2048Progress(
-                    activity.getSourceId(),
-                    activity.getDetails().getInteger("highestTile", 0),
-                    activity.getDetails().getBoolean("finished", false)
-            );
+                activity.getSourceId(),
+                activity.getDetails().getInteger("highestTile", 0),
+                activity.getDetails().getBoolean("finished", false));
             case "wordle_completed" -> new QuestEvent.WordleCompleted(
-                    LocalDate.parse(activity.getDetails().getString("date"))
-            );
+                LocalDate.parse(activity.getDetails().getString("date")));
             case "collectable_earned" -> new QuestEvent.CollectableEarned(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("collectionType"),
-                    activity.getDetails().getInteger("rarityOrdinal", -1),
-                    activity.getDetails().getLong("responseTimeMillis") == null
-                            ? Long.MAX_VALUE
-                            : activity.getDetails().getLong("responseTimeMillis"),
-                    Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("collectionType"),
+                activity.getDetails().getInteger("rarityOrdinal", -1),
+                activity.getDetails().getLong("responseTimeMillis") == null
+                    ? Long.MAX_VALUE
+                    : activity.getDetails().getLong("responseTimeMillis"),
+                Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate());
             case "marketplace_item_listed" -> new QuestEvent.MarketplaceItemListed(activity.getSourceId());
             case "marketplace_item_sold" -> new QuestEvent.MarketplaceItemSold(activity.getSourceId());
             case "valid_count" -> new QuestEvent.ValidCount(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("date") == null
-                            ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
-                            : LocalDate.parse(activity.getDetails().getString("date"))
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("date") == null
+                    ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
+                    : LocalDate.parse(activity.getDetails().getString("date")));
             case "geography_answered" -> new QuestEvent.GeographyAnswered(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("gameType"),
-                    activity.getDetails().getBoolean("correct", false)
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("gameType"),
+                activity.getDetails().getBoolean("correct", false));
             case "geography_game_completed" -> new QuestEvent.GeographyGameCompleted(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("gameType"),
-                    activity.getDetails().getInteger("gameSize", 0),
-                    activity.getDetails().getInteger("attempts", 0)
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("gameType"),
+                activity.getDetails().getInteger("gameSize", 0),
+                activity.getDetails().getInteger("attempts", 0));
             case "community_activity_completed" -> new QuestEvent.CommunityActivityCompleted(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("activityType"),
-                    LocalDate.parse(activity.getDetails().getString("date"))
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("activityType"),
+                LocalDate.parse(activity.getDetails().getString("date")));
             case "poll_activity" -> new QuestEvent.PollActivity(
-                    activity.getDetails().getString("pollId"),
-                    activity.getDetails().getString("voterId")
-            );
+                activity.getDetails().getString("pollId"),
+                activity.getDetails().getString("voterId"));
             case "reminder_created" -> new QuestEvent.ReminderCreated(activity.getSourceId());
             case "reminder_fired" -> new QuestEvent.ReminderFired(activity.getSourceId());
             case "economy_action" -> new QuestEvent.EconomyAction(
-                    activity.getSourceId(),
-                    activity.getDetails().getString("actionType"),
-                    activity.getDetails().getString("date") == null
-                            ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
-                            : LocalDate.parse(activity.getDetails().getString("date"))
-            );
+                activity.getSourceId(),
+                activity.getDetails().getString("actionType"),
+                activity.getDetails().getString("date") == null
+                    ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
+                    : LocalDate.parse(activity.getDetails().getString("date")));
             case "command_used" -> new QuestEvent.CommandUsed(
-                    activity.getDetails().getString("commandType"),
-                    activity.getDetails().getString("category"),
-                    activity.getDetails().getString("date") == null
-                            ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
-                            : LocalDate.parse(activity.getDetails().getString("date"))
-            );
+                activity.getDetails().getString("commandType"),
+                activity.getDetails().getString("category"),
+                activity.getDetails().getString("date") == null
+                    ? Instant.ofEpochMilli(activity.getOccurredAt()).atZone(ZoneOffset.UTC).toLocalDate()
+                    : LocalDate.parse(activity.getDetails().getString("date")));
             default -> throw new IllegalArgumentException("Unknown quest activity type: " + activity.getType());
         };
     }
 
     public List<QuestEvent> getQuestEvents(Guild guild, Member member, long weekStart) {
         List<QuestActivity> activities = Database.getDatabase().questActivities
-                .find(Filters.and(
-                        Filters.eq("guild", guild.getIdLong()),
-                        Filters.eq("user", member.getIdLong()),
-                        Filters.eq("weekStart", weekStart)
-                ))
-                .into(new ArrayList<>());
+            .find(Filters.and(
+                Filters.eq("guild", guild.getIdLong()),
+                Filters.eq("user", member.getIdLong()),
+                Filters.eq("weekStart", weekStart)))
+            .into(new ArrayList<>());
 
         return activities.stream()
-                .sorted(Comparator
-                        .comparingLong(QuestActivity::getOccurredAt)
-                        .thenComparing(QuestActivity::getSourceId))
-                .map(this::toEvent)
-                .toList();
+            .sorted(Comparator
+                .comparingLong(QuestActivity::getOccurredAt)
+                .thenComparing(QuestActivity::getSourceId))
+            .map(this::toEvent)
+            .toList();
     }
 }

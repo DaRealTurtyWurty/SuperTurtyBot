@@ -52,27 +52,26 @@ public class ChatRevivalManager extends ListenerAdapter {
 
         GuildData config = GuildData.getOrCreateGuildData(guild);
         executor.scheduleAtFixedRate(
-                () -> {
-                    ChatReviver chatReviver = getChatReviver(guild);
-                    EnumSet<ChatRevivalType> enabledTypes = ChatRevivalType.fromStorage(
-                            GuildData.getOrCreateGuildData(guild).getChatRevivalTypes());
-                    if (enabledTypes.isEmpty())
-                        return;
+            () -> {
+                ChatReviver chatReviver = getChatReviver(guild);
+                EnumSet<ChatRevivalType> enabledTypes = ChatRevivalType.fromStorage(
+                    GuildData.getOrCreateGuildData(guild).getChatRevivalTypes());
+                if (enabledTypes.isEmpty())
+                    return;
 
-                    int random = ThreadLocalRandom.current().nextInt(enabledTypes.size());
-                    ChatRevivalType selected = enabledTypes.stream().skip(random).findFirst().orElse(ChatRevivalType.TOPIC);
-                    if (selected == ChatRevivalType.DRAWING) {
-                        drawingChatRevival(guild, chatReviver);
-                    } else if (selected == ChatRevivalType.TOPIC) {
-                        topicChatRevival(guild, chatReviver);
-                    } else {
-                        wyrChatRevival(guild, chatReviver);
-                    }
-                },
-                getChatReviver(guild).nextRunTime(config.getChatRevivalTime()),
-                TimeUnit.HOURS.toMillis(Math.max(1L, config.getChatRevivalTime())),
-                TimeUnit.MILLISECONDS
-        );
+                int random = ThreadLocalRandom.current().nextInt(enabledTypes.size());
+                ChatRevivalType selected = enabledTypes.stream().skip(random).findFirst().orElse(ChatRevivalType.TOPIC);
+                if (selected == ChatRevivalType.DRAWING) {
+                    drawingChatRevival(guild, chatReviver);
+                } else if (selected == ChatRevivalType.TOPIC) {
+                    topicChatRevival(guild, chatReviver);
+                } else {
+                    wyrChatRevival(guild, chatReviver);
+                }
+            },
+            getChatReviver(guild).nextRunTime(config.getChatRevivalTime()),
+            TimeUnit.HOURS.toMillis(Math.max(1L, config.getChatRevivalTime())),
+            TimeUnit.MILLISECONDS);
 
         ShutdownHooks.register(executor::shutdown);
     }
@@ -120,7 +119,9 @@ public class ChatRevivalManager extends ListenerAdapter {
 
             textChannel.sendMessage("🎨 The word for today's drawing is: **" + word + "**! Happy drawing! 🎨").queue();
         } catch (IllegalStateException exception) {
-            textChannel.sendMessage("❌ Uh oh! Something went wrong! Unable to do the drawing today! Please report this to the bot owner!").queue();
+            textChannel.sendMessage(
+                "❌ Uh oh! Something went wrong! Unable to do the drawing today! Please report this to the bot owner!")
+                .queue();
             Constants.LOGGER.error("❌ Unable to get available words for drawing!", exception);
         }
     }
@@ -149,7 +150,8 @@ public class ChatRevivalManager extends ListenerAdapter {
         chatReviver.setLastRunTime(System.currentTimeMillis());
         Database.getDatabase().chatRevivers.replaceOne(Filters.eq("guild", guild.getIdLong()), chatReviver);
 
-        textChannel.sendMessage("📚 The topic for today's discussion is:\n **" + topic + "**\n Happy chatting! 📚").queue();
+        textChannel.sendMessage("📚 The topic for today's discussion is:\n **" + topic + "**\n Happy chatting! 📚")
+            .queue();
     }
 
     private void wyrChatRevival(Guild guild, ChatReviver chatReviver) {
@@ -184,7 +186,8 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private static ChatReviver getChatReviver(Guild guild) {
-        ChatReviver chatReviver = Database.getDatabase().chatRevivers.find(Filters.eq("guild", guild.getIdLong())).first();
+        ChatReviver chatReviver = Database.getDatabase().chatRevivers.find(Filters.eq("guild", guild.getIdLong()))
+            .first();
         if (chatReviver == null) {
             chatReviver = new ChatReviver(guild.getIdLong());
             Database.getDatabase().chatRevivers.insertOne(chatReviver);
@@ -194,7 +197,7 @@ public class ChatRevivalManager extends ListenerAdapter {
     }
 
     private static List<String> getDrawingWords() {
-        try(final InputStream stream = TurtyBot.loadResource("objects.txt")) {
+        try (final InputStream stream = TurtyBot.loadResource("objects.txt")) {
             if (stream == null)
                 throw new IllegalStateException("Could not find objects.txt file!");
 

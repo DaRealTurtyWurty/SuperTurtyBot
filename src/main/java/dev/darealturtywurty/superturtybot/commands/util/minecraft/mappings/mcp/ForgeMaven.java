@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 public final class ForgeMaven {
     private static final String BASE_URL = "https://maven.minecraftforge.net/de/oceanlabs/mcp/";
     private static final Cache<String, List<String>> VERSIONS = CacheBuilder.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
-            .build();
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build();
 
     private ForgeMaven() {
     }
@@ -53,6 +53,6 @@ public final class ForgeMaven {
     public static Path download(String artifact, String build, String classifier, Path directory) throws IOException {
         String filename = artifact + "-" + build + classifier + ".zip";
         return MappingDownloads.cached(BASE_URL + artifact + "/" + MappingFiles.encode(build)
-                + "/" + MappingFiles.encode(filename), directory.resolve(filename), null);
+            + "/" + MappingFiles.encode(filename), directory.resolve(filename), null);
     }
 }

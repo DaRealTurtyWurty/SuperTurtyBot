@@ -41,6 +41,6 @@ public class PropertySellSubcommand extends PropertySubcommand {
         EconomyManager.updateAccount(account);
 
         PropertyCommand.hookReply(event, "✅ You sold %s for %s."
-                .formatted(property.getName(), StringUtils.numberFormat(payout, config)));
+            .formatted(property.getName(), StringUtils.numberFormat(payout, config)));
     }
 }

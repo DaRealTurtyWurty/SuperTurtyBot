@@ -20,7 +20,14 @@ public class CountryCollectable extends Collectable {
     private final CollectableRarity rarity;
     private final String note;
 
-    private CountryCollectable(String name, String emoji, String question, Answer answer, CollectableRarity rarity, String note) {
+    private CountryCollectable(
+        String name,
+        String emoji,
+        String question,
+        Answer answer,
+        CollectableRarity rarity,
+        String note
+    ) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
@@ -126,8 +133,9 @@ public class CountryCollectable extends Collectable {
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            if(note != null && note.isBlank())
+            if (note != null && note.isBlank()) {
                 note = null;
+            }
 
             return new CountryCollectable(name, emoji, question, answer, rarity, note);
         }
@@ -135,9 +143,8 @@ public class CountryCollectable extends Collectable {
         private void addNormalizedAnswerVariants(boolean caseSensitive, boolean contains, String... answers) {
             List<String> variants = new ArrayList<>();
             for (String answer : answers) {
-                if (answer == null || answer.isBlank()) {
+                if (answer == null || answer.isBlank())
                     continue;
-                }
 
                 String trimmed = answer.trim();
                 addVariant(variants, trimmed);
@@ -149,9 +156,8 @@ public class CountryCollectable extends Collectable {
                 addVariant(variants, noSpaces);
             }
 
-            if (variants.isEmpty()) {
+            if (variants.isEmpty())
                 throw new IllegalArgumentException("Answer must be set!");
-            }
 
             if (variants.size() == 1) {
                 this.answer.segment(variants.getFirst(), caseSensitive, contains);
@@ -162,25 +168,24 @@ public class CountryCollectable extends Collectable {
         }
 
         private void addVariant(List<String> variants, String variant) {
-            if (variant == null || variant.isBlank() || variants.contains(variant)) {
+            if (variant == null || variant.isBlank() || variants.contains(variant))
                 return;
-            }
 
             variants.add(variant);
         }
 
         private String normalizeAnswer(String answer) {
             String normalized = Normalizer.normalize(answer, Normalizer.Form.NFD)
-                    .replaceAll("\\p{M}+", "")
-                    .replace('’', '\'')
-                    .replace('`', '\'')
-                    .replace('‘', '\'')
-                    .replace('“', '"')
-                    .replace('”', '"')
-                    .replaceAll("[^\\p{Alnum}\\s]", " ")
-                    .replaceAll("\\s+", " ")
-                    .trim()
-                    .toLowerCase(Locale.ROOT);
+                .replaceAll("\\p{M}+", "")
+                .replace('’', '\'')
+                .replace('`', '\'')
+                .replace('‘', '\'')
+                .replace('“', '"')
+                .replace('”', '"')
+                .replaceAll("[^\\p{Alnum}\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
             return normalized.isEmpty() ? answer : normalized;
         }

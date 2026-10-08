@@ -16,7 +16,9 @@ public final class MathHandler {
     public static MathOperation chooseOperation(float number) {
         final List<MathOperation> floats = MathOperation.getFloats();
         if ((int) number != number)
-            return RANDOM.nextBoolean() ? MathOperation.ADD : RANDOM.nextBoolean() ? MathOperation.SUBTRACT : floats.get(RANDOM.nextInt(floats.size() - 1));
+            return RANDOM.nextBoolean()
+                ? MathOperation.ADD
+                : RANDOM.nextBoolean() ? MathOperation.SUBTRACT : floats.get(RANDOM.nextInt(floats.size() - 1));
 
         if (number < -1000) {
             int random = RANDOM.nextInt(4);
@@ -69,8 +71,9 @@ public final class MathHandler {
             }
         }
 
-        if(divisors.isEmpty())
+        if (divisors.isEmpty()) {
             divisors.add(2.0F);
+        }
 
         return divisors;
     }
@@ -90,7 +93,9 @@ public final class MathHandler {
                 yield current / getRandom(divisors);
             }
             case FLOOR -> (float) Math.floor(current);
-            case MULTIPLY -> current * (RANDOM.nextBoolean() ? RANDOM.nextInt(2, current > 100 || current < -100 ? 10 : 15) : RANDOM.nextBoolean() ? 0.5f : 1.5f);
+            case MULTIPLY -> current * (RANDOM.nextBoolean()
+                ? RANDOM.nextInt(2, current > 100 || current < -100 ? 10 : 15)
+                : RANDOM.nextBoolean() ? 0.5f : 1.5f);
             case ROUND -> Math.round(current);
             case SQRT -> (float) Math.sqrt(current);
             case SQUARE -> current * current;
@@ -108,8 +113,9 @@ public final class MathHandler {
             }
         }
 
-        if(nonDivisors.isEmpty())
+        if (nonDivisors.isEmpty()) {
             nonDivisors.add(2.0F);
+        }
 
         return nonDivisors;
     }
@@ -132,7 +138,7 @@ public final class MathHandler {
         formatted = formatted.replace(".0", "");
 
         // to 1 decimal place
-        if(formatted.contains("."))
+        if (formatted.contains("."))
             return formatted.trim().formatted("%.1f");
 
         return formatted.trim();

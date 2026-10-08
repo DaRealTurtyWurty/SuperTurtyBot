@@ -52,24 +52,24 @@ public class NSFWCommand extends CoreCommand {
     @Override
     public List<SubcommandGroupData> createSubcommandGroupData() {
         return List.of(new SubcommandGroupData("real1", "Real NSFW commands (part 1)").addSubcommands(subcommand("ass"),
-                        subcommand("porn"), subcommand("nsfw"), subcommand("gay"), subcommand("cock"), subcommand("pussy"),
-                        subcommand("4k"), subcommand("anal"), subcommand("asian"), subcommand("bbc"), subcommand("bdsm"),
-                        subcommand("boobs"), subcommand("cosplay"), subcommand("cum"), subcommand("feet"), subcommand("ebony"),
-                        subcommand("gangbang"), subcommand("lesbian"), subcommand("interracial"), subcommand("gonewild"),
-                        subcommand("pawg"), subcommand("public"), subcommand("teen"), subcommand("thigh"), subcommand("trap")),
-                new SubcommandGroupData("real2", "Real NSFW commands (part 2)").addSubcommands(subcommand("boobjob"),
-                        subcommand("petite"), subcommand("passion"), subcommand("hardcore"), subcommand("milf"),
-                        subcommand("funny"), subcommand("femboy")),
-                new SubcommandGroupData("fake", "Fake NSFW commands").addSubcommands(subcommand("furry"),
-                        subcommand("hentaigif"), subcommand("yuri"), subcommand("oppai"), subcommand("r6s"),
-                        subcommand("apex"), subcommand("overwatch"), subcommand("valorant"), subcommand("hentai"),
-                        subcommand("anal"), subcommand("ass"), subcommand("boobjob"), subcommand("boobs"),
-                        subcommand("fox"), subcommand("kemonomimi"), subcommand("midriff"), subcommand("neko"),
-                        subcommand("tentacle"), subcommand("thigh"), subcommand("yaoi"), subcommand("loli")),
-                new SubcommandGroupData("misc", "Miscellaneous NSFW commands").addSubcommands(subcommand("random"),
-                        subcommand("orgasm"),
-                        subcommand("rule34").addOption(OptionType.STRING, "search_term", "The rule34 search phrase",
-                                true)));
+            subcommand("porn"), subcommand("nsfw"), subcommand("gay"), subcommand("cock"), subcommand("pussy"),
+            subcommand("4k"), subcommand("anal"), subcommand("asian"), subcommand("bbc"), subcommand("bdsm"),
+            subcommand("boobs"), subcommand("cosplay"), subcommand("cum"), subcommand("feet"), subcommand("ebony"),
+            subcommand("gangbang"), subcommand("lesbian"), subcommand("interracial"), subcommand("gonewild"),
+            subcommand("pawg"), subcommand("public"), subcommand("teen"), subcommand("thigh"), subcommand("trap")),
+            new SubcommandGroupData("real2", "Real NSFW commands (part 2)").addSubcommands(subcommand("boobjob"),
+                subcommand("petite"), subcommand("passion"), subcommand("hardcore"), subcommand("milf"),
+                subcommand("funny"), subcommand("femboy")),
+            new SubcommandGroupData("fake", "Fake NSFW commands").addSubcommands(subcommand("furry"),
+                subcommand("hentaigif"), subcommand("yuri"), subcommand("oppai"), subcommand("r6s"),
+                subcommand("apex"), subcommand("overwatch"), subcommand("valorant"), subcommand("hentai"),
+                subcommand("anal"), subcommand("ass"), subcommand("boobjob"), subcommand("boobs"),
+                subcommand("fox"), subcommand("kemonomimi"), subcommand("midriff"), subcommand("neko"),
+                subcommand("tentacle"), subcommand("thigh"), subcommand("yaoi"), subcommand("loli")),
+            new SubcommandGroupData("misc", "Miscellaneous NSFW commands").addSubcommands(subcommand("random"),
+                subcommand("orgasm"),
+                subcommand("rule34").addOption(OptionType.STRING, "search_term", "The rule34 search phrase",
+                    true)));
     }
 
     private static SubcommandData subcommand(String name) {
@@ -119,7 +119,7 @@ public class NSFWCommand extends CoreCommand {
         Guild guild = event.getGuild();
         if (guild != null) {
             GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-                    .first();
+                .first();
             if (config == null) {
                 config = new GuildData(guild.getIdLong());
                 Database.getDatabase().guildData.insertOne(config);
@@ -131,8 +131,9 @@ public class NSFWCommand extends CoreCommand {
                 return;
             }
 
-            MessageChannel channel = event.getChannelType() == ChannelType.TEXT ? event.getChannel()
-                    : event.getChannel().asThreadChannel().getParentMessageChannel();
+            MessageChannel channel = event.getChannelType() == ChannelType.TEXT
+                ? event.getChannel()
+                : event.getChannel().asThreadChannel().getParentMessageChannel();
             if (!enabledChannels.contains(channel.getIdLong())) {
                 event.getHook().editOriginal("❌ This channel is not configured as an NSFW channel!").queue();
                 return;
@@ -164,15 +165,15 @@ public class NSFWCommand extends CoreCommand {
     }
 
     public static boolean isValidChannel(MessageChannelUnion channel) {
-        if(channel == null)
+        if (channel == null)
             return false;
 
-        if(channel.getType() == ChannelType.UNKNOWN)
+        if (channel.getType() == ChannelType.UNKNOWN)
             return false;
 
         // if it's a private channel
         // TODO: Add a check for if the user is 18+ (and utilise the user config too)
-        if(channel.getType() == ChannelType.PRIVATE)
+        if (channel.getType() == ChannelType.PRIVATE)
             return true;
 
         // if it's a text channel and is nsfw
@@ -181,8 +182,8 @@ public class NSFWCommand extends CoreCommand {
 
         // if it's a thread channel and the parent is nsfw
         if ((channel.getType() == ChannelType.GUILD_PUBLIC_THREAD
-                || channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
-                || channel.getType() == ChannelType.GUILD_NEWS_THREAD
+            || channel.getType() == ChannelType.GUILD_PRIVATE_THREAD
+            || channel.getType() == ChannelType.GUILD_NEWS_THREAD
                 && channel.asThreadChannel().getParentMessageChannel().asTextChannel().isNSFW()))
             return true;
 
@@ -196,19 +197,20 @@ public class NSFWCommand extends CoreCommand {
             command.accept(data);
         } else {
             data.hook().editOriginal("❌  You must specify a valid subcommand!").setComponents().setFiles().setEmbeds()
-                    .queue();
+                .queue();
         }
     }
 
     private static void runReddit(InteractionHook hook, User user, String group, String subcommand) {
         NSFWCommandList.NSFWReddit reddit = NSFW_REDDIT_COMMANDS.stream().filter(cmd -> cmd.name().equals(subcommand))
-                .findFirst().orElse(null);
+            .findFirst().orElse(null);
         if (reddit != null) {
             final Either<EmbedBuilder, Collection<String>> eitherEmbedOrImages = RedditUtils.constructEmbed(true,
-                    reddit.subreddits());
+                reddit.subreddits());
             if (eitherEmbedOrImages == null) {
-                hook.editOriginal("❌  There has been an error processing the command you tried to run. Please try again!")
-                        .setComponents().setEmbeds().setFiles().queue();
+                hook.editOriginal(
+                    "❌  There has been an error processing the command you tried to run. Please try again!")
+                    .setComponents().setEmbeds().setFiles().queue();
                 return;
             }
 
@@ -223,58 +225,62 @@ public class NSFWCommand extends CoreCommand {
                         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
                         connection.connect();
                         uploads.add(
-                                FileUpload.fromData(connection.getInputStream(), "image_%d.png".formatted(index++)));
+                            FileUpload.fromData(connection.getInputStream(), "image_%d.png".formatted(index++)));
                     } catch (IOException | URISyntaxException exception) {
                         hook.editOriginal(
-                                        "❌  There has been an error processing the command you tried to run. Please try again!")
-                                .setComponents().setEmbeds().setFiles().queue();
+                            "❌  There has been an error processing the command you tried to run. Please try again!")
+                            .setComponents().setEmbeds().setFiles().queue();
                         Constants.LOGGER.error("Error getting image from URL: {}", image, exception);
                         return;
                     }
                 }
 
                 hook.editOriginal("Gallery 🖼️").setComponents().setEmbeds().setFiles(uploads)
-                        .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
+                    .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
                 return;
             }
 
             EmbedBuilder embed = eitherEmbedOrImages.isLeft() ? eitherEmbedOrImages.getLeft() : null;
             if (embed == null) {
-                hook.editOriginal("❌ There has been an error processing the command you tried to run. Please try again!")
-                        .setComponents().setEmbeds().setFiles().queue();
+                hook.editOriginal(
+                    "❌ There has been an error processing the command you tried to run. Please try again!")
+                    .setComponents().setEmbeds().setFiles().queue();
                 return;
             }
 
             final String mediaURL = embed.build().getTitle();
             if (mediaURL == null) {
-                hook.editOriginal("❌ There has been an error processing the command you tried to run. Please try again!")
-                        .setComponents().setEmbeds().setFiles().queue();
+                hook.editOriginal(
+                    "❌ There has been an error processing the command you tried to run. Please try again!")
+                    .setComponents().setEmbeds().setFiles().queue();
                 return;
             }
 
             if (RedditUtils.isEmbedVideo(mediaURL)) {
                 hook.editOriginal(mediaURL).setComponents().setEmbeds().setFiles()
-                        .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
+                    .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
                 return;
             }
 
             MessageEmbed builtEmbed = embed.build();
             hook.editOriginal(builtEmbed.getTitle() == null ? "😘" : builtEmbed.getTitle()).setComponents().setEmbeds()
-                    .setFiles().flatMap(msg -> msg.editMessageEmbeds(builtEmbed))
-                    .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
+                .setFiles().flatMap(msg -> msg.editMessageEmbeds(builtEmbed))
+                .queue(msg -> addRegenerateButton(hook, user, group, subcommand));
         }
     }
 
     public static void addRegenerateButton(Message message, User user, String group, String subcommand) {
         message.editMessageComponents(ActionRow.of(
-                Button.primary("regenerate-" + message.getId() + "-" + user.getId() + "-" + group + "-" + subcommand,
-                        "🔁 Regenerate"))).queue();
+            Button.primary("regenerate-" + message.getId() + "-" + user.getId() + "-" + group + "-" + subcommand,
+                "🔁 Regenerate")))
+            .queue();
     }
 
     public static void addRegenerateButton(InteractionHook hook, User user, String group, String subcommand) {
         hook.retrieveOriginal().queue(message -> hook.editOriginalComponents(ActionRow.of(
-                Button.primary("regenerate-" + message.getId() + "-" + user.getId() + "-" + group + "-" + subcommand,
-                        "🔁 Regenerate"))).queue());
+            Button.primary("regenerate-" + message.getId() + "-" + user.getId() + "-" + group + "-" + subcommand,
+                "🔁 Regenerate")))
+            .queue());
     }
 
     @Override
@@ -284,12 +290,13 @@ public class NSFWCommand extends CoreCommand {
             return;
         }
 
-        if (!Objects.requireNonNull(event.getButton().getCustomId()).startsWith("regenerate-")) return;
+        if (!Objects.requireNonNull(event.getButton().getCustomId()).startsWith("regenerate-"))
+            return;
 
         String[] split = event.getButton().getCustomId().split("-");
         if (split.length != 5) {
             event.reply("❌ There has been an error processing the command you tried to run. Please try again!")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true).queue();
             return;
         }
 
@@ -298,9 +305,8 @@ public class NSFWCommand extends CoreCommand {
         String group = split[3];
         String subcommand = split[4];
 
-        if (event.getMessageIdLong() != messageId) {
+        if (event.getMessageIdLong() != messageId)
             return;
-        }
 
         if (event.getUser().getIdLong() != userId) {
             event.reply("❌ You do not have permission to regenerate this command!").setEphemeral(true).queue();

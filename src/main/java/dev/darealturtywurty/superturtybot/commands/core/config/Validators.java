@@ -44,7 +44,8 @@ public final class Validators {
 
         GuildChannel channel = guild.getChannelById(StandardGuildChannel.class, str);
         if (channel != null)
-            return !channel.getType().isThread() && channel.getType().isGuild() && channel.getGuild().getIdLong() == guild.getIdLong();
+            return !channel.getType().isThread() && channel.getType().isGuild()
+                && channel.getGuild().getIdLong() == guild.getIdLong();
 
         if (MentionType.CHANNEL.getPattern().matcher(str).matches()) {
             final String id = str.replace("<#", "").replace(">", "");
@@ -55,14 +56,15 @@ public final class Validators {
         return false;
     };
 
-    public static final BiPredicate<SlashCommandInteractionEvent, String> EMOJI_VALIDATOR = (event,
+    public static final BiPredicate<SlashCommandInteractionEvent, String> EMOJI_VALIDATOR = (
+        event,
         str) -> Message.MentionType.EMOJI.getPattern().matcher(str).matches();
 
     public static final BiPredicate<SlashCommandInteractionEvent, String> ROLE_VALIDATOR = (event, str) -> {
         final Guild guild = event.getGuild();
-        if(guild == null)
+        if (guild == null)
             return false;
-        
+
         if (MentionType.ROLE.getPattern().matcher(str).matches()) {
             final String id = str.replace("<@&", "").replace(">", "");
             return guild.getRoleById(id) != null;

@@ -18,12 +18,14 @@ public class BattleshipsRevealCommand extends BattleshipsSubcommand {
         User user = event.getUser();
         BattleshipsCommand.Game game = BattleshipsCommand.getGame(guild.getIdLong(), user.getIdLong()).orElse(null);
         if (game == null) {
-            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.").queue();
+            replyBattleships(event, "❌ You are not currently in a game! Start a new game with `/battleships play`.")
+                .queue();
             return;
         }
 
         if (game.getThreadId() != event.getChannel().getIdLong()) {
-            replyBattleships(event, "❌ You can only reveal your board in the game thread: <#" + game.getThreadId() + ">.").queue();
+            replyBattleships(event,
+                "❌ You can only reveal your board in the game thread: <#" + game.getThreadId() + ">.").queue();
             return;
         }
 

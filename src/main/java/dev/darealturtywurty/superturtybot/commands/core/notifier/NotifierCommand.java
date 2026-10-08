@@ -8,17 +8,16 @@ public class NotifierCommand extends CoreCommand {
     public NotifierCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new YoutubeNotifierSubcommand(),
-                new TwitchNotifierSubcommand(),
-                new SteamNotifierSubcommand(),
-                new SteamStoreNotifierSubcommand(),
-                new RedditNotifierSubcommand(),
-                new MinecraftNotifierSubcommand(),
-                new SiegeNotifierSubcommand(),
-                new RocketLeagueNotifierSubcommand(),
-                new LeagueNotifierSubcommand(),
-                new ValorantNotifierSubcommand()
-        );
+            new YoutubeNotifierSubcommand(),
+            new TwitchNotifierSubcommand(),
+            new SteamNotifierSubcommand(),
+            new SteamStoreNotifierSubcommand(),
+            new RedditNotifierSubcommand(),
+            new MinecraftNotifierSubcommand(),
+            new SiegeNotifierSubcommand(),
+            new RocketLeagueNotifierSubcommand(),
+            new LeagueNotifierSubcommand(),
+            new ValorantNotifierSubcommand());
     }
 
     @Override

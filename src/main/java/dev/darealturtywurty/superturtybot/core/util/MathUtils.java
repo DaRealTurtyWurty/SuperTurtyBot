@@ -125,6 +125,7 @@ public class MathUtils {
 
     /**
      * Returns a pseudorandom {@link BigInteger} between {@code 0} (inclusive) and {@code upperLimit} (exclusive)
+     *
      * @param upperLimit the upper limit of the random {@link BigInteger}, exclusive
      * @return a pseudorandom {@link BigInteger} between {@code 0} (inclusive) and {@code upperLimit} (exclusive)
      */
@@ -139,10 +140,13 @@ public class MathUtils {
     }
 
     /**
-     * Returns a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit} (exclusive)
+     * Returns a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit}
+     * (exclusive)
+     *
      * @param lowerLimit the lower limit of the random {@link BigInteger}, inclusive
      * @param upperLimit the upper limit of the random {@link BigInteger}, exclusive
-     * @return a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit} (exclusive)
+     * @return a pseudorandom {@link BigInteger} between {@code lowerLimit} (inclusive) and {@code upperLimit}
+     *         (exclusive)
      */
     public static BigInteger getRandomBigInteger(BigInteger lowerLimit, BigInteger upperLimit) {
         return getRandomBigInteger(upperLimit.subtract(lowerLimit)).add(lowerLimit);

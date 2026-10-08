@@ -53,9 +53,15 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         reply(event, embed, mention, false);
     }
 
-    public static void reply(GenericCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean ephemeral) {
+    public static void reply(
+        GenericCommandInteractionEvent event,
+        EmbedBuilder embed,
+        boolean mention,
+        boolean ephemeral
+    ) {
         if (event.isAcknowledged()) {
-            event.getHook().sendMessageEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral).queue();
+            event.getHook().sendMessageEmbeds(embed.build()).mentionRepliedUser(mention).setEphemeral(ephemeral)
+                .queue();
             return;
         }
 
@@ -107,7 +113,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         return false;
     }
 
-    final boolean isNotServerOnly() {
+    protected final boolean isNotServerOnly() {
         return !isServerOnly();
     }
 
@@ -144,8 +150,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
-                        .setEphemeral(true).queue())) {
+            end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
+                .setEphemeral(true).queue())) {
             runMessageCtx(event);
         }
     }
@@ -156,7 +162,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
         final String content = event.getMessage().getContentRaw().toLowerCase();
         if (event.isWebhookMessage() || event.getAuthor().isBot()
-                || !content.startsWith((Environment.INSTANCE.defaultPrefix().orElse("") + getName() + " ").toLowerCase())
+            || !content.startsWith((Environment.INSTANCE.defaultPrefix().orElse("") + getName() + " ").toLowerCase())
                 && !(Environment.INSTANCE.defaultPrefix().orElse("") + getName()).equals(content))
             return;
 
@@ -164,7 +170,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getAuthor().getIdLong(),
-                end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
+            end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
             runNormalMessage(event);
 
             if (event.isFromGuild()) {
@@ -188,14 +194,13 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
-                        .setEphemeral(true).queue())) {
+            end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
+                .setEphemeral(true).queue())) {
             QuestManager.INSTANCE.recordCommandUsed(
-                    event.getGuild(),
-                    event.getUser(),
-                    getName(),
-                    getCategory().getName()
-            );
+                event.getGuild(),
+                event.getUser(),
+                getName(),
+                getCategory().getName());
 
             String subcommand = event.getSubcommandName();
             if (subcommand == null) {
@@ -204,12 +209,11 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             }
 
             this.subcommands.stream()
-                    .filter(sub -> sub.getName().equalsIgnoreCase(subcommand))
-                    .findFirst()
-                    .ifPresentOrElse(
-                            sub -> sub.execute(event),
-                            () -> runSlash(event)
-                    );
+                .filter(sub -> sub.getName().equalsIgnoreCase(subcommand))
+                .findFirst()
+                .ifPresentOrElse(
+                    sub -> sub.execute(event),
+                    () -> runSlash(event));
         }
     }
 
@@ -220,8 +224,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
-                end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
-                        .setEphemeral(true).queue())) {
+            end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
+                .setEphemeral(true).queue())) {
             runUserCtx(event);
         }
     }

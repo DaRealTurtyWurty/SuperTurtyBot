@@ -23,18 +23,18 @@ public abstract class MarketplaceSubcommand extends SubcommandCommand {
         GuildData config = GuildData.getOrCreateGuildData(guild);
         if (!config.isEconomyEnabled()) {
             event.getHook().editOriginalEmbeds(MarketplaceCommand.notice("Marketplace unavailable",
-                    "Economy is not enabled in this server.", true).build()).queue();
+                "Economy is not enabled in this server.", true).build()).queue();
             return;
         }
         try {
             execute(event, guild, config);
         } catch (IllegalArgumentException exception) {
             event.getHook().editOriginalEmbeds(MarketplaceCommand.notice("Marketplace action failed",
-                    exception.getMessage(), true).build()).queue();
+                exception.getMessage(), true).build()).queue();
         } catch (MongoException exception) {
             Constants.LOGGER.error("Marketplace action failed", exception);
             event.getHook().editOriginalEmbeds(MarketplaceCommand.notice("Marketplace unavailable",
-                    "Please try again later.", true).build()).queue();
+                "Please try again later.", true).build()).queue();
         }
     }
 

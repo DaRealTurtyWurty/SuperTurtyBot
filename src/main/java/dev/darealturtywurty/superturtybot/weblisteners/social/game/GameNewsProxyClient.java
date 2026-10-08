@@ -23,8 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public final class GameNewsProxyClient {
-    private static final String PROXY_LIST_URL =
-            "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/protocols/https/data.json";
+    private static final String PROXY_LIST_URL = "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/protocols/https/data.json";
     private static final Duration REFRESH_INTERVAL = Duration.ofMinutes(10);
     private static final Duration FAILED_REFRESH_INTERVAL = Duration.ofMinutes(1);
     private static final int MAX_PROXY_ATTEMPTS = 3;
@@ -33,9 +32,9 @@ public final class GameNewsProxyClient {
     private static final double MAX_LATENCY_MILLIS = 1_500.0;
     private static final Object REFRESH_LOCK = new Object();
     private static final OkHttpClient DIRECT_CLIENT = Constants.HTTP_CLIENT.newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .callTimeout(75, TimeUnit.SECONDS)
-            .build();
+        .readTimeout(60, TimeUnit.SECONDS)
+        .callTimeout(75, TimeUnit.SECONDS)
+        .build();
 
     private static volatile List<ProxyEndpoint> proxyEndpoints = List.of();
     private static volatile long nextRefreshAt;
@@ -60,7 +59,7 @@ public final class GameNewsProxyClient {
                     return response;
 
                 lastProxyFailure = new IOException(
-                        "Proxy %s returned HTTP %d".formatted(endpoint, response.code()));
+                    "Proxy %s returned HTTP %d".formatted(endpoint, response.code()));
                 response.close();
             } catch (IOException exception) {
                 lastProxyFailure = exception;
@@ -69,14 +68,14 @@ public final class GameNewsProxyClient {
 
         if (attempts > 0) {
             Constants.LOGGER.debug("All {} sampled proxies failed for {}; falling back to a direct request.",
-                    attempts, sourceName);
+                attempts, sourceName);
         }
 
         return executeDirect(request, sourceName, lastProxyFailure);
     }
 
     private static Response executeDirect(Request request, String sourceName, IOException proxyFailure)
-            throws IOException {
+        throws IOException {
         int attempts = isRetryableMethod(request.method()) ? MAX_DIRECT_ATTEMPTS : 1;
         IOException lastFailure = null;
         for (int index = 0; index < attempts; index++) {
@@ -93,14 +92,16 @@ public final class GameNewsProxyClient {
 
             if (index < attempts - 1) {
                 Constants.LOGGER.debug("Game-news request for {} failed; retrying directly ({}/{}).",
-                        sourceName, index + 1, attempts);
+                    sourceName, index + 1, attempts);
             }
         }
 
-        if (lastFailure == null)
+        if (lastFailure == null) {
             lastFailure = new IOException("Game-news request failed without a response");
-        if (proxyFailure != null)
+        }
+        if (proxyFailure != null) {
             lastFailure.addSuppressed(proxyFailure);
+        }
         throw lastFailure;
     }
 
@@ -118,8 +119,8 @@ public final class GameNewsProxyClient {
         try (response) {
             byte[] bytes = body.bytes();
             return response.newBuilder()
-                    .body(ResponseBody.create(bytes, body.contentType()))
-                    .build();
+                .body(ResponseBody.create(bytes, body.contentType()))
+                .build();
         }
     }
 
@@ -146,10 +147,10 @@ public final class GameNewsProxyClient {
 
     private static boolean refreshProxyEndpoints() {
         Request request = new Request.Builder()
-                .url(PROXY_LIST_URL)
-                .header("Accept", "application/json")
-                .header("User-Agent", "SuperTurtyBot/1.0")
-                .build();
+            .url(PROXY_LIST_URL)
+            .header("Accept", "application/json")
+            .header("User-Agent", "SuperTurtyBot/1.0")
+            .build();
 
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful()) {
@@ -180,8 +181,9 @@ public final class GameNewsProxyClient {
                 }
             }
 
-            List<ProxyEndpoint> refreshedEndpoints =
-                    preferredEndpoints.isEmpty() ? allValidEndpoints : preferredEndpoints;
+            List<ProxyEndpoint> refreshedEndpoints = preferredEndpoints.isEmpty()
+                ? allValidEndpoints
+                : preferredEndpoints;
             if (refreshedEndpoints.isEmpty()) {
                 Constants.LOGGER.warn("The game-news proxy list contained no usable HTTP proxies.");
                 return false;
@@ -204,10 +206,10 @@ public final class GameNewsProxyClient {
         String host = getString(object, "ip");
         int port = getInt(object, "port");
         if (!"http".equals(protocol.toLowerCase(Locale.ROOT))
-                || host.isBlank()
-                || !isPublicAddress(host)
-                || port < 1
-                || port > 65_535)
+            || host.isBlank()
+            || !isPublicAddress(host)
+            || port < 1
+            || port > 65_535)
             return null;
 
         return new ProxyEndpoint(host, port);
@@ -222,10 +224,10 @@ public final class GameNewsProxyClient {
         }
 
         if (address.isAnyLocalAddress()
-                || address.isLoopbackAddress()
-                || address.isLinkLocalAddress()
-                || address.isSiteLocalAddress()
-                || address.isMulticastAddress())
+            || address.isLoopbackAddress()
+            || address.isLinkLocalAddress()
+            || address.isSiteLocalAddress()
+            || address.isMulticastAddress())
             return false;
 
         byte[] bytes = address.getAddress();
@@ -233,8 +235,8 @@ public final class GameNewsProxyClient {
             int first = Byte.toUnsignedInt(bytes[0]);
             int second = Byte.toUnsignedInt(bytes[1]);
             return first != 0
-                    && first < 224
-                    && !(first == 100 && second >= 64 && second <= 127);
+                && first < 224
+                && !(first == 100 && second >= 64 && second <= 127);
         }
 
         if (address instanceof Inet6Address)
@@ -245,28 +247,28 @@ public final class GameNewsProxyClient {
 
     private static boolean isPreferred(JsonObject object) {
         return getBoolean(object, "ssl")
-                && getDouble(object, "uptime_percent", 0.0) >= MIN_UPTIME_PERCENT
-                && getDouble(object, "latency_ms", Double.MAX_VALUE) <= MAX_LATENCY_MILLIS;
+            && getDouble(object, "uptime_percent", 0.0) >= MIN_UPTIME_PERCENT
+            && getDouble(object, "latency_ms", Double.MAX_VALUE) <= MAX_LATENCY_MILLIS;
     }
 
     private static OkHttpClient clientFor(ProxyEndpoint endpoint) {
         var proxy = new Proxy(Proxy.Type.HTTP,
-                InetSocketAddress.createUnresolved(endpoint.host(), endpoint.port()));
+            InetSocketAddress.createUnresolved(endpoint.host(), endpoint.port()));
         return Constants.HTTP_CLIENT.newBuilder()
-                .proxy(proxy)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .callTimeout(40, TimeUnit.SECONDS)
-                .build();
+            .proxy(proxy)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(40, TimeUnit.SECONDS)
+            .build();
     }
 
     private static boolean shouldRetryWithAnotherProxy(int statusCode) {
         return statusCode == 403
-                || statusCode == 407
-                || statusCode == 408
-                || statusCode == 425
-                || statusCode == 429
-                || statusCode >= 500;
+            || statusCode == 407
+            || statusCode == 408
+            || statusCode == 425
+            || statusCode == 429
+            || statusCode >= 500;
     }
 
     private static String getString(JsonObject object, String property) {
@@ -281,7 +283,7 @@ public final class GameNewsProxyClient {
 
         try {
             return value.getAsInt();
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException _) {
             return -1;
         }
     }
@@ -293,7 +295,7 @@ public final class GameNewsProxyClient {
 
         try {
             return value.getAsBoolean();
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException _) {
             return false;
         }
     }
@@ -305,7 +307,7 @@ public final class GameNewsProxyClient {
 
         try {
             return value.getAsDouble();
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException _) {
             return fallback;
         }
     }

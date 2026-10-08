@@ -54,11 +54,10 @@ public class PetPetGifCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("user", "Creates a pet pet gif with the given user avatar.")
-                        .addOption(OptionType.USER, "user", "The user to pet pet gif", true),
-                new SubcommandData("image", "Creates a pet pet gif with the given image.")
-                        .addOption(OptionType.STRING, "image", "The image to pet pet gif", true)
-        );
+            new SubcommandData("user", "Creates a pet pet gif with the given user avatar.")
+                .addOption(OptionType.USER, "user", "The user to pet pet gif", true),
+            new SubcommandData("image", "Creates a pet pet gif with the given image.")
+                .addOption(OptionType.STRING, "image", "The image to pet pet gif", true));
     }
 
     @Override
@@ -77,7 +76,7 @@ public class PetPetGifCommand extends CoreCommand {
         reply(event, "⏸️ Creating pet pet gif...");
         String imageStr;
         switch (subcommand) {
-            case "user":
+            case "user" :
                 User user = event.getOption("user", OptionMapping::getAsUser);
                 if (user == null) {
                     reply(event, "❌ You must provide a user to pet pet gif!", false, true);
@@ -85,14 +84,14 @@ public class PetPetGifCommand extends CoreCommand {
                 }
                 imageStr = user.getEffectiveAvatar().getUrl();
                 break;
-            case "image":
+            case "image" :
                 imageStr = event.getOption("image", OptionMapping::getAsString);
                 if (imageStr == null) {
                     reply(event, "❌ You must provide an image to pet pet gif!", false, true);
                     return;
                 }
                 break;
-            default:
+            default :
                 imageStr = "";
                 break;
         }
@@ -112,7 +111,7 @@ public class PetPetGifCommand extends CoreCommand {
                 event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
             } catch (IOException exception) {
                 event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                        .queue();
+                    .queue();
             }
         });
     }
@@ -129,7 +128,7 @@ public class PetPetGifCommand extends CoreCommand {
 
         List<Message.Attachment> attachments = message.getAttachments();
         for (Message.Attachment attachment : attachments) {
-            if(attachment.isImage()) {
+            if (attachment.isImage()) {
                 attachment.getProxy().download().thenAccept(stream -> {
                     BufferedImage image;
                     try {
@@ -147,12 +146,12 @@ public class PetPetGifCommand extends CoreCommand {
                             event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
                         } catch (IOException exception) {
                             event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                                    .queue();
+                                .queue();
                         }
                     });
                 }).exceptionally(exception -> {
                     event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                            .queue();
+                        .queue();
                     return null;
                 });
 
@@ -163,12 +162,14 @@ public class PetPetGifCommand extends CoreCommand {
 
     @Override
     protected void runUserCtx(UserContextInteractionEvent event) {
-        if(event.getTargetMember() == null) {
+        if (event.getTargetMember() == null) {
             reply(event, "❌ You must be in a server to use this command!", false);
             return;
         }
 
-        String avatar = event.isFromGuild() ? event.getTargetMember().getEffectiveAvatarUrl() : event.getTarget().getEffectiveAvatarUrl();
+        String avatar = event.isFromGuild()
+            ? event.getTargetMember().getEffectiveAvatarUrl()
+            : event.getTarget().getEffectiveAvatarUrl();
 
         reply(event, "⏸️ Creating pet pet gif...");
 
@@ -188,7 +189,7 @@ public class PetPetGifCommand extends CoreCommand {
                 event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
             } catch (IOException exception) {
                 event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
-                        .queue();
+                    .queue();
             }
         });
     }

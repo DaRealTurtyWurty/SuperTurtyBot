@@ -1,12 +1,12 @@
 package dev.darealturtywurty.superturtybot.modules.quest.impl;
 
 public record CollectablesEarnedConfig(
-        int requiredCollectables,
-        int requiredCollections,
-        int requiredDays,
-        String collectionType,
-        int minimumRarityOrdinal,
-        long maximumResponseTimeMillis
+    int requiredCollectables,
+    int requiredCollections,
+    int requiredDays,
+    String collectionType,
+    int minimumRarityOrdinal,
+    long maximumResponseTimeMillis
 ) {
     public CollectablesEarnedConfig(int requiredCollectables) {
         this(requiredCollectables, 0, 0, null, -1, 0);

@@ -27,8 +27,8 @@ public class AddRoleToThreadCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.ROLE, "role", "The role to add to the channel.", false),
-                new OptionData(OptionType.CHANNEL, "channel", "The channel to add the role to.", false));
+            new OptionData(OptionType.ROLE, "role", "The role to add to the channel.", false),
+            new OptionData(OptionType.CHANNEL, "channel", "The channel to add the role to.", false));
     }
 
     @Override
@@ -69,51 +69,50 @@ public class AddRoleToThreadCommand extends CoreCommand {
     @Override
     protected void runSlash(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
-        if(guild == null || event.getMember() == null) {
+        if (guild == null || event.getMember() == null) {
             reply(event, "❌ This command can only be used in a server!", false, true);
             return;
         }
 
-        if(!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
             reply(event, "❌ You do not have permission to use this command!", false, true);
             return;
         }
 
-
         GuildChannel guildChannel = event.getOption("channel", event.getGuildChannel(), OptionMapping::getAsChannel);
-        if(guildChannel == null) {
+        if (guildChannel == null) {
             reply(event, "❌ You must provide a channel!", false, true);
             return;
         }
 
-        if(!(guildChannel instanceof ThreadChannel threadChannel)) {
+        if (!(guildChannel instanceof ThreadChannel threadChannel)) {
             reply(event, "❌ You must provide a thread!", false, true);
             return;
         }
 
         Role role = event.getOption("role", guild.getPublicRole(), OptionMapping::getAsRole);
-        if(role == null) {
+        if (role == null) {
             reply(event, "❌ You must provide a role!", false, true);
             return;
         }
 
-        if(!guild.getRoles().contains(role)) {
+        if (!guild.getRoles().contains(role)) {
             reply(event, "❌ That role does not exist in this server!", false, true);
             return;
         }
 
         Member selfMember = guild.getSelfMember();
-        if(!selfMember.canInteract(role)) {
+        if (!selfMember.canInteract(role)) {
             reply(event, "❌ I cannot interact with that role!", false, true);
             return;
         }
 
-        if(!threadChannel.canTalk(selfMember)) {
+        if (!threadChannel.canTalk(selfMember)) {
             reply(event, "❌ I cannot interact with that thread!", false, true);
             return;
         }
 
-        if(threadChannel.isLocked()) {
+        if (threadChannel.isLocked()) {
             reply(event, "❌ That thread is locked!", false, true);
             return;
         }
@@ -121,15 +120,15 @@ public class AddRoleToThreadCommand extends CoreCommand {
         event.deferReply().queue();
 
         guild.findMembersWithRoles(role).onSuccess(members -> {
-            if(members.isEmpty()) {
+            if (members.isEmpty()) {
                 event.getHook().editOriginal("❌ That role has no members!").queue();
                 return;
             }
 
             List<String> messages = new ArrayList<>();
             var strBuilder = new StringBuilder();
-            for(Member member : members) {
-                if(strBuilder.length() + member.getAsMention().length() + 2 > 2000) {
+            for (Member member : members) {
+                if (strBuilder.length() + member.getAsMention().length() + 2 > 2000) {
                     messages.add(strBuilder.toString());
                     strBuilder = new StringBuilder();
                 }
@@ -137,24 +136,23 @@ public class AddRoleToThreadCommand extends CoreCommand {
                 strBuilder.append(member.getAsMention()).append(" ");
             }
 
-            if(!strBuilder.isEmpty()) {
+            if (!strBuilder.isEmpty()) {
                 messages.add(strBuilder.toString());
             }
 
-            for(String message : messages) {
+            for (String message : messages) {
                 threadChannel.sendMessageEmbeds(
-                        new EmbedBuilder()
-                                .setDescription("✅ Added " + role.getAsMention() + " to " + message)
-                                .build())
-                        .queue(sentMessage ->
-                                sentMessage.editMessage(message).queue(ignored ->
-                                        ignored.delete().queueAfter(1, TimeUnit.SECONDS)));
+                    new EmbedBuilder()
+                        .setDescription("✅ Added " + role.getAsMention() + " to " + message)
+                        .build())
+                    .queue(sentMessage -> sentMessage.editMessage(message)
+                        .queue(ignored -> ignored.delete().queueAfter(1, TimeUnit.SECONDS)));
             }
 
             event.getHook()
-                    .editOriginal("✅ Added " + role.getAsMention() + " to " + threadChannel.getAsMention() + "!")
-                    .setAllowedMentions(List.of())
-                    .queue();
+                .editOriginal("✅ Added " + role.getAsMention() + " to " + threadChannel.getAsMention() + "!")
+                .setAllowedMentions(List.of())
+                .queue();
         });
     }
 }

@@ -30,7 +30,8 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
 
     private VoiceChannelNotifierManager() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::processNotifications, 5, NOTIFICATION_SCAN_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::processNotifications, 5, NOTIFICATION_SCAN_INTERVAL_SECONDS,
+            TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate(this::cleanupTrackedChannels, 30, 30, TimeUnit.MINUTES);
         ShutdownHooks.register(scheduler::shutdown);
     }
@@ -50,7 +51,8 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
             }
 
             trackedVoiceChannels.forEach(trackedVoiceChannel -> {
-                VoiceChannelNotifier notifier = voiceChannelNotifiers.get(Long.toString(trackedVoiceChannel.channelId()));
+                VoiceChannelNotifier notifier = voiceChannelNotifiers
+                    .get(Long.toString(trackedVoiceChannel.channelId()));
                 if (notifier == null || !notifier.isEnabled())
                     return;
 
@@ -59,16 +61,16 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
                     return;
 
                 List<TrackedUser> activeUsers = trackedVoiceChannel.trackedUsers().stream()
-                        .filter(TrackedUser::isInChannel)
-                        .toList();
+                    .filter(TrackedUser::isInChannel)
+                    .toList();
                 if (activeUsers.isEmpty())
                     return;
 
                 if (notifier.isAnnouncePerJoin()) {
                     activeUsers.stream()
-                            .filter(trackedUser -> !trackedUser.notified())
-                            .filter(trackedUser -> trackedUser.hasBeenInChannelFor(notifier.getCooldownMs()))
-                            .forEach(trackedUser -> notifyUser(guild, trackedVoiceChannel, trackedUser, channel, notifier));
+                        .filter(trackedUser -> !trackedUser.notified())
+                        .filter(trackedUser -> trackedUser.hasBeenInChannelFor(notifier.getCooldownMs()))
+                        .forEach(trackedUser -> notifyUser(guild, trackedVoiceChannel, trackedUser, channel, notifier));
                     return;
                 }
 
@@ -83,8 +85,13 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
         });
     }
 
-    private void notifyUser(Guild guild, TrackedVoiceChannel trackedVoiceChannel, TrackedUser trackedUser,
-                            VoiceChannel channel, VoiceChannelNotifier notifier) {
+    private void notifyUser(
+        Guild guild,
+        TrackedVoiceChannel trackedVoiceChannel,
+        TrackedUser trackedUser,
+        VoiceChannel channel,
+        VoiceChannelNotifier notifier
+    ) {
         Member member = guild.getMemberById(trackedUser.userId());
         if (member == null)
             return;
@@ -96,14 +103,11 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
     private void cleanupTrackedChannels() {
         long now = System.currentTimeMillis();
         trackedChannels.forEach((_, trackedVoiceChannels) -> {
-            trackedVoiceChannels.forEach(trackedVoiceChannel ->
-                    trackedVoiceChannel.trackedUsers()
-                            .removeIf(trackedUser ->
-                                    !trackedUser.isInChannel()
-                                            && now - trackedUser.leftAt() > TimeUnit.MINUTES.toMillis(30)));
+            trackedVoiceChannels.forEach(trackedVoiceChannel -> trackedVoiceChannel.trackedUsers()
+                .removeIf(trackedUser -> !trackedUser.isInChannel()
+                    && now - trackedUser.leftAt() > TimeUnit.MINUTES.toMillis(30)));
 
-            trackedVoiceChannels.removeIf(trackedVoiceChannel ->
-                    trackedVoiceChannel.trackedUsers().isEmpty());
+            trackedVoiceChannels.removeIf(trackedVoiceChannel -> trackedVoiceChannel.trackedUsers().isEmpty());
         });
     }
 
@@ -121,7 +125,7 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
         }
 
         List<TrackedVoiceChannel> trackedVoiceChannels = trackedChannels.computeIfAbsent(guild.getIdLong(),
-                _ -> new CopyOnWriteArrayList<>());
+            _ -> new CopyOnWriteArrayList<>());
 
         AudioChannelUnion channelJoined = event.getChannelJoined();
         AudioChannelUnion channelLeft = event.getChannelLeft();
@@ -129,22 +133,25 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
             VoiceChannelNotifier notifier = voiceChannelNotifiers.get(Long.toString(channelJoined.getIdLong()));
             if (notifier != null && notifier.isEnabled()) {
                 trackedVoiceChannels.stream()
-                        .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelJoined.getIdLong())
-                        .findFirst()
-                        .ifPresentOrElse(trackedVoiceChannel -> trackedVoiceChannel.trackUser(event.getMember().getIdLong()),
-                                () -> {
-                                    var newTrackedVoiceChannel = new TrackedVoiceChannel(channelJoined.getIdLong(), new CopyOnWriteArrayList<>());
-                                    newTrackedVoiceChannel.trackUser(event.getMember().getIdLong());
-                                    trackedVoiceChannels.add(newTrackedVoiceChannel);
-                                });
+                    .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelJoined.getIdLong())
+                    .findFirst()
+                    .ifPresentOrElse(
+                        trackedVoiceChannel -> trackedVoiceChannel.trackUser(event.getMember().getIdLong()),
+                        () -> {
+                            var newTrackedVoiceChannel = new TrackedVoiceChannel(channelJoined.getIdLong(),
+                                new CopyOnWriteArrayList<>());
+                            newTrackedVoiceChannel.trackUser(event.getMember().getIdLong());
+                            trackedVoiceChannels.add(newTrackedVoiceChannel);
+                        });
 
                 if (notifier.getCooldownMs() <= 0L) {
                     notifier.sendNotification(event.getMember(), channelJoined, false);
                     trackedVoiceChannels.stream()
-                            .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelJoined.getIdLong())
-                            .findFirst()
-                            .ifPresent(trackedVoiceChannel -> trackedVoiceChannel.markUserNotified(event.getMember().getIdLong(),
-                                    trackedVoiceChannel.latestJoinTimeFor(event.getMember().getIdLong())));
+                        .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelJoined.getIdLong())
+                        .findFirst()
+                        .ifPresent(
+                            trackedVoiceChannel -> trackedVoiceChannel.markUserNotified(event.getMember().getIdLong(),
+                                trackedVoiceChannel.latestJoinTimeFor(event.getMember().getIdLong())));
                 }
             }
         }
@@ -153,9 +160,9 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
             VoiceChannelNotifier notifier = voiceChannelNotifiers.get(Long.toString(channelLeft.getIdLong()));
             if (notifier != null && notifier.isEnabled()) {
                 trackedVoiceChannels.stream()
-                        .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelLeft.getIdLong())
-                        .findFirst()
-                        .ifPresent(trackedVoiceChannel -> trackedVoiceChannel.untrackUser(event.getMember().getIdLong()));
+                    .filter(trackedVoiceChannel -> trackedVoiceChannel.channelId() == channelLeft.getIdLong())
+                    .findFirst()
+                    .ifPresent(trackedVoiceChannel -> trackedVoiceChannel.untrackUser(event.getMember().getIdLong()));
 
                 if (notifier.isNotifyLeaves()) {
                     notifier.sendNotification(event.getMember(), channelLeft, true);
@@ -165,23 +172,22 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
     }
 
     public void saveGuildNotifiers(GuildData guildData) {
-        Document notifierDocument = new Document();
-        guildData.getVoiceChannelNotifiers().forEach((channelId, notifier) ->
-                notifierDocument.append(channelId, new Document()
-                        .append("voiceChannelId", notifier.getVoiceChannelId())
-                        .append("sendToChannelId", notifier.getSendToChannelId())
-                        .append("mentionRoles", notifier.getMentionRoles())
-                        .append("message", notifier.getMessage())
-                        .append("enabled", notifier.isEnabled())
-                        .append("announcePerJoin", notifier.isAnnouncePerJoin())
-                        .append("notifyLeaves", notifier.isNotifyLeaves())
-                        .append("cooldownMs", notifier.getCooldownMs())));
+        var notifierDocument = new Document();
+        guildData.getVoiceChannelNotifiers()
+            .forEach((channelId, notifier) -> notifierDocument.append(channelId, new Document()
+                .append("voiceChannelId", notifier.getVoiceChannelId())
+                .append("sendToChannelId", notifier.getSendToChannelId())
+                .append("mentionRoles", notifier.getMentionRoles())
+                .append("message", notifier.getMessage())
+                .append("enabled", notifier.isEnabled())
+                .append("announcePerJoin", notifier.isAnnouncePerJoin())
+                .append("notifyLeaves", notifier.isNotifyLeaves())
+                .append("cooldownMs", notifier.getCooldownMs())));
 
         Database.getDatabase().guildData.updateOne(
-                Filters.eq("guild", guildData.getGuild()),
-                new Document("$set", new Document("voiceChannelNotifiers", notifierDocument)),
-                new UpdateOptions().upsert(true)
-        );
+            Filters.eq("guild", guildData.getGuild()),
+            new Document("$set", new Document("voiceChannelNotifiers", notifierDocument)),
+            new UpdateOptions().upsert(true));
     }
 
     private record TrackedVoiceChannel(long channelId, List<TrackedUser> trackedUsers) {
@@ -191,27 +197,28 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
 
         public void untrackUser(long userId) {
             trackedUsers.stream()
-                    .filter(trackedUser -> trackedUser.userId() == userId && trackedUser.isInChannel())
-                    .findFirst()
-                    .ifPresent(trackedUser -> trackedUsers.set(trackedUsers.indexOf(trackedUser),
-                            new TrackedUser(trackedUser.userId(), trackedUser.joinedAt(), System.currentTimeMillis(),
-                                    trackedUser.notified())));
+                .filter(trackedUser -> trackedUser.userId() == userId && trackedUser.isInChannel())
+                .findFirst()
+                .ifPresent(trackedUser -> trackedUsers.set(trackedUsers.indexOf(trackedUser),
+                    new TrackedUser(trackedUser.userId(), trackedUser.joinedAt(), System.currentTimeMillis(),
+                        trackedUser.notified())));
         }
 
         public void markUserNotified(long userId, long joinedAt) {
             trackedUsers.stream()
-                    .filter(trackedUser -> trackedUser.userId() == userId && trackedUser.joinedAt() == joinedAt && trackedUser.isInChannel())
-                    .findFirst()
-                    .ifPresent(trackedUser -> trackedUsers.set(trackedUsers.indexOf(trackedUser),
-                            new TrackedUser(trackedUser.userId(), trackedUser.joinedAt(), trackedUser.leftAt(), true)));
+                .filter(trackedUser -> trackedUser.userId() == userId && trackedUser.joinedAt() == joinedAt
+                    && trackedUser.isInChannel())
+                .findFirst()
+                .ifPresent(trackedUser -> trackedUsers.set(trackedUsers.indexOf(trackedUser),
+                    new TrackedUser(trackedUser.userId(), trackedUser.joinedAt(), trackedUser.leftAt(), true)));
         }
 
         public long latestJoinTimeFor(long userId) {
             return trackedUsers.stream()
-                    .filter(trackedUser -> trackedUser.userId() == userId)
-                    .mapToLong(TrackedUser::joinedAt)
-                    .max()
-                    .orElse(-1L);
+                .filter(trackedUser -> trackedUser.userId() == userId)
+                .mapToLong(TrackedUser::joinedAt)
+                .max()
+                .orElse(-1L);
         }
     }
 
@@ -222,8 +229,8 @@ public class VoiceChannelNotifierManager extends ListenerAdapter {
 
         public boolean hasBeenInChannelFor(long duration) {
             return isInChannel()
-                    ? System.currentTimeMillis() - joinedAt >= duration
-                    : leftAt - joinedAt >= duration;
+                ? System.currentTimeMillis() - joinedAt >= duration
+                : leftAt - joinedAt >= duration;
         }
     }
 }

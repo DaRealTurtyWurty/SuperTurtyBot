@@ -12,9 +12,8 @@ public final class GeographyGameSizeRule implements QuestRule<GeographyGameSizeC
 
     @Override
     public void apply(GeographyGameSizeConfig config, GeographyCompletionsState state, QuestEvent event) {
-        if (event instanceof QuestEvent.GeographyGameCompleted(
-                String sourceId, String gameType, int gameSize, _
-        ) && config.gameType().equals(gameType) && gameSize >= config.requiredSize()) {
+        if (event instanceof QuestEvent.GeographyGameCompleted(String sourceId, String gameType, int gameSize, _)
+            && config.gameType().equals(gameType) && gameSize >= config.requiredSize()) {
             state.qualifyingGameIds.add(sourceId);
         }
     }

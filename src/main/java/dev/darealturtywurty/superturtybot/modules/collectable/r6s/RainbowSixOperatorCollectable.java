@@ -18,7 +18,14 @@ public class RainbowSixOperatorCollectable extends Collectable {
     private final CollectableRarity rarity;
     private final String note;
 
-    private RainbowSixOperatorCollectable(String name, String emoji, String question, Answer answer, CollectableRarity rarity, String note) {
+    private RainbowSixOperatorCollectable(
+        String name,
+        String emoji,
+        String question,
+        Answer answer,
+        CollectableRarity rarity,
+        String note
+    ) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
@@ -57,7 +64,8 @@ public class RainbowSixOperatorCollectable extends Collectable {
         public Builder emoji(String name) {
             long emojiId = EmojiReader.getEmoji(name);
             if (emojiId == 0)
-                throw new IllegalArgumentException("Emoji with name '" + name + "' does not exist in " + EmojiReader.getEmojisPath().getFileName() + "!");
+                throw new IllegalArgumentException("Emoji with name '" + name + "' does not exist in "
+                    + EmojiReader.getEmojisPath().getFileName() + "!");
 
             return emoji(name, emojiId);
         }
@@ -87,7 +95,8 @@ public class RainbowSixOperatorCollectable extends Collectable {
         }
 
         public Builder answerYesOrNo(boolean yes) {
-            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah", yes ? "true" : "false");
+            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah",
+                yes ? "true" : "false");
             return this;
         }
 
@@ -130,8 +139,9 @@ public class RainbowSixOperatorCollectable extends Collectable {
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            if(note != null && note.isBlank())
+            if (note != null && note.isBlank()) {
                 note = null;
+            }
 
             return new RainbowSixOperatorCollectable(name, emoji, question, answer, rarity, note);
         }

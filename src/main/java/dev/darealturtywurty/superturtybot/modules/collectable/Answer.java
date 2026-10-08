@@ -9,9 +9,8 @@ import java.util.function.Function;
 public record Answer(AnswerSegment... segments) {
     public boolean matches(String input) {
         for (AnswerSegment segment : segments) {
-            if (!segment.matches(input)) {
+            if (!segment.matches(input))
                 return false;
-            }
         }
 
         return true;
@@ -41,9 +40,9 @@ public record Answer(AnswerSegment... segments) {
 
         default T segment(String segment, boolean caseSensitive, boolean contains) {
             return segment(new StringAnswerSegment.Builder()
-                    .segment(segment)
-                    .caseSensitive(caseSensitive)
-                    .contains(contains));
+                .segment(segment)
+                .caseSensitive(caseSensitive)
+                .contains(contains));
         }
 
         default T segment(String segment) {
@@ -105,20 +104,21 @@ public record Answer(AnswerSegment... segments) {
         }
     }
 
-    public record StringAnswerSegment(String segment, boolean caseSensitive,
-                                      boolean contains) implements AnswerSegment {
+    public record StringAnswerSegment(
+        String segment,
+        boolean caseSensitive,
+        boolean contains
+    ) implements AnswerSegment {
         @Override
         public boolean matches(String input) {
             if (caseSensitive) {
-                if (contains) {
+                if (contains)
                     return input.contains(segment);
-                }
                 return input.equals(segment);
             }
 
-            if (contains) {
+            if (contains)
                 return input.toLowerCase(Locale.ROOT).contains(segment.toLowerCase(Locale.ROOT));
-            }
 
             return input.equalsIgnoreCase(segment);
         }
@@ -167,9 +167,8 @@ public record Answer(AnswerSegment... segments) {
         @Override
         public boolean matches(String input) {
             for (AnswerSegment segment : segments) {
-                if (segment.matches(input)) {
+                if (segment.matches(input))
                     return true;
-                }
             }
 
             return false;

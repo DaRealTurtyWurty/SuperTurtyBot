@@ -37,7 +37,8 @@ public class PropertyUpgradeSubcommand extends PropertySubcommand {
 
         List<BigInteger> upgradePrices = property.getUpgradePrices();
         int upgradeLevel = property.getUpgradeLevel();
-        if (upgradePrices == null || upgradePrices.isEmpty() || upgradeLevel < 0 || upgradeLevel >= upgradePrices.size()) {
+        if (upgradePrices == null || upgradePrices.isEmpty() || upgradeLevel < 0
+            || upgradeLevel >= upgradePrices.size()) {
             PropertyCommand.hookReply(event, "❌ This property cannot be upgraded further!");
             return;
         }
@@ -45,7 +46,7 @@ public class PropertyUpgradeSubcommand extends PropertySubcommand {
         BigInteger upgradeCost = upgradePrices.get(upgradeLevel);
         if (!EconomyManager.removeBalance(account, upgradeCost)) {
             PropertyCommand.hookReply(event, "❌ You need another %s to upgrade this property!"
-                    .formatted(StringUtils.numberFormat(upgradeCost.subtract(EconomyManager.getBalance(account)), config)));
+                .formatted(StringUtils.numberFormat(upgradeCost.subtract(EconomyManager.getBalance(account)), config)));
             return;
         }
 
@@ -53,13 +54,12 @@ public class PropertyUpgradeSubcommand extends PropertySubcommand {
         account.addTransaction(upgradeCost.negate(), MoneyTransaction.PROPERTY);
         EconomyManager.updateAccount(account);
         QuestManager.INSTANCE.recordEconomyAction(
-                guild.getIdLong(),
-                event.getUser().getIdLong(),
-                QuestManager.ECONOMY_PROPERTY_UPGRADED,
-                event.getId()
-        );
+            guild.getIdLong(),
+            event.getUser().getIdLong(),
+            QuestManager.ECONOMY_PROPERTY_UPGRADED,
+            event.getId());
 
         PropertyCommand.hookReply(event, "✅ Upgraded %s to level %d for %s."
-                .formatted(property.getName(), property.getUpgradeLevel(), StringUtils.numberFormat(upgradeCost, config)));
+            .formatted(property.getName(), property.getUpgradeLevel(), StringUtils.numberFormat(upgradeCost, config)));
     }
 }

@@ -12,7 +12,7 @@ public interface BotCommand {
     default List<OptionData> createOptions() {
         return List.of();
     }
-    
+
     default List<SubcommandData> createSubcommandData() {
         return List.of();
     }
@@ -24,13 +24,13 @@ public interface BotCommand {
     default List<SubcommandCommand> getSubcommands() {
         return List.of();
     }
-    
+
     CommandCategory getCategory();
-    
+
     String getDescription();
-    
+
     String getName();
-    
+
     default String getRichName() {
         return getName();
     }

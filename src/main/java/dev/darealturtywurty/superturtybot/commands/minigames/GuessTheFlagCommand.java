@@ -36,7 +36,8 @@ public class GuessTheFlagCommand extends SubcommandCommand {
 
     public GuessTheFlagCommand() {
         super("flag", "Guess the flag of a region!");
-        addOption(OptionType.BOOLEAN, "include-territories", "Whether to include territories in the flag guessing.", false);
+        addOption(OptionType.BOOLEAN, "include-territories", "Whether to include territories in the flag guessing.",
+            false);
         addOption(OptionType.BOOLEAN, "exclude-countries", "Whether to exclude countries in the flag guessing.", false);
     }
 
@@ -67,7 +68,7 @@ public class GuessTheFlagCommand extends SubcommandCommand {
             return;
         }
 
-        RegionExcludeRequestData.Builder builder = new RegionExcludeRequestData.Builder();
+        var builder = new RegionExcludeRequestData.Builder();
         if (excludeCountries) {
             builder.excludeCountries();
         }
@@ -96,32 +97,34 @@ public class GuessTheFlagCommand extends SubcommandCommand {
 
         try (var upload = FileUpload.fromData(outputStream.toByteArray(), "flag.png")) {
             event.getHook().editOriginal("🚩 Guess the flag of this region!")
-                    .setFiles(upload)
-                    .queue(message -> message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
-                        Either<List<Region>, HttpStatus> allRegions = ApiHandler.getAllRegions(data);
-                        if (allRegions.isRight()) {
-                            Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
-                                    allRegions.getRight().getCode());
-                            event.getHook().sendMessage("❌ An error occurred while trying to get all regions!").queue(ignored -> thread.delete().queue());
-                            return;
-                        }
+                .setFiles(upload)
+                .queue(message -> message.createThreadChannel(event.getUser().getName() + "'s game").queue(thread -> {
+                    Either<List<Region>, HttpStatus> allRegions = ApiHandler.getAllRegions(data);
+                    if (allRegions.isRight()) {
+                        Constants.LOGGER.error("An error occurred while trying to get all regions! Status code: {}",
+                            allRegions.getRight().getCode());
+                        event.getHook().sendMessage("❌ An error occurred while trying to get all regions!")
+                            .queue(_ -> thread.delete().queue());
+                        return;
+                    }
 
-                        var game = new Game(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
-                                thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), allRegions.getLeft(), pair);
-                        GAMES.put(message.getIdLong(), game);
+                    var game = new Game(event.getGuild().getIdLong(), event.getChannel().getIdLong(),
+                        thread.getIdLong(), message.getIdLong(), event.getUser().getIdLong(), allRegions.getLeft(),
+                        pair);
+                    GAMES.put(message.getIdLong(), game);
 
-                        message.editMessageComponents(
-                                        ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
-                                .queue();
+                    message.editMessageComponents(
+                        ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
+                        .queue();
 
-                        thread.sendMessage("✅ The game has started " + event.getUser().getAsMention() + "!").queue();
+                    thread.sendMessage("✅ The game has started " + event.getUser().getAsMention() + "!").queue();
 
-                        try {
-                            outputStream.close();
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error("An error occurred while closing the output stream!", exception);
-                        }
-                    }));
+                    try {
+                        outputStream.close();
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error("An error occurred while closing the output stream!", exception);
+                    }
+                }));
         } catch (IOException exception) {
             event.getHook().sendMessage("❌ An error occurred while uploading the flag!").queue();
             Constants.LOGGER.error("An error occurred while uploading the flag!", exception);
@@ -130,14 +133,18 @@ public class GuessTheFlagCommand extends SubcommandCommand {
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) return;
-        if (event.getButton().getCustomId() == null) return;
-        if (!event.getButton().getCustomId().startsWith("guess-flag-")) return;
+        if (!event.isFromGuild() || event.getGuild() == null)
+            return;
+        if (event.getButton().getCustomId() == null)
+            return;
+        if (!event.getButton().getCustomId().startsWith("guess-flag-"))
+            return;
 
         long messageId = Long.parseLong(event.getButton().getCustomId().replace("guess-flag-", ""));
 
         Game game = GAMES.get(messageId);
-        if (game == null) return;
+        if (game == null)
+            return;
 
         if (game.getUserId() != event.getUser().getIdLong()) {
             event.deferEdit().setComponents(event.getMessage().getComponents()).queue();
@@ -147,29 +154,34 @@ public class GuessTheFlagCommand extends SubcommandCommand {
         GAMES.remove(messageId, game);
 
         ThreadChannel thread = event.getGuild().getThreadChannelById(game.getChannelId());
-        if (thread == null) return;
+        if (thread == null)
+            return;
 
         thread.sendMessageFormat("Game cancelled! The region was %s!", game.flag.getRight().getName())
-                .queue($ -> thread.getManager().setArchived(true).setLocked(true).queue());
+            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
 
         event.editComponents().queue();
     }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (!event.isFromGuild()) return;
+        if (!event.isFromGuild())
+            return;
 
         // check if the user has a game running
         Game game = GAMES.values().stream()
-                .filter(g -> g.getUserId() == event.getAuthor().getIdLong() && g.getGuildId() == event.getGuild()
-                        .getIdLong() && g.getChannelId() == event.getChannel().getIdLong()).findFirst().orElse(null);
-        if (game == null) return;
+            .filter(g -> g.getUserId() == event.getAuthor().getIdLong() && g.getGuildId() == event.getGuild()
+                .getIdLong() && g.getChannelId() == event.getChannel().getIdLong())
+            .findFirst().orElse(null);
+        if (game == null)
+            return;
 
         // check if the message is a valid region
         String region = event.getMessage().getContentRaw().trim();
 
         // check if the region is valid
-        if (game.getAllRegions().stream().noneMatch(r -> r.getAliases().stream().anyMatch(region::equalsIgnoreCase) || r.getName().equalsIgnoreCase(region)))
+        if (game.getAllRegions().stream().noneMatch(
+            r -> r.getAliases().stream().anyMatch(region::equalsIgnoreCase) || r.getName().equalsIgnoreCase(region)))
             return;
 
         // check if the region has already been guessed
@@ -179,8 +191,7 @@ public class GuessTheFlagCommand extends SubcommandCommand {
         // add the region to the game
         if (game.guess(region)) {
             QuestManager.INSTANCE.recordGeographyAnswer(
-                    event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), true
-            );
+                event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), true);
             FileUpload flag = null;
             try (var outputStream = new ByteArrayOutputStream()) {
                 ImageIO.write(game.getFlag().getLeft(), "png", outputStream);
@@ -195,24 +206,24 @@ public class GuessTheFlagCommand extends SubcommandCommand {
             }
 
             FileUpload finalFlag = flag;
-            event.getChannel().sendMessageFormat("✅ Correct guess! The region was %s!", game.getFlag().getRight().getName())
-                    .setFiles(flag)
-                    .queue($ -> {
-                        if (game.isOver()) {
-                            event.getChannel().sendMessage("❌ You have run out of guesses!").queue();
-                            return;
-                        }
+            event.getChannel()
+                .sendMessageFormat("✅ Correct guess! The region was %s!", game.getFlag().getRight().getName())
+                .setFiles(flag)
+                .queue(_ -> {
+                    if (game.isOver()) {
+                        event.getChannel().sendMessage("❌ You have run out of guesses!").queue();
+                        return;
+                    }
 
-                        event.getChannel().sendMessage("🚩 Guess the flag of this region!")
-                                .setFiles(finalFlag)
-                                .queue(message -> message.editMessageComponents(
-                                                ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
-                                        .queue());
-                    });
+                    event.getChannel().sendMessage("🚩 Guess the flag of this region!")
+                        .setFiles(finalFlag)
+                        .queue(message -> message.editMessageComponents(
+                            ActionRow.of(Button.danger("guess-flag-" + message.getId(), Emoji.fromFormatted("❌"))))
+                            .queue());
+                });
         } else {
             QuestManager.INSTANCE.recordGeographyAnswer(
-                    event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), false
-            );
+                event.getGuild(), event.getAuthor(), "flag", event.getMessageIdLong(), false);
             event.getChannel().sendMessage("❌ Incorrect guess!").queue();
         }
     }
@@ -226,7 +237,15 @@ public class GuessTheFlagCommand extends SubcommandCommand {
         private final List<String> guesses = new ArrayList<>();
         private int incorrectGuesses = 0;
 
-        public Game(long guildId, long ownerChannelId, long channelId, long messageId, long userId, List<Region> allRegions, Pair<BufferedImage, Region> flag) {
+        public Game(
+            long guildId,
+            long ownerChannelId,
+            long channelId,
+            long messageId,
+            long userId,
+            List<Region> allRegions,
+            Pair<BufferedImage, Region> flag
+        ) {
             this.guildId = guildId;
             this.ownerChannelId = ownerChannelId;
             this.channelId = channelId;
@@ -237,9 +256,8 @@ public class GuessTheFlagCommand extends SubcommandCommand {
         }
 
         public boolean guess(@NotNull String guess) {
-            if (this.guesses.stream().anyMatch(guess::equalsIgnoreCase)) {
+            if (this.guesses.stream().anyMatch(guess::equalsIgnoreCase))
                 return false;
-            }
 
             for (Region region : this.allRegions) {
                 if (region.getName().equalsIgnoreCase(guess)) {

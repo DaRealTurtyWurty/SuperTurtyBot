@@ -10,11 +10,14 @@ import java.io.IOException;
 public final class EmptyCallback implements Callback {
     public static final EmptyCallback INSTANCE = new EmptyCallback();
 
-    private EmptyCallback() {}
+    private EmptyCallback() {
+    }
 
     @Override
-    public void onFailure(@NotNull Call call, @NotNull IOException exception) {}
+    public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+    }
 
     @Override
-    public void onResponse(@NotNull Call call, @NotNull Response response) {}
+    public void onResponse(@NotNull Call call, @NotNull Response response) {
+    }
 }

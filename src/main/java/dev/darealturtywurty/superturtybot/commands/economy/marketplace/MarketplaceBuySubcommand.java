@@ -21,15 +21,14 @@ public class MarketplaceBuySubcommand extends MarketplaceSubcommand {
         MarketplaceListing listing = MarketplaceService.buy(guild.getIdLong(), event.getUser().getIdLong(), id);
         if (MarketplaceService.RENTAL.equals(listing.getType())) {
             QuestManager.INSTANCE.recordEconomyAction(
-                    guild.getIdLong(),
-                    listing.getSeller(),
-                    QuestManager.ECONOMY_PROPERTY_RENTED_TO_USER,
-                    listing.getId()
-            );
+                guild.getIdLong(),
+                listing.getSeller(),
+                QuestManager.ECONOMY_PROPERTY_RENTED_TO_USER,
+                listing.getId());
         } else {
             QuestManager.INSTANCE.recordMarketplaceItemSold(guild, listing.getSeller(), listing.getId());
         }
         event.getHook().editOriginalEmbeds(MarketplaceCommand.result("Purchase complete", listing, config)
-                .setFooter("Seller paid and item transferred.").build()).queue();
+            .setFooter("Seller paid and item transferred.").build()).queue();
     }
 }

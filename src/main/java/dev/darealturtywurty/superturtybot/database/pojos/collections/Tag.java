@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class Tag {
     private long guild;
     private long user;
-    
+
     private String name;
     private String data;
 }

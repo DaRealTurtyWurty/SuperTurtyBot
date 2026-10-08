@@ -37,7 +37,8 @@ public class SteamCommand extends CoreCommand {
     static {
         new Thread(() -> {
             if (Environment.INSTANCE.steamKey().isPresent()) {
-                STEAM_WEB_CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get()).build();
+                STEAM_WEB_CLIENT = new SteamWebApiClient.SteamWebApiClientBuilder(Environment.INSTANCE.steamKey().get())
+                    .build();
             } else {
                 STEAM_WEB_CLIENT = null;
             }
@@ -56,7 +57,7 @@ public class SteamCommand extends CoreCommand {
         }
 
         String steamVanityUrl = "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=%s&vanityurl=%s"
-                .formatted(steamKey, steamName);
+            .formatted(steamKey, steamName);
 
         final Request request = new Request.Builder().url(steamVanityUrl).get().build();
         try (Response response = Constants.HTTP_CLIENT.newCall(request).execute()) {
@@ -84,10 +85,10 @@ public class SteamCommand extends CoreCommand {
             }
 
             var embed = new EmbedBuilder()
-                    .setTitle("Steam Name: " + steamName)
-                    .setDescription("Steam ID: " + vanityUrlResponse.getSteamid())
-                    .setColor(0x00adee)
-                    .build();
+                .setTitle("Steam Name: " + steamName)
+                .setDescription("Steam ID: " + vanityUrlResponse.getSteamid())
+                .setColor(0x00adee)
+                .build();
 
             event.getHook().sendMessageEmbeds(embed).queue();
         } catch (IOException exception) {
@@ -99,7 +100,10 @@ public class SteamCommand extends CoreCommand {
     private static void handleUserGames(SlashCommandInteractionEvent event) {
         String steamId = event.getOption("user", OptionMapping::getAsString);
         if (steamId == null) {
-            event.getHook().sendMessage("❌ You must provide a valid Steam User! Use `/steam-id` with your vanity url to get an ID.").queue();
+            event.getHook()
+                .sendMessage(
+                    "❌ You must provide a valid Steam User! Use `/steam-id` with your vanity url to get an ID.")
+                .queue();
             return;
         }
 
@@ -116,11 +120,11 @@ public class SteamCommand extends CoreCommand {
         }
 
         PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                .title("Steam ID: " + steamId)
-                .color(0x66c0f4)
-                .description("Total Games: %s".formatted(games.size()))
-                .authorOnly(event.getUser().getIdLong())
-                .build(event.getJDA());
+            .title("Steam ID: " + steamId)
+            .color(0x66c0f4)
+            .description("Total Games: %s".formatted(games.size()))
+            .authorOnly(event.getUser().getIdLong())
+            .build(event.getJDA());
 
         embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ Failed to list games!").queue());
     }
@@ -132,15 +136,16 @@ public class SteamCommand extends CoreCommand {
             return;
         }
 
-        String gameDetailsUrl = "https://store.steampowered.com/api/appdetails?appids=%s&l=english&cc=us".formatted(appID);
+        String gameDetailsUrl = "https://store.steampowered.com/api/appdetails?appids=%s&l=english&cc=us"
+            .formatted(appID);
         String playerCountUrl = "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?key=%s&appid=%s"
-                .formatted(steamKey, appID);
+            .formatted(steamKey, appID);
 
         final Request gameDetailsRequest = new Request.Builder().url(gameDetailsUrl).get().build();
         final Request playerCountRequest = new Request.Builder().url(playerCountUrl).get().build();
 
         try (Response gameDetailsResponse = Constants.HTTP_CLIENT.newCall(gameDetailsRequest).execute();
-             Response playerCountResponse = Constants.HTTP_CLIENT.newCall(playerCountRequest).execute()) {
+            Response playerCountResponse = Constants.HTTP_CLIENT.newCall(playerCountRequest).execute()) {
             if (!gameDetailsResponse.isSuccessful()) {
                 event.getHook().sendMessage("❌ Response was not successful!").queue();
                 return;
@@ -191,28 +196,28 @@ public class SteamCommand extends CoreCommand {
                 return;
             }
 
-            StringBuilder categories = new StringBuilder();
+            var categories = new StringBuilder();
             if (!appDetailsData.getCategories().isEmpty()) {
                 for (SteamAppDetailsData.Category category : appDetailsData.getCategories()) {
                     categories.append("`").append(category.getDescription()).append("`").append(", ");
                 }
             }
 
-            StringBuilder genres = new StringBuilder();
+            var genres = new StringBuilder();
             if (!appDetailsData.getGenres().isEmpty()) {
                 for (SteamAppDetailsData.Genre genre : appDetailsData.getGenres()) {
                     genres.append("`").append(genre.getDescription()).append("`").append(", ");
                 }
             }
 
-            StringBuilder developers = new StringBuilder();
+            var developers = new StringBuilder();
             if (!appDetailsData.getDevelopers().isEmpty()) {
                 for (String developer : appDetailsData.getDevelopers()) {
                     developers.append("`").append(developer).append("`").append(", ");
                 }
             }
 
-            StringBuilder publishers = new StringBuilder();
+            var publishers = new StringBuilder();
             if (!appDetailsData.getPublishers().isEmpty()) {
                 for (String publisher : appDetailsData.getPublishers()) {
                     publishers.append("`").append(publisher).append("`").append(", ");
@@ -220,13 +225,13 @@ public class SteamCommand extends CoreCommand {
             }
 
             var embed = new EmbedBuilder()
-                    .setTitle(appDetailsData.getName(), appDetailsData.getWebsite())
-                    .setThumbnail(appDetailsData.getCapsule_imagev5())
-                    .setDescription(appDetailsData.getShort_description())
-                    .setImage(appDetailsData.getHeader_image())
-                    .setFooter("Requested by %s".formatted(event.getUser().getEffectiveName()),
-                            event.getUser().getEffectiveAvatarUrl())
-                    .setTimestamp(Instant.now());
+                .setTitle(appDetailsData.getName(), appDetailsData.getWebsite())
+                .setThumbnail(appDetailsData.getCapsule_imagev5())
+                .setDescription(appDetailsData.getShort_description())
+                .setImage(appDetailsData.getHeader_image())
+                .setFooter("Requested by %s".formatted(event.getUser().getEffectiveName()),
+                    event.getUser().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now());
 
             if (!categories.isEmpty()) {
                 embed.addField("Categories", categories.substring(0, categories.length() - 2), true);
@@ -245,12 +250,12 @@ public class SteamCommand extends CoreCommand {
             }
 
             embed.addField("Platforms", """
-                    Windows: %s
-                    Mac: %s
-                    Linux: %s""".formatted(
-                    StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isWindows()),
-                    StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isMac()),
-                    StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isLinux())), false);
+                Windows: %s
+                Mac: %s
+                Linux: %s""".formatted(
+                StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isWindows()),
+                StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isMac()),
+                StringUtils.trueFalseToYesNo(appDetailsData.getPlatforms().isLinux())), false);
 
             if (appDetailsData.getPrice_overview() != null && !appDetailsData.is_free()) {
                 embed.addField("Price", appDetailsData.getPrice_overview().getFinal_formatted(), true);
@@ -267,27 +272,28 @@ public class SteamCommand extends CoreCommand {
             if (!screenshots.isEmpty()) {
                 SteamAppDetailsData.Screenshot screenshot0 = screenshots.getFirst();
                 var screenshot0Embed = new EmbedBuilder()
-                        .setTitle("Screenshots")
-                        .setUrl(appDetailsData.getWebsite() == null ?
-                                "https://store.steampowered.com/app/%s".formatted(appDetailsData.getSteam_appid()) :
-                                appDetailsData.getWebsite() + "/")
-                        .setImage(screenshot0.getPath_full())
-                        .setFooter("Requested by %s".formatted(event.getUser().getEffectiveName()),
-                                event.getUser().getEffectiveAvatarUrl())
-                        .setTimestamp(Instant.now());
+                    .setTitle("Screenshots")
+                    .setUrl(appDetailsData.getWebsite() == null
+                        ? "https://store.steampowered.com/app/%s".formatted(appDetailsData.getSteam_appid())
+                        : appDetailsData.getWebsite() + "/")
+                    .setImage(screenshot0.getPath_full())
+                    .setFooter("Requested by %s".formatted(event.getUser().getEffectiveName()),
+                        event.getUser().getEffectiveAvatarUrl())
+                    .setTimestamp(Instant.now());
                 screenshotEmbeds.add(screenshot0Embed);
 
-                appDetailsData.getScreenshots().subList(1, Math.min(appDetailsData.getScreenshots().size(), 4)).forEach(screenshot -> {
-                    var screenshotEmbed = new EmbedBuilder()
-                            .setUrl(appDetailsData.getWebsite() == null ?
-                                    "https://store.steampowered.com/app/%s".formatted(appDetailsData.getSteam_appid()) :
-                                    appDetailsData.getWebsite() + "/")
+                appDetailsData.getScreenshots().subList(1, Math.min(appDetailsData.getScreenshots().size(), 4))
+                    .forEach(screenshot -> {
+                        var screenshotEmbed = new EmbedBuilder()
+                            .setUrl(appDetailsData.getWebsite() == null
+                                ? "https://store.steampowered.com/app/%s".formatted(appDetailsData.getSteam_appid())
+                                : appDetailsData.getWebsite() + "/")
                             .setImage(screenshot.getPath_full())
                             .setFooter("Requested by %s".formatted(event.getUser().getEffectiveName()),
-                                    event.getUser().getEffectiveAvatarUrl())
+                                event.getUser().getEffectiveAvatarUrl())
                             .setTimestamp(Instant.now());
-                    screenshotEmbeds.add(screenshotEmbed);
-                });
+                        screenshotEmbeds.add(screenshotEmbed);
+                    });
             }
 
             List<MessageEmbed> embeds = new ArrayList<>();
@@ -303,9 +309,9 @@ public class SteamCommand extends CoreCommand {
     private static List<Game> getOwnedGames(String steamID) {
         try {
             var gameRequest = new GetOwnedGamesRequest.GetOwnedGamesRequestBuilder(steamID)
-                    .includeAppInfo(true)
-                    .includePlayedFreeGames(true)
-                    .buildRequest();
+                .includeAppInfo(true)
+                .includePlayedFreeGames(true)
+                .buildRequest();
 
             GetOwnedGames reqGame = STEAM_WEB_CLIENT.processRequest(gameRequest);
 
@@ -321,13 +327,12 @@ public class SteamCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("userid", "Gets the user's steam id from their vanity url.")
-                        .addOption(OptionType.STRING, "vanityurl", "The steam username of the user.", true),
-                new SubcommandData("usergames", "Gets the user's list of owned steam games.")
-                        .addOption(OptionType.STRING, "user", "The steamid or vanityurl of the user.", true),
-                new SubcommandData("game-details", "Gets information about a steam game.")
-                        .addOption(OptionType.STRING, "appid", "The appid of the game.", true)
-        );
+            new SubcommandData("userid", "Gets the user's steam id from their vanity url.")
+                .addOption(OptionType.STRING, "vanityurl", "The steam username of the user.", true),
+            new SubcommandData("usergames", "Gets the user's list of owned steam games.")
+                .addOption(OptionType.STRING, "user", "The steamid or vanityurl of the user.", true),
+            new SubcommandData("game-details", "Gets information about a steam game.")
+                .addOption(OptionType.STRING, "appid", "The appid of the game.", true));
     }
 
     @Override

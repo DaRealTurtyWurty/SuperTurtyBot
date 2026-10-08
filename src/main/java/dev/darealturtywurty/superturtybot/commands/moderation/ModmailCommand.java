@@ -12,11 +12,10 @@ public class ModmailCommand extends CoreCommand {
     public ModmailCommand() {
         super(new Types(true, false, false, false));
         addSubcommands(
-                new ModmailCreateSubcommand(),
-                new ModmailCloseSubcommand(),
-                new ModmailBlockSubcommand(),
-                new ModmailUnblockSubcommand()
-        );
+            new ModmailCreateSubcommand(),
+            new ModmailCloseSubcommand(),
+            new ModmailBlockSubcommand(),
+            new ModmailUnblockSubcommand());
     }
 
     @Override
@@ -37,10 +36,10 @@ public class ModmailCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return """
-                /modmail create <message>
-                /modmail close [reason]
-                /modmail block <user> [reason]
-                /modmail unblock <user>""";
+            /modmail create <message>
+            /modmail close [reason]
+            /modmail block <user> [reason]
+            /modmail unblock <user>""";
     }
 
     @Override

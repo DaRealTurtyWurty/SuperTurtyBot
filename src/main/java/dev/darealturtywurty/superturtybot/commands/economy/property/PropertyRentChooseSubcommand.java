@@ -73,9 +73,9 @@ public class PropertyRentChooseSubcommand extends PropertySubcommand {
         EconomyManager.updateAccount(account);
 
         PropertyCommand.hookReply(event, "✅ You rented out %s to %s for %s. Rental ends %s."
-                .formatted(property.getName(),
-                        offer.getName(),
-                        StringUtils.numberFormat(offer.getOffer(), config),
-                        TimeFormat.RELATIVE.format(property.getRentEndsAt())));
+            .formatted(property.getName(),
+                offer.getName(),
+                StringUtils.numberFormat(offer.getOffer(), config),
+                TimeFormat.RELATIVE.format(property.getRentEndsAt())));
     }
 }

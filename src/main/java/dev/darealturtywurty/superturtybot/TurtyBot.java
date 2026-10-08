@@ -56,7 +56,9 @@ import java.util.logging.Logger;
 public class TurtyBot {
     public static final long START_TIME = System.currentTimeMillis();
     public static final EventWaiter EVENT_WAITER = new EventWaiter();
-    public static final List<Message.MentionType> DEFAULT_ALLOWED_MENTIONS = List.of(Message.MentionType.ROLE, Message.MentionType.USER, Message.MentionType.CHANNEL, Message.MentionType.EMOJI, Message.MentionType.SLASH_COMMAND);
+    public static final List<Message.MentionType> DEFAULT_ALLOWED_MENTIONS = List.of(Message.MentionType.ROLE,
+        Message.MentionType.USER, Message.MentionType.CHANNEL, Message.MentionType.EMOJI,
+        Message.MentionType.SLASH_COMMAND);
 
     @Getter
     private static long lastStartTime = 0L;
@@ -69,49 +71,49 @@ public class TurtyBot {
         Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
 
         ArgumentParser parser = ArgumentParsers.newFor("TurtyBot")
-                .build()
-                .defaultHelp(true)
-                .description("A multipurpose bot for discord.");
+            .build()
+            .defaultHelp(true)
+            .description("A multipurpose bot for discord.");
 
         parser.addArgument("-env", "--environment")
-                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
-                .setDefault(Path.of("./.env"))
-                .help("The path to the environment file.");
+            .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+            .setDefault(Path.of("./.env"))
+            .help("The path to the environment file.");
 
         parser.addArgument("-startTime", "--startTime")
-                .type(new PathArgumentType().verifyIsFile().verifyCanRead().verifyCanWrite())
-                .setDefault(Path.of("./lastStartTime.txt"))
-                .help("The path to the file that stores the last start time.");
+            .type(new PathArgumentType().verifyIsFile().verifyCanRead().verifyCanWrite())
+            .setDefault(Path.of("./lastStartTime.txt"))
+            .help("The path to the file that stores the last start time.");
 
         parser.addArgument("-emojis", "--emojis")
-                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
-                .setDefault(Path.of("./emojis.json"))
-                .help("The path to the emojis json file.");
+            .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+            .setDefault(Path.of("./emojis.json"))
+            .help("The path to the emojis json file.");
 
         parser.addArgument("-serverIcons", "--serverIcons")
-                .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
-                .setDefault(Path.of("./serverIcons.json"))
-                .help("The path to the server icons json file.");
+            .type(new PathArgumentType().verifyExists().verifyIsFile().verifyCanRead())
+            .setDefault(Path.of("./serverIcons.json"))
+            .help("The path to the server icons json file.");
 
         parser.addArgument("-logFile", "--logFile")
-                .type(new PathArgumentType().verifyCanWrite())
-                .setDefault(Path.of("./latest.log"))
-                .help("The path to the log file.");
+            .type(new PathArgumentType().verifyCanWrite())
+            .setDefault(Path.of("./latest.log"))
+            .help("The path to the log file.");
 
         parser.addArgument("-datasetRoot", "--datasetRoot")
-                .type(new PathArgumentType())
-                .setDefault(Path.of("./data/RealAIImages"))
-                .help("The path to the RealAIImages dataset directory.");
+            .type(new PathArgumentType())
+            .setDefault(Path.of("./data/RealAIImages"))
+            .help("The path to the RealAIImages dataset directory.");
 
         parser.addArgument("-snippetsDb", "--snippetsDb")
-                .type(new PathArgumentType())
-                .setDefault(Path.of("./data/snippets.db"))
-                .help("The path to the code snippets database file.");
+            .type(new PathArgumentType())
+            .setDefault(Path.of("./data/snippets.db"))
+            .help("The path to the code snippets database file.");
 
         parser.addArgument("-videoIdsDb", "--videoIdsDb")
-                .type(new PathArgumentType())
-                .setDefault(Path.of("./data/video_ids.db"))
-                .help("The path to the YouTube video IDs database file.");
+            .type(new PathArgumentType())
+            .setDefault(Path.of("./data/video_ids.db"))
+            .help("The path to the YouTube video IDs database file.");
 
         var ctl = ConsoleTee.toFile(parser.parseArgsOrFail(args).get("logFile"), false);
         ShutdownHooks.register(ctl::close);
@@ -151,7 +153,8 @@ public class TurtyBot {
         Path videoIdsDbPath = namespace.get("videoIdsDb");
         YoutubePromotionMinigame.setVideoDbPath(videoIdsDbPath);
 
-        DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(), Environment.INSTANCE.loggingWebhookToken());
+        DiscordLogbackAppender.setup(Environment.INSTANCE.loggingWebhookId(),
+            Environment.INSTANCE.loggingWebhookToken());
 
         Database.ensureIndexes();
 
@@ -178,13 +181,14 @@ public class TurtyBot {
 
     private static void configureBuilder(JDABuilder builder) {
         // Set the current activity to watching me!
-        builder.setActivity(Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));
+        builder.setActivity(
+            Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));
 
         builder.setAutoReconnect(true);
 
         // We want to ensure that guild messages, DMs, members, emojis and voice states are enabled.
         builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES,
-                GatewayIntent.GUILD_EXPRESSIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
+            GatewayIntent.GUILD_EXPRESSIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.MESSAGE_CONTENT);
 
         // Cache all members. This makes it easier to do any kind of retrieval.
         builder.setMemberCachePolicy(MemberCachePolicy.ALL.and(MemberCachePolicy.lru(1000)));
@@ -268,8 +272,8 @@ public class TurtyBot {
 
     private static void loadRegistrars() {
         final var reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forPackage(""))
-                .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
-                .filterInputsBy(new FilterBuilder().includePackage("io")));
+            .setScanners(Scanners.SubTypes, Scanners.TypesAnnotated)
+            .filterInputsBy(new FilterBuilder().includePackage("io")));
         reflections.getTypesAnnotatedWith(Registerer.class).forEach(clazz -> {
             try {
                 clazz.getDeclaredConstructor().newInstance();

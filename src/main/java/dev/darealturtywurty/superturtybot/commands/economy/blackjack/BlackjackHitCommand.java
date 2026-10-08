@@ -47,7 +47,8 @@ public class BlackjackHitCommand extends BlackjackSubcommand {
             return;
         }
 
-        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(), ignored -> new ArrayList<>());
+        final List<BlackjackCommand.Game> games = BlackjackCommand.GAMES.computeIfAbsent(guild.getIdLong(),
+            _ -> new ArrayList<>());
 
         synchronized (game) {
             BlackjackCommand.Card card = game.hit();
@@ -58,8 +59,10 @@ public class BlackjackHitCommand extends BlackjackSubcommand {
                     applySettlement(account, settlement);
 
                     games.remove(game);
-                    String resultMessage = game.getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()));
-                    String content = "%s drew a %s.\n%s".formatted(event.getUser().getAsMention(), card.getFriendlyName(), resultMessage);
+                    String resultMessage = game
+                        .getResultMessage(number -> StringUtils.numberFormat(number, config.getEconomyCurrency()));
+                    String content = "%s drew a %s.\n%s".formatted(event.getUser().getAsMention(),
+                        card.getFriendlyName(), resultMessage);
                     try (FileUpload upload = BlackjackImageRenderer.createUpload(game, true)) {
                         event.getHook().editOriginal(content).setFiles(upload).queue();
                     } catch (Exception exception) {
@@ -70,7 +73,7 @@ public class BlackjackHitCommand extends BlackjackSubcommand {
                 }
             } else {
                 String content = "%s drew a %s.\nUse /blackjack hit to draw a card or /blackjack stand to end your turn."
-                        .formatted(event.getUser().getAsMention(), card.getFriendlyName());
+                    .formatted(event.getUser().getAsMention(), card.getFriendlyName());
                 try (FileUpload upload = BlackjackImageRenderer.createUpload(game, false)) {
                     event.getHook().editOriginal(content).setFiles(upload).queue();
                 } catch (Exception exception) {

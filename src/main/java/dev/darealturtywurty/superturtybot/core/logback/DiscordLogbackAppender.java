@@ -41,17 +41,17 @@ public class DiscordLogbackAppender extends AppenderBase<ILoggingEvent> {
                 return;
 
             final String body = '{' + "\"content\":\"" + contentBuf + "\"," + "\"allowed_mentions\":{\"parse\": []}"
-                    + '}';
+                + '}';
 
             Request request = new Request.Builder()
-                    .url(this.uri.toURL())
-                    .header("Content-Type", "application/json")
-                    .post(RequestBody.create(body, MediaType.parse("application/json")))
-                    .build();
+                .url(this.uri.toURL())
+                .header("Content-Type", "application/json")
+                .post(RequestBody.create(body, MediaType.parse("application/json")))
+                .build();
 
             // async request
             Constants.HTTP_CLIENT.newCall(request).enqueue(EmptyCallback.INSTANCE);
-        } catch (final IOException ignored) {
+        } catch (final IOException _) {
         }
     }
 

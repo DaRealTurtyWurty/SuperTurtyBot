@@ -39,10 +39,10 @@ public class OptCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("in", "Opt-in to a channel.").addOption(OptionType.STRING, "channel",
-                        "The channel to opt-in to.", true, true),
-                new SubcommandData("out", "Opt-out of a channel.").addOption(OptionType.CHANNEL, "channel",
-                        "The channel to opt-out of.", true),
-                new SubcommandData("list", "List all channels that you can opt-in/out of."));
+            "The channel to opt-in to.", true, true),
+            new SubcommandData("out", "Opt-out of a channel.").addOption(OptionType.CHANNEL, "channel",
+                "The channel to opt-out of.", true),
+            new SubcommandData("list", "List all channels that you can opt-in/out of."));
     }
 
     @Override
@@ -82,12 +82,15 @@ public class OptCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals(getName())) return;
+        if (!event.getName().equals(getName()))
+            return;
 
-        if (!"in".equals(event.getSubcommandName())) return;
+        if (!"in".equals(event.getSubcommandName()))
+            return;
 
         Guild guild = event.getGuild();
-        if (guild == null) return;
+        if (guild == null)
+            return;
 
         GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong())).first();
         if (config == null) {
@@ -95,7 +98,8 @@ public class OptCommand extends CoreCommand {
             return;
         }
 
-        UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", event.getUser().getIdLong())).first();
+        UserConfig userConfig = Database.getDatabase().userConfig.find(Filters.eq("user", event.getUser().getIdLong()))
+            .first();
         if (userConfig == null) {
             userConfig = new UserConfig(event.getUser().getIdLong());
             Database.getDatabase().userConfig.insertOne(userConfig);
@@ -104,10 +108,11 @@ public class OptCommand extends CoreCommand {
         List<Long> userChannels = userConfig.getOptInChannels();
 
         event.replyChoices(GuildData.getLongs(config.getOptInChannels()).stream()
-                .filter(channel -> !userChannels.contains(channel))
-                .map(channel -> guild.getChannels().stream().filter(guildChannel -> guildChannel.getIdLong() == channel)
-                        .findFirst().orElse(null)).filter(Objects::nonNull).map(GuildChannel::getName)
-                .map(channel -> new Command.Choice(channel, channel)).toList()).queue();
+            .filter(channel -> !userChannels.contains(channel))
+            .map(channel -> guild.getChannels().stream().filter(guildChannel -> guildChannel.getIdLong() == channel)
+                .findFirst().orElse(null))
+            .filter(Objects::nonNull).map(GuildChannel::getName)
+            .map(channel -> new Command.Choice(channel, channel)).toList()).queue();
     }
 
     @Override
@@ -145,9 +150,13 @@ public class OptCommand extends CoreCommand {
                 }
 
                 StandardGuildChannel channel = (StandardGuildChannel) guild.getChannels(true).stream()
-                        .filter(c -> c.getName()
-                                .equals(channelStr) && c.getType() != ChannelType.CATEGORY && c.getType() != ChannelType.GUILD_NEWS_THREAD && c.getType() != ChannelType.GUILD_PRIVATE_THREAD && c.getType() != ChannelType.GUILD_PUBLIC_THREAD && c.getType() != ChannelType.PRIVATE && c.getType() != ChannelType.GROUP)
-                        .findFirst().orElse(null);
+                    .filter(c -> c.getName()
+                        .equals(channelStr) && c.getType() != ChannelType.CATEGORY
+                        && c.getType() != ChannelType.GUILD_NEWS_THREAD
+                        && c.getType() != ChannelType.GUILD_PRIVATE_THREAD
+                        && c.getType() != ChannelType.GUILD_PUBLIC_THREAD && c.getType() != ChannelType.PRIVATE
+                        && c.getType() != ChannelType.GROUP)
+                    .findFirst().orElse(null);
                 if (channel == null) {
                     reply(event, "❌ That channel does not exist!", false, true);
                     return;
@@ -184,11 +193,12 @@ public class OptCommand extends CoreCommand {
                 channel.upsertPermissionOverride(event.getMember()).setAllowed(permissions).queue();
 
                 event.reply("✅ You have opted-in to " + channel.getAsMention() + "!")
-                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
             }
             case "out" -> {
                 OptionMapping channelOption = event.getOption("channel");
-                if (channelOption == null || (!channelOption.getChannelType().isGuild() || channelOption.getChannelType().isThread())) {
+                if (channelOption == null
+                    || (!channelOption.getChannelType().isGuild() || channelOption.getChannelType().isThread())) {
                     reply(event, "❌ You must specify a text or voice channel!", false, true);
                     return;
                 }
@@ -230,7 +240,7 @@ public class OptCommand extends CoreCommand {
                 channel.upsertPermissionOverride(event.getMember()).setDenied(permissions).queue();
 
                 event.reply("✅ You have opted-out of `#" + channel.getName() + "`!")
-                        .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
+                    .queue(hook -> hook.deleteOriginal().queueAfter(10, TimeUnit.SECONDS));
             }
             case "list" -> {
                 event.deferReply().queue();
@@ -241,20 +251,24 @@ public class OptCommand extends CoreCommand {
                     if (channel == null)
                         continue;
 
-                    contents.field("#" + channel.getName(), "Type: " + (channel.getType() == ChannelType.TEXT ? "Text" : "Voice"));
+                    contents.field("#" + channel.getName(),
+                        "Type: " + (channel.getType() == ChannelType.TEXT ? "Text" : "Voice"));
                 }
 
                 PaginatedEmbed embed = new PaginatedEmbed.Builder(15, contents)
-                        .title("Available channels to opt-in/out of:")
-                        .description("Use `/opt channel in <channel>` or `/opt channel out <channel>` to opt-in/out of a channel.")
-                        .timestamp(Instant.now())
-                        .color(Color.GREEN)
-                        .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
-                        .authorOnly(event.getUser().getIdLong())
-                        .thumbnail(guild.getIconUrl())
-                        .build(event.getJDA());
+                    .title("Available channels to opt-in/out of:")
+                    .description(
+                        "Use `/opt channel in <channel>` or `/opt channel out <channel>` to opt-in/out of a channel.")
+                    .timestamp(Instant.now())
+                    .color(Color.GREEN)
+                    .footer("Requested by " + event.getUser().getEffectiveName(),
+                        event.getMember().getEffectiveAvatarUrl())
+                    .authorOnly(event.getUser().getIdLong())
+                    .thumbnail(guild.getIconUrl())
+                    .build(event.getJDA());
 
-                embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ No channels available to opt-in/out of!").queue());
+                embed.send(event.getHook(),
+                    () -> event.getHook().editOriginal("❌ No channels available to opt-in/out of!").queue());
             }
         }
     }

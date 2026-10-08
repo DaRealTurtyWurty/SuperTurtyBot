@@ -39,8 +39,8 @@ public class PollCommand extends CoreCommand {
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         if (!event.isFromGuild() || event.getUser() == null || event.getUser().isBot()
-                || event.getUser().isSystem()
-                || !NUMBER_EMOTE_MAP.containsValue(event.getReaction().getEmoji().getName()))
+            || event.getUser().isSystem()
+            || !NUMBER_EMOTE_MAP.containsValue(event.getReaction().getEmoji().getName()))
             return;
 
         QuestManager.INSTANCE.recordPollVote(event.getGuild(), event.getMessageIdLong(), event.getUser());
@@ -142,9 +142,8 @@ public class PollCommand extends CoreCommand {
         final List<String> emotes = new ArrayList<>();
         int optionIndex = 1;
         for (final String option : options) {
-            if (option == null || option.isBlank()) {
+            if (option == null || option.isBlank())
                 continue;
-            }
 
             final String emote = NUMBER_EMOTE_MAP.get(optionIndex++);
             embed.appendDescription(emote + " " + option + "\n");

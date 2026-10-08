@@ -73,110 +73,110 @@ public class CrosswordCommand extends CoreCommand {
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Game game, ThreadChannel thread) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event -> event.isFromGuild() && event.isFromThread()
-                        && event.getGuild().getIdLong() == game.getGuildId()
-                        && event.getChannel().getIdLong() == game.getThreadId()
-                        && event.getAuthor().getIdLong() == game.getUserId()
-                        && (event.getMessage().getContentRaw().equalsIgnoreCase("give up")
-                        || GUESS_PATTERN.matcher(event.getMessage().getContentRaw()).matches()
-                        || CLEAR_PATTERN.matcher(event.getMessage().getContentRaw()).matches()))
-                .timeout(10, TimeUnit.MINUTES)
-                .timeoutAction(() -> endGame(thread, game, "❌ You took too long. Crossword revealed.", true))
-                .failure(() -> endGame(thread, game, "❌ Something went wrong. Crossword revealed.", true))
-                .success(event -> {
-                    String raw = event.getMessage().getContentRaw().trim();
-                    if (raw.equalsIgnoreCase("give up")) {
-                        endGame(thread, game, "✅ Crossword ended. Solution revealed.", true);
-                        return;
-                    }
+            .condition(event -> event.isFromGuild() && event.isFromThread()
+                && event.getGuild().getIdLong() == game.getGuildId()
+                && event.getChannel().getIdLong() == game.getThreadId()
+                && event.getAuthor().getIdLong() == game.getUserId()
+                && (event.getMessage().getContentRaw().equalsIgnoreCase("give up")
+                    || GUESS_PATTERN.matcher(event.getMessage().getContentRaw()).matches()
+                    || CLEAR_PATTERN.matcher(event.getMessage().getContentRaw()).matches()))
+            .timeout(10, TimeUnit.MINUTES)
+            .timeoutAction(() -> endGame(thread, game, "❌ You took too long. Crossword revealed.", true))
+            .failure(() -> endGame(thread, game, "❌ Something went wrong. Crossword revealed.", true))
+            .success(event -> {
+                String raw = event.getMessage().getContentRaw().trim();
+                if (raw.equalsIgnoreCase("give up")) {
+                    endGame(thread, game, "✅ Crossword ended. Solution revealed.", true);
+                    return;
+                }
 
-                    Matcher clearMatcher = CLEAR_PATTERN.matcher(raw);
-                    if (clearMatcher.matches()) {
-                        int clueNumber = Integer.parseInt(clearMatcher.group(1));
-                        if (!game.clearGuess(clueNumber)) {
-                            thread.sendMessage("❌ That clue number does not exist.")
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
-                            return;
-                        }
-
-                        Optional<FileUpload> upload = createUpload(game, false);
-                        if (upload.isPresent()) {
-                            thread.sendMessage("✍️ Crossword updated.")
-                                    .setFiles(upload.get())
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
-                        } else {
-                            thread.sendMessage("✍️ Crossword updated.")
-                                    .queue(ignored -> createEventWaiter(game, thread).build());
-                        }
-
-                        return;
-                    }
-
-                    Matcher matcher = GUESS_PATTERN.matcher(raw);
-                    if (!matcher.matches()) {
-                        createEventWaiter(game, thread).build();
-                        return;
-                    }
-
-                    int clueNumber = Integer.parseInt(matcher.group(1));
-                    String guess = normalizeWord(matcher.group(2));
-                    GuessResult result = game.applyGuess(clueNumber, guess);
-                    if (result == GuessResult.DOES_NOT_FIT) {
-                        thread.sendMessage("❌ That word does not fit clue " + clueNumber + ".")
-                                .queue(ignored -> createEventWaiter(game, thread).build());
-                        return;
-                    }
-
-                    if (result == GuessResult.INVALID_CLUE) {
+                Matcher clearMatcher = CLEAR_PATTERN.matcher(raw);
+                if (clearMatcher.matches()) {
+                    int clueNumber = Integer.parseInt(clearMatcher.group(1));
+                    if (!game.clearGuess(clueNumber)) {
                         thread.sendMessage("❌ That clue number does not exist.")
-                                .queue(ignored -> createEventWaiter(game, thread).build());
+                            .queue(_ -> createEventWaiter(game, thread).build());
                         return;
                     }
 
-                    if (result == GuessResult.CANNOT_PLACE) {
-                        thread.sendMessage("❌ That word cannot be placed with the letters already on the board.")
-                                .queue(ignored -> createEventWaiter(game, thread).build());
-                        return;
-                    }
-
-                    boolean completed = game.isComplete();
-                    Optional<FileUpload> upload = createUpload(game, completed);
-                    if (completed) {
-                        QuestManager.INSTANCE.recordMinigameCompletion(
-                                game.getGuildId(), game.getUserId(), "crossword", game.getThreadId());
-                        if (upload.isPresent()) {
-                            thread.sendMessage("✅ Crossword complete.")
-                                    .setFiles(upload.get())
-                                    .queue(ignored -> archiveThread(thread));
-                        } else {
-                            thread.sendMessage("✅ Crossword complete.")
-                                    .queue(ignored -> archiveThread(thread));
-                        }
-
-                        GAMES.remove(game);
-                        return;
-                    }
-
+                    Optional<FileUpload> upload = createUpload(game, false);
                     if (upload.isPresent()) {
                         thread.sendMessage("✍️ Crossword updated.")
-                                .setFiles(upload.get())
-                                .queue(ignored -> createEventWaiter(game, thread).build());
+                            .setFiles(upload.get())
+                            .queue(_ -> createEventWaiter(game, thread).build());
                     } else {
                         thread.sendMessage("✍️ Crossword updated.")
-                                .queue(ignored -> createEventWaiter(game, thread).build());
+                            .queue(_ -> createEventWaiter(game, thread).build());
                     }
-                });
+
+                    return;
+                }
+
+                Matcher matcher = GUESS_PATTERN.matcher(raw);
+                if (!matcher.matches()) {
+                    createEventWaiter(game, thread).build();
+                    return;
+                }
+
+                int clueNumber = Integer.parseInt(matcher.group(1));
+                String guess = normalizeWord(matcher.group(2));
+                GuessResult result = game.applyGuess(clueNumber, guess);
+                if (result == GuessResult.DOES_NOT_FIT) {
+                    thread.sendMessage("❌ That word does not fit clue " + clueNumber + ".")
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                    return;
+                }
+
+                if (result == GuessResult.INVALID_CLUE) {
+                    thread.sendMessage("❌ That clue number does not exist.")
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                    return;
+                }
+
+                if (result == GuessResult.CANNOT_PLACE) {
+                    thread.sendMessage("❌ That word cannot be placed with the letters already on the board.")
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                    return;
+                }
+
+                boolean completed = game.isComplete();
+                Optional<FileUpload> upload = createUpload(game, completed);
+                if (completed) {
+                    QuestManager.INSTANCE.recordMinigameCompletion(
+                        game.getGuildId(), game.getUserId(), "crossword", game.getThreadId());
+                    if (upload.isPresent()) {
+                        thread.sendMessage("✅ Crossword complete.")
+                            .setFiles(upload.get())
+                            .queue(_ -> archiveThread(thread));
+                    } else {
+                        thread.sendMessage("✅ Crossword complete.")
+                            .queue(_ -> archiveThread(thread));
+                    }
+
+                    GAMES.remove(game);
+                    return;
+                }
+
+                if (upload.isPresent()) {
+                    thread.sendMessage("✍️ Crossword updated.")
+                        .setFiles(upload.get())
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                } else {
+                    thread.sendMessage("✍️ Crossword updated.")
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                }
+            });
     }
 
     private static void endGame(ThreadChannel thread, Game game, String message, boolean revealAll) {
         Optional<FileUpload> upload = createUpload(game, revealAll);
         if (upload.isPresent()) {
             thread.sendMessage(message)
-                    .setFiles(upload.get())
-                    .queue(ignored -> archiveThread(thread));
+                .setFiles(upload.get())
+                .queue(_ -> archiveThread(thread));
         } else {
             thread.sendMessage(message)
-                    .queue(ignored -> archiveThread(thread));
+                .queue(_ -> archiveThread(thread));
         }
 
         GAMES.remove(game);
@@ -213,7 +213,7 @@ public class CrosswordCommand extends CoreCommand {
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         graphics.setPaint(new GradientPaint(0, 0, new Color(245, 238, 226),
-                imageWidth, imageHeight, new Color(226, 234, 244)));
+            imageWidth, imageHeight, new Color(226, 234, 244)));
         graphics.fillRect(0, 0, imageWidth, imageHeight);
 
         int boardOriginX = PADDING;
@@ -263,11 +263,13 @@ public class CrosswordCommand extends CoreCommand {
                     graphics.setFont(NUMBER_FONT);
                     graphics.setColor(new Color(95, 105, 118));
                     graphics.drawString(Integer.toString(startEntry.getNumber()), drawX + 7,
-                            drawY + 7 + numberMetrics.getAscent());
+                        drawY + 7 + numberMetrics.getAscent());
                 }
 
                 if (revealAll || game.hasFilledLetter(row, column)) {
-                    char currentLetter = revealAll ? game.getSolution(row, column) : game.getDisplayedLetter(row, column);
+                    char currentLetter = revealAll
+                        ? game.getSolution(row, column)
+                        : game.getDisplayedLetter(row, column);
                     String letter = String.valueOf(Character.toUpperCase(currentLetter));
                     graphics.setFont(LETTER_FONT);
                     graphics.setColor(new Color(42, 54, 66));
@@ -321,11 +323,12 @@ public class CrosswordCommand extends CoreCommand {
         List<String> lines = new ArrayList<>();
         String[] words = text.split("\\s+");
         String indent = " ".repeat(prefix.length());
-        StringBuilder line = new StringBuilder(prefix);
+        var line = new StringBuilder(prefix);
         boolean firstLine = true;
 
         for (String word : words) {
-            String candidate = line + (line.length() > (firstLine ? prefix.length() : indent.length()) ? " " : "") + word;
+            String candidate = line + (line.length() > (firstLine ? prefix.length() : indent.length()) ? " " : "")
+                + word;
             int threshold = firstLine ? prefix.length() : indent.length();
             if (metrics.stringWidth(candidate) > maxWidth && line.length() > threshold) {
                 lines.add(line.toString());
@@ -389,14 +392,14 @@ public class CrosswordCommand extends CoreCommand {
         }
 
         if (!guild.getSelfMember().hasPermission(event.getGuildChannel(),
-                Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+            Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
 
         if (GAMES.stream().anyMatch(game -> game.getGuildId() == guild.getIdLong()
-                && game.getChannelId() == event.getChannel().getIdLong()
-                && game.getUserId() == event.getUser().getIdLong())) {
+            && game.getChannelId() == event.getChannel().getIdLong()
+            && game.getUserId() == event.getUser().getIdLong())) {
             reply(event, "❌ You already have a crossword game in this channel!", false, true);
             return;
         }
@@ -413,17 +416,19 @@ public class CrosswordCommand extends CoreCommand {
                     Optional<FileUpload> upload = createUpload(game, false);
                     if (upload.isEmpty()) {
                         thread.sendMessage("❌ Failed to render the crossword.")
-                                .queue(ignored -> archiveThread(thread));
+                            .queue(_ -> archiveThread(thread));
                         GAMES.remove(game);
                         return;
                     }
 
-                    thread.sendMessage("✍️ Fill clues with `x=word`, where `x` is the clue number. Use `clear x` to empty a clue. Any guess that fits the current crossings is written into the board, and completion is only confirmed at the end.")
-                            .setFiles(upload.get())
-                            .queue(ignored -> {
-                                event.getHook().editOriginal("✅ Crossword created. Check the thread for the puzzle.").queue();
-                                createEventWaiter(game, thread).build();
-                            });
+                    thread.sendMessage(
+                        "✍️ Fill clues with `x=word`, where `x` is the clue number. Use `clear x` to empty a clue. Any guess that fits the current crossings is written into the board, and completion is only confirmed at the end.")
+                        .setFiles(upload.get())
+                        .queue(_ -> {
+                            event.getHook().editOriginal("✅ Crossword created. Check the thread for the puzzle.")
+                                .queue();
+                            createEventWaiter(game, thread).build();
+                        });
                 }, error -> {
                     GAMES.remove(game);
                     Constants.LOGGER.error("Failed to create crossword thread", error);
@@ -454,9 +459,8 @@ public class CrosswordCommand extends CoreCommand {
             this.userId = userId;
             this.channelId = channelId;
 
-            if (!generate()) {
+            if (!generate())
                 throw new IllegalStateException("Unable to generate crossword");
-            }
         }
 
         private boolean generate() {
@@ -465,13 +469,12 @@ public class CrosswordCommand extends CoreCommand {
                 this.entries.clear();
 
                 List<CandidateWord> candidates = fetchCandidateWords();
-                if (candidates.size() < TARGET_WORD_COUNT) {
+                if (candidates.size() < TARGET_WORD_COUNT)
                     continue;
-                }
 
                 candidates.sort(Comparator
-                        .comparingInt((CandidateWord definition) -> Math.abs(6 - definition.word().length()))
-                        .thenComparing(definition -> definition.word()));
+                    .comparingInt((CandidateWord definition) -> Math.abs(6 - definition.word().length()))
+                    .thenComparing(definition -> definition.word()));
 
                 CandidateWord seed = selectSeed(candidates);
                 int startRow = GRID_SIZE / 2;
@@ -479,25 +482,21 @@ public class CrosswordCommand extends CoreCommand {
                 place(new Entry(seed.word(), seed.definition(), Direction.ACROSS, startRow, startColumn));
 
                 for (CandidateWord candidate : candidates) {
-                    if (candidate.word().equals(seed.word())) {
+                    if (candidate.word().equals(seed.word()))
                         continue;
-                    }
 
                     Placement placement = findPlacement(candidate.word());
-                    if (placement == null) {
+                    if (placement == null)
                         continue;
-                    }
 
                     place(new Entry(candidate.word(), candidate.definition(),
-                            placement.direction(), placement.row(), placement.column()));
-                    if (this.entries.size() >= TARGET_WORD_COUNT) {
+                        placement.direction(), placement.row(), placement.column()));
+                    if (this.entries.size() >= TARGET_WORD_COUNT)
                         break;
-                    }
                 }
 
-                if (!isPlayableLayout()) {
+                if (!isPlayableLayout())
                     continue;
-                }
 
                 assignNumbers();
                 return true;
@@ -510,26 +509,23 @@ public class CrosswordCommand extends CoreCommand {
             List<CandidateWord> sorted = new ArrayList<>(candidates);
             sorted.sort(Comparator.comparingInt((CandidateWord definition) -> definition.word().length()).reversed());
             for (CandidateWord candidate : sorted) {
-                if (candidate.word().length() <= GRID_SIZE - 2) {
+                if (candidate.word().length() <= GRID_SIZE - 2)
                     return candidate;
-                }
             }
 
             return sorted.getFirst();
         }
 
         private boolean isPlayableLayout() {
-            if (this.entries.size() < MINIMUM_WORD_COUNT) {
+            if (this.entries.size() < MINIMUM_WORD_COUNT)
                 return false;
-            }
 
             int acrossCount = 0;
             int downCount = 0;
             for (Entry entry : this.entries) {
                 int intersections = countIntersections(entry);
-                if (intersections == 0) {
+                if (intersections == 0)
                     return false;
-                }
 
                 if (entry.direction == Direction.ACROSS) {
                     acrossCount++;
@@ -577,7 +573,8 @@ public class CrosswordCommand extends CoreCommand {
             Map<String, CandidateWord> definitions = new HashMap<>();
             int attempts = 0;
             while (definitions.size() < TARGET_WORD_COUNT * 3 && attempts++ < MAX_WORD_FETCH_ATTEMPTS) {
-                Either<List<String>, HttpStatus> response = ApiHandler.getCommonWords(new RandomWordRequestData.Builder()
+                Either<List<String>, HttpStatus> response = ApiHandler
+                    .getCommonWords(new RandomWordRequestData.Builder()
                         .length(3, 8)
                         .amount(CANDIDATE_BATCH_SIZE)
                         .build());
@@ -588,14 +585,12 @@ public class CrosswordCommand extends CoreCommand {
 
                 for (String rawWord : response.getLeft()) {
                     String word = normalizeWord(rawWord);
-                    if (word.isBlank() || definitions.containsKey(word)) {
+                    if (word.isBlank() || definitions.containsKey(word))
                         continue;
-                    }
 
                     Optional<String> definition = lookupDefinition(word);
-                    if (definition.isEmpty()) {
+                    if (definition.isEmpty())
                         continue;
-                    }
 
                     definitions.put(word, new CandidateWord(word, definition.get()));
                 }
@@ -613,25 +608,23 @@ public class CrosswordCommand extends CoreCommand {
                     int placedColumn = placed.column + (placed.direction == Direction.ACROSS ? placedIndex : 0);
 
                     for (int wordIndex = 0; wordIndex < word.length(); wordIndex++) {
-                        if (word.charAt(wordIndex) != placedLetter) {
+                        if (word.charAt(wordIndex) != placedLetter)
                             continue;
-                        }
 
                         Direction direction = placed.direction == Direction.ACROSS ? Direction.DOWN : Direction.ACROSS;
                         int row = direction == Direction.DOWN ? placedRow - wordIndex : placedRow;
                         int column = direction == Direction.ACROSS ? placedColumn - wordIndex : placedColumn;
-                        if (!isValidPlacement(word, row, column, direction)) {
+                        if (!isValidPlacement(word, row, column, direction))
                             continue;
-                        }
 
-                        placements.add(new Placement(row, column, direction, scorePlacement(word, row, column, direction)));
+                        placements
+                            .add(new Placement(row, column, direction, scorePlacement(word, row, column, direction)));
                     }
                 }
             }
 
-            if (placements.isEmpty()) {
+            if (placements.isEmpty())
                 return null;
-            }
 
             placements.sort(Comparator.comparingInt(Placement::score).reversed());
             return placements.getFirst();
@@ -655,19 +648,16 @@ public class CrosswordCommand extends CoreCommand {
         }
 
         private boolean isValidPlacement(String word, int row, int column, Direction direction) {
-            if (row < 0 || column < 0) {
+            if (row < 0 || column < 0)
                 return false;
-            }
 
             int endRow = row + (direction == Direction.DOWN ? word.length() - 1 : 0);
             int endColumn = column + (direction == Direction.ACROSS ? word.length() - 1 : 0);
-            if (endRow >= GRID_SIZE || endColumn >= GRID_SIZE) {
+            if (endRow >= GRID_SIZE || endColumn >= GRID_SIZE)
                 return false;
-            }
 
-            if (startsAnotherEntry(row, column)) {
+            if (startsAnotherEntry(row, column))
                 return false;
-            }
 
             int intersections = 0;
             for (int index = 0; index < word.length(); index++) {
@@ -676,9 +666,8 @@ public class CrosswordCommand extends CoreCommand {
                 char existing = this.solution[currentRow][currentColumn];
                 char letter = word.charAt(index);
 
-                if (existing != '\u0000' && existing != letter) {
+                if (existing != '\u0000' && existing != letter)
                     return false;
-                }
 
                 if (existing == letter) {
                     intersections++;
@@ -686,30 +675,25 @@ public class CrosswordCommand extends CoreCommand {
                 }
 
                 if (direction == Direction.ACROSS) {
-                    if (hasLetter(currentRow - 1, currentColumn) || hasLetter(currentRow + 1, currentColumn)) {
+                    if (hasLetter(currentRow - 1, currentColumn) || hasLetter(currentRow + 1, currentColumn))
                         return false;
-                    }
-                } else if (hasLetter(currentRow, currentColumn - 1) || hasLetter(currentRow, currentColumn + 1)) {
+                } else if (hasLetter(currentRow, currentColumn - 1) || hasLetter(currentRow, currentColumn + 1))
                     return false;
-                }
             }
 
             if (direction == Direction.ACROSS) {
-                if (hasLetter(row, column - 1) || hasLetter(row, endColumn + 1)) {
+                if (hasLetter(row, column - 1) || hasLetter(row, endColumn + 1))
                     return false;
-                }
-            } else if (hasLetter(row - 1, column) || hasLetter(endRow + 1, column)) {
+            } else if (hasLetter(row - 1, column) || hasLetter(endRow + 1, column))
                 return false;
-            }
 
             return intersections > 0;
         }
 
         private boolean startsAnotherEntry(int row, int column) {
             for (Entry entry : this.entries) {
-                if (entry.row == row && entry.column == column) {
+                if (entry.row == row && entry.column == column)
                     return true;
-                }
             }
 
             return false;
@@ -717,8 +701,8 @@ public class CrosswordCommand extends CoreCommand {
 
         public boolean hasLetter(int row, int column) {
             return row >= 0 && row < GRID_SIZE
-                    && column >= 0 && column < GRID_SIZE
-                    && this.solution[row][column] != '\u0000';
+                && column >= 0 && column < GRID_SIZE
+                && this.solution[row][column] != '\u0000';
         }
 
         private void place(Entry entry) {
@@ -734,8 +718,8 @@ public class CrosswordCommand extends CoreCommand {
         private void assignNumbers() {
             List<Entry> sorted = new ArrayList<>(this.entries);
             sorted.sort(Comparator.comparingInt(Entry::getRow)
-                    .thenComparingInt(Entry::getColumn)
-                    .thenComparing(entry -> entry.direction == Direction.ACROSS ? 0 : 1));
+                .thenComparingInt(Entry::getColumn)
+                .thenComparing(entry -> entry.direction == Direction.ACROSS ? 0 : 1));
             for (int index = 0; index < sorted.size(); index++) {
                 sorted.get(index).number = index + 1;
             }
@@ -743,17 +727,14 @@ public class CrosswordCommand extends CoreCommand {
 
         public GuessResult applyGuess(int clueNumber, String guess) {
             Entry entry = getEntry(clueNumber);
-            if (entry == null) {
+            if (entry == null)
                 return GuessResult.INVALID_CLUE;
-            }
 
-            if (entry.word.length() != guess.length()) {
+            if (entry.word.length() != guess.length())
                 return GuessResult.DOES_NOT_FIT;
-            }
 
-            if (!canPlaceGuess(entry, guess)) {
+            if (!canPlaceGuess(entry, guess))
                 return GuessResult.CANNOT_PLACE;
-            }
 
             entry.filledWord = guess;
             return GuessResult.APPLIED;
@@ -761,9 +742,8 @@ public class CrosswordCommand extends CoreCommand {
 
         public boolean clearGuess(int clueNumber) {
             Entry entry = getEntry(clueNumber);
-            if (entry == null) {
+            if (entry == null)
                 return false;
-            }
 
             entry.filledWord = "";
             return true;
@@ -774,9 +754,8 @@ public class CrosswordCommand extends CoreCommand {
                 int row = entry.row + (entry.direction == Direction.DOWN ? index : 0);
                 int column = entry.column + (entry.direction == Direction.ACROSS ? index : 0);
                 char existing = getDisplayedLetter(row, column, entry);
-                if (existing != '\u0000' && existing != guess.charAt(index)) {
+                if (existing != '\u0000' && existing != guess.charAt(index))
                     return false;
-                }
             }
 
             return true;
@@ -784,9 +763,8 @@ public class CrosswordCommand extends CoreCommand {
 
         public boolean isComplete() {
             for (Entry entry : this.entries) {
-                if (!entry.isSolved()) {
+                if (!entry.isSolved())
                     return false;
-                }
             }
 
             return true;
@@ -817,9 +795,8 @@ public class CrosswordCommand extends CoreCommand {
 
         private char getDisplayedLetter(int row, int column, Entry ignoredEntry) {
             for (Entry entry : this.entries) {
-                if (entry == ignoredEntry || !entry.hasFilledWord() || !entry.contains(row, column)) {
+                if (entry == ignoredEntry || !entry.hasFilledWord() || !entry.contains(row, column))
                     continue;
-                }
 
                 return entry.getFilledLetter(row, column);
             }
@@ -829,9 +806,8 @@ public class CrosswordCommand extends CoreCommand {
 
         public Entry getEntryStartingAt(int row, int column) {
             for (Entry entry : this.entries) {
-                if (entry.row == row && entry.column == column) {
+                if (entry.row == row && entry.column == column)
                     return entry;
-                }
             }
 
             return null;
@@ -839,9 +815,8 @@ public class CrosswordCommand extends CoreCommand {
 
         public Entry getEntry(int number) {
             for (Entry entry : this.entries) {
-                if (entry.number == number) {
+                if (entry.number == number)
                     return entry;
-                }
             }
 
             return null;
@@ -867,9 +842,8 @@ public class CrosswordCommand extends CoreCommand {
 
             for (int row = 0; row < GRID_SIZE; row++) {
                 for (int column = 0; column < GRID_SIZE; column++) {
-                    if (this.solution[row][column] == '\u0000') {
+                    if (this.solution[row][column] == '\u0000')
                         continue;
-                    }
 
                     minRow = Math.min(minRow, row);
                     minColumn = Math.min(minColumn, column);
@@ -878,9 +852,8 @@ public class CrosswordCommand extends CoreCommand {
                 }
             }
 
-            if (minRow == GRID_SIZE) {
+            if (minRow == GRID_SIZE)
                 return new Bounds(0, 0, GRID_SIZE - 1, GRID_SIZE - 1);
-            }
 
             return new Bounds(minRow, minColumn, maxRow, maxColumn);
         }
@@ -890,7 +863,8 @@ public class CrosswordCommand extends CoreCommand {
         Either<WordDefinition, HttpStatus> response = ApiHandler.getWordDefinition(word);
         if (response.isRight()) {
             if (response.getRight() != HttpStatus.NOT_FOUND) {
-                Constants.LOGGER.warn("Failed to fetch definition for crossword word {}: {}", word, response.getRight());
+                Constants.LOGGER.warn("Failed to fetch definition for crossword word {}: {}", word,
+                    response.getRight());
             }
 
             return Optional.empty();
@@ -903,34 +877,29 @@ public class CrosswordCommand extends CoreCommand {
 
     private static String sanitizeDefinition(String definition, String word, String partOfSpeech) {
         String cleaned = definition == null ? "" : definition.trim().replaceAll("\\s+", " ");
-        if (cleaned.isBlank()) {
+        if (cleaned.isBlank())
             return "";
-        }
 
-        if (cleaned.toLowerCase(Locale.ROOT).contains(word.toLowerCase(Locale.ROOT))) {
+        if (cleaned.toLowerCase(Locale.ROOT).contains(word.toLowerCase(Locale.ROOT)))
             return "";
-        }
 
         if (cleaned.length() > 180) {
             cleaned = cleaned.substring(0, 177) + "...";
         }
 
-        if (partOfSpeech == null || partOfSpeech.isBlank()) {
+        if (partOfSpeech == null || partOfSpeech.isBlank())
             return cleaned;
-        }
 
         return "(" + partOfSpeech + ") " + cleaned;
     }
 
     private static String normalizeWord(String rawWord) {
-        if (rawWord == null) {
+        if (rawWord == null)
             return "";
-        }
 
         String word = rawWord.trim().toLowerCase(Locale.ROOT);
-        if (!word.matches("[a-z]+")) {
+        if (!word.matches("[a-z]+"))
             return "";
-        }
 
         return word;
     }
@@ -969,9 +938,8 @@ public class CrosswordCommand extends CoreCommand {
             for (int index = 0; index < this.word.length(); index++) {
                 int row = this.row + (this.direction == Direction.DOWN ? index : 0);
                 int column = this.column + (this.direction == Direction.ACROSS ? index : 0);
-                if (row == checkRow && column == checkColumn) {
+                if (row == checkRow && column == checkColumn)
                     return true;
-                }
             }
 
             return false;
@@ -982,16 +950,14 @@ public class CrosswordCommand extends CoreCommand {
         }
 
         private char getFilledLetter(int checkRow, int checkColumn) {
-            if (!hasFilledWord()) {
+            if (!hasFilledWord())
                 return '\u0000';
-            }
 
             for (int index = 0; index < this.word.length(); index++) {
                 int row = this.row + (this.direction == Direction.DOWN ? index : 0);
                 int column = this.column + (this.direction == Direction.ACROSS ? index : 0);
-                if (row == checkRow && column == checkColumn) {
+                if (row == checkRow && column == checkColumn)
                     return this.filledWord.charAt(index);
-                }
             }
 
             return '\u0000';

@@ -43,74 +43,78 @@ public class WordSearchCommand extends CoreCommand {
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Game game, ThreadChannel thread) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event -> event.isFromGuild() && event.isFromThread()
-                        && event.getGuild().getIdLong() == game.getGuildId()
-                        && event.getChannel().getIdLong() == game.getThreadId()
-                        && event.getAuthor().getIdLong() == game.getUserId()
-                        && (event.getMessage().getContentRaw().split(" ").length == 1
-                        || event.getMessage().getContentRaw().equalsIgnoreCase("give up")))
-                .timeout(5, TimeUnit.MINUTES)
-                .timeoutAction(() -> {
-                    thread.sendMessage("❌ You took too long to find a word! Game over! The words were: " + String.join(", ", game.getWords()))
-                            .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+            .condition(event -> event.isFromGuild() && event.isFromThread()
+                && event.getGuild().getIdLong() == game.getGuildId()
+                && event.getChannel().getIdLong() == game.getThreadId()
+                && event.getAuthor().getIdLong() == game.getUserId()
+                && (event.getMessage().getContentRaw().split(" ").length == 1
+                    || event.getMessage().getContentRaw().equalsIgnoreCase("give up")))
+            .timeout(5, TimeUnit.MINUTES)
+            .timeoutAction(() -> {
+                thread
+                    .sendMessage("❌ You took too long to find a word! Game over! The words were: "
+                        + String.join(", ", game.getWords()))
+                    .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .failure(() -> {
+                thread
+                    .sendMessage(
+                        "❌ Something went wrong! Game over! The words were: " + String.join(", ", game.getWords()))
+                    .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                GAMES.remove(game);
+            })
+            .success(event -> {
+                String word = event.getMessage().getContentRaw().trim().toLowerCase(Locale.ROOT);
+                if (word.equalsIgnoreCase("give up")) {
+                    thread.sendMessage("✅ Game over! The words were: " + String.join(", ", game.getWords()))
+                        .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
                     GAMES.remove(game);
-                })
-                .failure(() -> {
-                    thread.sendMessage("❌ Something went wrong! Game over! The words were: " + String.join(", ", game.getWords()))
-                            .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
-                    GAMES.remove(game);
-                })
-                .success(event -> {
-                    String word = event.getMessage().getContentRaw().trim().toLowerCase(Locale.ROOT);
-                    if (word.equalsIgnoreCase("give up")) {
-                        thread.sendMessage("✅ Game over! The words were: " + String.join(", ", game.getWords()))
-                                .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+                    return;
+                }
+
+                if (game.getGuessedWords().contains(word)) {
+                    createEventWaiter(game, thread).build();
+                    return;
+                }
+
+                if (game.guess(word)) {
+                    Optional<FileUpload> upload = createUpload(game);
+                    if (upload.isEmpty()) {
+                        thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
+                            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
                         return;
                     }
 
-                    if (game.getGuessedWords().contains(word)) {
-                        createEventWaiter(game, thread).build();
+                    List<String> foundWords = game.getFoundWords();
+                    if (foundWords.size() == game.getWordCount()) {
+                        thread.sendMessage("✅ You found all the words! Game over!")
+                            .setFiles(upload.get())
+                            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                        QuestManager.INSTANCE.recordMinigameCompletion(
+                            game.getGuildId(), game.getUserId(), "word_search", game.getThreadId());
+                        GAMES.remove(game);
                         return;
                     }
 
-                    if (game.guess(word)) {
-                        Optional<FileUpload> upload = createUpload(game);
-                        if (upload.isEmpty()) {
-                            thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
-                                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
-                            GAMES.remove(game);
-                            return;
-                        }
-
-                        List<String> foundWords = game.getFoundWords();
-                        if (foundWords.size() == game.getWordCount()) {
-                            thread.sendMessage("✅ You found all the words! Game over!")
-                                    .setFiles(upload.get())
-                                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
-                            QuestManager.INSTANCE.recordMinigameCompletion(
-                                    game.getGuildId(), game.getUserId(), "word_search", game.getThreadId());
-                            GAMES.remove(game);
-                            return;
-                        }
-
-                        thread.sendMessage("✅ You found a word! " + (game.getWordCount() - foundWords.size()) + " left!")
-                                .setFiles(upload.get())
-                                .queue(ignored -> createEventWaiter(game, thread).build());
-                    } else {
-                        Optional<FileUpload> upload = createUpload(game);
-                        if (upload.isEmpty()) {
-                            thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
-                                    .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
-                            GAMES.remove(game);
-                            return;
-                        }
-
-                        thread.sendMessage("❌ That is not a word! Try again!")
-                                .setFiles(upload.get())
-                                .queue(ignored -> createEventWaiter(game, thread).build());
+                    thread.sendMessage("✅ You found a word! " + (game.getWordCount() - foundWords.size()) + " left!")
+                        .setFiles(upload.get())
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                } else {
+                    Optional<FileUpload> upload = createUpload(game);
+                    if (upload.isEmpty()) {
+                        thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
+                            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                        GAMES.remove(game);
+                        return;
                     }
-                });
+
+                    thread.sendMessage("❌ That is not a word! Try again!")
+                        .setFiles(upload.get())
+                        .queue(_ -> createEventWaiter(game, thread).build());
+                }
+            });
     }
 
     private static BufferedImage generateImage(Game game) {
@@ -142,9 +146,9 @@ public class WordSearchCommand extends CoreCommand {
             for (int j = 0; j < row.length; j++) {
                 char letter = row[j];
                 graphics.drawString(
-                        String.valueOf(letter),
-                        62 + (j * 70) - metrics.charWidth(letter) / 2,
-                        162 + (i * 70) + (int) (metrics.getHeight() / 2.5f));
+                    String.valueOf(letter),
+                    62 + (j * 70) - metrics.charWidth(letter) / 2,
+                    162 + (i * 70) + (int) (metrics.getHeight() / 2.5f));
             }
         }
 
@@ -241,7 +245,8 @@ public class WordSearchCommand extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
@@ -249,8 +254,8 @@ public class WordSearchCommand extends CoreCommand {
         reply(event, "✅ Creating a game of word search...");
 
         if (GAMES.stream().anyMatch(game -> game.getGuildId() == guild.getIdLong()
-                && game.getChannelId() == event.getChannel().getIdLong()
-                && game.getUserId() == event.getUser().getIdLong())) {
+            && game.getChannelId() == event.getChannel().getIdLong()
+            && game.getUserId() == event.getUser().getIdLong())) {
             event.getHook().editOriginal("❌ There is already a game of word search in this channel!").queue();
             return;
         }
@@ -258,7 +263,7 @@ public class WordSearchCommand extends CoreCommand {
         event.getHook().editOriginal("✅ Game created!").queue(message -> {
             try {
                 var game = new Game(10, 10,
-                        guild.getIdLong(), event.getUser().getIdLong(), event.getChannel().getIdLong());
+                    guild.getIdLong(), event.getUser().getIdLong(), event.getChannel().getIdLong());
                 GAMES.add(game);
                 message.createThreadChannel(event.getUser().getEffectiveName() + "'s Word Search").queue(thread -> {
                     thread.addThreadMember(event.getUser()).queue();
@@ -267,25 +272,33 @@ public class WordSearchCommand extends CoreCommand {
                     Optional<FileUpload> upload = createUpload(game);
                     if (upload.isEmpty()) {
                         thread.sendMessage("❌ Failed to create word search! Please try running the command again!")
-                                .queue(ignored -> thread.getManager().setArchived(true).setLocked(true).queue());
+                            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
                         GAMES.remove(game);
                         return;
                     }
 
                     thread.sendMessage("✅ Here is your word search! Type the words you find in the thread!")
-                            .setFiles(upload.get())
-                            .queue(ignored -> createEventWaiter(game, thread).build());
+                        .setFiles(upload.get())
+                        .queue(_ -> createEventWaiter(game, thread).build());
                 });
             } catch (IllegalStateException exception) {
-                message.editMessage("❌ Failed to create word search! This usually happens when it cannot fit a word in the grid. Please try running the command again!")
-                        .queue(ignored -> message.delete().queueAfter(10, TimeUnit.SECONDS));
+                message.editMessage(
+                    "❌ Failed to create word search! This usually happens when it cannot fit a word in the grid. Please try running the command again!")
+                    .queue(_ -> message.delete().queueAfter(10, TimeUnit.SECONDS));
                 RATE_LIMITS.put(event.getUser().getIdLong(), Pair.of(getName(), System.currentTimeMillis()));
             }
         });
     }
 
     private enum Direction {
-        UP, RIGHT, DOWN, LEFT, UP_RIGHT, DOWN_RIGHT, DOWN_LEFT, UP_LEFT;
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT,
+        UP_RIGHT,
+        DOWN_RIGHT,
+        DOWN_LEFT,
+        UP_LEFT;
 
         public static Direction fromCoordinates(Pair<Integer, Integer> from, Pair<Integer, Integer> to) {
             int startRow = from.getLeft();
@@ -293,15 +306,14 @@ public class WordSearchCommand extends CoreCommand {
             int endRow = to.getLeft();
             int endColumn = to.getRight();
 
-            if (startRow == endRow) {
+            if (startRow == endRow)
                 return startColumn < endColumn ? RIGHT : LEFT;
-            } else if (startColumn == endColumn) {
+            else if (startColumn == endColumn)
                 return startRow < endRow ? DOWN : UP;
-            } else if (startRow < endRow) {
+            else if (startRow < endRow)
                 return startColumn < endColumn ? DOWN_RIGHT : DOWN_LEFT;
-            } else {
+            else
                 return startColumn < endColumn ? UP_RIGHT : UP_LEFT;
-            }
         }
     }
 
@@ -346,9 +358,9 @@ public class WordSearchCommand extends CoreCommand {
 
         private static List<String> getWords(int size, int wordCount) {
             Either<List<String>, HttpStatus> response = ApiHandler.getWords(new RandomWordRequestData.Builder()
-                    .length(3, size)
-                    .amount(wordCount)
-                    .build());
+                .length(3, size)
+                .amount(wordCount)
+                .build());
             if (response.isLeft())
                 return List.copyOf(response.getLeft());
             else {
@@ -399,7 +411,10 @@ public class WordSearchCommand extends CoreCommand {
                 }
             }
 
-            int max = Math.max(Math.max(Math.max(Math.max(Math.max(Math.max(Math.max(up, right), down), left), upRight), downRight), downLeft), upLeft);
+            int max = Math.max(
+                Math.max(Math.max(Math.max(Math.max(Math.max(Math.max(up, right), down), left), upRight), downRight),
+                    downLeft),
+                upLeft);
             if (max == up)
                 return Direction.UP;
             if (max == right)

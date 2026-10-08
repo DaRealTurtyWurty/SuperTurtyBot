@@ -23,41 +23,38 @@ public final class ReportsService {
     public DashboardReportHistoryResponse getUserReports(long guildId, long userId) {
         Guild guild = requireGuild(guildId);
         return new DashboardReportHistoryResponse(
-                toUserSummary(guild, userId),
-                listReports(guildId, guild, userId)
-        );
+            toUserSummary(guild, userId),
+            listReports(guildId, guild, userId));
     }
 
     private Guild requireGuild(long guildId) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
         return guild;
     }
 
     private List<DashboardReportRecord> listReports(long guildId, Guild guild, long userId) {
         return Database.getDatabase().reports.find(Filters.and(
-                        Filters.eq("guild", guildId),
-                        Filters.eq("reported", userId)))
-                .sort(Sorts.descending("reportedAt"))
-                .into(new ArrayList<>())
-                .stream()
-                .map(report -> toRecord(guild, report))
-                .toList();
+            Filters.eq("guild", guildId),
+            Filters.eq("reported", userId)))
+            .sort(Sorts.descending("reportedAt"))
+            .into(new ArrayList<>())
+            .stream()
+            .map(report -> toRecord(guild, report))
+            .toList();
     }
 
     private DashboardReportRecord toRecord(Guild guild, Report report) {
         ResolvedUser reporter = resolveUser(guild, report.getReporter());
         return new DashboardReportRecord(
-                Long.toString(report.getReporter()),
-                reporter.displayName(),
-                reporter.avatarUrl(),
-                report.getReason(),
-                report.getReportedAt()
-        );
+            Long.toString(report.getReporter()),
+            reporter.displayName(),
+            reporter.avatarUrl(),
+            report.getReason(),
+            report.getReportedAt());
     }
 
     private DashboardReportUserSummary toUserSummary(Guild guild, long userId) {
@@ -67,14 +64,12 @@ public final class ReportsService {
 
     private ResolvedUser resolveUser(Guild guild, long userId) {
         Member member = guild.getMemberById(userId);
-        if (member != null) {
+        if (member != null)
             return new ResolvedUser(member.getEffectiveName(), member.getEffectiveAvatarUrl());
-        }
 
         var user = this.jda.getUserById(userId);
-        if (user != null) {
+        if (user != null)
             return new ResolvedUser(user.getName(), user.getEffectiveAvatarUrl());
-        }
 
         return new ResolvedUser("Unknown User", null);
     }

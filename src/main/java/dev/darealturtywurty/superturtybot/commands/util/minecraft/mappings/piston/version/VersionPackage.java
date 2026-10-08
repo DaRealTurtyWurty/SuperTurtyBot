@@ -15,10 +15,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public record VersionPackage(Arguments arguments, AssetIndex assetIndex, String assets, int complianceLevel,
-                             Downloads downloads, String id, JavaVersion javaVersion, List<Library> libraries,
-                             Logging logging, String mainClass, int minimumLauncherVersion, String releaseTime,
-                             String time, String type) {
+public record VersionPackage(
+    Arguments arguments,
+    AssetIndex assetIndex,
+    String assets,
+    int complianceLevel,
+    Downloads downloads,
+    String id,
+    JavaVersion javaVersion,
+    List<Library> libraries,
+    Logging logging,
+    String mainClass,
+    int minimumLauncherVersion,
+    String releaseTime,
+    String time,
+    String type
+) {
     private static final Map<PistonMetaVersion, Path> PATH_CACHE = new ConcurrentHashMap<>();
 
     public static VersionPackage fromJson(JsonObject json) {
@@ -61,7 +73,7 @@ public record VersionPackage(Arguments arguments, AssetIndex assetIndex, String 
         String type = json.get("type").getAsString();
 
         return new VersionPackage(arguments, assetIndex, assets, complianceLevel, downloads, id, javaVersion,
-                libraries, logging, mainClass, minimumLauncherVersion, releaseTime, time, type);
+            libraries, logging, mainClass, minimumLauncherVersion, releaseTime, time, type);
     }
 
     public static VersionPackage fromPath(Path path) {

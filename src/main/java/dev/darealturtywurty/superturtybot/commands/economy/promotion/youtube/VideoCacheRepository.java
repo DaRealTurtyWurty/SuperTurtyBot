@@ -8,27 +8,27 @@ import java.util.*;
 public record VideoCacheRepository(Path databasePath) {
     private static void ensureTables(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "CREATE TABLE IF NOT EXISTS dead_video_ids (video_id TEXT PRIMARY KEY, added_at INTEGER NOT NULL)")) {
+            "CREATE TABLE IF NOT EXISTS dead_video_ids (video_id TEXT PRIMARY KEY, added_at INTEGER NOT NULL)")) {
             statement.executeUpdate();
         }
 
         try (PreparedStatement statement = connection.prepareStatement(
-                "CREATE TABLE IF NOT EXISTS recent_video_cache (" +
-                        "video_id TEXT PRIMARY KEY, " +
-                        "title TEXT NOT NULL, " +
-                        "thumbnail_url TEXT, " +
-                        "view_count INTEGER NOT NULL, " +
-                        "like_count INTEGER NOT NULL, " +
-                        "published_at INTEGER NOT NULL, " +
-                        "duration_seconds INTEGER NOT NULL, " +
-                        "cached_at INTEGER NOT NULL)")) {
+            "CREATE TABLE IF NOT EXISTS recent_video_cache (" +
+                "video_id TEXT PRIMARY KEY, " +
+                "title TEXT NOT NULL, " +
+                "thumbnail_url TEXT, " +
+                "view_count INTEGER NOT NULL, " +
+                "like_count INTEGER NOT NULL, " +
+                "published_at INTEGER NOT NULL, " +
+                "duration_seconds INTEGER NOT NULL, " +
+                "cached_at INTEGER NOT NULL)")) {
             statement.executeUpdate();
         }
     }
 
     private static void pruneCache(Connection connection, long cutoff) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE FROM recent_video_cache WHERE cached_at < ?")) {
+            "DELETE FROM recent_video_cache WHERE cached_at < ?")) {
             statement.setLong(1, cutoff);
             statement.executeUpdate();
         }
@@ -37,7 +37,7 @@ public record VideoCacheRepository(Path databasePath) {
     private static List<YoutubeVideo> loadCachedVideos(Connection connection, long cutoff) throws SQLException {
         List<YoutubeVideo> videos = new ArrayList<>();
         String sql = "SELECT video_id, title, thumbnail_url, view_count, like_count, published_at, duration_seconds " +
-                "FROM recent_video_cache WHERE cached_at >= ?";
+            "FROM recent_video_cache WHERE cached_at >= ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, cutoff);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -50,7 +50,7 @@ public record VideoCacheRepository(Path databasePath) {
                     Instant publishedAt = Instant.ofEpochMilli(resultSet.getLong(6));
                     long durationSeconds = resultSet.getLong(7);
                     videos.add(new YoutubeVideo(id, title, thumbnailUrl, viewCount, likeCount, publishedAt,
-                            durationSeconds, false));
+                        durationSeconds, false));
                 }
             }
         }
@@ -63,8 +63,8 @@ public record VideoCacheRepository(Path databasePath) {
             return;
 
         String sql = "INSERT OR REPLACE INTO recent_video_cache " +
-                "(video_id, title, thumbnail_url, view_count, like_count, published_at, duration_seconds, cached_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            "(video_id, title, thumbnail_url, view_count, like_count, published_at, duration_seconds, cached_at) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (YoutubeVideo video : videos) {
                 statement.setString(1, video.id());
@@ -140,21 +140,26 @@ public record VideoCacheRepository(Path databasePath) {
         return Optional.empty();
     }
 
-    private static List<String> fetchRandomVideoIds(Connection connection, VideoIdSource source, String quoteString,
-                                                    int limit) throws SQLException {
+    private static List<String> fetchRandomVideoIds(
+        Connection connection,
+        VideoIdSource source,
+        String quoteString,
+        int limit
+    ) throws SQLException {
         List<String> ids = new ArrayList<>();
         String table = quoteIdentifier(source.table(), quoteString);
         String column = quoteIdentifier(source.column(), quoteString);
         String sql = "SELECT " + column + " FROM " + table +
-                " WHERE " + column + " NOT IN (SELECT video_id FROM dead_video_ids) " +
-                "ORDER BY RANDOM() LIMIT ?";
+            " WHERE " + column + " NOT IN (SELECT video_id FROM dead_video_ids) " +
+            "ORDER BY RANDOM() LIMIT ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, limit);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     String id = resultSet.getString(1);
-                    if (id != null && !id.isBlank())
+                    if (id != null && !id.isBlank()) {
                         ids.add(id);
+                    }
                 }
             }
         }
@@ -168,8 +173,12 @@ public record VideoCacheRepository(Path databasePath) {
         return quoteString + value.replace(quoteString, quoteString + quoteString) + quoteString;
     }
 
-    public List<YoutubeVideo> loadCandidates(YoutubeApiClient apiClient, int randomCount, int maxAttempts,
-                                             long cacheTtlMs) {
+    public List<YoutubeVideo> loadCandidates(
+        YoutubeApiClient apiClient,
+        int randomCount,
+        int maxAttempts,
+        long cacheTtlMs
+    ) {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
             ensureTables(connection);
             VideoIdSource source = resolveVideoIdSource(connection);
@@ -189,8 +198,9 @@ public record VideoCacheRepository(Path databasePath) {
                     break;
 
                 YoutubeApiClient.VideoFetchResult result = apiClient.fetchVideos(randomIds);
-                if (!result.missingIds().isEmpty())
+                if (!result.missingIds().isEmpty()) {
                     markDeadVideoIds(connection, result.missingIds(), now);
+                }
 
                 cacheVideos(connection, result.videos(), now);
                 for (YoutubeVideo video : result.videos()) {
@@ -209,7 +219,7 @@ public record VideoCacheRepository(Path databasePath) {
             return;
 
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath.toAbsolutePath())) {
-            StringBuilder placeholders = new StringBuilder();
+            var placeholders = new StringBuilder();
             for (int i = 0; i < videoIds.size(); i++) {
                 if (i > 0) {
                     placeholders.append(',');

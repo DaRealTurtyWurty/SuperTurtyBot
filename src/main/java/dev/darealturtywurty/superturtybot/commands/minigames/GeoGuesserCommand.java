@@ -59,8 +59,9 @@ public class GeoGuesserCommand extends SubcommandCommand {
         Either<Geoguesser, HttpStatus> response = ApiHandler.geoguesser();
         if (response.isRight()) {
             event.getHook().editOriginal(
-                    "❌ There was an error while trying to get a GeoGuesser game! ||Response Code: " +
-                            response.getRight() + "||").queue();
+                "❌ There was an error while trying to get a GeoGuesser game! ||Response Code: " +
+                    response.getRight() + "||")
+                .queue();
             return;
         }
 
@@ -78,88 +79,95 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
         byte[] bytes = baos.toByteArray();
         FileUpload upload = FileUpload.fromData(bytes, "geoguesser.png");
-        event.getHook().editOriginal("🌎 **Where is this?**").setFiles(upload).queue(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s Geo Guesser Game").queue(thread -> {
-                    thread.addThreadMember(event.getUser()).queue();
-                    var game = new Game(
-                            guild.getIdLong(),
-                            event.getChannel().getIdLong(),
-                            thread.getIdLong(),
-                            message.getIdLong(),
-                            event.getUser().getIdLong(),
-                            geoguesser);
+        event.getHook().editOriginal("🌎 **Where is this?**").setFiles(upload).queue(
+            message -> message.createThreadChannel(event.getUser().getName() + "'s Geo Guesser Game").queue(thread -> {
+                thread.addThreadMember(event.getUser()).queue();
+                var game = new Game(
+                    guild.getIdLong(),
+                    event.getChannel().getIdLong(),
+                    thread.getIdLong(),
+                    message.getIdLong(),
+                    event.getUser().getIdLong(),
+                    geoguesser);
 
-                    GAMES.add(game);
-                    createEventWaiter(game, thread).build();
-                }));
+                GAMES.add(game);
+                createEventWaiter(game, thread).build();
+            }));
     }
 
     private static EventWaiter.Builder<MessageReceivedEvent> createEventWaiter(Game game, ThreadChannel thread) {
         return TurtyBot.EVENT_WAITER
-                .builder(MessageReceivedEvent.class)
-                .condition(msgEvent -> msgEvent.isFromGuild() &&
-                        msgEvent.getGuild().getIdLong() == game.getGuildId() &&
-                        msgEvent.getChannel().getIdLong() == game.getChannelId() &&
-                        msgEvent.getAuthor().getIdLong() == game.getUserId() &&
-                        game.isValidGuess(msgEvent.getMessage().getContentRaw()) &&
-                        !game.hasGuessed(msgEvent.getMessage().getContentRaw()))
-                .timeout(10, TimeUnit.MINUTES)
-                .timeoutAction(() -> {
+            .builder(MessageReceivedEvent.class)
+            .condition(msgEvent -> msgEvent.isFromGuild() &&
+                msgEvent.getGuild().getIdLong() == game.getGuildId() &&
+                msgEvent.getChannel().getIdLong() == game.getChannelId() &&
+                msgEvent.getAuthor().getIdLong() == game.getUserId() &&
+                game.isValidGuess(msgEvent.getMessage().getContentRaw()) &&
+                !game.hasGuessed(msgEvent.getMessage().getContentRaw()))
+            .timeout(10, TimeUnit.MINUTES)
+            .timeoutAction(() -> {
+                GAMES.remove(game);
+                thread.sendMessage("❌ **Game timed out!**")
+                    .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+            })
+            .failure(() -> {
+                GAMES.remove(game);
+                thread.sendMessage("❌ **Game failed!**")
+                    .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+            })
+            .success(msgEvent -> {
+                String guess = msgEvent.getMessage().getContentRaw();
+                if (game.guess(guess)) {
+                    QuestManager.INSTANCE.recordGeographyAnswer(
+                        msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                        msgEvent.getMessageIdLong(), true);
+                    QuestManager.INSTANCE.recordGeographyGameCompleted(
+                        msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                        game.getMessageId(), 1, game.getGuesses().size());
                     GAMES.remove(game);
-                    thread.sendMessage("❌ **Game timed out!**").queue(ignored ->
-                            thread.getManager().setArchived(true).setLocked(true).queue());
-                })
-                .failure(() -> {
-                    GAMES.remove(game);
-                    thread.sendMessage("❌ **Game failed!**").queue(ignored ->
-                            thread.getManager().setArchived(true).setLocked(true).queue());
-                })
-                .success(msgEvent -> {
-                    String guess = msgEvent.getMessage().getContentRaw();
-                    if (game.guess(guess)) {
-                        QuestManager.INSTANCE.recordGeographyAnswer(
-                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
-                                msgEvent.getMessageIdLong(), true
-                        );
-                        QuestManager.INSTANCE.recordGeographyGameCompleted(
-                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
-                                game.getMessageId(), 1, game.getGuesses().size()
-                        );
+                    thread.sendMessage("✅ **Correct!**")
+                        .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
+                } else {
+                    QuestManager.INSTANCE.recordGeographyAnswer(
+                        msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
+                        msgEvent.getMessageIdLong(), false);
+                    thread.sendMessage("❌ **Incorrect!**").queue();
+
+                    if (game.hasLost()) {
                         GAMES.remove(game);
-                        thread.sendMessage("✅ **Correct!**").queue(ignored ->
-                                thread.getManager().setArchived(true).setLocked(true).queue());
+                        thread
+                            .sendMessage(
+                                "❌ **Game over! The correct answer was: " + game.getGeoguesser().country() + "**")
+                            .queue(_ -> thread.getManager().setArchived(true).setLocked(true).queue());
                     } else {
-                        QuestManager.INSTANCE.recordGeographyAnswer(
-                                msgEvent.getGuild(), msgEvent.getAuthor(), "geoguesser",
-                                msgEvent.getMessageIdLong(), false
-                        );
-                        thread.sendMessage("❌ **Incorrect!**").queue();
+                        thread.sendMessage("❌ **You have " + (10 - game.getGuesses().size()) + " guesses left!**")
+                            .queue();
 
-                        if (game.hasLost()) {
-                            GAMES.remove(game);
-                            thread.sendMessage("❌ **Game over! The correct answer was: " + game.getGeoguesser().country() + "**").queue(ignored ->
-                                    thread.getManager().setArchived(true).setLocked(true).queue());
-                        } else {
-                            thread.sendMessage("❌ **You have " + (10 - game.getGuesses().size()) + " guesses left!**").queue();
-
-                            // we need to listen for another message, so we need to create a new event waiter
-                            createEventWaiter(game, thread).build();
-                        }
+                        // we need to listen for another message, so we need to create a new event waiter
+                        createEventWaiter(game, thread).build();
                     }
-                });
+                }
+            });
     }
 
     @Getter
     public static class Game {
-        private static final RegionExcludeRequestData EXCLUDE_REQUEST_DATA =
-                new RegionExcludeRequestData.Builder().excludeTerritories().build();
+        private static final RegionExcludeRequestData EXCLUDE_REQUEST_DATA = new RegionExcludeRequestData.Builder()
+            .excludeTerritories().build();
 
         private final long guildId, parentChannelId, channelId, messageId, userId;
         private final Geoguesser geoguesser;
         private final List<String> guesses = new ArrayList<>();
         private final List<String> possibleCountries = new ArrayList<>();
 
-        public Game(long guildId, long parentChannelId, long channelId, long messageId, long userId, Geoguesser geoguesser) {
+        public Game(
+            long guildId,
+            long parentChannelId,
+            long channelId,
+            long messageId,
+            long userId,
+            Geoguesser geoguesser
+        ) {
             this.guildId = guildId;
             this.parentChannelId = parentChannelId;
             this.channelId = channelId;
@@ -169,7 +177,8 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
             Either<List<Region>, HttpStatus> matchingRegions = ApiHandler.getAllRegions(EXCLUDE_REQUEST_DATA);
             if (matchingRegions.isRight()) {
-                Constants.LOGGER.error("Error while getting all regions! Response Code: {}", matchingRegions.getRight());
+                Constants.LOGGER.error("Error while getting all regions! Response Code: {}",
+                    matchingRegions.getRight());
                 return;
             }
 
@@ -187,9 +196,8 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
         public boolean isValidGuess(String guess) {
             for (String possibleCountry : this.possibleCountries) {
-                if (possibleCountry.equalsIgnoreCase(guess.trim())) {
+                if (possibleCountry.equalsIgnoreCase(guess.trim()))
                     return true;
-                }
             }
 
             return isCorrect(guess);
@@ -197,9 +205,8 @@ public class GeoGuesserCommand extends SubcommandCommand {
 
         public boolean hasGuessed(String guess) {
             for (String guessed : this.guesses) {
-                if (guessed.equalsIgnoreCase(guess.trim())) {
+                if (guessed.equalsIgnoreCase(guess.trim()))
                     return true;
-                }
             }
 
             return false;

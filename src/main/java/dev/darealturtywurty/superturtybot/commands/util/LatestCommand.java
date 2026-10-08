@@ -37,42 +37,48 @@ public class LatestCommand extends CoreCommand {
         var embed = new EmbedBuilder();
         if (minecraftResponse.isLeft()) {
             CoupledPair<MinecraftVersion> versions = minecraftResponse.getLeft();
-            embed.addField("Minecraft", "Release: " + versions.getLeft().version() + "\nSnapshot: " + versions.getRight().version(), false);
+            embed.addField("Minecraft",
+                "Release: " + versions.getLeft().version() + "\nSnapshot: " + versions.getRight().version(), false);
         } else {
             embed.addField("Minecraft", "❌ Failed to get latest Minecraft versions!", false);
         }
 
         if (forgeResponse.isLeft()) {
             CoupledPair<ForgeVersion> versions = forgeResponse.getLeft();
-            embed.addField("Forge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+            embed.addField("Forge",
+                "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("Forge", "❌ Failed to get latest Forge versions!", false);
         }
 
         if (fabricResponse.isLeft()) {
             CoupledPair<FabricVersion> versions = fabricResponse.getLeft();
-            embed.addField("Fabric", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+            embed.addField("Fabric",
+                "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("Fabric", "❌ Failed to get latest Fabric versions!", false);
         }
 
         if (quiltResponse.isLeft()) {
             CoupledPair<QuiltVersion> versions = quiltResponse.getLeft();
-            embed.addField("Quilt", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+            embed.addField("Quilt",
+                "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("Quilt", "❌ Failed to get latest Quilt versions!", false);
         }
 
         if (neoforgeResponse.isLeft()) {
             CoupledPair<NeoforgeVersion> versions = neoforgeResponse.getLeft();
-            embed.addField("NeoForge", "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
+            embed.addField("NeoForge",
+                "Stable: " + versions.getLeft().version() + "\nLatest: " + versions.getRight().version(), false);
         } else {
             embed.addField("NeoForge", "❌ Failed to get latest NeoForge versions!", false);
         }
 
         if (parchmentResponse.isLeft()) {
             ParchmentVersion version = parchmentResponse.getLeft();
-            embed.addField("Parchment", "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
+            embed.addField("Parchment",
+                "Version: " + version.version() + "\nMinecraft Version: " + version.version().split("-")[1], false);
         } else {
             embed.addField("Parchment", "❌ Failed to get latest Parchment version!", false);
         }
@@ -82,13 +88,14 @@ public class LatestCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(new SubcommandData("minecraft", "Get the latest Minecraft version"),
-                new SubcommandData("forge", "Get the latest Forge version"),
-                new SubcommandData("fabric", "Get the latest Fabric version"),
-                new SubcommandData("quilt", "Get the latest Quilt version"),
-                new SubcommandData("parchment", "Get the latest Parchment version")
-                        .addOption(OptionType.STRING, "version", "The version of Minecraft to get the latest Parchment version for", false, true),
-                new SubcommandData("neoforge", "Get the latest NeoForge version"),
-                new SubcommandData("all", "Get the latest versions of all"));
+            new SubcommandData("forge", "Get the latest Forge version"),
+            new SubcommandData("fabric", "Get the latest Fabric version"),
+            new SubcommandData("quilt", "Get the latest Quilt version"),
+            new SubcommandData("parchment", "Get the latest Parchment version")
+                .addOption(OptionType.STRING, "version",
+                    "The version of Minecraft to get the latest Parchment version for", false, true),
+            new SubcommandData("neoforge", "Get the latest NeoForge version"),
+            new SubcommandData("all", "Get the latest versions of all"));
     }
 
     @Override
@@ -136,9 +143,9 @@ public class LatestCommand extends CoreCommand {
                 CoupledPair<MinecraftVersion> versions = response.getLeft();
 
                 var embed = new EmbedBuilder()
-                        .setTitle("Latest Minecraft Versions")
-                        .addField("Release", versions.getLeft().version(), true)
-                        .addField("Snapshot", versions.getRight().version(), true);
+                    .setTitle("Latest Minecraft Versions")
+                    .addField("Release", versions.getLeft().version(), true)
+                    .addField("Snapshot", versions.getRight().version(), true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -151,9 +158,9 @@ public class LatestCommand extends CoreCommand {
 
                 CoupledPair<ForgeVersion> versions = response.getLeft();
                 var embed = new EmbedBuilder()
-                        .setTitle("Latest Forge Versions")
-                        .addField("Recommended", versions.getLeft().version(), true)
-                        .addField("Latest", versions.getRight().version(), true);
+                    .setTitle("Latest Forge Versions")
+                    .addField("Recommended", versions.getLeft().version(), true)
+                    .addField("Latest", versions.getRight().version(), true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -166,9 +173,9 @@ public class LatestCommand extends CoreCommand {
 
                 CoupledPair<FabricVersion> versions = response.getLeft();
                 var embed = new EmbedBuilder()
-                        .setTitle("Latest Fabric Versions")
-                        .addField("Stable", versions.getLeft().version(), true)
-                        .addField("Latest", versions.getRight().version(), true);
+                    .setTitle("Latest Fabric Versions")
+                    .addField("Stable", versions.getLeft().version(), true)
+                    .addField("Latest", versions.getRight().version(), true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -181,9 +188,9 @@ public class LatestCommand extends CoreCommand {
 
                 CoupledPair<QuiltVersion> versions = response.getLeft();
                 var embed = new EmbedBuilder()
-                        .setTitle("Latest Quilt Versions")
-                        .addField("Stable", versions.getLeft().version(), true)
-                        .addField("Latest", versions.getRight().version(), true);
+                    .setTitle("Latest Quilt Versions")
+                    .addField("Stable", versions.getLeft().version(), true)
+                    .addField("Latest", versions.getRight().version(), true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -196,9 +203,9 @@ public class LatestCommand extends CoreCommand {
 
                 CoupledPair<NeoforgeVersion> versions = response.getLeft();
                 var embed = new EmbedBuilder()
-                        .setTitle("Latest Neoforge Versions")
-                        .addField("Recommended", versions.getLeft().version(), true)
-                        .addField("Latest", versions.getRight().version(), true);
+                    .setTitle("Latest Neoforge Versions")
+                    .addField("Recommended", versions.getLeft().version(), true)
+                    .addField("Latest", versions.getRight().version(), true);
 
                 event.getHook().editOriginalEmbeds(embed.build()).queue();
             }
@@ -213,9 +220,9 @@ public class LatestCommand extends CoreCommand {
 
                     ParchmentVersion version = response.getLeft();
                     var embed = new EmbedBuilder()
-                            .setTitle("Latest Parchment Version")
-                            .addField("Version", version.version(), true)
-                            .addField("Minecraft Version", version.version().split("-")[1], true);
+                        .setTitle("Latest Parchment Version")
+                        .addField("Version", version.version(), true)
+                        .addField("Minecraft Version", version.version().split("-")[1], true);
 
                     event.getHook().editOriginalEmbeds(embed.build()).queue();
                     return;
@@ -225,7 +232,8 @@ public class LatestCommand extends CoreCommand {
                 Either<ParchmentVersion, HttpStatus> response = ApiHandler.getParchment(suppliedVersion);
                 if (response.isRight()) {
                     if (response.getRight() == HttpStatus.NOT_FOUND) {
-                        event.getHook().sendMessage("❌ There is no Parchment version for that Minecraft version!").queue();
+                        event.getHook().sendMessage("❌ There is no Parchment version for that Minecraft version!")
+                            .queue();
                         return;
                     }
 
@@ -242,10 +250,12 @@ public class LatestCommand extends CoreCommand {
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        if (!event.getName().equals(getName()) || event.getSubcommandName() == null || !event.getSubcommandName().equalsIgnoreCase("parchment"))
+        if (!event.getName().equals(getName()) || event.getSubcommandName() == null
+            || !event.getSubcommandName().equalsIgnoreCase("parchment"))
             return;
 
-        if(RATE_LIMITS.containsKey(event.getUser().getIdLong()) && RATE_LIMITS.get(event.getUser().getIdLong()).getRight() > System.currentTimeMillis()){
+        if (RATE_LIMITS.containsKey(event.getUser().getIdLong())
+            && RATE_LIMITS.get(event.getUser().getIdLong()).getRight() > System.currentTimeMillis()) {
             event.replyChoices().queue();
             return;
         }
@@ -261,12 +271,12 @@ public class LatestCommand extends CoreCommand {
             List<MinecraftVersion> versions = response.getLeft();
             String value = query.getValue();
             event.replyChoiceStrings(versions.stream()
-                            .filter(MinecraftVersion::isRelease)
-                            .map(MinecraftVersion::version)
-                            .filter(version -> version.contains(value))
-                            .limit(25)
-                            .toList())
-                    .queue();
+                .filter(MinecraftVersion::isRelease)
+                .map(MinecraftVersion::version)
+                .filter(version -> version.contains(value))
+                .limit(25)
+                .toList())
+                .queue();
         }
     }
 }

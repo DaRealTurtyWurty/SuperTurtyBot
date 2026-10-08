@@ -22,9 +22,9 @@ public class DatabaseConverter {
         System.out.println("Hello world!");
 
         final CodecRegistry pojoRegistry = CodecRegistries
-                .fromProviders(PojoCodecProvider.builder().automatic(true).build());
+            .fromProviders(PojoCodecProvider.builder().automatic(true).build());
         final CodecRegistry codecRegistry = CodecRegistries
-                .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
+            .fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoRegistry);
 
         final MongoClient client = connect(codecRegistry);
         final MongoDatabase database = client.getDatabase("TurtyBot-dev");
@@ -35,11 +35,12 @@ public class DatabaseConverter {
     }
 
     private static void upgradeData(MongoDatabase database) {
-        BiConsumer<MongoCollection<Document>, Document> replace = (collection, document) -> collection.replaceOne(Filters.eq("_id", document.get("_id")), document);
+        BiConsumer<MongoCollection<Document>, Document> replace = (collection, document) -> collection
+            .replaceOne(Filters.eq("_id", document.get("_id")), document);
 
         MongoCollection<Document> guildData = database.getCollection("guildData");
         for (Document document : guildData.find()) {
-            if(numberToStringIfExists(document, "defaultEconomyBalance")) {
+            if (numberToStringIfExists(document, "defaultEconomyBalance")) {
                 replace.accept(guildData, document);
             }
         }
@@ -51,17 +52,17 @@ public class DatabaseConverter {
             if (document.containsKey("rankCard")) {
                 if (document.get("rankCard") instanceof Document rankCard) {
                     List<String> colorFields = List.of(
-                            "backgroundColor",
-                            "outlineColor",
-                            "rankTextColor",
-                            "levelTextColor",
-                            "xpOutlineColor",
-                            "xpEmptyColor",
-                            "xpFillColor",
-                            "avatarOutlineColor",
-                            "percentTextColor",
-                            "xpTextColor",
-                            "nameTextColor");
+                        "backgroundColor",
+                        "outlineColor",
+                        "rankTextColor",
+                        "levelTextColor",
+                        "xpOutlineColor",
+                        "xpEmptyColor",
+                        "xpFillColor",
+                        "avatarOutlineColor",
+                        "percentTextColor",
+                        "xpTextColor",
+                        "nameTextColor");
                     boolean changed = false;
                     for (String colorField : colorFields) {
                         if (rankCard.get(colorField) instanceof Document colorDocument) {
@@ -69,7 +70,8 @@ public class DatabaseConverter {
                             double red = colorDocument.get("red", Double.class);
                             double green = colorDocument.get("green", Double.class);
                             double blue = colorDocument.get("blue", Double.class);
-                            int colorAsInt = (int) (((Math.round(alpha * 255)) << 24) | ((Math.round(red * 255)) << 16) | ((Math.round(green * 255)) << 8) | Math.round(blue * 255));
+                            int colorAsInt = (int) (((Math.round(alpha * 255)) << 24) | ((Math.round(red * 255)) << 16)
+                                | ((Math.round(green * 255)) << 8) | Math.round(blue * 255));
                             rankCard.put(colorField, colorAsInt);
                             changed = true;
                         }
@@ -122,7 +124,7 @@ public class DatabaseConverter {
                     changed = true;
                 }
 
-                if(numberToStringIfExists(loan, "amountPaid")) {
+                if (numberToStringIfExists(loan, "amountPaid")) {
                     changed = true;
                 }
 
@@ -132,24 +134,24 @@ public class DatabaseConverter {
                 }
 
                 for (Document payment : getList(loan, "payments", Document.class)) {
-                    if(numberToStringIfExists(payment, "amount")) {
+                    if (numberToStringIfExists(payment, "amount")) {
                         changed = true;
                     }
                 }
             }
 
             for (Document transaction : getList(document, "transactions", Document.class)) {
-                if(numberToStringIfExists(transaction, "amount")) {
+                if (numberToStringIfExists(transaction, "amount")) {
                     changed = true;
                 }
             }
 
             for (Document shopItem : getList(document, "shopItems", Document.class)) {
-                if(numberToStringIfExists(shopItem, "originalPrice")) {
+                if (numberToStringIfExists(shopItem, "originalPrice")) {
                     changed = true;
                 }
 
-                if(numberToStringIfExists(shopItem, "price")) {
+                if (numberToStringIfExists(shopItem, "price")) {
                     changed = true;
                 }
             }
@@ -178,9 +180,9 @@ public class DatabaseConverter {
     }
 
     private static MongoClient connect(CodecRegistry codec) {
-        final ConnectionString connectionString = new ConnectionString(CONNECTION_STING);
+        final var connectionString = new ConnectionString(CONNECTION_STING);
         final MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connectionString)
-                .applicationName("TurtyBot").codecRegistry(codec).build();
+            .applicationName("TurtyBot").codecRegistry(codec).build();
         return MongoClients.create(settings);
     }
 }

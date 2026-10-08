@@ -47,7 +47,7 @@ public abstract class BaseNotifierSubcommand extends SubcommandCommand {
         }
 
         StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class,
-                rawChannel.getIdLong());
+            rawChannel.getIdLong());
         if (channel == null) {
             reply(event, "❌ You must choose a text or announcement channel!", false, true);
             return null;
@@ -55,8 +55,8 @@ public abstract class BaseNotifierSubcommand extends SubcommandCommand {
 
         if (!channel.canTalk() || !guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
             reply(event,
-                    "❌ I need permission to send messages and embeds in that channel before this notifier can work.",
-                    false, true);
+                "❌ I need permission to send messages and embeds in that channel before this notifier can work.",
+                false, true);
             return null;
         }
 
@@ -75,7 +75,7 @@ public abstract class BaseNotifierSubcommand extends SubcommandCommand {
 
     protected static OptionData mentionOption() {
         return new OptionData(OptionType.MENTIONABLE, "who_to_ping",
-                "Who should be pinged when a notification happens", true);
+            "Who should be pinged when a notification happens", true);
     }
 
     protected static OptionData unsubscribeOption() {

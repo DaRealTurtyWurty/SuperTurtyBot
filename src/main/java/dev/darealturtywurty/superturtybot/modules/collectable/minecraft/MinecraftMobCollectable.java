@@ -19,7 +19,15 @@ public class MinecraftMobCollectable extends Collectable {
     private final CollectableRarity rarity;
     private final String note;
 
-    private MinecraftMobCollectable(String name, String emoji, String question, Answer answer, MobCategory category, CollectableRarity rarity, String note) {
+    private MinecraftMobCollectable(
+        String name,
+        String emoji,
+        String question,
+        Answer answer,
+        MobCategory category,
+        CollectableRarity rarity,
+        String note
+    ) {
         super(name.toLowerCase(Locale.ROOT).replace(" ", "_"), emoji);
         this.richName = name;
         this.question = question;
@@ -82,7 +90,8 @@ public class MinecraftMobCollectable extends Collectable {
         }
 
         public Builder answerYesOrNo(boolean yes) {
-            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah", yes ? "true" : "false");
+            this.answer.or(yes ? "yes" : "no", yes ? "y" : "n", yes ? "yeah" : "nope", yes ? "yep" : "nah",
+                yes ? "true" : "false");
             return this;
         }
 
@@ -133,8 +142,9 @@ public class MinecraftMobCollectable extends Collectable {
             if (rarity == null)
                 throw new IllegalArgumentException("Rarity must be set!");
 
-            if(note != null && note.isBlank())
+            if (note != null && note.isBlank()) {
                 note = null;
+            }
 
             return new MinecraftMobCollectable(name, emoji, question, answer, category, rarity, note);
         }

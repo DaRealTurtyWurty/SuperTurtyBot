@@ -29,823 +29,823 @@ public class ConvertCommand extends CoreCommand {
     static {
         List<Unit> lengths = new ArrayList<>();
         var centimeters = new BaseUnit(
-                "centimeters",
-                "Centimeters",
-                "cm");
+            "centimeters",
+            "Centimeters",
+            "cm");
         var length = new Measurement("length", "Length", centimeters);
         lengths.add(centimeters);
         lengths.add(new Unit(
-                "millimeters",
-                "Millimeters",
-                "mm",
-                (measurement, value) -> value * 0.1,
-                value -> value / 0.1));
+            "millimeters",
+            "Millimeters",
+            "mm",
+            (measurement, value) -> value * 0.1,
+            value -> value / 0.1));
         lengths.add(new Unit(
-                "micrometers",
-                "Micrometers",
-                "µm",
-                (measurement, value) -> value * 0.0001,
-                value -> value / 0.0001));
+            "micrometers",
+            "Micrometers",
+            "µm",
+            (measurement, value) -> value * 0.0001,
+            value -> value / 0.0001));
         lengths.add(new Unit(
-                "nanometers",
-                "Nanometers",
-                "nm",
-                (measurement, value) -> value * 1e-7,
-                value -> value / 1e-7));
+            "nanometers",
+            "Nanometers",
+            "nm",
+            (measurement, value) -> value * 1e-7,
+            value -> value / 1e-7));
         lengths.add(new Unit(
-                "meters",
-                "Meters",
-                "m",
-                (measurement, value) -> value * 100,
-                value -> value / 100));
+            "meters",
+            "Meters",
+            "m",
+            (measurement, value) -> value * 100,
+            value -> value / 100));
         lengths.add(new Unit(
-                "kilometers",
-                "Kilometers",
-                "km",
-                (measurement, value) -> value * 100_000,
-                value -> value / 100_000));
+            "kilometers",
+            "Kilometers",
+            "km",
+            (measurement, value) -> value * 100_000,
+            value -> value / 100_000));
         lengths.add(new Unit(
-                "inches",
-                "Inches",
-                "in",
-                (measurement, value) -> value * 2.54,
-                value -> value / 2.54));
+            "inches",
+            "Inches",
+            "in",
+            (measurement, value) -> value * 2.54,
+            value -> value / 2.54));
         lengths.add(new Unit(
-                "feet",
-                "Feet",
-                "ft",
-                (measurement, value) -> value * 30.48,
-                value -> value / 30.48));
+            "feet",
+            "Feet",
+            "ft",
+            (measurement, value) -> value * 30.48,
+            value -> value / 30.48));
         lengths.add(new Unit(
-                "yards",
-                "Yards",
-                "yd",
-                (measurement, value) -> value * 91.44,
-                value -> value / 91.44));
+            "yards",
+            "Yards",
+            "yd",
+            (measurement, value) -> value * 91.44,
+            value -> value / 91.44));
         lengths.add(new Unit(
-                "miles",
-                "Miles",
-                "mi",
-                (measurement, value) -> value * 160_934.4,
-                value -> value / 160_934.4));
+            "miles",
+            "Miles",
+            "mi",
+            (measurement, value) -> value * 160_934.4,
+            value -> value / 160_934.4));
         lengths.add(new Unit(
-                "nauticalmiles",
-                "Nautical Miles",
-                "nmi",
-                (measurement, value) -> value * 185_200,
-                value -> value / 185_200));
+            "nauticalmiles",
+            "Nautical Miles",
+            "nmi",
+            (measurement, value) -> value * 185_200,
+            value -> value / 185_200));
         lengths.add(new Unit(
-                "lightyears",
-                "Light Years",
-                "ly",
-                (measurement, value) -> value * 9.461e+17,
-                value -> value / 9.461e+17));
+            "lightyears",
+            "Light Years",
+            "ly",
+            (measurement, value) -> value * 9.461e+17,
+            value -> value / 9.461e+17));
 
         UNITS.put(length, lengths);
 
         var celsius = new BaseUnit(
-                "celsius",
-                "Celsius",
-                "°C");
+            "celsius",
+            "Celsius",
+            "°C");
         var temperature = new Measurement("temperature", "Temperature", celsius);
         List<Unit> temperatures = new ArrayList<>();
         temperatures.add(celsius);
         temperatures.add(new Unit(
-                "fahrenheit",
-                "Fahrenheit",
-                "°F",
-                (measurement, value) -> (value * 1.8) + 32,
-                value -> (value - 32) / 1.8));
+            "fahrenheit",
+            "Fahrenheit",
+            "°F",
+            (measurement, value) -> (value * 1.8) + 32,
+            value -> (value - 32) / 1.8));
         temperatures.add(new Unit(
-                "kelvin",
-                "Kelvin",
-                "K",
-                (measurement, value) -> value + 273.15,
-                value -> value - 273.15));
+            "kelvin",
+            "Kelvin",
+            "K",
+            (measurement, value) -> value + 273.15,
+            value -> value - 273.15));
 
         UNITS.put(temperature, temperatures);
 
         var liters = new BaseUnit(
-                "liters",
-                "Liters",
-                "L");
+            "liters",
+            "Liters",
+            "L");
         var volume = new Measurement("volume", "Volume", liters);
         List<Unit> volumes = new ArrayList<>();
         volumes.add(liters);
         volumes.add(new Unit(
-                "milliliters",
-                "Milliliters",
-                "mL",
-                (measurement, value) -> value * 0.001,
-                value -> value / 0.001));
+            "milliliters",
+            "Milliliters",
+            "mL",
+            (measurement, value) -> value * 0.001,
+            value -> value / 0.001));
         volumes.add(new Unit(
-                "gallons",
-                "Gallons",
-                "gal",
-                (measurement, value) -> value * 4.546,
-                value -> value / 4.546));
+            "gallons",
+            "Gallons",
+            "gal",
+            (measurement, value) -> value * 4.546,
+            value -> value / 4.546));
         volumes.add(new Unit(
-                "quarts",
-                "Quarts",
-                "qt",
-                (measurement, value) -> value * 1.136,
-                value -> value / 1.136));
+            "quarts",
+            "Quarts",
+            "qt",
+            (measurement, value) -> value * 1.136,
+            value -> value / 1.136));
         volumes.add(new Unit(
-                "pints",
-                "Pints",
-                "pt",
-                (measurement, value) -> value * 1.76,
-                value -> value / 1.76));
+            "pints",
+            "Pints",
+            "pt",
+            (measurement, value) -> value * 1.76,
+            value -> value / 1.76));
         volumes.add(new Unit(
-                "cups",
-                "Cups",
-                "c",
-                (measurement, value) -> value * 3.52,
-                value -> value / 3.52));
+            "cups",
+            "Cups",
+            "c",
+            (measurement, value) -> value * 3.52,
+            value -> value / 3.52));
         volumes.add(new Unit(
-                "fluidounces",
-                "Fluid Ounces",
-                "fl oz",
-                (measurement, value) -> value * 35.195,
-                value -> value / 35.195));
+            "fluidounces",
+            "Fluid Ounces",
+            "fl oz",
+            (measurement, value) -> value * 35.195,
+            value -> value / 35.195));
         volumes.add(new Unit(
-                "tablespoons",
-                "Tablespoons",
-                "tbsp",
-                (measurement, value) -> value * 56.312,
-                value -> value / 56.312));
+            "tablespoons",
+            "Tablespoons",
+            "tbsp",
+            (measurement, value) -> value * 56.312,
+            value -> value / 56.312));
         volumes.add(new Unit(
-                "teaspoons",
-                "Teaspoons",
-                "tsp",
-                (measurement, value) -> value * 168.936,
-                value -> value / 168.936));
+            "teaspoons",
+            "Teaspoons",
+            "tsp",
+            (measurement, value) -> value * 168.936,
+            value -> value / 168.936));
         volumes.add(new Unit(
-                "cubicmeters",
-                "Cubic Meters",
-                "m³",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "cubicmeters",
+            "Cubic Meters",
+            "m³",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         volumes.add(new Unit(
-                "cubiccentimeters",
-                "Cubic Centimeters",
-                "cm³",
-                (measurement, value) -> value * 0.001,
-                value -> value / 0.001));
+            "cubiccentimeters",
+            "Cubic Centimeters",
+            "cm³",
+            (measurement, value) -> value * 0.001,
+            value -> value / 0.001));
         volumes.add(new Unit(
-                "cubicinches",
-                "Cubic Inches",
-                "in³",
-                (measurement, value) -> value * 61.024,
-                value -> value / 61.024));
+            "cubicinches",
+            "Cubic Inches",
+            "in³",
+            (measurement, value) -> value * 61.024,
+            value -> value / 61.024));
         volumes.add(new Unit(
-                "cubicfeet",
-                "Cubic Feet",
-                "ft³",
-                (measurement, value) -> value * 28.317,
-                value -> value / 28.317));
+            "cubicfeet",
+            "Cubic Feet",
+            "ft³",
+            (measurement, value) -> value * 28.317,
+            value -> value / 28.317));
         volumes.add(new Unit(
-                "cubicyards",
-                "Cubic Yards",
-                "yd³",
-                (measurement, value) -> value * 764.555,
-                value -> value / 764.555));
+            "cubicyards",
+            "Cubic Yards",
+            "yd³",
+            (measurement, value) -> value * 764.555,
+            value -> value / 764.555));
 
         UNITS.put(volume, volumes);
 
         var kilograms = new BaseUnit(
-                "kilograms",
-                "Kilograms",
-                "kg");
+            "kilograms",
+            "Kilograms",
+            "kg");
         var weight = new Measurement("weight", "Weight", kilograms);
         List<Unit> weights = new ArrayList<>();
         weights.add(kilograms);
         weights.add(new Unit(
-                "grams",
-                "Grams",
-                "g",
-                (measurement, value) -> value * 0.001,
-                value -> value / 0.001));
+            "grams",
+            "Grams",
+            "g",
+            (measurement, value) -> value * 0.001,
+            value -> value / 0.001));
         weights.add(new Unit(
-                "milligrams",
-                "Milligrams",
-                "mg",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "milligrams",
+            "Milligrams",
+            "mg",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         weights.add(new Unit(
-                "metrictons",
-                "Metric Tons",
-                "t",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "metrictons",
+            "Metric Tons",
+            "t",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         weights.add(new Unit(
-                "imperialtons",
-                "Imperial Tons",
-                "lt",
-                (measurement, value) -> value * 1016.047,
-                value -> value / 1016.047));
+            "imperialtons",
+            "Imperial Tons",
+            "lt",
+            (measurement, value) -> value * 1016.047,
+            value -> value / 1016.047));
         weights.add(new Unit(
-                "ustons",
-                "US Tons",
-                "st",
-                (measurement, value) -> value * 907.185,
-                value -> value / 907.185));
+            "ustons",
+            "US Tons",
+            "st",
+            (measurement, value) -> value * 907.185,
+            value -> value / 907.185));
         weights.add(new Unit(
-                "pounds",
-                "Pounds",
-                "lb",
-                (measurement, value) -> value * 2.205,
-                value -> value / 2.205));
+            "pounds",
+            "Pounds",
+            "lb",
+            (measurement, value) -> value * 2.205,
+            value -> value / 2.205));
         weights.add(new Unit(
-                "ounces",
-                "Ounces",
-                "oz",
-                (measurement, value) -> value * 35.274,
-                value -> value / 35.274));
+            "ounces",
+            "Ounces",
+            "oz",
+            (measurement, value) -> value * 35.274,
+            value -> value / 35.274));
 
         UNITS.put(weight, weights);
 
         var meterspersecond = new BaseUnit(
-                "meterspersecond",
-                "Meters Per Second",
-                "m/s");
+            "meterspersecond",
+            "Meters Per Second",
+            "m/s");
         var speed = new Measurement("speed", "Speed", meterspersecond);
         List<Unit> speeds = new ArrayList<>();
         speeds.add(meterspersecond);
         speeds.add(new Unit(
-                "kilometersperhour",
-                "Kilometers Per Hour",
-                "km/h",
-                (measurement, value) -> value * 3.6,
-                value -> value / 3.6));
+            "kilometersperhour",
+            "Kilometers Per Hour",
+            "km/h",
+            (measurement, value) -> value * 3.6,
+            value -> value / 3.6));
         speeds.add(new Unit(
-                "milesperhour",
-                "Miles Per Hour",
-                "mph",
-                (measurement, value) -> value * 2.237,
-                value -> value / 2.237));
+            "milesperhour",
+            "Miles Per Hour",
+            "mph",
+            (measurement, value) -> value * 2.237,
+            value -> value / 2.237));
         speeds.add(new Unit(
-                "knots",
-                "Knots",
-                "kn",
-                (measurement, value) -> value * 1.944,
-                value -> value / 1.944));
+            "knots",
+            "Knots",
+            "kn",
+            (measurement, value) -> value * 1.944,
+            value -> value / 1.944));
         speeds.add(new Unit(
-                "feetpersecond",
-                "Feet Per Second",
-                "ft/s",
-                (measurement, value) -> value * 3.281,
-                value -> value / 3.281));
+            "feetpersecond",
+            "Feet Per Second",
+            "ft/s",
+            (measurement, value) -> value * 3.281,
+            value -> value / 3.281));
         speeds.add(new Unit(
-                "mach",
-                "Mach",
-                "M",
-                (measurement, value) -> value * 343,
-                value -> value / 343));
+            "mach",
+            "Mach",
+            "M",
+            (measurement, value) -> value * 343,
+            value -> value / 343));
 
         UNITS.put(speed, speeds);
 
         var seconds = new BaseUnit(
-                "seconds",
-                "Seconds",
-                "s");
+            "seconds",
+            "Seconds",
+            "s");
         var time = new Measurement("time", "Time", seconds);
         List<Unit> times = new ArrayList<>();
         times.add(seconds);
         times.add(new Unit(
-                "nanoseconds",
-                "Nanoseconds",
-                "ns",
-                (measurement, value) -> value * 1e+9,
-                value -> value / 1e+9));
+            "nanoseconds",
+            "Nanoseconds",
+            "ns",
+            (measurement, value) -> value * 1e+9,
+            value -> value / 1e+9));
         times.add(new Unit(
-                "microseconds",
-                "Microseconds",
-                "µs",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "microseconds",
+            "Microseconds",
+            "µs",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         times.add(new Unit(
-                "milliseconds",
-                "Milliseconds",
-                "ms",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "milliseconds",
+            "Milliseconds",
+            "ms",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         times.add(new Unit(
-                "minutes",
-                "Minutes",
-                "min",
-                (measurement, value) -> value * 60,
-                value -> value / 60));
+            "minutes",
+            "Minutes",
+            "min",
+            (measurement, value) -> value * 60,
+            value -> value / 60));
         times.add(new Unit(
-                "hours",
-                "Hours",
-                "h",
-                (measurement, value) -> value * 3600,
-                value -> value / 3600));
+            "hours",
+            "Hours",
+            "h",
+            (measurement, value) -> value * 3600,
+            value -> value / 3600));
         times.add(new Unit(
-                "days",
-                "Days",
-                "d",
-                (measurement, value) -> value * 86400,
-                value -> value / 86400));
+            "days",
+            "Days",
+            "d",
+            (measurement, value) -> value * 86400,
+            value -> value / 86400));
         times.add(new Unit(
-                "weeks",
-                "Weeks",
-                "wk",
-                (measurement, value) -> value * 604800,
-                value -> value / 604800));
+            "weeks",
+            "Weeks",
+            "wk",
+            (measurement, value) -> value * 604800,
+            value -> value / 604800));
         times.add(new Unit(
-                "months",
-                "Months",
-                "mo",
-                (measurement, value) -> value * 2.628e+6,
-                value -> value / 2.628e+6));
+            "months",
+            "Months",
+            "mo",
+            (measurement, value) -> value * 2.628e+6,
+            value -> value / 2.628e+6));
         times.add(new Unit(
-                "years",
-                "Years",
-                "yr",
-                (measurement, value) -> value * 3.154e+7,
-                value -> value / 3.154e+7));
+            "years",
+            "Years",
+            "yr",
+            (measurement, value) -> value * 3.154e+7,
+            value -> value / 3.154e+7));
         times.add(new Unit(
-                "decades",
-                "Decades",
-                "dec",
-                (measurement, value) -> value * 3.154e+8,
-                value -> value / 3.154e+8));
+            "decades",
+            "Decades",
+            "dec",
+            (measurement, value) -> value * 3.154e+8,
+            value -> value / 3.154e+8));
 
         UNITS.put(time, times);
 
         var squaremeters = new BaseUnit(
-                "squaremeters",
-                "Square Meters",
-                "m²");
+            "squaremeters",
+            "Square Meters",
+            "m²");
         var area = new Measurement("area", "Area", squaremeters);
         List<Unit> areas = new ArrayList<>();
         areas.add(squaremeters);
         areas.add(new Unit(
-                "squarekilometers",
-                "Square Kilometers",
-                "km²",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "squarekilometers",
+            "Square Kilometers",
+            "km²",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         areas.add(new Unit(
-                "squarefeet",
-                "Square Feet",
-                "ft²",
-                (measurement, value) -> value * 10.764,
-                value -> value / 10.764));
+            "squarefeet",
+            "Square Feet",
+            "ft²",
+            (measurement, value) -> value * 10.764,
+            value -> value / 10.764));
         areas.add(new Unit(
-                "squareyards",
-                "Square Yards",
-                "yd²",
-                (measurement, value) -> value * 1.196,
-                value -> value / 1.196));
+            "squareyards",
+            "Square Yards",
+            "yd²",
+            (measurement, value) -> value * 1.196,
+            value -> value / 1.196));
         areas.add(new Unit(
-                "squaremiles",
-                "Square Miles",
-                "mi²",
-                (measurement, value) -> value * 2.59e+6,
-                value -> value / 2.59e+6));
+            "squaremiles",
+            "Square Miles",
+            "mi²",
+            (measurement, value) -> value * 2.59e+6,
+            value -> value / 2.59e+6));
         areas.add(new Unit(
-                "squareinches",
-                "Square Inches",
-                "in²",
-                (measurement, value) -> value * 1550,
-                value -> value / 1550));
+            "squareinches",
+            "Square Inches",
+            "in²",
+            (measurement, value) -> value * 1550,
+            value -> value / 1550));
         areas.add(new Unit(
-                "acres",
-                "Acres",
-                "ac",
-                (measurement, value) -> value * 4046.856,
-                value -> value / 4046.856));
+            "acres",
+            "Acres",
+            "ac",
+            (measurement, value) -> value * 4046.856,
+            value -> value / 4046.856));
         areas.add(new Unit(
-                "hectares",
-                "Hectares",
-                "ha",
-                (measurement, value) -> value * 10000,
-                value -> value / 10000));
+            "hectares",
+            "Hectares",
+            "ha",
+            (measurement, value) -> value * 10000,
+            value -> value / 10000));
 
         UNITS.put(area, areas);
 
         var pascals = new BaseUnit(
-                "pascals",
-                "Pascals",
-                "Pa");
+            "pascals",
+            "Pascals",
+            "Pa");
         var pressure = new Measurement("pressure", "Pressure", pascals);
         List<Unit> pressures = new ArrayList<>();
         pressures.add(pascals);
         pressures.add(new Unit(
-                "bars",
-                "Bars",
-                "bar",
-                (measurement, value) -> value * 100_000,
-                value -> value / 100_000));
+            "bars",
+            "Bars",
+            "bar",
+            (measurement, value) -> value * 100_000,
+            value -> value / 100_000));
         pressures.add(new Unit(
-                "poundspersquareinch",
-                "Pounds Per Square Inch",
-                "psi",
-                (measurement, value) -> value * 6894.757,
-                value -> value / 6894.757));
+            "poundspersquareinch",
+            "Pounds Per Square Inch",
+            "psi",
+            (measurement, value) -> value * 6894.757,
+            value -> value / 6894.757));
         pressures.add(new Unit(
-                "atmospheres",
-                "Atmospheres",
-                "atm",
-                (measurement, value) -> value * 101_325,
-                value -> value / 101_325));
+            "atmospheres",
+            "Atmospheres",
+            "atm",
+            (measurement, value) -> value * 101_325,
+            value -> value / 101_325));
         pressures.add(new Unit(
-                "torrs",
-                "Torrs",
-                "Torr",
-                (measurement, value) -> value * 133.322,
-                value -> value / 133.322));
+            "torrs",
+            "Torrs",
+            "Torr",
+            (measurement, value) -> value * 133.322,
+            value -> value / 133.322));
 
         UNITS.put(pressure, pressures);
 
         var joules = new BaseUnit(
-                "joules",
-                "Joules",
-                "J");
+            "joules",
+            "Joules",
+            "J");
         var energy = new Measurement("energy", "Energy", joules);
         List<Unit> energies = new ArrayList<>();
         energies.add(joules);
         energies.add(new Unit(
-                "kilojoules",
-                "Kilojoules",
-                "kJ",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "kilojoules",
+            "Kilojoules",
+            "kJ",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         energies.add(new Unit(
-                "gramcalories",
-                "Gram Calories",
-                "cal",
-                (measurement, value) -> value * 4.184,
-                value -> value / 4.184));
+            "gramcalories",
+            "Gram Calories",
+            "cal",
+            (measurement, value) -> value * 4.184,
+            value -> value / 4.184));
         energies.add(new Unit(
-                "kilocalories",
-                "Kilocalories",
-                "kcal",
-                (measurement, value) -> value * 4184,
-                value -> value / 4184));
+            "kilocalories",
+            "Kilocalories",
+            "kcal",
+            (measurement, value) -> value * 4184,
+            value -> value / 4184));
         energies.add(new Unit(
-                "watt-hours",
-                "Watt Hours",
-                "Wh",
-                (measurement, value) -> value * 3600,
-                value -> value / 3600));
+            "watt-hours",
+            "Watt Hours",
+            "Wh",
+            (measurement, value) -> value * 3600,
+            value -> value / 3600));
         energies.add(new Unit(
-                "kilowatt-hours",
-                "Kilowatt Hours",
-                "kWh",
-                (measurement, value) -> value * 3.6e+6,
-                value -> value / 3.6e+6));
+            "kilowatt-hours",
+            "Kilowatt Hours",
+            "kWh",
+            (measurement, value) -> value * 3.6e+6,
+            value -> value / 3.6e+6));
         energies.add(new Unit(
-                "electronvolts",
-                "Electronvolts",
-                "eV",
-                (measurement, value) -> value * 6.242e+18,
-                value -> value / 6.242e+18));
+            "electronvolts",
+            "Electronvolts",
+            "eV",
+            (measurement, value) -> value * 6.242e+18,
+            value -> value / 6.242e+18));
         energies.add(new Unit(
-                "britishthermalunit",
-                "British Thermal Unit",
-                "BTU",
-                (measurement, value) -> value * 1055.056,
-                value -> value / 1055.056));
+            "britishthermalunit",
+            "British Thermal Unit",
+            "BTU",
+            (measurement, value) -> value * 1055.056,
+            value -> value / 1055.056));
         energies.add(new Unit(
-                "usthermalunit",
-                "US Thermal Unit",
-                "BTU",
-                (measurement, value) -> value * 1.055e+8,
-                value -> value / 1.055e+8));
+            "usthermalunit",
+            "US Thermal Unit",
+            "BTU",
+            (measurement, value) -> value * 1.055e+8,
+            value -> value / 1.055e+8));
         energies.add(new Unit(
-                "foot-pound",
-                "Foot Pound",
-                "ft·lb",
-                (measurement, value) -> value * 1.356,
-                value -> value / 1.356));
+            "foot-pound",
+            "Foot Pound",
+            "ft·lb",
+            (measurement, value) -> value * 1.356,
+            value -> value / 1.356));
 
         UNITS.put(energy, energies);
 
         var watts = new BaseUnit(
-                "watts",
-                "Watts",
-                "W");
+            "watts",
+            "Watts",
+            "W");
         var power = new Measurement("power", "Power", watts);
         List<Unit> powers = new ArrayList<>();
         powers.add(watts);
         powers.add(new Unit(
-                "kilowatts",
-                "Kilowatts",
-                "kW",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "kilowatts",
+            "Kilowatts",
+            "kW",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         powers.add(new Unit(
-                "megawatts",
-                "Megawatts",
-                "MW",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "megawatts",
+            "Megawatts",
+            "MW",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         powers.add(new Unit(
-                "gigawatts",
-                "Gigawatts",
-                "GW",
-                (measurement, value) -> value * 1e+9,
-                value -> value / 1e+9));
+            "gigawatts",
+            "Gigawatts",
+            "GW",
+            (measurement, value) -> value * 1e+9,
+            value -> value / 1e+9));
         powers.add(new Unit(
-                "terawatts",
-                "Terawatts",
-                "TW",
-                (measurement, value) -> value * 1e+12,
-                value -> value / 1e+12));
+            "terawatts",
+            "Terawatts",
+            "TW",
+            (measurement, value) -> value * 1e+12,
+            value -> value / 1e+12));
         powers.add(new Unit(
-                "horsepower",
-                "Horsepower",
-                "hp",
-                (measurement, value) -> value * 745.7,
-                value -> value / 745.7));
+            "horsepower",
+            "Horsepower",
+            "hp",
+            (measurement, value) -> value * 745.7,
+            value -> value / 745.7));
         powers.add(new Unit(
-                "metrichorsepower",
-                "Metric Horsepower",
-                "hp(M)",
-                (measurement, value) -> value * 735.498,
-                value -> value / 735.498));
+            "metrichorsepower",
+            "Metric Horsepower",
+            "hp(M)",
+            (measurement, value) -> value * 735.498,
+            value -> value / 735.498));
 
         UNITS.put(power, powers);
 
         var bits = new BaseUnit(
-                "bits",
-                "Bits",
-                "b");
+            "bits",
+            "Bits",
+            "b");
         var data = new Measurement("data", "Data", bits);
         List<Unit> datums = new ArrayList<>();
         datums.add(bits);
         datums.add(new Unit(
-                "bytes",
-                "Bytes",
-                "B",
-                (measurement, value) -> value * 8,
-                value -> value / 8));
+            "bytes",
+            "Bytes",
+            "B",
+            (measurement, value) -> value * 8,
+            value -> value / 8));
         datums.add(new Unit(
-                "kilobits",
-                "Kilobits",
-                "kb",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "kilobits",
+            "Kilobits",
+            "kb",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         datums.add(new Unit(
-                "kilobytes",
-                "Kilobytes",
-                "kB",
-                (measurement, value) -> value * 8000,
-                value -> value / 8000));
+            "kilobytes",
+            "Kilobytes",
+            "kB",
+            (measurement, value) -> value * 8000,
+            value -> value / 8000));
         datums.add(new Unit(
-                "megabits",
-                "Megabits",
-                "Mb",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "megabits",
+            "Megabits",
+            "Mb",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         datums.add(new Unit(
-                "megabytes",
-                "Megabytes",
-                "MB",
-                (measurement, value) -> value * 8e+6,
-                value -> value / 8e+6));
+            "megabytes",
+            "Megabytes",
+            "MB",
+            (measurement, value) -> value * 8e+6,
+            value -> value / 8e+6));
         datums.add(new Unit(
-                "gigabits",
-                "Gigabits",
-                "Gb",
-                (measurement, value) -> value * 1e+9,
-                value -> value / 1e+9));
+            "gigabits",
+            "Gigabits",
+            "Gb",
+            (measurement, value) -> value * 1e+9,
+            value -> value / 1e+9));
         datums.add(new Unit(
-                "gigabytes",
-                "Gigabytes",
-                "GB",
-                (measurement, value) -> value * 8e+9,
-                value -> value / 8e+9));
+            "gigabytes",
+            "Gigabytes",
+            "GB",
+            (measurement, value) -> value * 8e+9,
+            value -> value / 8e+9));
         datums.add(new Unit(
-                "terabits",
-                "Terabits",
-                "Tb",
-                (measurement, value) -> value * 1e+12,
-                value -> value / 1e+12));
+            "terabits",
+            "Terabits",
+            "Tb",
+            (measurement, value) -> value * 1e+12,
+            value -> value / 1e+12));
         datums.add(new Unit(
-                "terabytes",
-                "Terabytes",
-                "TB",
-                (measurement, value) -> value * 8e+12,
-                value -> value / 8e+12));
+            "terabytes",
+            "Terabytes",
+            "TB",
+            (measurement, value) -> value * 8e+12,
+            value -> value / 8e+12));
         datums.add(new Unit(
-                "petabits",
-                "Petabits",
-                "Pb",
-                (measurement, value) -> value * 1e+15,
-                value -> value / 1e+15));
+            "petabits",
+            "Petabits",
+            "Pb",
+            (measurement, value) -> value * 1e+15,
+            value -> value / 1e+15));
         datums.add(new Unit(
-                "petabytes",
-                "Petabytes",
-                "PB",
-                (measurement, value) -> value * 8e+15,
-                value -> value / 8e+15));
+            "petabytes",
+            "Petabytes",
+            "PB",
+            (measurement, value) -> value * 8e+15,
+            value -> value / 8e+15));
         datums.add(new Unit(
-                "kibibits",
-                "Kibibits",
-                "Kib",
-                (measurement, value) -> value * 1024,
-                value -> value / 1024));
+            "kibibits",
+            "Kibibits",
+            "Kib",
+            (measurement, value) -> value * 1024,
+            value -> value / 1024));
         datums.add(new Unit(
-                "mebibits",
-                "Mebibits",
-                "Mib",
-                (measurement, value) -> value * 1.049e+6,
-                value -> value / 1.049e+6));
+            "mebibits",
+            "Mebibits",
+            "Mib",
+            (measurement, value) -> value * 1.049e+6,
+            value -> value / 1.049e+6));
         datums.add(new Unit(
-                "gibibits",
-                "Gibibits",
-                "Gib",
-                (measurement, value) -> value * 1.074e+9,
-                value -> value / 1.074e+9));
+            "gibibits",
+            "Gibibits",
+            "Gib",
+            (measurement, value) -> value * 1.074e+9,
+            value -> value / 1.074e+9));
         datums.add(new Unit(
-                "tebibits",
-                "Tebibits",
-                "Tib",
-                (measurement, value) -> value * 1.1e+12,
-                value -> value / 1.1e+12));
+            "tebibits",
+            "Tebibits",
+            "Tib",
+            (measurement, value) -> value * 1.1e+12,
+            value -> value / 1.1e+12));
         datums.add(new Unit(
-                "pebibits",
-                "Pebibits",
-                "Pib",
-                (measurement, value) -> value * 1.126e+15,
-                value -> value / 1.126e+15));
+            "pebibits",
+            "Pebibits",
+            "Pib",
+            (measurement, value) -> value * 1.126e+15,
+            value -> value / 1.126e+15));
         datums.add(new Unit(
-                "kibibytes",
-                "Kibibytes",
-                "KiB",
-                (measurement, value) -> value * 8192,
-                value -> value / 8192));
+            "kibibytes",
+            "Kibibytes",
+            "KiB",
+            (measurement, value) -> value * 8192,
+            value -> value / 8192));
         datums.add(new Unit(
-                "mebibytes",
-                "Mebibytes",
-                "MiB",
-                (measurement, value) -> value * 8.389e+6,
-                value -> value / 8.389e+6));
+            "mebibytes",
+            "Mebibytes",
+            "MiB",
+            (measurement, value) -> value * 8.389e+6,
+            value -> value / 8.389e+6));
         datums.add(new Unit(
-                "gibibytes",
-                "Gibibytes",
-                "GiB",
-                (measurement, value) -> value * 8.59e+9,
-                value -> value / 8.59e+9));
+            "gibibytes",
+            "Gibibytes",
+            "GiB",
+            (measurement, value) -> value * 8.59e+9,
+            value -> value / 8.59e+9));
         datums.add(new Unit(
-                "tebibytes",
-                "Tebibytes",
-                "TiB",
-                (measurement, value) -> value * 8.796e+12,
-                value -> value / 8.796e+12));
+            "tebibytes",
+            "Tebibytes",
+            "TiB",
+            (measurement, value) -> value * 8.796e+12,
+            value -> value / 8.796e+12));
         datums.add(new Unit(
-                "pebibytes",
-                "Pebibytes",
-                "PiB",
-                (measurement, value) -> value * 9.007e+15,
-                value -> value / 9.007e+15));
+            "pebibytes",
+            "Pebibytes",
+            "PiB",
+            (measurement, value) -> value * 9.007e+15,
+            value -> value / 9.007e+15));
 
         UNITS.put(data, datums);
 
         var hertz = new BaseUnit(
-                "hertz",
-                "Hertz",
-                "Hz");
+            "hertz",
+            "Hertz",
+            "Hz");
         var frequency = new Measurement("frequency", "Frequency", hertz);
         List<Unit> frequencies = new ArrayList<>();
         frequencies.add(hertz);
         frequencies.add(new Unit(
-                "kilohertz",
-                "Kilohertz",
-                "kHz",
-                (measurement, value) -> value * 1000,
-                value -> value / 1000));
+            "kilohertz",
+            "Kilohertz",
+            "kHz",
+            (measurement, value) -> value * 1000,
+            value -> value / 1000));
         frequencies.add(new Unit(
-                "megahertz",
-                "Megahertz",
-                "MHz",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "megahertz",
+            "Megahertz",
+            "MHz",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         frequencies.add(new Unit(
-                "gigahertz",
-                "Gigahertz",
-                "GHz",
-                (measurement, value) -> value * 1e+9,
-                value -> value / 1e+9));
+            "gigahertz",
+            "Gigahertz",
+            "GHz",
+            (measurement, value) -> value * 1e+9,
+            value -> value / 1e+9));
         frequencies.add(new Unit(
-                "terahertz",
-                "Terahertz",
-                "THz",
-                (measurement, value) -> value * 1e+12,
-                value -> value / 1e+12));
+            "terahertz",
+            "Terahertz",
+            "THz",
+            (measurement, value) -> value * 1e+12,
+            value -> value / 1e+12));
         frequencies.add(new Unit(
-                "petahertz",
-                "Petahertz",
-                "PHz",
-                (measurement, value) -> value * 1e+15,
-                value -> value / 1e+15));
+            "petahertz",
+            "Petahertz",
+            "PHz",
+            (measurement, value) -> value * 1e+15,
+            value -> value / 1e+15));
         frequencies.add(new Unit(
-                "centihertz",
-                "Centihertz",
-                "cHz",
-                (measurement, value) -> value * 0.01,
-                value -> value / 0.01));
+            "centihertz",
+            "Centihertz",
+            "cHz",
+            (measurement, value) -> value * 0.01,
+            value -> value / 0.01));
         frequencies.add(new Unit(
-                "millihertz",
-                "Millihertz",
-                "mHz",
-                (measurement, value) -> value * 0.001,
-                value -> value / 0.001));
+            "millihertz",
+            "Millihertz",
+            "mHz",
+            (measurement, value) -> value * 0.001,
+            value -> value / 0.001));
         frequencies.add(new Unit(
-                "microhertz",
-                "Microhertz",
-                "µHz",
-                (measurement, value) -> value * 1e+6,
-                value -> value / 1e+6));
+            "microhertz",
+            "Microhertz",
+            "µHz",
+            (measurement, value) -> value * 1e+6,
+            value -> value / 1e+6));
         frequencies.add(new Unit(
-                "nanohertz",
-                "Nanohertz",
-                "nHz",
-                (measurement, value) -> value * 1e+9,
-                value -> value / 1e+9));
+            "nanohertz",
+            "Nanohertz",
+            "nHz",
+            (measurement, value) -> value * 1e+9,
+            value -> value / 1e+9));
 
         UNITS.put(frequency, frequencies);
 
         var degrees = new BaseUnit(
-                "degrees",
-                "Degrees",
-                "°");
+            "degrees",
+            "Degrees",
+            "°");
         var angle = new Measurement("angle", "Angle", degrees);
         List<Unit> angles = new ArrayList<>();
         angles.add(degrees);
         angles.add(new Unit(
-                "radians",
-                "Radians",
-                "rad",
-                (measurement, value) -> value * 180 / Math.PI,
-                value -> value * Math.PI / 180));
+            "radians",
+            "Radians",
+            "rad",
+            (measurement, value) -> value * 180 / Math.PI,
+            value -> value * Math.PI / 180));
         angles.add(new Unit(
-                "gradians",
-                "Gradians",
-                "grad",
-                (measurement, value) -> value * 180 / 200,
-                value -> value * 200 / 180));
+            "gradians",
+            "Gradians",
+            "grad",
+            (measurement, value) -> value * 180 / 200,
+            value -> value * 200 / 180));
         angles.add(new Unit(
-                "arcseconds",
-                "Arcseconds",
-                "arcsec",
-                (measurement, value) -> value * 3600,
-                value -> value / 3600));
+            "arcseconds",
+            "Arcseconds",
+            "arcsec",
+            (measurement, value) -> value * 3600,
+            value -> value / 3600));
         angles.add(new Unit(
-                "arcminutes",
-                "Arcminutes",
-                "arcmin",
-                (measurement, value) -> value * 60,
-                value -> value / 60));
+            "arcminutes",
+            "Arcminutes",
+            "arcmin",
+            (measurement, value) -> value * 60,
+            value -> value / 60));
         angles.add(new Unit(
-                "milliradians",
-                "Milliradians",
-                "mrad",
-                (measurement, value) -> value * 180 / (Math.PI * 1000),
-                value -> value * Math.PI * 1000 / 180));
+            "milliradians",
+            "Milliradians",
+            "mrad",
+            (measurement, value) -> value * 180 / (Math.PI * 1000),
+            value -> value * Math.PI * 1000 / 180));
 
         UNITS.put(angle, angles);
 
         var newtonmeters = new BaseUnit(
-                "newtonmeters",
-                "Newton Meters",
-                "N·m");
+            "newtonmeters",
+            "Newton Meters",
+            "N·m");
         var torque = new Measurement("torque", "Torque", newtonmeters);
         List<Unit> torques = new ArrayList<>();
         torques.add(newtonmeters);
         torques.add(new Unit(
-                "footpounds",
-                "Foot Pounds",
-                "ft·lb",
-                (measurement, value) -> value * 1.356,
-                value -> value / 1.356));
+            "footpounds",
+            "Foot Pounds",
+            "ft·lb",
+            (measurement, value) -> value * 1.356,
+            value -> value / 1.356));
 
         UNITS.put(torque, torques);
 
         var lux = new BaseUnit(
-                "lux",
-                "Lux",
-                "lx");
+            "lux",
+            "Lux",
+            "lx");
         var illuminance = new Measurement("illuminance", "Illuminance", lux);
         List<Unit> illuminances = new ArrayList<>();
         illuminances.add(lux);
         illuminances.add(new Unit(
-                "candelas",
-                "Candelas",
-                "cd",
-                (measurement, value) -> value,
-                value -> value));
+            "candelas",
+            "Candelas",
+            "cd",
+            (measurement, value) -> value,
+            value -> value));
         illuminances.add(new Unit(
-                "footcandles",
-                "Footcandles",
-                "fc",
-                (measurement, value) -> value * 10.764,
-                value -> value / 10.764));
+            "footcandles",
+            "Footcandles",
+            "fc",
+            (measurement, value) -> value * 10.764,
+            value -> value / 10.764));
 
         UNITS.put(illuminance, illuminances);
     }
@@ -860,7 +860,13 @@ public class ConvertCommand extends CoreCommand {
         private final BiFunction<Measurement, Double, Double> toBase;
         private final Function<Double, Double> fromBase;
 
-        public Unit(String name, String richName, String symbol, BiFunction<Measurement, Double, Double> toBase, Function<Double, Double> fromBase) {
+        public Unit(
+            String name,
+            String richName,
+            String symbol,
+            BiFunction<Measurement, Double, Double> toBase,
+            Function<Double, Double> fromBase
+        ) {
             this.name = name;
             this.richName = richName;
             this.symbol = symbol;
@@ -891,26 +897,22 @@ public class ConvertCommand extends CoreCommand {
     public List<SubcommandData> createSubcommandData() {
         List<SubcommandData> subcommands = new ArrayList<>();
         for (Measurement measurement : UNITS.keySet()) {
-            SubcommandData subcommand = new SubcommandData(measurement.name, measurement.richName);
+            var subcommand = new SubcommandData(measurement.name, measurement.richName);
             subcommand.addOptions(
-                    new OptionData(OptionType.STRING, "from", "The unit to convert from", true, true),
-                    new OptionData(OptionType.STRING, "to", "The unit to convert to", true, true),
-                    new OptionData(OptionType.NUMBER, "value", "The value to convert", true)
-            );
+                new OptionData(OptionType.STRING, "from", "The unit to convert from", true, true),
+                new OptionData(OptionType.STRING, "to", "The unit to convert to", true, true),
+                new OptionData(OptionType.NUMBER, "value", "The value to convert", true));
 
             subcommands.add(subcommand);
         }
 
         subcommands.addAll(List.of(
-                new SubcommandData("list", "Lists all the available units"),
-                new SubcommandData("info", "Gets information about a unit").addOptions(
-                        new OptionData(OptionType.STRING, "unit", "The unit to get information about", true, true)
-                ),
-                new SubcommandData("all", "Converts a value from one unit to all the other units").addOptions(
-                        new OptionData(OptionType.STRING, "from", "The unit to convert from", true, true),
-                        new OptionData(OptionType.NUMBER, "value", "The value to convert", true)
-                )
-        ));
+            new SubcommandData("list", "Lists all the available units"),
+            new SubcommandData("info", "Gets information about a unit").addOptions(
+                new OptionData(OptionType.STRING, "unit", "The unit to get information about", true, true)),
+            new SubcommandData("all", "Converts a value from one unit to all the other units").addOptions(
+                new OptionData(OptionType.STRING, "from", "The unit to convert from", true, true),
+                new OptionData(OptionType.NUMBER, "value", "The value to convert", true))));
 
         return subcommands;
     }
@@ -938,7 +940,8 @@ public class ConvertCommand extends CoreCommand {
             return;
         }
 
-        Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst().orElse(null);
+        Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst()
+            .orElse(null);
         if (measurement == null) {
             event.replyChoices().queue();
             return;
@@ -949,19 +952,19 @@ public class ConvertCommand extends CoreCommand {
 
             String to = event.getOption("to", OptionMapping::getAsString);
             List<String> units = UNITS.get(measurement)
-                    .stream()
-                    .map(u -> u.name)
-                    .filter(u -> u.contains(typed))
-                    .filter(u -> !u.equals(to))
-                    .sorted((a, b) -> {
-                        if (a.startsWith(typed) && !b.startsWith(typed))
-                            return -1;
-                        if (!a.startsWith(typed) && b.startsWith(typed))
-                            return 1;
-                        return a.compareTo(b);
-                    })
-                    .limit(25)
-                    .toList();
+                .stream()
+                .map(u -> u.name)
+                .filter(u -> u.contains(typed))
+                .filter(u -> !u.equals(to))
+                .sorted((a, b) -> {
+                    if (a.startsWith(typed) && !b.startsWith(typed))
+                        return -1;
+                    if (!a.startsWith(typed) && b.startsWith(typed))
+                        return 1;
+                    return a.compareTo(b);
+                })
+                .limit(25)
+                .toList();
 
             event.replyChoiceStrings(units).queue();
             return;
@@ -972,31 +975,10 @@ public class ConvertCommand extends CoreCommand {
 
             String from = event.getOption("from", OptionMapping::getAsString);
             List<String> units = UNITS.get(measurement)
-                    .stream()
-                    .map(u -> u.name)
-                    .filter(u -> u.contains(typed))
-                    .filter(u -> !u.equals(from))
-                    .sorted((a, b) -> {
-                        if (a.startsWith(typed) && !b.startsWith(typed))
-                            return -1;
-                        if (!a.startsWith(typed) && b.startsWith(typed))
-                            return 1;
-                        return a.compareTo(b);
-                    })
-                    .limit(25)
-                    .toList();
-
-            event.replyChoiceStrings(units).queue();
-        }
-    }
-
-    private static void replyUnits(@NotNull CommandAutoCompleteInteractionEvent event, AutoCompleteQuery query) {
-        String typed = query.getValue();
-        List<String> units = UNITS.values()
                 .stream()
-                .flatMap(List::stream)
                 .map(u -> u.name)
                 .filter(u -> u.contains(typed))
+                .filter(u -> !u.equals(from))
                 .sorted((a, b) -> {
                     if (a.startsWith(typed) && !b.startsWith(typed))
                         return -1;
@@ -1006,6 +988,27 @@ public class ConvertCommand extends CoreCommand {
                 })
                 .limit(25)
                 .toList();
+
+            event.replyChoiceStrings(units).queue();
+        }
+    }
+
+    private static void replyUnits(@NotNull CommandAutoCompleteInteractionEvent event, AutoCompleteQuery query) {
+        String typed = query.getValue();
+        List<String> units = UNITS.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(u -> u.name)
+            .filter(u -> u.contains(typed))
+            .sorted((a, b) -> {
+                if (a.startsWith(typed) && !b.startsWith(typed))
+                    return -1;
+                if (!a.startsWith(typed) && b.startsWith(typed))
+                    return 1;
+                return a.compareTo(b);
+            })
+            .limit(25)
+            .toList();
         event.replyChoiceStrings(units).queue();
     }
 
@@ -1049,13 +1052,14 @@ public class ConvertCommand extends CoreCommand {
         switch (subcommand) {
             case "list" -> {
                 var embed = new EmbedBuilder()
-                        .setTitle("Units")
-                        .setColor(Color.GREEN)
-                        .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                    .setTitle("Units")
+                    .setColor(Color.GREEN)
+                    .setTimestamp(Instant.now())
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl());
 
                 for (Measurement measurement : UNITS.keySet()) {
-                    StringBuilder builder = new StringBuilder();
+                    var builder = new StringBuilder();
                     for (Unit unit : UNITS.get(measurement)) {
                         builder.append(unit.richName).append(" (").append(unit.symbol).append(")\n");
                     }
@@ -1073,15 +1077,16 @@ public class ConvertCommand extends CoreCommand {
                     return;
                 }
 
-                Unit unit = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(unitStr)).findFirst().orElse(null);
+                Unit unit = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(unitStr))
+                    .findFirst().orElse(null);
                 if (unit == null) {
                     reply(event, "❌ Please specify a valid unit!", true);
                     return;
                 }
 
                 reply(event, "**" + unit.richName + "** (" + unit.symbol + ")\n\n" +
-                        "Name: " + unit.name + "\n" +
-                        "Symbol: " + unit.symbol, false);
+                    "Name: " + unit.name + "\n" +
+                    "Symbol: " + unit.symbol, false);
                 return;
             }
             case "all" -> {
@@ -1093,7 +1098,8 @@ public class ConvertCommand extends CoreCommand {
                     return;
                 }
 
-                Unit from = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(fromStr)).findFirst().orElse(null);
+                Unit from = UNITS.values().stream().flatMap(List::stream).filter(u -> u.name.equalsIgnoreCase(fromStr))
+                    .findFirst().orElse(null);
 
                 if (from == null) {
                     reply(event, "❌ Please specify a valid unit!", true);
@@ -1104,7 +1110,8 @@ public class ConvertCommand extends CoreCommand {
                 if (from instanceof BaseUnit) {
                     measurement = UNITS.keySet().stream().filter(m -> m.baseUnit.equals(from)).findFirst().orElse(null);
                 } else {
-                    measurement = UNITS.keySet().stream().filter(m -> UNITS.get(m).contains(from)).findFirst().orElse(null);
+                    measurement = UNITS.keySet().stream().filter(m -> UNITS.get(m).contains(from)).findFirst()
+                        .orElse(null);
                 }
 
                 if (measurement == null) {
@@ -1115,10 +1122,12 @@ public class ConvertCommand extends CoreCommand {
                 double base = from.toBase(measurement, value);
 
                 var embed = new EmbedBuilder()
-                        .setTitle(value + " " + from.richName + " (" + from.symbol + ") converted to all other " + measurement.richName())
-                        .setColor(Color.GREEN)
-                        .setTimestamp(Instant.now())
-                        .setFooter("Requested by " + event.getUser().getEffectiveName(), event.getUser().getEffectiveAvatarUrl());
+                    .setTitle(value + " " + from.richName + " (" + from.symbol + ") converted to all other "
+                        + measurement.richName())
+                    .setColor(Color.GREEN)
+                    .setTimestamp(Instant.now())
+                    .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                        event.getUser().getEffectiveAvatarUrl());
 
                 for (Unit unit : UNITS.get(measurement).stream().filter(u -> !u.equals(from)).toList()) {
                     double converted = unit.fromBase(base);
@@ -1139,7 +1148,8 @@ public class ConvertCommand extends CoreCommand {
             }
         }
 
-        Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst().orElse(null);
+        Measurement measurement = UNITS.keySet().stream().filter(m -> m.name.equals(subcommand)).findFirst()
+            .orElse(null);
         if (measurement != null) {
             String fromStr = event.getOption("from", OptionMapping::getAsString);
             String toStr = event.getOption("to", OptionMapping::getAsString);
@@ -1150,8 +1160,10 @@ public class ConvertCommand extends CoreCommand {
                 return;
             }
 
-            Unit from = UNITS.get(measurement).stream().filter(u -> u.name.equalsIgnoreCase(fromStr)).findFirst().orElse(null);
-            Unit to = UNITS.get(measurement).stream().filter(u -> u.name.equalsIgnoreCase(toStr)).findFirst().orElse(null);
+            Unit from = UNITS.get(measurement).stream().filter(u -> u.name.equalsIgnoreCase(fromStr)).findFirst()
+                .orElse(null);
+            Unit to = UNITS.get(measurement).stream().filter(u -> u.name.equalsIgnoreCase(toStr)).findFirst()
+                .orElse(null);
 
             if (from == null || to == null) {
                 reply(event, "❌ Please specify valid units!", true);
@@ -1169,9 +1181,11 @@ public class ConvertCommand extends CoreCommand {
                 formatted = rounded + to.symbol;
             }
 
-            reply(event, "**" + from.richName + "** (" + from.symbol + ") to **" + to.richName + "** (" + to.symbol + ")\n\n" +
+            reply(event,
+                "**" + from.richName + "** (" + from.symbol + ") to **" + to.richName + "** (" + to.symbol + ")\n\n" +
                     "Value: " + value + "\n" +
-                    "Converted: " + formatted, false);
+                    "Converted: " + formatted,
+                false);
             return;
         }
 
@@ -1179,11 +1193,10 @@ public class ConvertCommand extends CoreCommand {
     }
 
     public static double roundToNDecimalPlaces(double number, int decimalPlaces) {
-        if (decimalPlaces < 0) {
+        if (decimalPlaces < 0)
             throw new IllegalArgumentException("Decimal places cannot be negative.");
-        }
 
-        BigDecimal bigDecimal = new BigDecimal(Double.toString(number));
+        var bigDecimal = new BigDecimal(Double.toString(number));
         bigDecimal = bigDecimal.setScale(decimalPlaces, RoundingMode.HALF_UP);
         return bigDecimal.doubleValue();
     }

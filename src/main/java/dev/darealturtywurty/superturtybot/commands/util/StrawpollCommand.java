@@ -37,27 +37,27 @@ public class StrawpollCommand extends CoreCommand {
     @Override
     public List<OptionData> createOptions() {
         return List.of(
-                new OptionData(OptionType.STRING, "question", "The question that this strawpoll should ask", true),
-                new OptionData(OptionType.STRING, "option1", "The first option", true),
-                new OptionData(OptionType.STRING, "option2", "The second option", true),
-                new OptionData(OptionType.STRING, "option3", "The third option", false),
-                new OptionData(OptionType.STRING, "option4", "The fourth option", false),
-                new OptionData(OptionType.STRING, "option5", "The fith option", false),
-                new OptionData(OptionType.STRING, "description", "The description of the poll", false),
-                new OptionData(OptionType.BOOLEAN, "private", "Whether or not the poll is private", false),
-                new OptionData(OptionType.BOOLEAN, "multiple_choice", "Whether or not the poll is multiple choice", false),
-                new OptionData(OptionType.BOOLEAN, "name_required", "Whether or not the participants name must be entered",
-                        false),
-                new OptionData(OptionType.BOOLEAN, "re-captcha", "Whether or not the participant must complete a reCAPTCHA",
-                        false),
-                new OptionData(OptionType.BOOLEAN, "allow_vpn", "Whether or not the participants are allowed to use a VPN",
-                        false),
-                new OptionData(OptionType.BOOLEAN, "allow_comments", "Whether or not this poll allows comments", false),
-                new OptionData(OptionType.STRING, "duplication_type", "The type of duplication checking that will be used",
-                        false).addChoice("ip", "ip").addChoice("browser", "browser"),
-                new OptionData(OptionType.STRING, "deadline",
-                        "When this poll ends [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional",
-                        false));
+            new OptionData(OptionType.STRING, "question", "The question that this strawpoll should ask", true),
+            new OptionData(OptionType.STRING, "option1", "The first option", true),
+            new OptionData(OptionType.STRING, "option2", "The second option", true),
+            new OptionData(OptionType.STRING, "option3", "The third option", false),
+            new OptionData(OptionType.STRING, "option4", "The fourth option", false),
+            new OptionData(OptionType.STRING, "option5", "The fith option", false),
+            new OptionData(OptionType.STRING, "description", "The description of the poll", false),
+            new OptionData(OptionType.BOOLEAN, "private", "Whether or not the poll is private", false),
+            new OptionData(OptionType.BOOLEAN, "multiple_choice", "Whether or not the poll is multiple choice", false),
+            new OptionData(OptionType.BOOLEAN, "name_required", "Whether or not the participants name must be entered",
+                false),
+            new OptionData(OptionType.BOOLEAN, "re-captcha", "Whether or not the participant must complete a reCAPTCHA",
+                false),
+            new OptionData(OptionType.BOOLEAN, "allow_vpn", "Whether or not the participants are allowed to use a VPN",
+                false),
+            new OptionData(OptionType.BOOLEAN, "allow_comments", "Whether or not this poll allows comments", false),
+            new OptionData(OptionType.STRING, "duplication_type", "The type of duplication checking that will be used",
+                false).addChoice("ip", "ip").addChoice("browser", "browser"),
+            new OptionData(OptionType.STRING, "deadline",
+                "When this poll ends [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional",
+                false));
     }
 
     @Override
@@ -116,12 +116,14 @@ public class StrawpollCommand extends CoreCommand {
         final boolean allowVPN = event.getOption("allow_vpn", true, OptionMapping::getAsBoolean);
         final boolean allowComments = event.getOption("allow_comments", true, OptionMapping::getAsBoolean);
         final DuplicationType duplicationType = event.getOption("duplication_type", DuplicationType.IP,
-                mapping -> DuplicationType.valueOf(mapping.getAsString()));
+            mapping -> DuplicationType.valueOf(mapping.getAsString()));
         final Date deadline = (Date) event.getOption("deadline", mapping -> {
             final String dateStr = mapping.getAsString();
             final String[] parts = dateStr.split("-");
             if (parts.length < 3) {
-                reply(event, "❌ You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional", false, true);
+                reply(event,
+                    "❌ You must supply a valid date format! [year-month-day]{-hour-minute-second-millisecond} | [] = required, {} = optional",
+                    false, true);
                 return null;
             }
 
@@ -129,7 +131,7 @@ public class StrawpollCommand extends CoreCommand {
                 return DateFormat.getInstance().parseObject(TimeUtils.parseDate(parts));
             } catch (final ParseException exception) {
                 reply(event, "❌ There was an issue parsing this date. Please report the following to the bot owner:\n"
-                        + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception), false);
+                    + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception), false);
                 return null;
             }
         });
@@ -138,10 +140,10 @@ public class StrawpollCommand extends CoreCommand {
             return;
 
         event.deferReply()
-                .setContent(
-                        createPoll(new StrawpollEntry(question, description, isPrivate, multipleChoice, nameRequired, reCAPTCHA,
-                                allowVPN, allowComments, duplicationType, deadline, option1, option2, option3, option4, option5)))
-                .mentionRepliedUser(false).queue();
+            .setContent(
+                createPoll(new StrawpollEntry(question, description, isPrivate, multipleChoice, nameRequired, reCAPTCHA,
+                    allowVPN, allowComments, duplicationType, deadline, option1, option2, option3, option4, option5)))
+            .mentionRepliedUser(false).queue();
     }
 
     private static String createPoll(StrawpollEntry entry) {
@@ -186,7 +188,7 @@ public class StrawpollCommand extends CoreCommand {
 
             final var reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             final var response = Constants.GSON.fromJson(String.join("\n", IOUtils.readLines(reader)),
-                    JsonObject.class);
+                JsonObject.class);
 
             final String url = "https://strawpoll.com/" + response.get("content_id").getAsString();
             Constants.LOGGER.info("FLOAT strawpoll was just created: {}", url);
@@ -194,17 +196,27 @@ public class StrawpollCommand extends CoreCommand {
         } catch (IOException | JsonSyntaxException | URISyntaxException exception) {
             Constants.LOGGER.error("Failed to create strawpoll!", exception);
             return "❌ There has been an error connecting to strawpoll, please report the following to the bot owner:\n"
-                    + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception);
+                + exception.getMessage() + "\n" + ExceptionUtils.getMessage(exception);
         }
     }
 
     public enum DuplicationType {
-        IP, BROWSER
+        IP,
+        BROWSER
     }
 
-    public record StrawpollEntry(String title, String description, boolean isPrivate, boolean multiple,
-                                 boolean enterName, boolean reCAPTCHA, boolean allowVPN, boolean allowComments,
-                                 DuplicationType duplicationCheck,
-                                 Date deadline, String... options) {
+    public record StrawpollEntry(
+        String title,
+        String description,
+        boolean isPrivate,
+        boolean multiple,
+        boolean enterName,
+        boolean reCAPTCHA,
+        boolean allowVPN,
+        boolean allowComments,
+        DuplicationType duplicationCheck,
+        Date deadline,
+        String... options
+    ) {
     }
 }

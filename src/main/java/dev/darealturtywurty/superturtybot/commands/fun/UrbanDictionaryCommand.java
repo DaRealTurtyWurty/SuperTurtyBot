@@ -74,7 +74,8 @@ public class UrbanDictionaryCommand extends CoreCommand {
             return;
         }
 
-        final String searchTerm = URLEncoder.encode(event.getOption("search_term", "", OptionMapping::getAsString).toLowerCase().trim(),
+        final String searchTerm = URLEncoder.encode(
+            event.getOption("search_term", "", OptionMapping::getAsString).toLowerCase().trim(),
             StandardCharsets.UTF_8);
         final Pair<Boolean, Either<String, EmbedBuilder>> returned = makeRequest(searchTerm);
         if (Boolean.FALSE.equals(returned.getLeft())) {
@@ -91,7 +92,7 @@ public class UrbanDictionaryCommand extends CoreCommand {
 
     private static Pair<Boolean, Either<String, EmbedBuilder>> makeRequest(String searchTerm) {
         try {
-            //noinspection OptionalGetWithoutIsPresent
+            // noinspection OptionalGetWithoutIsPresent
             final Request request = new Request.Builder()
                 .url("https://mashape-community-urban-dictionary.p.rapidapi.com/define?term=" + searchTerm).get()
                 .addHeader("X-RapidAPI-Host", "mashape-community-urban-dictionary.p.rapidapi.com")
@@ -99,14 +100,12 @@ public class UrbanDictionaryCommand extends CoreCommand {
             final Response response = Constants.HTTP_CLIENT.newCall(request).execute();
 
             ResponseBody body = response.body();
-            if (body == null) {
+            if (body == null)
                 return Pair.of(false, Either.left("Failed to connect!"));
-            }
 
             String bodyString = body.string();
-            if(bodyString.isBlank()) {
+            if (bodyString.isBlank())
                 return Pair.of(false, Either.left("Failed to connect!"));
-            }
 
             final JsonObject json = Constants.GSON.fromJson(bodyString, JsonObject.class);
             final JsonArray list = json.getAsJsonArray("list");

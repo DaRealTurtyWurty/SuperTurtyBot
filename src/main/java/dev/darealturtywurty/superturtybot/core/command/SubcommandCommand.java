@@ -38,7 +38,13 @@ public abstract class SubcommandCommand extends ListenerAdapter {
         return this;
     }
 
-    public SubcommandCommand addOption(OptionType type, String name, String description, boolean required, boolean autocomplete) {
+    public SubcommandCommand addOption(
+        OptionType type,
+        String name,
+        String description,
+        boolean required,
+        boolean autocomplete
+    ) {
         return addOption(new OptionData(type, name, description, required, autocomplete));
     }
 
@@ -47,12 +53,17 @@ public abstract class SubcommandCommand extends ListenerAdapter {
     }
 
     public SubcommandCommand addOption(OptionType type, String name, String description) {
-        return addOption(type, name, description,false);
+        return addOption(type, name, description, false);
     }
 
     public abstract void execute(SlashCommandInteractionEvent event);
 
-    protected static void reply(SlashCommandInteractionEvent event, String message, boolean mention, boolean isEphemeral) {
+    protected static void reply(
+        SlashCommandInteractionEvent event,
+        String message,
+        boolean mention,
+        boolean isEphemeral
+    ) {
         CoreCommand.reply(event, message, mention, isEphemeral);
     }
 
@@ -64,7 +75,12 @@ public abstract class SubcommandCommand extends ListenerAdapter {
         CoreCommand.reply(event, message);
     }
 
-    protected static void reply(SlashCommandInteractionEvent event, EmbedBuilder embed, boolean mention, boolean isEphemeral) {
+    protected static void reply(
+        SlashCommandInteractionEvent event,
+        EmbedBuilder embed,
+        boolean mention,
+        boolean isEphemeral
+    ) {
         CoreCommand.reply(event, embed, mention, isEphemeral);
     }
 

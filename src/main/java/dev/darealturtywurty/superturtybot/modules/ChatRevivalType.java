@@ -26,7 +26,7 @@ public enum ChatRevivalType {
 
             try {
                 types.add(ChatRevivalType.valueOf(value.trim().toUpperCase(Locale.ROOT)));
-            } catch (IllegalArgumentException ignored) {
+            } catch (IllegalArgumentException _) {
                 // Ignore bad persisted values and fall back to whatever remains valid.
             }
         }
@@ -39,8 +39,8 @@ public enum ChatRevivalType {
             return "";
 
         return types.stream()
-                .map(type -> type.name().toLowerCase(Locale.ROOT))
-                .collect(Collectors.joining(";"));
+            .map(type -> type.name().toLowerCase(Locale.ROOT))
+            .collect(Collectors.joining(";"));
     }
 
     public static boolean isValidStorage(String stored) {
@@ -48,14 +48,14 @@ public enum ChatRevivalType {
             return false;
 
         return Arrays.stream(stored.split("[,; ]"))
-                .filter(value -> value != null && !value.isBlank())
-                .allMatch(value -> {
-                    try {
-                        ChatRevivalType.valueOf(value.trim().toUpperCase(Locale.ROOT));
-                        return true;
-                    } catch (IllegalArgumentException ignored) {
-                        return false;
-                    }
-                });
+            .filter(value -> value != null && !value.isBlank())
+            .allMatch(value -> {
+                try {
+                    ChatRevivalType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+                    return true;
+                } catch (IllegalArgumentException _) {
+                    return false;
+                }
+            });
     }
 }

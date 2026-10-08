@@ -40,13 +40,13 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
     private static ArtistChallengeResult createChallenge(boolean useNsfwFilter) {
         boolean isAi = ThreadLocalRandom.current().nextBoolean();
         Optional<Path> image = useNsfwFilter
-                ? ArtistNsfwCache.pickRandomSafeImage(isAi)
-                : Optional.ofNullable(pickRandomImage(isAi));
+            ? ArtistNsfwCache.pickRandomSafeImage(isAi)
+            : Optional.ofNullable(pickRandomImage(isAi));
 
         if (image.isEmpty()) {
             String error = useNsfwFilter
-                    ? "❌ NSFW filter is enabled but no filtered images are available yet."
-                    : "❌ Could not find artist images.";
+                ? "❌ NSFW filter is enabled but no filtered images are available yet."
+                : "❌ Could not find artist images.";
             return new ArtistChallengeResult(null, error);
         }
 
@@ -62,9 +62,9 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
             }
         })) {
             List<Path> files = stream.filter(Files::isRegularFile)
-                    .filter(ArtistPromotionMinigame::isSupportedImage)
-                    .filter(path -> isAi == isAiPath(path))
-                    .toList();
+                .filter(ArtistPromotionMinigame::isSupportedImage)
+                .filter(path -> isAi == isAiPath(path))
+                .toList();
             if (files.isEmpty())
                 return null;
 
@@ -118,9 +118,8 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
 
     private static List<Path> datasetSplits() {
         return List.of(
-                datasetRoot.resolve("train"),
-                datasetRoot.resolve("test")
-        );
+            datasetRoot.resolve("train"),
+            datasetRoot.resolve("test"));
     }
 
     private static Boolean parseAnswer(String input) {
@@ -150,8 +149,8 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
             return false;
 
         UserConfig userConfig = Database.getDatabase().userConfig
-                .find(Filters.eq("user", event.getUser().getIdLong()))
-                .first();
+            .find(Filters.eq("user", event.getUser().getIdLong()))
+            .first();
         return userConfig != null && userConfig.isArtistNsfwFilterOptIn();
     }
 
@@ -170,45 +169,50 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
         }
 
         event.getHook()
-                .editOriginal("✅ You have started the promotion minigame! You have 10 seconds to answer.")
-                .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
-                .queue(channel -> {
-                    channel.addThreadMember(event.getUser()).queue();
-                    sendChallenge(channel, event, account, result.challenge(), useNsfwFilter);
-                });
+            .editOriginal("✅ You have started the promotion minigame! You have 10 seconds to answer.")
+            .flatMap(message -> message.createThreadChannel(event.getUser().getName() + "'s Promotion"))
+            .queue(channel -> {
+                channel.addThreadMember(event.getUser()).queue();
+                sendChallenge(channel, event, account, result.challenge(), useNsfwFilter);
+            });
     }
 
-    private void sendChallenge(ThreadChannel channel, SlashCommandInteractionEvent event, Economy account,
-                               ArtistChallenge challenge, boolean useNsfwFilter) {
+    private void sendChallenge(
+        ThreadChannel channel,
+        SlashCommandInteractionEvent event,
+        Economy account,
+        ArtistChallenge challenge,
+        boolean useNsfwFilter
+    ) {
         String prompt = event.getUser().getAsMention()
-                + " Is this image AI or real? Reply with `ai` or `real`.";
+            + " Is this image AI or real? Reply with `ai` or `real`.";
         if (useNsfwFilter) {
             prompt += "\n⚠️ Potential NSFW warning. Image is spoilered.";
         }
 
         try (FileUpload upload = buildUpload(challenge.imagePath(), useNsfwFilter)) {
             channel.sendMessage(prompt)
-                    .addFiles(upload)
-                    .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                            .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
-                                    && e.getAuthor().getIdLong() == event.getUser().getIdLong()
-                                    && parseAnswer(e.getMessage().getContentRaw()) != null)
-                            .timeout(ANSWER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                            .timeoutAction(() -> handleTimeout(channel, account, challenge))
-                            .success(messageEvent -> handleAnswer(channel, account,
-                                    messageEvent.getMessage().getContentRaw(), challenge))
-                            .build());
+                .addFiles(upload)
+                .queue(message -> TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
+                    .condition(e -> e.getChannel().getIdLong() == channel.getIdLong()
+                        && e.getAuthor().getIdLong() == event.getUser().getIdLong()
+                        && parseAnswer(e.getMessage().getContentRaw()) != null)
+                    .timeout(ANSWER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .timeoutAction(() -> handleTimeout(channel, account, challenge))
+                    .success(messageEvent -> handleAnswer(channel, account,
+                        messageEvent.getMessage().getContentRaw(), challenge))
+                    .build());
         } catch (IOException exception) {
             channel.sendMessage("❌ Could not load the artist challenge image.")
-                    .queue(ignored -> closeChannel(channel));
+                .queue(_ -> closeChannel(channel));
             endPromotion(account);
         }
     }
 
     private void handleTimeout(ThreadChannel channel, Economy account, ArtistChallenge challenge) {
         channel.sendMessage("❌ You took too long to answer! The correct answer was "
-                        + formatAnswer(challenge.isAi()) + ".")
-                .queue(ignored -> closeChannel(channel));
+            + formatAnswer(challenge.isAi()) + ".")
+            .queue(_ -> closeChannel(channel));
         endPromotion(account);
     }
 
@@ -216,20 +220,20 @@ public class ArtistPromotionMinigame implements PromotionMinigame {
         Boolean answer = parseAnswer(input);
         if (answer == null) {
             channel.sendMessage("❌ Invalid answer. Reply with `ai` or `real`.")
-                    .queue(ignored -> closeChannel(channel));
+                .queue(_ -> closeChannel(channel));
             endPromotion(account);
             return;
         }
 
         if (answer == challenge.isAi()) {
             channel.sendMessageFormat("✅ You have been promoted to level %d!",
-                            account.getJobLevel() + 1)
-                    .queue(ignored -> closeChannel(channel));
+                account.getJobLevel() + 1)
+                .queue(_ -> closeChannel(channel));
             EconomyManager.promoteJob(account);
         } else {
             channel.sendMessage("❌ That is not correct! The correct answer was "
-                            + formatAnswer(challenge.isAi()) + ".")
-                    .queue(ignored -> closeChannel(channel));
+                + formatAnswer(challenge.isAi()) + ".")
+                .queue(_ -> closeChannel(channel));
         }
 
         endPromotion(account);

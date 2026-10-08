@@ -3,10 +3,10 @@ package dev.darealturtywurty.superturtybot.modules.quest.impl;
 import java.util.Set;
 
 public record EconomyActionsConfig(
-        Set<String> actionTypes,
-        int requiredActions,
-        int requiredDays,
-        String actionLabel
+    Set<String> actionTypes,
+    int requiredActions,
+    int requiredDays,
+    String actionLabel
 ) {
     public EconomyActionsConfig(Set<String> actionTypes, int requiredActions, int requiredDays) {
         this(actionTypes, requiredActions, requiredDays, "actions");

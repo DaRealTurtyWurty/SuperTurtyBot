@@ -58,7 +58,7 @@ public class NSFWSmashOrPassCommand extends CoreCommand {
         Guild guild = event.getGuild();
         if (guild != null) {
             GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-                    .first();
+                .first();
             if (config == null) {
                 event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
                 return;
@@ -101,9 +101,9 @@ public class NSFWSmashOrPassCommand extends CoreCommand {
         final String name = pornstar.getName();
 
         var embed = new EmbedBuilder()
-                .setTitle("Smash or Pass?")
-                .setDescription("Would you smash or pass " + name + "?")
-                .setImage(photo);
+            .setTitle("Smash or Pass?")
+            .setDescription("Would you smash or pass " + name + "?")
+            .setImage(photo);
 
         event.getHook().sendMessageEmbeds(embed.build()).queue();
     }

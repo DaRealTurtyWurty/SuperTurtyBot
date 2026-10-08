@@ -35,10 +35,9 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GuessSexPositionCommand extends CoreCommand {
     private static final List<SexPositionGame> GAMES = new ArrayList<>();
     private static final Map<Pair<Integer, Integer>, String> TILE_MAP = Map.of(Pair.of(0, 0), "Top Left", Pair.of(1, 0),
-            "Top Middle", Pair.of(2, 0), "Top Right", Pair.of(0, 1), "Middle Left", Pair.of(1, 1), "Middle",
-            Pair.of(2, 1), "Middle Right", Pair.of(0, 2), "Bottom Left", Pair.of(1, 2), "Bottom Middle", Pair.of(2, 2),
-            "Bottom Right");
-
+        "Top Middle", Pair.of(2, 0), "Top Right", Pair.of(0, 1), "Middle Left", Pair.of(1, 1), "Middle",
+        Pair.of(2, 1), "Middle Right", Pair.of(0, 2), "Bottom Left", Pair.of(1, 2), "Bottom Middle", Pair.of(2, 2),
+        "Bottom Right");
 
     public GuessSexPositionCommand() {
         super(new Types(true, false, false, false));
@@ -74,7 +73,7 @@ public class GuessSexPositionCommand extends CoreCommand {
         Guild guild = event.getGuild();
         if (guild != null) {
             GuildData config = Database.getDatabase().guildData.find(Filters.eq("guild", guild.getIdLong()))
-                    .first();
+                .first();
             if (config == null) {
                 event.deferReply(true).setContent("❌ This server has not been configured yet!").queue();
                 return;
@@ -135,65 +134,71 @@ public class GuessSexPositionCommand extends CoreCommand {
 
         var upload = FileUpload.fromData(boas.toByteArray(), "sex_position.jpg");
         event.deferReply().setContent("Reveal tiles one-by-one and guess the sex position when you are ready 😜!")
-                .setFiles(upload).setComponents().queue(hook -> {
-                    hook.retrieveOriginal().queue(message ->
-                            message.reply("Which tile do you want to reveal?").queue(msg -> {
-                                GAMES.add(new SexPositionGame(position, url, guild == null ? 0 : guild.getIdLong(),
-                                        event.getChannel().getIdLong(), message.getIdLong(), msg.getIdLong(),
-                                        event.getUser().getIdLong()));
+            .setFiles(upload).setComponents().queue(hook -> {
+                hook.retrieveOriginal()
+                    .queue(message -> message.reply("Which tile do you want to reveal?").queue(msg -> {
+                        GAMES.add(new SexPositionGame(position, url, guild == null ? 0 : guild.getIdLong(),
+                            event.getChannel().getIdLong(), message.getIdLong(), msg.getIdLong(),
+                            event.getUser().getIdLong()));
 
-                                var tileSelectMenu = StringSelectMenu.create(
-                                        "position_tile-" + message.getId() + "-" + msg.getId() + "-" + event.getUser().getId());
-                                tileSelectMenu.setPlaceholder("Select a tile to reveal");
-                                tileSelectMenu.setRequiredRange(1, 1);
-                                TILE_MAP.forEach(
-                                        (pair, name) -> tileSelectMenu.addOption(name, pair.getLeft() + "-" + pair.getRight()));
+                        var tileSelectMenu = StringSelectMenu.create(
+                            "position_tile-" + message.getId() + "-" + msg.getId() + "-" + event.getUser().getId());
+                        tileSelectMenu.setPlaceholder("Select a tile to reveal");
+                        tileSelectMenu.setRequiredRange(1, 1);
+                        TILE_MAP.forEach(
+                            (pair, name) -> tileSelectMenu.addOption(name, pair.getLeft() + "-" + pair.getRight()));
 
-                                msg.editMessageComponents(ActionRow.of(tileSelectMenu.build())).queue();
+                        msg.editMessageComponents(ActionRow.of(tileSelectMenu.build())).queue();
 
-                                var positionSelectMenu = StringSelectMenu.create(
-                                        "position_select_menu-" + message.getId() + "-" + msg.getId() + "-" + event.getUser()
-                                                .getId());
-                                positionSelectMenu.setPlaceholder("Guess which sex position");
-                                positionSelectMenu.setRequiredRange(1, 1);
-                                for (SexPosition sexPosition : SexPosition.values()) {
-                                    positionSelectMenu.addOption(sexPosition.getName(),
-                                            sexPosition.name().toLowerCase(Locale.ROOT));
-                                }
+                        var positionSelectMenu = StringSelectMenu.create(
+                            "position_select_menu-" + message.getId() + "-" + msg.getId() + "-" + event.getUser()
+                                .getId());
+                        positionSelectMenu.setPlaceholder("Guess which sex position");
+                        positionSelectMenu.setRequiredRange(1, 1);
+                        for (SexPosition sexPosition : SexPosition.values()) {
+                            positionSelectMenu.addOption(sexPosition.getName(),
+                                sexPosition.name().toLowerCase(Locale.ROOT));
+                        }
 
-                                message.editMessageComponents(ActionRow.of(positionSelectMenu.build())).queue();
-                            }));
+                        message.editMessageComponents(ActionRow.of(positionSelectMenu.build())).queue();
+                    }));
 
-                    try {
-                        upload.close();
-                    } catch (IOException exception) {
-                        Constants.LOGGER.error("Failed to close upload!", exception);
-                    }
-                });
+                try {
+                    upload.close();
+                } catch (IOException exception) {
+                    Constants.LOGGER.error("Failed to close upload!", exception);
+                }
+            });
     }
 
     @Override
     public void onStringSelectInteraction(@NotNull StringSelectInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) return;
+        if (!event.isFromGuild() || event.getGuild() == null)
+            return;
 
-        if (!NSFWCommand.isValidChannel(event.getChannel())) return;
+        if (!NSFWCommand.isValidChannel(event.getChannel()))
+            return;
 
         String id = event.getComponentId();
         String[] split = id.split("-");
-        if (split.length != 4) return;
+        if (split.length != 4)
+            return;
 
         String type = split[0];
         long messageId = Long.parseLong(split[1]);
         long replyId = Long.parseLong(split[2]);
         long userId = Long.parseLong(split[3]);
 
-        if (event.getUser().getIdLong() != userId) return;
+        if (event.getUser().getIdLong() != userId)
+            return;
 
         if (type.equals("position_tile") && replyId == event.getMessageIdLong()) {
             SexPositionGame game = GAMES.stream()
-                    .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
-                            .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
-            if (game == null) return;
+                .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
+                    .getIdLong() && g.getMessageId() == messageId)
+                .findFirst().orElse(null);
+            if (game == null)
+                return;
 
             if (game.isFullyRevealed()) {
                 event.reply("❌ You have already revealed all tiles!").setEphemeral(true).queue();
@@ -273,9 +278,11 @@ public class GuessSexPositionCommand extends CoreCommand {
             event.getChannel().asGuildMessageChannel().editMessageAttachmentsById(messageId, upload).queue();
         } else if (type.equals("position_select_menu") && messageId == event.getMessageIdLong()) {
             SexPositionGame game = GAMES.stream()
-                    .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
-                            .getIdLong() && g.getMessageId() == messageId).findFirst().orElse(null);
-            if (game == null) return;
+                .filter(g -> g.guildId == event.getGuild().getIdLong() && g.channelId == event.getChannel()
+                    .getIdLong() && g.getMessageId() == messageId)
+                .findFirst().orElse(null);
+            if (game == null)
+                return;
 
             event.deferEdit().queue();
 
@@ -283,13 +290,16 @@ public class GuessSexPositionCommand extends CoreCommand {
             SexPosition sexPosition = SexPosition.valueOf(value.toUpperCase(Locale.ROOT));
             if (sexPosition != game.getPosition()) {
                 event.getHook().sendMessage(
-                        "❌ " + sexPosition.getName() + " was not the right position! The correct position was " + game.getPosition()
-                                .getName() + "!").queue();
+                    "❌ " + sexPosition.getName() + " was not the right position! The correct position was "
+                        + game.getPosition()
+                            .getName()
+                        + "!")
+                    .queue();
             } else if (LevellingManager.INSTANCE.areLevelsEnabled(event.getGuild())) {
                 int xpEarned = ThreadLocalRandom.current()
-                        .nextInt((9 - game.getRevealedCount()) * 5, (9 - game.getRevealedCount()) * 20);
+                    .nextInt((9 - game.getRevealedCount()) * 5, (9 - game.getRevealedCount()) * 20);
                 event.getHook().sendMessage("✅ You were correct! The correct position was " + game.getPosition()
-                        .getName() + "! You " + "earned " + xpEarned + " XP!").queue();
+                    .getName() + "! You " + "earned " + xpEarned + " XP!").queue();
                 LevellingManager.INSTANCE.addXP(event.getGuild(), event.getUser(), xpEarned);
             }
 
@@ -350,20 +360,31 @@ public class GuessSexPositionCommand extends CoreCommand {
 
     @Getter
     public enum SexPosition {
-        SIXTYNINE("69", "https://mysexpics.com/69/"), MISSIONARY("Missionary",
-                "https://www.mysexpics.com/missionary/"), DOGGY_STYLE("Doggy Style",
-                "https://mysexpics.com/doggystyle/"), ANAL("Anal", "https://mysexpics.com/anal/",
-                "https://mysexpics.com/painful-anal/", "https://mysexpics.com/lesbian-anal/",
-                "https://mysexpics.com/big-ass-anal/"), BLOWJOB("Blowjob", "https://mysexpics.com/blowjob/"), STANDING(
-                "Standing", "https://mysexpics.com/standing/"), COWGIRL("Cowgirl",
-                "https://mysexpics.com/cowgirl/"), MASTURBATION("Masturbation",
-                "https://mysexpics.com/masturbation/"), ORGY("Orgy", "https://mysexpics.com/gangbang/",
-                "https://mysexpics.com/orgy/", "https://mysexpics.com/group-sex/"), FISTING("Fisting",
-                "https://mysexpics.com/fisting/"), HANDJOB("Handjob",
-                "https://mysexpics.com/handjob/"), DOUBLE_PENETRATION("Double Penetration",
-                "https://mysexpics.com/double-penetration/"), PUSSY_LICKING("Pussy Licking",
-                "https://mysexpics.com/pussy-licking/");
-
+        SIXTYNINE("69", "https://mysexpics.com/69/"),
+        MISSIONARY("Missionary",
+            "https://www.mysexpics.com/missionary/"),
+        DOGGY_STYLE("Doggy Style",
+            "https://mysexpics.com/doggystyle/"),
+        ANAL("Anal", "https://mysexpics.com/anal/",
+            "https://mysexpics.com/painful-anal/", "https://mysexpics.com/lesbian-anal/",
+            "https://mysexpics.com/big-ass-anal/"),
+        BLOWJOB("Blowjob", "https://mysexpics.com/blowjob/"),
+        STANDING(
+            "Standing", "https://mysexpics.com/standing/"),
+        COWGIRL("Cowgirl",
+            "https://mysexpics.com/cowgirl/"),
+        MASTURBATION("Masturbation",
+            "https://mysexpics.com/masturbation/"),
+        ORGY("Orgy", "https://mysexpics.com/gangbang/",
+            "https://mysexpics.com/orgy/", "https://mysexpics.com/group-sex/"),
+        FISTING("Fisting",
+            "https://mysexpics.com/fisting/"),
+        HANDJOB("Handjob",
+            "https://mysexpics.com/handjob/"),
+        DOUBLE_PENETRATION("Double Penetration",
+            "https://mysexpics.com/double-penetration/"),
+        PUSSY_LICKING("Pussy Licking",
+            "https://mysexpics.com/pussy-licking/");
 
         private final String name;
         private final String[] urls;
@@ -389,7 +410,15 @@ public class GuessSexPositionCommand extends CoreCommand {
         private final long positionSelectionMessageId;
         private final long userId;
 
-        public SexPositionGame(SexPosition position, String url, long guildId, long channelId, long messageId, long positionSelectionMessageId, long userId) {
+        public SexPositionGame(
+            SexPosition position,
+            String url,
+            long guildId,
+            long channelId,
+            long messageId,
+            long positionSelectionMessageId,
+            long userId
+        ) {
             this.position = position;
             this.url = url;
             this.revealed = new boolean[3][3];
@@ -411,9 +440,8 @@ public class GuessSexPositionCommand extends CoreCommand {
         public boolean isFullyRevealed() {
             for (boolean[] row : this.revealed) {
                 for (boolean revealed : row) {
-                    if (!revealed) {
+                    if (!revealed)
                         return false;
-                    }
                 }
             }
 

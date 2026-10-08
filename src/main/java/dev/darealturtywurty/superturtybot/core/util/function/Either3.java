@@ -9,9 +9,17 @@ public abstract class Either3<L, M, R> {
     private Either3() {
     }
 
-    public abstract <A, B, C> Either3<A, B, C> mapAll(Function<? super L, ? extends A> leftMapper, Function<? super M, ? extends B> middleMapper, Function<? super R, ? extends C> rightMapper);
+    public abstract <A, B, C> Either3<A, B, C> mapAll(
+        Function<? super L, ? extends A> leftMapper,
+        Function<? super M, ? extends B> middleMapper,
+        Function<? super R, ? extends C> rightMapper
+    );
 
-    public abstract <T> T map(Function<? super L, ? extends T> leftMapper, Function<? super M, ? extends T> middleMapper, Function<? super R, ? extends T> rightMapper);
+    public abstract <T> T map(
+        Function<? super L, ? extends T> leftMapper,
+        Function<? super M, ? extends T> middleMapper,
+        Function<? super R, ? extends T> rightMapper
+    );
 
     public abstract Either3<L, M, R> ifLeft(Consumer<? super L> consumer);
 
@@ -81,12 +89,20 @@ public abstract class Either3<L, M, R> {
         }
 
         @Override
-        public <A, B, C> Either3<A, B, C> mapAll(Function<? super L, ? extends A> leftMapper, Function<? super M, ? extends B> middleMapper, Function<? super R, ? extends C> rightMapper) {
+        public <A, B, C> Either3<A, B, C> mapAll(
+            Function<? super L, ? extends A> leftMapper,
+            Function<? super M, ? extends B> middleMapper,
+            Function<? super R, ? extends C> rightMapper
+        ) {
             return left(leftMapper.apply(value));
         }
 
         @Override
-        public <T> T map(Function<? super L, ? extends T> leftMapper, Function<? super M, ? extends T> middleMapper, Function<? super R, ? extends T> rightMapper) {
+        public <T> T map(
+            Function<? super L, ? extends T> leftMapper,
+            Function<? super M, ? extends T> middleMapper,
+            Function<? super R, ? extends T> rightMapper
+        ) {
             return leftMapper.apply(value);
         }
 
@@ -128,8 +144,10 @@ public abstract class Either3<L, M, R> {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Left<?, ?, ?> left = (Left<?, ?, ?>) o;
             return value.equals(left.value);
         }
@@ -148,12 +166,20 @@ public abstract class Either3<L, M, R> {
         }
 
         @Override
-        public <A, B, C> Either3<A, B, C> mapAll(Function<? super L, ? extends A> leftMapper, Function<? super M, ? extends B> middleMapper, Function<? super R, ? extends C> rightMapper) {
+        public <A, B, C> Either3<A, B, C> mapAll(
+            Function<? super L, ? extends A> leftMapper,
+            Function<? super M, ? extends B> middleMapper,
+            Function<? super R, ? extends C> rightMapper
+        ) {
             return middle(middleMapper.apply(value));
         }
 
         @Override
-        public <T> T map(Function<? super L, ? extends T> leftMapper, Function<? super M, ? extends T> middleMapper, Function<? super R, ? extends T> rightMapper) {
+        public <T> T map(
+            Function<? super L, ? extends T> leftMapper,
+            Function<? super M, ? extends T> middleMapper,
+            Function<? super R, ? extends T> rightMapper
+        ) {
             return middleMapper.apply(value);
         }
 
@@ -195,8 +221,10 @@ public abstract class Either3<L, M, R> {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Middle<?, ?, ?> middle = (Middle<?, ?, ?>) o;
             return value.equals(middle.value);
         }
@@ -215,12 +243,20 @@ public abstract class Either3<L, M, R> {
         }
 
         @Override
-        public <A, B, C> Either3<A, B, C> mapAll(Function<? super L, ? extends A> leftMapper, Function<? super M, ? extends B> middleMapper, Function<? super R, ? extends C> rightMapper) {
+        public <A, B, C> Either3<A, B, C> mapAll(
+            Function<? super L, ? extends A> leftMapper,
+            Function<? super M, ? extends B> middleMapper,
+            Function<? super R, ? extends C> rightMapper
+        ) {
             return right(rightMapper.apply(value));
         }
 
         @Override
-        public <T> T map(Function<? super L, ? extends T> leftMapper, Function<? super M, ? extends T> middleMapper, Function<? super R, ? extends T> rightMapper) {
+        public <T> T map(
+            Function<? super L, ? extends T> leftMapper,
+            Function<? super M, ? extends T> middleMapper,
+            Function<? super R, ? extends T> rightMapper
+        ) {
             return rightMapper.apply(value);
         }
 
@@ -262,8 +298,10 @@ public abstract class Either3<L, M, R> {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Right<?, ?, ?> right = (Right<?, ?, ?>) o;
             return value.equals(right.value);
         }

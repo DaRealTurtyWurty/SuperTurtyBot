@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import java.util.List;
 import java.util.Objects;
 
-abstract class AutoModSubcommand extends SubcommandCommand {
+public abstract class AutoModSubcommand extends SubcommandCommand {
     protected AutoModSubcommand(String name, String description) {
         super(name, description);
     }
@@ -33,7 +33,8 @@ abstract class AutoModSubcommand extends SubcommandCommand {
     }
 
     protected static boolean saveConfig(Guild guild, GuildData config) {
-        UpdateResult result = Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()), config);
+        UpdateResult result = Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guild.getIdLong()),
+            config);
         return result.getModifiedCount() > 0 || result.getMatchedCount() > 0;
     }
 
@@ -50,10 +51,10 @@ abstract class AutoModSubcommand extends SubcommandCommand {
             return "`None`";
 
         return channelIds.stream()
-                .map(guild::getGuildChannelById)
-                .filter(Objects::nonNull)
-                .map(GuildChannel::getAsMention)
-                .reduce((left, right) -> left + ", " + right)
-                .orElse("`None`");
+            .map(guild::getGuildChannelById)
+            .filter(Objects::nonNull)
+            .map(GuildChannel::getAsMention)
+            .reduce((left, right) -> left + ", " + right)
+            .orElse("`None`");
     }
 }

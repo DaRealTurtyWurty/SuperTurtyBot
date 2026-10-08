@@ -133,19 +133,22 @@ public class HangmanCommand extends CoreCommand {
             return;
         }
 
-        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS, Permission.MANAGE_THREADS)) {
+        if (!guild.getSelfMember().hasPermission(event.getGuildChannel(), Permission.CREATE_PUBLIC_THREADS,
+            Permission.MANAGE_THREADS)) {
             reply(event, "❌ I do not have permission to create or manage threads in this channel!", false, true);
             return;
         }
 
-        if (GAMES.stream().anyMatch(game -> game.getGuildId() == guild.getIdLong() && game.getUserId() == event.getUser().getIdLong())) {
+        if (GAMES.stream().anyMatch(
+            game -> game.getGuildId() == guild.getIdLong() && game.getUserId() == event.getUser().getIdLong())) {
             reply(event, "❌ You are already playing a game of hangman in this server!", false, true);
             return;
         }
 
         event.deferReply().setContent("Creating a game of hangman...").queue();
 
-        Either<Game, HttpStatus> response = Game.create(guild.getIdLong(), event.getChannel().getIdLong(), event.getUser().getIdLong());
+        Either<Game, HttpStatus> response = Game.create(guild.getIdLong(), event.getChannel().getIdLong(),
+            event.getUser().getIdLong());
         if (response.isRight()) {
             HttpStatus status = response.getRight();
             if (status == HttpStatus.NOT_FOUND) {
@@ -158,35 +161,37 @@ public class HangmanCommand extends CoreCommand {
         }
 
         Game game = response.getLeft();
-        event.getHook().editOriginal("✅ Game of hangman created!").queue(message ->
-                message.createThreadChannel(event.getUser().getName() + "'s Hangman Game").queue(thread -> {
-                    game.setThreadId(thread.getIdLong());
-                    GAMES.add(game);
+        event.getHook().editOriginal("✅ Game of hangman created!").queue(
+            message -> message.createThreadChannel(event.getUser().getName() + "'s Hangman Game").queue(thread -> {
+                game.setThreadId(thread.getIdLong());
+                GAMES.add(game);
 
-                    // Create hangman image
-                    BufferedImage hangmanImage = createHangmanImage(game);
-                    try (FileUpload upload = createFileUpload(hangmanImage)) {
-                        if (upload == null) {
-                            thread.sendMessage("❌ An error occurred while creating a hangman image!").queue(ignored -> {
-                                thread.delete().queue();
-                                GAMES.remove(game);
-                            });
-                            return;
-                        }
-
-                        thread.sendMessage("The word is: `" + "_ ".repeat(game.getWord().length()).trim() + "` (" + game.getWord().length() + " letters)")
-                                .setFiles(upload)
-                                .queue(ignored -> thread.sendMessage("Guess a letter by typing it in chat!").queue());
-
-                        createWaiter(game, thread).build();
-                    } catch (IOException exception) {
-                        Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
-                        thread.sendMessage("❌ An error occurred while uploading a hangman image!").queue(ignored -> {
+                // Create hangman image
+                BufferedImage hangmanImage = createHangmanImage(game);
+                try (FileUpload upload = createFileUpload(hangmanImage)) {
+                    if (upload == null) {
+                        thread.sendMessage("❌ An error occurred while creating a hangman image!").queue(_ -> {
                             thread.delete().queue();
                             GAMES.remove(game);
                         });
+                        return;
                     }
-                }));
+
+                    thread
+                        .sendMessage("The word is: `" + "_ ".repeat(game.getWord().length()).trim() + "` ("
+                            + game.getWord().length() + " letters)")
+                        .setFiles(upload)
+                        .queue(_ -> thread.sendMessage("Guess a letter by typing it in chat!").queue());
+
+                    createWaiter(game, thread).build();
+                } catch (IOException exception) {
+                    Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
+                    thread.sendMessage("❌ An error occurred while uploading a hangman image!").queue(_ -> {
+                        thread.delete().queue();
+                        GAMES.remove(game);
+                    });
+                }
+            }));
     }
 
     private static FileUpload createFileUpload(BufferedImage image) {
@@ -203,125 +208,131 @@ public class HangmanCommand extends CoreCommand {
 
     private static EventWaiter.Builder<MessageReceivedEvent> createWaiter(Game game, ThreadChannel threadChannel) {
         return TurtyBot.EVENT_WAITER.builder(MessageReceivedEvent.class)
-                .condition(event -> event.getGuild().getIdLong() == game.getGuildId()
-                        && event.getChannel().getIdLong() == game.getThreadId()
-                        && event.getAuthor().getIdLong() == game.getUserId()
-                        && event.getMessage().getContentRaw().length() == 1
-                        && Character.isLetter(event.getMessage().getContentRaw().charAt(0)))
-                .timeout(2, TimeUnit.MINUTES)
-                .timeoutAction(() -> {
-                    threadChannel.sendMessage("❌ You took too long to guess a letter! The word was `" + game.getWord() + "`!")
-                            .queue(ignored -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
-                    GAMES.remove(game);
-                })
-                .success(event -> {
-                    String guess = event.getMessage().getContentRaw().toLowerCase(Locale.ROOT);
-                    boolean isCorrect = game.guess(guess);
-                    if (!isCorrect) {
-                        threadChannel.sendMessage("❌ `" + guess + "` is not in the word!").queue();
-                    }
+            .condition(event -> event.getGuild().getIdLong() == game.getGuildId()
+                && event.getChannel().getIdLong() == game.getThreadId()
+                && event.getAuthor().getIdLong() == game.getUserId()
+                && event.getMessage().getContentRaw().length() == 1
+                && Character.isLetter(event.getMessage().getContentRaw().charAt(0)))
+            .timeout(2, TimeUnit.MINUTES)
+            .timeoutAction(() -> {
+                threadChannel
+                    .sendMessage("❌ You took too long to guess a letter! The word was `" + game.getWord() + "`!")
+                    .queue(_ -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
+                GAMES.remove(game);
+            })
+            .success(event -> {
+                String guess = event.getMessage().getContentRaw().toLowerCase(Locale.ROOT);
+                boolean isCorrect = game.guess(guess);
+                if (!isCorrect) {
+                    threadChannel.sendMessage("❌ `" + guess + "` is not in the word!").queue();
+                }
 
-                    if (game.hasWon()) {
-                        threadChannel.sendMessage("✅ `" + guess + "` is in the word!").queue();
-
-                        try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
-                            if (upload == null) {
-                                threadChannel.sendMessage("❌ An error occurred while creating a hangman image!").queue(ignored -> {
-                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                    GAMES.remove(game);
-                                });
-                                return;
-                            }
-
-                            threadChannel.sendMessage("✅ You won! The word was `" + game.getWord() + "`!")
-                                    .setFiles(upload)
-                                    .queue(ignored -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
-                            QuestManager.INSTANCE.recordMinigameCompletion(
-                                    game.getGuildId(), game.getUserId(), "hangman", game.getThreadId());
-                            GAMES.remove(game);
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
-                            threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(ignored -> {
-                                threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                GAMES.remove(game);
-                            });
-                        }
-
-                        return;
-                    }
-
-                    if (game.hasLost()) {
-                        try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
-                            if (upload == null) {
-                                threadChannel.sendMessage("❌ An error occurred while creating a hangman image!").queue(ignored -> {
-                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                    GAMES.remove(game);
-                                });
-
-                                return;
-                            }
-
-                            threadChannel.sendMessage("❌ You lost! The word was `" + game.getWord() + "`!")
-                                    .setFiles(upload)
-                                    .queue(ignored -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
-                            GAMES.remove(game);
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
-                            threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(ignored -> {
-                                threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                GAMES.remove(game);
-                            });
-                        }
-
-                        return;
-                    }
-
-                    if (!isCorrect) {
-                        try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
-                            if (upload == null) {
-                                threadChannel.sendMessage("❌ An error occurred while creating a hangman image!").queue(ignored -> {
-                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                    GAMES.remove(game);
-                                });
-
-                                return;
-                            }
-
-                            threadChannel.sendMessage("The word is: `" + game.getWord().chars()
-                                            .mapToObj(character -> (char) character)
-                                            .map(character -> game.getGuessedLetters().contains(character) ? character.toString() : "_")
-                                            .reduce((first, second) -> first + " " + second).orElse("") + "` (" + game.getWord().length() + " letters)")
-                                    .setFiles(upload)
-                                    .queue(ignored -> createWaiter(game, threadChannel).build());
-                        } catch (IOException exception) {
-                            Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
-                            threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(ignored -> {
-                                threadChannel.getManager().setLocked(true).setArchived(true).queue();
-                                GAMES.remove(game);
-                            });
-                        }
-
-                        return;
-                    }
-
+                if (game.hasWon()) {
                     threadChannel.sendMessage("✅ `" + guess + "` is in the word!").queue();
 
-                    BufferedImage hangmanImage = createHangmanImage(game);
-                    try (var upload = createFileUpload(hangmanImage)) {
-                        threadChannel.sendMessage("The word is: `" + game.getWord().chars()
-                                        .mapToObj(character -> (char) character)
-                                        .map(character -> game.getGuessedLetters().contains(character) ? character.toString() : "_")
-                                        .reduce((first, second) -> first + " " + second).orElse("") + "` (" + game.getWord().length() + " letters)")
-                                .setFiles(upload)
-                                .queue(ignored -> createWaiter(game, threadChannel).build());
+                    try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
+                        if (upload == null) {
+                            threadChannel.sendMessage("❌ An error occurred while creating a hangman image!")
+                                .queue(_ -> {
+                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                                    GAMES.remove(game);
+                                });
+                            return;
+                        }
+
+                        threadChannel.sendMessage("✅ You won! The word was `" + game.getWord() + "`!")
+                            .setFiles(upload)
+                            .queue(_ -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
+                        QuestManager.INSTANCE.recordMinigameCompletion(
+                            game.getGuildId(), game.getUserId(), "hangman", game.getThreadId());
+                        GAMES.remove(game);
                     } catch (IOException exception) {
                         Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
-                        threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(ignored -> {
+                        threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(_ -> {
                             threadChannel.getManager().setLocked(true).setArchived(true).queue();
                             GAMES.remove(game);
                         });
                     }
-                });
+
+                    return;
+                }
+
+                if (game.hasLost()) {
+                    try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
+                        if (upload == null) {
+                            threadChannel.sendMessage("❌ An error occurred while creating a hangman image!")
+                                .queue(_ -> {
+                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                                    GAMES.remove(game);
+                                });
+
+                            return;
+                        }
+
+                        threadChannel.sendMessage("❌ You lost! The word was `" + game.getWord() + "`!")
+                            .setFiles(upload)
+                            .queue(_ -> threadChannel.getManager().setLocked(true).setArchived(true).queue());
+                        GAMES.remove(game);
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
+                        threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(_ -> {
+                            threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                            GAMES.remove(game);
+                        });
+                    }
+
+                    return;
+                }
+
+                if (!isCorrect) {
+                    try (FileUpload upload = createFileUpload(createHangmanImage(game))) {
+                        if (upload == null) {
+                            threadChannel.sendMessage("❌ An error occurred while creating a hangman image!")
+                                .queue(_ -> {
+                                    threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                                    GAMES.remove(game);
+                                });
+
+                            return;
+                        }
+
+                        threadChannel.sendMessage("The word is: `" + game.getWord().chars()
+                            .mapToObj(character -> (char) character)
+                            .map(character -> game.getGuessedLetters().contains(character) ? character.toString() : "_")
+                            .reduce((first, second) -> first + " " + second).orElse("") + "` ("
+                            + game.getWord().length() + " letters)")
+                            .setFiles(upload)
+                            .queue(_ -> createWaiter(game, threadChannel).build());
+                    } catch (IOException exception) {
+                        Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
+                        threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(_ -> {
+                            threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                            GAMES.remove(game);
+                        });
+                    }
+
+                    return;
+                }
+
+                threadChannel.sendMessage("✅ `" + guess + "` is in the word!").queue();
+
+                BufferedImage hangmanImage = createHangmanImage(game);
+                try (var upload = createFileUpload(hangmanImage)) {
+                    threadChannel.sendMessage("The word is: `" + game.getWord().chars()
+                        .mapToObj(character -> (char) character)
+                        .map(character -> game.getGuessedLetters().contains(character) ? character.toString() : "_")
+                        .reduce((first, second) -> first + " " + second).orElse("") + "` (" + game.getWord().length()
+                        + " letters)")
+                        .setFiles(upload)
+                        .queue(_ -> createWaiter(game, threadChannel).build());
+                } catch (IOException exception) {
+                    Constants.LOGGER.error("An error occurred while uploading a hangman image!", exception);
+                    threadChannel.sendMessage("❌ An error occurred while uploading a hangman image!").queue(_ -> {
+                        threadChannel.getManager().setLocked(true).setArchived(true).queue();
+                        GAMES.remove(game);
+                    });
+                }
+            });
     }
 
     private static BufferedImage createHangmanImage(Game game) {
@@ -358,9 +369,9 @@ public class HangmanCommand extends CoreCommand {
             if (game.getGuessedLetters().contains(letter)) {
                 String letterString = String.valueOf(letter);
                 graphics.drawString(
-                        letterString,
-                        startX + (index * 50) + 15 - (metrics.stringWidth(letterString) / 2),
-                        485);
+                    letterString,
+                    startX + (index * 50) + 15 - (metrics.stringWidth(letterString) / 2),
+                    485);
             }
         }
 
@@ -392,12 +403,11 @@ public class HangmanCommand extends CoreCommand {
     @RequiredArgsConstructor
     @Getter
     public static class Game {
-        private static final RandomWordRequestData RANDOM_WORD_REQUEST_DATA =
-                new RandomWordRequestData.Builder()
-                        .amount(1000)
-                        .minLength(4)
-                        .maxLength(10)
-                        .build();
+        private static final RandomWordRequestData RANDOM_WORD_REQUEST_DATA = new RandomWordRequestData.Builder()
+            .amount(1000)
+            .minLength(4)
+            .maxLength(10)
+            .build();
         private static final int MAX_LIVES = 10;
 
         private final List<Character> guessedLetters = new ArrayList<>();
@@ -441,7 +451,8 @@ public class HangmanCommand extends CoreCommand {
             if (words.isEmpty())
                 return Either.right(HttpStatus.NOT_FOUND);
 
-            return Either.left(new Game(guildId, channelId, userId, words.get(ThreadLocalRandom.current().nextInt(words.size())).toLowerCase(Locale.ROOT)));
+            return Either.left(new Game(guildId, channelId, userId,
+                words.get(ThreadLocalRandom.current().nextInt(words.size())).toLowerCase(Locale.ROOT)));
         }
     }
 }

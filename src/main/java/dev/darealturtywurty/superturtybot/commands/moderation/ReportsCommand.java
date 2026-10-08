@@ -24,7 +24,6 @@ public class ReportsCommand extends CoreCommand {
         super(new Types(true, false, false, false));
     }
 
-
     @Override
     public List<OptionData> createOptions() {
         return List.of(new OptionData(OptionType.USER, "user", "The user to get reports for", true));
@@ -101,7 +100,7 @@ public class ReportsCommand extends CoreCommand {
             int finalIndex = index;
             event.getJDA().retrieveUserById(report.getReporter()).queue(reporter -> {
                 contents.field("Reported by %s".formatted(reporter.getEffectiveName()),
-                        ReportManager.truncate(report.getReason(), 256));
+                    ReportManager.truncate(report.getReason(), 256));
 
                 if (finalIndex == reports.size() - 1) {
                     future.complete(null);
@@ -111,13 +110,13 @@ public class ReportsCommand extends CoreCommand {
 
         future.thenRun(() -> {
             PaginatedEmbed embed = new PaginatedEmbed.Builder(10, contents)
-                    .title("Reports for %s".formatted(user.getEffectiveName()))
-                    .description(user.getEffectiveName() + " has " + reports.size() + " reports")
-                    .color(Color.RED)
-                    .timestamp(Instant.now())
-                    .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
-                    .authorOnly(event.getUser().getIdLong())
-                    .build(event.getJDA());
+                .title("Reports for %s".formatted(user.getEffectiveName()))
+                .description(user.getEffectiveName() + " has " + reports.size() + " reports")
+                .color(Color.RED)
+                .timestamp(Instant.now())
+                .footer("Requested by " + event.getUser().getEffectiveName(), event.getMember().getEffectiveAvatarUrl())
+                .authorOnly(event.getUser().getIdLong())
+                .build(event.getJDA());
 
             embed.send(event.getHook(), () -> event.getHook().editOriginal("❌ User has no reports!").queue());
         });

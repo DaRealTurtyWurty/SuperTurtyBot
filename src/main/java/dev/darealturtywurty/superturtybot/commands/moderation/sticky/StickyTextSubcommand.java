@@ -34,7 +34,8 @@ public class StickyTextSubcommand extends StickySubcommand {
             return;
         }
 
-        StickyMessage sticky = new StickyMessage(event.getGuild().getIdLong(), channel.getIdLong(), event.getUser().getIdLong(), content, null);
+        var sticky = new StickyMessage(event.getGuild().getIdLong(), channel.getIdLong(), event.getUser().getIdLong(),
+            content, null);
         StickyMessageManager.saveSticky(sticky);
         StickyMessageManager.repostSticky(event.getGuild(), channel, sticky);
         reply(event, "✅ Sticky text configured for " + channel.getAsMention() + ".", false, true);

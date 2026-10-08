@@ -24,8 +24,15 @@ public class Quest<C, S> implements Registerable {
     private final BiPredicate<Guild, Member> isAvailableFor;
     private final Set<String> conflictGroups = new HashSet<>();
 
-    public Quest(String id, String displayName, String description, C config, QuestRule<C, S> rule,
-                 QuestReward reward, BiPredicate<Guild, Member> isAvailableFor) {
+    public Quest(
+        String id,
+        String displayName,
+        String description,
+        C config,
+        QuestRule<C, S> rule,
+        QuestReward reward,
+        BiPredicate<Guild, Member> isAvailableFor
+    ) {
         this.id = id;
         this.displayName = displayName;
         this.description = description;

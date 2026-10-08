@@ -40,33 +40,34 @@ public class RoleSelectionCommand extends CoreCommand {
     @Override
     public List<SubcommandData> createSubcommandData() {
         return List.of(
-                new SubcommandData("create", "Creates a role selection menu").addOption(OptionType.CHANNEL, "channel",
-                                "The channel to create this role selection menu in", true).addOptions(
-                                new OptionData(OptionType.STRING, "title", "The title for this role selection menu",
-                                        true).setRequiredLength(1, 1028))
-                        .addOption(OptionType.ROLE, "role", "The default role to add to this menu", true)
-                        .addOption(OptionType.STRING, "emoji", "The emoji to use for this role", true, true).addOptions(
-                                new OptionData(OptionType.STRING, "description", "The description for this role",
-                                        true).setRequiredLength(1, 1028)).addOptions(
-                                new OptionData(OptionType.INTEGER, "embed_color",
-                                        "The color that will be used for the embed. This defaults to blue if not specified!",
-                                        false).addChoice("red", 0xFF0000).addChoice("green", 0x00FF00)
-                                        .addChoice("blue", 0x0000FF).addChoice("black", 0x000000).addChoice("white", 0xFFFFFF)
-                                        .addChoice("yellow", 0xFFFF00).addChoice("cyan", 0x00FFFF).addChoice("brown", 0xFF00FF)
-                                        .addChoice("orange", 0xFFA500).addChoice("purple", 0x800080)
-                                        .addChoice("pink", 0xFFC0CB)),
-                new SubcommandData("add", "Adds to an existing role selection menu").addOption(OptionType.STRING,
-                                "message-url", "The URL of the message that contains the role selection menu", true, true)
-                        .addOption(OptionType.ROLE, "role", "The role to add to this menu", true)
-                        .addOption(OptionType.STRING, "emoji", "The emoji to use for this role", true, true).addOptions(
-                                new OptionData(OptionType.STRING, "description", "The description for this role",
-                                        true).setRequiredLength(1, 1028)),
-                new SubcommandData("delete", "Deletes an existing role selection menu").addOption(OptionType.STRING,
-                        "message-url", "The URL of the message that contains the role selection menu", true, true),
-                new SubcommandData("remove", "Removes a role from an existing role selection menu").addOption(
-                                OptionType.STRING, "message-url",
-                                "The URL of the message that contains the role selection menu", true, true)
-                        .addOption(OptionType.ROLE, "role", "The role to remove from this selection menu", true));
+            new SubcommandData("create", "Creates a role selection menu").addOption(OptionType.CHANNEL, "channel",
+                "The channel to create this role selection menu in", true).addOptions(
+                    new OptionData(OptionType.STRING, "title", "The title for this role selection menu",
+                        true).setRequiredLength(1, 1028))
+                .addOption(OptionType.ROLE, "role", "The default role to add to this menu", true)
+                .addOption(OptionType.STRING, "emoji", "The emoji to use for this role", true, true).addOptions(
+                    new OptionData(OptionType.STRING, "description", "The description for this role",
+                        true).setRequiredLength(1, 1028))
+                .addOptions(
+                    new OptionData(OptionType.INTEGER, "embed_color",
+                        "The color that will be used for the embed. This defaults to blue if not specified!",
+                        false).addChoice("red", 0xFF0000).addChoice("green", 0x00FF00)
+                        .addChoice("blue", 0x0000FF).addChoice("black", 0x000000).addChoice("white", 0xFFFFFF)
+                        .addChoice("yellow", 0xFFFF00).addChoice("cyan", 0x00FFFF).addChoice("brown", 0xFF00FF)
+                        .addChoice("orange", 0xFFA500).addChoice("purple", 0x800080)
+                        .addChoice("pink", 0xFFC0CB)),
+            new SubcommandData("add", "Adds to an existing role selection menu").addOption(OptionType.STRING,
+                "message-url", "The URL of the message that contains the role selection menu", true, true)
+                .addOption(OptionType.ROLE, "role", "The role to add to this menu", true)
+                .addOption(OptionType.STRING, "emoji", "The emoji to use for this role", true, true).addOptions(
+                    new OptionData(OptionType.STRING, "description", "The description for this role",
+                        true).setRequiredLength(1, 1028)),
+            new SubcommandData("delete", "Deletes an existing role selection menu").addOption(OptionType.STRING,
+                "message-url", "The URL of the message that contains the role selection menu", true, true),
+            new SubcommandData("remove", "Removes a role from an existing role selection menu").addOption(
+                OptionType.STRING, "message-url",
+                "The URL of the message that contains the role selection menu", true, true)
+                .addOption(OptionType.ROLE, "role", "The role to remove from this selection menu", true));
     }
 
     @Override
@@ -87,10 +88,10 @@ public class RoleSelectionCommand extends CoreCommand {
     @Override
     public String getHowToUse() {
         return """
-                /role-selection create [channel] [title] [role] [emoji] [description] {embedColor}
-                /role-selection add [messageURL] [role] [emoji] [description]
-                /role-selection delete [messageURL]
-                /role-selection remove [messageURL] [role]""";
+            /role-selection create [channel] [title] [role] [emoji] [description] {embedColor}
+            /role-selection add [messageURL] [role] [emoji] [description]
+            /role-selection delete [messageURL]
+            /role-selection remove [messageURL] [role]""";
     }
 
     @Override
@@ -115,10 +116,12 @@ public class RoleSelectionCommand extends CoreCommand {
 
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) return;
+        if (!event.isFromGuild() || event.getGuild() == null)
+            return;
 
         final String id = event.getComponentId();
-        if (!id.startsWith("role-selection-")) return;
+        if (!id.startsWith("role-selection-"))
+            return;
 
         long messageId;
         try {
@@ -127,7 +130,8 @@ public class RoleSelectionCommand extends CoreCommand {
             return;
         }
 
-        if (messageId != event.getMessageIdLong()) return;
+        if (messageId != event.getMessageIdLong())
+            return;
 
         final Member member = event.getMember();
         final Guild guild = event.getGuild();
@@ -139,20 +143,20 @@ public class RoleSelectionCommand extends CoreCommand {
                 roleId = Long.parseLong(value);
             } catch (final NumberFormatException exception) {
                 event.deferReply(true).setContent("❌ The role that you have selected is invalid!")
-                        .mentionRepliedUser(false).queue();
+                    .mentionRepliedUser(false).queue();
                 return;
             }
 
             final Role role = guild.getRoleById(roleId);
             if (role == null) {
                 event.deferReply(true).setContent("❌ The role that you have selected is invalid!")
-                        .mentionRepliedUser(false).queue();
+                    .mentionRepliedUser(false).queue();
                 return;
             }
 
             if (member == null) {
                 event.deferReply(true).setContent("❌ You are not a member of this server!").mentionRepliedUser(false)
-                        .queue();
+                    .queue();
                 return;
             }
 
@@ -163,7 +167,8 @@ public class RoleSelectionCommand extends CoreCommand {
             }
         }
 
-        event.deferReply(true).setContent("✅ I have added/removed the selected roles!").mentionRepliedUser(false).queue();
+        event.deferReply(true).setContent("✅ I have added/removed the selected roles!").mentionRepliedUser(false)
+            .queue();
     }
 
     @Override
@@ -193,8 +198,10 @@ public class RoleSelectionCommand extends CoreCommand {
         switch (subcommand) {
             case "create" -> {
                 final TextChannel channel = event.getOption("channel",
-                        mapping -> mapping.getChannelType().isMessage() ? mapping.getAsChannel()
-                                .asTextChannel() : null);
+                    mapping -> mapping.getChannelType().isMessage()
+                        ? mapping.getAsChannel()
+                            .asTextChannel()
+                        : null);
 
                 final String title = event.getOption("title", "Unknown", OptionMapping::getAsString);
                 final Role role = event.getOption("role", OptionMapping::getAsRole);
@@ -230,13 +237,14 @@ public class RoleSelectionCommand extends CoreCommand {
                 embed.addField(emoji + " `@" + role.getName() + "`", description, false);
 
                 channel.sendMessageEmbeds(embed.build()).queue(msg -> {
-                    SelectOption option = SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
-                            .withDescription(description);
+                    SelectOption option = SelectOption.of(role.getName(), role.getId())
+                        .withEmoji(Emoji.fromFormatted(emoji))
+                        .withDescription(description);
 
                     msg.editMessageComponents(ActionRow.of(StringSelectMenu.create("role-selection-" + msg.getId())
-                            .addOptions(option).setPlaceholder("Select a role").build())).queue();
+                        .addOptions(option).setPlaceholder("Select a role").build())).queue();
                     event.getHook().editOriginal("✅ I have created this role selection menu at:\n" + msg.getJumpUrl())
-                            .mentionRepliedUser(false).queue();
+                        .mentionRepliedUser(false).queue();
                 });
             }
 
@@ -313,33 +321,34 @@ public class RoleSelectionCommand extends CoreCommand {
                 StringSelectMenu menu = getStringSelectMenu(message);
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
-                            true);
+                        true);
                     return;
                 }
 
                 if (menu.getOptions().size() >= SelectMenu.OPTIONS_MAX_AMOUNT) {
                     reply(event,
-                            "❌ The role selection menu that you have provided has reached the maximum amount of roles!",
-                            false, true);
+                        "❌ The role selection menu that you have provided has reached the maximum amount of roles!",
+                        false, true);
                     return;
                 }
 
                 if (menu.getOptions().stream().anyMatch(option -> option.getLabel().equals(role.getName()))) {
                     reply(event, "❌ The role selection menu that you have provided already has this role!", false,
-                            true);
+                        true);
                     return;
                 }
 
                 Builder menuBuilder = menu.createCopy();
                 menuBuilder.getOptions()
-                        .add(SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
-                                .withDescription(description));
+                    .add(SelectOption.of(role.getName(), role.getId()).withEmoji(Emoji.fromFormatted(emoji))
+                        .withDescription(description));
                 menuBuilder.setMaxValues(menu.getMaxValues() + 1);
 
-                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
+                var embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
                 embedBuilder.addField(emoji + " `@" + role.getName() + "`", description, false);
 
-                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build())
+                    .queue();
                 reply(event, "✅ I have added the role to the role selection menu!");
             }
 
@@ -410,13 +419,13 @@ public class RoleSelectionCommand extends CoreCommand {
 
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
-                            true);
+                        true);
                     return;
                 }
 
                 if (menu.getOptions().stream().noneMatch(option -> option.getLabel().equals(role.getName()))) {
                     reply(event, "❌ The role selection menu that you have provided does not have this role!", false,
-                            true);
+                        true);
                     return;
                 }
 
@@ -424,10 +433,11 @@ public class RoleSelectionCommand extends CoreCommand {
                 menuBuilder.getOptions().removeIf(option -> option.getLabel().equals(role.getName()));
                 menuBuilder.setMaxValues(menu.getMaxValues() - 1);
 
-                EmbedBuilder embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
+                var embedBuilder = new EmbedBuilder(message.getEmbeds().getFirst());
                 embedBuilder.getFields().removeIf(field -> Objects.equals(field.getName(), role.getName()));
 
-                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build()).queue();
+                message.editMessageComponents(ActionRow.of(menuBuilder.build())).setEmbeds(embedBuilder.build())
+                    .queue();
                 reply(event, "✅ I have removed the role from the role selection menu!");
             }
 
@@ -491,7 +501,7 @@ public class RoleSelectionCommand extends CoreCommand {
 
                 if (menu == null) {
                     reply(event, "❌ The message that you have provided does not have a role selection menu!", false,
-                            true);
+                        true);
                     return;
                 }
 

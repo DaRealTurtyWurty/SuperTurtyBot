@@ -20,8 +20,13 @@ public class ViewQuestSubcommand extends QuestSubcommand {
     }
 
     @Override
-    protected void execute(SlashCommandInteractionEvent event, Guild guild, Member member, QuestPlayer player,
-                           List<QuestEvent> events) {
+    protected void execute(
+        SlashCommandInteractionEvent event,
+        Guild guild,
+        Member member,
+        QuestPlayer player,
+        List<QuestEvent> events
+    ) {
         String questId = event.getOption("quest", "", OptionMapping::getAsString);
         if (!player.getAssignedQuestIds().contains(questId)) {
             reply(event, "That quest is not assigned to you this week.", false, true);

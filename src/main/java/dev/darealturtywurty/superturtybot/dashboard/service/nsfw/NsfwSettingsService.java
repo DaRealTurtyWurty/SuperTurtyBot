@@ -27,15 +27,13 @@ public final class NsfwSettingsService {
 
     public NsfwSettingsResponse updateSettings(long guildId, NsfwSettingsRequest request) {
         Guild guild = this.jda.getGuildById(guildId);
-        if (guild == null) {
+        if (guild == null)
             throw new DashboardApiException(HttpStatus.NOT_FOUND, "dashboard_guild_not_connected",
-                    "TurtyBot is not currently connected to that guild.");
-        }
+                "TurtyBot is not currently connected to that guild.");
 
-        if (request == null) {
+        if (request == null)
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_nsfw_settings",
-                    "The NSFW settings payload was missing.");
-        }
+                "The NSFW settings payload was missing.");
 
         List<String> nsfwChannelIds = normalizeSnowflakes(request.getNsfwChannelIds());
         validateRequest(guild, nsfwChannelIds);
@@ -50,43 +48,38 @@ public final class NsfwSettingsService {
 
     private static NsfwSettingsResponse toResponse(GuildData guildData) {
         return new NsfwSettingsResponse(
-                GuildData.getLongs(guildData.getNsfwChannels()).stream().map(String::valueOf).toList(),
-                guildData.isArtistNsfwFilterEnabled()
-        );
+            GuildData.getLongs(guildData.getNsfwChannels()).stream().map(String::valueOf).toList(),
+            guildData.isArtistNsfwFilterEnabled());
     }
 
     private static void validateRequest(Guild guild, List<String> nsfwChannelIds) {
         for (String channelId : nsfwChannelIds) {
             TextChannel channel = guild.getTextChannelById(channelId);
-            if (channel == null) {
+            if (channel == null)
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_nsfw_channel",
-                        "One or more NSFW channels were not valid text channels in this guild.");
-            }
+                    "One or more NSFW channels were not valid text channels in this guild.");
         }
     }
 
     private static List<String> normalizeSnowflakes(List<String> values) {
-        if (values == null || values.isEmpty()) {
+        if (values == null || values.isEmpty())
             return List.of();
-        }
 
         List<String> normalized = new ArrayList<>();
         for (String value : values) {
             String trimmed = value == null ? "" : value.trim();
-            if (trimmed.isEmpty()) {
+            if (trimmed.isEmpty())
                 continue;
-            }
 
             try {
                 long parsed = Long.parseLong(trimmed);
-                if (parsed <= 0L) {
+                if (parsed <= 0L)
                     throw new NumberFormatException("Snowflake ID must be positive.");
-                }
 
                 normalized.add(Long.toString(parsed));
             } catch (NumberFormatException exception) {
                 throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_snowflake_id",
-                        "One of the supplied IDs was not a valid Discord snowflake.");
+                    "One of the supplied IDs was not a valid Discord snowflake.");
             }
         }
 
