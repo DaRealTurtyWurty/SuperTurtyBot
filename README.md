@@ -29,6 +29,16 @@ Run `./gradlew generateCommandMetadata` to regenerate [commands.json](commands.j
 
 The `/marketplace` command uses MongoDB transactions to transfer listings, items, and money together. Its MongoDB deployment must support transactions (a replica set or sharded cluster).
 
+## Java quality tools
+
+The build uses the separate `../railroad-quality-plugin` checkout. Keep it beside
+SuperTurtyBot. Run `./gradlew format` to apply Railroad's Java style, or
+`./gradlew formatCheck` to check it. Run `./gradlew javadocCoverage` to generate
+`build/reports/javadoc-coverage/index.html`; `javadocCoverageCheck` enforces complete
+public API documentation. Strict coverage is opt-in.
+
+These tools require the plugin checkout in local and CI builds until it is published.
+
 ## License
 
 TurtyBot is licensed under the GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE) for the full license text.

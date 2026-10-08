@@ -1,1 +1,5 @@
+pluginManagement {
+    includeBuild('../railroad-quality-plugin')
+}
+
 rootProject.name = "SuperTurtyBot"
