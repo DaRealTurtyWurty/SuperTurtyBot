@@ -31,13 +31,13 @@ The `/marketplace` command uses MongoDB transactions to transfer listings, items
 
 ## Java quality tools
 
-The build uses the separate `../railroad-quality-plugin` checkout. Keep it beside
-SuperTurtyBot. Run `./gradlew format` to apply Railroad's Java style, or
+The build resolves `dev.railroadide.quality` version `1.0.0` from Railroad Maven
+at `https://maven.railroadide.dev/releases`. Run `./gradlew format` to apply Railroad's Java style, or
 `./gradlew formatCheck` to check it. Run `./gradlew javadocCoverage` to generate
 `build/reports/javadoc-coverage/index.html`; `javadocCoverageCheck` enforces complete
 public API documentation. Strict coverage is opt-in.
 
-These tools require the plugin checkout in local and CI builds until it is published.
+Local and CI builds download the plugin automatically.
 
 ## License
 

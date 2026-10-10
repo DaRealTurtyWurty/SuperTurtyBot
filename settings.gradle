@@ -1,5 +1,8 @@
 pluginManagement {
-    includeBuild('../railroad-quality-plugin')
+    repositories {
+        maven { url = uri('https://maven.railroadide.dev/releases') }
+        gradlePluginPortal()
+    }
 }
 
 rootProject.name = "SuperTurtyBot"
