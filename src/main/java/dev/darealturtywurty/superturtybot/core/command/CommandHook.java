@@ -15,6 +15,8 @@ import dev.darealturtywurty.superturtybot.commands.economy.property.PropertyComm
 import dev.darealturtywurty.superturtybot.commands.fun.*;
 import dev.darealturtywurty.superturtybot.commands.image.*;
 import dev.darealturtywurty.superturtybot.commands.levelling.RankCommand;
+import dev.darealturtywurty.superturtybot.commands.levelling.RankCardCommand;
+import dev.darealturtywurty.superturtybot.commands.levelling.XPInventoryCommand;
 import dev.darealturtywurty.superturtybot.commands.levelling.SetXPCommand;
 import dev.darealturtywurty.superturtybot.commands.minigames.*;
 import dev.darealturtywurty.superturtybot.commands.minigames.battleships.BattleshipsCommand;
@@ -416,7 +418,8 @@ public class CommandHook extends ListenerAdapter {
         // Levelling
         commands.add(new RankCommand());
         commands.add(new LeaderboardCommand());
-        // commands.add(new XPInventoryCommand());
+        commands.add(new XPInventoryCommand());
+        commands.add(new RankCardCommand());
         commands.add(new SetXPCommand());
 
         // Minigames

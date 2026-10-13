@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import dev.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 
 @SuppressWarnings("DataFlowIssue") // TODO: Possibly hold the images in memory to avoid reading them every time and that
                                    // way this is irrelevant
@@ -192,190 +193,172 @@ public class RankCommand extends CoreCommand {
         float xpPercent
     ) {
         try {
-            final BufferedImage base = ImageIO
-                .read(TurtyBot.class.getResourceAsStream("/levels/background/default.png"));
-            final BufferedImage outline = ImageIO
-                .read(TurtyBot.class.getResourceAsStream("/levels/outline/default.png"));
-            final var rankCardBuffer = new BufferedImage(base.getWidth(), base.getHeight(),
-                BufferedImage.TYPE_INT_ARGB);
-            final var graphics = (Graphics2D) rankCardBuffer.getGraphics();
-            graphics.addRenderingHints(
-                new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            // graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-            // RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
-
-            // Background
-            BufferedImage background;
-            if (!card.getBackgroundImage().isBlank()) {
-                background = ImageIO.read(
-                    TurtyBot.class.getResourceAsStream("/levels/background/" + card.getBackgroundImage() + ".png"));
-            } else {
-                final var bgBuf = new BufferedImage(base.getWidth(), base.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                final var bgGraphics = bgBuf.createGraphics();
-                bgGraphics.setColor(card.getBackgroundColor());
-                bgGraphics.fillRect(0, 0, base.getWidth(), base.getHeight());
-                bgGraphics.dispose();
-                background = bgBuf;
-            }
-
-            final var bgBuffer = new BufferedImage(base.getWidth(), base.getHeight(), BufferedImage.TYPE_INT_ARGB);
-            final var bgGraphics = bgBuffer.createGraphics();
-            bgGraphics.setClip(new Rectangle2D.Float(0, 0, base.getWidth(), base.getHeight()));
-            bgGraphics.drawImage(background, 0, 0, base.getWidth(), base.getHeight(), null);
-            bgGraphics.dispose();
-            graphics.drawImage(bgBuffer, 0, 0, base.getWidth(), base.getHeight(), null);
-
-            // Outline
-            BufferedImage outlineImg;
-            if (!card.getOutlineImage().isBlank()) {
-                outlineImg = ImageIO
-                    .read(TurtyBot.class.getResourceAsStream("/levels/outline/" + card.getOutlineImage() + ".png"));
-            } else {
-                final var outBuf = new BufferedImage(outline.getWidth(), outline.getHeight(),
-                    BufferedImage.TYPE_INT_ARGB);
-                final var outGraphics = outBuf.createGraphics();
-                outGraphics.setColor(card.getOutlineColor());
-                outGraphics.fillRect(0, 0, outline.getWidth(), outline.getHeight());
-                outGraphics.dispose();
-                outlineImg = outBuf;
-            }
-
-            outlineImg = cutoutImageMiddle(outlineImg, base.getWidth(), base.getHeight(), 20);
-
-            final var outlineAlpha = card.getOutlineOpacity();
-            final var alphaComp = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, outlineAlpha);
-            graphics.setComposite(alphaComp);
-            graphics.drawImage(outlineImg, 0, 0, base.getWidth(), base.getHeight(), null);
-            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
-
-            // Name
-            graphics.setStroke(new BasicStroke(3));
-            graphics.setColor(card.getNameTextColor());
-
-            final String name = member.getEffectiveName();
-            final float nameFontSize = name.length() <= 12
-                ? 200f
-                : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
-            graphics.setFont(this.usedFont.deriveFont(nameFontSize));
-            graphics.drawString(name.length() > 26 ? name.substring(0, 26) + "..." : name, 700, 270);
-
-            // Rank
-            graphics.setColor(card.getRankTextColor());
-            graphics.setFont(this.usedFont.deriveFont(105f));
-
-            int rank = getRank(member);
-
-            var xModifier = 0;
-            if (rank >= 10) {
-                xModifier += 15;
-            }
-
-            if (rank >= 100) {
-                xModifier += 15;
-            }
-
-            if (rank >= 1000) {
-                xModifier += 15;
-            }
-
-            if (rank >= 10000) {
-                xModifier += 15;
-            }
-
-            if (rank < 0) {
-                rank = 0;
-            }
-
-            graphics.drawString("Rank #" + (rank + 1), 2200 - xModifier, 250);
-
-            final var fontMetrics = graphics.getFontMetrics();
-            final int textWidth = fontMetrics.stringWidth("Rank #" + (rank + 1));
-            graphics.drawLine(700, 300 + fontMetrics.getDescent(), 2200 - xModifier + textWidth,
-                300 + fontMetrics.getDescent());
-
-            // Level
-            final var levelStr = String.valueOf(level);
-            graphics.setColor(card.getLevelTextColor());
-            graphics.drawString("Level " + levelStr, 700, 450);
-            graphics.setFont(this.usedFont.deriveFont(75f));
-
-            // XP
-            final var currentXp = xp - LevellingManager.getXPForLevel(level);
-            final var nextXp = nextLevelXp - LevellingManager.getXPForLevel(level);
-            final var xpStr = currentXp + " / " + nextXp + " XP";
-
-            graphics.setColor(card.getXpTextColor());
-            drawRightAlignedString(graphics, xpStr, this.usedFont.deriveFont(75f), 2600, 375);
-
-            // XP Bar
-            if (!card.getXpOutlineImage().isBlank()) {
-                final BufferedImage xpBarOutline = makeRoundedCorner(
-                    ImageIO.read(
-                        TurtyBot.class.getResourceAsStream("/levels/xpOutline/" + card.getXpOutlineImage() + ".png")),
-                    20);
-                graphics.drawImage(xpBarOutline, 700, 550, 1900, 120, null);
-            } else {
-                graphics.setColor(card.getXpOutlineColor());
-                graphics.drawRoundRect(700, 550, 1900, 120, 30, 30);
-            }
-
-            if (!card.getXpEmptyImage().isBlank()) {
-                final BufferedImage xpBarEmpty = makeRoundedCorner(ImageIO.read(
-                    TurtyBot.class.getResourceAsStream("/levels/xpEmpty/" + card.getXpEmptyImage() + ".png")), 20);
-                graphics.drawImage(xpBarEmpty, 700, 550, 1900, 120, null);
-            } else {
-                graphics.setColor(card.getXpEmptyColor());
-                graphics.fillRoundRect(700, 550, 1900, 120, 30, 30);
-            }
-
-            if (!card.getXpFillImage().isBlank()) {
-                final BufferedImage xpBarFill = makeRoundedCorner(ImageIO
-                    .read(TurtyBot.class.getResourceAsStream("/levels/xpFill/" + card.getXpFillImage() + ".png")), 20);
-                graphics.drawImage(xpBarFill, 700, 550, (int) (1900 * (xpPercent * 0.01f)), 120, null);
-            } else {
-                graphics.setColor(card.getXpFillColor());
-                graphics.fillRoundRect(700, 550, (int) (1900 * (xpPercent * 0.01f)), 120, 30, 30);
-            }
-
-            graphics.setColor(card.getPercentTextColor());
-            graphics.setFont(this.usedFont.deriveFont(90f));
-
-            graphics.drawString(DECIMAL_FORMAT.format(xpPercent) + "%", 1500, 640);
-
-            // User Avatar
-            BufferedImage userAvatar = ImageIO.read(member.getEffectiveAvatar().download(512).join());
-            userAvatar = BotUtils.resize(userAvatar, 512);
-
-            if (!card.getAvatarOutlineImage().isBlank()) {
-                final var avatarOut = new BufferedImage(userAvatar.getWidth(), userAvatar.getHeight(),
-                    BufferedImage.TYPE_INT_ARGB);
-                final var avatarOutGraphics = avatarOut.createGraphics();
-                avatarOutGraphics.setColor(card.getBackgroundColor());
-                avatarOutGraphics.setClip(new Ellipse2D.Float(0, 0, userAvatar.getWidth(), userAvatar.getHeight()));
-                avatarOutGraphics.drawImage(
-                    ImageIO.read(TurtyBot.class
-                        .getResourceAsStream("/levels/avatarOutline/" + card.getAvatarOutlineImage() + ".png")),
-                    0, 0, userAvatar.getWidth(), userAvatar.getHeight(), null);
-                avatarOutGraphics.dispose();
-                graphics.drawImage(avatarOut, 350, 300, userAvatar.getWidth() + 30, userAvatar.getHeight() + 30, null);
-                drawAvatar(userAvatar, graphics);
-            } else {
-                drawAvatar(userAvatar, graphics);
-                graphics.setColor(card.getAvatarOutlineColor());
-                final Shape shape = createRingShape(350, 300, userAvatar.getWidth() / 2f, 10);
-                graphics.fill(shape);
-                graphics.draw(shape);
-            }
-
-            graphics.dispose();
-
-            return rankCardBuffer;
-        } catch (final IOException exception) {
+            BufferedImage avatar = BotUtils.resize(ImageIO.read(member.getEffectiveAvatar().download(512).join()), 512);
+            return renderRankCard(member.getEffectiveName(), getRank(member), avatar, card,
+                level, xp, nextLevelXp, xpPercent, this.usedFont);
+        } catch (IOException exception) {
             Constants.LOGGER.error("Error getting rank card for {}", member.getEffectiveName(), exception);
+            return null;
+        }
+    }
+
+    static BufferedImage renderRankCard(
+        String name,
+        int rank,
+        BufferedImage userAvatar,
+        RankCard card,
+        int level,
+        int xp,
+        int nextLevelXp,
+        float xpPercent,
+        Font font
+    ) throws IOException {
+        final int baseWidth = 2800;
+        final int baseHeight = 845;
+        final var rankCardBuffer = new BufferedImage(baseWidth, baseHeight,
+            BufferedImage.TYPE_INT_ARGB);
+        final var graphics = (Graphics2D) rankCardBuffer.getGraphics();
+        graphics.addRenderingHints(
+            new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+        // RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
+
+        // Background: crop to fit, keeping the texture's proportions.
+        BufferedImage background = readTexture(RankCardItem.Type.BACKGROUND_IMAGE, card.getBackgroundImage());
+        if (background == null) {
+            graphics.setColor(card.getBackgroundColor());
+            graphics.fillRect(0, 0, baseWidth, baseHeight);
+        } else {
+            graphics.drawImage(RankCardTextures.cover(background, baseWidth, baseHeight), 0, 0, null);
         }
 
-        return null;
+        BufferedImage outlineImg = readTexture(RankCardItem.Type.OUTLINE_IMAGE, card.getOutlineImage());
+        if (outlineImg == null) {
+            outlineImg = new BufferedImage(baseWidth, baseHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D layer = outlineImg.createGraphics();
+            layer.setColor(card.getOutlineColor());
+            layer.fillRect(0, 0, baseWidth, baseHeight);
+            layer.dispose();
+        }
+        outlineImg = cutoutImageMiddle(outlineImg, baseWidth, baseHeight, 20);
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+            Math.clamp(card.getOutlineOpacity(), 0f, 1f)));
+        graphics.drawImage(outlineImg, 0, 0, null);
+        graphics.setComposite(AlphaComposite.SrcOver);
+
+        // Keep the card artwork visible while separating the text from busy backgrounds.
+        graphics.setColor(new Color(10, 16, 24, 170));
+        graphics.fillRoundRect(660, 70, 2000, 430, 40, 40);
+
+        // Name
+        graphics.setStroke(new BasicStroke(3));
+        graphics.setColor(card.getNameTextColor());
+
+        final float nameFontSize = name.length() <= 12
+            ? 200f
+            : name.length() <= 16 ? 150f : name.length() <= 20 ? 125f : name.length() <= 26 ? 100f : 90f;
+        graphics.setFont(font.deriveFont(nameFontSize));
+        graphics.drawString(name.length() > 26 ? name.substring(0, 26) + "..." : name, 700, 270);
+
+        // Rank
+        graphics.setColor(card.getRankTextColor());
+        graphics.setFont(font.deriveFont(105f));
+
+        var xModifier = 0;
+        if (rank >= 10) {
+            xModifier += 15;
+        }
+
+        if (rank >= 100) {
+            xModifier += 15;
+        }
+
+        if (rank >= 1000) {
+            xModifier += 15;
+        }
+
+        if (rank >= 10000) {
+            xModifier += 15;
+        }
+
+        if (rank < 0) {
+            rank = 0;
+        }
+
+        graphics.drawString("Rank #" + (rank + 1), 2200 - xModifier, 250);
+
+        final var fontMetrics = graphics.getFontMetrics();
+        final int textWidth = fontMetrics.stringWidth("Rank #" + (rank + 1));
+        graphics.drawLine(700, 300 + fontMetrics.getDescent(), 2200 - xModifier + textWidth,
+            300 + fontMetrics.getDescent());
+
+        // Level
+        final var levelStr = String.valueOf(level);
+        graphics.setColor(card.getLevelTextColor());
+        graphics.drawString("Level " + levelStr, 700, 450);
+        graphics.setFont(font.deriveFont(75f));
+
+        // XP
+        final var currentXp = xp - LevellingManager.getXPForLevel(level);
+        final var nextXp = nextLevelXp - LevellingManager.getXPForLevel(level);
+        final var xpStr = currentXp + " / " + nextXp + " XP";
+
+        graphics.setColor(card.getXpTextColor());
+        drawRightAlignedString(graphics, xpStr, font.deriveFont(75f), 2600, 375);
+
+        // Draw the textured border last so the empty/fill layers cannot obscure it.
+        RankCardTextures.drawBar(graphics,
+            readTexture(RankCardItem.Type.XP_EMPTY_IMAGE, card.getXpEmptyImage()),
+            card.getXpEmptyColor(), 700, 550, 1900, 120, 1f, false);
+        RankCardTextures.drawBar(graphics,
+            readTexture(RankCardItem.Type.XP_FILL_IMAGE, card.getXpFillImage()),
+            card.getXpFillColor(), 700, 550, 1900, 120, xpPercent / 100f, false);
+        RankCardTextures.drawBar(graphics,
+            readTexture(RankCardItem.Type.XP_OUTLINE_IMAGE, card.getXpOutlineImage()),
+            card.getXpOutlineColor(), 700, 550, 1900, 120, 1f, true);
+
+        graphics.setFont(font.deriveFont(90f));
+        String percentText = DECIMAL_FORMAT.format(xpPercent) + "%";
+        FontMetrics percentMetrics = graphics.getFontMetrics();
+        graphics.setColor(new Color(10, 16, 24, 170));
+        graphics.fillRoundRect(1480, 558, percentMetrics.stringWidth(percentText) + 40, 104, 24, 24);
+        graphics.setColor(card.getPercentTextColor());
+        int percentBaseline = 610 + (percentMetrics.getAscent() - percentMetrics.getDescent()) / 2;
+        graphics.drawString(percentText, 1500, percentBaseline);
+
+        // User Avatar
+
+        BufferedImage avatarTexture = readTexture(RankCardItem.Type.AVATAR_OUTLINE_IMAGE,
+            card.getAvatarOutlineImage());
+        Shape ring = createRingShape(350, 300, userAvatar.getWidth() / 2f + 10, 10);
+        Graphics2D avatarGraphics = (Graphics2D) graphics.create();
+        avatarGraphics.clip(ring);
+        if (avatarTexture == null) {
+            avatarGraphics.setColor(card.getAvatarOutlineColor());
+            avatarGraphics.fill(ring);
+        } else {
+            int diameter = userAvatar.getWidth() + 20;
+            avatarGraphics.drawImage(RankCardTextures.cover(avatarTexture, diameter, diameter),
+                350 - diameter / 2, 300 - diameter / 2, null);
+        }
+        avatarGraphics.dispose();
+        drawAvatar(userAvatar, graphics);
+
+        graphics.dispose();
+
+        return rankCardBuffer;
+    }
+
+    static @Nullable BufferedImage readTexture(RankCardItem.Type type, String name) throws IOException {
+        if (name == null || name.isBlank())
+            return null;
+        RankCardItem item = RankCardItemRegistry.resolveImage(type, name);
+        if (item == null)
+            return null;
+        try (InputStream stream = TurtyBot.loadResource(item.getResourcePath())) {
+            return stream == null ? null : ImageIO.read(stream);
+        }
     }
 
     public static Shape createRingShape(double centerX, double centerY, double outerRadius, double thickness) {
@@ -402,8 +385,8 @@ public class RankCommand extends CoreCommand {
         final var toSubtract = new Area(new RoundRectangle2D.Double(cornerRadius, cornerRadius,
             baseWidth - cornerRadius * 2, baseHeight - cornerRadius * 2, cornerRadius, cornerRadius));
         area.subtract(toSubtract);
-        g2.setPaint(new TexturePaint(image, new Rectangle2D.Double(0, 0, baseWidth, baseHeight)));
-        g2.fill(area);
+        g2.clip(area);
+        g2.drawImage(RankCardTextures.cover(image, baseWidth, baseHeight), 0, 0, null);
         g2.dispose();
         return output;
     }

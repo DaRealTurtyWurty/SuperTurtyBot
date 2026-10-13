@@ -1,0 +1,425 @@
+{
+  "retrieved": "2026-10-13",
+  "assets": [
+    {
+      "path": "levels/background/minecraft_overworld.jpg",
+      "asset": "minecraft_overworld",
+      "title": "Minecraft Overworld",
+      "source": "Generated for SuperTurtyBot using the built-in image generation tool",
+      "provenance": "generated",
+      "prompt": "Create a wide landscape background illustration for a Discord rank card inspired by Minecraft: an unmistakably voxel block-built grassy overworld with stepped green hills, blocky oak trees, a winding blue river, distant square mountains and a warm sunrise. Authentic pixel-textured cube geometry, inviting colorful game-world atmosphere. Wide panoramic composition with interesting terrain across the lower portion and open sky above; designed to survive a central crop to 3.3:1. No characters in foreground, text, logos, HUD, interface, border or rounded corners. Full opaque rectangular artwork, not a card mockup.",
+      "sha256": "af2957660752df1d0aff14f4a880f8a18f4bdfc790430b6aaae133f204a4ddac",
+      "transformation": "JPEG encoding at original dimensions; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/fortnite_island.jpg",
+      "asset": "fortnite_island",
+      "title": "Fortnite Island",
+      "source": "Generated for SuperTurtyBot using the built-in image generation tool",
+      "provenance": "generated",
+      "prompt": "Create original AI-generated Fortnite-inspired environment artwork for a wide Discord rank-card background. Panoramic colorful stylized 3D battle royale island: rolling vivid green hills, rounded pine trees, a small recognizable suburban battle royale town, wooden player-built ramps, distant blue ocean, violet storm clouds on the horizon. A blue balloon-powered battle bus floats small in the far-left sky. Bright polished cartoon game art, rich teal and purple with warm afternoon sun, attractive atmospheric depth. Aspect ratio approximately 3:1, with all key details safe inside a central 3.3:1 crop. Scene spans full width; keep upper-middle relatively calm for code-overlaid text. No text, logos, HUD, border, rounded corners or UI. No foreground characters. Full opaque rectangular image, not a card mockup.",
+      "sha256": "bf4d72b199bbd602903a4aff37841f70d69accdaa4bb18ffe7bbb663a8add4ed",
+      "transformation": "JPEG encoding at original dimensions; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/rocket_league_arena.jpg",
+      "asset": "rocket_league_arena",
+      "title": "Rocket League Arena",
+      "source": "Generated for SuperTurtyBot using the built-in image generation tool",
+      "provenance": "generated",
+      "prompt": "Generate a believable Rocket League in-game style stadium background, a wide 3:1 panoramic videogame render. Camera at low spectator height near one corner of a regulation rectangular car-soccer pitch, looking diagonally toward ONE orange goal centered in the far end wall. Realistic spatial layout: long side walls and packed stadium grandstands converge toward that far end; the opposite goal is behind the camera and NOT visible. Flat green artificial turf, restrained white field markings, curved plexiglass perimeter and fine hexagonal safety mesh. Enclosed ordinary modern sports stadium, neutral daylight, no fantasy mountains or skyline. Two modestly sized compact rocket-powered sports cars on four wheels near midfield, one blue and one orange, and one metallic paneled soccer ball about 1.3 times car height. Cars and ball small in scene and located along the lower right, with subtle short boost exhaust. Faithful polished game-engine materials and proportions, not exaggerated cinematic concept art, not toy cars, not photoreal road vehicles. Keep central upper half uncluttered. Full rectangular opaque background image, no UI, text, logos, sponsor signage, rounded corners or borders.",
+      "sha256": "e0598f98ecdbf3d850af0d2eed919d4b0b34019e2cf426f6a9be48cb552e8ebb",
+      "transformation": "JPEG encoding at original dimensions; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/bananas.jpg",
+      "asset": "bananas",
+      "title": "Bananas",
+      "source": "Generated for SuperTurtyBot using the built-in image generation tool",
+      "provenance": "generated",
+      "prompt": "Use case: photorealistic-natural. Asset type: rectangular background texture for a Discord rank card, not a mockup. Generate a wide landscape overhead photograph filled edge to edge with ripe yellow bananas. Many whole curved bananas arranged in a dense natural overlapping pile, with varied orientations and recognizable banana shapes, bright yellow peels with subtle realistic speckles and small brown stem tips. Gentle diffuse studio lighting, crisp realistic detail across the image. Bananas continue beyond every edge. No table visible, no bowl, no other fruit, no stickers, packaging, text, logos, borders, rounded corners or UI. Full opaque rectangular image. The image will be cropped to a very wide rank-card background by Java code, so distribute the bananas evenly without a single central subject.",
+      "sha256": "cf3bc3aedc35aeefa60913b522fc46f935c550773c8bd5983f6c8301e9a60f96",
+      "transformation": "JPEG encoding at original dimensions; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/baked_beans.jpg",
+      "asset": "baked_beans",
+      "title": "Baked Beans",
+      "source": "Generated for SuperTurtyBot using the built-in image generation tool",
+      "provenance": "generated",
+      "prompt": "Use case: photorealistic-natural. Asset type: rectangular background texture for a Discord rank card, not a mockup. Generate a wide landscape macro food photograph completely filled edge to edge with British baked haricot beans in glossy orange-red tomato sauce. Many individual plump small beans in natural irregular orientations, appetizing realistic detail, gentle diffuse lighting, reasonably even focus and detail across the entire image. Camera directly overhead. The beans continue beyond every edge. No bowl, plate, toast, cutlery, cans, packaging, garnish, text, logos, borders, rounded corners or UI. Full opaque rectangular image. This image will be cropped to a very wide rank-card background by Java code, so distribute the beans evenly without a central subject.",
+      "sha256": "17a0abe48f50eb765cbfa289a3146f0b3d97dbd645b6ef4323cbbb8fd75e2ee8",
+      "transformation": "JPEG encoding at original dimensions; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/ginger_cat.jpg",
+      "asset": "ginger_cat",
+      "title": "Closeup Cat",
+      "authors": { "pixabay": "As credited by NegativeSpace" },
+      "source": "https://negativespace.co/closeup-cat/",
+      "download": "https://negativespace.co/wp-content/uploads/2017/05/negative-space-closeup-cat-pixabay-thumb-1.jpg",
+      "sha256": "29a57401977063c684524f62d67a3de1057ae38b43b53553062539269701bbe4",
+      "license": "CC0-1.0",
+      "transformation": "Unmodified rectangular photograph; crop and shapes rendered in Java"
+    },
+    {
+      "path": "levels/avatarOutline/cobalt_metal.jpg",
+      "asset": "blue_metal_plate",
+      "title": "Blue Metal Plate",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/blue_metal_plate",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/blue_metal_plate/blue_metal_plate_diff_1k.jpg",
+      "sourceMd5": "a906d0e554596fb76c6969f2f644c5e6",
+      "sha256": "0f6f427b70290b5dc3fa55cec50e5db79cf32b3d47eece45b15e79af25655097",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/avatarOutline/red_leather.jpg",
+      "asset": "leather_red_02",
+      "title": "Leather Red 02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/leather_red_02",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leather_red_02/leather_red_02_coll1_1k.jpg",
+      "sourceMd5": "a91110dd3cea1bfb5d8f34b5c3c6536d",
+      "sha256": "3549b1c4ab3b2a00c4a28ecad945dd1d869b61fe7acedd4ee904fed9eb5af1eb",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/avatarOutline/cherry_wood.jpg",
+      "asset": "lacquered_cherry_wood",
+      "title": "Lacquered Cherry Wood",
+      "authors": {
+        "Jenelle van Heerden": "Scanning",
+        "Rico Cilliers": "Processing"
+      },
+      "source": "https://polyhaven.com/a/lacquered_cherry_wood",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lacquered_cherry_wood/lacquered_cherry_wood_diff_1k.jpg",
+      "sourceMd5": "4e72bd6e1f2eff09528a50dc297d9a6c",
+      "sha256": "6d63ef87e48d81599f5b914a1b3e2fa213874cb5e011ca7851fe6ac63bbec856",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/avatarOutline/forest_moss.jpg",
+      "asset": "mossy_rock",
+      "title": "Mossy Rock",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/mossy_rock",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mossy_rock/mossy_rock_diff_1k.jpg",
+      "sourceMd5": "a57fbbf55269eb64f8d40708fe3af26c",
+      "sha256": "5ee6b0eb411f897de61d7e18d799904d19d2ea7b80e691de891e70013e594ecc",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/avatarOutline/ivory_marble.jpg",
+      "asset": "marble_01",
+      "title": "Marble 01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/marble_01",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_01/marble_01_diff_1k.jpg",
+      "sourceMd5": "04325ced5018eb8a2e598a4ef69cb176",
+      "sha256": "c2e1f74bcec779c1bf937bf58ec079cf614b5e0615268d3834115b05c54c8104",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/cherry_panels.jpg",
+      "asset": "lacquered_cherry_wood",
+      "title": "Lacquered Cherry Wood",
+      "authors": {
+        "Jenelle van Heerden": "Scanning",
+        "Rico Cilliers": "Processing"
+      },
+      "source": "https://polyhaven.com/a/lacquered_cherry_wood",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lacquered_cherry_wood/lacquered_cherry_wood_diff_1k.jpg",
+      "sourceMd5": "4e72bd6e1f2eff09528a50dc297d9a6c",
+      "sha256": "6d63ef87e48d81599f5b914a1b3e2fa213874cb5e011ca7851fe6ac63bbec856",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/midnight_slate.jpg",
+      "asset": "dark_rock",
+      "title": "Dark Rock",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "source": "https://polyhaven.com/a/dark_rock",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_diff_1k.jpg",
+      "sourceMd5": "ee1bf662b14c31830e0683197f6a4c65",
+      "sha256": "260ef9b3ecd0050cc19d9040ca78ba3d1ee6d93de300d865ec6b89379d2bbe5f",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/forest_floor.jpg",
+      "asset": "aerial_grass_rock",
+      "title": "Aerial Grass Rock",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/aerial_grass_rock",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/aerial_grass_rock/aerial_grass_rock_diff_1k.jpg",
+      "sourceMd5": "e920ce36afd0abff000b8366d3d768d3",
+      "sha256": "009f5e321886728086f1cb6480dcf344d75cb1312f03dd6fa6f4cb59272207d6",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/woven_denim.jpg",
+      "asset": "denim_fabric",
+      "title": "Denim Fabric",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/denim_fabric",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/denim_fabric/denim_fabric_diff_1k.jpg",
+      "sourceMd5": "3835b5e277dd99784bfe68d985da14ae",
+      "sha256": "c176e810ec731f2ac88d496fe837b3d12f6f5319f609d9585dc3d52b2f947523",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/background/marble_tiles.jpg",
+      "asset": "marble_tiles",
+      "title": "Marble Tiles",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "source": "https://polyhaven.com/a/marble_tiles",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_tiles/marble_tiles_diff_1k.jpg",
+      "sourceMd5": "8a023d7399c685ab7b539b05a433bc89",
+      "sha256": "ee7abde66376d2fd5b940d2c88c8e5f5d1b4d298f632bbb1031d272c4371f5b9",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpEmpty/weathered_copper.jpg",
+      "asset": "rusty_metal",
+      "title": "Rusty Metal",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/rusty_metal",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rusty_metal/rusty_metal_diff_1k.jpg",
+      "sourceMd5": "ba829f953270d3ad87d8e86d840f71d6",
+      "sha256": "3f67e2a11a55d647eafa2444db6995aa36447127262a3ddf0ddc54217a8070b9",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpEmpty/dark_oak.jpg",
+      "asset": "dark_wood",
+      "title": "Dark Wood",
+      "authors": {
+        "Dario Barresi": "Baking",
+        "Dimitrios Savva": "Photography",
+        "Rico Cilliers": "Tiling"
+      },
+      "source": "https://polyhaven.com/a/dark_wood",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_wood/dark_wood_diff_1k.jpg",
+      "sourceMd5": "47fa883f1bb33acc5711245f64b75975",
+      "sha256": "bb112b4b1e0ead8fc5f80ff894ee9e84546bb0b9406448f6dd5d93ba977e3675",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpEmpty/golden_sand.jpg",
+      "asset": "sand_01",
+      "title": "Sand 01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/sand_01",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/sand_01/sand_01_diff_1k.jpg",
+      "sourceMd5": "c914c8edb419f040e04224081a3f79a5",
+      "sha256": "4e6f0638735635806350564cc7654e4f6dc17c60ed59219ae90cbff70ea189b4",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpEmpty/mossy_stone.jpg",
+      "asset": "mossy_rock",
+      "title": "Mossy Rock",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/mossy_rock",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mossy_rock/mossy_rock_diff_1k.jpg",
+      "sourceMd5": "a57fbbf55269eb64f8d40708fe3af26c",
+      "sha256": "5ee6b0eb411f897de61d7e18d799904d19d2ea7b80e691de891e70013e594ecc",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpEmpty/river_pebbles.jpg",
+      "asset": "clean_pebbles",
+      "title": "Clean Pebbles",
+      "authors": {
+        "Dario Barresi": "Processing ",
+        "Charlotte Baglioni": "Photography"
+      },
+      "source": "https://polyhaven.com/a/clean_pebbles",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/clean_pebbles/clean_pebbles_diff_1k.jpg",
+      "sourceMd5": "01c641abeb4d2e1659e280f69a8e6cc7",
+      "sha256": "ddbada38be9c672fe327c4f992e032fc58ce9e9f15191a5a625a0713be2eb837",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpFill/cobalt_steel.jpg",
+      "asset": "blue_metal_plate",
+      "title": "Blue Metal Plate",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/blue_metal_plate",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/blue_metal_plate/blue_metal_plate_diff_1k.jpg",
+      "sourceMd5": "a906d0e554596fb76c6969f2f644c5e6",
+      "sha256": "0f6f427b70290b5dc3fa55cec50e5db79cf32b3d47eece45b15e79af25655097",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpFill/oak_planks.jpg",
+      "asset": "oak_wood_planks",
+      "title": "Oak Wood Planks",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "source": "https://polyhaven.com/a/oak_wood_planks",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/oak_wood_planks/oak_wood_planks_diff_1k.jpg",
+      "sourceMd5": "e9e25ac7abcc482f73214fda23e2de25",
+      "sha256": "ab371230c363d526af436073ebfc9902b84319786772b6a6b1a6217e52c9bccf",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpFill/pale_marble.jpg",
+      "asset": "marble_01",
+      "title": "Marble 01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/marble_01",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_01/marble_01_diff_1k.jpg",
+      "sourceMd5": "04325ced5018eb8a2e598a4ef69cb176",
+      "sha256": "c2e1f74bcec779c1bf937bf58ec079cf614b5e0615268d3834115b05c54c8104",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpFill/red_copper.jpg",
+      "asset": "rusty_metal",
+      "title": "Rusty Metal",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/rusty_metal",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rusty_metal/rusty_metal_diff_1k.jpg",
+      "sourceMd5": "ba829f953270d3ad87d8e86d840f71d6",
+      "sha256": "3f67e2a11a55d647eafa2444db6995aa36447127262a3ddf0ddc54217a8070b9",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpFill/polished_cherry.jpg",
+      "asset": "lacquered_cherry_wood",
+      "title": "Lacquered Cherry Wood",
+      "authors": {
+        "Jenelle van Heerden": "Scanning",
+        "Rico Cilliers": "Processing"
+      },
+      "source": "https://polyhaven.com/a/lacquered_cherry_wood",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lacquered_cherry_wood/lacquered_cherry_wood_diff_1k.jpg",
+      "sourceMd5": "4e72bd6e1f2eff09528a50dc297d9a6c",
+      "sha256": "6d63ef87e48d81599f5b914a1b3e2fa213874cb5e011ca7851fe6ac63bbec856",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/outline/leather_frame.jpg",
+      "asset": "leather_red_02",
+      "title": "Leather Red 02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/leather_red_02",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leather_red_02/leather_red_02_coll1_1k.jpg",
+      "sourceMd5": "a91110dd3cea1bfb5d8f34b5c3c6536d",
+      "sha256": "3549b1c4ab3b2a00c4a28ecad945dd1d869b61fe7acedd4ee904fed9eb5af1eb",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/outline/moss_frame.jpg",
+      "asset": "mossy_rock",
+      "title": "Mossy Rock",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/mossy_rock",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mossy_rock/mossy_rock_diff_1k.jpg",
+      "sourceMd5": "a57fbbf55269eb64f8d40708fe3af26c",
+      "sha256": "5ee6b0eb411f897de61d7e18d799904d19d2ea7b80e691de891e70013e594ecc",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/outline/wood_frame.jpg",
+      "asset": "dark_wood",
+      "title": "Dark Wood",
+      "authors": {
+        "Dario Barresi": "Baking",
+        "Dimitrios Savva": "Photography",
+        "Rico Cilliers": "Tiling"
+      },
+      "source": "https://polyhaven.com/a/dark_wood",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_wood/dark_wood_diff_1k.jpg",
+      "sourceMd5": "47fa883f1bb33acc5711245f64b75975",
+      "sha256": "bb112b4b1e0ead8fc5f80ff894ee9e84546bb0b9406448f6dd5d93ba977e3675",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpOutline/pebble_edge.jpg",
+      "asset": "clean_pebbles",
+      "title": "Clean Pebbles",
+      "authors": {
+        "Dario Barresi": "Processing ",
+        "Charlotte Baglioni": "Photography"
+      },
+      "source": "https://polyhaven.com/a/clean_pebbles",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/clean_pebbles/clean_pebbles_diff_1k.jpg",
+      "sourceMd5": "01c641abeb4d2e1659e280f69a8e6cc7",
+      "sha256": "ddbada38be9c672fe327c4f992e032fc58ce9e9f15191a5a625a0713be2eb837",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    },
+    {
+      "path": "levels/xpOutline/marble_edge.jpg",
+      "asset": "marble_01",
+      "title": "Marble 01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source": "https://polyhaven.com/a/marble_01",
+      "download": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_01/marble_01_diff_1k.jpg",
+      "sourceMd5": "04325ced5018eb8a2e598a4ef69cb176",
+      "sha256": "c2e1f74bcec779c1bf937bf58ec079cf614b5e0615268d3834115b05c54c8104",
+      "license": "CC0-1.0",
+      "transformation": "JPEG recompression only; full rectangular source color map; shapes rendered in Java"
+    }
+  ]
+}

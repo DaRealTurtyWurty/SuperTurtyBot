@@ -5051,6 +5051,131 @@
       ]
     },
     {
+      "name": "rankcard",
+      "richName": "Rank Card",
+      "description": "Equip an earned rank card item, or reset a slot by leaving item empty.",
+      "category": "Levelling",
+      "access": "Everyone",
+      "usage": "/rankcard slot:<slot> item:<earned item>\n/rankcard slot:<slot> (reset to its default color)",
+      "serverOnly": true,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 0,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Equip an earned rank card item, or reset a slot by leaving item empty.",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "rankcard",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [
+            {
+              "autocomplete": false,
+              "choices": [
+                {
+                  "name": "Background",
+                  "name_localizations": {},
+                  "value": "background"
+                },
+                {
+                  "name": "Outline",
+                  "name_localizations": {},
+                  "value": "outline"
+                },
+                {
+                  "name": "XP outline",
+                  "name_localizations": {},
+                  "value": "xpOutline"
+                },
+                {
+                  "name": "XP empty",
+                  "name_localizations": {},
+                  "value": "xpEmpty"
+                },
+                {
+                  "name": "XP fill",
+                  "name_localizations": {},
+                  "value": "xpFill"
+                },
+                {
+                  "name": "Avatar outline",
+                  "name_localizations": {},
+                  "value": "avatarOutline"
+                }
+              ],
+              "description": "The part of your card to customize",
+              "description_localizations": {},
+              "name": "slot",
+              "name_localizations": {},
+              "required": true,
+              "type": 3
+            },
+            {
+              "autocomplete": true,
+              "description": "An owned item; leave empty to reset this slot",
+              "description_localizations": {},
+              "name": "item",
+              "name_localizations": {},
+              "required": false,
+              "type": 3
+            }
+          ],
+          "type": 1
+        }
+      ]
+    },
+    {
+      "name": "xpinventory",
+      "richName": "XP Inventory",
+      "description": "Displays the items that you currently have in your xp(levelling) inventory",
+      "category": "Levelling",
+      "access": "Everyone",
+      "usage": "/xpinventory",
+      "serverOnly": true,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 0,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Displays the items that you currently have in your xp(levelling) inventory",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "xpinventory",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [],
+          "type": 1
+        }
+      ]
+    },
+    {
       "name": "2048",
       "richName": "2048",
       "description": "Play a game of 2048",

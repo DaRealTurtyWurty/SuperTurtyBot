@@ -34,4 +34,18 @@ public class Levelling {
     public void setXp(int xp) {
         this.xp = Math.max(xp, 0);
     }
+
+    public List<String> getInventory() {
+        if (this.inventory == null) {
+            this.inventory = new ArrayList<>();
+        }
+        return this.inventory;
+    }
+
+    public RankCard getRankCard() {
+        if (this.rankCard == null) {
+            this.rankCard = new RankCard();
+        }
+        return this.rankCard;
+    }
 }

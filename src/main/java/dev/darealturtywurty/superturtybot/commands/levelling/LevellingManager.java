@@ -3,7 +3,6 @@ package dev.darealturtywurty.superturtybot.commands.levelling;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.TurtyBot;
-import dev.darealturtywurty.superturtybot.commands.levelling.RankCardItem.Rarity;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
@@ -19,7 +18,6 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.bson.BsonType;
 
 public final class LevellingManager extends ListenerAdapter {
     public static final LevellingManager INSTANCE = new LevellingManager();
@@ -192,16 +191,14 @@ public final class LevellingManager extends ListenerAdapter {
         if (newXp <= 0)
             return;
 
-        // TODO: Re-enable when implemented properly
-        /*
-         * if (ThreadLocalRandom.current().nextInt(config.getLevellingItemChance()) == 0) { final List<String>
-         * inventory = userProfile.getInventory(); final Pair<String, Rarity> chosen =
-         * createWeightedBag(inventory).getRandom(); inventory.add(chosen.getLeft());
-         * updates.add(Updates.set("inventory", inventory)); description.append("\n\nCongratulations " +
-         * member.getAsMention() + "! You earned an `" +
-         * WordUtils.capitalize(chosen.getRight().name().toLowerCase()) +
-         * "` rank card item! Use `/xpinventory` to view your inventory!"); }
-         */
+        RankCardItem earned = tryAwardItem(guild, member, config);
+        if (earned != null) {
+            sendProgressMessage(config, member,
+                member.getAsMention() + ", you earned **" + earned.getDisplayName() + "** ("
+                    + earned.rarity.saveName + ", " + earned.type.displayName
+                    + ")! Use `/xpinventory` to view your items and `/rankcard` to equip them.",
+                event.getMessage());
+        }
     }
 
     private Levelling getProfile(Guild guild, Member member) {
@@ -309,6 +306,10 @@ public final class LevellingManager extends ListenerAdapter {
     }
 
     private void sendLevelUpMessage(GuildData config, Member member, int level, @Nullable Message replyTo) {
+        sendProgressMessage(config, member, member.getAsMention() + ", you are now Level " + level + "! ??", replyTo);
+    }
+
+    private void sendProgressMessage(GuildData config, Member member, String description, @Nullable Message replyTo) {
         if (config.isDisableLevelUpMessages())
             return;
 
@@ -317,12 +318,13 @@ public final class LevellingManager extends ListenerAdapter {
             userConfig = new UserConfig(member.getIdLong());
             Database.getDatabase().userConfig.insertOne(userConfig);
         }
-
         UserConfig.LevelUpMessageType type = userConfig.getLevelUpMessageType();
         if (type == UserConfig.LevelUpMessageType.NONE)
             return;
-
-        final var description = new StringBuilder(member.getAsMention() + ", you are now Level " + level + "! 🎉");
+        if (type == UserConfig.LevelUpMessageType.DM) {
+            member.getUser().openPrivateChannel().queue(channel -> channel.sendMessage(description).queue());
+            return;
+        }
 
         final var embed = new EmbedBuilder();
         embed.setTimestamp(Instant.now());
@@ -356,17 +358,29 @@ public final class LevellingManager extends ListenerAdapter {
         }
     }
 
-    private WeightedRandomBag<Pair<String, Rarity>> createWeightedBag(List<String> inventory) {
-        final var bag = new WeightedRandomBag<Pair<String, Rarity>>();
+    private @Nullable RankCardItem tryAwardItem(Guild guild, Member member, GuildData config) {
+        if (ThreadLocalRandom.current().nextInt(100) >= Math.clamp(config.getLevellingItemChance(), 0, 100))
+            return null;
 
-        final Map<String, Rarity> canAdd = new HashMap<>();
-        RankCardItemRegistry.RANK_CARD_ITEMS.getRegistry().values()
-            .forEach(item -> canAdd.put(item.getName(), item.rarity));
+        Levelling profile = getProfile(guild, member);
+        RankCardItem item = chooseReward(profile.getInventory());
+        if (item == null)
+            return null;
 
-        inventory.forEach(canAdd::remove);
+        Bson filter = Filters.and(Filters.eq("guild", guild.getIdLong()),
+            Filters.eq("user", member.getIdLong()), Filters.ne("inventory", item.getName()));
+        Database.getDatabase().levelling.updateOne(Filters.and(filter, Filters.type("inventory", BsonType.NULL)),
+            Updates.set("inventory", List.of()));
+        return Database.getDatabase().levelling.updateOne(filter, Updates.addToSet("inventory", item.getName()))
+            .getModifiedCount() > 0 ? item : null;
+    }
 
-        canAdd.forEach((key, value) -> bag.addEntry(Pair.of(key, value), value.chance));
-        return bag;
+    static @Nullable RankCardItem chooseReward(List<String> inventory) {
+        WeightedRandomBag<RankCardItem> bag = new WeightedRandomBag<>();
+        RankCardItemRegistry.RANK_CARD_ITEMS.values().stream()
+            .filter(item -> !inventory.contains(item.getName()))
+            .forEach(item -> bag.addEntry(item, item.rarity.chance));
+        return bag.getRandom();
     }
 
     private Map<Integer, Long> getLevelRoles(GuildData config) {
