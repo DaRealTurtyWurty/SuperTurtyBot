@@ -100,7 +100,7 @@ public class XPInventoryCommand extends CoreCommand {
             final var output = new ByteArrayOutputStream();
             ImageIO.write(image, "png", output);
             event.getHook().editOriginal(
-                "Use `/rankcard` to equip an item, or leave its item option empty to reset a slot.\nDrops are earned from messages eligible for XP; items belong to this server.")
+                "Use `/rankcard` to equip an item, or leave its item option empty to reset a slot.\nYou have a chance to earn an item when you level up; items belong to this server.")
                 .setFiles(FileUpload.fromData(output.toByteArray(), "inventory.png"))
                 .mentionRepliedUser(false).queue();
         } catch (final IOException | URISyntaxException exception) {

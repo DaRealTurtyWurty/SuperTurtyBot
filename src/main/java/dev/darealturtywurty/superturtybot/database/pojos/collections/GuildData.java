@@ -199,7 +199,7 @@ public class GuildData {
         this.levelCooldown = 25000L;
         this.minXP = 5;
         this.maxXP = 15;
-        this.levellingItemChance = 50;
+        this.levellingItemChance = 5;
         this.levellingEnabled = true;
         this.disabledLevellingChannels = "";
         this.disableLevelUpMessages = false;

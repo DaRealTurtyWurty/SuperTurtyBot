@@ -208,7 +208,7 @@ export default function LevellingSettingsForm({guildId, initialSettings}: Levell
 
             <label id="item-chance" className="border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
                 <p className="text-sm font-semibold text-white">Item Chance</p>
-                <p className="mt-1 text-sm text-slate-400">Chance for levelling item drops as a percentage.</p>
+                <p className="mt-1 text-sm text-slate-400">Percentage chance to receive an item on a level-up. Default: 5%. Set to 0 to disable drops.</p>
                 <DashboardNumberInput
                     id="item-chance-input"
                     min={0}

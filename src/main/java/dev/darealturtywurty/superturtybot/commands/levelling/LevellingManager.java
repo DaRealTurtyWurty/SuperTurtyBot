@@ -187,18 +187,7 @@ public final class LevellingManager extends ListenerAdapter {
         int xp = ThreadLocalRandom.current().nextInt(config.getMinXP(), config.getMaxXP());
         xp = Math.max((int) (xp * (boostPercentage / 100f)), 1);
 
-        int newXp = addXP(guild, member.getUser(), xp, new LevelUpMessage(guild, Optional.of(event.getMessage())));
-        if (newXp <= 0)
-            return;
-
-        RankCardItem earned = tryAwardItem(guild, member, config);
-        if (earned != null) {
-            sendProgressMessage(config, member,
-                member.getAsMention() + ", you earned **" + earned.getDisplayName() + "** ("
-                    + earned.rarity.saveName + ", " + earned.type.displayName
-                    + ")! Use `/xpinventory` to view your items and `/rankcard` to equip them.",
-                event.getMessage());
-        }
+        addXP(guild, member.getUser(), xp, new LevelUpMessage(guild, Optional.of(event.getMessage())));
     }
 
     private Levelling getProfile(Guild guild, Member member) {
@@ -238,7 +227,7 @@ public final class LevellingManager extends ListenerAdapter {
             userProfile.setLevel(newLevel);
             updates.add(Updates.set("level", newLevel));
 
-            if (levelUpMessage != null) {
+            if (newLevel > level && levelUpMessage != null) {
                 final GuildData config = GuildData.getOrCreateGuildData(guild);
 
                 sendLevelUpMessage(config, guild.getMember(user), newLevel, levelUpMessage.sendTo().orElse(null));
@@ -247,6 +236,19 @@ public final class LevellingManager extends ListenerAdapter {
 
         Database.getDatabase().levelling.updateOne(filter, updates);
         updateLevelRoles(guild, member, newLevel);
+
+        if (xp > 0 && newLevel > level) {
+            final GuildData config = GuildData.getOrCreateGuildData(guild);
+            RankCardItem earned = tryAwardItem(guild, member, config);
+            if (earned != null) {
+                sendProgressMessage(config, member,
+                    member.getAsMention() + ", you earned **" + earned.getDisplayName() + "** ("
+                        + earned.rarity.saveName + ", " + earned.type.displayName
+                        + ")! Use `/xpinventory` to view your items and `/rankcard` to equip them.",
+                    levelUpMessage == null ? null : levelUpMessage.sendTo().orElse(null));
+            }
+        }
+
         return currentXP;
     }
 
