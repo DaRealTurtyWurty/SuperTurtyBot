@@ -317,6 +317,7 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new ShutdownCommand());
         commands.add(new RestartCommand());
         commands.add(new GuildConfigCommand());
+        commands.add(new ServerAuditCommand());
         commands.add(new UserConfigCommand());
         commands.add(new OptCommand());
         commands.add(new UptimeCommand());

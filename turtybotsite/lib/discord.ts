@@ -24,17 +24,40 @@ interface DiscordGuildResponse {
     permissions: string;
 }
 
+export class DiscordApiError extends Error {
+    constructor(readonly operation: string, readonly status: number, readonly code: string | null) {
+        super(`Discord ${operation} failed (HTTP ${status}).`);
+        this.name = "DiscordApiError";
+    }
+}
+
+export class DiscordConfigurationError extends Error {
+    constructor(readonly variable: string) {
+        super(`Missing required environment variable: ${variable}`);
+        this.name = "DiscordConfigurationError";
+    }
+}
+
+async function discordFailure(response: Response, operation: string) {
+    const payload = await response.json().catch(() => null) as {error?: unknown; code?: unknown} | null;
+    // Keep known error identifiers only. Never log response bodies, descriptions, or token values.
+    const oauthCodes = new Set(["invalid_client", "invalid_grant", "invalid_request", "invalid_scope", "unsupported_grant_type", "access_denied", "server_error", "temporarily_unavailable"]);
+    const code = typeof payload?.error === "string" && oauthCodes.has(payload.error) ? payload.error :
+        typeof payload?.code === "number" && Number.isSafeInteger(payload.code) ? String(payload.code) : null;
+    return new DiscordApiError(operation, response.status, code);
+}
+
 function getRequiredEnv(name: string) {
-    const value = process.env[name];
+    const value = process.env[name]?.trim();
     if (!value) {
-        throw new Error(`Missing required environment variable: ${name}`);
+        throw new DiscordConfigurationError(name);
     }
 
     return value;
 }
 
 function getRedirectUri(origin: string) {
-    return process.env.DISCORD_REDIRECT_URI ?? `${origin}/api/auth/discord/callback`;
+    return process.env.DISCORD_REDIRECT_URI?.trim() || `${origin}/api/auth/discord/callback`;
 }
 
 export function getPublicOrigin(origin: string) {
@@ -82,7 +105,7 @@ export async function exchangeCodeForAccessToken(code: string, origin: string) {
     });
 
     if (!response.ok) {
-        throw new Error(`Discord token exchange failed with status ${response.status}`);
+        throw await discordFailure(response, "token_exchange");
     }
 
     const payload = await response.json() as DiscordTokenResponse;
@@ -102,7 +125,7 @@ async function fetchDiscordResource<T>(path: string, accessToken: string) {
     });
 
     if (!response.ok) {
-        throw new Error(`Discord API request for ${path} failed with status ${response.status}`);
+        throw await discordFailure(response, path === "/users/@me" ? "user_profile" : "guild_list");
     }
 
     return response.json() as Promise<T>;

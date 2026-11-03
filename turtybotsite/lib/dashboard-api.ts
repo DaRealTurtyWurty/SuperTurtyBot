@@ -1254,3 +1254,21 @@ export async function deleteDashboardCountingChannel(guildId: string, channelId:
         method: "DELETE"
     });
 }
+
+export interface DashboardAuditHealthCheck {
+    name: string;
+    status: "passed" | "failed" | "skipped";
+    detail: string;
+}
+
+export interface DashboardServerAudit {
+    guildId: string;
+    generatedAtMs: number;
+    findings: Array<{section: string; message: string; settingsPage?: string | null}>;
+    notes: string[];
+    healthChecks?: DashboardAuditHealthCheck[] | null;
+}
+
+export async function fetchDashboardAudit(guildId: string, userId: string, method: "GET" | "POST" = "GET") {
+    return dashboardFetch<{report?: DashboardServerAudit | null}>(`/api/guilds/${guildId}/audit?userId=${encodeURIComponent(userId)}`, {method});
+}

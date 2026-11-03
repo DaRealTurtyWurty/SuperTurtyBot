@@ -117,6 +117,7 @@ const NAV_SECTIONS: SidebarSection[] = [
         label: "General",
         items: [
             {label: "Overview", href: (guildId: string) => `/dashboard/${guildId}`},
+            {label: "Server audit", href: (guildId: string) => `/dashboard/${guildId}/audit`},
             {
                 label: "Birthday",
                 href: (guildId: string) => `/dashboard/${guildId}/birthday`,

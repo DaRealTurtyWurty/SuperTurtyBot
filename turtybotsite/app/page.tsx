@@ -12,6 +12,16 @@ function getErrorMessage(error: string | undefined) {
             return "Discord login was cancelled.";
         case "invalid_oauth_state":
             return "The Discord login state was invalid or expired. Please try again.";
+        case "oauth_invalid_client":
+            return "Discord rejected the dashboard application's client credentials. The operator must check DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET for the same Discord application, then restart the site.";
+        case "oauth_configuration_failed":
+            return "Discord login is not configured correctly. Check the site server log for the missing setting.";
+        case "oauth_token_exchange_failed":
+            return "Discord could not complete the login exchange. Start a new sign-in. If it fails again, check the site server log and Discord client settings.";
+        case "oauth_profile_failed":
+            return "Discord login could not load your account or servers. Try again and check the site server log if it continues.";
+        case "oauth_session_failed":
+            return "Discord sign-in completed, but the dashboard could not save your session. Check the bot API connection, API key, and database; see the site server log.";
         case "oauth_callback_failed":
             return "Discord login failed. Check the OAuth environment variables and try again.";
         default:

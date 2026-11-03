@@ -37,3 +37,11 @@ DASHBOARD_API_KEY=
 - Sidebar-based guild dashboard with dedicated pages
 - Editable starboard settings backed by the bot's dashboard API
 - Legacy authenticated user profile lookup backed by the bot's dashboard API
+
+## Server audits
+
+The authenticated `/dashboard/{guildId}/audit` page shows the latest report generated in Discord or from the dashboard. Findings link to the relevant settings editors; run the audit again after making changes. Sign-in and current Discord Manage Server permission are required. Reports are stored by the bot in MongoDB.
+
+Configure `DASHBOARD_SITE_URL` on the bot to this site's public URL so the Discord summary embed can link here. `DASHBOARD_API_URL` on this site still points to the Javalin API.
+
+Run the audit route authorization checks with `node --experimental-vm-modules --test tests/server-audit.test.mjs`.

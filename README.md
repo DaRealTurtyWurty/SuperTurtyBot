@@ -21,6 +21,7 @@ More information is available at [turtywurty.dev/projects/turtybot](https://turt
 
 - Members can use commands like `/weather`, `/wikipedia`, `/poll`, `/quote`, `/run-code`, `/wordle`, `/trivia`, `/balance`, and `/remindme`.
 - Staff can configure things like automod, role menus, logging, suggestions, notifier feeds, and other server features.
+- Staff with Manage Server can run `/serveraudit` for a private summary embed linking to the server audit page in the dashboard. The latest completed report is saved per server in MongoDB and includes bot permissions, broken channel/role settings, unusable notifiers, dashboard/API health, repair links, and checks that could not run. Staff can run the audit again from the dashboard after fixing settings. Notifier inactivity alone is not treated as a failure; upstream account existence and delivery age are not verified.
 - Communities can use it for recurring engagement through levelling, leaderboards, birthdays, starboard posts, and chat revival prompts.
 
 ## Command Metadata
@@ -42,3 +43,9 @@ Local and CI builds download the plugin automatically.
 ## License
 
 TurtyBot is licensed under the GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE) for the full license text.
+
+## Server audit dashboard links
+
+Set `DASHBOARD_SITE_URL` on the **bot** to the public Next.js site URL (for example, `https://bot.example.com` or `http://localhost:3003` in development). `/serveraudit` links to `/dashboard/{guildId}/audit` on that site. This is separate from `DASHBOARD_PUBLIC_URL`, which points to the bot API for health checks. If the site URL is missing or invalid, the command saves the report and explains that its dashboard link is unavailable.
+
+Audit reads and reruns require a dashboard session and a live Discord Manage Server permission check. Reports are server-scoped; the latest completed audit replaces the previous report and survives bot restarts. A rerun is limited to once every 30 seconds per server, and settings are changed only through their existing dashboard editors. Permission and service health findings include instructions for the server administrator or bot operator.

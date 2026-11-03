@@ -58,6 +58,10 @@ public final class Environment {
         return getString("DASHBOARD_PUBLIC_URL");
     }
 
+    public Optional<String> dashboardSiteUrl() {
+        return getString("DASHBOARD_SITE_URL");
+    }
+
     public Optional<String> githubOAuthToken() {
         return getString("GITHUB_OAUTH_TOKEN");
     }

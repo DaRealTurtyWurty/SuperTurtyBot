@@ -1188,6 +1188,43 @@
       ]
     },
     {
+      "name": "serveraudit",
+      "richName": "Server Audit",
+      "description": "Checks bot permissions, settings, stale notifiers and dashboard/API health",
+      "category": "Core",
+      "access": "Manage Server",
+      "usage": "/serveraudit",
+      "serverOnly": true,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 30,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Checks bot permissions, settings, stale notifiers and dashboard/API health",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "serveraudit",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [],
+          "type": 1
+        }
+      ]
+    },
+    {
       "name": "serverconfig",
       "richName": "Server Config",
       "description": "Sets up this server's config",

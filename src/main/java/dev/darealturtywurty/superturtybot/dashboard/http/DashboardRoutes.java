@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.dashboard.DashboardConfig;
+import dev.darealturtywurty.superturtybot.dashboard.service.audit.ServerAuditDashboardService;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.ai.AiSettingsRequest;
@@ -74,6 +75,7 @@ public final class DashboardRoutes {
 
     private final DashboardConfig config;
     private final JDA jda;
+    private final ServerAuditDashboardService auditService = new ServerAuditDashboardService();
     private final GuildConfigCatalogService catalogService;
     private final GuildSettingsService guildSettingsService;
     private final DashboardSessionService sessionService;
@@ -190,6 +192,15 @@ public final class DashboardRoutes {
             "dashboard_not_found", "The requested dashboard route does not exist."));
 
         app.get("/api/health", this::getHealth);
+        app.get("/api/guilds/{guildId}/audit", ctx -> {
+            long guildId = parseGuildId(ctx);
+            this.auditService.requireManager(this.jda, guildId, parseUserIdQuery(ctx));
+            ctx.json(new AuditResponse(this.auditService.latest(guildId)));
+        });
+        app.post("/api/guilds/{guildId}/audit", ctx -> {
+            var guild = this.auditService.requireManager(this.jda, parseGuildId(ctx), parseUserIdQuery(ctx));
+            ctx.json(new AuditResponse(this.auditService.run(guild)));
+        });
         app.get("/api/config/options", ctx -> ctx.json(this.catalogService.listOptions()));
         app.get("/api/guilds/{guildId}/config",
             ctx -> ctx.json(this.guildSettingsService.getGuildConfigSnapshot(parseGuildId(ctx))));
@@ -323,6 +334,9 @@ public final class DashboardRoutes {
             return;
 
         authenticate(ctx);
+    }
+
+    private record AuditResponse(ServerAuditDashboardService.Snapshot report) {
     }
 
     private void authenticate(Context ctx) {

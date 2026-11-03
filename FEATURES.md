@@ -330,9 +330,7 @@ Frontend dashboard pages:
 
 ### Utility And Admin
 
-- `/schedule`: recurring event/reminder system with calendar-style schedules, time zone support, RSVP buttons, and automatic reminder threads.
 - `/translate`: translate text or replied messages with language detection and per-server preferred languages.
-- `/timezone`: save user time zones and convert times mentioned in chat.
 - `/serveraudit`: checks bot permissions, broken config references, deleted channels/roles in settings, stale notifiers, and dashboard/API health.
 - `/snapshot`: export selected guild configuration to JSON and restore it later, with dry-run validation.
 - `/cleanup`: find stale roles, empty channels, dead threads, expired invites, inactive voice notifiers, and unused bot-created categories.
@@ -340,19 +338,14 @@ Frontend dashboard pages:
 
 ### Community Engagement
 
-- Achievements and badges: cross-feature badges for games, economy milestones, moderation participation, birthdays, collectables, and streaks.
 - Server seasons: resettable seasonal leaderboards for XP, economy, minigames, counting, and collectables with rewards at season end.
 - Reputation/kudos: peer recognition with cooldowns, leaderboards, anti-farming checks, and optional role rewards.
 - Event brackets: tournament manager for chess, checkers, Connect 4, trivia, or custom event signups.
-- Birthday/event cards: generated celebratory images using existing font/image infrastructure.
 
 ### Economy And Games
 
-- Crafting/upgrades: combine collectables or shop items into cosmetics, boosts, or limited badges.
-- Daily/weekly quests for money and XP, integrated with the reward command.
 - Stock/crypto parody market: simulated market with server-local prices, news events, and risk controls.
 - Fishing/mining/farming idle loops: low-pressure economy activities with rare drops and collectable tie-ins.
-- Cooperative boss/heist events: multi-user timed events using buttons, roles, skills, and pooled risk/reward.
 - Game lobbies: shared lobby system for chess/checkers/connect4/battleships/trivia with open invites and rematches.
 
 ### Dashboard And Operations
@@ -367,14 +360,10 @@ Frontend dashboard pages:
 ### AI Features
 
 - Staff summarizer: summarize reports, modmail tickets, warning history, and long message threads for moderators.
-- AI-assisted automod drafts: suggest sanction reason text, but keep human approval for actions.
 - Server knowledge bot: configurable FAQ/knowledge base built from pinned messages, tags, docs, and selected channels.
 - AI image alt-text: generate accessible descriptions for images in showcase/starboard channels.
 - Toxicity trend summaries: aggregate non-punitive trend reports for staff without exposing raw private user profiling.
 
 ### Developer Quality
 
-- Add integration tests for command registration, dashboard route coverage, and config option descriptors.
-- Add smoke tests for every dashboard API route with fake guild/config data.
-- Add health checks for external API keys and optional dependencies like FFmpeg, OpenAI, Twitch, Steam, GitHub, and Pexels.
 - Add migration/versioning support for MongoDB schema changes and config defaults.
