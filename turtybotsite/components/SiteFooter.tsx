@@ -5,6 +5,9 @@ export default function SiteFooter() {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
             <span>TurtyBot</span>
             <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-3">
+                <Link href="/terms" className="underline underline-offset-4 transition hover:text-sky-300">
+                    Terms of service
+                </Link>
                 <Link href="/privacy" className="underline underline-offset-4 transition hover:text-sky-300">
                     Privacy policy
                 </Link>

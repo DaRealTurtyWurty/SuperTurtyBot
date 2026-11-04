@@ -6,6 +6,8 @@ It is built to help a server feel more active, easier to manage, and more fun to
 
 More information is available at [turtywurty.dev/projects/turtybot](https://turtywurty.dev/projects/turtybot).
 
+See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the hosted service.
+
 ## What It Can Do
 
 - Moderate with bans, kicks, timeouts, warnings, reports, modmail, slowmode, purge tools, and automatic protection against invites, scams, and image spam.

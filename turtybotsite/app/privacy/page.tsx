@@ -2,7 +2,7 @@ import type {Metadata} from "next";
 import {readFile} from "node:fs/promises";
 import path from "node:path";
 import Link from "next/link";
-import PrivacyPolicyContent from "@/components/PrivacyPolicyContent";
+import PolicyContent from "@/components/PolicyContent";
 
 export const metadata: Metadata = {
     title: "Privacy Policy | TurtyBot",
@@ -25,7 +25,7 @@ export default async function PrivacyPage() {
                     Contact us about privacy
                 </a>
             </nav>
-            <PrivacyPolicyContent source={source} />
+            <PolicyContent source={source} />
         </div>
     </main>;
 }
