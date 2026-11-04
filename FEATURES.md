@@ -4,7 +4,7 @@ This file is an inventory of the commands, feature modules, dashboard areas, and
 
 Notes:
 
-- Scanned command count: 126 active registered commands and 4 implemented-but-disabled command classes.
+- Scanned command count: 133 active registered commands and 2 implemented-but-disabled command classes.
 - Active commands are the commands currently added in `CommandHook.createCommands()`.
 - Prefix commands use the configured bot prefix at runtime. This file writes them as `prefix:<name>`.
 - Context commands are Discord message or user context menu commands.
@@ -23,7 +23,9 @@ Notes:
 | `prefix:shutdown` | Prefix | Global | Owner/admin shutdown command. |
 | `prefix:restart` | Prefix | Global | Owner/admin restart command. |
 | `/serverconfig` | Slash | Server | Gets and sets guild configuration. Subcommands: `get`, `set`. |
+| `/serveraudit` | Slash | Server | Runs a private server health/configuration audit and links to its saved dashboard report. Requires Manage Server. |
 | `/userconfig` | Slash | Server | Gets and sets per-user configuration. Subcommands: `get`, `set`. |
+| `/privacy` | Slash | Global | Shows privacy information, exports/deletes supported account data, and manages optional-data preferences. Subcommands: `info`, `export`, `delete`, `opt-out`, `opt-in`. |
 | `/opt` | Slash | Server | Opts users in or out of configured channels. Subcommands: `in`, `out`, `list`. |
 | `/uptime` | Slash | Global | Shows bot uptime. |
 | `prefix:eval` | Prefix | Global | Evaluates code for bot administration. |
@@ -64,6 +66,7 @@ Notes:
 | `/birthday` | Slash | Global | Sets/views birthdays and toggles birthday announcements. Subcommands: `set`, `view`, `announced`. |
 | `/latex` | Slash | Global | Renders LaTeX as an image. |
 | `Run Code` | Message context | Global | Executes code snippets in supported languages via the configured runner. |
+| `/mappings` | Slash | Global | Searches and translates Minecraft classes, methods, and fields. Subcommands: `search`, `translate`. |
 
 ### Community And Server Workflow
 
@@ -73,6 +76,7 @@ Notes:
 | `/role-selection` | Slash | Server | Creates and edits role-selection menus. Subcommands: `create`, `add`, `delete`, `remove`. |
 | `/notifier` | Slash | Server | Configures external update notifiers. Subcommands: `youtube`, `twitch`, `steam`, `steamsales`, `reddit`, `minecraft`, `siege`, `rocketleague`, `league`, `valorant`. |
 | `/addroletothread` | Slash | Server | Adds a role's members to a thread. |
+| `/quest` | Slash | Server | Lists, views, and rerolls weekly quests. Subcommands: `list`, `view`, `reroll`. |
 
 ### Moderation
 
@@ -134,6 +138,8 @@ Notes:
 | Command | Type | Scope | What it does |
 | --- | --- | --- | --- |
 | `/rank` | Slash | Server | Shows a member's rank card. |
+| `/xpinventory` | Slash | Server | Renders the member's earned rank-card item inventory. |
+| `/rankcard` | Slash | Server | Equips an owned rank-card item or resets a selected slot to its default color. |
 | `/leaderboard` | Slash | Server | Shows levelling or economy leaderboards. Subcommands: `levels`, `economy`. |
 | `prefix:setxp` | Prefix | Server | Server-owner command to add, remove, or set user XP. |
 
@@ -197,8 +203,6 @@ These command classes exist, but their `commands.add(...)` lines are commented o
 | --- | --- | --- | --- |
 | `/systemstats` | Slash | Global | Shows bot host system stats. |
 | `/convert` | Slash | Global | Unit conversion command with `list`, `info`, and `all` subcommands. |
-| `/xpinventory` | Slash | Server | Renders a levelling inventory image; item acquisition is also currently commented out in `LevellingManager`. |
-| `/mappings` | Slash | Global | Minecraft mapping translation/search command. |
 
 ## Feature Modules
 
@@ -209,6 +213,14 @@ These command classes exist, but their `commands.add(...)` lines are commented o
 - MongoDB-backed persistence through Morphia/driver collections, plus custom codecs and startup index creation.
 - Registry loading for rank card items, collectables, image command types, shop items, and properties.
 - Discord logback webhook appender and console tee to a latest log file.
+- Command metadata generation through `./gradlew generateCommandMetadata`, also run by `build`, produces `commands.json` from active commands without requiring a bot token. Includes descriptions, categories, access notes, usage, rate limits, scopes, options, and subcommands.
+
+### Server Audits And Privacy
+
+- `/serveraudit` and the dashboard audit page check bot permissions, broken channel/role settings, unusable notifier destinations, and dashboard/API health, with repair guidance and explicit checks that could not run.
+- The latest completed audit is saved per server in MongoDB and survives restarts. Viewing/rerunning requires Manage Server; reruns have a per-server cooldown. Audits do not verify upstream account existence or delivery age, and notifier inactivity alone is not considered a failure.
+- `/privacy` provides ephemeral information, supported account-data export, confirmed deletion, and optional-data opt-out/opt-in. Cleanup can require operator follow-up for external copies and unsupported references.
+- Automatic retention cleanup runs after startup and daily for eligible inactive profiles, closed modmail/transcripts, expired warnings, resolved reports/privacy requests, sticky roles, and abandoned temporary work. Active moderation records and unresolved requests are preserved; detailed retention windows and limitations are documented in `README.md`.
 
 ### Moderation And Safety
 
@@ -240,6 +252,12 @@ These command classes exist, but their `commands.add(...)` lines are commented o
 - XP boosts from specific channels, roles, and server boosting.
 - Optional weekly level depletion for inactive users.
 - Rank cards and rank card item registries for avatar outlines, backgrounds, XP bar fills, XP bar empties, outlines, and XP outlines.
+- Earned rank-card items can be viewed with `/xpinventory` and equipped or reset with `/rankcard`.
+
+### Quests
+
+- Weekly per-member quest assignments with persistent progress, completion rewards, and list/view/reroll commands.
+- Quest rules integrate with community activity, command usage, minigames, counting, collectables, marketplace sales, and economy actions.
 
 ### Counting
 
@@ -290,6 +308,7 @@ These command classes exist, but their `commands.add(...)` lines are commented o
 - Steam update notifier and Steam store sale/fest notifier.
 - Scraped game-news notifiers for Minecraft, Rainbow Six Siege, Rocket League, League of Legends, and VALORANT.
 - Shared dashboard and command configuration for target Discord channel and mention behavior.
+- Shared delivery helpers check channel availability and send/embed permissions, and log delivery failures with a cooldown. Dashboard poll/delivery history and manual test-send remain suggested additions.
 
 ### AI And NSFW Classification
 
@@ -307,10 +326,11 @@ Backend API areas:
 - Health, sessions, user profile, guild config catalog, guild channels, roles, and member search.
 - Settings APIs for starboard, levelling, logging, warnings, economy, welcome, birthday, collectables, opt-in channels, suggestions, AI, chat revival, NSFW, threads, misc, automod, modmail, sticky messages, counting, and voice channel notifiers.
 - Management APIs for notifiers, warning records, report history, suggestions, quotes, tags, modmail tickets, sticky messages, counting channels, and voice channel notifiers.
+- Server audit API for retrieving the latest saved report and running a fresh audit.
 
 Frontend dashboard pages:
 
-- Overview/search, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, NSFW, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
+- Overview/search, server audit, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, NSFW, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
 
 ## Data And Assets
 
@@ -331,10 +351,9 @@ Frontend dashboard pages:
 ### Utility And Admin
 
 - `/translate`: translate text or replied messages with language detection and per-server preferred languages.
-- `/serveraudit`: checks bot permissions, broken config references, deleted channels/roles in settings, stale notifiers, and dashboard/API health.
 - `/snapshot`: export selected guild configuration to JSON and restore it later, with dry-run validation.
 - `/cleanup`: find stale roles, empty channels, dead threads, expired invites, inactive voice notifiers, and unused bot-created categories.
-- `/docs`: searchable command/config documentation generated from command metadata and dashboard config descriptors.
+- `/docs`: searchable command/config documentation built on the existing generated command metadata and dashboard config descriptors.
 
 ### Community Engagement
 
@@ -350,12 +369,12 @@ Frontend dashboard pages:
 
 ### Dashboard And Operations
 
-- Full command explorer page: command list, permissions, cooldowns, scopes, subcommands, and enable/disable switches per command.
-- Config diff and audit log: show who changed settings, when, and what changed, with rollback.
-- Dashboard onboarding wizard: first-run setup for logging, moderation, starboard, suggestions, economy, levelling, and modmail.
+- Full command explorer page: use the existing generated metadata for command lists, permissions, cooldowns, scopes, and subcommands; add per-command enable/disable controls separately.
+- Config diff and audit log (priority 2): show who changed settings, when, and before/after values across dashboard and command edits; add rollback afterward.
+- Dashboard onboarding wizard (priority 3): start with logging, moderation, welcome messages, and a final server audit, then expand to starboard, suggestions, economy, levelling, and modmail.
 - Real-time bot status panel: gateway ping, shard/session state, scheduler status, queue sizes, failing notifiers, and recent exceptions.
-- Notifier diagnostics: last poll time, last delivered item, failures, channel permission checks, and manual test-send.
-- Data retention controls: dashboard UI for pruning old logs, warnings, reports, transcripts, reminders, and stale economy accounts.
+- Notifier diagnostics (priority 1): expose last check, last successful delivery/item, failures, channel permission checks, and manual test-send in the dashboard, building on existing delivery checks and failure logging.
+- Data retention controls: dashboard visibility into the existing automatic cleanup, retention eligibility, and failures, with previews and controlled manual cleanup where appropriate. Any new pruning options must preserve active moderation, pending reminders, and unresolved requests.
 
 ### AI Features
 
