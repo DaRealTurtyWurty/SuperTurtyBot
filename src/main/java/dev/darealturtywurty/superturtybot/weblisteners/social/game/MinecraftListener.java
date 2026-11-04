@@ -38,6 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDeliverySupport;
+import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDiagnostics;
 
 public class MinecraftListener {
     private static final String FEED_URL = "https://net-secondary.web.minecraft-services.net/api/v1.0/en-us/search?page=1&pageSize=24&sortType=Recent&category=News&newsOnly=true&geography=GB&filter%5Bsubscription%5D=Minecraft%3A+Java";
@@ -79,18 +80,10 @@ public class MinecraftListener {
                 if (notifiers.isEmpty())
                     return;
 
-                List<MinecraftArticle> articles = readRelevantArticles();
-                if (articles.isEmpty())
-                    return;
-
-                for (MinecraftNotifier notifier : notifiers) {
-                    try {
-                        handleNotifier(jda, notifier, articles);
-                    } catch (Exception exception) {
-                        Constants.LOGGER.error("Failed to process Minecraft notifier for guild {}",
-                            notifier.getGuild(), exception);
-                    }
-                }
+                NotifierDiagnostics.poll(notifiers,
+                    notifier -> NotifierDiagnostics.key("minecraft", notifier.getGuild(), null, notifier.getChannel()),
+                    MinecraftListener::readRelevantArticles,
+                    (notifier, articles) -> handleNotifier(jda, notifier, articles));
             } catch (Exception exception) {
                 Constants.LOGGER.error("Minecraft listener task failed", exception);
             }
@@ -105,20 +98,19 @@ public class MinecraftListener {
             .build();
 
         try (Response response = GameNewsProxyClient.execute(request, "Minecraft")) {
-            if (!response.isSuccessful()) {
-                Constants.LOGGER.error("Failed to read Minecraft news feed! Status code: {}", response.code());
-                return List.of();
-            }
+            if (!response.isSuccessful())
+                throw new IllegalStateException("Minecraft feed returned HTTP " + response.code());
 
             ResponseBody body = response.body();
             if (body == null || body.contentLength() == 0)
-                return List.of();
+                throw new IllegalStateException("Minecraft feed returned an empty body");
 
             JsonElement root = Constants.GSON.fromJson(body.charStream(), JsonElement.class);
+            if (root == null || (!root.isJsonObject() && !root.isJsonArray()))
+                throw new IllegalStateException("Minecraft feed did not contain a news response");
             return parseArticles(root);
         } catch (IOException exception) {
-            Constants.LOGGER.error("Failed to read Minecraft news feed", exception);
-            return List.of();
+            throw new IllegalStateException("Minecraft feed could not be read", exception);
         }
     }
 
@@ -237,8 +229,8 @@ public class MinecraftListener {
         if (guild == null)
             return;
 
-        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
-            "Minecraft");
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild,
+            NotifierDiagnostics.key("minecraft", notifier.getGuild(), null, notifier.getChannel()));
         if (channel == null)
             return;
 
@@ -321,8 +313,8 @@ public class MinecraftListener {
         return NotifierDeliverySupport.sendAndWait(
             channel.sendMessageEmbeds(embed.build())
                 .setContent(notifier.getMention()),
-            "Minecraft",
-            channel);
+            NotifierDiagnostics.key("minecraft", notifier.getGuild(), null, notifier.getChannel()),
+            article.id());
     }
 
     private static String truncate(String value, int maxLength) {

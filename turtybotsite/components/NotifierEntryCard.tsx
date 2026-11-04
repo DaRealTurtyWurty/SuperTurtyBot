@@ -2,6 +2,7 @@ import type {DashboardNotifierEntry} from "@/lib/notifier-types";
 import {getNotifierTypeDefinition} from "@/lib/notifiers";
 import NotifierIcon from "@/components/NotifierIcon";
 import NotifierPingPreview from "@/components/NotifierPingPreview";
+import NotifierDiagnosticsPanel from "@/components/NotifierDiagnosticsPanel";
 
 function formatChannel(value: string | null) {
     if (!value) {
@@ -62,6 +63,8 @@ export default function NotifierEntryCard({
                 <span>{detail}</span>
             </li>)}
         </ul> : null}
+
+        <NotifierDiagnosticsPanel key={`${entry.type}:${entry.targetValue}:${entry.channelId}`} guildId={guildId} entry={entry} />
 
         {onEdit || onRemove ? <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-800 pt-4">
             {onEdit ? <button

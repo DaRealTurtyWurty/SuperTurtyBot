@@ -17,13 +17,14 @@ class DashboardProxyError extends Error {
     }
 }
 
-async function proxyDeleteWarning(guildId: string, warningUuid: string) {
+async function proxyDeleteWarning(guildId: string, warningUuid: string, userId: string) {
     const apiUrl = new URL(`/api/guilds/${guildId}/warnings/${warningUuid}`, getRequiredEnv("DASHBOARD_API_URL").replace(/\/?$/, "/"));
     const response = await fetch(apiUrl, {
         method: "DELETE",
         headers: {
             "Accept": "application/json",
-            "X-TurtyBot-Api-Key": getRequiredEnv("DASHBOARD_API_KEY")
+            "X-TurtyBot-Api-Key": getRequiredEnv("DASHBOARD_API_KEY"),
+            "X-TurtyBot-Actor-Id": userId
         },
         cache: "no-store"
     });
@@ -56,7 +57,7 @@ export async function DELETE(_: NextRequest, {params}: {params: Promise<{guildId
     }
 
     try {
-        return NextResponse.json(await proxyDeleteWarning(guildId, warningUuid));
+        return NextResponse.json(await proxyDeleteWarning(guildId, warningUuid, session.user.id));
     } catch (error) {
         if (error instanceof DashboardProxyError) {
             return NextResponse.json({

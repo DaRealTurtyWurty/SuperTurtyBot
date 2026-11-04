@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public class TwitchListener {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
@@ -72,17 +73,24 @@ public class TwitchListener {
         final String gameName = stream.getGameName();
         final String title = stream.getTitle();
         final String url = "https://twitch.tv/" + channelName;
-        for (TwitchNotifier notifier : Database.getDatabase().twitchNotifier.find(Filters.eq("channel", channelName))) {
+        for (TwitchNotifier notifier : Database.getDatabase().twitchNotifier
+            .find(Filters.regex("channel", "^" + Pattern.quote(channelName) + "$", "i"))) {
+            var key = NotifierDiagnostics.key("twitch", notifier.getGuild(), notifier.getChannel(),
+                notifier.getDiscordChannel());
+            NotifierDiagnostics.checking(key);
+            NotifierDiagnostics.checked(key);
             final Guild guild = jda.getGuildById(notifier.getGuild());
             if (guild == null)
                 continue;
 
-            final TextChannel discordChannel = guild.getTextChannelById(notifier.getDiscordChannel());
+            final var discordChannel = NotifierDeliverySupport.resolveChannel(guild, key);
             if (discordChannel == null)
                 continue;
 
-            discordChannel.sendMessage(notifier.getMention() + " **" + channelName + "** is now live!\nGame: **"
-                + (gameName.isBlank() ? "Just Chatting" : gameName) + "**!\nTitle: " + title + "\n" + url).queue();
+            NotifierDeliverySupport.send(
+                discordChannel.sendMessage(notifier.getMention() + " **" + channelName + "** is now live!\nGame: **"
+                    + (gameName.isBlank() ? "Just Chatting" : gameName) + "**!\nTitle: " + title + "\n" + url),
+                key, url);
         }
     }
 }

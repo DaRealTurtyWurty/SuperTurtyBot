@@ -6,6 +6,11 @@ export interface DashboardSearchEntry {
 
 export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
     {
+        label: "Settings history",
+        href: guildId => `/dashboard/${guildId}/config-history`,
+        terms: ["config diff", "audit log", "settings changes", "before", "after", "staff changes"]
+    },
+    {
         label: "Server audit",
         href: guildId => `/dashboard/${guildId}/audit`,
         terms: ["audit", "permissions", "broken settings", "deleted channels", "deleted roles", "stale notifiers", "health", "fix"]

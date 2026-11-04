@@ -83,11 +83,14 @@ public class YouTubeListener {
                 String feedUrl = String.format(TOPIC_URL, channelId);
                 List<YoutubeNotifier> notifiers = entry.getValue();
 
+                notifiers.forEach(notifier -> NotifierDiagnostics.checking(diagnosticKey(notifier)));
                 Request request = new Request.Builder().url(feedUrl).build();
 
                 Constants.HTTP_CLIENT.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException exception) {
+                        notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                            NotifierDiagnostics.failureReason(exception)));
                         logFetchFailure(channelId, "request:" + exception.getClass().getName(),
                             () -> Constants.LOGGER.error("Failed response from channel '{}'", channelId, exception));
                     }
@@ -96,6 +99,8 @@ public class YouTubeListener {
                     public void onResponse(@NotNull Call call, @NotNull Response response) {
                         try (ResponseBody body = response.body()) {
                             if (!response.isSuccessful()) {
+                                notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                                    "YouTube RSS returned HTTP " + response.code() + "."));
                                 logFetchFailure(channelId, "status:" + response.code(),
                                     () -> Constants.LOGGER.error("Failed response from channel '{}' (status {})",
                                         channelId, response.code()));
@@ -105,6 +110,8 @@ public class YouTubeListener {
                             clearFailureState(channelId);
 
                             if (body == null) {
+                                notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                                    "YouTube RSS returned an empty body."));
                                 logFetchFailure(channelId, "empty-body",
                                     () -> Constants.LOGGER.error("Failed response from channel '{}' (empty body)",
                                         channelId));
@@ -112,6 +119,7 @@ public class YouTubeListener {
                             }
 
                             List<Video> videos = parseVideos(body.byteStream());
+                            notifiers.forEach(notifier -> NotifierDiagnostics.checked(diagnosticKey(notifier)));
                             if (videos.isEmpty())
                                 return;
 
@@ -132,26 +140,13 @@ public class YouTubeListener {
                                 YoutubeNotifier notifier = notifierEntry.getKey();
                                 Guild guild = notifierEntry.getValue();
 
-                                final long videoChannel = notifier.getChannel();
-                                final TextChannel channel = guild.getTextChannelById(videoChannel);
-                                if (channel == null || !channel.canTalk()) {
-                                    notifier.setChannel(0L);
-                                    final Bson filter = getFilter(guild.getIdLong());
-                                    Database.getDatabase().youtubeNotifier.updateOne(
-                                        Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                        Updates.set("channel", 0L));
+                                final var key = diagnosticKey(notifier);
+                                final var channel = NotifierDeliverySupport.resolveChannel(guild, key);
+                                if (channel == null)
                                     continue;
-                                }
 
                                 for (Video video : videos) {
                                     if (!notifier.getStoredVideos().contains(video.videoId())) {
-                                        notifier.getStoredVideos().add(video.videoId());
-
-                                        final Bson filter = getFilter(guild.getIdLong());
-                                        Database.getDatabase().youtubeNotifier.updateOne(
-                                            Filters.and(filter, Filters.eq("youtubeChannel", channelId)),
-                                            Updates.set("storedVideos", notifier.getStoredVideos()));
-
                                         VideoDetails details = videoDetailsMap.getOrDefault(video.videoId(),
                                             VideoDetails.unknown());
                                         var embed = new EmbedBuilder()
@@ -167,13 +162,21 @@ public class YouTubeListener {
                                             .setTimestamp(Instant.now());
                                         String message = buildNotificationMessage(notifier.getMention(), video,
                                             details);
-                                        channel.sendMessage(message)
+                                        if (NotifierDeliverySupport.sendAndWait(channel.sendMessage(message)
                                             .setAllowedMentions(EnumSet.allOf(Message.MentionType.class))
-                                            .setEmbeds(embed.build()).queue();
+                                            .setEmbeds(embed.build()), key, video.url())) {
+                                            notifier.getStoredVideos().add(video.videoId());
+                                            Database.getDatabase().youtubeNotifier.updateOne(
+                                                Filters.and(getFilter(guild.getIdLong()),
+                                                    Filters.eq("youtubeChannel", channelId)),
+                                                Updates.set("storedVideos", notifier.getStoredVideos()));
+                                        }
                                     }
                                 }
                             }
                         } catch (final Exception exception) {
+                            notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                                "YouTube RSS could not be parsed or processed. Ask the operator to check the logs."));
                             Constants.LOGGER.error("Failed to process YouTube notifier response for '{}'", channelId,
                                 exception);
                         }
@@ -181,6 +184,11 @@ public class YouTubeListener {
                 });
             }
         }, 0, 1, TimeUnit.MINUTES);
+    }
+
+    private static NotifierDiagnostics.Key diagnosticKey(YoutubeNotifier notifier) {
+        return NotifierDiagnostics.key("youtube", notifier.getGuild(), notifier.getYoutubeChannel(),
+            notifier.getChannel());
     }
 
     private static void logFetchFailure(String channelId, String reason, Runnable logger) {
@@ -214,8 +222,7 @@ public class YouTubeListener {
 
             document = documentBuilder.parse(input);
         } catch (SAXException | IOException exception) {
-            Constants.LOGGER.error("Failed to parse XML!", exception);
-            return Collections.emptyList();
+            throw new IllegalStateException("YouTube RSS XML could not be parsed", exception);
         }
 
         final List<Video> videos = new ArrayList<>();
@@ -226,8 +233,7 @@ public class YouTubeListener {
         try {
             entries = (NodeList) xPath.compile(expression).evaluate(document, XPathConstants.NODESET);
         } catch (XPathExpressionException exception) {
-            Constants.LOGGER.error("Failed to evaluate XPath expression!", exception);
-            return Collections.emptyList();
+            throw new IllegalStateException("YouTube RSS entries could not be parsed", exception);
         }
 
         for (int i = 0; i < entries.getLength(); i++) {

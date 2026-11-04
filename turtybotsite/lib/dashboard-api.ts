@@ -182,37 +182,8 @@ export interface DashboardWarningHistoryResponse {
     warnings: DashboardWarningRecord[];
 }
 
-export interface DashboardNotifierEntry {
-    type: string;
-    kind: string;
-    targetLabel: string;
-    targetValue: string | null;
-    channelId: string;
-    channelName: string | null;
-    mention: string;
-    details: string[];
-}
-
-export interface DashboardNotifierSection {
-    key: string;
-    title: string;
-    description: string;
-    count: number;
-    entries: DashboardNotifierEntry[];
-}
-
-export interface DashboardNotifiersResponse {
-    guild: DashboardGuildInfo;
-    totalCount: number;
-    sections: DashboardNotifierSection[];
-}
-
-export interface DashboardNotifierMutationRequest {
-    originalTarget?: string | null;
-    target: string | null;
-    discordChannelId: string | null;
-    mention: string | null;
-}
+export type {DashboardNotifierEntry, DashboardNotifierSection, DashboardNotifiersResponse, DashboardNotifierMutationRequest} from "@/lib/notifier-types";
+import type {DashboardNotifiersResponse, DashboardNotifierMutationRequest} from "@/lib/notifier-types";
 
 export interface DashboardReportUserSummary {
     id: string;
@@ -666,14 +637,18 @@ async function readErrorPayload(response: Response) {
 }
 
 async function dashboardFetch<T>(path: string, init?: RequestInit) {
+    const headers = new Headers({...createDashboardHeaders(), ...(init?.headers ?? {})});
+    if (path.startsWith("/api/guilds/") && init?.method && init.method !== "GET") {
+        const {getCurrentSession} = await import("@/lib/auth");
+        const session = await getCurrentSession();
+        if (!session) throw new DashboardApiError("Sign in to change server settings.", 401);
+        headers.set("X-TurtyBot-Actor-Id", session.user.id);
+    }
     let response: Response;
     try {
         response = await fetch(createDashboardApiUrl(path), {
             ...init,
-            headers: {
-                ...createDashboardHeaders(),
-                ...(init?.headers ?? {})
-            },
+            headers,
             cache: "no-store"
         });
     } catch {
@@ -1271,4 +1246,31 @@ export interface DashboardServerAudit {
 
 export async function fetchDashboardAudit(guildId: string, userId: string, method: "GET" | "POST" = "GET") {
     return dashboardFetch<{report?: DashboardServerAudit | null}>(`/api/guilds/${guildId}/audit?userId=${encodeURIComponent(userId)}`, {method});
+}
+
+export interface DashboardConfigHistoryEntry {
+    id: string;
+    actorId: string | null;
+    source: string;
+    action: string;
+    area: string;
+    createdAt: number;
+    changes: {field: string; before: string; after: string}[];
+}
+
+export interface DashboardConfigHistory {
+    entries: DashboardConfigHistoryEntry[];
+    page: number;
+    hasMore: boolean;
+}
+
+export async function fetchDashboardConfigHistory(guildId: string, userId: string, page = 1) {
+    const query = new URLSearchParams({userId, page: String(page)});
+    return dashboardFetch<DashboardConfigHistory>(`/api/guilds/${guildId}/config-history?${query}`);
+}
+
+export async function testDashboardNotifier(guildId: string, type: string, body: DashboardNotifierMutationRequest) {
+    return dashboardFetch<DashboardNotifiersResponse>(`/api/guilds/${guildId}/notifiers/${encodeURIComponent(type)}/test`, {
+        method: "POST", body: JSON.stringify(body)
+    });
 }

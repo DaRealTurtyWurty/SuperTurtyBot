@@ -308,7 +308,8 @@ These command classes exist, but their `commands.add(...)` lines are commented o
 - Steam update notifier and Steam store sale/fest notifier.
 - Scraped game-news notifiers for Minecraft, Rainbow Six Siege, Rocket League, League of Legends, and VALORANT.
 - Shared dashboard and command configuration for target Discord channel and mention behavior.
-- Shared delivery helpers check channel availability and send/embed permissions, and log delivery failures with a cooldown. Dashboard poll/delivery history and manual test-send remain suggested additions.
+- Persistent notifier diagnostics track the last attempted/successful feed check, last confirmed delivery/item, and separate feed, delivery, and manual-test failures across all external feeds. Successful empty checks are recorded; Twitch reports received live events instead of claiming poll health.
+- Notifier cards show live destination permission checks, refreshable diagnostics, and a manual test-send button. Tests use a fixed message without pings, require current Manage Server permission, have a 30-second per-server cooldown, and do not change feed caches or real delivery/check timestamps.
 
 ### AI And NSFW Classification
 
@@ -327,10 +328,11 @@ Backend API areas:
 - Settings APIs for starboard, levelling, logging, warnings, economy, welcome, birthday, collectables, opt-in channels, suggestions, AI, chat revival, NSFW, threads, misc, automod, modmail, sticky messages, counting, and voice channel notifiers.
 - Management APIs for notifiers, warning records, report history, suggestions, quotes, tags, modmail tickets, sticky messages, counting channels, and voice channel notifiers.
 - Server audit API for retrieving the latest saved report and running a fresh audit.
+- Server-scoped settings history API and dashboard page show the actor, source, timestamp, and before/after values for server settings, counting registrations/modes, and external notifier configuration changed through commands or the dashboard. Automatic changes are labelled separately; no-op saves and runtime caches are excluded. History expires after 90 days; rollback remains a future addition.
 
 Frontend dashboard pages:
 
-- Overview/search, server audit, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, NSFW, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
+- Overview/search, server audit, settings history, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, NSFW, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
 
 ## Data And Assets
 
@@ -370,10 +372,9 @@ Frontend dashboard pages:
 ### Dashboard And Operations
 
 - Full command explorer page: use the existing generated metadata for command lists, permissions, cooldowns, scopes, and subcommands; add per-command enable/disable controls separately.
-- Config diff and audit log (priority 2): show who changed settings, when, and before/after values across dashboard and command edits; add rollback afterward.
+- Config history rollback: extend the implemented before/after audit log with validated, permission-checked rollback and conflict handling for settings changed since the selected entry.
 - Dashboard onboarding wizard (priority 3): start with logging, moderation, welcome messages, and a final server audit, then expand to starboard, suggestions, economy, levelling, and modmail.
 - Real-time bot status panel: gateway ping, shard/session state, scheduler status, queue sizes, failing notifiers, and recent exceptions.
-- Notifier diagnostics (priority 1): expose last check, last successful delivery/item, failures, channel permission checks, and manual test-send in the dashboard, building on existing delivery checks and failure logging.
 - Data retention controls: dashboard visibility into the existing automatic cleanup, retention eligibility, and failures, with previews and controlled manual cleanup where appropriate. Any new pruning options must preserve active moderation, pending reminders, and unresolved requests.
 
 ### AI Features

@@ -12,6 +12,15 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import dev.darealturtywurty.superturtybot.weblisteners.social.TwitchListener;
+import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDiagnostics;
+import org.bson.Document;
+import net.dv8tion.jda.api.EmbedBuilder;
+import com.mongodb.MongoWriteException;
+import com.mongodb.client.model.UpdateOptions;
+import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -27,12 +36,64 @@ public final class NotifiersService {
 
     public DashboardNotifiersResponse getNotifiers(long guildId) {
         Guild guild = requireGuild(guildId);
+        Map<String, Document> diagnostics = new HashMap<>();
+        NotifierDiagnostics.collection().find(Filters.eq("guild", guildId))
+            .forEach(record -> diagnostics.put(record.getString("_id"), record));
         List<DashboardNotifierSection> sections = List.of(
-            buildSocialSection(guildId, guild),
-            buildGameSection(guildId, guild));
+            buildSocialSection(guildId, guild, diagnostics),
+            buildGameSection(guildId, guild, diagnostics));
 
         int totalCount = sections.stream().mapToInt(DashboardNotifierSection::count).sum();
         return new DashboardNotifiersResponse(toGuildInfo(guild), totalCount, sections);
+    }
+
+    public DashboardNotifiersResponse testNotifier(long guildId, String type, String target, String channelId) {
+        Guild guild = requireGuild(guildId);
+        String normalizedType = normalizeType(type);
+        DashboardNotifierEntry entry = getNotifiers(guildId).sections().stream()
+            .flatMap(section -> section.entries().stream())
+            .filter(value -> value.type().equals(normalizedType))
+            .filter(value -> NotifierDiagnostics.key(value.type(), guildId, value.targetValue(), 0).target()
+                .equals(NotifierDiagnostics.key(normalizedType, guildId, target, 0).target()))
+            .filter(value -> value.channelId().equals(channelId))
+            .findFirst().orElseThrow(() -> new DashboardApiException(HttpStatus.NOT_FOUND, "notifier_missing",
+                "This notifier changed or was removed. Refresh the page and try again."));
+        var key = NotifierDiagnostics.key(normalizedType, guildId, entry.targetValue(),
+            Long.parseLong(entry.channelId()));
+        long now = System.currentTimeMillis();
+        try {
+            var limit = Database.getDatabase().mongoDatabase.getCollection("notifierTestLimits");
+            var result = limit.updateOne(new Document("_id", guildId).append("nextAt", new Document("$lte", now)),
+                new Document("$set", new Document("nextAt", now + 30000).append("expiresAt", new Date(now + 60000))),
+                new UpdateOptions().upsert(true));
+            if (result.getMatchedCount() == 0 && result.getUpsertedId() == null)
+                throw new DashboardApiException(HttpStatus.TOO_MANY_REQUESTS, "notifier_test_cooldown",
+                    "Wait 30 seconds between notifier tests in this server.");
+        } catch (MongoWriteException exception) {
+            if (exception.getError().getCode() != 11000)
+                throw exception;
+            throw new DashboardApiException(HttpStatus.TOO_MANY_REQUESTS, "notifier_test_cooldown",
+                "Wait 30 seconds between notifier tests in this server.");
+        }
+        String problem = NotifierDiagnostics.channelProblem(guild, key.channel());
+        if (problem != null) {
+            NotifierDiagnostics.tested(key, problem);
+            throw new DashboardApiException(HttpStatus.BAD_REQUEST, "notifier_test_permissions", problem);
+        }
+        var channel = guild.getChannelById(StandardGuildMessageChannel.class, key.channel());
+        try {
+            channel.sendMessageEmbeds(new EmbedBuilder().setTitle("Notifier delivery test")
+                .setDescription("TurtyBot can deliver " + entry.kind() + " notifications to this channel. "
+                    + "This checks Discord delivery; it does not contact the feed provider.")
+                .setColor(0x38BDF8).setTimestamp(Instant.now()).build())
+                .setAllowedMentions(List.of()).timeout(10, TimeUnit.SECONDS).complete();
+            NotifierDiagnostics.tested(key, null);
+        } catch (RuntimeException exception) {
+            NotifierDiagnostics.tested(key, "Discord rejected the test or did not confirm it within 10 seconds.");
+            throw new DashboardApiException(HttpStatus.BAD_GATEWAY, "notifier_test_failed",
+                "Discord did not confirm delivery. Check channel permissions; a timed-out test may still arrive.");
+        }
+        return getNotifiers(guildId);
     }
 
     public DashboardNotifiersResponse addNotifier(long guildId, String type, DashboardNotifierMutationRequest request) {
@@ -182,11 +243,11 @@ public final class NotifiersService {
             true);
     }
 
-    private DashboardNotifierSection buildSocialSection(long guildId, Guild guild) {
+    private DashboardNotifierSection buildSocialSection(long guildId, Guild guild, Map<String, Document> diagnostics) {
         List<DashboardNotifierEntry> entries = new ArrayList<>();
         Database.getDatabase().youtubeNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "youtube",
                 "YouTube",
                 notifier.getYoutubeChannel(),
@@ -199,7 +260,7 @@ public final class NotifiersService {
                     "Command: /notifier youtube"))));
         Database.getDatabase().twitchNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "twitch",
                 "Twitch",
                 notifier.getChannel(),
@@ -210,7 +271,7 @@ public final class NotifiersService {
                 List.of("Command: /notifier twitch"))));
         Database.getDatabase().redditNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "reddit",
                 "Reddit",
                 "r/" + notifier.getSubreddit(),
@@ -228,12 +289,12 @@ public final class NotifiersService {
             entries);
     }
 
-    private DashboardNotifierSection buildGameSection(long guildId, Guild guild) {
+    private DashboardNotifierSection buildGameSection(long guildId, Guild guild, Map<String, Document> diagnostics) {
         List<DashboardNotifierEntry> entries = new ArrayList<>();
 
         Database.getDatabase().steamNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "steam",
                 "Steam",
                 "App " + notifier.getAppId(),
@@ -246,7 +307,7 @@ public final class NotifiersService {
 
         Database.getDatabase().steamStoreNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "steam-store",
                 "Steam Store",
                 "Steam sales / fests",
@@ -259,7 +320,7 @@ public final class NotifiersService {
 
         Database.getDatabase().minecraftNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "minecraft",
                 "Minecraft",
                 "Minecraft news",
@@ -274,7 +335,7 @@ public final class NotifiersService {
 
         Database.getDatabase().siegeNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "siege",
                 "Rainbow Six Siege",
                 "Siege news",
@@ -286,7 +347,7 @@ public final class NotifiersService {
 
         Database.getDatabase().rocketLeagueNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "rocket-league",
                 "Rocket League",
                 "Rocket League news",
@@ -299,7 +360,7 @@ public final class NotifiersService {
 
         Database.getDatabase().leagueNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "league",
                 "League of Legends",
                 "League news",
@@ -311,7 +372,7 @@ public final class NotifiersService {
 
         Database.getDatabase().valorantNotifier.find(Filters.eq("guild", guildId))
             .into(new ArrayList<>())
-            .forEach(notifier -> entries.add(entry(
+            .forEach(notifier -> entries.add(entry(guild, diagnostics,
                 "valorant",
                 "VALORANT",
                 "VALORANT news",
@@ -331,6 +392,8 @@ public final class NotifiersService {
     }
 
     private DashboardNotifierEntry entry(
+        Guild guild,
+        Map<String, Document> diagnostics,
         String type,
         String kind,
         String targetLabel,
@@ -348,7 +411,9 @@ public final class NotifiersService {
             Long.toString(channelId),
             channelName,
             mention,
-            details);
+            details,
+            NotifierDiagnostics.status(NotifierDiagnostics.key(type, guild.getIdLong(), targetValue, channelId),
+                guild, diagnostics.get(NotifierDiagnostics.key(type, guild.getIdLong(), targetValue, channelId).id())));
     }
 
     private long requireDiscordChannel(DashboardNotifierMutationRequest request) {

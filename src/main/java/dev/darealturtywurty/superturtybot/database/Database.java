@@ -7,6 +7,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.modules.audit.AuditedConfigCollection;
 import dev.darealturtywurty.superturtybot.core.ShutdownHooks;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.codecs.*;
@@ -76,7 +77,7 @@ public class Database {
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
         this.levelling = OptionalDataCollection.wrap(mongoDatabase.getCollection("levelling", Levelling.class), "user");
-        this.counting = mongoDatabase.getCollection("counting", Counting.class);
+        this.counting = AuditedConfigCollection.wrap(mongoDatabase.getCollection("counting", Counting.class));
         this.suggestions = OptionalDataCollection.wrap(mongoDatabase.getCollection("suggestions", Suggestion.class),
             "user");
         this.highlighters = OptionalDataCollection.wrap(mongoDatabase.getCollection("highlighters", Highlighter.class),
@@ -84,20 +85,30 @@ public class Database {
         this.warnings = mongoDatabase.getCollection("warnings", Warning.class);
         this.tags = OptionalDataCollection.wrap(mongoDatabase.getCollection("tags", Tag.class), "user");
         this.starboard = OptionalDataCollection.wrap(mongoDatabase.getCollection("starboard", Showcase.class), "user");
-        this.guildData = mongoDatabase.getCollection("guildData", GuildData.class);
+        this.guildData = AuditedConfigCollection.wrap(mongoDatabase.getCollection("guildData", GuildData.class));
         this.userConfig = OptionalDataCollection.wrap(mongoDatabase.getCollection("userConfig", UserConfig.class),
             "user");
-        this.youtubeNotifier = mongoDatabase.getCollection("youtubeNotifier", YoutubeNotifier.class);
-        this.twitchNotifier = mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class);
-        this.steamNotifier = mongoDatabase.getCollection("steamNotifier", SteamNotifier.class);
-        this.steamStoreNotifier = mongoDatabase.getCollection("steamStoreNotifier", SteamStoreNotifier.class);
-        this.redditNotifier = mongoDatabase.getCollection("redditNotifier", RedditNotifier.class);
+        this.youtubeNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("youtubeNotifier", YoutubeNotifier.class));
+        this.twitchNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class));
+        this.steamNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("steamNotifier", SteamNotifier.class));
+        this.steamStoreNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("steamStoreNotifier", SteamStoreNotifier.class));
+        this.redditNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("redditNotifier", RedditNotifier.class));
         this.redditPostCache = mongoDatabase.getCollection("redditPostCache", RedditPostCache.class);
-        this.minecraftNotifier = mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class);
-        this.siegeNotifier = mongoDatabase.getCollection("siegeNotifier", SiegeNotifier.class);
-        this.rocketLeagueNotifier = mongoDatabase.getCollection("rocketLeagueNotifier", RocketLeagueNotifier.class);
-        this.leagueNotifier = mongoDatabase.getCollection("leagueNotifier", LeagueNotifier.class);
-        this.valorantNotifier = mongoDatabase.getCollection("valorantNotifier", ValorantNotifier.class);
+        this.minecraftNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("minecraftNotifier", MinecraftNotifier.class));
+        this.siegeNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("siegeNotifier", SiegeNotifier.class));
+        this.rocketLeagueNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("rocketLeagueNotifier", RocketLeagueNotifier.class));
+        this.leagueNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("leagueNotifier", LeagueNotifier.class));
+        this.valorantNotifier = AuditedConfigCollection
+            .wrap(mongoDatabase.getCollection("valorantNotifier", ValorantNotifier.class));
         this.reports = mongoDatabase.getCollection("reports", Report.class);
         this.quotes = OptionalDataCollection.wrap(mongoDatabase.getCollection("quotes", Quote.class), "user");
         this.userEmbeds = OptionalDataCollection.wrap(mongoDatabase.getCollection("userEmbeds", UserEmbeds.class),
@@ -223,6 +234,16 @@ public class Database {
             db.mongoDatabase.getCollection("privacyRequests").createIndex(
                 Indexes.compoundIndex(Indexes.ascending("user"), Indexes.descending("createdAt")));
             ensurePrivacyRequestExpiryIndex(db.mongoDatabase);
+            db.mongoDatabase.getCollection("configHistory").createIndex(
+                Indexes.compoundIndex(Indexes.ascending("guild"), Indexes.descending("createdAt"),
+                    Indexes.descending("_id")));
+            db.mongoDatabase.getCollection("configHistory").createIndex(Indexes.ascending("createdAt"),
+                new IndexOptions().expireAfter(90L, TimeUnit.DAYS));
+            db.mongoDatabase.getCollection("notifierDiagnostics").createIndex(Indexes.ascending("guild"));
+            db.mongoDatabase.getCollection("notifierDiagnostics").createIndex(Indexes.ascending("updatedAt"),
+                new IndexOptions().expireAfter(90L, TimeUnit.DAYS));
+            db.mongoDatabase.getCollection("notifierTestLimits").createIndex(Indexes.ascending("expiresAt"),
+                new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
             db.mongoDatabase.getCollection("privacyActivity").createIndex(Indexes.ascending("lastActiveAt"));
             db.modmailTickets.createIndex(Indexes.compoundIndex(Indexes.ascending("open"),
                 Indexes.ascending("closedAt")));

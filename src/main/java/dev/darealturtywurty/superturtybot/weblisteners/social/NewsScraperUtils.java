@@ -66,12 +66,12 @@ public final class NewsScraperUtils {
         try (Response response = requestExecutor.execute(request)) {
             if (!response.isSuccessful()) {
                 Constants.LOGGER.error("Failed to fetch {} page {}. HTTP {}", logPrefix, url, response.code());
-                return null;
+                throw new IOException("Provider returned HTTP " + response.code());
             }
 
             ResponseBody body = response.body();
             if (body == null)
-                return null;
+                throw new IOException("Provider returned an empty body");
 
             return body.bytes();
         }

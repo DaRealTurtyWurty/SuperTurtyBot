@@ -101,17 +101,17 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
             Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
                 request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
-                return List.of();
+                throw new IllegalStateException("Siege listing was unavailable");
 
             String html = document.html();
             int startIndex = html.indexOf("window.__INITIAL_STATE__ = {");
             if (startIndex == -1)
-                return List.of();
+                throw new IllegalStateException("Siege listing format changed");
 
             startIndex += 27;
             int endIndex = html.indexOf("};</script>", startIndex);
             if (endIndex == -1)
-                return List.of();
+                throw new IllegalStateException("Siege listing format changed");
 
             String jsonString = html.substring(startIndex, endIndex + 1);
             JsonElement root = Constants.GSON.fromJson(jsonString, JsonElement.class);
@@ -120,8 +120,7 @@ public final class SiegeListener extends AbstractScrapedGameListener<SiegeNotifi
             collectSiegeArticles(root, articles);
             return articles;
         } catch (Exception exception) {
-            Constants.LOGGER.error("Failed to scrape {} news page", sourceName(), exception);
-            return List.of();
+            throw new IllegalStateException("Siege listing could not be parsed", exception);
         }
     }
 

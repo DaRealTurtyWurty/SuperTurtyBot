@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.weblisteners.social;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -10,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public final class NotifierDeliverySupport {
     private static final Duration FAILURE_LOG_COOLDOWN = Duration.ofMinutes(15);
@@ -20,48 +19,40 @@ public final class NotifierDeliverySupport {
     private NotifierDeliverySupport() {
     }
 
-    public static @Nullable StandardGuildMessageChannel resolveChannel(Guild guild, long channelId, String sourceName) {
-        StandardGuildMessageChannel channel = guild.getChannelById(StandardGuildMessageChannel.class, channelId);
-        if (channel == null) {
-            logFailure(sourceName, guild.getIdLong(), channelId, "missing-channel", null,
-                "Skipping {} notifier for guild {} because channel {} is not a text or announcement channel, or no longer exists.",
-                sourceName, guild.getIdLong(), channelId);
+    public static @Nullable StandardGuildMessageChannel resolveChannel(Guild guild, NotifierDiagnostics.Key key) {
+        String problem = NotifierDiagnostics.channelProblem(guild, key.channel());
+        if (problem != null) {
+            NotifierDiagnostics.deliveryFailed(key, problem);
+            logFailure(key.type(), key.guild(), key.channel(), "channel-permissions", null,
+                "Skipping {} notifier for guild {} in channel {}: {}", key.type(), key.guild(), key.channel(), problem);
             return null;
         }
-
-        if (!channel.canTalk()) {
-            logFailure(sourceName, guild.getIdLong(), channelId, "cannot-talk", null,
-                "Skipping {} notifier for guild {} because the bot cannot send messages in channel {}.",
-                sourceName, guild.getIdLong(), channelId);
-            return null;
-        }
-
-        if (!guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
-            logFailure(sourceName, guild.getIdLong(), channelId, "missing-embed-links", null,
-                "Skipping {} notifier for guild {} because the bot is missing {} in channel {}.",
-                sourceName, guild.getIdLong(), Permission.MESSAGE_EMBED_LINKS, channelId);
-            return null;
-        }
-
-        return channel;
+        return guild.getChannelById(StandardGuildMessageChannel.class, key.channel());
     }
 
-    public static boolean sendAndWait(RestAction<?> action, String sourceName, StandardGuildMessageChannel channel) {
+    public static boolean sendAndWait(RestAction<?> action, NotifierDiagnostics.Key key, String item) {
         try {
-            action.submit().join();
+            action.timeout(15, TimeUnit.SECONDS).complete();
+            NotifierDiagnostics.delivered(key, item);
             return true;
-        } catch (CompletionException exception) {
-            Throwable cause = exception.getCause() == null ? exception : exception.getCause();
-            logFailure(sourceName, channel.getGuild().getIdLong(), channel.getIdLong(), "send-failure", cause,
-                "Failed to send {} notifier update for guild {} in channel {}.",
-                sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
-            return false;
-        } catch (Exception exception) {
-            logFailure(sourceName, channel.getGuild().getIdLong(), channel.getIdLong(), "send-failure", exception,
-                "Failed to send {} notifier update for guild {} in channel {}.",
-                sourceName, channel.getGuild().getIdLong(), channel.getIdLong());
+        } catch (RuntimeException exception) {
+            NotifierDiagnostics.deliveryFailed(key,
+                "Discord did not confirm delivery. Check destination permissions and bot connectivity.");
+            logFailure(key.type(), key.guild(), key.channel(), "send-failure", exception,
+                "Failed to send {} notifier update for guild {} in channel {}.", key.type(), key.guild(),
+                key.channel());
             return false;
         }
+    }
+
+    public static void send(RestAction<?> action, NotifierDiagnostics.Key key, String item) {
+        action.queue(_ -> NotifierDiagnostics.delivered(key, item), exception -> {
+            NotifierDiagnostics.deliveryFailed(key,
+                "Discord rejected delivery. Check destination permissions and bot connectivity.");
+            logFailure(key.type(), key.guild(), key.channel(), "send-failure", exception,
+                "Failed to send {} notifier update for guild {} in channel {}.", key.type(), key.guild(),
+                key.channel());
+        });
     }
 
     private static void logFailure(

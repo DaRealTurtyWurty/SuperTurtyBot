@@ -1,5 +1,7 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
+import dev.darealturtywurty.superturtybot.modules.audit.ConfigHistory;
+
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyOptOutException;
 import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
@@ -184,7 +186,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
         if (validateRatelimit(event.getAuthor().getIdLong(),
             end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
-            try {
+            try (var actor = ConfigHistory.actor(event.getAuthor().getIdLong(), "command", getName())) {
                 runNormalMessage(event);
 
                 if (event.isFromGuild()) {
@@ -295,8 +297,11 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
     }
 
     private void runPrivacyAware(GenericCommandInteractionEvent event, Runnable operation) {
-        try {
+        try (var actor = ConfigHistory.actor(event.getUser().getIdLong(), "command",
+            event instanceof SlashCommandInteractionEvent slash ? slash.getFullCommandName() : getName())) {
             operation.run();
+        } catch (ConfigHistory.RecordingException exception) {
+            reply(event, exception.getMessage(), false, true);
         } catch (PrivacyOptOutException exception) {
             reply(event,
                 "This feature is unavailable because an account involved has opted out of optional data processing.",

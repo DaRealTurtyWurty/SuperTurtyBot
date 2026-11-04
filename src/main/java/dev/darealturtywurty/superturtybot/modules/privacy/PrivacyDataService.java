@@ -91,7 +91,7 @@ public final class PrivacyDataService {
     private static final List<String> MANUAL_REVIEW = List.of(
         "Discord posts, open modmail channels, older untracked Gists, downloaded files and provider-held copies",
         "Active temporary-ban schedules, modmail blocks and AI access restrictions",
-        "Free-text references, server audit snapshots and any concurrent or in-progress activity");
+        "Free-text references, server audit snapshots, configuration history values and any concurrent or in-progress activity");
 
     private final MongoDatabase database;
     private final TrackedGistService gists;
@@ -116,6 +116,8 @@ public final class PrivacyDataService {
                 "Email turtybot@gmail.com to request review of additional records."));
         exported.put("optionalDataOptOut", !read(PrivacyPreferences.COLLECTION, id("_id", userId)).isEmpty());
         var records = new Document();
+        records.put("configHistory", read("configHistory", Filters.eq("actorId", Long.toString(userId))).stream()
+            .map(document -> select(document, "guild", "actorId", "source", "action", "area", "createdAt")).toList());
         for (var entry : new TreeMap<>(OWNED).entrySet()) {
             records.put(entry.getKey(), read(entry.getKey(), id(entry.getValue(), userId)).stream()
                 .map(document -> exportOwned(entry.getKey(), document, userId)).toList());
@@ -210,6 +212,12 @@ public final class PrivacyDataService {
 
         List<String> failed = new ArrayList<>();
         long changed = 0;
+        try {
+            changed += collection("configHistory").updateMany(Filters.eq("actorId", Long.toString(userId)),
+                new Document("$set", new Document("actorId", null))).getModifiedCount();
+        } catch (RuntimeException exception) {
+            failed.add("configuration history actor references");
+        }
         long gistsDeleted = 0;
         try {
             runtimeCleanup.accept(userId);

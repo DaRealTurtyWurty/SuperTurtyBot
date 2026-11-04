@@ -59,18 +59,11 @@ public class SteamStoreListener {
                 if (notifiers.isEmpty())
                     return;
 
-                List<SteamStoreArticle> articles = readRelevantArticles();
-                if (articles.isEmpty())
-                    return;
-
-                for (SteamStoreNotifier notifier : notifiers) {
-                    try {
-                        handleNotifier(jda, notifier, articles);
-                    } catch (Exception exception) {
-                        Constants.LOGGER.error("Failed to process Steam store notifier for guild {}",
-                            notifier.getGuild(), exception);
-                    }
-                }
+                NotifierDiagnostics.poll(notifiers,
+                    notifier -> NotifierDiagnostics.key("steam-store", notifier.getGuild(), null,
+                        notifier.getChannel()),
+                    SteamStoreListener::readRelevantArticles,
+                    (notifier, articles) -> handleNotifier(jda, notifier, articles));
             } catch (Exception exception) {
                 Constants.LOGGER.error("Steam store listener task failed", exception);
             }
@@ -81,7 +74,7 @@ public class SteamStoreListener {
         try {
             byte[] bytes = NewsScraperUtils.fetchBytes(FEED_URL, FEED_REFERER, "Steam store RSS feed");
             if (bytes == null)
-                return List.of();
+                throw new IllegalStateException("Steam store feed was unavailable");
 
             return READER.read(new ByteArrayInputStream(bytes))
                 .map(SteamStoreListener::toArticle)
@@ -89,8 +82,7 @@ public class SteamStoreListener {
                 .filter(article -> matchesTitle(article.title()))
                 .toList();
         } catch (IOException exception) {
-            Constants.LOGGER.error("Failed to read Steam store RSS feed", exception);
-            return List.of();
+            throw new IllegalStateException("Steam store feed could not be parsed", exception);
         }
     }
 
@@ -286,8 +278,8 @@ public class SteamStoreListener {
             return;
         }
 
-        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
-            "Steam store");
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild,
+            NotifierDiagnostics.key("steam-store", notifier.getGuild(), null, notifier.getChannel()));
         if (channel == null)
             return;
 
@@ -390,8 +382,8 @@ public class SteamStoreListener {
         return NotifierDeliverySupport.sendAndWait(
             channel.sendMessageEmbeds(embed.build())
                 .setContent(content),
-            "Steam store",
-            channel);
+            NotifierDiagnostics.key("steam-store", notifier.getGuild(), null, notifier.getChannel()),
+            article.id());
     }
 
     public static boolean isInitialized() {

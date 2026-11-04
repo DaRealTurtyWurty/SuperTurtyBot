@@ -75,7 +75,7 @@ public final class ServerAuditDashboardService {
         }
         if (!member.hasPermission(Permission.MANAGE_SERVER))
             throw new DashboardApiException(HttpStatus.FORBIDDEN, "audit_access_denied",
-                "Manage Server permission is required to view or run audits.");
+                "Manage Server permission is required for this dashboard action.");
         return guild;
     }
 

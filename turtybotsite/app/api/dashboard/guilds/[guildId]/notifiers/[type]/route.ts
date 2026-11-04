@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {getCurrentSession} from "@/lib/auth";
+import {getPublicOrigin} from "@/lib/discord";
 
 function getRequiredEnv(name: string) {
     const value = process.env[name];
@@ -17,14 +18,15 @@ class DashboardProxyError extends Error {
     }
 }
 
-async function proxyNotifierMutation(guildId: string, type: string, method: "POST" | "PUT" | "DELETE", body: unknown) {
+async function proxyNotifierMutation(guildId: string, type: string, method: "POST" | "PUT" | "DELETE", body: unknown, userId: string) {
     const apiUrl = new URL(`/api/guilds/${guildId}/notifiers/${encodeURIComponent(type)}`, getRequiredEnv("DASHBOARD_API_URL").replace(/\/?$/, "/"));
     const response = await fetch(apiUrl, {
         method,
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "X-TurtyBot-Api-Key": getRequiredEnv("DASHBOARD_API_KEY")
+            "X-TurtyBot-Api-Key": getRequiredEnv("DASHBOARD_API_KEY"),
+            "X-TurtyBot-Actor-Id": userId
         },
         body: JSON.stringify(body),
         cache: "no-store"
@@ -47,6 +49,9 @@ async function handleMutation(
     params: Promise<{guildId: string; type: string}>,
     unauthorizedMessage: string,
 ) {
+    if (request.headers.get("origin") !== getPublicOrigin(request.nextUrl.origin)) {
+        return NextResponse.json({message: "This request must come from the dashboard."}, {status: 403});
+    }
     const session = await getCurrentSession();
     if (!session) {
         return NextResponse.json({
@@ -65,7 +70,7 @@ async function handleMutation(
     const body = await request.json().catch(() => ({}));
 
     try {
-        return NextResponse.json(await proxyNotifierMutation(guildId, type, method, body));
+        return NextResponse.json(await proxyNotifierMutation(guildId, type, method, body, session.user.id));
     } catch (error) {
         if (error instanceof DashboardProxyError) {
             return NextResponse.json({

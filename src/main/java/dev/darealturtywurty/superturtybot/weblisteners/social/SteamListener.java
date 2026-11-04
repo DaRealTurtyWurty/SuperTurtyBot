@@ -57,8 +57,14 @@ public class SteamListener {
 
         IS_RUNNING.set(true);
 
-        if (CLIENT == null)
+        if (CLIENT == null) {
+            Database.getDatabase().steamNotifier.find().forEach(notifier -> {
+                NotifierDiagnostics.checking(diagnosticKey(notifier));
+                NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                    "The bot operator has not configured the Steam API key.");
+            });
             return;
+        }
 
         EXECUTOR.scheduleAtFixedRate(() -> {
             try {
@@ -85,8 +91,12 @@ public class SteamListener {
 
                     final GetNewsForAppRequest request = SteamWebApiRequestFactory.createGetNewsForAppRequest(appId, 1,
                         MessageEmbed.DESCRIPTION_MAX_LENGTH);
+                    notifiers.forEach(notifier -> NotifierDiagnostics.checking(diagnosticKey(notifier)));
                     try {
                         final GetNewsForApp newses = CLIENT.processRequest(request);
+                        if (newses == null || newses.getAppnews() == null)
+                            throw new IllegalStateException("Steam returned no app news response");
+                        notifiers.forEach(notifier -> NotifierDiagnostics.checked(diagnosticKey(notifier)));
                         if (newses.getAppnews() == null || newses.getAppnews().getNewsitems().isEmpty())
                             continue;
 
@@ -109,8 +119,12 @@ public class SteamListener {
                                 Updates.set("previousData", steamNotifier.getPreviousData()));
                         }
                     } catch (final SteamApiException exception) {
+                        notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                            NotifierDiagnostics.failureReason(exception)));
                         Constants.LOGGER.error("Failed to get news for app {}", appId, exception);
                     } catch (final Exception exception) {
+                        notifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                            NotifierDiagnostics.failureReason(exception)));
                         Constants.LOGGER.error("Unexpected error processing app {}", appId, exception);
                     }
                 }
@@ -118,6 +132,11 @@ public class SteamListener {
                 Constants.LOGGER.error("Steam listener task failed", exception);
             }
         }, 0, 30, TimeUnit.MINUTES);
+    }
+
+    private static NotifierDiagnostics.Key diagnosticKey(SteamNotifier notifier) {
+        return NotifierDiagnostics.key("steam", notifier.getGuild(), Integer.toString(notifier.getAppId()),
+            notifier.getChannel());
     }
 
     private static EmbedBuilder getFormattedChanges(Newsitem original, Newsitem current) {
@@ -210,8 +229,8 @@ public class SteamListener {
             return false;
         }
 
-        final StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, notifier.getChannel(),
-            "Steam");
+        final StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild,
+            diagnosticKey(notifier));
         if (channel == null)
             return false;
 
@@ -225,7 +244,7 @@ public class SteamListener {
         return NotifierDeliverySupport.sendAndWait(
             channel.sendMessage(notifier.getMention() + " Steam news update: **" + name + "**.")
                 .addEmbeds(changed.build()),
-            "Steam",
-            channel);
+            diagnosticKey(notifier),
+            current.getGid());
     }
 }

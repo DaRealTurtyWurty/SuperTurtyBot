@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.dashboard.DashboardConfig;
 import dev.darealturtywurty.superturtybot.dashboard.service.audit.ServerAuditDashboardService;
+import dev.darealturtywurty.superturtybot.modules.audit.ConfigHistory;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsService;
 import dev.darealturtywurty.superturtybot.dashboard.service.ai.AiSettingsRequest;
@@ -66,6 +67,7 @@ import net.dv8tion.jda.api.JDA;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.Set;
 
 public final class DashboardRoutes {
     private static final String API_KEY_HEADER = "X-TurtyBot-Api-Key";
@@ -177,6 +179,9 @@ public final class DashboardRoutes {
 
     public void register(Javalin app) {
         app.before(this::handleBefore);
+        app.after(_ -> ConfigHistory.clearActor());
+        app.exception(ConfigHistory.RecordingException.class, (exception, ctx) -> writeError(ctx,
+            HttpStatus.SERVICE_UNAVAILABLE, "config_history_unavailable", exception.getMessage()));
 
         app.exception(DashboardApiException.class,
             (exception, ctx) -> writeError(ctx, exception.status(), exception.errorCode(), exception.getMessage()));
@@ -192,6 +197,14 @@ public final class DashboardRoutes {
             "dashboard_not_found", "The requested dashboard route does not exist."));
 
         app.get("/api/health", this::getHealth);
+        app.get("/api/guilds/{guildId}/config-history", ctx -> {
+            long guildId = parseGuildId(ctx);
+            this.auditService.requireManager(this.jda, guildId, parseUserIdQuery(ctx));
+            int page = parsePositiveIntQuery(ctx, "page", 1);
+            if (page > 10000)
+                throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_page", "Page is too large.");
+            ctx.json(ConfigHistory.list(guildId, page));
+        });
         app.get("/api/guilds/{guildId}/audit", ctx -> {
             long guildId = parseGuildId(ctx);
             this.auditService.requireManager(this.jda, guildId, parseUserIdQuery(ctx));
@@ -233,6 +246,11 @@ public final class DashboardRoutes {
         app.post("/api/guilds/{guildId}/notifiers/{type}", this::createNotifier);
         app.put("/api/guilds/{guildId}/notifiers/{type}", this::updateNotifier);
         app.delete("/api/guilds/{guildId}/notifiers/{type}", this::deleteNotifier);
+        app.post("/api/guilds/{guildId}/notifiers/{type}/test", ctx -> {
+            var request = ctx.bodyAsClass(DashboardNotifierMutationRequest.class);
+            ctx.json(this.notifiersService.testNotifier(parseGuildId(ctx), ctx.pathParam("type"), request.getTarget(),
+                request.getDiscordChannelId()));
+        });
         app.get("/api/guilds/{guildId}/reports/{userId}", this::getReportsForUser);
         app.get("/api/guilds/{guildId}/config/economy",
             ctx -> ctx.json(this.economySettingsService.getSettings(parseGuildId(ctx))));
@@ -317,6 +335,7 @@ public final class DashboardRoutes {
     }
 
     private void handleBefore(Context ctx) {
+        ConfigHistory.clearActor();
         if (!ctx.path().startsWith("/api"))
             return;
 
@@ -334,6 +353,35 @@ public final class DashboardRoutes {
             return;
 
         authenticate(ctx);
+        if (ctx.path().startsWith("/api/guilds/")
+            && Set.of("POST", "PUT", "PATCH", "DELETE").contains(ctx.req().getMethod())) {
+            String actorId = ctx.header("X-TurtyBot-Actor-Id");
+            long userId;
+            try {
+                userId = Long.parseLong(actorId == null ? "" : actorId);
+                if (userId <= 0)
+                    throw new NumberFormatException();
+            } catch (NumberFormatException exception) {
+                throw new DashboardApiException(HttpStatus.UNAUTHORIZED, "dashboard_actor_required",
+                    "A signed-in dashboard user is required for settings changes.");
+            }
+            this.auditService.requireManager(this.jda, parseSnowflake(ctx.path().split("/")[3], "invalid_guild_id"),
+                userId);
+            String[] parts = ctx.path().split("/");
+            String section = parts.length > 4 ? parts[4] : "server";
+            if (section.equals("config") && parts.length > 5) {
+                section = parts[5];
+            }
+            if (section.equals("notifiers") && parts.length > 5) {
+                section = parts[5] + " notifier";
+            }
+            String action = switch (ctx.req().getMethod()) {
+                case "POST" -> "Create";
+                case "DELETE" -> "Remove";
+                default -> "Update";
+            };
+            ConfigHistory.setDashboardActor(userId, action + " " + section.replace('-', ' ') + " settings");
+        }
     }
 
     private record AuditResponse(ServerAuditDashboardService.Snapshot report) {

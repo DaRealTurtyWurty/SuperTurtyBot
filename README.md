@@ -212,6 +212,45 @@ Run `./gradlew generateCommandMetadata` to regenerate [commands.json](commands.j
 
 The `/marketplace` command uses MongoDB transactions to transfer listings, items, and money together. Its MongoDB deployment must support transactions (a replica set or sharded cluster).
 
+## Notifier diagnostics and settings history
+
+Notifier cards in the dashboard show the last attempted/successful check, last
+confirmed delivery and item, and separate feed, delivery and manual-test errors.
+Refresh diagnostics to load current state and destination permission checks.
+Successful checks with no new posts are recorded. Twitch is event-driven: its
+timestamps describe received live events, rather than a successful upstream poll.
+Diagnostics start when the updated bot observes activity and persist across restarts.
+
+**Send test (no pings)** sends a fixed Discord embed to the notifier's saved
+destination. It requires current Manage Server permission, uses no configured
+mentions, and is limited to once every 30 seconds per server. Tests check Discord
+delivery only; they do not contact the upstream provider or change deduplication
+caches, real delivery timestamps, or successful-check timestamps. A timed-out send
+can still arrive. Inactive diagnostic records expire after 90 days.
+
+The **Settings history** dashboard page lists before/after values, the Discord
+actor (linked to their profile), source, and time for server-wide settings,
+counting registrations/modes, and external notifier configuration. It covers
+dashboard and command writes through the shared collections, including automatic
+configuration changes. Runtime caches, counting progress, birthday membership and
+tax bookkeeping are excluded. Saved content and moderation actions are separate
+from settings history. Entries start with this release and expire after 90 days;
+there is no rollback control yet.
+
+History reads and server mutations require current Manage Server permission.
+The Next.js server forwards the actor from the signed-in session using
+`X-TurtyBot-Actor-Id`; direct bot-API mutation clients must supply that header as
+well as the API key. Deploy the bot and dashboard together. Never expose the API
+key to browser code or accept actor IDs from browser inputs.
+
+Run one bot process. Configuration snapshots/writes are serialized per collection
+within that process; history is written after the settings write and is not a
+MongoDB transaction. A history-write failure reports that the settings were saved
+but history could not be recorded, and logs an operator error. A process failure
+between the writes can leave a gap; this is operational history, not a tamper-proof
+ledger. `/privacy export` includes the actor's history metadata; deletion removes
+their actor references. References embedded in settings values need operator review.
+
 ## Java quality tools
 
 The build resolves `dev.railroadide.quality` version `1.0.0` from Railroad Maven

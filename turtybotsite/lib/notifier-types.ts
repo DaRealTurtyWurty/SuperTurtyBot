@@ -7,6 +7,20 @@ export interface DashboardNotifierEntry {
     channelName: string | null;
     mention: string;
     details: string[];
+    diagnostics: {
+        lastCheckAt: number | null;
+        lastSuccessfulCheckAt: number | null;
+        checkError: string | null;
+        checkErrorAt: number | null;
+        lastDeliveredAt: number | null;
+        lastDeliveredItem: string | null;
+        deliveryError: string | null;
+        deliveryErrorAt: number | null;
+        lastTestAt: number | null;
+        testError: string | null;
+        channelProblem: string | null;
+        eventDriven: boolean;
+    };
 }
 
 export interface DashboardNotifierSection {

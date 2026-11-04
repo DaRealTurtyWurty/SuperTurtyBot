@@ -63,10 +63,14 @@ public class RedditListener {
                     if (now < backoffUntil)
                         continue;
 
+                    subredditNotifiers.forEach(notifier -> NotifierDiagnostics.checking(diagnosticKey(notifier)));
                     Stream<Item> items;
                     try {
-                        items = READER.read("https://www.reddit.com/r/" + subreddit + "/new/.rss");
-                    } catch (final IOException exception) {
+                        items = READER.read("https://www.reddit.com/r/" + subreddit + "/new/.rss").toList().stream();
+                        subredditNotifiers.forEach(notifier -> NotifierDiagnostics.checked(diagnosticKey(notifier)));
+                    } catch (final Exception exception) {
+                        subredditNotifiers.forEach(notifier -> NotifierDiagnostics.checkFailed(diagnosticKey(notifier),
+                            NotifierDiagnostics.failureReason(exception)));
                         Integer status = extractHttpStatus(exception);
                         if (status != null && status >= 500 && status < 600) {
                             SUBREDDIT_BACKOFF_UNTIL.put(subreddit, now + TimeUnit.MINUTES.toMillis(5));
@@ -112,11 +116,14 @@ public class RedditListener {
                                     if (guild == null)
                                         continue;
 
-                                    TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
+                                    var channel = NotifierDeliverySupport.resolveChannel(guild,
+                                        diagnosticKey(redditNotifier));
                                     if (channel == null || !channel.canTalk())
                                         continue;
 
-                                    channel.sendMessageEmbeds(embed).setContent(redditNotifier.getMention()).queue();
+                                    NotifierDeliverySupport.send(
+                                        channel.sendMessageEmbeds(embed).setContent(redditNotifier.getMention()),
+                                        diagnosticKey(redditNotifier), link);
                                 }
                             } else {
                                 for (RedditNotifier redditNotifier : subredditNotifiers) {
@@ -124,17 +131,21 @@ public class RedditListener {
                                     if (guild == null)
                                         continue;
 
-                                    TextChannel channel = guild.getTextChannelById(redditNotifier.getChannel());
+                                    var channel = NotifierDeliverySupport.resolveChannel(guild,
+                                        diagnosticKey(redditNotifier));
                                     if (channel == null || !channel.canTalk())
                                         continue;
 
-                                    channel.sendMessage(
+                                    NotifierDeliverySupport.send(channel.sendMessage(
                                         String.format("%s [%s](<%s>) by %s at %s\n%s",
-                                            redditNotifier.getMention(), title, link, author, time, mediaUrl))
-                                        .queue();
+                                            redditNotifier.getMention(), title, link, author, time, mediaUrl)),
+                                        diagnosticKey(redditNotifier), link);
                                 }
                             }
                         } catch (final Exception exception) {
+                            subredditNotifiers.forEach(notifier -> NotifierDiagnostics.deliveryFailed(
+                                diagnosticKey(notifier),
+                                "A Reddit update could not be prepared or delivered. Ask the operator to check the logs."));
                             Constants.LOGGER.error("Failed to process Reddit item for r/{}", subreddit, exception);
                         }
                     });
@@ -143,6 +154,10 @@ public class RedditListener {
                 Constants.LOGGER.error("Reddit listener task failed", exception);
             }
         }, 0, 30, TimeUnit.SECONDS);
+    }
+
+    private static NotifierDiagnostics.Key diagnosticKey(RedditNotifier notifier) {
+        return NotifierDiagnostics.key("reddit", notifier.getGuild(), notifier.getSubreddit(), notifier.getChannel());
     }
 
     private static Optional<String> findMediaUrl(String html) {

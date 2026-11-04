@@ -6,6 +6,7 @@ import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.weblisteners.social.NewsScraperUtils;
 import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDeliverySupport;
+import dev.darealturtywurty.superturtybot.weblisteners.social.NotifierDiagnostics;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -47,19 +48,8 @@ public abstract class AbstractScrapedGameListener<N> {
             if (notifiers.isEmpty())
                 return;
 
-            List<ScrapedArticle> articles = readRelevantArticles();
-            if (articles.isEmpty())
-                return;
-
-            for (N notifier : notifiers) {
-                try {
-                    handleNotifier(jda, notifier, articles);
-                } catch (Exception exception) {
-                    Constants.LOGGER.error("Failed to process {} notifier for guild {}", sourceName(),
-                        guildId(notifier),
-                        exception);
-                }
-            }
+            NotifierDiagnostics.poll(notifiers, this::diagnosticKey, this::readRelevantArticles,
+                (notifier, articles) -> handleNotifier(jda, notifier, articles));
         } catch (Exception exception) {
             Constants.LOGGER.error("{} listener task failed", sourceName(), exception);
         }
@@ -70,7 +60,9 @@ public abstract class AbstractScrapedGameListener<N> {
             Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
                 request -> GameNewsProxyClient.execute(request, sourceName()));
             if (document == null)
-                return List.of();
+                throw new IllegalStateException("News listing was unavailable");
+            if (document.select(linkSelector()).isEmpty())
+                throw new IllegalStateException("News listing did not contain the expected article links");
 
             List<ScrapedArticle> articles = new ArrayList<>();
             Set<String> seenUrls = new HashSet<>();
@@ -105,8 +97,7 @@ public abstract class AbstractScrapedGameListener<N> {
 
             return articles;
         } catch (Exception exception) {
-            Constants.LOGGER.error("Failed to scrape {} news page", sourceName(), exception);
-            return List.of();
+            throw new IllegalStateException("News listing could not be fetched or parsed", exception);
         }
     }
 
@@ -117,8 +108,7 @@ public abstract class AbstractScrapedGameListener<N> {
             return;
         }
 
-        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, channelId(notifier),
-            sourceName());
+        StandardGuildMessageChannel channel = NotifierDeliverySupport.resolveChannel(guild, diagnosticKey(notifier));
         if (channel == null)
             return;
 
@@ -193,8 +183,16 @@ public abstract class AbstractScrapedGameListener<N> {
         return NotifierDeliverySupport.sendAndWait(
             channel.sendMessageEmbeds(embed.build())
                 .setContent(mention(notifier)),
-            sourceName(),
-            channel);
+            diagnosticKey(notifier),
+            article.url());
+    }
+
+    private NotifierDiagnostics.Key diagnosticKey(N notifier) {
+        String type = notifierCollection().getNamespace().getCollectionName().replace("Notifier", "");
+        if (type.equals("rocketLeague")) {
+            type = "rocket-league";
+        }
+        return NotifierDiagnostics.key(type, guildId(notifier), null, channelId(notifier));
     }
 
     protected String resolveUrl(Element link) {
