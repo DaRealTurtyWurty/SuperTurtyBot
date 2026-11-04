@@ -22,6 +22,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTask;
 import dev.darealturtywurty.superturtybot.core.util.discord.DailyTaskScheduler;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -114,7 +115,7 @@ public class AIMessageResponder extends ListenerAdapter {
     public AIMessageResponder() {
         DailyTaskScheduler.addTask(new DailyTask(() -> tokensUsed.forEach((userId, tokens) -> {
             if (tokens > 0) {
-                tokensUsed.put(userId, Math.max(0, tokens - 200));
+                tokensUsed.computeIfPresent(userId, (id, current) -> Math.max(0, current - 200));
             }
         }), 8, 0));
     }
@@ -238,6 +239,13 @@ public class AIMessageResponder extends ListenerAdapter {
         List<Message.MentionType> allowedMentions,
         int localToolRounds
     ) {
+        if (PrivacyPreferences.isOptedOut(event.getAuthor().getIdLong())
+            || chat.stream().anyMatch(message -> PrivacyPreferences.isOptedOut(message.userId()))) {
+            reply.editMessage(
+                "This AI request was stopped because an account involved has opted out of optional data processing.")
+                .setAllowedMentions(List.of()).queue();
+            return;
+        }
         ResponseAccumulator accumulator = ResponseAccumulator.create();
         var responseContent = new StringBuilder();
         var lastEditTime = new AtomicLong(System.currentTimeMillis());

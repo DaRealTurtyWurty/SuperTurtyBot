@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
+import org.bson.Document;
 
 public final class ModmailManager extends ListenerAdapter {
     public static final ModmailManager INSTANCE = new ModmailManager();
@@ -371,6 +373,13 @@ public final class ModmailManager extends ListenerAdapter {
     }
 
     private static TranscriptArchiveResult archiveTranscript(TextChannel channel) {
+        Document ticket = Database.getDatabase().mongoDatabase.getCollection("modmailTickets")
+            .find(Filters.and(Filters.eq("guild", channel.getGuild().getIdLong()),
+                Filters.eq("channel", channel.getIdLong())))
+            .first();
+        long ticketUser = ticket != null && ticket.get("user") instanceof Number user ? user.longValue() : 0L;
+        if (PrivacyPreferences.isOptedOut(ticketUser))
+            return new TranscriptArchiveResult(0, 0);
         Database.getDatabase().modmailTranscriptChunks.deleteMany(Filters.and(
             Filters.eq("guild", channel.getGuild().getIdLong()),
             Filters.eq("ticketChannel", channel.getIdLong())));
@@ -379,20 +388,34 @@ public final class ModmailManager extends ListenerAdapter {
         int chunkIndex = 0;
         int messageCount = 0;
         while (true) {
+            if (PrivacyPreferences.isOptedOut(ticketUser))
+                break;
             List<Message> batch = history.retrievePast(100).complete();
             if (batch.isEmpty())
                 break;
 
-            List<ModmailTranscriptEntry> entries = batch.stream()
-                .map(ModmailManager::toTranscriptEntry)
-                .collect(Collectors.toCollection(ArrayList::new));
-            Collections.reverse(entries);
-            Database.getDatabase().modmailTranscriptChunks.insertOne(new ModmailTranscriptChunk(
-                channel.getGuild().getIdLong(),
-                channel.getIdLong(),
-                chunkIndex++,
-                entries));
-            messageCount += entries.size();
+            int currentChunk = chunkIndex;
+            int archived = PrivacyPreferences.optionalOperation(() -> {
+                if (PrivacyPreferences.isOptedOut(ticketUser))
+                    return 0;
+                List<ModmailTranscriptEntry> entries = batch.stream()
+                    .filter(message -> !PrivacyPreferences.isOptedOut(message.getAuthor().getIdLong()))
+                    .map(ModmailManager::toTranscriptEntry)
+                    .collect(Collectors.toCollection(ArrayList::new));
+                if (entries.isEmpty())
+                    return 0;
+                Collections.reverse(entries);
+                Database.getDatabase().modmailTranscriptChunks.insertOne(new ModmailTranscriptChunk(
+                    channel.getGuild().getIdLong(),
+                    channel.getIdLong(),
+                    currentChunk,
+                    entries));
+                return entries.size();
+            });
+            if (archived > 0) {
+                chunkIndex++;
+            }
+            messageCount += archived;
 
             if (batch.size() < 100)
                 break;

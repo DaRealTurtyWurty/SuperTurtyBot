@@ -844,10 +844,10 @@
     {
       "name": "privacy",
       "richName": "privacy",
-      "description": "Read the privacy policy, privately export your records, or request deletion of your data",
+      "description": "Read the privacy policy, export or delete your data, or manage optional data processing",
       "category": "Core",
       "access": "Everyone",
-      "usage": "/privacy info | /privacy export | /privacy delete",
+      "usage": "/privacy info | /privacy export | /privacy delete | /privacy opt-out | /privacy opt-in",
       "serverOnly": false,
       "types": {
         "slash": true,
@@ -865,7 +865,7 @@
             "0",
             "1"
           ],
-          "description": "Read the privacy policy, privately export your records, or request deletion of your data",
+          "description": "Read the privacy policy, export or delete your data, or manage optional data processing",
           "description_localizations": {},
           "integration_types": [
             "0"
@@ -894,6 +894,22 @@
               "description": "Confirm automatic cleanup and request operator review of remaining copies",
               "description_localizations": {},
               "name": "delete",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            },
+            {
+              "description": "Disable optional commands and data collection across all servers",
+              "description_localizations": {},
+              "name": "opt-out",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            },
+            {
+              "description": "Enable optional features and remove your identifier from the opt-out list",
+              "description_localizations": {},
+              "name": "opt-in",
               "name_localizations": {},
               "options": [],
               "type": 1

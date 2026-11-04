@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.WordleStreakData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.WordleProfile;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -59,7 +60,7 @@ public final class WordleReminderManager {
     }
 
     public static void scheduleReminder(long userId, long guildId, long reminderAt) {
-        if (jda == null || reminderAt <= 0L)
+        if (jda == null || reminderAt <= 0L || PrivacyPreferences.isOptedOut(userId))
             return;
 
         String reminderKey = createReminderKey(userId, guildId);
@@ -69,6 +70,26 @@ public final class WordleReminderManager {
         ScheduledFuture<?> future = SCHEDULER.schedule(() -> fireReminder(userId, guildId), delayMillis,
             TimeUnit.MILLISECONDS);
         SCHEDULED_REMINDERS.put(reminderKey, future);
+    }
+
+    public static void pauseReminders(long userId) {
+        SCHEDULED_REMINDERS.keySet().stream().filter(key -> key.startsWith(userId + ":"))
+            .toList().forEach(WordleReminderManager::unschedule);
+    }
+
+    public static void resumeReminders(long userId) {
+        WordleProfile profile = Database.getDatabase().wordleProfiles.find(Filters.eq("user", userId)).first();
+        if (profile == null)
+            return;
+        for (WordleStreakData streak : profile.getStreaks()) {
+            if (!isPendingReminder(streak))
+                continue;
+            if (streak.getReminderAt() > System.currentTimeMillis()) {
+                scheduleReminder(userId, streak.getGuild(), streak.getReminderAt());
+            } else {
+                markReminderSent(userId, streak.getGuild());
+            }
+        }
     }
 
     private static void fireReminder(long userId, long guildId) {
@@ -107,6 +128,8 @@ public final class WordleReminderManager {
     }
 
     private static void sendReminder(User user, WordleStreakData streakData) {
+        if (PrivacyPreferences.isOptedOut(user.getIdLong()))
+            return;
         MessageChannel destination = findReminderDestination(streakData);
         if (destination != null) {
             destination.sendMessage(formatChannelReminderMessage(user.getIdLong(), streakData.getStreak()))
@@ -138,14 +161,19 @@ public final class WordleReminderManager {
     }
 
     private static void sendDirectMessage(User user, WordleStreakData streakData) {
+        if (PrivacyPreferences.isOptedOut(user.getIdLong()))
+            return;
         user.openPrivateChannel().queue(
-            channel -> channel.sendMessage(formatDirectReminderMessage(streakData.getGuild(), streakData.getStreak()))
-                .queue(
+            channel -> {
+                if (PrivacyPreferences.isOptedOut(user.getIdLong()))
+                    return;
+                channel.sendMessage(formatDirectReminderMessage(streakData.getGuild(), streakData.getStreak())).queue(
                     success -> markReminderSent(user.getIdLong(), streakData.getGuild()),
                     failure -> {
                         Constants.LOGGER.warn("Failed to send Wordle reminder to user {}", user.getIdLong(), failure);
                         markReminderSent(user.getIdLong(), streakData.getGuild());
-                    }),
+                    });
+            },
             failure -> {
                 Constants.LOGGER.warn("Failed to open DM for Wordle reminder for user {}", user.getIdLong(), failure);
                 markReminderSent(user.getIdLong(), streakData.getGuild());
@@ -173,13 +201,18 @@ public final class WordleReminderManager {
     }
 
     private static void markReminderSent(long userId, long guildId) {
-        Database.getDatabase().wordleProfiles.updateOne(
-            Filters.and(
-                Filters.eq("user", userId),
-                Filters.eq("streaks.guild", guildId)),
-            Updates.combine(
-                Updates.set("streaks.$.reminderSent", true),
-                Updates.set("streaks.$.reminderAt", 0L)));
+        PrivacyPreferences.optionalOperation(() -> {
+            if (PrivacyPreferences.isOptedOut(userId))
+                return null;
+            Database.getDatabase().wordleProfiles.updateOne(
+                Filters.and(
+                    Filters.eq("user", userId),
+                    Filters.eq("streaks.guild", guildId)),
+                Updates.combine(
+                    Updates.set("streaks.$.reminderSent", true),
+                    Updates.set("streaks.$.reminderAt", 0L)));
+            return null;
+        });
     }
 
     private static void unschedule(String reminderKey) {

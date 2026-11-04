@@ -18,6 +18,11 @@ import dev.darealturtywurty.superturtybot.modules.*;
 import dev.darealturtywurty.superturtybot.modules.collectable.CollectableGameCollectorRegistry;
 import dev.darealturtywurty.superturtybot.modules.counting.CountingManager;
 import dev.darealturtywurty.superturtybot.modules.modmail.ModmailManager;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyEventManager;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
+import dev.darealturtywurty.superturtybot.modules.privacy.ExternalSharingConfirmation;
+import dev.darealturtywurty.superturtybot.modules.privacy.RetentionActivity;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyRetentionManager;
 import dev.darealturtywurty.superturtybot.registry.Registerer;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
@@ -157,6 +162,8 @@ public class TurtyBot {
             Environment.INSTANCE.loggingWebhookToken());
 
         Database.ensureIndexes();
+        PrivacyPreferences.initialize(Database.getDatabase().mongoDatabase);
+        RetentionActivity.initialize(Database.getDatabase().mongoDatabase);
 
         Environment.INSTANCE.botToken().ifPresentOrElse(token -> {
             final var jdaBuilder = JDABuilder.createDefault(token);
@@ -173,6 +180,7 @@ public class TurtyBot {
         Constants.LOGGER.info("Loaded registries!");
 
         DashboardServer.startIfEnabled(TurtyBot.jda);
+        PrivacyRetentionManager.start(Database.getDatabase().mongoDatabase);
     }
 
     public static JDA getJDA() {
@@ -180,6 +188,8 @@ public class TurtyBot {
     }
 
     private static void configureBuilder(JDABuilder builder) {
+        builder.setEventManager(new PrivacyEventManager());
+        builder.addEventListeners(ExternalSharingConfirmation.INSTANCE);
         // Set the current activity to watching me!
         builder.setActivity(
             Activity.of(Environment.INSTANCE.activityType(), Environment.INSTANCE.activity().orElse("me!")));

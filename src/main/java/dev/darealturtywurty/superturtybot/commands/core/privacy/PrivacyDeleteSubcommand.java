@@ -5,11 +5,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 
 import dev.darealturtywurty.superturtybot.Environment;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
-import dev.darealturtywurty.superturtybot.modules.AIMessageResponder;
-import dev.darealturtywurty.superturtybot.modules.LoggingManager;
-import dev.darealturtywurty.superturtybot.modules.ReminderManager;
 import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyConfirmation;
 import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyDataService;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyRuntimeCleanup;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -18,7 +16,6 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.LongConsumer;
 
 public final class PrivacyDeleteSubcommand extends SubcommandCommand {
     private static final String DELETE_PREFIX = "privacy:delete:";
@@ -37,11 +34,14 @@ public final class PrivacyDeleteSubcommand extends SubcommandCommand {
         event.reply("**Delete your stored TurtyBot data across all servers?**\n\n"
             + "This permanently removes supported profiles, birthdays, reminders, balances, inventories, "
             + "game progress and related database records. You may lose virtual items and progress. "
+            + "Tracked Gists linked to you as author or requester will also be deleted from GitHub. "
             + "Consider using `/privacy export` first.\n\n"
             + "Other people's shared records will have your structured references removed where supported. "
             + "A request containing your user ID is kept while the operator reviews remaining copies, "
-            + "including Discord posts, Gists, free-text mentions and active restrictions. "
-            + "This does not remove Discord bans or stop future activity creating new records.\n\n"
+            + "including Discord posts, older untracked Gists, free-text mentions and active restrictions. "
+            + "The bot will also opt you out of optional features before cleanup, retaining only your Discord "
+            + "user ID in the opt-out list. Optional features stay disabled until you use `/privacy opt-in`. "
+            + "Server safety moderation still applies, and Discord bans are not removed.\n\n"
             + "The confirmation expires in five minutes.")
             .setEphemeral(true).setAllowedMentions(List.of())
             .setComponents(ActionRow.of(Button.danger(DELETE_PREFIX + token, "Delete my data"),
@@ -67,7 +67,7 @@ public final class PrivacyDeleteSubcommand extends SubcommandCommand {
             return;
         }
         if (!operations.tryBegin(userId)) {
-            event.editMessage("A privacy operation is already operations.running. Wait for it to finish, then run "
+            event.editMessage("A privacy operation is already running. Wait for it to finish, then run "
                 + "`/privacy delete` again.").setComponents(List.of()).queue();
             return;
         }
@@ -82,16 +82,19 @@ public final class PrivacyDeleteSubcommand extends SubcommandCommand {
         try {
             PrivacyDataService service = PrivacyOperations.service();
             PrivacyDataService.DeletionResult result = service.deleteUser(userId, requestId,
-                PrivacyDeleteSubcommand::clearRuntime);
+                PrivacyRuntimeCleanup::deleteUser);
             boolean success = result.failedSteps().isEmpty();
             hook.editOriginal(
                 (success ? "Automatic database cleanup completed." : "Some automatic cleanup steps failed.")
                     + "\nChanged or removed **" + result.recordsChanged() + "** database records.\n\n"
-                    + "Your request is saved for operator review of remaining data, including Discord/Gist/provider "
+                    + "Deleted **" + result.gistsDeleted() + "** tracked Gists from GitHub. "
+                    + "Failed removals remain tracked for retry or operator review.\n\n"
+                    + "Your request is saved for operator review of remaining data, including Discord/older Gist/provider "
                     + "copies, free-text references and active restrictions. Your user ID is retained with the request "
                     + "until it is resolved. This is not confirmation that every copy has been erased.\n\n"
                     + "Reference: `" + requestId + "`\nContact: **turtybot@gmail.com**. "
-                    + "Future activity can create new records.")
+                    + "Optional features remain disabled until you use `/privacy opt-in`. Your Discord user ID "
+                    + "is kept in the opt-out list to honour this choice.")
                 .setAllowedMentions(List.of()).queue();
             notifyOperator(jda, userId, requestId, success ? "manual_review" : "partial_failure");
         } catch (Exception exception) {
@@ -123,18 +126,4 @@ public final class PrivacyDeleteSubcommand extends SubcommandCommand {
         }
     }
 
-    private static void clearRuntime(long userId) {
-        boolean failed = false;
-        List<LongConsumer> steps = List.of(AIMessageResponder.INSTANCE::forgetUser,
-            LoggingManager.INSTANCE::forgetUser, ReminderManager::clearReminders);
-        for (LongConsumer step : steps) {
-            try {
-                step.accept(userId);
-            } catch (RuntimeException exception) {
-                failed = true;
-            }
-        }
-        if (failed)
-            throw new IllegalStateException("A runtime privacy cleanup step failed");
-    }
 }

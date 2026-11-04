@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 
 public final class ReminderManager {
     private static final AtomicBoolean RUNNING = new AtomicBoolean(false);
@@ -105,10 +106,29 @@ public final class ReminderManager {
     }
 
     public static long clearReminders(long userId) {
-        List<Reminder> reminders = Database.getDatabase().reminders.find(Filters.eq("user", userId))
+        List<Reminder> reminders = Database.getDatabase().mongoDatabase.getCollection("reminders", Reminder.class)
+            .find(Filters.eq("user", userId))
             .into(new ArrayList<>());
         reminders.forEach(reminder -> unschedule(reminder.getId()));
         return Database.getDatabase().reminders.deleteMany(Filters.eq("user", userId)).getDeletedCount();
+    }
+
+    public static void pauseReminders(long userId) {
+        for (Reminder reminder : Database.getDatabase().mongoDatabase.getCollection("reminders", Reminder.class)
+            .find(Filters.eq("user", userId))) {
+            unschedule(reminder.getId());
+        }
+    }
+
+    public static void resumeReminders(long userId) {
+        long now = System.currentTimeMillis();
+        for (Reminder reminder : Database.getDatabase().reminders.find(Filters.eq("user", userId))) {
+            if (reminder.getTime() > now) {
+                scheduleReminder(reminder);
+            } else {
+                deleteReminderRecord(reminder);
+            }
+        }
     }
 
     private static boolean isValid(Reminder reminder) {
@@ -122,6 +142,8 @@ public final class ReminderManager {
     }
 
     private static void scheduleReminder(Reminder reminder) {
+        if (reminder != null && PrivacyPreferences.isOptedOut(reminder.getUser()))
+            return;
         if (jda == null || reminder == null || !isValid(reminder))
             return;
 
@@ -199,6 +221,8 @@ public final class ReminderManager {
     }
 
     private static void sendReminder(MessageChannel channel, Reminder reminder, Runnable fallback) {
+        if (PrivacyPreferences.isOptedOut(reminder.getUser()))
+            return;
         channel.sendMessage(formatReminderMessage(reminder))
             .addEmbeds(createReminderEmbed(reminder, false))
             .setAllowedMentions(List.of(Message.MentionType.USER))
@@ -208,15 +232,20 @@ public final class ReminderManager {
     }
 
     private static void sendDirectMessage(long guildId, User user, Reminder reminder) {
+        if (PrivacyPreferences.isOptedOut(user.getIdLong()))
+            return;
         user.openPrivateChannel().queue(
-            channel -> channel.sendMessageEmbeds(createReminderEmbed(reminder, true))
-                .queue(
+            channel -> {
+                if (PrivacyPreferences.isOptedOut(user.getIdLong()))
+                    return;
+                channel.sendMessageEmbeds(createReminderEmbed(reminder, true)).queue(
                     _ -> completeReminder(guildId, user.getIdLong(), reminder.getId()),
                     failure -> {
                         Constants.LOGGER.warn("Failed to send reminder {} to user {}", reminder.getId(),
                             reminder.getUser(), failure);
                         deleteReminderRecord(guildId, user.getIdLong(), reminder.getId());
-                    }),
+                    });
+            },
             failure -> {
                 Constants.LOGGER.warn("Failed to open DM for reminder {} and user {}", reminder.getId(),
                     reminder.getUser(), failure);
@@ -225,8 +254,16 @@ public final class ReminderManager {
     }
 
     private static void completeReminder(long guildId, long userId, String reminderId) {
-        QuestManager.INSTANCE.recordReminderFired(guildId, userId, reminderId);
-        deleteReminderRecord(guildId, userId, reminderId);
+        try {
+            PrivacyPreferences.optionalOperation(() -> {
+                if (!PrivacyPreferences.isOptedOut(userId)) {
+                    QuestManager.INSTANCE.recordReminderFired(guildId, userId, reminderId);
+                }
+                return null;
+            });
+        } finally {
+            deleteReminderRecord(guildId, userId, reminderId);
+        }
     }
 
     private static String formatReminderMessage(Reminder reminder) {

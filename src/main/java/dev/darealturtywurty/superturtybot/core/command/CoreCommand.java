@@ -1,6 +1,9 @@
 package dev.darealturtywurty.superturtybot.core.command;
 
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyOptOutException;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
+import dev.darealturtywurty.superturtybot.modules.privacy.RetentionExpiredException;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
@@ -10,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEven
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -149,10 +153,13 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx())
             return;
 
+        if (rejectPrivacy(event))
+            return;
+
         if (validateRatelimit(event.getUser().getIdLong(),
             end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                 .setEphemeral(true).queue())) {
-            runMessageCtx(event);
+            runPrivacyAware(event, () -> runMessageCtx(event));
         }
     }
 
@@ -169,21 +176,34 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!this.types.normal())
             return;
 
+        if (PrivacyPreferences.isOptedOut(event.getAuthor().getIdLong())
+            && !PrivacyPreferences.isAllowedCommand(getName())) {
+            reply(event, PrivacyPreferences.BLOCKED_MESSAGE);
+            return;
+        }
+
         if (validateRatelimit(event.getAuthor().getIdLong(),
             end -> reply(event, "❌ You are being rate-limited! You can use the command again " + end + "!"))) {
-            runNormalMessage(event);
+            try {
+                runNormalMessage(event);
 
-            if (event.isFromGuild()) {
-                if (event.isFromThread()) {
-                    runThreadMessage(event);
+                if (event.isFromGuild()) {
+                    if (event.isFromThread()) {
+                        runThreadMessage(event);
+                        return;
+                    }
+
+                    runGuildMessage(event);
                     return;
                 }
 
-                runGuildMessage(event);
-                return;
+                runPrivateMessage(event);
+            } catch (PrivacyOptOutException exception) {
+                reply(event,
+                    "This feature is unavailable because an account involved has opted out of optional data processing.");
+            } catch (RetentionExpiredException exception) {
+                reply(event, exception.getMessage());
             }
-
-            runPrivateMessage(event);
         }
     }
 
@@ -193,10 +213,13 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
             return;
 
+        if (rejectPrivacy(event))
+            return;
+
         if (validateRatelimit(event.getUser().getIdLong(),
             end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                 .setEphemeral(true).queue())) {
-            if (recordsQuestActivity()) {
+            if (recordsQuestActivity() && !PrivacyPreferences.isOptedOut(event.getUser().getIdLong())) {
                 QuestManager.INSTANCE.recordCommandUsed(
                     event.getGuild(),
                     event.getUser(),
@@ -206,7 +229,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
             String subcommand = event.getSubcommandName();
             if (subcommand == null) {
-                runSlash(event);
+                runPrivacyAware(event, () -> runSlash(event));
                 return;
             }
 
@@ -214,8 +237,8 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
                 .filter(sub -> sub.getName().equalsIgnoreCase(subcommand))
                 .findFirst()
                 .ifPresentOrElse(
-                    sub -> sub.execute(event),
-                    () -> runSlash(event));
+                    sub -> runPrivacyAware(event, () -> sub.execute(event)),
+                    () -> runPrivacyAware(event, () -> runSlash(event)));
         }
     }
 
@@ -225,15 +248,62 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
             return;
 
+        if (rejectPrivacy(event))
+            return;
+
         if (validateRatelimit(event.getUser().getIdLong(),
             end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                 .setEphemeral(true).queue())) {
-            runUserCtx(event);
+            runPrivacyAware(event, () -> runUserCtx(event));
         }
     }
 
     protected void runGuildMessage(MessageReceivedEvent event) {
         // NO-OP
+    }
+
+    private boolean rejectPrivacy(GenericCommandInteractionEvent event) {
+        if (PrivacyPreferences.isOptedOut(event.getUser().getIdLong())
+            && !PrivacyPreferences.isAllowedCommand(getName())) {
+            reply(event, PrivacyPreferences.BLOCKED_MESSAGE, false, true);
+            return true;
+        }
+
+        if (getCategory() == CommandCategory.MODERATION || PrivacyPreferences.isAllowedCommand(getName()))
+            return false;
+
+        boolean targetOptedOut = false;
+        switch (event) {
+            case SlashCommandInteractionEvent slash ->
+                targetOptedOut = slash.getOptions().stream().filter(option -> option.getType() == OptionType.USER)
+                    .anyMatch(option -> PrivacyPreferences.isOptedOut(option.getAsUser().getIdLong()));
+            case UserContextInteractionEvent user ->
+                targetOptedOut = PrivacyPreferences.isOptedOut(user.getTarget().getIdLong());
+            case MessageContextInteractionEvent message ->
+                targetOptedOut = PrivacyPreferences.isOptedOut(message.getTarget().getAuthor().getIdLong());
+            default -> {
+            }
+        }
+
+        if (targetOptedOut) {
+            reply(event,
+                "This feature is unavailable because the selected user has opted out of optional data processing.",
+                false, true);
+        }
+
+        return targetOptedOut;
+    }
+
+    private void runPrivacyAware(GenericCommandInteractionEvent event, Runnable operation) {
+        try {
+            operation.run();
+        } catch (PrivacyOptOutException exception) {
+            reply(event,
+                "This feature is unavailable because an account involved has opted out of optional data processing.",
+                false, true);
+        } catch (RetentionExpiredException exception) {
+            reply(event, exception.getMessage(), false, true);
+        }
     }
 
     protected boolean recordsQuestActivity() {

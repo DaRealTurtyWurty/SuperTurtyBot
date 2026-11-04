@@ -6,9 +6,12 @@ import com.google.gson.JsonObject;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.modules.privacy.ExternalSharingConfirmation;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -56,32 +59,61 @@ public class RunCodeCommand extends CoreCommand {
 
     @Override
     protected void runMessageCtx(MessageContextInteractionEvent event) {
-        event.deferReply().queue();
-
         Message message = event.getTarget();
-        CodeBlock codeBlock = findCodeBlock(message);
-        if (codeBlock == null) {
-            event.getHook().sendMessage("❌ No code block found!").mentionRepliedUser(false).queue();
+        if (message.getAuthor().getIdLong() != event.getUser().getIdLong()
+            || message.getAuthor().isBot() || message.isWebhookMessage()) {
+            reply(event, "Only the message's author can submit its code for execution. "
+                + "Ask them to use Run Code on their own message.", false, true);
             return;
         }
+        event.reply(ExternalSharingConfirmation.INSTANCE.create(event.getUser().getIdLong(),
+            "**Submit your code for execution?**\nThe first supported code block or attachment on "
+                + "[your message](" + message.getJumpUrl() + ") will be sent to **Compiler Explorer (godbolt.org)** "
+                + "with its language and execution options. Brainfuck runs locally instead. "
+                + "The result will be posted here. The provider may retain submissions under its terms; "
+                + "TurtyBot cannot recall a submission after sending it. "
+                + "[Compiler Explorer privacy policy](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/Privacy.md).",
+            hook -> executeApprovedCode(event, message, hook))).queue();
+    }
 
-        codeBlock.code().thenAccept(codeContent -> {
-            if (codeContent == null) {
-                event.getHook().sendMessage("❌ Failed to read code block!").mentionRepliedUser(false).queue();
-                return;
-            }
-
-            EvaluationResult result = evaluateCode(codeBlock.language(), codeContent);
-            var embed = new EmbedBuilder()
-                .setTitle(codeBlock.language().name() + " Code Execution")
-                .setDescription(result.message())
-                .setColor(result.success() ? 0x00CC00 : 0xCC0000)
-                .setTimestamp(event.getTimeCreated())
-                .setFooter("Requested by " + event.getUser().getEffectiveName(),
-                    event.getUser().getEffectiveAvatarUrl());
-
-            event.getHook().sendMessageEmbeds(embed.build()).mentionRepliedUser(false).queue();
+    private static void executeApprovedCode(
+        MessageContextInteractionEvent event,
+        Message original,
+        InteractionHook hook
+    ) {
+        Message message = original.getChannel().retrieveMessageById(original.getIdLong()).complete();
+        if (!ExternalSharingConfirmation.isUnchanged(original, message)) {
+            hook.editOriginal("The message changed. Nothing was submitted; use Run Code again.").queue();
+            return;
+        }
+        CodeBlock codeBlock = findCodeBlock(message);
+        if (codeBlock == null) {
+            hook.editOriginal("No supported code block or attachment was found. Nothing was submitted.").queue();
+            return;
+        }
+        String codeContent = codeBlock.code().join();
+        if (codeContent == null) {
+            hook.editOriginal("Failed to read the code. Nothing was submitted.").queue();
+            return;
+        }
+        Message latest = original.getChannel().retrieveMessageById(original.getIdLong()).complete();
+        if (!ExternalSharingConfirmation.isUnchanged(original, latest)) {
+            hook.editOriginal("The message changed. Nothing was submitted; use Run Code again.").queue();
+            return;
+        }
+        EvaluationResult result = PrivacyPreferences.optionalOperation(() -> {
+            PrivacyPreferences.requireOptionalData(original.getAuthor().getIdLong());
+            return evaluateCode(codeBlock.language(), codeContent);
         });
+        var embed = new EmbedBuilder()
+            .setTitle(codeBlock.language().name() + " Code Execution")
+            .setDescription(result.message())
+            .setColor(result.success() ? 0x00CC00 : 0xCC0000)
+            .setTimestamp(event.getTimeCreated())
+            .setFooter("Requested by " + event.getUser().getEffectiveName(),
+                event.getUser().getEffectiveAvatarUrl());
+
+        hook.editOriginal("Code execution completed.").setEmbeds(embed.build()).setAllowedMentions(List.of()).queue();
     }
 
     private static String buildExecutionJson(String code, String languageId) {
@@ -135,8 +167,6 @@ public class RunCodeCommand extends CoreCommand {
                 Constants.LOGGER.error("Failed to evaluate code! Response body is empty!");
                 return new EvaluationResult(false, "Failed to evaluate code! Response body is empty!");
             }
-
-            Constants.LOGGER.debug("Got evaluation result: {}", content);
 
             JsonObject object = Constants.GSON.fromJson(content, JsonObject.class);
             JsonArray allStdout = object.get("stdout").getAsJsonArray();

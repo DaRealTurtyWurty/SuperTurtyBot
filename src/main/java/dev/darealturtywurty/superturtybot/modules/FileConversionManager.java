@@ -1,6 +1,7 @@
 package dev.darealturtywurty.superturtybot.modules;
 
 import dev.darealturtywurty.superturtybot.core.util.Constants;
+import dev.darealturtywurty.superturtybot.modules.privacy.ManagedTemporaryFiles;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -21,11 +22,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.*;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 
 public class FileConversionManager extends ListenerAdapter {
     public static final FileConversionManager INSTANCE = new FileConversionManager();
@@ -138,6 +139,9 @@ public class FileConversionManager extends ListenerAdapter {
             if (authorUser.isBot())
                 return;
 
+            if (PrivacyPreferences.isOptedOut(authorUser.getIdLong()))
+                return;
+
             final boolean isAuthor = authorUser.getIdLong() == reactor.getIdLong();
             final boolean canForce = reactor.hasPermission(Permission.MESSAGE_MANAGE);
             if (!isAuthor && !canForce)
@@ -165,6 +169,9 @@ public class FileConversionManager extends ListenerAdapter {
     }
 
     private void processAttachments(Message message, long requesterId) {
+        if (PrivacyPreferences.isOptedOut(requesterId)
+            || PrivacyPreferences.isOptedOut(message.getAuthor().getIdLong()))
+            return;
         final List<Message.Attachment> attachments = message.getAttachments();
         boolean foundConvertible = false;
         boolean convertedAny = false;
@@ -205,85 +212,94 @@ public class FileConversionManager extends ListenerAdapter {
 
     private void convertAttachment(Message message, Message.Attachment attachment, ConversionType type)
         throws IOException {
-        final Path tempDir = Files.createTempDirectory("turtybot_conversion");
-        final String extension = attachment.getFileExtension() != null
-            ? attachment.getFileExtension().toLowerCase(Locale.ROOT)
-            : "tmp";
-        final Path inputFile = tempDir.resolve("input." + extension);
-        final Path outputFile = tempDir.resolve("output" + type.outputExtension());
-
+        final Path tempDir = ManagedTemporaryFiles.INSTANCE.createDirectory("conversion-");
         try {
-            attachment.getProxy().downloadToPath(inputFile).join();
-        } catch (Exception exception) {
-            cleanup(tempDir);
-            throw new IOException("Failed to download attachment.", exception);
-        }
+            final String extension = attachment.getFileExtension() != null
+                ? attachment.getFileExtension().toLowerCase(Locale.ROOT)
+                : "tmp";
+            final Path inputFile = tempDir.resolve("input." + extension);
+            final Path outputFile = tempDir.resolve("output" + type.outputExtension());
 
-        final FFmpegBuilder builder = new FFmpegBuilder()
-            .setInput(inputFile.toAbsolutePath().toString())
-            .overrideOutputFiles(true);
+            try {
+                attachment.getProxy().downloadToPath(inputFile).join();
+            } catch (Exception exception) {
+                cleanup(tempDir);
+                throw new IOException("Failed to download attachment.", exception);
+            }
 
-        final FFmpegOutputBuilder outputBuilder = builder.addOutput(outputFile.toAbsolutePath().toString())
-            .setFormat(type.outputFormat());
+            final FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(inputFile.toAbsolutePath().toString())
+                .overrideOutputFiles(true);
 
-        switch (type) {
-            case VIDEO -> outputBuilder.setVideoCodec("libx264")
-                .setAudioCodec("aac")
-                .setAudioBitRate(128_000)
-                .setVideoFrameRate(30, 1)
-                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL);
-            case AUDIO -> outputBuilder.disableVideo()
-                .setAudioCodec("libmp3lame")
-                .setAudioBitRate(192_000);
-            case IMAGE -> outputBuilder.disableAudio();
-        }
+            final FFmpegOutputBuilder outputBuilder = builder.addOutput(outputFile.toAbsolutePath().toString())
+                .setFormat(type.outputFormat());
 
-        outputBuilder.done();
+            switch (type) {
+                case VIDEO -> outputBuilder.setVideoCodec("libx264")
+                    .setAudioCodec("aac")
+                    .setAudioBitRate(128_000)
+                    .setVideoFrameRate(30, 1)
+                    .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL);
+                case AUDIO -> outputBuilder.disableVideo()
+                    .setAudioCodec("libmp3lame")
+                    .setAudioBitRate(192_000);
+                case IMAGE -> outputBuilder.disableAudio();
+            }
 
-        final var executor = new FFmpegExecutor(this.ffmpeg, this.ffprobe);
-        try {
-            executor.createJob(builder).run();
-        } catch (RuntimeException exception) {
-            cleanup(tempDir);
-            throw new IOException("FFmpeg failed to convert file.", exception);
-        }
+            outputBuilder.done();
 
-        byte[] fileBytes = Files.readAllBytes(outputFile);
+            final var executor = new FFmpegExecutor(this.ffmpeg, this.ffprobe);
+            try {
+                executor.createJob(builder).run();
+            } catch (RuntimeException exception) {
+                cleanup(tempDir);
+                throw new IOException("FFmpeg failed to convert file.", exception);
+            }
 
-        final long maxFileSize = message.isFromGuild() ? message.getGuild().getMaxFileSize() : Message.MAX_FILE_SIZE;
-        final long outputSize = fileBytes.length;
-        message.reply("⏳ Converted `%s` (%s → %s)..."
-            .formatted(attachment.getFileName(), humanReadableSize(attachment.getSize()),
-                humanReadableSize(outputSize)))
-            .mentionRepliedUser(false)
-            .queue();
-        if (outputSize > maxFileSize) {
-            cleanup(tempDir);
-            message.reply("⚠️ Converted file `%s` is %s which exceeds this server's upload limit of %s."
-                .formatted(attachment.getFileName(), humanReadableSize(outputSize), humanReadableSize(maxFileSize)))
+            byte[] fileBytes = Files.readAllBytes(outputFile);
+
+            final long maxFileSize = message.isFromGuild()
+                ? message.getGuild().getMaxFileSize()
+                : Message.MAX_FILE_SIZE;
+            final long outputSize = fileBytes.length;
+            message.reply("⏳ Converted `%s` (%s → %s)..."
+                .formatted(attachment.getFileName(), humanReadableSize(attachment.getSize()),
+                    humanReadableSize(outputSize)))
                 .mentionRepliedUser(false)
                 .queue();
-            return;
-        }
-
-        final String safeBaseName = sanitizeFileName(attachment.getFileName());
-        final String deliveredName = safeBaseName + type.outputExtension();
-        final FileUpload upload = FileUpload.fromData(outputFile, deliveredName);
-
-        message
-            .reply(
-                "✅ Converted `%s` to **.%s**.".formatted(attachment.getFileName(), type.outputExtension().substring(1)))
-            .mentionRepliedUser(false)
-            .addFiles(upload)
-            .queue(msg -> cleanup(tempDir), error -> {
+            if (outputSize > maxFileSize) {
                 cleanup(tempDir);
-                Constants.LOGGER.error("Failed to upload converted file {}", deliveredName, error);
-                message
-                    .reply(
-                        "❌ Discord rejected the converted file `%s`: %s".formatted(deliveredName, error.getMessage()))
+                message.reply("⚠️ Converted file `%s` is %s which exceeds this server's upload limit of %s."
+                    .formatted(attachment.getFileName(), humanReadableSize(outputSize), humanReadableSize(maxFileSize)))
                     .mentionRepliedUser(false)
                     .queue();
-            });
+                return;
+            }
+
+            final String safeBaseName = sanitizeFileName(attachment.getFileName());
+            final String deliveredName = safeBaseName + type.outputExtension();
+            final FileUpload upload = FileUpload.fromData(outputFile, deliveredName);
+
+            message
+                .reply(
+                    "✅ Converted `%s` to **.%s**.".formatted(attachment.getFileName(),
+                        type.outputExtension().substring(1)))
+                .mentionRepliedUser(false)
+                .addFiles(upload)
+                .queue(msg -> cleanup(tempDir), error -> {
+                    cleanup(tempDir);
+                    Constants.LOGGER.error("Failed to upload converted file {}", deliveredName, error);
+                    message
+                        .reply(
+                            "❌ Discord rejected the converted file `%s`: %s".formatted(deliveredName,
+                                error.getMessage()))
+                        .mentionRepliedUser(false)
+                        .queue();
+                });
+        } catch (IOException | RuntimeException exception) {
+            cleanup(tempDir);
+            throw exception;
+        }
     }
 
     private ConversionType determineConversionType(Message.Attachment attachment) {
@@ -306,13 +322,8 @@ public class FileConversionManager extends ListenerAdapter {
     }
 
     private void cleanup(Path directory) {
-        try (var stream = Files.walk(directory)) {
-            stream.sorted(Comparator.reverseOrder()).forEach(path -> {
-                try {
-                    Files.deleteIfExists(path);
-                } catch (IOException _) {
-                }
-            });
+        try {
+            ManagedTemporaryFiles.INSTANCE.release(directory);
         } catch (IOException _) {
         }
     }

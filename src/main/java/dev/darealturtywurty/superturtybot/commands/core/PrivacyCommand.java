@@ -4,6 +4,8 @@ import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyDeleteSub
 import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyExportSubcommand;
 import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyInfoSubcommand;
 import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyOperations;
+import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyOptInSubcommand;
+import dev.darealturtywurty.superturtybot.commands.core.privacy.PrivacyOptOutSubcommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -16,7 +18,8 @@ public final class PrivacyCommand extends CoreCommand {
         super(new Types(true, false, false, false));
         var operations = new PrivacyOperations();
         addSubcommands(new PrivacyInfoSubcommand(), new PrivacyExportSubcommand(operations),
-            new PrivacyDeleteSubcommand(operations));
+            new PrivacyDeleteSubcommand(operations), new PrivacyOptOutSubcommand(operations),
+            new PrivacyOptInSubcommand(operations));
     }
 
     @Override
@@ -26,7 +29,7 @@ public final class PrivacyCommand extends CoreCommand {
 
     @Override
     public String getDescription() {
-        return "Read the privacy policy, privately export your records, or request deletion of your data";
+        return "Read the privacy policy, export or delete your data, or manage optional data processing";
     }
 
     @Override
@@ -36,7 +39,7 @@ public final class PrivacyCommand extends CoreCommand {
 
     @Override
     public String getHowToUse() {
-        return "/privacy info | /privacy export | /privacy delete";
+        return "/privacy info | /privacy export | /privacy delete | /privacy opt-out | /privacy opt-in";
     }
 
     @Override

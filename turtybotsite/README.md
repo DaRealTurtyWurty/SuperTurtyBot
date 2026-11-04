@@ -11,6 +11,15 @@ npm run dev
 
 The site runs on `http://localhost:3003`.
 
+## Privacy policy
+
+The public `/privacy` page is available without Discord sign-in or a connection to
+the bot API. A shared footer links to it throughout the site.
+
+Edit [content/privacy.md](content/privacy.md) to update the policy, then rebuild
+and deploy the site. The page is rendered at build time. Enter its public URL
+in the Discord Developer Portal.
+
 ## Required Environment Variables
 
 ```env

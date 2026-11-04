@@ -22,7 +22,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -58,7 +58,13 @@ public final class StickyRolesManager extends ListenerAdapter {
         StickyRoles stickyRoles = Database.getDatabase().stickyRoles.find(Filters.and(
             Filters.eq("guild", guild.getIdLong()),
             Filters.eq("user", member.getIdLong()))).first();
-        if (stickyRoles == null || stickyRoles.getRoles().isEmpty())
+        if (stickyRoles == null)
+            return;
+        if (stickyRoles.getSavedAt() <= retentionCutoff(Instant.now())) {
+            clearStoredRoles(guild.getIdLong(), member.getIdLong());
+            return;
+        }
+        if (stickyRoles.getRoles().isEmpty())
             return;
 
         List<Long> validRoleIds = stickyRoles.getRoles().stream()
@@ -73,7 +79,6 @@ public final class StickyRolesManager extends ListenerAdapter {
                 clearStoredRoles(guild.getIdLong(), member.getIdLong());
             } else {
                 stickyRoles.setRoles(validRoleIds);
-                stickyRoles.setSavedAt(System.currentTimeMillis());
                 Database.getDatabase().stickyRoles.replaceOne(
                     Filters.and(Filters.eq("guild", guild.getIdLong()), Filters.eq("user", member.getIdLong())),
                     stickyRoles,
@@ -156,7 +161,6 @@ public final class StickyRolesManager extends ListenerAdapter {
             }
 
             stickyRoles.setRoles(updatedRoles);
-            stickyRoles.setSavedAt(System.currentTimeMillis());
             Database.getDatabase().stickyRoles.replaceOne(
                 Filters.and(Filters.eq("guild", guildId), Filters.eq("user", stickyRoles.getUser())),
                 stickyRoles,
@@ -189,12 +193,22 @@ public final class StickyRolesManager extends ListenerAdapter {
     }
 
     private static void cleanupExpiredStickyRoles() {
-        long cutoff = Instant.now().minus(STICKY_ROLE_RETENTION_MONTHS, ChronoUnit.MONTHS).toEpochMilli();
-        long deleted = Database.getDatabase().stickyRoles.deleteMany(Filters.lte("savedAt", cutoff)).getDeletedCount();
-        if (deleted > 0) {
-            Constants.LOGGER.info("Deleted {} expired sticky role entries older than {} months.",
-                deleted, STICKY_ROLE_RETENTION_MONTHS);
+        try {
+            long cutoff = retentionCutoff(Instant.now());
+            long deleted = Database.getDatabase().stickyRoles.deleteMany(Filters.lte("savedAt", cutoff))
+                .getDeletedCount();
+            if (deleted > 0) {
+                Constants.LOGGER.info("Deleted {} expired sticky role entries older than {} months.",
+                    deleted, STICKY_ROLE_RETENTION_MONTHS);
+            }
+        } catch (RuntimeException exception) {
+            Constants.LOGGER.error("Failed to clean up expired sticky roles; the next scheduled cleanup will retry.",
+                exception);
         }
+    }
+
+    private static long retentionCutoff(Instant now) {
+        return now.atZone(ZoneOffset.UTC).minusMonths(STICKY_ROLE_RETENTION_MONTHS).toInstant().toEpochMilli();
     }
 
     private static boolean isLikelyDeletedAccount(User user) {

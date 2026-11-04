@@ -8,6 +8,8 @@ import {FaArrowRight, FaBell, FaHashtag, FaMessage, FaTriangleExclamation} from 
 
 function getErrorMessage(error: string | undefined) {
     switch (error) {
+        case "privacy_opted_out":
+            return "You've opted out of optional data processing, so the dashboard is disabled. Use /privacy opt-in in Discord to enable it again.";
         case "access_denied":
             return "Discord login was cancelled.";
         case "invalid_oauth_state":

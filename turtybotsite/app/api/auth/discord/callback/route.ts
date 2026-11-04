@@ -54,7 +54,8 @@ export async function GET(request: NextRequest) {
             service: "dashboard", status: error.status, code: error.code
         } : {service: "unknown"};
         console.error("Discord OAuth callback failed", {stage, ...details});
-        const reason = error instanceof DiscordApiError && error.code === "invalid_client" ? "oauth_invalid_client" :
+        const reason = isDashboardApiError(error) && error.code === "privacy_opted_out" ? "privacy_opted_out" :
+            error instanceof DiscordApiError && error.code === "invalid_client" ? "oauth_invalid_client" :
             error instanceof DiscordConfigurationError ? "oauth_configuration_failed" :
             stage === "token_exchange" ? "oauth_token_exchange_failed" :
                 stage === "discord_profile" ? "oauth_profile_failed" :

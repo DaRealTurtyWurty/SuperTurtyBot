@@ -4,6 +4,7 @@ import dev.darealturtywurty.superturtybot.core.command.SubcommandCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import dev.darealturtywurty.superturtybot.Environment;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
 import java.net.URI;
 
 public final class PrivacyInfoSubcommand extends SubcommandCommand {
@@ -17,16 +18,22 @@ public final class PrivacyInfoSubcommand extends SubcommandCommand {
         String policy = url == null
             ? "Contact **turtybot@gmail.com** for the full policy."
             : "Read the [privacy policy](" + url + ").";
-        reply(event, "**Your privacy with TurtyBot**\n" + policy + "\n\n"
+        String status = PrivacyPreferences.isOptedOut(event.getUser().getIdLong()) ? "Opted out" : "Enabled";
+        reply(event, "**Your privacy with TurtyBot**\n" + policy + "\nOptional data processing: **" + status + "**.\n\n"
             + "The bot stores Discord identifiers, settings, messages needed for enabled features, moderation and "
             + "modmail records, and game/economy progress. Optional AI replies send conversation content to OpenAI.\n\n"
             + "**Export:** `/privacy export` privately downloads your structured database records. Other people's "
             + "identities, staff-only moderation text and messages are excluded. Email us for a wider access review.\n\n"
             + "**Deletion:** `/privacy delete` asks for confirmation, removes supported database records and clears "
             + "relevant caches. A request is saved for operator review of external copies, active restrictions and "
-            + "other remaining records. It does not unban you. Future activity may create new records; this is not "
-            + "an opt-out from future collection.\n\n"
-            + "Most stored feature records currently have no automatic expiry. nginx logs are kept for 90 days. "
+            + "other remaining records. Deletion also opts you out to prevent profile recreation.\n\n"
+            + "**Opt-out:** `/privacy opt-out` disables most commands and background features across all servers. "
+            + "We keep only your Discord user ID in the opt-out list. Existing records remain until deleted. "
+            + "Server safety moderation and privacy handling still apply. Use `/privacy opt-in` to enable optional "
+            + "features again. Privacy commands always remain available.\n\n"
+            + "Daily cleanup removes optional profiles after 12 months of inactivity, closed modmail and "
+            + "expired moderation records after 90 days, and resolved privacy requests after 30 days. "
+            + "Active restrictions and unresolved requests remain. nginx logs are kept for 90 days. "
             + "Dashboard sessions expire after seven days; local AI context expires after 30 minutes without access.\n\n"
             + "Questions, correction requests, or help: **turtybot@gmail.com**. "
             + "You do not need a server administrator's permission to use these commands.", false, true);

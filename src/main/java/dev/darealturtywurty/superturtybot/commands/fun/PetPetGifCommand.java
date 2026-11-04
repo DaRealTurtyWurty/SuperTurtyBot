@@ -3,6 +3,7 @@ package dev.darealturtywurty.superturtybot.commands.fun;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
 import dev.darealturtywurty.superturtybot.core.util.object.PetPetGifCreator;
+import dev.darealturtywurty.superturtybot.modules.privacy.ManagedTemporaryFiles;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -108,8 +109,10 @@ public class PetPetGifCommand extends CoreCommand {
             try {
                 InputStream stream = Files.newInputStream(path);
                 FileUpload upload = FileUpload.fromData(stream, "petpet.gif");
-                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-            } catch (IOException exception) {
+                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload)
+                    .queue(_ -> releaseTemporary(path), _ -> releaseTemporary(path));
+            } catch (IOException | RuntimeException exception) {
+                releaseTemporary(path);
                 event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
                     .queue();
             }
@@ -143,8 +146,10 @@ public class PetPetGifCommand extends CoreCommand {
                         try {
                             InputStream outStream = Files.newInputStream(path);
                             FileUpload upload = FileUpload.fromData(outStream, "petpet.gif");
-                            event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-                        } catch (IOException exception) {
+                            event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload)
+                                .queue(_ -> releaseTemporary(path), _ -> releaseTemporary(path));
+                        } catch (IOException | RuntimeException exception) {
+                            releaseTemporary(path);
                             event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
                                 .queue();
                         }
@@ -186,8 +191,10 @@ public class PetPetGifCommand extends CoreCommand {
             try {
                 InputStream stream = Files.newInputStream(path);
                 FileUpload upload = FileUpload.fromData(stream, "petpet.gif");
-                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload).queue();
-            } catch (IOException exception) {
+                event.getHook().editOriginal("✅ Here is your pet pet gif!").setFiles(upload)
+                    .queue(_ -> releaseTemporary(path), _ -> releaseTemporary(path));
+            } catch (IOException | RuntimeException exception) {
+                releaseTemporary(path);
                 event.getHook().editOriginal("❌ An error occurred while creating the pet pet gif!")
                     .queue();
             }
@@ -197,11 +204,28 @@ public class PetPetGifCommand extends CoreCommand {
     private CompletableFuture<Path> createPetPetGif(BufferedImage inputImage) {
         Path tempFile;
         try {
-            tempFile = Files.createTempFile("petpet", ".gif");
+            tempFile = ManagedTemporaryFiles.INSTANCE.createFile("petpet-", ".gif");
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create temp file!", exception);
         }
 
-        return new PetPetGifCreator(tempFile, inputImage).start();
+        try {
+            return new PetPetGifCreator(tempFile, inputImage).start().whenComplete((path, failure) -> {
+                if (failure != null) {
+                    releaseTemporary(tempFile);
+                }
+            });
+        } catch (RuntimeException exception) {
+            releaseTemporary(tempFile);
+            throw exception;
+        }
+    }
+
+    private static void releaseTemporary(Path path) {
+        try {
+            ManagedTemporaryFiles.INSTANCE.release(path);
+        } catch (IOException _) {
+            // The daily retention job retries abandoned files.
+        }
     }
 }

@@ -13,11 +13,13 @@ import dev.darealturtywurty.superturtybot.database.codecs.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestActivity;
+import dev.darealturtywurty.superturtybot.modules.privacy.OptionalDataCollection;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestPlayer;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
+import org.bson.Document;
 
 import java.time.Duration;
 import java.util.concurrent.Callable;
@@ -73,15 +75,18 @@ public class Database {
         this.client = client;
         this.mongoDatabase = client.getDatabase("TurtyBot" + (Environment.INSTANCE.isDevelopment() ? "-dev" : ""));
 
-        this.levelling = mongoDatabase.getCollection("levelling", Levelling.class);
+        this.levelling = OptionalDataCollection.wrap(mongoDatabase.getCollection("levelling", Levelling.class), "user");
         this.counting = mongoDatabase.getCollection("counting", Counting.class);
-        this.suggestions = mongoDatabase.getCollection("suggestions", Suggestion.class);
-        this.highlighters = mongoDatabase.getCollection("highlighters", Highlighter.class);
+        this.suggestions = OptionalDataCollection.wrap(mongoDatabase.getCollection("suggestions", Suggestion.class),
+            "user");
+        this.highlighters = OptionalDataCollection.wrap(mongoDatabase.getCollection("highlighters", Highlighter.class),
+            "user");
         this.warnings = mongoDatabase.getCollection("warnings", Warning.class);
-        this.tags = mongoDatabase.getCollection("tags", Tag.class);
-        this.starboard = mongoDatabase.getCollection("starboard", Showcase.class);
+        this.tags = OptionalDataCollection.wrap(mongoDatabase.getCollection("tags", Tag.class), "user");
+        this.starboard = OptionalDataCollection.wrap(mongoDatabase.getCollection("starboard", Showcase.class), "user");
         this.guildData = mongoDatabase.getCollection("guildData", GuildData.class);
-        this.userConfig = mongoDatabase.getCollection("userConfig", UserConfig.class);
+        this.userConfig = OptionalDataCollection.wrap(mongoDatabase.getCollection("userConfig", UserConfig.class),
+            "user");
         this.youtubeNotifier = mongoDatabase.getCollection("youtubeNotifier", YoutubeNotifier.class);
         this.twitchNotifier = mongoDatabase.getCollection("twitchNotifier", TwitchNotifier.class);
         this.steamNotifier = mongoDatabase.getCollection("steamNotifier", SteamNotifier.class);
@@ -94,27 +99,37 @@ public class Database {
         this.leagueNotifier = mongoDatabase.getCollection("leagueNotifier", LeagueNotifier.class);
         this.valorantNotifier = mongoDatabase.getCollection("valorantNotifier", ValorantNotifier.class);
         this.reports = mongoDatabase.getCollection("reports", Report.class);
-        this.quotes = mongoDatabase.getCollection("quotes", Quote.class);
-        this.userEmbeds = mongoDatabase.getCollection("userEmbeds", UserEmbeds.class);
-        this.reminders = mongoDatabase.getCollection("reminders", Reminder.class);
+        this.quotes = OptionalDataCollection.wrap(mongoDatabase.getCollection("quotes", Quote.class), "user");
+        this.userEmbeds = OptionalDataCollection.wrap(mongoDatabase.getCollection("userEmbeds", UserEmbeds.class),
+            "user");
+        this.reminders = OptionalDataCollection.wrap(mongoDatabase.getCollection("reminders", Reminder.class), "user");
         this.tempBans = mongoDatabase.getCollection("tempBans", TempBan.class);
-        this.wordleProfiles = mongoDatabase.getCollection("wordleProfiles", WordleProfile.class);
-        this.economy = mongoDatabase.getCollection("economy", Economy.class);
-        this.marketplaceListings = mongoDatabase.getCollection("marketplaceListings", MarketplaceListing.class);
+        this.wordleProfiles = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("wordleProfiles", WordleProfile.class), "user");
+        this.economy = OptionalDataCollection.wrap(mongoDatabase.getCollection("economy", Economy.class), "user");
+        this.marketplaceListings = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("marketplaceListings", MarketplaceListing.class), "seller");
         this.chatRevivers = mongoDatabase.getCollection("chatRevivers", ChatReviver.class);
-        this.birthdays = mongoDatabase.getCollection("birthdays", Birthday.class);
-        this.userCollectables = mongoDatabase.getCollection("userCollectables", UserCollectables.class);
-        this.twoThousandFortyEight = mongoDatabase.getCollection("twoThousandFortyEight",
-            TwoThousandFortyEightProfile.class);
-        this.stickyMessages = mongoDatabase.getCollection("stickyMessages", StickyMessage.class);
-        this.modmailTickets = mongoDatabase.getCollection("modmailTickets", ModmailTicket.class);
+        this.birthdays = OptionalDataCollection.wrap(mongoDatabase.getCollection("birthdays", Birthday.class), "user");
+        this.userCollectables = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("userCollectables", UserCollectables.class), "user");
+        this.twoThousandFortyEight = OptionalDataCollection.wrap(mongoDatabase.getCollection("twoThousandFortyEight",
+            TwoThousandFortyEightProfile.class), "user");
+        this.stickyMessages = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("stickyMessages", StickyMessage.class), "owner");
+        this.modmailTickets = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("modmailTickets", ModmailTicket.class), "user");
         this.modmailBlockedUsers = mongoDatabase.getCollection("modmailBlockedUsers", ModmailBlockedUser.class);
         this.modmailTranscriptChunks = mongoDatabase.getCollection("modmailTranscriptChunks",
             ModmailTranscriptChunk.class);
-        this.stickyRoles = mongoDatabase.getCollection("stickyRoles", StickyRoles.class);
-        this.dashboardSessions = mongoDatabase.getCollection("dashboardSessions", DashboardSession.class);
-        this.questPlayers = mongoDatabase.getCollection("questPlayers", QuestPlayer.class);
-        this.questActivities = mongoDatabase.getCollection("questActivities", QuestActivity.class);
+        this.stickyRoles = OptionalDataCollection.wrap(mongoDatabase.getCollection("stickyRoles", StickyRoles.class),
+            "user");
+        this.dashboardSessions = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("dashboardSessions", DashboardSession.class), "user.id");
+        this.questPlayers = OptionalDataCollection.wrap(mongoDatabase.getCollection("questPlayers", QuestPlayer.class),
+            "user");
+        this.questActivities = OptionalDataCollection
+            .wrap(mongoDatabase.getCollection("questActivities", QuestActivity.class), "user");
 
         ShutdownHooks.register(client::close);
     }
@@ -207,8 +222,13 @@ public class Database {
                 new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
             db.mongoDatabase.getCollection("privacyRequests").createIndex(
                 Indexes.compoundIndex(Indexes.ascending("user"), Indexes.descending("createdAt")));
-            db.mongoDatabase.getCollection("privacyRequests").createIndex(Indexes.ascending("deleteAfter"),
-                new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
+            ensurePrivacyRequestExpiryIndex(db.mongoDatabase);
+            db.mongoDatabase.getCollection("privacyActivity").createIndex(Indexes.ascending("lastActiveAt"));
+            db.modmailTickets.createIndex(Indexes.compoundIndex(Indexes.ascending("open"),
+                Indexes.ascending("closedAt")));
+            db.warnings.createIndex(Indexes.ascending("expiresAt"));
+            db.mongoDatabase.getCollection("gistUploads").createIndex(Indexes.ascending("author"));
+            db.mongoDatabase.getCollection("gistUploads").createIndex(Indexes.ascending("requester"));
             db.questPlayers.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("weekStart")),
                 new IndexOptions().unique(true));
             db.questActivities.createIndex(
@@ -238,6 +258,19 @@ public class Database {
             customCodecRegistry,
             MongoClientSettings.getDefaultCodecRegistry(),
             pojoRegistry);
+    }
+
+    private static void ensurePrivacyRequestExpiryIndex(MongoDatabase database) {
+        var requests = database.getCollection("privacyRequests");
+        for (Document index : requests.listIndexes()) {
+            if (new Document("deleteAfter", 1).equals(index.get("key"))
+                && (!(index.get("expireAfterSeconds") instanceof Number expiry) || expiry.longValue() != 0
+                    || !new Document("status", "resolved").equals(index.get("partialFilterExpression")))) {
+                requests.dropIndex(index.getString("name"));
+            }
+        }
+        requests.createIndex(Indexes.ascending("deleteAfter"), new IndexOptions().expireAfter(0L, TimeUnit.SECONDS)
+            .partialFilterExpression(Filters.eq("status", "resolved")));
     }
 
     private static MongoClient connect(CodecRegistry codec) {

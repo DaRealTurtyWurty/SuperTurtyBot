@@ -8,6 +8,9 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Levelling;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Warning;
 import dev.darealturtywurty.superturtybot.modules.economy.EconomyManager;
+import dev.darealturtywurty.superturtybot.modules.privacy.PrivacyPreferences;
+import dev.darealturtywurty.superturtybot.modules.privacy.RetentionActivity;
+import dev.darealturtywurty.superturtybot.modules.privacy.RetentionExpiredException;
 import dev.darealturtywurty.superturtybot.modules.economy.MoneyTransaction;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -52,33 +55,38 @@ public class WarnManager {
         float xpPercentage = config.getWarningXpPercentage();
         float economyPercentage = config.getWarningEconomyPercentage();
 
-        if (xpPercentage > 0 && LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
-            Levelling profile = Database.getDatabase().levelling
-                .find(Filters.and(Filters.eq("guild", guild.getIdLong()),
-                    Filters.eq("user", toWarn.getIdLong())))
-                .first();
-            if (profile != null) {
-                int xp = profile.getXp();
+        try {
+            if (!PrivacyPreferences.isOptedOut(toWarn.getIdLong()) && !RetentionActivity.isExpired(toWarn.getIdLong())
+                && xpPercentage > 0
+                && LevellingManager.INSTANCE.areLevelsEnabled(guild)) {
+                Levelling profile = Database.getDatabase().levelling
+                    .find(Filters.and(Filters.eq("guild", guild.getIdLong()),
+                        Filters.eq("user", toWarn.getIdLong())))
+                    .first();
+                if (profile != null) {
+                    int xp = profile.getXp();
 
-                // take xpPercentage% of xp
-                int toTake = (int) (xp / xpPercentage);
+                    int toTake = (int) (xp / xpPercentage);
 
-                LevellingManager.INSTANCE.removeXP(guild, toWarn, toTake);
+                    LevellingManager.INSTANCE.removeXP(guild, toWarn, toTake);
+                }
             }
-        }
 
-        if (economyPercentage > 0 && config.isEconomyEnabled()) {
-            Economy account = EconomyManager.getOrCreateAccount(guild, toWarn);
+            if (!PrivacyPreferences.isOptedOut(toWarn.getIdLong()) && !RetentionActivity.isExpired(toWarn.getIdLong())
+                && economyPercentage > 0 && config.isEconomyEnabled()) {
+                Economy account = EconomyManager.getOrCreateAccount(guild, toWarn);
 
-            BigInteger balance = EconomyManager.getBalance(account);
+                BigInteger balance = EconomyManager.getBalance(account);
 
-            // take economyPercentage% of balance
-            BigInteger toTake = new BigDecimal(balance).divide(BigDecimal.valueOf(economyPercentage), RoundingMode.DOWN)
-                .toBigInteger();
+                BigInteger toTake = new BigDecimal(balance)
+                    .divide(BigDecimal.valueOf(economyPercentage), RoundingMode.DOWN)
+                    .toBigInteger();
 
-            EconomyManager.removeMoney(account, toTake, true);
-            account.addTransaction(toTake.negate(), MoneyTransaction.WARNING);
-            EconomyManager.updateAccount(account);
+                EconomyManager.removeMoney(account, toTake, true);
+                account.addTransaction(toTake.negate(), MoneyTransaction.WARNING);
+                EconomyManager.updateAccount(account);
+            }
+        } catch (RetentionExpiredException _) {
         }
 
         final var warn = new Warning(guild.getIdLong(), toWarn.getIdLong(), reason, warner.getIdLong(), time,

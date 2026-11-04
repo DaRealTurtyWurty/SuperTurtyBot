@@ -33,12 +33,14 @@ public final class PrivacyDataService {
         - formatVersion: the export format version.
         - userId: the Discord account this export belongs to.
         - generatedAt: the time the export was prepared, in UTC.
+        - optionalDataOptOut: whether your account has opted out of optional processing.
         - scope and limitations: what the export covers and its exclusions.
         - records: data grouped by feature, across all servers where matching records exist.
 
         Groups may include preferences, birthdays, reminders, game progress, levelling,
         virtual economy records, saved content, moderation summaries, modmail messages
-        you authored, dashboard profile information, and privacy requests.
+        you authored, dashboard profile information, tracked Gist upload references,
+        and privacy requests. Gist references do not include the uploaded contents.
         Groups ending in Participation contain only your part of shared records.
         An empty group means no matching records were exported for that category.
         Missing or null fields can represent absent or redacted information.
@@ -54,7 +56,7 @@ public final class PrivacyDataService {
         records are represented by a summary rather than their full contents.
         Original image, audio, video, and other attachments are not bundled. Stored
         attachment links or references may be present; they may expire or require access.
-        Live games, memory caches, Discord-hosted posts, Gists, server logs, and data
+        Live games, memory caches, Discord-hosted posts, uploaded Gist contents, server logs, and data
         retained by external providers are outside this automated database export.
         Records may change while the export is being prepared.
 
@@ -64,6 +66,10 @@ public final class PrivacyDataService {
         the export's generatedAt time. Never send passwords or authentication tokens.
         Creating this export does not delete your data. Use /privacy delete to begin
         confirmed cleanup and operator review of remaining copies, or contact us by email.
+        Deletion also opts you out of optional data processing to prevent new profiles.
+        /privacy opt-out disables most features without deleting existing records.
+        We retain only your Discord user ID in the opt-out list until /privacy opt-in.
+        Server safety moderation and handling of privacy requests still apply.
 
         Keep this archive private: it can contain your personal information and messages.
         """;
@@ -83,14 +89,20 @@ public final class PrivacyDataService {
         "targetId", "owner", "renter", "warner", "moderator", "reporter", "reported",
         "blockedBy", "closedBy", "responder", "addedBy");
     private static final List<String> MANUAL_REVIEW = List.of(
-        "Discord posts, open modmail channels, Gists, downloaded files and provider-held copies",
+        "Discord posts, open modmail channels, older untracked Gists, downloaded files and provider-held copies",
         "Active temporary-ban schedules, modmail blocks and AI access restrictions",
         "Free-text references, server audit snapshots and any concurrent or in-progress activity");
 
     private final MongoDatabase database;
+    private final TrackedGistService gists;
 
     public PrivacyDataService(MongoDatabase database) {
+        this(database, new TrackedGistService(database));
+    }
+
+    public PrivacyDataService(MongoDatabase database, TrackedGistService gists) {
         this.database = Objects.requireNonNull(database);
+        this.gists = Objects.requireNonNull(gists);
     }
 
     public byte[] exportUser(long userId) throws IOException {
@@ -100,8 +112,9 @@ public final class PrivacyDataService {
             .append("limitations", List.of(
                 "Staff-only moderation text and other people's messages and identities are excluded.",
                 "Shared-record summaries show only your participation. Session identifiers are never exported.",
-                "Live games, memory caches, Discord posts, Gists, server logs and provider-held copies are not included.",
+                "Live games, memory caches, Discord posts, uploaded Gist contents, server logs and provider-held copies are not included.",
                 "Email turtybot@gmail.com to request review of additional records."));
+        exported.put("optionalDataOptOut", !read(PrivacyPreferences.COLLECTION, id("_id", userId)).isEmpty());
         var records = new Document();
         for (var entry : new TreeMap<>(OWNED).entrySet()) {
             records.put(entry.getKey(), read(entry.getKey(), id(entry.getValue(), userId)).stream()
@@ -132,6 +145,13 @@ public final class PrivacyDataService {
         records.put("privacyRequests", read("privacyRequests", id("user", userId)).stream()
             .map(document -> select(document, "_id", "createdAt", "status", "automaticCompletedAt", "manualReview"))
             .toList());
+        records.put("gistUploads", read(TrackedGistService.COLLECTION, TrackedGistService.userFilter(userId)).stream()
+            .map(document -> select(document, "_id", "gistId", "guild", "channel", "message", "createdAt", "state")
+                .append("sourceAuthor", isUser(document.get("author"), userId))
+                .append("requestedByYou", isUser(document.get("requester"), userId)))
+            .toList());
+        records.put("retentionActivity", read(RetentionActivity.COLLECTION, id("_id", userId)).stream()
+            .map(document -> select(document, "lastActiveAt")).toList());
         exported.put("records", records);
         checkSize(exported);
         byte[] json = exported.toJson().getBytes(StandardCharsets.UTF_8);
@@ -162,6 +182,12 @@ public final class PrivacyDataService {
             .append("manualReview", MANUAL_REVIEW);
         database.getCollection("privacyRequests").insertOne(request);
         try {
+            PrivacyPreferences.setOptedOut(database, userId, true);
+        } catch (RuntimeException exception) {
+            recordFailure(requestId, "persisting the optional-data opt-out");
+            throw exception;
+        }
+        try {
             List<Document> references = new ArrayList<>();
             for (String name : List.of("starboard", "suggestions", "stickyMessages", "quotes", "modmailTickets")) {
                 String userField = name.equals("stickyMessages") ? "owner" : "user";
@@ -169,6 +195,10 @@ public final class PrivacyDataService {
                     references.add(select(record, "guild", "channel", "message", "starboardMessage", "postedMessage",
                         "ticketNumber").append("collection", name));
                 }
+            }
+            for (Document record : read(TrackedGistService.COLLECTION, TrackedGistService.userFilter(userId))) {
+                references.add(select(record, "gistId", "guild", "channel", "message")
+                    .append("trackingId", record.get("_id")).append("collection", TrackedGistService.COLLECTION));
             }
 
             collection("privacyRequests").updateOne(Filters.eq("_id", requestId),
@@ -180,10 +210,22 @@ public final class PrivacyDataService {
 
         List<String> failed = new ArrayList<>();
         long changed = 0;
+        long gistsDeleted = 0;
         try {
             runtimeCleanup.accept(userId);
         } catch (RuntimeException exception) {
             failed.add("memory caches or scheduled reminders");
+        }
+
+        try {
+            TrackedGistService.CleanupResult result = gists.deleteUser(userId);
+            changed += result.recordsRemoved();
+            gistsDeleted = result.gistsDeleted();
+            if (!result.failedUploads().isEmpty()) {
+                failed.add("tracked GitHub Gists");
+            }
+        } catch (RuntimeException exception) {
+            failed.add("tracked GitHub Gists");
         }
 
         try {
@@ -206,11 +248,11 @@ public final class PrivacyDataService {
             }
         }
 
-        for (String name : List.of("reports", "dashboardSessions")) {
+        for (String name : List.of("reports", "dashboardSessions", RetentionActivity.COLLECTION)) {
             try {
                 Bson filter = name.equals("reports")
                     ? Filters.or(id("reported", userId), id("reporter", userId))
-                    : id("user.id", userId);
+                    : id(name.equals(RetentionActivity.COLLECTION) ? "_id" : "user.id", userId);
                 changed += collection(name).deleteMany(filter).getDeletedCount();
             } catch (RuntimeException exception) {
                 failed.add(name);
@@ -229,9 +271,10 @@ public final class PrivacyDataService {
 
         String status = failed.isEmpty() ? "manual_review" : "partial_failure";
         var update = new Document("status", status).append("failedSteps", failed)
-            .append("automaticCompletedAt", new Date()).append("recordsChanged", changed);
+            .append("automaticCompletedAt", new Date()).append("recordsChanged", changed)
+            .append("gistsDeleted", gistsDeleted);
         collection("privacyRequests").updateOne(Filters.eq("_id", requestId), new Document("$set", update));
-        return new DeletionResult(requestId, changed, List.copyOf(failed));
+        return new DeletionResult(requestId, changed, List.copyOf(failed), gistsDeleted);
     }
 
     public void recordFailure(String requestId, String step) {
@@ -466,7 +509,10 @@ public final class PrivacyDataService {
         return selected;
     }
 
-    public record DeletionResult(String requestId, long recordsChanged, List<String> failedSteps) {
+    public record DeletionResult(String requestId, long recordsChanged, List<String> failedSteps, long gistsDeleted) {
+        public DeletionResult(String requestId, long recordsChanged, List<String> failedSteps) {
+            this(requestId, recordsChanged, failedSteps, 0);
+        }
     }
 
     public static final class ExportTooLargeException extends RuntimeException {
