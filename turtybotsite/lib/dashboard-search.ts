@@ -96,9 +96,9 @@ export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
         terms: ["enable economy", "enable donations", "currency", "default balance", "income tax"]
     },
     {
-        label: "NSFW",
+        label: "Artist image filter",
         href: guildId => `/dashboard/${guildId}/nsfw`,
-        terms: ["nsfw channels", "artist nsfw filter"]
+        terms: ["artist nsfw filter", "image safety", "art cache"]
     },
     {
         label: "Levelling",

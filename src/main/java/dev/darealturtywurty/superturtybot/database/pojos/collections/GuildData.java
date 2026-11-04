@@ -46,7 +46,6 @@ public class GuildData {
     private long modLogging;
     private long suggestions;
     private String optInChannels;
-    private String nsfwChannels;
     private long birthdayChannel;
     private long welcomeChannel;
     private long collectorChannel;
@@ -178,7 +177,6 @@ public class GuildData {
         this.modLogging = 0L;
         this.suggestions = 0L;
         this.optInChannels = "";
-        this.nsfwChannels = "";
         this.birthdayChannel = 0L;
         this.welcomeChannel = 0L;
         this.collectorChannel = 0L;

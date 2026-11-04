@@ -404,7 +404,6 @@ export interface DashboardChatRevivalSettings {
 }
 
 export interface DashboardNsfwSettings {
-    nsfwChannelIds: string[];
     artistNsfwFilterEnabled: boolean;
 }
 

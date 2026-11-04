@@ -1,7 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.core;
 
 import dev.darealturtywurty.superturtybot.Environment;
-import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
 import dev.darealturtywurty.superturtybot.core.command.CommandCategory;
 import dev.darealturtywurty.superturtybot.core.command.CommandHook;
 import dev.darealturtywurty.superturtybot.core.command.CoreCommand;
@@ -71,12 +70,6 @@ public class HelpCommand extends CoreCommand {
 
         final List<String> commands = CommandHook.INSTANCE.getCommands().stream()
             .filter(cmd -> cmd.getName().contains(term))
-            .filter(cmd -> {
-                if (!event.isFromGuild() || cmd.getCategory() != CommandCategory.NSFW)
-                    return true;
-
-                return NSFWCommand.isValidChannel(event.getChannel());
-            })
             .limit(25)
             .map(CoreCommand::getName)
             .toList();
@@ -133,7 +126,6 @@ public class HelpCommand extends CoreCommand {
         embed.addField("How To Use: ", cmd.getHowToUse(), false);
         embed.addField("Command Access: ", cmd.getAccess(), false);
         embed.addField("Is Server Only: ", StringUtils.trueFalseToYesNo(cmd.isServerOnly()), false);
-        embed.addField("Is NSFW: ", StringUtils.trueFalseToYesNo(cmd.getCategory() == CommandCategory.NSFW), false);
     }
 
     private static void setAuthor(

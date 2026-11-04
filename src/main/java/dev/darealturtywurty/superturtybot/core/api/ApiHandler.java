@@ -937,27 +937,6 @@ public class ApiHandler {
         }
     }
 
-    public static Either<Pornstar, HttpStatus> getPornstar() {
-        try (Response response = makeRequest(
-            "nsfw/pornstar?apiKey=%s".formatted(Environment.INSTANCE.turtyApiKey().get()))) {
-            if (response.code() != HttpStatus.OK.getCode())
-                return Either.right(HttpStatus.forStatus(response.code()));
-
-            ResponseBody body = response.body();
-            if (body == null)
-                return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-
-            String json = body.string();
-            if (json.isBlank())
-                return Either.right(HttpStatus.NOT_FOUND);
-
-            return Either.left(Constants.GSON.fromJson(json, Pornstar.class));
-        } catch (IOException exception) {
-            Constants.LOGGER.error("Something went wrong making this request", exception);
-            return Either.right(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     public static Either<WouldYouRather, HttpStatus> getRandomWouldYouRather(WouldYouRatherRequest request) {
         String urlPath = "fun/wyr/random?apiKey=%s&includeNSFW=%s&nsfw=%s"
             .formatted(Environment.INSTANCE.turtyApiKey().get(), request.isIncludeNsfw(), request.isNsfw());

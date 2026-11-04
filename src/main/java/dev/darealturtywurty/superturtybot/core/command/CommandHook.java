@@ -25,9 +25,6 @@ import dev.darealturtywurty.superturtybot.commands.moderation.warnings.ClearWarn
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.RemoveWarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarnCommand;
 import dev.darealturtywurty.superturtybot.commands.moderation.warnings.WarningsCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.GuessSexPositionCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
-import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWSmashOrPassCommand;
 import dev.darealturtywurty.superturtybot.commands.test.TestCommand;
 import dev.darealturtywurty.superturtybot.commands.util.*;
 import dev.darealturtywurty.superturtybot.commands.util.minecraft.MappingsCommand;
@@ -386,11 +383,6 @@ public class CommandHook extends ListenerAdapter {
         commands.add(new RegisterCountingCommand());
         commands.add(new ReportCommand());
         commands.add(new ReportsCommand());
-
-        // NSFW
-        commands.add(new NSFWCommand());
-        commands.add(new GuessSexPositionCommand());
-        commands.add(new NSFWSmashOrPassCommand());
 
         // Image
         commands.add(new HttpCatCommand());

@@ -196,7 +196,6 @@ export default async function GuildOverviewPage({
     const xpBoostRoleCount = readList(config, "xp_boosted_roles").length;
     const showcaseChannelCount = readList(config, "showcase_channels").length;
     const inviteWhitelistCount = readList(config, "discord_invite_whitelist_channels").length;
-    const nsfwChannelCount = readList(config, "nsfw_channels").length;
     const welcomeChannel = readText(config, "welcome_channel");
     const birthdayChannel = readText(config, "birthday_channel");
     const suggestionsChannel = readText(config, "suggestions");
@@ -304,11 +303,11 @@ export default async function GuildOverviewPage({
             detail: `${levellingRoleCount} level roles · ${disabledLevellingCount} disabled channels · boosts ${xpBoostChannelCount}/${xpBoostRoleCount}`
         },
         {
-            title: "NSFW",
+            title: "Artist image filter",
             href: `/dashboard/${guildId}/nsfw`,
-            status: nsfwChannelCount > 0 || Boolean(readBoolean(config, "artist_nsfw_filter_enabled")) ? "Ready" : "Missing",
-            ready: nsfwChannelCount > 0 || Boolean(readBoolean(config, "artist_nsfw_filter_enabled")),
-            detail: `${nsfwChannelCount} NSFW channels · artist filter ${formatStatus(readBoolean(config, "artist_nsfw_filter_enabled"))}`
+            status: readBoolean(config, "artist_nsfw_filter_enabled") ? "Ready" : "Disabled",
+            ready: Boolean(readBoolean(config, "artist_nsfw_filter_enabled")),
+            detail: `Artist filter ${formatStatus(readBoolean(config, "artist_nsfw_filter_enabled"))}`
         },
         {
             title: "Automod",

@@ -225,18 +225,6 @@ public class GuildConfigRegistry {
                     return true;
                 }).build());
 
-        GUILD_CONFIG_OPTIONS.register("nsfw_channels",
-            new GuildConfigOption.Builder().dataType(DataType.STRING).serializer(GuildData::setNsfwChannels)
-                .valueFromConfig(GuildData::getNsfwChannels).validator((event, value) -> {
-                    final String[] channels = value.split("[ ;]");
-                    for (final String channelStr : channels) {
-                        if (!Validators.TEXT_CHANNEL_VALIDATOR.test(event, channelStr))
-                            return false;
-                    }
-
-                    return true;
-                }).build());
-
         GUILD_CONFIG_OPTIONS.register(
             "warnings_moderator_only", new GuildConfigOption.Builder().dataType(DataType.BOOLEAN).serializer(
                 (config, value) -> config.setWarningsModeratorOnly(Boolean.parseBoolean(value))).valueFromConfig(

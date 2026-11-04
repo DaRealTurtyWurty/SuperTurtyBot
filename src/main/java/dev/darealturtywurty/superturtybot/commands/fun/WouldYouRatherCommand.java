@@ -1,6 +1,6 @@
 package dev.darealturtywurty.superturtybot.commands.fun;
 
-import dev.darealturtywurty.superturtybot.commands.nsfw.NSFWCommand;
+import dev.darealturtywurty.superturtybot.core.util.discord.NSFWUtility;
 import dev.darealturtywurty.superturtybot.core.api.ApiHandler;
 import dev.darealturtywurty.superturtybot.core.api.pojo.WouldYouRather;
 import dev.darealturtywurty.superturtybot.core.api.request.WouldYouRatherRequest;
@@ -68,7 +68,7 @@ public class WouldYouRatherCommand extends CoreCommand {
         boolean nsfw = event.getOption("nsfw", false, OptionMapping::getAsBoolean);
         boolean includeNsfw = event.getOption("include-nsfw", true, OptionMapping::getAsBoolean);
 
-        if (nsfw && !NSFWCommand.isValidChannel(event.getChannel())) {
+        if (nsfw && !NSFWUtility.isValidChannel(event.getChannel())) {
             event.getHook().editOriginal("❌ This command can only be used in NSFW channels!").queue();
             return;
         }

@@ -10,7 +10,6 @@ public interface CommandCategory {
     CommandCategory UTILITY = create("Utility", "⚒️");
     CommandCategory FUN = create("Fun", "😂");
     CommandCategory MODERATION = create("Moderation", "⚖");
-    CommandCategory NSFW = create("NSFW", "🥵", true);
     CommandCategory LEVELLING = create("Levelling", "🔝");
     CommandCategory MINIGAMES = create("Minigames", "🎮");
     CommandCategory ECONOMY = create("Economy", "💰");
@@ -19,10 +18,6 @@ public interface CommandCategory {
 
     @NotNull
     String getName();
-
-    default boolean isNSFW() {
-        return false;
-    }
 
     @Nullable
     static CommandCategory byName(String name) {
@@ -40,28 +35,6 @@ public interface CommandCategory {
             @Override
             public @NotNull String getName() {
                 return name;
-            }
-        };
-
-        CommandHook.getCategories().add(category);
-        return category;
-    }
-
-    static CommandCategory create(String name, String emoji, boolean isNSFW) {
-        final var category = new CommandCategory() {
-            @Override
-            public String getEmoji() {
-                return emoji;
-            }
-
-            @Override
-            public @NotNull String getName() {
-                return name;
-            }
-
-            @Override
-            public boolean isNSFW() {
-                return isNSFW;
             }
         };
 

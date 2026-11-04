@@ -1,17 +1,13 @@
 package dev.darealturtywurty.superturtybot.dashboard.service.nsfw;
 
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import dev.darealturtywurty.superturtybot.dashboard.http.DashboardApiException;
 import dev.darealturtywurty.superturtybot.database.Database;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.GuildData;
 import io.javalin.http.HttpStatus;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
 
 public final class NsfwSettingsService {
     private final JDA jda;
@@ -35,54 +31,13 @@ public final class NsfwSettingsService {
             throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_nsfw_settings",
                 "The NSFW settings payload was missing.");
 
-        List<String> nsfwChannelIds = normalizeSnowflakes(request.getNsfwChannelIds());
-        validateRequest(guild, nsfwChannelIds);
-
-        GuildData guildData = GuildData.getOrCreateGuildData(guildId);
-        guildData.setNsfwChannels(String.join(" ", nsfwChannelIds));
-        guildData.setArtistNsfwFilterEnabled(request.isArtistNsfwFilterEnabled());
-
-        Database.getDatabase().guildData.replaceOne(Filters.eq("guild", guildId), guildData);
-        return toResponse(guildData);
+        GuildData.getOrCreateGuildData(guildId);
+        Database.getDatabase().guildData.updateOne(Filters.eq("guild", guildId),
+            Updates.set("artistNsfwFilterEnabled", request.isArtistNsfwFilterEnabled()));
+        return new NsfwSettingsResponse(request.isArtistNsfwFilterEnabled());
     }
 
     private static NsfwSettingsResponse toResponse(GuildData guildData) {
-        return new NsfwSettingsResponse(
-            GuildData.getLongs(guildData.getNsfwChannels()).stream().map(String::valueOf).toList(),
-            guildData.isArtistNsfwFilterEnabled());
-    }
-
-    private static void validateRequest(Guild guild, List<String> nsfwChannelIds) {
-        for (String channelId : nsfwChannelIds) {
-            TextChannel channel = guild.getTextChannelById(channelId);
-            if (channel == null)
-                throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_nsfw_channel",
-                    "One or more NSFW channels were not valid text channels in this guild.");
-        }
-    }
-
-    private static List<String> normalizeSnowflakes(List<String> values) {
-        if (values == null || values.isEmpty())
-            return List.of();
-
-        List<String> normalized = new ArrayList<>();
-        for (String value : values) {
-            String trimmed = value == null ? "" : value.trim();
-            if (trimmed.isEmpty())
-                continue;
-
-            try {
-                long parsed = Long.parseLong(trimmed);
-                if (parsed <= 0L)
-                    throw new NumberFormatException("Snowflake ID must be positive.");
-
-                normalized.add(Long.toString(parsed));
-            } catch (NumberFormatException exception) {
-                throw new DashboardApiException(HttpStatus.BAD_REQUEST, "invalid_snowflake_id",
-                    "One of the supplied IDs was not a valid Discord snowflake.");
-            }
-        }
-
-        return new ArrayList<>(new LinkedHashSet<>(normalized));
+        return new NsfwSettingsResponse(guildData.isArtistNsfwFilterEnabled());
     }
 }

@@ -290,10 +290,9 @@ const NAV_SECTIONS: SidebarSection[] = [
                 ]
             },
             {
-                label: "NSFW",
+                label: "Artist image filter",
                 href: (guildId: string) => `/dashboard/${guildId}/nsfw`,
                 options: [
-                    {label: "NSFW Channels", fragment: "nsfw-channels"},
                     {label: "Artist NSFW Filter", fragment: "artist-nsfw-filter"}
                 ]
             },

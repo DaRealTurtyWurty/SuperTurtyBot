@@ -3,7 +3,6 @@
 import type {FormEvent} from "react";
 import {useState, useTransition} from "react";
 import {useDashboardUnsavedChanges} from "@/components/DashboardNavigationGuard";
-import GuildChannelSelect from "@/components/GuildChannelSelect";
 import type {DashboardNsfwSettings} from "@/lib/dashboard-api";
 
 interface NsfwSettingsFormProps {
@@ -11,21 +10,12 @@ interface NsfwSettingsFormProps {
     initialSettings: DashboardNsfwSettings;
 }
 
-const ALLOWED_CHANNEL_TYPES = ["text"];
-
 export default function NsfwSettingsForm({guildId, initialSettings}: NsfwSettingsFormProps) {
     const [settings, setSettings] = useState(initialSettings);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const {markSaved} = useDashboardUnsavedChanges(settings);
-
-    function updateChannels(nsfwChannelIds: string[]) {
-        setSettings(current => ({
-            ...current,
-            nsfwChannelIds
-        }));
-    }
 
     function updateBoolean(artistNsfwFilterEnabled: boolean) {
         setSettings(current => ({
@@ -46,39 +36,24 @@ export default function NsfwSettingsForm({guildId, initialSettings}: NsfwSetting
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    nsfwChannelIds: settings.nsfwChannelIds,
                     artistNsfwFilterEnabled: settings.artistNsfwFilterEnabled
                 })
             });
 
             if (!response.ok) {
                 const payload = await response.json().catch(() => null) as {message?: string} | null;
-                setError(payload?.message ?? "Failed to save NSFW settings.");
+                setError(payload?.message ?? "Failed to save artist image filter settings.");
                 return;
             }
 
             const updated = await response.json() as DashboardNsfwSettings;
             setSettings(updated);
             markSaved(updated);
-            setSuccess("NSFW settings saved.");
+            setSuccess("Artist image filter settings saved.");
         });
     }
 
     return <form onSubmit={onSubmit} className="space-y-5">
-        <GuildChannelSelect
-            id="nsfw-channels"
-            guildId={guildId}
-            value=""
-            onChange={() => undefined}
-            values={settings.nsfwChannelIds}
-            onValuesChange={updateChannels}
-            multiple
-            allowTypes={ALLOWED_CHANNEL_TYPES}
-            label="NSFW Channels"
-            description="Text channels here can run NSFW commands. Threads follow their parent channel."
-            placeholder="Select channels"
-        />
-
         <label id="artist-nsfw-filter" className="block border border-slate-800/80 bg-slate-950/60 p-5 scroll-mt-24">
             <div className="flex items-center justify-between gap-4">
                 <div>
@@ -109,7 +84,7 @@ export default function NsfwSettingsForm({guildId, initialSettings}: NsfwSetting
                 type="submit"
                 disabled={isPending}
                 className="border border-sky-400 bg-sky-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-60">
-                {isPending ? "Saving..." : "Save NSFW Settings"}
+                {isPending ? "Saving..." : "Save Artist Image Filter"}
             </button>
         </div>
     </form>;

@@ -246,7 +246,6 @@ public final class ServerAuditService {
                 "levelRoles" -> "levelling";
             case "chatRevivalChannel" -> "chat-revival";
             case "optInChannels" -> "opt-in-channels";
-            case "nsfwChannels" -> "nsfw";
             case "discordInviteWhitelistChannels" -> "automod";
             case "autoThreadChannels" -> "threads";
             case "aiChannelWhitelist" -> "ai";
@@ -259,7 +258,6 @@ public final class ServerAuditService {
     private static @NotNull Map<String, String> createChannelLists(GuildData data) {
         Map<String, String> channelLists = new LinkedHashMap<>();
         channelLists.put("optInChannels", data.getOptInChannels());
-        channelLists.put("nsfwChannels", data.getNsfwChannels());
         channelLists.put("discordInviteWhitelistChannels", data.getDiscordInviteWhitelistChannels());
         channelLists.put("showcaseChannels", data.getShowcaseChannels());
         channelLists.put("disabledLevellingChannels", data.getDisabledLevellingChannels());

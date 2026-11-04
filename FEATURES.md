@@ -4,11 +4,11 @@ This file is an inventory of the commands, feature modules, dashboard areas, and
 
 Notes:
 
-- Scanned command count: 133 active registered commands and 2 implemented-but-disabled command classes.
+- Scanned command count: 130 active registered commands and 2 implemented-but-disabled command classes.
 - Active commands are the commands currently added in `CommandHook.createCommands()`.
 - Prefix commands use the configured bot prefix at runtime. This file writes them as `prefix:<name>`.
 - Context commands are Discord message or user context menu commands.
-- A few implemented commands are intentionally listed as disabled because their registration line is commented out.
+- Implemented commands that are not registered are listed separately as disabled.
 
 ## Active Commands
 
@@ -187,17 +187,9 @@ Notes:
 | `/poker` | Slash | Server | Simplified Texas Hold'em against the dealer. Subcommands: `play`, `bet`, `fold`, `howtoplay`. |
 | `/gofish` | Slash | Server | Multiplayer Go Fish. Subcommands: `create`, `howtoplay`, `ask`, `hand`, `status`, `leave`. |
 
-### NSFW
-
-| Command | Type | Scope | What it does |
-| --- | --- | --- | --- |
-| `/nsfw` | Slash | Global | Runs the configured NSFW command group. |
-| `/guesssexposition` | Slash | Global | Tile-reveal guessing game. |
-| `/nsfwsmashorpass` | Slash | Global | NSFW smash-or-pass game. |
-
 ## Implemented But Disabled Commands
 
-These command classes exist, but their `commands.add(...)` lines are commented out in `CommandHook`.
+These command classes exist but are not registered in `CommandHook`.
 
 | Command | Type | Scope | Notes |
 | --- | --- | --- | --- |
@@ -332,7 +324,7 @@ Backend API areas:
 
 Frontend dashboard pages:
 
-- Overview/search, server audit, settings history, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, NSFW, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
+- Overview/search, server audit, settings history, birthday, collectables, welcome, suggestions, quotes, tags, opt-in channels, notifiers, voice channel notifiers, AI, chat revival, threads, misc, counting, economy, artist image filtering, levelling, starboard, reports, warnings, automod, modmail, sticky messages, and logging.
 
 ## Data And Assets
 
