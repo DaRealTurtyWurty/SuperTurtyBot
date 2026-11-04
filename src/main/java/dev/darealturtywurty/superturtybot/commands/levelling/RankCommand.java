@@ -202,7 +202,7 @@ public class RankCommand extends CoreCommand {
         }
     }
 
-    static BufferedImage renderRankCard(
+    private static BufferedImage renderRankCard(
         String name,
         int rank,
         BufferedImage userAvatar,
@@ -350,7 +350,7 @@ public class RankCommand extends CoreCommand {
         return rankCardBuffer;
     }
 
-    static @Nullable BufferedImage readTexture(RankCardItem.Type type, String name) throws IOException {
+    private static @Nullable BufferedImage readTexture(RankCardItem.Type type, String name) throws IOException {
         if (name == null || name.isBlank())
             return null;
         RankCardItem item = RankCardItemRegistry.resolveImage(type, name);

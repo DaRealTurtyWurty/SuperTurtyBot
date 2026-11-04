@@ -134,7 +134,7 @@ public class XPInventoryCommand extends CoreCommand {
         return buffer;
     }
 
-    static void drawItems(Graphics2D graphics, List<String> inventory, RankCard card, Font font) {
+    private static void drawItems(Graphics2D graphics, List<String> inventory, RankCard card, Font font) {
         final List<RankCardItem> items = inventory.stream().distinct()
             .map(RankCardItemRegistry.RANK_CARD_ITEMS::get).filter(Objects::nonNull)
             .sorted(Comparator.comparing(RankCardItem::getName)).toList();
@@ -166,7 +166,7 @@ public class XPInventoryCommand extends CoreCommand {
 
     }
 
-    static BufferedImage createTemplate(Font font) {
+    private static BufferedImage createTemplate(Font font) {
         int columns = 10;
         for (RankCardItem.Type type : RankCardItem.Type.values()) {
             int count = (int) RankCardItemRegistry.RANK_CARD_ITEMS.values().stream()
@@ -174,7 +174,7 @@ public class XPInventoryCommand extends CoreCommand {
             columns = Math.max(columns, count);
         }
         int extraWidth = (columns - 10) * 156;
-        BufferedImage image = new BufferedImage(1820 + extraWidth, 1200, BufferedImage.TYPE_INT_ARGB);
+        var image = new BufferedImage(1820 + extraWidth, 1200, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics.setColor(new Color(44, 62, 78));
@@ -188,13 +188,15 @@ public class XPInventoryCommand extends CoreCommand {
             graphics.setColor(new Color(73, 101, 124));
             graphics.drawRect(62, y, 1694 + extraWidth, 156);
             graphics.drawLine(197, y, 197, y + 156);
-            for (int column = 1; column < columns; column++)
+            for (int column = 1; column < columns; column++) {
                 graphics.drawLine(197 + column * 156, y, 197 + column * 156, y + 156);
+            }
             graphics.setColor(Color.WHITE);
             String label = type.displayName;
             String[] words = label.split(" ");
-            for (int line = 0; line < words.length; line++)
+            for (int line = 0; line < words.length; line++) {
                 graphics.drawString(words[line], 78, y + 62 + line * 28);
+            }
         }
         graphics.dispose();
         return image;

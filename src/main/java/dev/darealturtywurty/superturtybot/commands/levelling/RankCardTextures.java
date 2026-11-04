@@ -59,7 +59,7 @@ public final class RankCardTextures {
         switch (type) {
             case BACKGROUND_IMAGE -> graphics.drawImage(cover(source, 140, 85), 0, 0, null);
             case OUTLINE_IMAGE -> {
-                Area frame = new Area(new RoundRectangle2D.Float(0, 0, 140, 85, 12, 12));
+                var frame = new Area(new RoundRectangle2D.Float(0, 0, 140, 85, 12, 12));
                 frame.subtract(new Area(new RoundRectangle2D.Float(6, 6, 128, 73, 8, 8)));
                 graphics.clip(frame);
                 graphics.drawImage(cover(source, 140, 85), 0, 0, null);
