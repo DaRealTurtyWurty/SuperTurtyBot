@@ -117,6 +117,8 @@ const NAV_SECTIONS: SidebarSection[] = [
         label: "General",
         items: [
             {label: "Overview", href: (guildId: string) => `/dashboard/${guildId}`},
+            {label: "Command explorer", href: (guildId: string) => `/dashboard/${guildId}/commands`,
+                options: ["Commands", "Permissions", "Cooldowns", "Scopes", "Subcommands", "Enable commands", "Disable commands"]},
             {label: "Server audit", href: (guildId: string) => `/dashboard/${guildId}/audit`},
             {label: "Settings history", href: (guildId: string) => `/dashboard/${guildId}/config-history`},
             {

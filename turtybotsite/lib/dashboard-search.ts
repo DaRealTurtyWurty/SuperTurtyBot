@@ -6,6 +6,11 @@ export interface DashboardSearchEntry {
 
 export const DASHBOARD_SEARCH_ENTRIES: DashboardSearchEntry[] = [
     {
+        label: "Command explorer",
+        href: guildId => `/dashboard/${guildId}/commands`,
+        terms: ["commands", "permissions", "cooldowns", "scopes", "subcommands", "enable commands", "disable commands"]
+    },
+    {
         label: "Settings history",
         href: guildId => `/dashboard/${guildId}/config-history`,
         terms: ["config diff", "audit log", "settings changes", "before", "after", "staff changes"]

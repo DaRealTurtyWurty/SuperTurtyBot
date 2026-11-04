@@ -55,3 +55,23 @@ The authenticated `/dashboard/{guildId}/audit` page shows the latest report gene
 Configure `DASHBOARD_SITE_URL` on the bot to this site's public URL so the Discord summary embed can link here. `DASHBOARD_API_URL` on this site still points to the Javalin API.
 
 Run the audit route authorization checks with `node --experimental-vm-modules --test tests/server-audit.test.mjs`.
+
+## Command explorer
+
+Open `/dashboard/{guildId}/commands` or choose **Command explorer** in the sidebar.
+Search command names, descriptions, permissions, or nested subcommands, and filter
+by category, command type, access, scope, and server availability. Open a command
+for its usage, permissions, cooldown, Discord registration contexts, install scopes,
+subcommands, and required/optional arguments.
+
+The bot serves the existing command metadata schema from its running command
+registry through `/api/commands`, using the same generator as root `commands.json`.
+No separate command catalog needs to be maintained or copied into the site image.
+Per-server availability is stored separately in `guildData.disabledCommands` and
+saved immediately using each command's availability switch. Changes require a
+signed-in dashboard session and current Discord Manage Server permission, and are
+recorded in settings history. They apply to slash, prefix, and both context-menu
+entry points, including all subcommands. Commands remain visible in Discord;
+disabled commands reply that they are unavailable in that server. Direct messages
+and existing background features are unaffected. Enabling a command retains its
+normal permissions, privacy checks, cooldown, and module requirements.

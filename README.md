@@ -210,6 +210,19 @@ for the guidance used in this review.
 
 Run `./gradlew generateCommandMetadata` to regenerate [commands.json](commands.json). The normal Gradle `build` task also regenerates it. The JSON is generated from the active `CoreCommand` instances in `CommandHook` and includes command descriptions, categories, access notes, usage, rate limits, scopes, and the Discord registration payloads (including options and subcommands). It does not require a running bot or Discord token.
 
+Each run replaces the entire metadata file, so commands removed from
+`CommandHook.createCommands()` disappear on regeneration.
+
+The dashboard's **Command explorer** (`/dashboard/{guildId}/commands`) uses that same
+metadata generator against the running registry. Staff with current Manage Server
+permission can search and filter commands, inspect their full definitions, and
+enable or disable each command for their server. Availability is saved separately
+in `guildData.disabledCommands`, recorded in settings history, and checked before
+command execution, cooldowns, or quest activity. Disabling a command blocks its
+slash, prefix, context-menu, and subcommand entry points in that server; Discord
+still lists registered commands. Direct messages and background features are
+unaffected. Enabling preserves existing permissions and module settings.
+
 The `/marketplace` command uses MongoDB transactions to transfer listings, items, and money together. Its MongoDB deployment must support transactions (a replica set or sharded cluster).
 
 ## Notifier diagnostics and settings history

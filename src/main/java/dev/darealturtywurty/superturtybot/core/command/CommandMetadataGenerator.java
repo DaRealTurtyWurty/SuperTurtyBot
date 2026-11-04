@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,7 +41,11 @@ public final class CommandMetadataGenerator {
     }
 
     private static String generate() {
-        List<CoreCommand> commands = CommandHook.createCommands().stream()
+        return GSON.toJson(generate(CommandHook.createCommands())) + System.lineSeparator();
+    }
+
+    public static JsonObject generate(Collection<CoreCommand> registeredCommands) {
+        List<CoreCommand> commands = registeredCommands.stream()
             .sorted(Comparator.comparing((CoreCommand command) -> command.getCategory().getName())
                 .thenComparing(CoreCommand::getName))
             .toList();
@@ -52,7 +57,7 @@ public final class CommandMetadataGenerator {
             entries.add(toJson(command));
         }
         root.add("commands", entries);
-        return GSON.toJson(root) + System.lineSeparator();
+        return root;
     }
 
     private static JsonObject toJson(CoreCommand command) {

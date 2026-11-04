@@ -4196,14 +4196,9 @@
               "autocomplete": false,
               "choices": [
                 {
-                  "name": "Minecraft Mobs",
+                  "name": "Rainbow Six Operators",
                   "name_localizations": {},
-                  "value": "minecraft_mobs"
-                },
-                {
-                  "name": "Anime Characters",
-                  "name_localizations": {},
-                  "value": "anime_characters"
+                  "value": "r6_operators"
                 },
                 {
                   "name": "Countries",
@@ -4211,9 +4206,14 @@
                   "value": "countries"
                 },
                 {
-                  "name": "Rainbow Six Operators",
+                  "name": "Anime Characters",
                   "name_localizations": {},
-                  "value": "r6_operators"
+                  "value": "anime_characters"
+                },
+                {
+                  "name": "Minecraft Mobs",
+                  "name_localizations": {},
+                  "value": "minecraft_mobs"
                 }
               ],
               "description": "The collection you want to view",

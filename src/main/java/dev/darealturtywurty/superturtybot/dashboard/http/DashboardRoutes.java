@@ -5,6 +5,7 @@ import dev.darealturtywurty.superturtybot.TurtyBot;
 import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.dashboard.DashboardConfig;
 import dev.darealturtywurty.superturtybot.dashboard.service.audit.ServerAuditDashboardService;
+import dev.darealturtywurty.superturtybot.dashboard.service.commands.CommandSettingsService;
 import dev.darealturtywurty.superturtybot.modules.audit.ConfigHistory;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsRequest;
 import dev.darealturtywurty.superturtybot.dashboard.service.automod.AutomodSettingsService;
@@ -78,6 +79,7 @@ public final class DashboardRoutes {
     private final DashboardConfig config;
     private final JDA jda;
     private final ServerAuditDashboardService auditService = new ServerAuditDashboardService();
+    private final CommandSettingsService commandSettingsService = new CommandSettingsService();
     private final GuildConfigCatalogService catalogService;
     private final GuildSettingsService guildSettingsService;
     private final DashboardSessionService sessionService;
@@ -197,6 +199,15 @@ public final class DashboardRoutes {
             "dashboard_not_found", "The requested dashboard route does not exist."));
 
         app.get("/api/health", this::getHealth);
+        app.get("/api/commands",
+            ctx -> ctx.contentType("application/json").result(this.commandSettingsService.metadata()));
+        app.get("/api/guilds/{guildId}/commands", ctx -> {
+            long guildId = parseGuildId(ctx);
+            this.auditService.requireManager(this.jda, guildId, parseUserIdQuery(ctx));
+            ctx.json(this.commandSettingsService.getSettings(guildId));
+        });
+        app.patch("/api/guilds/{guildId}/commands/{commandName}", ctx -> ctx.json(this.commandSettingsService.update(
+            parseGuildId(ctx), ctx.pathParam("commandName"), ctx.bodyAsClass(CommandSettingsService.Change.class))));
         app.get("/api/guilds/{guildId}/config-history", ctx -> {
             long guildId = parseGuildId(ctx);
             this.auditService.requireManager(this.jda, guildId, parseUserIdQuery(ctx));

@@ -155,7 +155,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.messageCtx())
             return;
 
-        if (rejectPrivacy(event))
+        if (rejectDisabled(event) || rejectPrivacy(event))
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
@@ -177,6 +177,11 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
         if (!this.types.normal())
             return;
+
+        if (event.isFromGuild() && CommandAvailability.isDisabled(event.getGuild().getIdLong(), getName())) {
+            reply(event, "This command is disabled in this server.");
+            return;
+        }
 
         if (PrivacyPreferences.isOptedOut(event.getAuthor().getIdLong())
             && !PrivacyPreferences.isAllowedCommand(getName())) {
@@ -215,7 +220,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getName()) || !this.types.slash())
             return;
 
-        if (rejectPrivacy(event))
+        if (rejectDisabled(event) || rejectPrivacy(event))
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
@@ -250,7 +255,7 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (!event.getName().equalsIgnoreCase(getRichName()) || !this.types.userCtx())
             return;
 
-        if (rejectPrivacy(event))
+        if (rejectDisabled(event) || rejectPrivacy(event))
             return;
 
         if (validateRatelimit(event.getUser().getIdLong(),
@@ -262,6 +267,14 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
     protected void runGuildMessage(MessageReceivedEvent event) {
         // NO-OP
+    }
+
+    private boolean rejectDisabled(GenericCommandInteractionEvent event) {
+        if (event.isFromGuild() && CommandAvailability.isDisabled(event.getGuild().getIdLong(), getName())) {
+            reply(event, "This command is disabled in this server.", false, true);
+            return true;
+        }
+        return false;
     }
 
     private boolean rejectPrivacy(GenericCommandInteractionEvent event) {

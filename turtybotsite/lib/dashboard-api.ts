@@ -1,4 +1,19 @@
 import "server-only";
+import type {CommandCatalog, CommandSettings} from "@/lib/command-metadata";
+
+export async function fetchDashboardCommandCatalog() {
+    return dashboardFetch<CommandCatalog>("/api/commands", {method: "GET"});
+}
+
+export async function fetchDashboardCommandSettings(guildId: string, userId: string) {
+    return dashboardFetch<CommandSettings>(`/api/guilds/${guildId}/commands?userId=${encodeURIComponent(userId)}`, {method: "GET"});
+}
+
+export async function updateDashboardCommand(guildId: string, commandName: string, enabled: boolean) {
+    return dashboardFetch<CommandSettings>(`/api/guilds/${guildId}/commands/${encodeURIComponent(commandName)}`, {
+        method: "PATCH", body: JSON.stringify({enabled})
+    });
+}
 
 export interface DashboardHealthResponse {
     status: string;

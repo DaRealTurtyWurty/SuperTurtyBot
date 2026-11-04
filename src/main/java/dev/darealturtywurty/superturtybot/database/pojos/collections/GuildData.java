@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 @Data
 public class GuildData {
     private long guild;
+    private List<String> disabledCommands = new ArrayList<>();
 
     // Channels
     private long modLogging;

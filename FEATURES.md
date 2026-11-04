@@ -363,7 +363,6 @@ Frontend dashboard pages:
 
 ### Dashboard And Operations
 
-- Full command explorer page: use the existing generated metadata for command lists, permissions, cooldowns, scopes, and subcommands; add per-command enable/disable controls separately.
 - Config history rollback: extend the implemented before/after audit log with validated, permission-checked rollback and conflict handling for settings changed since the selected entry.
 - Dashboard onboarding wizard (priority 3): start with logging, moderation, welcome messages, and a final server audit, then expand to starboard, suggestions, economy, levelling, and modmail.
 - Real-time bot status panel: gateway ping, shard/session state, scheduler status, queue sizes, failing notifiers, and recent exceptions.
