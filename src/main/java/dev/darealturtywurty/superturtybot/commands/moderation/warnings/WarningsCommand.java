@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class WarningsCommand extends CoreCommand {
     public WarningsCommand() {
@@ -104,31 +105,25 @@ public class WarningsCommand extends CoreCommand {
             String expiryLabel = active ? "Active" : "Expired";
 
             int finalIndex = index;
-            event.getJDA().retrieveUserById(warning.getWarner()).queue(warner -> {
+            Consumer<String> addWarning = moderator -> {
                 contents.field("Warn #" + finalIndex,
                     "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
                         expiryLabel,
                         warning.getReason(),
                         warning.getUuid(),
-                        warner.getAsMention(),
+                        moderator,
                         TimeFormat.RELATIVE.format(warning.getWarnedAt())));
 
                 if (finalIndex == warns.size() - 1) {
                     completed.complete(null);
                 }
-            }, error -> {
-                contents.field("Warn #" + finalIndex,
-                    "Status: `%s`\nReason: `%s`\nUUID: `%s`\nModerator: %s\nOccurred: %s".formatted(
-                        expiryLabel,
-                        warning.getReason(),
-                        warning.getUuid(),
-                        "Unknown",
-                        TimeFormat.RELATIVE.format(warning.getWarnedAt())));
-
-                if (finalIndex == warns.size() - 1) {
-                    completed.complete(null);
-                }
-            });
+            };
+            if (warning.getWarner() <= 0L) {
+                addWarning.accept("Deleted account");
+            } else {
+                event.getJDA().retrieveUserById(warning.getWarner()).queue(
+                    warner -> addWarning.accept(warner.getAsMention()), error -> addWarning.accept("Unknown"));
+            }
         }
 
         completed.thenRun(() -> {

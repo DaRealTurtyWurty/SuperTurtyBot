@@ -842,6 +842,68 @@
       ]
     },
     {
+      "name": "privacy",
+      "richName": "privacy",
+      "description": "Read the privacy policy, privately export your records, or request deletion of your data",
+      "category": "Core",
+      "access": "Everyone",
+      "usage": "/privacy info | /privacy export | /privacy delete",
+      "serverOnly": false,
+      "types": {
+        "slash": true,
+        "prefix": false,
+        "messageContext": false,
+        "userContext": false
+      },
+      "rateLimit": {
+        "duration": 5,
+        "unit": "SECONDS"
+      },
+      "registrations": [
+        {
+          "contexts": [
+            "0",
+            "1"
+          ],
+          "description": "Read the privacy policy, privately export your records, or request deletion of your data",
+          "description_localizations": {},
+          "integration_types": [
+            "0"
+          ],
+          "name": "privacy",
+          "name_localizations": {},
+          "nsfw": false,
+          "options": [
+            {
+              "description": "Read how your data is used and how to request access or deletion",
+              "description_localizations": {},
+              "name": "info",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            },
+            {
+              "description": "Download a private ZIP of your stored records across servers",
+              "description_localizations": {},
+              "name": "export",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            },
+            {
+              "description": "Confirm automatic cleanup and request operator review of remaining copies",
+              "description_localizations": {},
+              "name": "delete",
+              "name_localizations": {},
+              "options": [],
+              "type": 1
+            }
+          ],
+          "type": 1
+        }
+      ]
+    },
+    {
       "name": "quest",
       "richName": "Quest",
       "description": "View and manage quests.",
@@ -4118,14 +4180,9 @@
               "autocomplete": false,
               "choices": [
                 {
-                  "name": "Rainbow Six Operators",
+                  "name": "Minecraft Mobs",
                   "name_localizations": {},
-                  "value": "r6_operators"
-                },
-                {
-                  "name": "Countries",
-                  "name_localizations": {},
-                  "value": "countries"
+                  "value": "minecraft_mobs"
                 },
                 {
                   "name": "Anime Characters",
@@ -4133,9 +4190,14 @@
                   "value": "anime_characters"
                 },
                 {
-                  "name": "Minecraft Mobs",
+                  "name": "Countries",
                   "name_localizations": {},
-                  "value": "minecraft_mobs"
+                  "value": "countries"
+                },
+                {
+                  "name": "Rainbow Six Operators",
+                  "name_localizations": {},
+                  "value": "r6_operators"
                 }
               ],
               "description": "The collection you want to view",

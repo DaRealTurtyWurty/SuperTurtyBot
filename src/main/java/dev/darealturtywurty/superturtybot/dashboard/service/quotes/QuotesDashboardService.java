@@ -108,6 +108,9 @@ public final class QuotesDashboardService {
     }
 
     private ResolvedUser resolveUser(long userId) {
+        if (userId <= 0L)
+            return new ResolvedUser("Deleted account", null);
+
         User user = this.jda.getUserById(userId);
         if (user == null)
             return new ResolvedUser("Unknown User", null);

@@ -89,7 +89,6 @@ public final class TempBanManager {
             && !tempBan.getId().isBlank()
             && tempBan.getGuild() != 0L
             && tempBan.getUser() != 0L
-            && tempBan.getModerator() != 0L
             && tempBan.getReason() != null
             && !tempBan.getReason().isBlank()
             && tempBan.getDeleteDays() >= 0
@@ -177,7 +176,7 @@ public final class TempBanManager {
             return;
 
         String target = user != null ? user.getAsMention() : "<@" + tempBan.getUser() + ">";
-        String moderator = "<@" + tempBan.getModerator() + ">";
+        String moderator = tempBan.getModerator() == 0L ? "a deleted account" : "<@" + tempBan.getModerator() + ">";
         BanCommand.log(logging.getValue(),
             target + "'s temporary ban set by " + moderator + " has expired and they have been unbanned!",
             true);

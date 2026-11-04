@@ -37,6 +37,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -97,10 +99,16 @@ public class AIMessageResponder extends ListenerAdapter {
         .maximumWeight(5_000)
         .build();
 
-    private final Map<Long, Integer> tokensUsed = new HashMap<>(); // Map of user ID to tokens used
+    private final Map<Long, Integer> tokensUsed = new ConcurrentHashMap<>(); // Map of user ID to tokens used
 
     public int getTokens(User user) {
         return tokensUsed.getOrDefault(user.getIdLong(), 0);
+    }
+
+    public void forgetUser(long userId) {
+        chatMessages.asMap().entrySet().removeIf(entry -> entry.getValue().stream()
+            .anyMatch(message -> message.userId() == userId));
+        tokensUsed.remove(userId);
     }
 
     public AIMessageResponder() {
@@ -154,7 +162,8 @@ public class AIMessageResponder extends ListenerAdapter {
         }
         tokensUsed.put(userId, tokensUsed.getOrDefault(userId, 0) + tokens);
 
-        List<UserChatMessage> chat = chatMessages.asMap().computeIfAbsent(channelId, k -> new ArrayList<>());
+        List<UserChatMessage> chat = chatMessages.asMap()
+            .computeIfAbsent(channelId, _ -> new CopyOnWriteArrayList<>());
         List<ResponseInputContent> contentParts = new ArrayList<>();
         contentParts.add(ResponseInputContent.ofInputText(ResponseInputText.builder()
             .text("%s: %s".formatted(

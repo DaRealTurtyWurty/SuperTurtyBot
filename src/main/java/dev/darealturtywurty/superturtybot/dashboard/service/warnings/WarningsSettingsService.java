@@ -198,6 +198,9 @@ public final class WarningsSettingsService {
     }
 
     private ResolvedUser resolveUser(Guild guild, long userId) {
+        if (userId <= 0L)
+            return new ResolvedUser("Deleted account", null);
+
         Member member = guild.getMemberById(userId);
         if (member != null)
             return new ResolvedUser(member.getEffectiveName(), member.getEffectiveAvatarUrl());

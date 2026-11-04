@@ -205,6 +205,10 @@ public class Database {
             db.dashboardSessions.createIndex(Indexes.descending("sessionId"), new IndexOptions().unique(true));
             db.dashboardSessions.createIndex(Indexes.descending("expiresAt"),
                 new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
+            db.mongoDatabase.getCollection("privacyRequests").createIndex(
+                Indexes.compoundIndex(Indexes.ascending("user"), Indexes.descending("createdAt")));
+            db.mongoDatabase.getCollection("privacyRequests").createIndex(Indexes.ascending("deleteAfter"),
+                new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
             db.questPlayers.createIndex(Indexes.compoundIndex(guildIndex, userIndex, Indexes.descending("weekStart")),
                 new IndexOptions().unique(true));
             db.questActivities.createIndex(

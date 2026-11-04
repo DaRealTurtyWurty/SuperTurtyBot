@@ -48,12 +48,19 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class LoggingManager extends ListenerAdapter {
     public static final LoggingManager INSTANCE = new LoggingManager();
 
-    private static final Map<Long, List<MessageData>> MESSAGE_CACHE = new HashMap<>();
+    private static final Map<Long, List<MessageData>> MESSAGE_CACHE = new ConcurrentHashMap<>();
+
+    public void forgetUser(long userId) {
+        MESSAGE_CACHE.values().forEach(
+            messages -> messages.removeIf(message -> message.getAuthor() == userId));
+    }
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -79,7 +86,7 @@ public class LoggingManager extends ListenerAdapter {
         final long authorId = event.getAuthor().getIdLong();
         final String message = event.getMessage().getContentRaw();
 
-        MESSAGE_CACHE.computeIfAbsent(channelId, k -> new ArrayList<>())
+        MESSAGE_CACHE.computeIfAbsent(channelId, _ -> new CopyOnWriteArrayList<>())
             .add(new MessageData(messageId, authorId, message));
         if (MESSAGE_CACHE.get(channelId).size() > 100) {
             MESSAGE_CACHE.get(channelId).removeFirst();
@@ -645,7 +652,7 @@ public class LoggingManager extends ListenerAdapter {
         Guild guild = event.getGuild();
         getLogChannelAndValidate(guild, event).ifPresent(channel -> {
             List<MessageData> messages = MESSAGE_CACHE.computeIfAbsent(event.getChannel().getIdLong(),
-                id -> new ArrayList<>());
+                _ -> new CopyOnWriteArrayList<>());
             Optional<MessageData> optional = messages.stream().filter(data -> data.getId() == event.getMessageIdLong())
                 .findFirst();
 

@@ -377,7 +377,7 @@ public final class LevellingManager extends ListenerAdapter {
             .getModifiedCount() > 0 ? item : null;
     }
 
-    static @Nullable RankCardItem chooseReward(List<String> inventory) {
+    private static @Nullable RankCardItem chooseReward(List<String> inventory) {
         WeightedRandomBag<RankCardItem> bag = new WeightedRandomBag<>();
         RankCardItemRegistry.RANK_CARD_ITEMS.values().stream()
             .filter(item -> !inventory.contains(item.getName()))

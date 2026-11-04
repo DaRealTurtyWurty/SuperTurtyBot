@@ -196,11 +196,13 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
         if (validateRatelimit(event.getUser().getIdLong(),
             end -> event.reply("❌ You are being rate-limited! You can use the command again " + end + "!")
                 .setEphemeral(true).queue())) {
-            QuestManager.INSTANCE.recordCommandUsed(
-                event.getGuild(),
-                event.getUser(),
-                getName(),
-                getCategory().getName());
+            if (recordsQuestActivity()) {
+                QuestManager.INSTANCE.recordCommandUsed(
+                    event.getGuild(),
+                    event.getUser(),
+                    getName(),
+                    getCategory().getName());
+            }
 
             String subcommand = event.getSubcommandName();
             if (subcommand == null) {
@@ -232,6 +234,10 @@ public abstract class CoreCommand extends ListenerAdapter implements BotCommand 
 
     protected void runGuildMessage(MessageReceivedEvent event) {
         // NO-OP
+    }
+
+    protected boolean recordsQuestActivity() {
+        return true;
     }
 
     protected void runMessageCtx(MessageContextInteractionEvent event) {

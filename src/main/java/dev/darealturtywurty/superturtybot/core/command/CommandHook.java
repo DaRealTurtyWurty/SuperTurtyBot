@@ -311,6 +311,7 @@ public class CommandHook extends ListenerAdapter {
         final Set<CoreCommand> commands = new HashSet<>();
         // Core
         commands.add(new PingCommand());
+        commands.add(new PrivacyCommand());
         commands.add(new HelpCommand());
         commands.add(new CommandListCommand());
         commands.add(new TagCommand());

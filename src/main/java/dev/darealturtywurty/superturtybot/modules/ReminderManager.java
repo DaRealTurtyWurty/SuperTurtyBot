@@ -105,7 +105,8 @@ public final class ReminderManager {
     }
 
     public static long clearReminders(long userId) {
-        List<Reminder> reminders = getRemindersForUser(userId);
+        List<Reminder> reminders = Database.getDatabase().reminders.find(Filters.eq("user", userId))
+            .into(new ArrayList<>());
         reminders.forEach(reminder -> unschedule(reminder.getId()));
         return Database.getDatabase().reminders.deleteMany(Filters.eq("user", userId)).getDeletedCount();
     }
