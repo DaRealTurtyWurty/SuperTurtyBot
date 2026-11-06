@@ -1,281 +1,401 @@
-If you were in a circus, which character would you be?
-What is the worst advice you have given?
-What is one thing you should never say at a wedding?
-What is the worst pickup line you have ever heard?
-If you could only store one type of food in your pocket, what would you carry?
-What is the worst present you have ever received and why?
-If you were a farm animal, which would you be and why?
-What is the worst first date you have ever been on?
-Have you ever stalked someone on social media?
+What's the best prank you've ever played on someone?
+What’s something outside games that inspires your designs?
+If you could time travel to the past, what era would you choose to live in?
+What's the worst thing one can say on a first date?
+What’s a crafting recipe you’d redesign, and what would you change?
+What's the most daring adventure you'd like to embark on?
+What's the most breathtaking view you've seen from an airplane?
+If you could learn any language instantly, which one would it be?
+Have you ever been stalked on social media?
+What's your favorite sport?
+What’s a self-imposed challenge that made a familiar game fun again?
+What's the most surprising or unexpected thing you've learned about yourself recently?
+What’s something you automated that you’re particularly glad you did?
+What would be the title of your memoire?
+What's your favorite childhood memory?
+What's the most breathtaking natural wonder you'd like to visit?
+If you could visit any fictional world from a book or movie, where would you go?
+What’s a keyboard shortcut you now use without thinking?
+What’s a texture, model, or animation you’ve made that you’d like to show?
 What is the best part about taking a selfie?
-What is your favorite celebrity scandal?
-If you could do anything illegal without getting caught, what would you do?
-What is the weirdest food combination you've ever tried?
-Did you have an imaginary friend? What was his/her name?
-Have you ever had a dream where everyone was in their underwear?
-Who's your favorite comedian?
-Have you ever been on a blind date?
-If you could make up a school subject, what would it be?
-What is your very favorite letter of the alphabet? Why?
-If someone gave you 20 dollars, what would you buy with it?
-If you had a chance to eat dessert for breakfast every day, what dessert would you choose?
-What is the first thing you think about when you wake up in the morning?
-Which animal at the zoo do you like best?
-If you had the opportunity to invent a new ice cream flavor, what would it be?
-What is the silliest thing someone has ever said to you?
-What's your favorite word?
-Would you switch roles with your parent if you had the chance?
-Do you prefer cold weather or hot weather?
-If you never had to eat one vegetable, which would it be?
-What is/was your favorite part about school? Your least favorite?
-If you could be famous, would you want to? Why?
-Who is a celebrity you admire?
-If you could have more friends, would you?
-Where do you want to be ten years from now?
-If you had $100, what would you spend it on?
-If you were to choose one way to be disciplined, what would it be?
-What do you think are the best traits for a person to have?
-Would you ever get a tattoo? What would it be?
-If you could go anywhere in the world, where would you choose and why?
-What is something you wish you could do every day?
-What are the top three things on your bucket list?
-How do you think you will die?
-What is the biggest risk you've ever taken?
-If someone gave you an envelope with your death date inside of it, would you open it?
-What is your idea of the perfect day?
-Do you think your priorities have changed since you were younger?
-What is the most memorable lesson you learned from your parents?
-What is the most difficult thing you've ever done?
-What's something not many people know about you?
-What do you like to cook the most?
-What's your favorite TV show?
-What is your favorite book?
-What's your dream job?
-Do you have any nicknames?
-What talent do you wish you had?
+What's your favorite city you've visited?
+If you could attend any major historical event as an observer, which one would you choose?
+What would you put in a mod designed around exploration rather than combat?
 Where do you see yourself living when you retire?
+What colour combination do you keep coming back to?
+What is the worst pickup line you have ever heard?
+Which Minecraft biome would you most enjoy making a mod for?
+What's the most fascinating aspect of ancient history to you?
+What is the silliest thing you've posted online?
+Have you ever stalked someone on social media?
+What's the most beautiful place in nature you've ever been to?
+Working on anything exciting lately?
 What is your favorite weekend activity?
+What’s a before-and-after comparison from your work that you’d enjoy sharing?
+What was the first job you ever had?
+What bad habits do you wish you could stop?
+What is the worst advice you have given?
+Would you rather be invisible or have X-ray vision?
+Would you rather watch a feature being built from scratch or an existing project being debugged?
+Would you ever get a tattoo? What would it be?
+If you could have a conversation with a famous philosopher, who would it be and what philosophical questions would you explore?
+What is your spirit animal?
+What's the most unique piece of art you've ever created or encountered?
+If you could have any animal as a pet (real or mythical), which one would it be and why?
+How old were you when you had your first job?
+If you could meet any famous archaeologist, who would it be and what historical mysteries would you explore?
+What’s the most frustrating part of setting up a new modding project?
+What is your least favorite chore?
+What's the most intriguing piece of ancient art you've seen?
+How long can you go without checking your phone?
+If you could have a conversation with a famous musician, who would it be and what musical topics would you discuss?
+Do you ever sing in the shower?
+What is the worst present you have ever received and why?
+If you could time travel to the future, what year would you choose and why?
+Have you ever really kept a New Year's resolution?
+If you had to pick one-skydiving, bungee jumping, or scuba diving-which would you do?
+How do you think you will die?
+Who would win in a fight, a robot or a dinosaur?
+What did you work on most recently before opening Discord?
+If you could trade lives with someone for a day, who would it be and why?
+What’s a programming habit you’re trying to improve?
+Where's the most exotic place you've ever been?
+What’s the most misleading error message you’ve encountered?
+What's the most fascinating aspect of space exploration to you?
+What's the most unusual place you've ever visited?
+Do you have any pets?
+What’s a creative limitation that helped you come up with a better idea?
+If you could meet any historical figure and have a conversation, who would it be and what would you discuss?
+If you could live in any fictional universe, which one would it be and why?
+Have you been on any interesting trips lately?
+If your plane was going down, who would you would call?
+If you could acquire any knowledge instantly, what subject would you choose?
+If you could acquire any historical artifact, what would it be and why?
+What's your favorite type of music, and is there a specific song that holds special meaning for you?
+What is the most difficult thing you've ever done?
+If you tried Railroad for ten minutes, what task would you use to judge whether it helped?
+What's the most memorable cultural festival or celebration you've attended?
+If you made a mod containing exactly one block, what would that block do?
+If you could acquire any knowledge about the universe, what cosmic mysteries would you unravel?
+If you could have a superpower, what would it be and how would you use it?
+If we held a short project-sharing session, what would you bring?
+Can you tell when someone is lying?
+What do you think has been the best movie of the year so far?
+What’s a programming question you’d like someone to explain without assuming prior knowledge?
+What’s a community project you’d like to join if someone else helped organise it?
+If you could have a conversation with a famous historian, who would it be and what historical events would you delve into?
+If you could be a character in a video game, which game would you choose and why?
+What’s a project update you’d actually stop scrolling to read?
+Batman or Superman, who would win?
+What’s your ideal way to spend a free hour?
+What’s the smallest test that has saved you from a big headache?
+How would you teach a player a chemistry mechanic through gameplay?
+What’s a resource you find tedious to collect, and how would you make collecting it more interesting?
+What's the most awe-inspiring waterfall you've visited?
+What’s a Minecraft mechanic you appreciate more after trying to code something similar?
+What’s a small tool or script you wrote to save yourself time?
+What’s a memorable moment from playing a game with friends?
+Do you listen to any podcasts? Which is your favorite?
+What's the most impressive historical artifact you've seen in a museum?
+What’s a modded machine you enjoy using because of how it looks or sounds?
+Where would you go on vacation if you had no budget?
+What’s a debugging trick you wish you’d learned earlier?
+Do you have any nicknames?
+If you were to choose one way to be disciplined, what would it be?
+Has this been a busy time for you?
+What’s a game soundtrack you enjoy listening to outside the game?
+What are you working on at the moment? Describe it in one sentence.
+What hobby do you wish you had more time for?
+What's the most thought-provoking documentary you've watched recently?
+What do you think are the best traits for a person to have?
+What's the most inspiring book you've ever read, and how did it impact your life?
+What makes a code example easy for you to follow?
+Have you ever stolen anything?
+What would make you more comfortable posting unfinished work in showcase?
+If you could meet any author, living or deceased, who would it be and what would you discuss?
+What is your favorite book?
+What’s something you’ve built that turned out completely differently from your original plan?
+What’s a question you’d like everyone else in this server to answer?
+What's the most impressive piece of technology you've seen in action?
+What’s something you’ve made that deserves more attention than it got?
+What’s one thing blocking progress on your project right now?
+If you could have a magical ability (besides flying), what would it be?
+If you could have a conversation with a famous author, who would it be and what literary topics would you discuss?
+What is the most memorable lesson you learned from your parents?
+If you could have a conversation with your future self, what would you ask?
+What's the most amazing natural phenomenon you've witnessed?
+Do you like to cook?
+What are the top three things on your bucket list?
+What’s your favourite thing to build in Minecraft when you have no particular goal?
+What is the funniest gift you have ever given?
+What's the most exciting adventure you'd like to go on with friends?
+What's the most captivating wildlife encounter you've had?
+If you could show your past self one thing you’ve made, what would it be?
+What’s your favourite role in a co-op game?
+What's your dream job?
+If you could have a conversation with a renowned chef, who would it be and what culinary topics would you discuss?
+What is the worst first date you have ever been on?
+If you could have dinner with any three people, dead or alive, who would they be and why?
+What's the most incredible phenomenon you've observed in the night sky?
+If someone offered to tell you your future, would you accept it?
+What's your strangest hidden talent?
+What’s one thing you think a good Minecraft tutorial area should teach?
+What’s the first task you’d want a Minecraft modding IDE like Railroad to make easier?
+What’s a game you’d enjoy introducing someone else to?
+If you never had to eat one vegetable, which would it be?
+If you could switch lives with a fictional character for a day, who would it be and why?
+What’s a model that looked simple until you tried making it?
+Who is a celebrity you admire?
+If you could sit down with your 13-year-old self, what would you say?
+If you could have more friends, would you?
+If you could have tea with a fictional character, who would that be?
+If you could meet any influential leader, alive or from history, who would it be and what would you discuss?
+What is one thing you can't live without?
+"Go to bed, you'll feel better in the morning" is the human version of "Did you turn it off and turn it back on again?"
+Which two kinds of mods would you like to see work together more closely?
+If you had $100, what would you spend it on?
+If you had to pick any character in a book, movie, or TV show who is most similar to you, who would you choose? Why?
+Which of your family members are you most like?
+What’s the funniest bug you’ve accidentally created?
+What's the most thrilling adventure you've had while traveling?
+If you could meet any influential scientist, who would it be and what scientific questions would you ask?
+What’s a tool you wish existed for your development workflow?
+What is something you've failed at recently?
+Did you have an imaginary friend? What was his/her name?
+What do you think is the funniest movie ever?
+Maybe plants are really farming us, giving us oxygen until we eventually expire and turn into mulch which they can consume.
+What's the most fun project you've ever worked on?
+What kind of small contribution would you enjoy making: code, textures, testing, documentation, or something else?
+What’s something interesting you learned this week that has nothing to do with your project?
+What feature was surprisingly easy once you tried it?
+What’s a visual detail you added purely because it made you happy?
+What’s an art technique you’d like to learn?
+What's the most interesting dream you've ever had?
+If you had the opportunity to invent a new ice cream flavor, what would it be?
+What's the most fascinating place you've ever read about and would like to visit?
+What would your rock band group be called?
+If you were to remove one social media app from your phone, which would it be and why?
+If you could have a conversation with a famous artist, who would it be and what artistic topics would you discuss?
+Would you want to live on a boat, a mountain or an island?
+What’s a piece of old code you revisited and were pleasantly surprised by?
+What is one thing you should never say at a wedding?
+If you could meet any famous explorer, who would it be and what exploration-related topics would you discuss?
+What’s a hobby outside gaming or programming that you enjoy?
+What is/was your favorite part about school? Your least favorite?
+When you die, what would you want to be reincarnated as?
+What's the most inspiring quote or saying that motivates you?
+Do you think you're an introvert or an extrovert?
+What’s one thing another member has shared or explained that you appreciated?
+What's the most unusual or exotic dish you've ever tried?
+What is the one food you could eat for the rest of your life?
+If you could go anywhere in the world, where would you choose and why?
+What feature took much longer to make than you expected?
+What's the most adventurous thing you've ever done?
+When trying an unfinished tool, what information do you want before downloading it?
+What time period would you travel to?
+What’s a mod feature you wish more people knew about?
+What's your guilty pleasure when it comes to food or TV shows?
+If you could visit any planet in the solar system, which one would it be?
+If you could have a pet from any period in history, what would it be?
+If you could be any age, what age would you choose?
+If you could have any job for a day, purely for the experience, what would it be?
+What’s one feature you’d love to add to Minecraft but haven’t figured out how to make?
+If you could acquire any artistic talent, what type of art would you create?
+Which part of your current project are you most excited to finish?
+If you could live in any era of history, which one would it be and what would you do?
+If you could be an animal, what would it be and why?
+Is a hot dog a sandwich?
+What do you like listening to while coding, drawing, or building?
+Which vanilla Minecraft block has the most untapped potential for a mod?
+When designing something new, do you start with its appearance or what it does?
+If you could only pack one thing for a trip (besides clothing) what would it be?
+What's your plan if there was a zombie apocalypse?
+If you had a chance to eat dessert for breakfast every day, what dessert would you choose?
+If you could be famous, would you want to? Why?
+What's the best piece of advice you've ever received from someone?
+Lawyers hope you get sued, doctors hope you get sick, cops hope you're criminal, mechanics hope you have car trouble, but only a thief wishes prosperity for you.
+What’s your first move when code behaves differently from what you expected?
+Would you rather be really hot or really cold?
+If you could have a conversation with a famous inventor, who would it be and what inventions would you explore?
+What’s one useful thing you’d like TurtyBot to help you find in this server?
+Do you prefer cold weather or hot weather?
+If you could have picked your own name, what would it be?
+What’s a piece of game art that made you stop and look more closely?
+What kind of collectable theme would you enjoy seeing in TurtyBot?
+What's the most captivating archaeological site you've visited?
+What's the most delicious meal you've ever had, and where did you eat it?
+What's the most thrilling adventure activity you've ever participated in?
+When you were growing up, what was your dream job? Is any part of that still true?
+If you could bring one extinct species back to life, which one would it be?
+Be honest. Are you a jealous person?
+If you could travel back in time and witness any historical event, which one would it be?
+If you could have any animal as a sidekick, which one would you choose and why?
+If you could acquire any mathematical skill, what area of mathematics would you excel in?
+If you were a farm animal, which would you be and why?
+Have you ever won an award?
+What makes documentation genuinely helpful to you?
+What’s one thing you’d like feedback on this week?
+If you could have any job in the entertainment industry for a week, what would it be?
+What is one thing you can't live without?
+What's your favorite form of social media?
+How would you make a machine’s purpose obvious without using text?
+What’s a vanilla feature you’d happily build an entire mod around?
+What is the silliest thing someone has ever said to you?
+If you could describe yourself in three words, what would they be?
+What's the most enchanting forest you've explored?
+If you could only store one type of food in your pocket, what would you carry?
+What's the most beautiful piece of architecture you've seen?
+If you could have any job in the world for one week, what would it be?
+If you could acquire any knowledge about the human mind, what psychological mysteries would you uncover?
+What's the most incredible natural phenomenon you've ever witnessed?
+What is the first thing you think about when you wake up in the morning?
+What is the strangest gift you have ever received?
+What is your idea of the perfect day?
+What instrument would you like to play?
+Have you ever been on a blind date?
+For Industria, what sounds most interesting to explore: machines, chemistry, factory design, or something else?
+If you could visit any fictional city, from books or movies, where would you go?
+What’s an unfinished project you still want to return to?
+If you could speak any language fluently, which one would it be and why?
+What’s your sign that it’s time to take a break from debugging?
+What’s something you could show another member how to do in ten minutes?
+What is your very favorite letter of the alphabet? Why?
+What would make an industrial machine satisfying to operate beyond simply producing items?
+If you could do anything illegal without getting caught, what would you do?
+What's the most heartwarming act of kindness you've ever witnessed or experienced?
+What's the most thrilling water-based adventure you've enjoyed?
+If you could meet any famous psychologist, who would it be and what psychological topics would you discuss?
+What’s a sound effect you’d love to create for a game?
+What makes a custom block feel like it belongs in Minecraft?
+If villagers had one new profession, what should it be?
+What’s one thing you’ve made recently that you’re pleased with, however small?
+What’s something a game taught you without you realising at the time?
+What's the most magnificent sunset or sunrise you've witnessed?
+What's the most stunning celestial event you've witnessed?
+If you could give one Minecraft mob a new behaviour, what would it do?
+Do you think your priorities have changed since you were younger?
+What’s a game you keep returning to, and what brings you back?
+How many countries have you been to?
+What's the most breathtaking view you've ever seen from a mountain or hilltop?
+If you could acquire any musical talent, what instrument would you master?
+What's the most impressive skill you wish you could master instantly?
+What's the most unusual or unique hobby you have?
+What’s a project idea you’d enjoy making even if nobody else used it?
+Do you prefer polaroid or digital cameras?
+If you could visit any fictional universe from a movie or TV show, where would you go?
+What's the most unusual job or occupation you've heard of and find intriguing?
+If someone gave you an envelope with your death date inside of it, would you open it?
+What is the biggest risk you've ever taken?
+What's your favorite type of weather and why?
+What's one thing you've won and how did you win it?
+What's your favorite TV show?
+What's the most valuable piece of advice you'd give to your younger self?
+What makes you want to start a fresh Minecraft world?
+What’s a variable or method name you struggled to come up with?
+What's your favorite type of art (e.g., painting, sculpture, photography) and why?
+What’s a game you’d recommend to someone who only has twenty minutes to play?
+If you could only save one item from a house fire, what would it be?
+What’s one thing you check before asking someone for coding help?
+If you could meet any famous mathematician, who would it be and what mathematical concepts would you discuss?
+What's the most remarkable cultural tradition you've observed or been part of?
+What song have you had stuck in your head this week?
+If you could visit any fictional realm from literature, where would you go?
+What is your favorite celebrity scandal?
+What would count as a small win for your project this week?
+What sport do you wish you were perfect at?
+What's one movie you could watch over and over?
+What's the biggest challenge you've taken on this year?
+What’s a tutorial topic you’d like explained through a tiny, complete project?
+What's the most thrilling adventure you've had underwater?
+What's the most challenging goal you've set for yourself, and did you achieve it?
+What talent do you wish you had?
+Do you think there are aliens on other planets?
+What are your thoughts on the British royal family?
+If you could have dinner with a character from a book, who would it be and why?
+If you could have a conversation with a famous athlete, who would it be and what sports-related topics would you discuss?
 Do you have any pet peeves?
 Are you a cat person or a dog person?
-What is the silliest thing you've posted online?
-When you die, what would you want to be reincarnated as?
-Who would you swap lives with for a day?
-What is the strangest gift you have ever received?
-What is the funniest gift you have ever given?
-Would you rather be invisible or have X-ray vision?
-If you could only save one item from a house fire, what would it be?
-What is the one food you could eat for the rest of your life?
-What's one movie you could watch over and over?
-Where's the most exotic place you've ever been?
-If you could have picked your own name, what would it be?
-What time period would you travel to?
-What is one thing you can't live without?
-What is your least favorite chore?
-If you could describe yourself in three words, what would they be?
-What instrument would you like to play?
-Would you want to live on a boat, a mountain or an island?
-If you could be an animal, what would it be and why?
-If you could be any age, what age would you choose?
-What's one thing you've won and how did you win it?
-What was the first job you ever had?
-What's the most fun project you've ever worked on?
-Have you ever won an award?
-How old were you when you had your first job?
-How long can you go without checking your phone?
-Have you ever really kept a New Year's resolution?
-What bad habits do you wish you could stop?
-Have you ever been stalked on social media?
-Can you tell when someone is lying?
-Be honest. Are you a jealous person?
-Do you prefer polaroid or digital cameras?
-If someone offered to tell you your future, would you accept it?
-Have you ever stolen anything?
-If you were to remove one social media app from your phone, which would it be and why?
-If you could have tea with a fictional character, who would that be?
-If you were on death row, what would your last meal be?
-If you could sit down with your 13-year-old self, what would you say?
-If you could only pack one thing for a trip (besides clothing) what would it be?
-What is your spirit animal?
-What would be the title of your memoire?
 What would your theme song be if you had your own show?
-What would you do if you were home alone and the power went out?
-If your plane was going down, who would you would call?
-What would your rock band group be called?
-Batman or Superman, who would win?
-What's the worst thing one can say on a first date?
-Working on anything exciting lately?
-Has this been a busy time for you?
-What are you doing this weekend?
-If you had to pick any character in a book, movie, or TV show who is most similar to you, who would you choose? Why?
-When you were growing up, what was your dream job? Is any part of that still true?
-What's your biggest fear?
-Is there a charitable cause you support?
-If you had to pick one-skydiving, bungee jumping, or scuba diving-which would you do?
-Which of your family members are you most like?
-Do you think there are aliens on other planets?
-Who would win in a fight, a robot or a dinosaur?
 What was your worst fashion disaster?
-What's your plan if there was a zombie apocalypse?
-What's your favorite form of social media?
-What do you think is the best show on Netflix right now?
-Do you listen to any podcasts? Which is your favorite?
-Have you been on any interesting trips lately?
-What do you think has been the best movie of the year so far?
-Do you think you're an introvert or an extrovert?
-What's your strangest hidden talent?
-Where would you go on vacation if you had no budget?
-What is one thing you can't live without?
-How many countries have you been to?
-What's your favorite city you've visited?
-Would you rather travel via plane or boat?
-Would you rather be really hot or really cold?
-What are your thoughts on the British royal family?
+What's something not many people know about you?
 Do you like documentaries? Have you watched any good ones recently?
-What's your favorite sport?
-What sport do you wish you were perfect at?
-Do you have any pets?
-What was the last movie you saw?
-What hobby do you wish you had more time for?
-If you weren't here, what would you be doing?
-Do you like to cook?
-What song have you had stuck in your head this week?
-What is something you've failed at recently?
-What's the biggest challenge you've taken on this year?
-Do you ever sing in the shower?
-What's the best prank you've ever played on someone?
-What do you think is the funniest movie ever?
-What weird conspiracy theory do you believe?
-Is a hot dog a sandwich?
-"Go to bed, you'll feel better in the morning" is the human version of "Did you turn it off and turn it back on again?"
-Maybe plants are really farming us, giving us oxygen until we eventually expire and turn into mulch which they can consume.
-Lawyers hope you get sued, doctors hope you get sick, cops hope you're criminal, mechanics hope you have car trouble, but only a thief wishes prosperity for you.
-If you could travel back in time and witness any historical event, which one would it be?
-What's the most embarrassing thing that has ever happened to you in public?
-If you could have dinner with any three people, dead or alive, who would they be and why?
-What's the most unusual place you've ever visited?
-If you could have a superpower, what would it be and how would you use it?
-What's your favorite childhood memory?
-If you could switch lives with a fictional character for a day, who would it be and why?
-What's the most adventurous thing you've ever done?
-If you could visit any planet in the solar system, which one would it be?
-What's the most interesting dream you've ever had?
-If you could have any job in the world for one week, what would it be?
-What's your guilty pleasure when it comes to food or TV shows?
-If you could time travel to the future, what year would you choose and why?
-What's the most meaningful gift you've ever received?
-If you could speak any language fluently, which one would it be and why?
-What's the best piece of advice you've ever received from someone?
-If you could eliminate one thing from the world, what would it be?
-What's your favorite type of weather and why?
-If you could have a conversation with your future self, what would you ask?
-What's the most valuable lesson you've learned from a mistake?
-If you could live in any fictional universe, which one would it be and why?
-What's the most unusual or unique hobby you have?
-If you could have dinner with a famous historical figure, who would it be and what would you talk about?
-What's the most beautiful place in nature you've ever been to?
-If you could have any animal as a pet (real or mythical), which one would it be and why?
-What's your favorite way to relax and unwind after a long day?
-If you could time travel to the past, what era would you choose to live in?
-What's the most amazing natural phenomenon you've witnessed?
-If you could meet any author, living or deceased, who would it be and what would you discuss?
-What's the most surprising or unexpected thing you've learned about yourself recently?
-If you could have any animal as a sidekick, which one would you choose and why?
-What's the most fascinating place you've ever read about and would like to visit?
-If you could trade lives with someone for a day, who would it be and why?
-What's the most impressive skill you wish you could master instantly?
-If you could live in any era of history, which one would it be and what would you do?
-What's your favorite type of art (e.g., painting, sculpture, photography) and why?
-If you could visit any fictional world from a book or movie, where would you go?
-What's the most delicious meal you've ever had, and where did you eat it?
-If you could be a character in a video game, which game would you choose and why?
-What's the most challenging goal you've set for yourself, and did you achieve it?
-If you could have any job for a day, purely for the experience, what would it be?
-What's the most thought-provoking documentary you've watched recently?
-If you could meet any historical figure and have a conversation, who would it be and what would you discuss?
-What's your favorite type of music, and is there a specific song that holds special meaning for you?
-If you could have dinner with a character from a book, who would it be and why?
-What's the most daring adventure you'd like to embark on?
-If you could witness any natural phenomenon up close, what would it be?
-What's the most heartwarming act of kindness you've ever witnessed or experienced?
-If you could have a magical ability (besides flying), what would it be?
-What's the most valuable piece of advice you'd give to your younger self?
-If you could create a new holiday, what would it be and how would you celebrate it?
-What's the most unusual job or occupation you've heard of and find intriguing?
-If you could visit any fictional city, from books or movies, where would you go?
-What's the most beautiful natural landscape you've seen in person?
-If you could have a conversation with any famous scientist, who would it be and what scientific topic would you discuss?
-What's the most fascinating book you've read recently, and what did you learn from it?
-If you could have a lifetime supply of any food or drink, what would it be?
-What's your favorite way to spend a rainy day?
-If you could instantly acquire a new skill or talent, what would it be?
-What's the most breathtaking view you've ever seen from a mountain or hilltop?
-If you could solve one global issue, what would it be and why?
-What's the most unique piece of art you've ever created or encountered?
-If you could explore any planet in our solar system (excluding Earth), which one would you choose?
-What's the most memorable cultural festival or celebration you've attended?
-If you could have a conversation with a famous artist, who would it be and what artistic topics would you discuss?
-What's the most thrilling adventure you've had while traveling?
-If you could be a character in a classic novel, which one would you choose?
-What's the most inspiring quote or saying that motivates you?
-If you could learn any language instantly, which one would it be?
-What's the most unusual or exotic dish you've ever tried?
-If you could attend any major historical event as an observer, which one would you choose?
-What's the most beautiful piece of architecture you've seen?
-If you could bring one extinct species back to life, which one would it be?
-What's the most thrilling adventure activity you've ever participated in?
-If you could have any job in the entertainment industry for a week, what would it be?
-What's the most breathtaking natural wonder you'd like to visit?
-If you could invent a new technology, what problem would it solve?
-What's the most fascinating scientific discovery you've learned about recently?
-If you could have a conversation with a famous musician, who would it be and what musical topics would you discuss?
-What's the most inspiring book you've ever read, and how did it impact your life?
-If you could have a conversation with an ancient philosopher, who would it be and what philosophical topics would you discuss?
-What's the most delicious dessert you've ever tasted?
-If you could have a pet from any period in history, what would it be?
-What's the most incredible natural phenomenon you've ever witnessed?
-If you could visit any fictional realm from literature, where would you go?
-What's the most impressive historical artifact you've seen in a museum?
-If you could have a conversation with a famous athlete, who would it be and what sports-related topics would you discuss?
-What's the most fascinating aspect of space exploration to you?
-If you could meet any influential leader, alive or from history, who would it be and what would you discuss?
-What's the most awe-inspiring waterfall you've visited?
-If you could have a conversation with a renowned chef, who would it be and what culinary topics would you discuss?
-What's the most exciting adventure you'd like to go on with friends?
-If you could acquire any artistic talent, what type of art would you create?
-What's the most impressive piece of technology you've seen in action?
-If you could visit any fictional universe from a movie or TV show, where would you go?
-What's the most exhilarating outdoor activity you've experienced?
-If you could have a conversation with a famous author, who would it be and what literary topics would you discuss?
-What's the most enchanting forest you've explored?
-If you could acquire any knowledge instantly, what subject would you choose?
-What's the most magnificent sunset or sunrise you've witnessed?
-If you could meet any influential scientist, who would it be and what scientific questions would you ask?
-What's the most captivating wildlife encounter you've had?
-If you could have a conversation with a famous philosopher, who would it be and what philosophical questions would you explore?
-What's the most thrilling water-based adventure you've enjoyed?
-If you could acquire any historical artifact, what would it be and why?
-What's the most fascinating aspect of ancient history to you?
-If you could meet any famous explorer, who would it be and what exploration-related topics would you discuss?
-What's the most breathtaking view you've seen from an airplane?
-If you could have a conversation with a famous historian, who would it be and what historical events would you delve into?
-What's the most awe-inspiring canyon or gorge you've visited?
-If you could acquire any musical talent, what instrument would you master?
-What's the most remarkable cultural tradition you've observed or been part of?
-If you could have a conversation with a famous inventor, who would it be and what inventions would you explore?
-What's the most exciting wildlife safari experience you've had?
-If you could acquire any mathematical skill, what area of mathematics would you excel in?
-What's the most intriguing piece of ancient art you've seen?
-If you could meet any famous mathematician, who would it be and what mathematical concepts would you discuss?
-What's the most stunning celestial event you've witnessed?
-If you could acquire any knowledge about the universe, what cosmic mysteries would you unravel?
-What's the most captivating archaeological site you've visited?
-If you could meet any famous archaeologist, who would it be and what historical mysteries would you explore?
-What's the most thrilling adventure you've had underwater?
+What’s a game mechanic you’d love to borrow for a project of your own?
 If you could acquire any linguistic skill, what language would you become fluent in?
+What's the most embarrassing thing that has ever happened to you in public?
+What’s a real-world object you think would make an interesting Minecraft machine?
+Would you switch roles with your parent if you had the chance?
+What’s the most useful feedback you’ve received on something creative?
+What's the most fascinating scientific discovery you've learned about recently?
+Who would you swap lives with for a day?
+If you could eliminate one thing from the world, what would it be?
+What's the most fascinating book you've read recently, and what did you learn from it?
+If you could instantly acquire a new skill or talent, what would it be?
+Where do you want to be ten years from now?
+What's the most awe-inspiring canyon or gorge you've visited?
+What’s the hardest thing to make recognisable in a 16×16 texture?
+What’s a small animation detail that makes a creature feel alive?
+If you could solve one global issue, what would it be and why?
+If you could have a conversation with an ancient philosopher, who would it be and what philosophical topics would you discuss?
+What do you think is the best show on Netflix right now?
+What’s something you used to copy and paste but now understand?
+What are you doing this weekend?
+What’s a tiny quality-of-life feature you always miss when playing without mods?
+What programming concept finally clicked for you after seeing a good example?
+What originally got you interested in Minecraft modding?
+What’s a Minecraft item you’d give a completely new use?
+What’s your favourite example of a mod making something complicated feel intuitive?
+What is something you wish you could do every day?
+What’s a feature you removed because the project worked better without it?
 What's the most breathtaking view you've seen from a boat?
 If you could have a conversation with a famous linguist, who would it be and what language-related topics would you delve into?
-What's the most incredible phenomenon you've observed in the night sky?
-If you could acquire any knowledge about the human mind, what psychological mysteries would you uncover?
-What's the most enchanting castle or historical fortress you've explored?
-If you could meet any famous psychologist, who would it be and what psychological topics would you discuss?
+What’s a game interface you find especially easy to understand?
+What makes you decide whether a mod belongs in your modpack?
 What's the most thrilling adventure you'd like to go on alone?
+If you could have a conversation with any famous scientist, who would it be and what scientific topic would you discuss?
+What’s a game you enjoy even though you’re not particularly good at it?
+What’s a mistake you made that taught you something useful?
+If you could have dinner with a famous historical figure, who would it be and what would you talk about?
+If you could have a lifetime supply of any food or drink, what would it be?
+If you could witness any natural phenomenon up close, what would it be?
+What’s a small detail that makes a game world feel believable?
+What do you like to cook the most?
+If you weren't here, what would you be doing?
+What would make you comfortable contributing to a community project for the first time?
+What was the last movie you saw?
+Do you prefer starting with a working example or building from a blank project?
+What's the most exhilarating outdoor activity you've experienced?
+Which Minecraft block has your favourite texture?
+What's your biggest fear?
+What's the most exciting wildlife safari experience you've had?
+What weird conspiracy theory do you believe?
+What's your favorite way to spend a rainy day?
+What's the most delicious dessert you've ever tasted?
+What’s the smallest change you’ve made that noticeably improved a project?
+What’s something you understand now that confused you a month ago?
+If you could invent a new technology, what problem would it solve?
+Who's your favorite comedian?
+Which animal at the zoo do you like best?
+If you could create a new holiday, what would it be and how would you celebrate it?
+What's the most enchanting castle or historical fortress you've explored?
+Do you prefer exploring a game without guidance or having a clear objective?
+If you could be a character in a classic novel, which one would you choose?
+What's the most beautiful natural landscape you've seen in person?
+What makes a Minecraft boss enjoyable to fight?
+If you were in a circus, which character would you be?
+What is the weirdest food combination you've ever tried?
+What's your favorite way to relax and unwind after a long day?
+What’s a factory-building task that would be more enjoyable with another player?
+Have you ever had a dream where everyone was in their underwear?
+If you could make up a school subject, what would it be?
+If someone gave you 20 dollars, what would you buy with it?
+What’s a small thing that made your week better?
+If you were on death row, what would your last meal be?
+What's the most meaningful gift you've ever received?
+If you could make one cosmetic item with no gameplay effect, what would it be?
+If you could explore any planet in our solar system (excluding Earth), which one would you choose?
+What would you do if you were home alone and the power went out?
+Is there a charitable cause you support?
+What's your favorite word?
+What's the most valuable lesson you've learned from a mistake?
+Would you rather travel via plane or boat?
+What’s a useful item that could also have a funny unintended use?
