@@ -2,7 +2,7 @@ package dev.darealturtywurty.superturtybot.core.logback;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.LayoutBase;
 import net.dv8tion.jda.api.entities.IMentionable;
@@ -39,13 +39,6 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
 
     private static final boolean JDA_EXISTS;
 
-    /**
-     * The maximum length in characters of a stacktrace printed by this layout. If the stacktrace exceeds this length,
-     * the stacktrace is truncated to this length, and a small snippet is appended with information about the truncated
-     * portion of the stacktrace.
-     */
-    private static final int MAXIMUM_STACKTRACE_LENGTH = 1700;
-
     static {
         var jdaExists = true;
         try {
@@ -76,38 +69,11 @@ public class DiscordLogbackLayout extends LayoutBase<ILoggingEvent> {
         builder.append("**] - ").append(getFormattedMessage(event)).append(CoreConstants.LINE_SEPARATOR);
 
         if (event.getThrowableProxy() != null) {
-            final IThrowableProxy proxy = event.getThrowableProxy();
-            builder.append(proxy.getClassName()).append(": ").append(proxy.getMessage())
-                .append(CoreConstants.LINE_SEPARATOR);
-
-            final StringBuilder stacktrace = buildStacktrace(proxy);
-            String stacktraceCutoff = null;
-            builder.append("Stacktrace: ");
-            if (stacktrace.length() > MAXIMUM_STACKTRACE_LENGTH) {
-                stacktraceCutoff = stacktrace.substring(MAXIMUM_STACKTRACE_LENGTH, stacktrace.length());
-                stacktrace.delete(MAXIMUM_STACKTRACE_LENGTH, stacktrace.length());
-            }
-
-            builder.append(CoreConstants.LINE_SEPARATOR).append("```ansi").append(CoreConstants.LINE_SEPARATOR)
-                .append(stacktrace).append("```");
-
-            if (stacktraceCutoff != null) {
-                builder.append("*Too long to fully display. ").append(stacktraceCutoff.length())
-                    .append(" characters or ").append(stacktraceCutoff.lines().count())
-                    .append(" lines were truncated.*");
-            }
+            builder.append("Stacktrace:").append(CoreConstants.LINE_SEPARATOR)
+                .append("```ansi").append(CoreConstants.LINE_SEPARATOR)
+                .append(ThrowableProxyUtil.asString(event.getThrowableProxy())).append("```");
         }
         return builder.toString();
-    }
-
-    private StringBuilder buildStacktrace(IThrowableProxy exception) {
-        final var builder = new StringBuilder();
-        for (int i = 0; i < exception.getStackTraceElementProxyArray().length; i++) {
-            builder.append("\t ").append(exception.getStackTraceElementProxyArray()[i].toString())
-                .append(CoreConstants.LINE_SEPARATOR);
-        }
-
-        return builder;
     }
 
     /**
