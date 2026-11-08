@@ -227,6 +227,9 @@ The `/marketplace` command uses MongoDB transactions to transfer listings, items
 
 ## Notifier diagnostics and settings history
 
+Steam news snapshots accept both BSON 32-bit and 64-bit integer dates. New writes
+use 64-bit integers; existing snapshots do not need a database migration.
+
 Notifier cards in the dashboard show the last attempted/successful check, last
 confirmed delivery and item, and separate feed, delivery and manual-test errors.
 Refresh diagnostics to load current state and destination permission checks.

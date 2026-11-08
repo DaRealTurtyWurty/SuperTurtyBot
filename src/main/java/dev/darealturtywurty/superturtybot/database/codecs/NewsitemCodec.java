@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.database.codecs;
 
 import com.lukaspradel.steamapi.data.json.appnews.Newsitem;
 import org.bson.BsonReader;
+import org.bson.BsonType;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
@@ -14,7 +15,7 @@ public class NewsitemCodec implements Codec<Newsitem> {
         Newsitem newsitem = new Newsitem()
             .withAuthor(reader.readString("author"))
             .withContents(reader.readString("contents"))
-            .withDate(reader.readInt64("date"))
+            .withDate(readDate(reader))
             .withFeedlabel(reader.readString("feedlabel"))
             .withFeedname(reader.readString("feedname"))
             .withGid(reader.readString("gid"))
@@ -43,5 +44,10 @@ public class NewsitemCodec implements Codec<Newsitem> {
     @Override
     public Class<Newsitem> getEncoderClass() {
         return Newsitem.class;
+    }
+
+    private static long readDate(BsonReader reader) {
+        reader.readName("date");
+        return reader.getCurrentBsonType() == BsonType.INT32 ? reader.readInt32() : reader.readInt64();
     }
 }
