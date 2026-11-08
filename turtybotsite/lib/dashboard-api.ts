@@ -651,42 +651,52 @@ async function readErrorPayload(response: Response) {
 }
 
 async function dashboardFetch<T>(path: string, init?: RequestInit) {
-    const headers = new Headers({...createDashboardHeaders(), ...(init?.headers ?? {})});
+    const headers = new Headers(createDashboardHeaders());
+    new Headers(init?.headers).forEach((value, name) => headers.set(name, value));
     if (path.startsWith("/api/guilds/") && init?.method && init.method !== "GET") {
         const {getCurrentSession} = await import("@/lib/auth");
         const session = await getCurrentSession();
         if (!session) throw new DashboardApiError("Sign in to change server settings.", 401);
         headers.set("X-TurtyBot-Actor-Id", session.user.id);
     }
-    let response: Response;
+    const timeout = AbortSignal.timeout(init?.method && init.method !== "GET" ? 60_000 : 15_000);
     try {
-        response = await fetch(createDashboardApiUrl(path), {
+        const response = await fetch(createDashboardApiUrl(path), {
             ...init,
             headers,
-            cache: "no-store"
+            cache: "no-store",
+            signal: timeout
         });
-    } catch {
+
+        if (!response.ok) {
+            const payload = await readErrorPayload(response);
+            throw new DashboardApiError(
+                payload?.message ?? `Dashboard API request failed with status ${response.status}.`,
+                response.status,
+                payload?.error ?? null
+            );
+        }
+
+        if (response.status === 204) {
+            return undefined as T;
+        }
+
+        return await response.json() as T;
+    } catch (error) {
+        if (isDashboardApiError(error)) throw error;
+        if (timeout.aborted) {
+            throw new DashboardApiError(
+                "The dashboard API took too long to respond. Refresh before retrying; a settings change may have been saved.",
+                504,
+                "dashboard_timeout"
+            );
+        }
         throw new DashboardApiError(
             "The bot is currently offline.",
             503,
             "dashboard_offline"
         );
     }
-
-    if (!response.ok) {
-        const payload = await readErrorPayload(response);
-        throw new DashboardApiError(
-            payload?.message ?? `Dashboard API request failed with status ${response.status}.`,
-            response.status,
-            payload?.error ?? null
-        );
-    }
-
-    if (response.status === 204) {
-        return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
 }
 
 export function isDashboardApiError(error: unknown): error is DashboardApiError {
@@ -919,6 +929,12 @@ export async function createDashboardTag(guildId: string, request: DashboardTagC
     return dashboardFetch<DashboardTagsPageResponse>(`/api/guilds/${guildId}/tags?${searchParams.toString()}`, {
         method: "POST",
         body: JSON.stringify(request)
+    });
+}
+
+export async function fetchDashboardSuggestionCount(guildId: string) {
+    return dashboardFetch<{totalCount: number}>(`/api/guilds/${guildId}/suggestions/count`, {
+        method: "GET"
     });
 }
 

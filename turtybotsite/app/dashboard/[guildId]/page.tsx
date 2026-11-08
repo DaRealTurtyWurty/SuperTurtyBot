@@ -16,7 +16,7 @@ import {
     fetchDashboardNotifiers,
     fetchDashboardOptInChannelsSettings,
     fetchDashboardStickyMessages,
-    fetchDashboardSuggestions,
+    fetchDashboardSuggestionCount,
     fetchDashboardWarnings
 } from "@/lib/dashboard-api";
 import {handleDashboardPageError} from "@/lib/dashboard-offline";
@@ -167,7 +167,7 @@ export default async function GuildOverviewPage({
         fetchDashboardCountingSettings(guildId).catch(() => null),
         fetchDashboardStickyMessages(guildId).catch(() => null),
         fetchDashboardModmailTickets(guildId).catch(() => null),
-        fetchDashboardSuggestions(guildId).catch(() => null),
+        fetchDashboardSuggestionCount(guildId).catch(() => null),
         fetchDashboardOptInChannelsSettings(guildId).catch(() => null),
         fetchDashboardAutomodSettings(guildId).catch(() => null),
         fetchDashboardModmailSettings(guildId).catch(() => null)

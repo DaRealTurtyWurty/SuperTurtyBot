@@ -50,6 +50,11 @@ public final class SuggestionsDashboardService {
         this.jda = jda;
     }
 
+    public long countSuggestions(long guildId) {
+        requireGuild(guildId);
+        return Database.getDatabase().suggestions.countDocuments(Filters.eq("guild", guildId));
+    }
+
     public DashboardSuggestionsPageResponse getSuggestions(long guildId, int page, int pageSize) {
         Guild guild = requireGuild(guildId);
         long totalCount = Database.getDatabase().suggestions.countDocuments(Filters.eq("guild", guild.getIdLong()));

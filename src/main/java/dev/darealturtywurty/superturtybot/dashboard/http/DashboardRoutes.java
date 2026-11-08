@@ -68,6 +68,7 @@ import net.dv8tion.jda.api.JDA;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.Map;
 import java.util.Set;
 
 public final class DashboardRoutes {
@@ -283,6 +284,8 @@ public final class DashboardRoutes {
         app.get("/api/guilds/{guildId}/config/suggestions",
             ctx -> ctx.json(this.suggestionsSettingsService.getSettings(parseGuildId(ctx))));
         app.put("/api/guilds/{guildId}/config/suggestions", this::updateSuggestionsSettings);
+        app.get("/api/guilds/{guildId}/suggestions/count", ctx -> ctx.json(Map.of("totalCount",
+            this.suggestionsDashboardService.countSuggestions(parseGuildId(ctx)))));
         app.get("/api/guilds/{guildId}/suggestions", ctx -> ctx.json(this.suggestionsDashboardService.getSuggestions(
             parseGuildId(ctx),
             parsePositiveIntQuery(ctx, "page", 1),
