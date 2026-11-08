@@ -144,10 +144,12 @@ public class SteamListener {
 
         class Utils {
             private void appendChange(String name, Function<Newsitem, String> str) {
+                String previous = Objects.toString(str.apply(original), "");
+                String updated = Objects.toString(str.apply(current), "");
                 embed.addField(name,
-                    getEmojiForChange(str.apply(original), str.apply(current))
-                        + (!str.apply(original).isBlank() ? " `" + str.apply(original) + "` ->" : "") + " `"
-                        + str.apply(current) + "`\n",
+                    getEmojiForChange(previous, updated)
+                        + (!previous.isBlank() ? " `" + previous + "` ->" : "") + " `"
+                        + updated + "`\n",
                     false);
             }
 
@@ -158,7 +160,7 @@ public class SteamListener {
             }
 
             private boolean compareData(Function<Newsitem, String> str) {
-                return !str.apply(original).equals(str.apply(current));
+                return !Objects.equals(str.apply(original), str.apply(current));
             }
 
             private String getEmojiForChange(String old, String current) {
@@ -178,7 +180,7 @@ public class SteamListener {
         utils.compareAndAdd("URL", Newsitem::getUrl);
         utils.compareAndAdd("Author", Newsitem::getAuthor);
         utils.compareAndAdd("Contents", Newsitem::getContents);
-        utils.compareAndAdd("Has External URL", news -> Boolean.toString(news.getIsExternalUrl()));
+        utils.compareAndAdd("Has External URL", news -> Objects.toString(news.getIsExternalUrl(), ""));
         utils.compareAndAdd("Feed Label", Newsitem::getFeedlabel);
         utils.compareAndAdd("Feed Name", Newsitem::getFeedname);
         utils.compareAndAdd("Group ID", Newsitem::getGid);
@@ -236,7 +238,8 @@ public class SteamListener {
 
         final String name = getGameName(notifier.getAppId()).orElse("undefined");
         final String thumbnailURL = getGameBanner(notifier.getAppId()).orElse(null);
-        changed.setTitle(name, original.getUrl().isBlank() ? null : original.getUrl());
+        String originalUrl = Objects.toString(original.getUrl(), "");
+        changed.setTitle(name, originalUrl.isBlank() ? null : originalUrl);
         changed.setTimestamp(Instant.now());
         changed.setColor(Color.BLUE);
         changed.setThumbnail(thumbnailURL);

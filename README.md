@@ -227,8 +227,11 @@ The `/marketplace` command uses MongoDB transactions to transfer listings, items
 
 ## Notifier diagnostics and settings history
 
-Steam news snapshots accept both BSON 32-bit and 64-bit integer dates. New writes
-use 64-bit integers; existing snapshots do not need a database migration.
+Steam news snapshots accept fields in any order, missing or null fields, extra
+fields, `is_external_url` and legacy `isExternalUrl`/`externalUrl` names, and BSON
+32-bit or 64-bit integer dates. New writes use `is_external_url` and 64-bit integer dates;
+existing snapshots do not need a database migration. Missing article details are
+handled safely when comparing and displaying updates.
 
 Notifier cards in the dashboard show the last attempted/successful check, last
 confirmed delivery and item, and separate feed, delivery and manual-test errors.
