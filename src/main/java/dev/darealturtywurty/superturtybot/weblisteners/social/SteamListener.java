@@ -40,6 +40,7 @@ public class SteamListener {
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static SteamWebApiClient CLIENT;
     private static final String APP_DETAILS_URL = "https://store.steampowered.com/api/appdetails?appids=%d";
+    private static final String UPDATE_DESCRIPTION = "🟩 -> Added\n🟨 -> Modified\n🟥 -> Removed";
 
     static {
         Environment.INSTANCE.steamKey().ifPresentOrElse(
@@ -141,16 +142,15 @@ public class SteamListener {
 
     private static EmbedBuilder getFormattedChanges(Newsitem original, Newsitem current) {
         final var embed = new EmbedBuilder();
+        record Change(String name, String previous, String updated) {
+        }
+        List<Change> changes = new ArrayList<>();
 
         class Utils {
             private void appendChange(String name, Function<Newsitem, String> str) {
                 String previous = Objects.toString(str.apply(original), "");
                 String updated = Objects.toString(str.apply(current), "");
-                embed.addField(name,
-                    getEmojiForChange(previous, updated)
-                        + (!previous.isBlank() ? " `" + previous + "` ->" : "") + " `"
-                        + updated + "`\n",
-                    false);
+                changes.add(new Change(name, previous, updated));
             }
 
             private void compareAndAdd(String name, Function<Newsitem, String> str) {
@@ -163,15 +163,6 @@ public class SteamListener {
                 return !Objects.equals(str.apply(original), str.apply(current));
             }
 
-            private String getEmojiForChange(String old, String current) {
-                if (old.isBlank() && !current.isBlank())
-                    return "🟩";
-
-                if (current.isBlank() && !old.isBlank())
-                    return "🟥";
-
-                return "🟨";
-            }
         }
 
         final var utils = new Utils();
@@ -185,7 +176,52 @@ public class SteamListener {
         utils.compareAndAdd("Feed Name", Newsitem::getFeedname);
         utils.compareAndAdd("Group ID", Newsitem::getGid);
 
+        if (!changes.isEmpty()) {
+            int available = MessageEmbed.EMBED_MAX_LENGTH_BOT - MessageEmbed.TITLE_MAX_LENGTH
+                - UPDATE_DESCRIPTION.length() - changes.stream().mapToInt(change -> change.name().length()).sum();
+            int fieldLimit = Math.min(MessageEmbed.VALUE_MAX_LENGTH, available / changes.size());
+            for (Change change : changes) {
+                embed.addField(change.name(), formatChangeValue(change.previous(), change.updated(), fieldLimit),
+                    false);
+            }
+        }
+
         return embed;
+    }
+
+    private static String formatChangeValue(String previous, String updated, int maxLength) {
+        String emoji = "🟨";
+        if (previous.isBlank() && !updated.isBlank()) {
+            emoji = "🟩";
+        } else if (!previous.isBlank() && updated.isBlank()) {
+            emoji = "🟥";
+        }
+        String prefix = emoji + " `";
+        String suffix = "`\n";
+        if (previous.isBlank())
+            return prefix + truncatePreview(updated, maxLength - prefix.length() - suffix.length()) + suffix;
+
+        String separator = "` -> `";
+        int available = maxLength - prefix.length() - separator.length() - suffix.length();
+        int previousLimit = Math.min(previous.length(), available / 2);
+        int updatedLimit = Math.min(updated.length(), available - previousLimit);
+        previousLimit = Math.min(previous.length(), available - updatedLimit);
+        return prefix + truncatePreview(previous, previousLimit) + separator + truncatePreview(updated, updatedLimit)
+            + suffix;
+    }
+
+    private static String truncatePreview(String value, int maxLength) {
+        if (value.length() <= maxLength)
+            return value;
+        if (maxLength <= 0)
+            return "";
+
+        int end = maxLength - 1;
+        if (end > 0 && Character.isHighSurrogate(value.charAt(end - 1))
+            && Character.isLowSurrogate(value.charAt(end))) {
+            end--;
+        }
+        return value.substring(0, end) + "…";
     }
 
     private static Optional<String> getGameBanner(int appId) {
@@ -236,14 +272,15 @@ public class SteamListener {
         if (channel == null)
             return false;
 
-        final String name = getGameName(notifier.getAppId()).orElse("undefined");
+        final String gameName = getGameName(notifier.getAppId()).filter(value -> !value.isBlank()).orElse("undefined");
+        final String name = truncatePreview(gameName, MessageEmbed.TITLE_MAX_LENGTH);
         final String thumbnailURL = getGameBanner(notifier.getAppId()).orElse(null);
         String originalUrl = Objects.toString(original.getUrl(), "");
         changed.setTitle(name, originalUrl.isBlank() ? null : originalUrl);
         changed.setTimestamp(Instant.now());
         changed.setColor(Color.BLUE);
         changed.setThumbnail(thumbnailURL);
-        changed.setDescription("🟩 -> Added\n🟨 -> Modified\n🟥 -> Removed");
+        changed.setDescription(UPDATE_DESCRIPTION);
         return NotifierDeliverySupport.sendAndWait(
             channel.sendMessage(notifier.getMention() + " Steam news update: **" + name + "**.")
                 .addEmbeds(changed.build()),
