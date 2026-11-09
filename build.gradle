@@ -55,7 +55,7 @@ dependencies {
     implementation "com.github.LowLevelSubmarine:GeniusLyricsAPI:1.0.3"
     implementation "com.github.oshi:oshi-core:6.6.5"
     implementation "io.github.matyrobbrt:curseforgeapi:1.8.0"
-    implementation "net.bramp.ffmpeg:ffmpeg:0.8.0"
+    implementation "net.bramp.ffmpeg:ffmpeg:0.9.2"
     implementation "io.github.fastily:jwiki:1.11.0"
     implementation "com.openai:openai-java:4.41.0"
     implementation "com.knuddels:jtokkit:1.1.0"
