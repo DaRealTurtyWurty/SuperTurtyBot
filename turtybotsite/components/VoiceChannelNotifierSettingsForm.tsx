@@ -259,7 +259,7 @@ export default function VoiceChannelNotifierSettingsForm({
                         onChange={event => setField("message", event.target.value)}
                         disabled={isPending}
                         rows={5}
-                        className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition placeholder:text-slate-500 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                         placeholder={DEFAULT_MESSAGE}
                     />
                 </label>
@@ -324,7 +324,7 @@ export default function VoiceChannelNotifierSettingsForm({
                         value={form.cooldownSeconds}
                         onChange={event => setField("cooldownSeconds", event.target.value)}
                         disabled={isPending}
-                        className="mt-3 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="mt-3 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition placeholder:text-slate-500 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                         placeholder="0"
                     />
                 </label>

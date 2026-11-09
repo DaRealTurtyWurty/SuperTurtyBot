@@ -14,6 +14,15 @@ npm run dev
 
 The site runs on `http://localhost:3003`.
 
+## Styling
+
+The dashboard uses Tailwind CSS 4 through the `@tailwindcss/postcss` plugin.
+`app/globals.css` imports Tailwind and explicitly loads `tailwind.config.ts`, which
+defines the dashboard's theme extensions and source paths. Keep the Tailwind and
+PostCSS plugin versions aligned when upgrading.
+
+Tailwind 4 requires modern browsers: Safari 16.4+, Chrome 111+, or Firefox 128+.
+
 ## Terms of service and privacy policy
 
 The public `/terms` and `/privacy` pages are available without Discord sign-in or

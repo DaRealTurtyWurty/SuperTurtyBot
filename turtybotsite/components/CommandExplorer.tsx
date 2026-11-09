@@ -196,7 +196,7 @@ export default function CommandExplorer({guildId, commands, initialSettings}: Co
         </div> : <div className="divide-y divide-slate-700 border-y border-slate-700">
             {visible.map(command => <article key={command.name} className="flex flex-col gap-4 py-5 xl:flex-row xl:gap-6">
                 <details className="min-w-0 flex-1">
-                    <summary className="cursor-pointer rounded-sm text-sky-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400">
+                    <summary className="cursor-pointer rounded-xs text-sky-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400">
                         <code className="break-all text-lg font-semibold">{command.types.slash ? "/" : command.types.prefix ? "." : ""}{command.name}</code>
                         <span className="ml-3 text-xs text-slate-400">{command.category}</span>
                         <span className="ml-3 text-xs text-slate-300">View details</span>

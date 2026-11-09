@@ -76,7 +76,7 @@ export default function WarningRecordCard({
                     </div>
                     <Link
                         href={`/dashboard/${guildId}/warnings/${warning.uuid}`}
-                        className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 transition hover:border-slate-500 hover:text-white"
+                        className="rounded-sm border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 transition hover:border-slate-500 hover:text-white"
                     >
                         {warning.uuid}
                     </Link>

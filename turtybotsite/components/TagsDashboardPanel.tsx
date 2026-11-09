@@ -123,7 +123,7 @@ export default function TagsDashboardPanel({guildId, initialState}: TagsDashboar
                         onChange={event => setName(event.target.value)}
                         placeholder="Helpful name"
                         maxLength={64}
-                        className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-sky-500"
+                        className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-hidden transition placeholder:text-slate-600 focus:border-sky-500"
                     />
                 </label>
 
@@ -132,7 +132,7 @@ export default function TagsDashboardPanel({guildId, initialState}: TagsDashboar
                     <select
                         value={contentType}
                         onChange={event => setContentType(event.target.value === "embed" ? "embed" : "message")}
-                        className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-500"
+                        className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-hidden transition focus:border-sky-500"
                     >
                         <option value="message">Message</option>
                         <option value="embed">Embed</option>
@@ -150,7 +150,7 @@ export default function TagsDashboardPanel({guildId, initialState}: TagsDashboar
                     placeholder={contentType === "embed" ? "Your saved embed name" : "Tag text"}
                     maxLength={2000}
                     rows={6}
-                    className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-sky-500"
+                    className="w-full border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-hidden transition placeholder:text-slate-600 focus:border-sky-500"
                 />
             </label>
 

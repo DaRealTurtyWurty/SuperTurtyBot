@@ -287,7 +287,7 @@ export default function GuildChannelSelect({
                     setIsOpen(current => !current);
                 }}
                 disabled={disabled || isLoading}
-                className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-hidden transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 <span className="flex min-w-0 items-center gap-2 text-slate-100">
                     {!isLoading && summary.iconType ? <ChannelTypeIcon type={summary.iconType} /> : null}
@@ -316,7 +316,7 @@ export default function GuildChannelSelect({
                         value={searchQuery}
                         onChange={event => setSearchQuery(event.target.value)}
                         placeholder="Search channel"
-                        className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                        className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-hidden transition placeholder:text-slate-500 focus:border-sky-400"
                     />
                 </div>
 

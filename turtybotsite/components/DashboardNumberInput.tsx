@@ -85,7 +85,7 @@ export default function DashboardNumberInput({
             onChange={event => onChange(event.target.value)}
             disabled={disabled}
             placeholder={placeholder}
-            className="dashboard-number-input h-full w-full border border-slate-700 bg-slate-900 px-4 pr-12 text-sm text-white outline-none transition focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="dashboard-number-input h-full w-full border border-slate-700 bg-slate-900 px-4 pr-12 text-sm text-white outline-hidden transition focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <div className="absolute inset-y-0 right-0 flex h-full w-9 flex-col border-l border-slate-700 bg-slate-900">
             <button

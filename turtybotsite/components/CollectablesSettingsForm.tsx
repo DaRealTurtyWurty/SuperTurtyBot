@@ -262,7 +262,7 @@ export default function CollectablesSettingsForm({
                     onChange={event => setCollectionQuery(event.target.value)}
                     onKeyDown={onCollectionSearchKeyDown}
                     placeholder="Search character names"
-                    className="min-w-0 flex-1 border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-400"
+                    className="min-w-0 flex-1 border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-hidden focus:border-sky-400"
                 />
                 <button
                     type="button"
@@ -366,7 +366,7 @@ export default function CollectablesSettingsForm({
                         <div className="mt-4 flex flex-wrap gap-2">
                             {collection.collectables.slice(0, 6).map(collectable => <span
                                 key={collectable.name}
-                                className="rounded border border-slate-800/80 bg-slate-950/50 px-2 py-1 text-sm text-white"
+                                className="rounded-sm border border-slate-800/80 bg-slate-950/50 px-2 py-1 text-sm text-white"
                                 title={collectable.richName}
                             >
                                 <CollectableVisual

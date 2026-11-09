@@ -164,7 +164,7 @@ export default function NotifierManagementPanel({
                     <input
                         value={target}
                         onChange={event => setTarget(event.target.value)}
-                        className="mt-3 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400"
+                        className="mt-3 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition focus:border-sky-400"
                         placeholder={typeInfo.targetPlaceholder ?? ""}
                         required
                     />

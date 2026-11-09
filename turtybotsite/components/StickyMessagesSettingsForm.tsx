@@ -123,7 +123,7 @@ export default function StickyMessagesSettingsForm({guildId, initialSettings}: S
                         value={content}
                         onChange={event => setContent(event.target.value)}
                         rows={7}
-                        className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                        className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition placeholder:text-slate-500 focus:border-sky-400"
                         placeholder="Write the sticky message here..."
                     />
                 </label>

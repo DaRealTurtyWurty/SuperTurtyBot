@@ -27,8 +27,9 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.5",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "tailwindcss": "^4.3.4",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "@tailwindcss/postcss": "4.3.4"
   },
   "engines": {
     "node": "26.x"
