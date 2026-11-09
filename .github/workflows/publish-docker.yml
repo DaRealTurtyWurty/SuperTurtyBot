@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Java
         uses: actions/setup-java@v4.4.0
