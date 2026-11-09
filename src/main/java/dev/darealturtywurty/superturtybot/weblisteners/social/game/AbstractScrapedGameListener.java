@@ -141,11 +141,14 @@ public abstract class AbstractScrapedGameListener<N> {
         boolean changed = false;
         for (int index = articles.size() - 1; index >= 0; index--) {
             ScrapedArticle article = articles.get(index);
-            if (storedArticleIds.contains(article.id()))
+            if (hasStoredArticle(storedArticleIds, article))
                 continue;
 
-            if (!sendUpdate(channel, notifier, article))
+            if (!sendUpdate(channel, notifier, article)) {
+                if (stopAfterDeliveryFailure(article))
+                    break;
                 continue;
+            }
 
             storedArticleIds.add(article.id());
             while (storedArticleIds.size() > STORED_ARTICLE_LIMIT) {
@@ -262,6 +265,14 @@ public abstract class AbstractScrapedGameListener<N> {
 
     protected void customizeEmbed(EmbedBuilder embed, ScrapedArticle article) {
         // NO-OP
+    }
+
+    protected boolean hasStoredArticle(List<String> storedIds, ScrapedArticle article) {
+        return storedIds.contains(article.id());
+    }
+
+    protected boolean stopAfterDeliveryFailure(ScrapedArticle article) {
+        return false;
     }
 
     protected abstract MongoCollection<N> notifierCollection();

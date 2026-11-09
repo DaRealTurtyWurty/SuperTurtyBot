@@ -2,6 +2,7 @@ package dev.darealturtywurty.superturtybot.weblisteners.social.game;
 
 import com.mongodb.client.MongoCollection;
 import dev.darealturtywurty.superturtybot.database.Database;
+import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.RocketLeagueNotifier;
 import dev.darealturtywurty.superturtybot.weblisteners.social.NewsScraperUtils;
 import net.dv8tion.jda.api.JDA;
@@ -9,6 +10,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.time.Instant;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -20,6 +23,8 @@ import java.util.regex.Pattern;
 
 public final class RocketLeagueListener extends AbstractScrapedGameListener<RocketLeagueNotifier> {
     private static final String NEWS_URL = "https://www.rocketleague.com/en/news";
+    private static final String STEAM_NEWS_URL = "https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/"
+        + "?appid=252950&count=100&maxlength=1000&feeds=steam_community_announcements";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d, uuuu", Locale.ENGLISH);
     private static final Pattern DATE_PATTERN = Pattern.compile("\\b[A-Z][a-z]{2} \\d{1,2}, \\d{4}\\b");
     private static final RocketLeagueListener INSTANCE = new RocketLeagueListener();
@@ -88,6 +93,37 @@ public final class RocketLeagueListener extends AbstractScrapedGameListener<Rock
     @Override
     protected String linkSelector() {
         return "a[href*=/news/]";
+    }
+
+    @Override
+    protected List<ScrapedArticle> readRelevantArticles() {
+        try {
+            return super.readRelevantArticles();
+        } catch (RuntimeException websiteFailure) {
+            try {
+                byte[] response = NewsScraperUtils.fetchBytes(STEAM_NEWS_URL,
+                    "https://store.steampowered.com/app/252950/", "Rocket League Steam");
+                List<ScrapedArticle> articles = RocketLeagueSteamNews
+                    .parse(new String(response, StandardCharsets.UTF_8));
+                Constants.LOGGER.warn(
+                    "Rocket League website unavailable; using official Steam announcements, which may omit website-only patches.");
+                return articles;
+            } catch (IOException | RuntimeException steamFailure) {
+                steamFailure.addSuppressed(websiteFailure);
+                throw new IllegalStateException("Rocket League website and official Steam feed were unavailable",
+                    steamFailure);
+            }
+        }
+    }
+
+    @Override
+    protected boolean hasStoredArticle(List<String> storedIds, ScrapedArticle article) {
+        return super.hasStoredArticle(storedIds, article) || RocketLeagueSteamNews.alreadyStored(storedIds, article);
+    }
+
+    @Override
+    protected boolean stopAfterDeliveryFailure(ScrapedArticle article) {
+        return article.id().startsWith("steam:");
     }
 
     @Override
