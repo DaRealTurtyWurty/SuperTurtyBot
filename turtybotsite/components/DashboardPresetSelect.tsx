@@ -72,7 +72,6 @@ export default function DashboardPresetSelect({
 
     useEffect(() => {
         if (isOpen) {
-            setSearchQuery("");
             queueMicrotask(() => searchInputRef.current?.focus());
         }
     }, [isOpen]);
@@ -84,7 +83,10 @@ export default function DashboardPresetSelect({
         <div className="relative mt-4">
             <button
                 type="button"
-                onClick={() => setIsOpen(current => !current)}
+                onClick={() => {
+                    setSearchQuery("");
+                    setIsOpen(current => !current);
+                }}
                 disabled={disabled}
                 className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >

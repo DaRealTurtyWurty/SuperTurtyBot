@@ -658,16 +658,32 @@ function DiscordSpoiler({children}: {children?: ReactNode}) {
     </button>;
 }
 
-export default function ModmailTicketsBrowser({guildId, initialTickets}: ModmailTicketsBrowserProps) {
+export default function ModmailTicketsBrowser(props: ModmailTicketsBrowserProps) {
+    return <GuildModmailTicketsBrowser key={props.guildId} {...props} />;
+}
+
+function GuildModmailTicketsBrowser({guildId, initialTickets}: ModmailTicketsBrowserProps) {
     const [filter, setFilter] = useState<TicketFilter>("all");
     const [tickets, setTickets] = useState<DashboardModmailTicketSummary[]>(initialTickets.tickets);
     const [selectedTicketNumber, setSelectedTicketNumber] = useState<number | null>(initialTickets.tickets[0]?.ticketNumber ?? null);
-    const [detail, setDetail] = useState<DashboardModmailTicketDetail | null>(null);
-    const [mentionLookups, setMentionLookups] = useState<MentionLookups>({channels: {}, roles: {}, members: {}});
-    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [detailResult, setDetailResult] = useState<{
+        ticketNumber: number;
+        detail: DashboardModmailTicketDetail | null;
+        error: string | null;
+    } | null>(null);
+    const [mentionResult, setMentionResult] = useState<{
+        detail: DashboardModmailTicketDetail;
+        lookups: MentionLookups;
+    } | null>(null);
     const [listError, setListError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    const currentDetail = detailResult?.ticketNumber === selectedTicketNumber ? detailResult : null;
+    const detail = currentDetail?.detail ?? null;
+    const error = currentDetail?.error ?? null;
+    const isLoadingDetail = selectedTicketNumber != null && currentDetail === null;
+    const mentionLookups = detail && mentionResult?.detail === detail
+        ? mentionResult.lookups
+        : {channels: {}, roles: {}, members: {}};
 
     const selectedTicket = useMemo(
         () => tickets.find(ticket => ticket.ticketNumber === selectedTicketNumber) ?? null,
@@ -676,8 +692,6 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
 
     useEffect(() => {
         let isCancelled = false;
-
-        setListError(null);
 
         fetch(`/api/dashboard/guilds/${guildId}/modmail/tickets?status=${filter}`, {
             cache: "no-store"
@@ -696,6 +710,7 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
                 }
 
                 setTickets(payload.tickets);
+                setListError(null);
                 setSelectedTicketNumber(current => {
                     if (current && payload.tickets.some(ticket => ticket.ticketNumber === current)) {
                         return current;
@@ -717,14 +732,10 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
 
     useEffect(() => {
         if (selectedTicketNumber == null) {
-            setDetail(null);
             return;
         }
 
         let isCancelled = false;
-        setIsLoadingDetail(true);
-        setError(null);
-
         fetch(`/api/dashboard/guilds/${guildId}/modmail/tickets/${selectedTicketNumber}`, {
             cache: "no-store"
         })
@@ -738,17 +749,16 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
             })
             .then(payload => {
                 if (!isCancelled) {
-                    setDetail(payload);
+                    setDetailResult({ticketNumber: selectedTicketNumber, detail: payload, error: null});
                 }
             })
             .catch(fetchError => {
                 if (!isCancelled) {
-                    setError(fetchError instanceof Error ? fetchError.message : "Failed to load modmail ticket.");
-                }
-            })
-            .finally(() => {
-                if (!isCancelled) {
-                    setIsLoadingDetail(false);
+                    setDetailResult({
+                        ticketNumber: selectedTicketNumber,
+                        detail: null,
+                        error: fetchError instanceof Error ? fetchError.message : "Failed to load modmail ticket."
+                    });
                 }
             });
 
@@ -759,10 +769,10 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
 
     useEffect(() => {
         if (!detail) {
-            setMentionLookups({channels: {}, roles: {}, members: {}});
             return;
         }
 
+        const lookupDetail = detail;
         let isCancelled = false;
         const memberIds = new Set<string>();
         const transcriptSources = [detail.openerMessage, ...detail.transcript.map(entry => entry.content)];
@@ -807,16 +817,19 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
                 return;
             }
 
-            setMentionLookups({
-                channels: Object.fromEntries(channelsPayload.channels.map(channel => [channel.id, `#${channel.name}`])),
-                roles: Object.fromEntries(rolesPayload.roles.map(role => [role.id, `@${role.name}`])),
-                members: Object.fromEntries(memberPayloads.flat().map(member => [member.id, `@${member.displayName}`])),
+            setMentionResult({
+                detail: lookupDetail,
+                lookups: {
+                    channels: Object.fromEntries(channelsPayload.channels.map(channel => [channel.id, `#${channel.name}`])),
+                    roles: Object.fromEntries(rolesPayload.roles.map(role => [role.id, `@${role.name}`])),
+                    members: Object.fromEntries(memberPayloads.flat().map(member => [member.id, `@${member.displayName}`])),
+                }
             });
         }
 
         loadLookups().catch(() => {
             if (!isCancelled) {
-                setMentionLookups({channels: {}, roles: {}, members: {}});
+                setMentionResult(null);
             }
         });
 
@@ -826,6 +839,10 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
     }, [detail, guildId]);
 
     function selectFilter(nextFilter: TicketFilter) {
+        if (nextFilter === filter) {
+            return;
+        }
+        setListError(null);
         startTransition(() => {
             setFilter(nextFilter);
         });
@@ -922,6 +939,11 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
                     <p className="mt-2 text-sm text-slate-200">{selectedTicket.closeReason}</p>
                 </section> : null}
 
+                {isLoadingDetail || isPending ? <p className="text-sm text-slate-400">Loading transcript...</p> : null}
+                {error ? <p className="border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+                    {error}
+                </p> : null}
+
                 {detail ? <section className="space-y-3">
                     <div className="border border-slate-800 bg-slate-900/70 p-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Opener Message</p>
@@ -932,10 +954,6 @@ export default function ModmailTicketsBrowser({guildId, initialTickets}: Modmail
 
                     <div className="space-y-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Transcript</p>
-                        {isLoadingDetail || isPending ? <p className="text-sm text-slate-400">Loading transcript...</p> : null}
-                        {error ? <p className="border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
-                            {error}
-                        </p> : null}
                         {!isLoadingDetail && !error && detail.transcript.length === 0 ? <p className="text-sm text-slate-400">No transcript was archived for this ticket.</p> : null}
                         <div className="space-y-3">
                             {detail.transcript.map(entry => {
