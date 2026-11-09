@@ -4,8 +4,11 @@ This is the Next.js dashboard application for TurtyBot.
 
 ## Running Locally
 
+Use Node.js 26 and npm. The Docker image also runs Node.js 26, matching the
+`@types/node` development dependency.
+
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 

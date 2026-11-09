@@ -6,9 +6,11 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.LeagueNotif
 import dev.darealturtywurty.superturtybot.weblisteners.social.NewsScraperUtils;
 import net.dv8tion.jda.api.JDA;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Document;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,6 +84,11 @@ public final class LeagueListener extends AbstractScrapedGameListener<LeagueNoti
     @Override
     protected String linkSelector() {
         return "a[href*=/news/game-updates/]";
+    }
+
+    @Override
+    protected Optional<List<ScrapedArticle>> readStructuredArticles(Document document) {
+        return RiotNewsListing.parse(document, newsUrl(), this::matchesTitle);
     }
 
     @Override
