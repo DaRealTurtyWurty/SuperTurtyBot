@@ -14,10 +14,12 @@ import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChanne
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,10 +59,20 @@ public abstract class AbstractScrapedGameListener<N> {
 
     protected List<ScrapedArticle> readRelevantArticles() {
         try {
-            Document document = NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
-                request -> GameNewsProxyClient.execute(request, sourceName()));
+            Document document = fetchListingDocument(false);
+            Optional<List<ScrapedArticle>> structured = document == null
+                ? Optional.empty()
+                : readStructuredArticles(document);
+            if (document == null || (structured.isEmpty() && document.select(linkSelector()).isEmpty())) {
+                Constants.LOGGER.warn("{} news listing had no article data; retrying {} directly.", sourceName(),
+                    newsUrl());
+                document = fetchListingDocument(true);
+                structured = document == null ? Optional.empty() : readStructuredArticles(document);
+            }
             if (document == null)
                 throw new IllegalStateException("News listing was unavailable");
+            if (structured.isPresent())
+                return structured.get();
             if (document.select(linkSelector()).isEmpty())
                 throw new IllegalStateException("News listing did not contain the expected article links");
 
@@ -77,8 +89,7 @@ public abstract class AbstractScrapedGameListener<N> {
                     if (listingTitle.isBlank() || !matchesTitle(listingTitle))
                         continue;
 
-                    Document articleDocument = NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName(),
-                        request -> GameNewsProxyClient.execute(request, sourceName()));
+                    Document articleDocument = fetchArticleDocument(url);
 
                     String title = resolveArticleTitle(articleDocument, listingTitle);
                     if (title.isBlank() || !matchesTitle(title))
@@ -97,8 +108,25 @@ public abstract class AbstractScrapedGameListener<N> {
 
             return articles;
         } catch (Exception exception) {
-            throw new IllegalStateException("News listing could not be fetched or parsed", exception);
+            throw new IllegalStateException(sourceName() + " news listing could not be fetched or parsed at "
+                + newsUrl(), exception);
         }
+    }
+
+    protected Document fetchListingDocument(boolean direct) throws IOException {
+        if (direct)
+            return NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName());
+        return NewsScraperUtils.fetchDocument(newsUrl(), listingReferer(), sourceName(),
+            request -> GameNewsProxyClient.execute(request, sourceName()));
+    }
+
+    protected Document fetchArticleDocument(String url) throws IOException {
+        return NewsScraperUtils.fetchDocument(url, newsUrl(), sourceName(),
+            request -> GameNewsProxyClient.execute(request, sourceName()));
+    }
+
+    protected Optional<List<ScrapedArticle>> readStructuredArticles(Document document) {
+        return Optional.empty();
     }
 
     private void handleNotifier(JDA jda, N notifier, List<ScrapedArticle> articles) {

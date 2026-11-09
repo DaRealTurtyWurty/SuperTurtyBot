@@ -232,6 +232,12 @@ The `/marketplace` command uses MongoDB transactions to transfer listings, items
 
 ## Notifier diagnostics and settings history
 
+League of Legends and VALORANT patch feeds can read the first page of Riot's
+embedded article data without rendered article links. Listings with neither
+recognized data nor matching article links are retried directly before failing.
+Errors include the game and URL;
+unrecognized or blocked pages remain failures rather than successful empty checks.
+
 Steam news snapshots accept fields in any order, missing or null fields, extra
 fields, `is_external_url` and legacy `isExternalUrl`/`externalUrl` names, and BSON
 32-bit or 64-bit integer dates. New writes use `is_external_url` and 64-bit integer dates;
