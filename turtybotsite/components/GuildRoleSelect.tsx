@@ -30,15 +30,14 @@ function discordColorToHex(color: number): string {
 }
 
 export function useGuildRoles(guildId: string) {
-    const [roles, setRoles] = useState<DashboardGuildRoleOption[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [result, setResult] = useState<{
+        guildId: string;
+        roles: DashboardGuildRoleOption[];
+        error: string | null;
+    } | null>(null);
 
     useEffect(() => {
         let isCancelled = false;
-
-        setIsLoading(true);
-        setError(null);
 
         fetch(`/api/discord/guilds/${guildId}/roles`, {
             cache: "no-store"
@@ -53,14 +52,16 @@ export function useGuildRoles(guildId: string) {
             })
             .then(payload => {
                 if (!isCancelled) {
-                    setRoles(payload.roles);
-                    setIsLoading(false);
+                    setResult({guildId, roles: payload.roles, error: null});
                 }
             })
             .catch(fetchError => {
                 if (!isCancelled) {
-                    setError(fetchError instanceof Error ? fetchError.message : "Failed to load guild roles.");
-                    setIsLoading(false);
+                    setResult({
+                        guildId,
+                        roles: [],
+                        error: fetchError instanceof Error ? fetchError.message : "Failed to load guild roles."
+                    });
                 }
             });
 
@@ -69,7 +70,12 @@ export function useGuildRoles(guildId: string) {
         };
     }, [guildId]);
 
-    return {roles, isLoading, error};
+    const currentResult = result?.guildId === guildId ? result : null;
+    return {
+        roles: currentResult?.roles ?? [],
+        isLoading: currentResult === null,
+        error: currentResult?.error ?? null
+    };
 }
 
 function formatSummary(
@@ -145,7 +151,6 @@ export default function GuildRoleSelect({
 
     useEffect(() => {
         if (isOpen) {
-            setSearchQuery("");
             queueMicrotask(() => searchInputRef.current?.focus());
         }
     }, [isOpen]);
@@ -170,7 +175,10 @@ export default function GuildRoleSelect({
         <div className="relative mt-4">
             <button
                 type="button"
-                onClick={() => setIsOpen(current => !current)}
+                onClick={() => {
+                    setSearchQuery("");
+                    setIsOpen(current => !current);
+                }}
                 disabled={disabled || isLoading}
                 className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
