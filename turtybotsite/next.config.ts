@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    experimental: {
+        useTypeScriptCli: false
+    },
   /* config options here */
     output: 'standalone',
     images: {
