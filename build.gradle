@@ -69,7 +69,7 @@ dependencies {
     implementation "net.dv8tion:JDA:6.1.1"
 
     implementation "com.github.twitch4j:twitch4j:1.23.0"
-    implementation "com.github.philippheuer.events4j:events4j-handler-reactor:0.12.2"
+    implementation "com.github.philippheuer.events4j:events4j-handler-reactor:0.12.3"
     implementation "com.lukaspradel:steam-web-api:1.9.0"
     implementation "com.apptasticsoftware:rssreader:3.12.0"
     implementation "io.javalin:javalin:6.4.0"
