@@ -136,15 +136,14 @@ function getSummaryState(
 }
 
 export function useGuildChannels(guildId: string) {
-    const [channels, setChannels] = useState<DashboardGuildChannelOption[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [result, setResult] = useState<{
+        guildId: string;
+        channels: DashboardGuildChannelOption[];
+        error: string | null;
+    } | null>(null);
 
     useEffect(() => {
         let isCancelled = false;
-
-        setIsLoading(true);
-        setError(null);
 
         fetch(`/api/discord/guilds/${guildId}/channels`, {
             cache: "no-store"
@@ -159,14 +158,16 @@ export function useGuildChannels(guildId: string) {
             })
             .then(payload => {
                 if (!isCancelled) {
-                    setChannels(payload.channels);
-                    setIsLoading(false);
+                    setResult({guildId, channels: payload.channels, error: null});
                 }
             })
             .catch(fetchError => {
                 if (!isCancelled) {
-                    setError(fetchError instanceof Error ? fetchError.message : "Failed to load guild channels.");
-                    setIsLoading(false);
+                    setResult({
+                        guildId,
+                        channels: [],
+                        error: fetchError instanceof Error ? fetchError.message : "Failed to load guild channels."
+                    });
                 }
             });
 
@@ -175,7 +176,12 @@ export function useGuildChannels(guildId: string) {
         };
     }, [guildId]);
 
-    return {channels, isLoading, error};
+    const currentResult = result?.guildId === guildId ? result : null;
+    return {
+        channels: currentResult?.channels ?? [],
+        isLoading: currentResult === null,
+        error: currentResult?.error ?? null
+    };
 }
 
 export default function GuildChannelSelect({
@@ -246,7 +252,6 @@ export default function GuildChannelSelect({
 
     useEffect(() => {
         if (isOpen) {
-            setSearchQuery("");
             queueMicrotask(() => searchInputRef.current?.focus());
         }
     }, [isOpen]);
@@ -277,7 +282,10 @@ export default function GuildChannelSelect({
         <div className={`relative ${embedded ? "mt-3" : "mt-4"}`}>
             <button
                 type="button"
-                onClick={() => setIsOpen(current => !current)}
+                onClick={() => {
+                    setSearchQuery("");
+                    setIsOpen(current => !current);
+                }}
                 disabled={disabled || isLoading}
                 className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >

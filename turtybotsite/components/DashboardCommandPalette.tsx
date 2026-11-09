@@ -58,6 +58,8 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
         function onKeyDown(event: KeyboardEvent) {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
                 event.preventDefault();
+                setQuery("");
+                setActiveIndex(0);
                 setIsOpen(current => !current);
             }
 
@@ -75,14 +77,8 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
             return;
         }
 
-        setQuery("");
-        setActiveIndex(0);
         queueMicrotask(() => inputRef.current?.focus());
     }, [isOpen]);
-
-    useEffect(() => {
-        setActiveIndex(0);
-    }, [query]);
 
     function close() {
         setIsOpen(false);
@@ -109,7 +105,11 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
     return <>
         <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+                setQuery("");
+                setActiveIndex(0);
+                setIsOpen(true);
+            }}
             className="inline-flex items-center gap-2 border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-800"
         >
             <FaMagnifyingGlass className="h-3.5 w-3.5" aria-hidden="true" />
@@ -131,7 +131,10 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
                             <input
                                 ref={inputRef}
                                 value={query}
-                                onChange={event => setQuery(event.target.value)}
+                                onChange={event => {
+                                    setQuery(event.target.value);
+                                    setActiveIndex(0);
+                                }}
                                 onKeyDown={event => {
                                     if (event.key === "Enter") {
                                         event.preventDefault();
