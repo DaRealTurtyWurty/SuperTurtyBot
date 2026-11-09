@@ -441,7 +441,7 @@ function buildMentionNode(kind: "user" | "role" | "channel", id: string, raw: st
     const baseClasses = [
         "inline-flex",
         "items-center",
-        "rounded",
+        "rounded-sm",
         "px-1.5",
         "py-0.5",
         "text-[0.92em]",
@@ -488,7 +488,7 @@ function TranscriptMarkdown({source, lookups}: {source: string; lookups: Mention
                     className: [
                         "inline-flex",
                         "items-center",
-                        "rounded",
+                        "rounded-sm",
                         "px-1.5",
                         "py-0.5",
                         "text-[0.92em]",
@@ -546,7 +546,7 @@ function TranscriptMarkdown({source, lookups}: {source: string; lookups: Mention
                         </div>;
                     }
 
-                    return <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-[0.95em] text-sky-100" {...props}>{children}</code>;
+                    return <code className="rounded-sm bg-slate-800 px-1 py-0.5 font-mono text-[0.95em] text-sky-100" {...props}>{children}</code>;
                 },
                 ul: (props: HtmlProps<"ul">) => <ul className="list-disc space-y-1 pl-5 text-sm text-slate-200" {...props} />,
                 ol: (props: HtmlProps<"ol">) => <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-200" {...props} />,
@@ -647,7 +647,7 @@ function DiscordSpoiler({children}: {children?: ReactNode}) {
     return <button
         type="button"
         onClick={() => setRevealed(current => !current)}
-        className={`rounded px-1 text-left transition ${
+        className={`rounded-sm px-1 text-left transition ${
             revealed
                 ? "bg-slate-800 text-slate-100"
                 : "bg-slate-700 text-slate-700 hover:text-slate-200"

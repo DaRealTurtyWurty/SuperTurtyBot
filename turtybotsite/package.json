@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.15.1",
-    "next": "^16.3.0",
+    "next": "^16.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-icons": "^5.6.0",
+    "react-icons": "^5.7.0",
     "react-remark": "^2.1.0",
     "react-syntax-highlighter": "^16.1.1",
     "remark-gfm": "^4.0.1"
@@ -28,6 +28,7 @@
     "eslint-config-next": "16.4.5",
     "postcss": "^8",
     "tailwindcss": "^4.3.4",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "@tailwindcss/postcss": "4.3.4"
   }
 }

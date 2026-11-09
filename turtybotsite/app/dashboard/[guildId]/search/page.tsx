@@ -27,7 +27,7 @@ export default async function DashboardSearchPage({
                     name="q"
                     defaultValue={query}
                     placeholder="Search settings, pages, channels, roles..."
-                    className="mt-2 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                    className="mt-2 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-hidden transition placeholder:text-slate-500 focus:border-sky-400"
                 />
             </label>
             <button

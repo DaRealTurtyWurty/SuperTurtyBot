@@ -101,7 +101,7 @@ function WarningList({
                         </div>
                         <Link
                             href={`/dashboard/${guildId}/warnings/${warning.uuid}`}
-                            className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 transition hover:border-slate-500 hover:text-white"
+                            className="rounded-sm border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-300 transition hover:border-slate-500 hover:text-white"
                         >
                             {warning.uuid}
                         </Link>
@@ -331,7 +331,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                     <label id="warning-expiry-days" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                         <p className="text-sm font-semibold text-white">Rolling Warning Window (Days)</p>
                         <p className="mt-1 text-sm text-slate-400">
-                            How many days warnings should count toward future sanction thresholds. Existing sanctions are not removed when warnings expire. Use <code className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable expiry and keep all warnings active.
+                            How many days warnings should count toward future sanction thresholds. Existing sanctions are not removed when warnings expire. Use <code className="rounded-sm border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable expiry and keep all warnings active.
                         </p>
                         <DashboardNumberInput
                             min={0}
@@ -346,7 +346,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                     <label id="xp-loss-percentage" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                         <p className="text-sm font-semibold text-white">XP Loss Percentage</p>
                         <p className="mt-1 text-sm text-slate-400">
-                            How much XP to remove when a warning is added. Use <code className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
+                            How much XP to remove when a warning is added. Use <code className="rounded-sm border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
                         </p>
                         <DashboardNumberInput
                             min={0}
@@ -361,7 +361,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                     <label id="economy-loss-percentage" className="border border-slate-800/80 bg-slate-950/50 p-4 scroll-mt-24">
                         <p className="text-sm font-semibold text-white">Economy Loss Percentage</p>
                         <p className="mt-1 text-sm text-slate-400">
-                            How much money to remove when a warning is added. Use <code className="rounded border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
+                            How much money to remove when a warning is added. Use <code className="rounded-sm border border-slate-700 bg-slate-900 px-1 py-0.5 text-[0.85em] text-slate-200">0</code> to disable.
                         </p>
                         <DashboardNumberInput
                             min={0}
@@ -423,7 +423,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
                                             ? sanction.deleteMessageDays
                                             : 0
                                     })}
-                                    className="w-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-sky-400"
+                                    className="w-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-hidden transition focus:border-sky-400"
                                 >
                                     <option value="timeout">Timeout</option>
                                     <option value="kick">Kick</option>
@@ -539,7 +539,7 @@ export default function WarningsSettingsForm({guildId, initialData}: WarningsSet
             role="dialog"
             aria-modal="true"
             aria-labelledby="warning-remove-title"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-xs"
             onClick={() => setWarningPendingRemoval(null)}
         >
             <div

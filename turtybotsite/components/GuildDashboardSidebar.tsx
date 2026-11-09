@@ -548,7 +548,7 @@ export default function GuildDashboardSidebar({guildId}: GuildDashboardSidebarPr
                         }
                     }}
                     placeholder="Search dashboard"
-                    className="min-w-0 flex-1 border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-sky-400"
+                    className="min-w-0 flex-1 border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-hidden transition placeholder:text-slate-500 focus:border-sky-400"
                 />
                 <button
                     type="button"
@@ -566,7 +566,7 @@ export default function GuildDashboardSidebar({guildId}: GuildDashboardSidebarPr
                     key={match.href}
                     type="button"
                     onClick={() => navigateTo(match.href)}
-                    className="block w-full rounded border border-transparent px-3 py-2 text-left text-sm text-slate-200 transition hover:border-slate-700 hover:bg-slate-900 hover:text-white"
+                    className="block w-full rounded-sm border border-transparent px-3 py-2 text-left text-sm text-slate-200 transition hover:border-slate-700 hover:bg-slate-900 hover:text-white"
                 >
                     <span className="block truncate">{match.label}</span>
                     <span className="block truncate text-xs text-slate-500">{match.href}</span>

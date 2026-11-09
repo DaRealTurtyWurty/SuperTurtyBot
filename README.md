@@ -26,6 +26,11 @@ See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the ho
 - Staff with Manage Server can run `/serveraudit` for a private summary embed linking to the server audit page in the dashboard. The latest completed report is saved per server in MongoDB and includes bot permissions, broken channel/role settings, unusable notifiers, dashboard/API health, repair links, and checks that could not run. Staff can run the audit again from the dashboard after fixing settings. Notifier inactivity alone is not treated as a failure; upstream account existence and delivery age are not verified.
 - Communities can use it for recurring engagement through levelling, leaderboards, birthdays, starboard posts, and chat revival prompts.
 
+Scam protection keeps a local domain list from phish.sinking.yachts. Live updates
+accept single objects or batches and are applied only after a complete WebSocket
+message arrives. Only `add` and `delete` actions change the list. Catch-up requests
+use an elapsed time window of up to seven days.
+
 ## Privacy commands
 
 `/privacy info`, `/privacy export`, `/privacy delete`, `/privacy opt-out`, and
@@ -232,6 +237,13 @@ fields, `is_external_url` and legacy `isExternalUrl`/`externalUrl` names, and BS
 32-bit or 64-bit integer dates. New writes use `is_external_url` and 64-bit integer dates;
 existing snapshots do not need a database migration. Missing article details are
 handled safely when comparing and displaying updates.
+
+Rocket League patch notifications try the official website first and fall back to
+its official Steam announcements if the website is unavailable or blocks requests.
+The Steam feed may lag behind or omit website-only patches; a warning identifies
+fallback checks. Fallback delivery only includes patch versions newer than those
+already tracked, uses the latest Steam post for each version, and avoids repeating
+the same version when website access recovers. Saved notifier settings stay compatible.
 
 Notifier cards in the dashboard show the last attempted/successful check, last
 confirmed delivery and item, and separate feed, delivery and manual-test errors.

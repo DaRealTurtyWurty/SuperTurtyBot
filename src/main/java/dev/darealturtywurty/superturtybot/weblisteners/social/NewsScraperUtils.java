@@ -65,7 +65,7 @@ public final class NewsScraperUtils {
 
         try (Response response = requestExecutor.execute(request)) {
             if (!response.isSuccessful()) {
-                Constants.LOGGER.error("Failed to fetch {} page {}. HTTP {}", logPrefix, url, response.code());
+                Constants.LOGGER.debug("Failed to fetch {} page {}. HTTP {}", logPrefix, url, response.code());
                 throw new IOException("Provider returned HTTP " + response.code());
             }
 

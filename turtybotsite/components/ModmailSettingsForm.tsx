@@ -91,7 +91,7 @@ export default function ModmailSettingsForm({guildId, initialSettings}: ModmailS
                 value={settings.ticketCreatedMessage}
                 onChange={event => updateMessage(event.target.value)}
                 rows={5}
-                className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400"
+                className="mt-4 w-full resize-y border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition focus:border-sky-400"
                 placeholder="Leave blank to disable the extra message."
             />
         </label>

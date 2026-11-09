@@ -233,7 +233,7 @@ export default function SuggestionsDashboardPanel({
                     </a> : null}
                 </div>
 
-                <div className="mt-4 rounded border border-slate-800 bg-slate-900/70 p-4">
+                <div className="mt-4 rounded-sm border border-slate-800 bg-slate-900/70 p-4">
                     <p className="whitespace-pre-wrap text-sm text-slate-100">{suggestion.content}</p>
                     {suggestion.mediaPreview ? <div className="mt-4">
                         <SuggestionMediaPreviewCard preview={suggestion.mediaPreview} />
@@ -261,7 +261,7 @@ export default function SuggestionsDashboardPanel({
                             value={reasons[suggestion.messageId] ?? ""}
                             onChange={event => updateReason(suggestion.messageId, event)}
                             rows={3}
-                            className="mt-3 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400"
+                            className="mt-3 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-hidden transition focus:border-sky-400"
                             placeholder="Optional reason shown in response"
                         />
                     </label>

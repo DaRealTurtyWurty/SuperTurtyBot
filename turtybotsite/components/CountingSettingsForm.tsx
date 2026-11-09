@@ -59,7 +59,7 @@ function CountingModeSelect({
             type="button"
             onClick={() => setIsOpen(current => !current)}
             disabled={disabled}
-            className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-between gap-3 border border-slate-700 bg-slate-900 px-4 py-3 text-left text-sm text-white outline-hidden transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
             <span className="min-w-0">
                 <span className="block truncate font-medium">
@@ -278,7 +278,7 @@ export default function CountingSettingsForm({guildId, initialSettings}: Countin
                             value={maxCountingSuccession}
                             onChange={event => setMaxCountingSuccession(event.target.value)}
                             disabled={isSavingSuccession || pendingChannelId !== null || isAdding}
-                            className="min-h-12 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="min-h-12 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition hover:border-slate-600 focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                         />
                     </div>
                 </div>

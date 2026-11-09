@@ -142,7 +142,7 @@ export default function StarboardSettingsForm({guildId, initialSettings}: Starbo
                     value={settings.starEmoji}
                     onChange={event => updateText("starEmoji", event.target.value)}
                     disabled={isDisabled}
-                    className="mt-4 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-4 w-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-hidden transition focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="⭐"
                 />
             </label>

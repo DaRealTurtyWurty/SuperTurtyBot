@@ -363,7 +363,7 @@ export default function GuildMemberMultiSelect({
                     }}
                     disabled={disabled}
                     placeholder={placeholder}
-                    className="min-w-36 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500 disabled:cursor-not-allowed"
+                    className="min-w-36 flex-1 bg-transparent text-sm text-white outline-hidden placeholder:text-slate-500 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -410,6 +410,6 @@ export default function GuildMemberMultiSelect({
             </div> : null}
         </div>
 
-        {!error ? <p className="mt-3 text-xs text-slate-500">Paste comma-separated IDs or start typing a name. Press Enter or comma to add a valid ID, including mentions like <code className="rounded bg-slate-900 px-1 py-0.5 font-mono text-slate-300">&lt;@123...&gt;</code>. When the field is empty, press Backspace twice to remove the last chip.</p> : null}
+        {!error ? <p className="mt-3 text-xs text-slate-500">Paste comma-separated IDs or start typing a name. Press Enter or comma to add a valid ID, including mentions like <code className="rounded-sm bg-slate-900 px-1 py-0.5 font-mono text-slate-300">&lt;@123...&gt;</code>. When the field is empty, press Backspace twice to remove the last chip.</p> : null}
     </div>;
 }

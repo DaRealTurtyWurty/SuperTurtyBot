@@ -28,7 +28,7 @@ export default function ReportsLookupForm({guildId}: {guildId: string}) {
                 value={userId}
                 onChange={event => setUserId(event.target.value.replace(/[^0-9]/g, "").slice(0, 18))}
                 placeholder="Enter user ID"
-                className="mt-2 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
+                className="mt-2 w-full border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-sky-400 focus:outline-hidden"
             />
         </label>
 

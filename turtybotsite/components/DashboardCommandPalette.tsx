@@ -114,13 +114,13 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
         >
             <FaMagnifyingGlass className="h-3.5 w-3.5" aria-hidden="true" />
             Command Palette
-            <span className="ml-1 hidden rounded border border-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-500 md:inline">
+            <span className="ml-1 hidden rounded-sm border border-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-500 md:inline">
                 Ctrl K
             </span>
         </button>
 
         {isOpen && typeof document !== "undefined" ? createPortal(
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm" onClick={close}>
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs" onClick={close}>
                 <div
                     className="absolute left-1/2 top-20 w-[min(92vw,720px)] -translate-x-1/2 border border-slate-800 bg-slate-950 shadow-2xl"
                     onClick={event => event.stopPropagation()}
@@ -152,7 +152,7 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
                                     }
                                 }}
                                 placeholder="Search pages, settings, and fields..."
-                                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+                                className="w-full bg-transparent text-sm text-white outline-hidden placeholder:text-slate-500"
                             />
                         </div>
                         <p className="mt-2 text-xs text-slate-500">
@@ -179,7 +179,7 @@ export default function DashboardCommandPalette({guildId}: DashboardCommandPalet
                                     : "border-transparent hover:border-slate-700 hover:bg-slate-900"
                             }`}
                         >
-                            <span className="mt-0.5 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            <span className="mt-0.5 rounded-sm border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                                 {index + 1}
                             </span>
                             <span className="min-w-0 flex-1">
