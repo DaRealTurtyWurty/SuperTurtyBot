@@ -6,7 +6,8 @@
     "dev": "next dev -p 3003 --turbopack",
     "build": "next build",
     "start": "next start -p 3003",
-    "lint": "eslint app components lib --ext .ts,.tsx"
+    "lint": "eslint app components lib --ext .ts,.tsx",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.15.1",
@@ -22,10 +23,11 @@
     "@types/node": "^20",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }
