@@ -56,12 +56,16 @@ public final class DataRetentionService {
     }
 
     private static void step(String name, LongSupplier operation, Map<String, Long> removed, List<String> failed) {
+        long started = System.nanoTime();
         try {
-            removed.put(name, operation.getAsLong());
+            long count = operation.getAsLong();
+            removed.put(name, count);
+            Constants.LOGGER.info("Daily retention step {} removed {} records or workspaces in {} ms", name, count,
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
         } catch (RuntimeException exception) {
             failed.add(name);
-            Constants.LOGGER.warn("Daily retention step {} failed ({}); it will retry next run", name,
-                exception.getClass().getSimpleName());
+            Constants.LOGGER.warn("Daily retention step {} failed ({}) after {} ms; it will retry next run", name,
+                exception.getClass().getSimpleName(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
         }
     }
 
@@ -69,7 +73,11 @@ public final class DataRetentionService {
         Instant cutoff = profileCutoff(now);
         long changed = 0;
         RuntimeException failure = null;
-        for (long userId : RetentionActivity.backfillProfiles()) {
+        long scanned = RetentionActivity.backfillProfiles();
+        Set<Long> candidates = RetentionActivity.expiryCandidates(cutoff);
+        Constants.LOGGER.info("Profile retention migration scanned {} records; {} expiry candidates", scanned,
+            candidates.size());
+        for (long userId : candidates) {
             try {
                 changed += RetentionActivity.expire(userId, cutoff);
             } catch (RuntimeException exception) {

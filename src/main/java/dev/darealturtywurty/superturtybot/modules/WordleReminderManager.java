@@ -201,7 +201,7 @@ public final class WordleReminderManager {
     }
 
     private static void markReminderSent(long userId, long guildId) {
-        PrivacyPreferences.optionalOperation(() -> {
+        PrivacyPreferences.optionalOperation(userId, () -> {
             if (PrivacyPreferences.isOptedOut(userId))
                 return null;
             Database.getDatabase().wordleProfiles.updateOne(

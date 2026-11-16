@@ -115,6 +115,9 @@ account within this bot instance; multiple bot processes need a distributed lock
 `PrivacyRetentionManager` starts one cleanup pass after startup and repeats daily.
 Each step reports a count and failures without recording message contents or user
 IDs in cleanup logs. Failures do not cancel later steps or future runs.
+Each step also reports its duration. Profile cleanup logs migration rows and
+expiry candidate counts; the daily summary includes aggregate privacy lock wait
+time and acquisition counts, without account identifiers.
 
 - Optional profiles and saved personal feature records: 12 UTC calendar months
   without observed messages, reactions, voice activity, commands or dashboard use
@@ -140,10 +143,36 @@ profile data. Profile writes enroll an account once; background maintenance does
 not refresh it. Activity is cached and persisted at most hourly, with an extra
 hour of expiry grace so a restart cannot cause early cleanup. Existing data without
 activity timestamps gets a full new window when observed. `privacyRetentionConfig`
-stores the rollout date used for untimestamped opted-out records; those accounts do
-not acquire new activity profiles. Profile expiry removes the activity metadata and
-keeps only a transient ID guard against delayed writes until a new user interaction
+stores the rollout date used for untimestamped opted-out records; backfill and
+normal feature processing do not enroll opted-out accounts. Profile expiry removes
+the activity metadata and keeps only a transient ID guard against delayed writes until a new user interaction
 or restart. `/privacy export` includes activity timestamps; `/privacy delete` clears them.
+
+Existing profiles are enrolled by a one-time migration, with a durable checkpoint
+every 500 records and a completion marker per collection in `privacyRetentionConfig`.
+An interrupted migration resumes on the next cleanup pass. Completed collections
+are not rescanned daily; normal writes enroll new profiles, and opting back in
+prepares tracking for retained profiles before removing the opt-out marker, so an
+interrupted opt-in cannot leave those profiles untracked. Adding a new profile
+collection starts its own migration. Imports that bypass the collection wrappers must also enroll
+their accounts or deliberately reset the affected collection's backfill checkpoint.
+
+Routine cleanup uses the `privacyActivity.lastActiveAt` index to select candidates,
+then rechecks current in-memory activity under the account lock before deletion.
+Profile collections have owner-field indexes for account cleanup. Legacy opt-out
+records without activity timestamps are found with indexed owner
+lookups in batches of 500 after their rollout grace expires; empty opt-out markers
+do not become deletion candidates. Known-account events and writes coordinate by
+account, so deleting one account does not hold up
+another account's XP updates. Multi-account operations acquire shared locks in
+account order; nested event work can finish while deletion is queued. Writes whose
+owners cannot be bounded use a conservative shared barrier against deletion.
+Exclusion snapshots are cached and invalidated on preference or expiry changes;
+bounded operations check only their locked owners. These guarantees still assume
+a single bot process.
+
+See [retention performance verification](docs/retention-performance.md) for the
+isolated before/after measurements and concurrency checks.
 
 The startup index migration replaces the old unrestricted `privacyRequests.deleteAfter`
 TTL index with one filtered to `status: resolved`, so a reopened/pending request cannot

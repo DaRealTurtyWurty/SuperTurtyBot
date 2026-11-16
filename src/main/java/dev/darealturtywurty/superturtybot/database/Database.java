@@ -15,6 +15,7 @@ import dev.darealturtywurty.superturtybot.database.pojos.collections.*;
 import dev.darealturtywurty.superturtybot.database.pojos.collections.Tag;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestActivity;
 import dev.darealturtywurty.superturtybot.modules.privacy.OptionalDataCollection;
+import dev.darealturtywurty.superturtybot.modules.privacy.RetentionActivity;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestPlayer;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -245,6 +246,9 @@ public class Database {
             db.mongoDatabase.getCollection("notifierTestLimits").createIndex(Indexes.ascending("expiresAt"),
                 new IndexOptions().expireAfter(0L, TimeUnit.SECONDS));
             db.mongoDatabase.getCollection("privacyActivity").createIndex(Indexes.ascending("lastActiveAt"));
+            for (var profile : RetentionActivity.PROFILE_FIELDS.entrySet()) {
+                db.mongoDatabase.getCollection(profile.getKey()).createIndex(Indexes.descending(profile.getValue()));
+            }
             db.modmailTickets.createIndex(Indexes.compoundIndex(Indexes.ascending("open"),
                 Indexes.ascending("closedAt")));
             db.warnings.createIndex(Indexes.ascending("expiresAt"));

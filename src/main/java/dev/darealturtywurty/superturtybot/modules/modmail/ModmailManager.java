@@ -395,7 +395,10 @@ public final class ModmailManager extends ListenerAdapter {
                 break;
 
             int currentChunk = chunkIndex;
-            int archived = PrivacyPreferences.optionalOperation(() -> {
+            List<Long> participants = batch.stream().map(message -> message.getAuthor().getIdLong())
+                .collect(Collectors.toCollection(ArrayList::new));
+            participants.add(ticketUser);
+            int archived = PrivacyPreferences.optionalOperation(participants, () -> {
                 if (PrivacyPreferences.isOptedOut(ticketUser))
                     return 0;
                 List<ModmailTranscriptEntry> entries = batch.stream()
