@@ -145,8 +145,9 @@ hour of expiry grace so a restart cannot cause early cleanup. Existing data with
 activity timestamps gets a full new window when observed. `privacyRetentionConfig`
 stores the rollout date used for untimestamped opted-out records; backfill and
 normal feature processing do not enroll opted-out accounts. Profile expiry removes
-the activity metadata and keeps only a transient ID guard against delayed writes until a new user interaction
-or restart. `/privacy export` includes activity timestamps; `/privacy delete` clears them.
+the activity metadata and keeps only a transient ID guard against delayed writes
+until a new user interaction or restart. `/privacy export` includes activity
+timestamps; `/privacy delete` clears them.
 
 Existing profiles are enrolled by a one-time migration, with a durable checkpoint
 every 500 records and a completion marker per collection in `privacyRetentionConfig`.
@@ -154,17 +155,18 @@ An interrupted migration resumes on the next cleanup pass. Completed collections
 are not rescanned daily; normal writes enroll new profiles, and opting back in
 prepares tracking for retained profiles before removing the opt-out marker, so an
 interrupted opt-in cannot leave those profiles untracked. Adding a new profile
-collection starts its own migration. Imports that bypass the collection wrappers must also enroll
-their accounts or deliberately reset the affected collection's backfill checkpoint.
+collection starts its own migration. Imports that bypass the collection wrappers
+must also enroll their accounts or deliberately reset the affected collection's
+backfill checkpoint.
 
 Routine cleanup uses the `privacyActivity.lastActiveAt` index to select candidates,
 then rechecks current in-memory activity under the account lock before deletion.
 Profile collections have owner-field indexes for account cleanup. Legacy opt-out
-records without activity timestamps are found with indexed owner
-lookups in batches of 500 after their rollout grace expires; empty opt-out markers
+records without activity timestamps are found with indexed owner lookups in
+batches of 500 after their rollout grace expires; empty opt-out markers
 do not become deletion candidates. Known-account events and writes coordinate by
-account, so deleting one account does not hold up
-another account's XP updates. Multi-account operations acquire shared locks in
+account, so deleting one account does not hold up another account's XP updates.
+Multi-account operations acquire shared locks in
 account order; nested event work can finish while deletion is queued. Writes whose
 owners cannot be bounded use a conservative shared barrier against deletion.
 Exclusion snapshots are cached and invalidated on preference or expiry changes;
