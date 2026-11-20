@@ -22,6 +22,7 @@ See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the ho
 ## Examples
 
 - Members can use commands like `/weather`, `/wikipedia`, `/poll`, `/quote`, `/run-code`, `/wordle`, `/trivia`, `/balance`, and `/remindme`.
+- `/wikipedia` searches English Wikipedia and shows up to five articles. The requester can select a result to see its summary and lead image when available. The command reports when Wikipedia is unavailable.
 - Staff can configure things like automod, role menus, logging, suggestions, notifier feeds, and other server features.
 - Staff with Manage Server can run `/serveraudit` for a private summary embed linking to the server audit page in the dashboard. The latest completed report is saved per server in MongoDB and includes bot permissions, broken channel/role settings, unusable notifiers, dashboard/API health, repair links, and checks that could not run. Staff can run the audit again from the dashboard after fixing settings. Notifier inactivity alone is not treated as a failure; upstream account existence and delivery age are not verified.
 - Communities can use it for recurring engagement through levelling, leaderboards, birthdays, starboard posts, and chat revival prompts.
