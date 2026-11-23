@@ -22,6 +22,7 @@ See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the ho
 ## Examples
 
 - Members can use commands like `/weather`, `/wikipedia`, `/poll`, `/quote`, `/run-code`, `/wordle`, `/trivia`, `/balance`, and `/remindme`.
+- `/wikipedia` searches English Wikipedia and shows up to five articles. The requester can select a result to see its summary and lead image when available. The command reports when Wikipedia is unavailable.
 - Staff can configure things like automod, role menus, logging, suggestions, notifier feeds, and other server features.
 - Staff with Manage Server can run `/serveraudit` for a private summary embed linking to the server audit page in the dashboard. The latest completed report is saved per server in MongoDB and includes bot permissions, broken channel/role settings, unusable notifiers, dashboard/API health, repair links, and checks that could not run. Staff can run the audit again from the dashboard after fixing settings. Notifier inactivity alone is not treated as a failure; upstream account existence and delivery age are not verified.
 - Communities can use it for recurring engagement through levelling, leaderboards, birthdays, starboard posts, and chat revival prompts.
@@ -29,7 +30,9 @@ See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the ho
 Scam protection keeps a local domain list from phish.sinking.yachts. Live updates
 accept single objects or batches and are applied only after a complete WebSocket
 message arrives. Only `add` and `delete` actions change the list. Catch-up requests
-use an elapsed time window of up to seven days.
+use an elapsed time window of up to seven days. If the connection resets, the bot
+continues checking messages against its local list and logs a one-line warning
+while it reconnects.
 
 ## Privacy commands
 
@@ -115,6 +118,9 @@ account within this bot instance; multiple bot processes need a distributed lock
 `PrivacyRetentionManager` starts one cleanup pass after startup and repeats daily.
 Each step reports a count and failures without recording message contents or user
 IDs in cleanup logs. Failures do not cancel later steps or future runs.
+Each step also reports its duration. Profile cleanup logs migration rows and
+expiry candidate counts; the daily summary includes aggregate privacy lock wait
+time and acquisition counts, without account identifiers.
 
 - Optional profiles and saved personal feature records: 12 UTC calendar months
   without observed messages, reactions, voice activity, commands or dashboard use
@@ -140,10 +146,38 @@ profile data. Profile writes enroll an account once; background maintenance does
 not refresh it. Activity is cached and persisted at most hourly, with an extra
 hour of expiry grace so a restart cannot cause early cleanup. Existing data without
 activity timestamps gets a full new window when observed. `privacyRetentionConfig`
-stores the rollout date used for untimestamped opted-out records; those accounts do
-not acquire new activity profiles. Profile expiry removes the activity metadata and
-keeps only a transient ID guard against delayed writes until a new user interaction
-or restart. `/privacy export` includes activity timestamps; `/privacy delete` clears them.
+stores the rollout date used for untimestamped opted-out records; backfill and
+normal feature processing do not enroll opted-out accounts. Profile expiry removes
+the activity metadata and keeps only a transient ID guard against delayed writes
+until a new user interaction or restart. `/privacy export` includes activity
+timestamps; `/privacy delete` clears them.
+
+Existing profiles are enrolled by a one-time migration, with a durable checkpoint
+every 500 records and a completion marker per collection in `privacyRetentionConfig`.
+An interrupted migration resumes on the next cleanup pass. Completed collections
+are not rescanned daily; normal writes enroll new profiles, and opting back in
+prepares tracking for retained profiles before removing the opt-out marker, so an
+interrupted opt-in cannot leave those profiles untracked. Adding a new profile
+collection starts its own migration. Imports that bypass the collection wrappers
+must also enroll their accounts or deliberately reset the affected collection's
+backfill checkpoint.
+
+Routine cleanup uses the `privacyActivity.lastActiveAt` index to select candidates,
+then rechecks current in-memory activity under the account lock before deletion.
+Profile collections have owner-field indexes for account cleanup. Legacy opt-out
+records without activity timestamps are found with indexed owner lookups in
+batches of 500 after their rollout grace expires; empty opt-out markers
+do not become deletion candidates. Known-account events and writes coordinate by
+account, so deleting one account does not hold up another account's XP updates.
+Multi-account operations acquire shared locks in
+account order; nested event work can finish while deletion is queued. Writes whose
+owners cannot be bounded use a conservative shared barrier against deletion.
+Exclusion snapshots are cached and invalidated on preference or expiry changes;
+bounded operations check only their locked owners. These guarantees still assume
+a single bot process.
+
+See [retention performance verification](docs/retention-performance.md) for the
+isolated before/after measurements and concurrency checks.
 
 The startup index migration replaces the old unrestricted `privacyRequests.deleteAfter`
 TTL index with one filtered to `status: resolved`, so a reopened/pending request cannot

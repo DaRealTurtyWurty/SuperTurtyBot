@@ -23,7 +23,12 @@ import org.jetbrains.annotations.NotNull;
 public final class PrivacyEventManager extends InterfacedEventManager {
     @Override
     public void handle(@NotNull GenericEvent event) {
-        PrivacyPreferences.optionalOperation(() -> {
+        Long userId = actor(event);
+        if (userId == null) {
+            dispatch(event);
+            return;
+        }
+        PrivacyPreferences.optionalOperation(userId, () -> {
             dispatch(event);
             return null;
         });

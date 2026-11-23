@@ -22,10 +22,13 @@ public final class OptionalDataCollection {
 
     private final MongoCollection<?> delegate;
     private final String userField;
+    private final boolean profile;
+    private volatile Exclusion snapshot;
 
     private OptionalDataCollection(MongoCollection<?> delegate, String userField) {
         this.delegate = delegate;
         this.userField = userField;
+        this.profile = RetentionActivity.isProfileCollection(delegate);
     }
 
     @SuppressWarnings("unchecked")
@@ -33,11 +36,101 @@ public final class OptionalDataCollection {
         var boundary = new OptionalDataCollection(collection, userField);
         return (MongoCollection<T>) Proxy.newProxyInstance(MongoCollection.class.getClassLoader(),
             new Class<?>[]{MongoCollection.class},
-            (_, method, arguments) -> PrivacyPreferences.optionalOperation(
-                () -> RetentionActivity.mutation(() -> boundary.invoke(method, arguments))));
+            (_, method, arguments) -> boundary.coordinate(method, arguments));
     }
 
-    private Object invoke(Method method, Object[] supplied) {
+    private Object coordinate(Method method, Object[] arguments) {
+        String name = method.getName();
+        if (!WRITES.contains(name) && !name.equals("find") && !name.equals("countDocuments"))
+            return invoke(method, arguments, null);
+
+        Set<Long> owners = boundedOwners(method, arguments);
+        if (owners == null)
+            return PrivacyPreferences.optionalOperation(() -> invoke(method, arguments, null));
+        return PrivacyPreferences.optionalOperation(owners, () -> invoke(method, arguments, owners));
+    }
+
+    private Set<Long> boundedFilter(BsonDocument filter) {
+        Set<Long> result = null;
+        for (var entry : filter.entrySet()) {
+            Set<Long> part = null;
+            if (entry.getKey().equals(userField)) {
+                BsonValue value = entry.getValue();
+                if (value.isString() || value.isNumber()) {
+                    part = new HashSet<>();
+                    addIdentity(part, value);
+                } else if (value.isDocument() && value.asDocument().containsKey("$eq")
+                    && (value.asDocument().get("$eq").isString() || value.asDocument().get("$eq").isNumber())) {
+                    part = new HashSet<>();
+                    addIdentity(part, value.asDocument().get("$eq"));
+                } else if (value.isDocument() && value.asDocument().containsKey("$in")) {
+                    part = new HashSet<>();
+                    for (BsonValue identity : value.asDocument().getArray("$in")) {
+                        if (!identity.isString() && !identity.isNumber())
+                            return null;
+                        addIdentity(part, identity);
+                    }
+                }
+            } else if ((entry.getKey().equals("$and") || entry.getKey().equals("$or"))
+                && entry.getValue().isArray()) {
+                boolean union = entry.getKey().equals("$or");
+                for (BsonValue clause : entry.getValue().asArray()) {
+                    Set<Long> nested = clause.isDocument() ? boundedFilter(clause.asDocument()) : null;
+                    if (union && nested == null) {
+                        part = null;
+                        break;
+                    }
+                    if (nested != null) {
+                        if (part == null) {
+                            part = new HashSet<>();
+                        }
+                        part.addAll(nested);
+                    }
+                }
+            }
+            if (part != null) {
+                if (result == null) {
+                    result = new HashSet<>();
+                }
+                result.addAll(part);
+            }
+        }
+        return result;
+    }
+
+    private Set<Long> boundedOwners(Method method, Object[] supplied) {
+        Object[] arguments = supplied == null ? new Object[0] : supplied;
+        String name = method.getName();
+        int index = arguments.length > 0 && arguments[0] instanceof ClientSession ? 1 : 0;
+        Set<Long> owners;
+        if (name.equals("insertOne") || name.equals("insertMany")) {
+            owners = new HashSet<>();
+            collectRecord(owners, arguments[index]);
+            return owners.isEmpty() ? null : owners;
+        }
+        if (arguments.length <= index || !(arguments[index] instanceof Bson filter))
+            return null;
+        owners = boundedFilter(filter.toBsonDocument(Document.class, delegate.getCodecRegistry()));
+        if (owners == null)
+            return null;
+        if (name.equals("replaceOne") || name.equals("findOneAndReplace")) {
+            collectRecord(owners, arguments[index + 1]);
+        } else if (WRITES.contains(name)) {
+            for (int position = index + 1; position < arguments.length; position++) {
+                Object update = arguments[position];
+                if (update instanceof Bson bson) {
+                    collectFilter(owners, bson.toBsonDocument(Document.class, delegate.getCodecRegistry()));
+                } else if (update instanceof List<?> pipeline) {
+                    pipeline.stream().filter(Bson.class::isInstance).map(Bson.class::cast)
+                        .forEach(stage -> collectFilter(owners,
+                            stage.toBsonDocument(Document.class, delegate.getCodecRegistry())));
+                }
+            }
+        }
+        return owners;
+    }
+
+    private Object invoke(Method method, Object[] supplied, Set<Long> owners) {
         Object[] arguments = supplied == null ? new Object[0] : supplied.clone();
         String name = method.getName();
         boolean writing = WRITES.contains(name);
@@ -66,43 +159,47 @@ public final class OptionalDataCollection {
                 throw new IllegalStateException("Optional-data bulk writes require per-account privacy checks");
         }
 
-        List<Object> excluded = new ArrayList<>();
-        Set<Long> excludedUsers = new HashSet<>(PrivacyPreferences.excludedUsers());
-        if (RetentionActivity.isProfileCollection(delegate)) {
-            excludedUsers.addAll(RetentionActivity.excludedUsers());
-        }
-        for (long id : excludedUsers) {
-            excluded.add(id);
-            excluded.add(Long.toString(id));
-        }
-
-        if (!excluded.isEmpty() && (writing || name.equals("find") || name.equals("countDocuments"))) {
-            Bson exclusion = Filters.nin(userField, excluded);
-            Class<?>[] types = method.getParameterTypes();
-            boolean hasFilter = false;
-            for (int i = 0; i < types.length; i++) {
-                if (types[i] == Bson.class) {
-                    arguments[i] = Filters.and((Bson) arguments[i], exclusion);
-                    hasFilter = true;
-                    break;
+        if (writing || name.equals("find") || name.equals("countDocuments")) {
+            Bson exclusion;
+            if (owners == null) {
+                exclusion = exclusion();
+            } else {
+                List<Object> blocked = new ArrayList<>();
+                for (long owner : owners) {
+                    if (PrivacyPreferences.isOptedOut(owner) || profile && RetentionActivity.isExpired(owner)) {
+                        blocked.add(owner);
+                        blocked.add(Long.toString(owner));
+                    }
                 }
+                exclusion = blocked.isEmpty() ? null : Filters.nin(userField, blocked);
             }
+            if (exclusion != null) {
+                Class<?>[] types = method.getParameterTypes();
+                boolean hasFilter = false;
+                for (int i = 0; i < types.length; i++) {
+                    if (types[i] == Bson.class) {
+                        arguments[i] = Filters.and((Bson) arguments[i], exclusion);
+                        hasFilter = true;
+                        break;
+                    }
+                }
 
-            if (!hasFilter && (name.equals("find") || name.equals("countDocuments"))) {
-                int index = types.length > 0 && types[0] == ClientSession.class ? 1 : 0;
-                Object[] expanded = new Object[arguments.length + 1];
-                Class<?>[] expandedTypes = new Class<?>[types.length + 1];
-                System.arraycopy(arguments, 0, expanded, 0, index);
-                System.arraycopy(types, 0, expandedTypes, 0, index);
-                expanded[index] = exclusion;
-                expandedTypes[index] = Bson.class;
-                System.arraycopy(arguments, index, expanded, index + 1, arguments.length - index);
-                System.arraycopy(types, index, expandedTypes, index + 1, types.length - index);
-                try {
-                    method = MongoCollection.class.getMethod(name, expandedTypes);
-                    arguments = expanded;
-                } catch (NoSuchMethodException exception) {
-                    throw new IllegalStateException("Unsupported optional-data query overload", exception);
+                if (!hasFilter && (name.equals("find") || name.equals("countDocuments"))) {
+                    int index = types.length > 0 && types[0] == ClientSession.class ? 1 : 0;
+                    Object[] expanded = new Object[arguments.length + 1];
+                    Class<?>[] expandedTypes = new Class<?>[types.length + 1];
+                    System.arraycopy(arguments, 0, expanded, 0, index);
+                    System.arraycopy(types, 0, expandedTypes, 0, index);
+                    expanded[index] = exclusion;
+                    expandedTypes[index] = Bson.class;
+                    System.arraycopy(arguments, index, expanded, index + 1, arguments.length - index);
+                    System.arraycopy(types, index, expandedTypes, index + 1, types.length - index);
+                    try {
+                        method = MongoCollection.class.getMethod(name, expandedTypes);
+                        arguments = expanded;
+                    } catch (NoSuchMethodException exception) {
+                        throw new IllegalStateException("Unsupported optional-data query overload", exception);
+                    }
                 }
             }
         }
@@ -126,9 +223,36 @@ public final class OptionalDataCollection {
         }
     }
 
+    private Bson exclusion() {
+        List<Long> optedOut = PrivacyPreferences.excludedUsers();
+        Set<Long> expired = profile ? RetentionActivity.excludedUsers() : Set.of();
+        Exclusion current = snapshot;
+        if (current == null || current.optedOut() != optedOut || current.expired() != expired) {
+            Set<Long> users = new HashSet<>(optedOut);
+            users.addAll(expired);
+            List<Object> values = new ArrayList<>(users.size() * 2);
+            for (long id : users) {
+                values.add(id);
+                values.add(Long.toString(id));
+            }
+            current = new Exclusion(optedOut, expired, values.isEmpty() ? null : Filters.nin(userField, values));
+            snapshot = current;
+        }
+        return current.filter();
+    }
+
+    private record Exclusion(List<Long> optedOut, Set<Long> expired, Bson filter) {
+    }
+
     private void checkRecord(Object record) {
+        Set<Long> owners = new HashSet<>();
+        collectRecord(owners, record);
+        owners.forEach(this::checkIdentity);
+    }
+
+    private void collectRecord(Set<Long> owners, Object record) {
         if (record instanceof List<?> records) {
-            records.forEach(this::checkRecord);
+            records.forEach(value -> collectRecord(owners, value));
             return;
         }
 
@@ -154,39 +278,50 @@ public final class OptionalDataCollection {
             }
         }
 
-        checkIdentity(value);
+        addIdentity(owners, value);
     }
 
     private void checkFilter(BsonDocument filter) {
+        Set<Long> owners = new HashSet<>();
+        collectFilter(owners, filter);
+        owners.forEach(this::checkIdentity);
+    }
+
+    private void collectFilter(Set<Long> owners, BsonDocument filter) {
         for (var entry : filter.entrySet()) {
             if (entry.getKey().equals(userField)) {
                 BsonValue value = entry.getValue();
                 if (value.isDocument()) {
                     BsonDocument condition = value.asDocument();
                     if (condition.containsKey("$eq")) {
-                        checkIdentity(condition.get("$eq"));
+                        addIdentity(owners, condition.get("$eq"));
                     }
 
                     if (condition.containsKey("$in")) {
-                        condition.getArray("$in").forEach(this::checkIdentity);
+                        condition.getArray("$in").forEach(identity -> addIdentity(owners, identity));
                     }
                 } else {
-                    checkIdentity(value);
+                    addIdentity(owners, value);
                 }
             } else if (Set.of("$and", "$or", "$set", "$setOnInsert").contains(entry.getKey())) {
                 BsonValue value = entry.getValue();
                 if (value.isDocument()) {
-                    checkFilter(value.asDocument());
+                    collectFilter(owners, value.asDocument());
                 } else if (value.isArray()) {
                     value.asArray().stream()
                         .filter(BsonValue::isDocument)
-                        .forEach(part -> checkFilter(part.asDocument()));
+                        .forEach(part -> collectFilter(owners, part.asDocument()));
                 }
             }
         }
     }
 
-    private void checkIdentity(Object value) {
+    private void checkIdentity(long userId) {
+        PrivacyPreferences.requireOptionalData(userId);
+        RetentionActivity.register(delegate, userId);
+    }
+
+    private static void addIdentity(Set<Long> owners, Object value) {
         if (value instanceof BsonValue bson) {
             if (bson.isString()) {
                 value = bson.asString().getValue();
@@ -201,8 +336,7 @@ public final class OptionalDataCollection {
 
         try {
             long userId = Long.parseLong(value.toString());
-            PrivacyPreferences.requireOptionalData(userId);
-            RetentionActivity.register(delegate, userId);
+            owners.add(userId);
         } catch (NumberFormatException exception) {
             throw new IllegalStateException("Invalid optional-data owner", exception);
         }

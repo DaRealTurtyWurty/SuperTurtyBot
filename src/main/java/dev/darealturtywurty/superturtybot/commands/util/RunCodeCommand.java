@@ -101,7 +101,7 @@ public class RunCodeCommand extends CoreCommand {
             hook.editOriginal("The message changed. Nothing was submitted; use Run Code again.").queue();
             return;
         }
-        EvaluationResult result = PrivacyPreferences.optionalOperation(() -> {
+        EvaluationResult result = PrivacyPreferences.optionalOperation(original.getAuthor().getIdLong(), () -> {
             PrivacyPreferences.requireOptionalData(original.getAuthor().getIdLong());
             return evaluateCode(codeBlock.language(), codeContent);
         });

@@ -52,7 +52,7 @@ public final class TrackedGistService {
         long message,
         Map<String, GistFile> files
     ) {
-        return PrivacyPreferences.optionalOperation(() -> {
+        return PrivacyPreferences.optionalOperation(List.of(author, requester), () -> {
             PrivacyPreferences.requireOptionalData(author);
             PrivacyPreferences.requireOptionalData(requester);
             GistService client = github.get();

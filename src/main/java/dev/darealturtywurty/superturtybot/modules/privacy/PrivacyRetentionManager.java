@@ -34,6 +34,10 @@ public final class PrivacyRetentionManager {
             } catch (RuntimeException exception) {
                 Constants.LOGGER.warn("Daily privacy cleanup failed ({}); the next scheduled run will retry",
                     exception.getClass().getSimpleName());
+            } finally {
+                PrivacyCoordinator.Timing timing = PrivacyCoordinator.drainTiming();
+                Constants.LOGGER.info("Privacy coordination since last report: {} lock acquisitions, {} ms total wait",
+                    timing.acquisitions(), TimeUnit.NANOSECONDS.toMillis(timing.waitNanos()));
             }
         }, 0, 1, TimeUnit.DAYS);
     }

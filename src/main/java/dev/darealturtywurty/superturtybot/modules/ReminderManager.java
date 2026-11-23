@@ -255,7 +255,7 @@ public final class ReminderManager {
 
     private static void completeReminder(long guildId, long userId, String reminderId) {
         try {
-            PrivacyPreferences.optionalOperation(() -> {
+            PrivacyPreferences.optionalOperation(userId, () -> {
                 if (!PrivacyPreferences.isOptedOut(userId)) {
                     QuestManager.INSTANCE.recordReminderFired(guildId, userId, reminderId);
                 }
