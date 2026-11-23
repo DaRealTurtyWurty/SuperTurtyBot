@@ -30,7 +30,9 @@ See the [Terms of Service](TERMS.md) and [Privacy Policy](PRIVACY.md) for the ho
 Scam protection keeps a local domain list from phish.sinking.yachts. Live updates
 accept single objects or batches and are applied only after a complete WebSocket
 message arrives. Only `add` and `delete` actions change the list. Catch-up requests
-use an elapsed time window of up to seven days.
+use an elapsed time window of up to seven days. If the connection resets, the bot
+continues checking messages against its local list and logs a one-line warning
+while it reconnects.
 
 ## Privacy commands
 

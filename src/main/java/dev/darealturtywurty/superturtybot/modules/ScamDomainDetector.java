@@ -362,8 +362,11 @@ public class ScamDomainDetector {
 
     private static void logWebSocketFailure(String message, Throwable error) {
         final Throwable cause = unwrapCompletionException(error);
-        if (cause instanceof SocketException) {
-            Constants.LOGGER.warn("{}: {}. Reconnecting.", message, cause.getMessage());
+        final String reason = cause.getMessage();
+        final boolean connectionReset = cause instanceof IOException
+            && ("Connection reset by peer".equalsIgnoreCase(reason) || "Connection reset".equalsIgnoreCase(reason));
+        if (cause instanceof SocketException || connectionReset) {
+            Constants.LOGGER.warn("{}: {}. Reconnecting.", message, reason);
         } else {
             Constants.LOGGER.error(message + ". Reconnecting.", cause);
         }
