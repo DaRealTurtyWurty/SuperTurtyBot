@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.MessageEditCallbackAction;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -216,10 +217,10 @@ public class Connect4Command extends CoreCommand {
         BufferedImage yellow = null;
 
         try {
-            red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar().download().join());
+            red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar(ImageFormat.PNG).download().join());
             yellow = ImageIO.read(game.isBot()
-                ? jda.getSelfUser().getEffectiveAvatar().download().join()
-                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
+                ? jda.getSelfUser().getEffectiveAvatar(ImageFormat.PNG).download().join()
+                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar(ImageFormat.PNG).download().join());
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
         }

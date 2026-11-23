@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -448,9 +449,9 @@ public class LeaderboardCommand extends CoreCommand {
         User user = member == null ? guild.getJDA().getUserById(userId) : member.getUser();
         InputStream avatarStream;
         if (member != null) {
-            avatarStream = member.getEffectiveAvatar().download(512).join();
+            avatarStream = member.getEffectiveAvatar(ImageFormat.PNG).download(512).join();
         } else if (user != null) {
-            avatarStream = user.getEffectiveAvatar().download(512).join();
+            avatarStream = user.getEffectiveAvatar(ImageFormat.PNG).download(512).join();
         } else {
             avatarStream = new URI(DISCORD_ICON_URL).toURL().openStream();
         }

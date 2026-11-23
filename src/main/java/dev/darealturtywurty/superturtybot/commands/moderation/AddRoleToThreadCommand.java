@@ -107,7 +107,7 @@ public class AddRoleToThreadCommand extends CoreCommand {
             return;
         }
 
-        if (!threadChannel.canTalk(selfMember)) {
+        if (threadChannel.isDetached() || !threadChannel.canTalk(selfMember)) {
             reply(event, "❌ I cannot interact with that thread!", false, true);
             return;
         }

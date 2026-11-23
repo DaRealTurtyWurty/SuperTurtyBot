@@ -12,6 +12,7 @@ import dev.darealturtywurty.superturtybot.registry.impl.RankCardItemRegistry;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.bson.conversions.Bson;
 
 import javax.imageio.ImageIO;
@@ -118,7 +119,7 @@ public class XPInventoryCommand extends CoreCommand {
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         final BufferedImage profilePic = BotUtils
-            .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl()).toURL()), 100);
+            .resize(ImageIO.read(new URI(member.getUser().getEffectiveAvatarUrl(ImageFormat.PNG)).toURL()), 100);
         graphics.drawImage(profilePic, 80, 68, profilePic.getWidth(), profilePic.getHeight(), null);
 
         graphics.setFont(this.usedFont.deriveFont(42f));

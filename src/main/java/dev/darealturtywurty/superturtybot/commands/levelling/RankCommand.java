@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.Nullable;
@@ -193,7 +194,8 @@ public class RankCommand extends CoreCommand {
         float xpPercent
     ) {
         try {
-            BufferedImage avatar = BotUtils.resize(ImageIO.read(member.getEffectiveAvatar().download(512).join()), 512);
+            BufferedImage avatar = BotUtils
+                .resize(ImageIO.read(member.getEffectiveAvatar(ImageFormat.PNG).download(512).join()), 512);
             return renderRankCard(member.getEffectiveName(), getRank(member), avatar, card,
                 level, xp, nextLevelXp, xpPercent, this.usedFont);
         } catch (IOException exception) {
