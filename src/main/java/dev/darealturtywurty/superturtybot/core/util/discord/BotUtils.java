@@ -1,6 +1,8 @@
 package dev.darealturtywurty.superturtybot.core.util.discord;
 
 import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -59,6 +61,12 @@ public final class BotUtils {
         g2d.drawImage(src, 0, 0, targetWidth, targetHeight, null);
         g2d.dispose();
         return retImg;
+    }
+
+    public static BufferedImage readAvatar(User user) throws IOException {
+        try (InputStream stream = user.getEffectiveAvatar(ImageFormat.PNG).download().join()) {
+            return ImageIO.read(stream);
+        }
     }
 
     public static @NotNull InputStream toInputStream(@NotNull BufferedImage image) {

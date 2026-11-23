@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import lombok.Getter;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -18,7 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.api.utils.ImageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -316,10 +316,8 @@ public class CheckersCommand extends CoreCommand {
         BufferedImage red, yellow;
 
         try {
-            red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar(ImageFormat.PNG).download().join());
-            yellow = ImageIO.read(game.isBot()
-                ? jda.getSelfUser().getEffectiveAvatar(ImageFormat.PNG).download().join()
-                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar(ImageFormat.PNG).download().join());
+            red = BotUtils.readAvatar(jda.getUserById(game.getUserId()));
+            yellow = BotUtils.readAvatar(game.isBot() ? jda.getSelfUser() : jda.getUserById(game.getOpponentId()));
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
             return null;
