@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -79,7 +80,16 @@ public class PurgeCommand extends CoreCommand {
             return;
         }
 
-        if (!event.getMember().hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
+        GuildMessageChannel channel = event.getGuildChannel();
+        if (channel.isDetached() || !event.getGuild().getSelfMember()
+            .hasPermission(channel, Permission.VIEW_CHANNEL, Permission.MESSAGE_HISTORY, Permission.MESSAGE_MANAGE)) {
+            reply(event,
+                "❌ I need View Channel, Read Message History, and Manage Messages permissions in this channel!",
+                false, true);
+            return;
+        }
+
+        if (!event.getMember().hasPermission(channel, Permission.MESSAGE_MANAGE)) {
             reply(event, "❌ You require the `Manage Messages` permission to perform this action!", false, true);
             return;
         }
@@ -94,9 +104,9 @@ public class PurgeCommand extends CoreCommand {
 
         CompletableFuture<List<Message>> messages;
         if (userOption != null) {
-            messages = getMessagesByUser(event.getMessageChannel(), amount, userOption.getAsUser());
+            messages = getMessagesByUser(channel, amount, userOption.getAsUser());
         } else {
-            messages = getMessages(event.getMessageChannel(), amount);
+            messages = getMessages(channel, amount);
         }
 
         final String reason = event.getOption("reason", "Unspecified", OptionMapping::getAsString);
@@ -104,8 +114,8 @@ public class PurgeCommand extends CoreCommand {
         messages.thenAccept(msgs -> {
             reply(event, "I have found " + msgs.size() + " messages, I will now start purging!", false, true);
 
-            CompletableFuture.allOf(event.getGuildChannel().purgeMessages(msgs).toArray(new CompletableFuture[0]))
-                .thenAccept(action -> event.getMessageChannel().sendMessage(
+            CompletableFuture.allOf(channel.purgeMessages(msgs).toArray(new CompletableFuture[0]))
+                .thenAccept(action -> channel.sendMessage(
                     "✅ " + event.getMember().getAsMention() + " I have successfully purged " + msgs.size()
                         + " messages!")
                     .queue(success -> {

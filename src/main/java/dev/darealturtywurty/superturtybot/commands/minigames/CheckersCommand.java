@@ -7,6 +7,7 @@ import dev.darealturtywurty.superturtybot.core.util.Constants;
 import dev.darealturtywurty.superturtybot.core.util.discord.EventWaiter;
 import dev.darealturtywurty.superturtybot.modules.quest.QuestManager;
 import lombok.Getter;
+import dev.darealturtywurty.superturtybot.core.util.discord.BotUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -315,10 +316,8 @@ public class CheckersCommand extends CoreCommand {
         BufferedImage red, yellow;
 
         try {
-            red = ImageIO.read(jda.getUserById(game.getUserId()).getEffectiveAvatar().download().join());
-            yellow = ImageIO.read(game.isBot()
-                ? jda.getSelfUser().getEffectiveAvatar().download().join()
-                : jda.getUserById(game.getOpponentId()).getEffectiveAvatar().download().join());
+            red = BotUtils.readAvatar(jda.getUserById(game.getUserId()));
+            yellow = BotUtils.readAvatar(game.isBot() ? jda.getSelfUser() : jda.getUserById(game.getOpponentId()));
         } catch (IOException exception) {
             Constants.LOGGER.error("Failed to read image!", exception);
             return null;

@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.ImageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -83,7 +84,7 @@ public class PetPetGifCommand extends CoreCommand {
                     reply(event, "❌ You must provide a user to pet pet gif!", false, true);
                     return;
                 }
-                imageStr = user.getEffectiveAvatar().getUrl();
+                imageStr = user.getEffectiveAvatarUrl(ImageFormat.PNG);
                 break;
             case "image" :
                 imageStr = event.getOption("image", OptionMapping::getAsString);
@@ -173,8 +174,8 @@ public class PetPetGifCommand extends CoreCommand {
         }
 
         String avatar = event.isFromGuild()
-            ? event.getTargetMember().getEffectiveAvatarUrl()
-            : event.getTarget().getEffectiveAvatarUrl();
+            ? event.getTargetMember().getEffectiveAvatarUrl(ImageFormat.PNG)
+            : event.getTarget().getEffectiveAvatarUrl(ImageFormat.PNG);
 
         reply(event, "⏸️ Creating pet pet gif...");
 
